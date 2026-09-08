@@ -88,35 +88,35 @@ function renderStudents(list) {
   }
 
   empty.style.display = "none";
-list.forEach(student => {
 
-  const row =
-    document.createElement("tr");
+  list.forEach(student => {
 
-  row.innerHTML = `
-    <td>${student.student_code || "—"}</td>
-    <td>${student.full_name || "—"}</td>
-    <td>${student.phone || "—"}</td>
-    <td>${student.email || "—"}</td>
-    <td>${student.preferred_area || "—"}</td>
-    <td>${student.preferred_ward || "—"}</td>
-    <td>${student.status || "—"}</td>
-  `;
+    const row =
+      document.createElement("tr");
 
-  row.style.cursor = "pointer";
+    row.innerHTML = `
+      <td>${student.student_code || "—"}</td>
+      <td>${student.full_name || "—"}</td>
+      <td>${student.phone || "—"}</td>
+      <td>${student.email || "—"}</td>
+      <td>${student.preferred_area || "—"}</td>
+      <td>${student.preferred_ward || "—"}</td>
+      <td>${student.status || "—"}</td>
+    `;
 
-  row.title = "Bấm để xem hồ sơ học viên";
+    row.style.cursor = "pointer";
 
-  row.addEventListener("click", () => {
-    window.location.href =
-      `./student-detail.html?id=${encodeURIComponent(student.id)}`;
-  });
+    row.title =
+      "Bấm để xem hồ sơ học viên";
 
-  tbody.appendChild(row);
-});
+    row.addEventListener("click", () => {
+      window.location.href =
+        `./student-detail.html?id=${encodeURIComponent(student.id)}`;
+    });
+
+    tbody.appendChild(row);
   });
 }
-
 document
   .getElementById("search")
   .addEventListener("input", event => {
