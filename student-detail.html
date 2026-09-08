@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hồ sơ học viên | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 19px;
+    }
+
+    .brand span,
+    .green {
+      color: #d8ff45;
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin-top: 26px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+      font-size: clamp(34px, 6vw, 55px);
+    }
+
+    .code {
+      color: rgba(255,255,255,.6);
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(6,39,88,.72);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      font-size: 20px;
+    }
+
+    .item {
+      margin-bottom: 15px;
+    }
+
+    .label {
+      color: rgba(255,255,255,.5);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.12);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .registrations {
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 13px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    .empty {
+      padding: 25px 0;
+      color: rgba(255,255,255,.6);
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        width: calc(100% - 20px);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+</header>
+
+<main class="container">
+
+  <a class="back" href="./students.html">
+    ← Danh sách học viên
+  </a>
+
+  <div class="eyebrow">
+    HỒ SƠ HỌC VIÊN
+  </div>
+
+  <h1 id="studentName">Đang tải...</h1>
+  <div class="code" id="studentCode"></div>
+
+  <section class="grid">
+
+    <div class="card">
+      <h2>👤 Thông tin học viên</h2>
+
+      <div class="item">
+        <div class="label">Số điện thoại</div>
+        <div class="value" id="phone">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Email</div>
+        <div class="value" id="email">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Ngày sinh</div>
+        <div class="value" id="birthDate">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Giới tính</div>
+        <div class="value" id="gender">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Trạng thái</div>
+        <div class="value">
+          <span class="badge" id="status">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📍 Khu vực & ghi chú</h2>
+
+      <div class="item">
+        <div class="label">Khu vực muốn học</div>
+        <div class="value" id="area">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Xã/Phường muốn học</div>
+        <div class="value" id="ward">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Địa chỉ</div>
+        <div class="value" id="address">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Ghi chú</div>
+        <div class="value" id="note">—</div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="card registrations">
+
+    <h2>📚 Đăng ký học</h2>
+
+    <div class="table-wrap">
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mã ĐK</th>
+            <th>Gói học</th>
+            <th>Trạng thái</th>
+            <th>Nguồn</th>
+            <th>Mã giới thiệu</th>
+            <th>Ngày đăng ký</th>
+          </tr>
+        </thead>
+
+        <tbody id="registrationBody">
+          <tr>
+            <td colspan="6">
+              Đang tải...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+  const cfg = window.PICKDEE_CONFIG || {};
+
+  const sb = window.supabase.createClient(
+    cfg.SUPABASE_URL,
+    cfg.SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const studentId = params.get("id");
+
+  function show(id, value) {
+    document.getElementById(id).textContent =
+      value || "—";
+  }
+
+  function dateVN(value) {
+    if (!value) return "—";
+
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    ).format(new Date(value));
+  }
+
+  async function checkAdmin() {
+
+    const {
+      data: { session }
+    } = await sb.auth.getSession();
+
+    if (!session) {
+      location.replace("./login.html");
+      return false;
+    }
+
+    show(
+      "userEmail",
+      session.user.email
+    );
+
+    const { data: profile } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+    if (!profile || profile.role !== "admin") {
+      location.replace("./login.html");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function loadStudent() {
+
+    if (!studentId) {
+      alert("Không tìm thấy ID học viên.");
+      location.replace("./students.html");
+      return;
+    }
+
+    const { data, error } =
+      await sb
+        .from("students")
+        .select("*")
+        .eq("id", studentId)
+        .single();
+
+    if (error || !data) {
+      console.error(error);
+      alert("Không tải được hồ sơ học viên.");
+      return;
+    }
+
+    show("studentName", data.full_name);
+    show("studentCode", data.student_code);
+
+    show("phone", data.phone);
+    show("email", data.email);
+    show("birthDate", dateVN(data.birth_date));
+    show("gender", data.gender);
+    show("status", data.status);
+
+    show(
+      "area",
+      data.preferred_area
+    );
+
+    show(
+      "ward",
+      data.preferred_ward
+    );
+
+    show(
+      "address",
+      data.address
+    );
+
+    show(
+      "note",
+      data.note
+    );
+  }
+
+  async function loadRegistrations() {
+
+    const body =
+      document.getElementById(
+        "registrationBody"
+      );
+
+    const { data, error } =
+      await sb
+        .from("registrations")
+        .select("*")
+        .eq("student_id", studentId)
+        .order(
+          "created_at",
+          { ascending: false }
+        );
+
+    if (error) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="6">
+            Không tải được đăng ký học.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    if (!data || !data.length) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="6" class="empty">
+            Học viên này chưa có đăng ký học.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    body.innerHTML =
+      data.map(r => `
+        <tr>
+          <td>${r.registration_code || "—"}</td>
+          <td>${r.package_name || "—"}</td>
+          <td>
+            <span class="badge">
+              ${r.status || "—"}
+            </span>
+          </td>
+          <td>${r.source || "—"}</td>
+          <td>${r.referral_code || "—"}</td>
+          <td>${dateVN(r.created_at)}</td>
+        </tr>
+      `).join("");
+  }
+
+  async function init() {
+
+    const ok =
+      await checkAdmin();
+
+    if (!ok) return;
+
+    await loadStudent();
+    await loadRegistrations();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
