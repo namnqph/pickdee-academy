@@ -43,15 +43,16 @@ async function loadStudents() {
   const { data, error } =
     await supabaseClient
       .from("students")
-      .select(`
-        student_code,
-        full_name,
-        phone,
-        email,
-        preferred_area,
-        preferred_ward,
-        status
-      `)
+    .select(`
+  id,
+  student_code,
+  full_name,
+  phone,
+  email,
+  preferred_area,
+  preferred_ward,
+  status
+`)
       .order("created_at", {
         ascending: false
       });
@@ -87,23 +88,32 @@ function renderStudents(list) {
   }
 
   empty.style.display = "none";
+list.forEach(student => {
 
-  list.forEach(student => {
+  const row =
+    document.createElement("tr");
 
-    const row =
-      document.createElement("tr");
+  row.innerHTML = `
+    <td>${student.student_code || "—"}</td>
+    <td>${student.full_name || "—"}</td>
+    <td>${student.phone || "—"}</td>
+    <td>${student.email || "—"}</td>
+    <td>${student.preferred_area || "—"}</td>
+    <td>${student.preferred_ward || "—"}</td>
+    <td>${student.status || "—"}</td>
+  `;
 
-    row.innerHTML = `
-      <td>${student.student_code || ""}</td>
-      <td>${student.full_name || ""}</td>
-      <td>${student.phone || ""}</td>
-      <td>${student.email || ""}</td>
-      <td>${student.preferred_area || ""}</td>
-      <td>${student.preferred_ward || ""}</td>
-      <td>${student.status || ""}</td>
-    `;
+  row.style.cursor = "pointer";
 
-    tbody.appendChild(row);
+  row.title = "Bấm để xem hồ sơ học viên";
+
+  row.addEventListener("click", () => {
+    window.location.href =
+      `./student-detail.html?id=${encodeURIComponent(student.id)}`;
+  });
+
+  tbody.appendChild(row);
+});
   });
 }
 
