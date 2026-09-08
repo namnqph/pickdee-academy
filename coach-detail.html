@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hồ sơ Coach | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .container {
+      width: min(1050px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .eyebrow {
+      margin-top: 25px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+      font-size: clamp(34px, 6vw, 54px);
+    }
+
+    .code {
+      color: rgba(255,255,255,.6);
+      margin-bottom: 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      font-size: 20px;
+    }
+
+    .item {
+      margin-bottom: 15px;
+    }
+
+    .label {
+      color: rgba(255,255,255,.5);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.13);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .full {
+      margin-top: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+</header>
+
+<main class="container">
+
+  <a class="back" href="./coaches.html">
+    ← Danh sách Coach
+  </a>
+
+  <div class="eyebrow">
+    HỒ SƠ COACH
+  </div>
+
+  <h1 id="coachName">Đang tải...</h1>
+  <div class="code" id="coachCode"></div>
+
+  <section class="grid">
+
+    <div class="card">
+      <h2>👤 Thông tin Coach</h2>
+
+      <div class="item">
+        <div class="label">Số điện thoại</div>
+        <div class="value" id="phone">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Email</div>
+        <div class="value" id="email">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Trạng thái</div>
+        <div class="value">
+          <span class="badge" id="status">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📍 Khu vực phụ trách</h2>
+
+      <div class="item">
+        <div class="label">Khu vực</div>
+        <div class="value" id="area">—</div>
+      </div>
+
+      <div class="item">
+        <div class="label">Xã/Phường</div>
+        <div class="value" id="ward">—</div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="card full">
+    <h2>📝 Ghi chú</h2>
+    <div id="note">—</div>
+  </section>
+
+</main>
+
+<script>
+  const cfg = window.PICKDEE_CONFIG || {};
+
+  const sb = window.supabase.createClient(
+    cfg.SUPABASE_URL,
+    cfg.SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  const coachId =
+    params.get("id");
+
+  function show(id, value) {
+    document.getElementById(id).textContent =
+      value || "—";
+  }
+
+  async function checkAdmin() {
+
+    const {
+      data: { session }
+    } = await sb.auth.getSession();
+
+    if (!session) {
+      location.replace("./login.html");
+      return false;
+    }
+
+    show("userEmail", session.user.email);
+
+    const { data: profile } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+    if (!profile || profile.role !== "admin") {
+      location.replace("./login.html");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function loadCoach() {
+
+    if (!coachId) {
+      alert("Không tìm thấy ID Coach.");
+      location.replace("./coaches.html");
+      return;
+    }
+
+    const { data, error } =
+      await sb
+        .from("coaches")
+        .select(`
+          id,
+          coach_code,
+          full_name,
+          phone,
+          email,
+          preferred_area,
+          preferred_ward,
+          status,
+          note
+        `)
+        .eq("id", coachId)
+        .single();
+
+    if (error || !data) {
+      console.error(error);
+      alert("Không tải được hồ sơ Coach.");
+      return;
+    }
+
+    show("coachName", data.full_name);
+    show("coachCode", data.coach_code);
+    show("phone", data.phone);
+    show("email", data.email);
+    show("area", data.preferred_area);
+    show("ward", data.preferred_ward);
+    show("status", data.status);
+    show("note", data.note);
+  }
+
+  async function init() {
+
+    const ok =
+      await checkAdmin();
+
+    if (!ok) return;
+
+    await loadCoach();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
