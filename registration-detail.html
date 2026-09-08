@@ -356,46 +356,57 @@
   btn.style.fontWeight = "900";
   btn.style.cursor = "pointer";
 
-  btn.addEventListener("click", async () => {
+  btn.onclick = async function () {
 
-    const confirmed =
-      window.confirm(
-        "Xác nhận duyệt đăng ký học này?"
-      );
+  btn.disabled = true;
+  btn.textContent = "ĐANG DUYỆT...";
 
-    if (!confirmed) return;
+  try {
 
-    btn.disabled = true;
-    btn.textContent = "ĐANG DUYỆT...";
-
-    const { error } =
+    const { data, error } =
       await sb
         .from("registrations")
         .update({
-          status: "Đã duyệt",
-          updated_at: new Date().toISOString()
+          status: "Đã duyệt"
         })
-        .eq("id", registrationId);
+        .eq(
+          "id",
+          Number(registrationId)
+        )
+        .select("id, status")
+        .single();
 
     if (error) {
-
-      console.error(error);
-
-      alert(
-        "Không duyệt được đăng ký: " +
-        error.message
-      );
-
-      btn.disabled = false;
-      btn.textContent = "DUYỆT ĐĂNG KÝ";
-
-      return;
+      throw error;
     }
 
-    statusEl.textContent = "Đã duyệt";
+    if (!data) {
+      throw new Error(
+        "Supabase không trả về đăng ký vừa cập nhật."
+      );
+    }
+
+    statusEl.textContent =
+      data.status;
 
     btn.remove();
-  });
+
+    alert("Đã duyệt đăng ký thành công.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Lỗi duyệt đăng ký: " +
+      (error.message || error)
+    );
+
+    btn.disabled = false;
+    btn.textContent =
+      "DUYỆT ĐĂNG KÝ";
+  }
+};
 
   infoCard.appendChild(btn);
 }
