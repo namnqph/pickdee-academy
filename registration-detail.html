@@ -319,14 +319,100 @@
     }
   }
 
-  async function init() {
-    const ok = await checkAdmin();
-    if (!ok) return;
+ async function setupApproveButton() {
 
-    await loadRegistration();
+  const statusEl =
+    document.getElementById("status");
+
+  if (
+    !statusEl ||
+    statusEl.textContent.trim() !== "Mới đăng ký"
+  ) {
+    return;
   }
 
-  init();
+  const infoCard =
+    document.querySelector(".grid .card");
+
+  if (
+    !infoCard ||
+    document.getElementById("approveRegistrationBtn")
+  ) {
+    return;
+  }
+
+  const btn =
+    document.createElement("button");
+
+  btn.id = "approveRegistrationBtn";
+  btn.textContent = "DUYỆT ĐĂNG KÝ";
+
+  btn.style.marginTop = "18px";
+  btn.style.padding = "12px 16px";
+  btn.style.border = "0";
+  btn.style.borderRadius = "10px";
+  btn.style.background = "#d8ff45";
+  btn.style.color = "#172600";
+  btn.style.fontWeight = "900";
+  btn.style.cursor = "pointer";
+
+  btn.addEventListener("click", async () => {
+
+    const confirmed =
+      window.confirm(
+        "Xác nhận duyệt đăng ký học này?"
+      );
+
+    if (!confirmed) return;
+
+    btn.disabled = true;
+    btn.textContent = "ĐANG DUYỆT...";
+
+    const { error } =
+      await sb
+        .from("registrations")
+        .update({
+          status: "Đã duyệt",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", registrationId);
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "Không duyệt được đăng ký: " +
+        error.message
+      );
+
+      btn.disabled = false;
+      btn.textContent = "DUYỆT ĐĂNG KÝ";
+
+      return;
+    }
+
+    statusEl.textContent = "Đã duyệt";
+
+    btn.remove();
+  });
+
+  infoCard.appendChild(btn);
+}
+
+
+async function init() {
+
+  const ok = await checkAdmin();
+
+  if (!ok) return;
+
+  await loadRegistration();
+
+  await setupApproveButton();
+}
+
+init();
 </script>
 
 </body>
