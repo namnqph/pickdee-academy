@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Tạo đăng ký học | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .container {
+      width: min(760px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .eyebrow {
+      margin-top: 26px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 8px;
+      font-size: clamp(34px, 6vw, 52px);
+    }
+
+    .student {
+      margin-bottom: 26px;
+      color: rgba(255,255,255,.68);
+    }
+
+    .card {
+      background: rgba(6,39,88,.76);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 7px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.07);
+      color: white;
+      outline: none;
+    }
+
+    select option {
+      color: black;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 11px;
+      background: #d8ff45;
+      color: #172600;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .error {
+      color: #ffb0b0;
+    }
+
+    .success {
+      color: #d8ff45;
+    }
+
+    @media (max-width: 650px) {
+      .two {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+</header>
+
+<main class="container">
+
+  <a id="backLink" class="back" href="./students.html">
+    ← Hồ sơ học viên
+  </a>
+
+  <div class="eyebrow">
+    QUẢN LÝ HỌC VIÊN
+  </div>
+
+  <h1>Tạo đăng ký học</h1>
+
+  <div class="student">
+    Học viên:
+    <strong id="studentName">Đang tải...</strong>
+    <span id="studentCode"></span>
+  </div>
+
+  <form id="registrationForm" class="card">
+
+    <div class="field">
+      <label>Gói học *</label>
+
+      <select id="packageName" required>
+        <option value="">-- Chọn gói học --</option>
+
+        <option value="Cơ bản 10 buổi">
+          Cơ bản 10 buổi
+        </option>
+
+        <option value="Cơ bản 12 buổi">
+          Cơ bản 12 buổi
+        </option>
+
+        <option value="Nâng cao 12 buổi">
+          Nâng cao 12 buổi
+        </option>
+
+        <option value="Theo yêu cầu">
+          Theo yêu cầu
+        </option>
+      </select>
+    </div>
+
+    <div class="two">
+
+      <div class="field">
+        <label>Khu vực muốn học</label>
+        <input id="preferredArea" type="text">
+      </div>
+
+      <div class="field">
+        <label>Xã/Phường muốn học</label>
+        <input id="preferredWard" type="text">
+      </div>
+
+    </div>
+
+    <div class="field">
+      <label>Mã người giới thiệu</label>
+      <input
+        id="referralCode"
+        type="text"
+        placeholder="Có thể để trống"
+      >
+    </div>
+
+    <div class="field">
+      <label>Ghi chú</label>
+      <textarea
+        id="note"
+        placeholder="Nhu cầu học, giờ học mong muốn..."
+      ></textarea>
+    </div>
+
+    <button id="saveBtn" type="submit">
+      TẠO ĐĂNG KÝ HỌC
+    </button>
+
+    <div id="message" class="message"></div>
+
+  </form>
+
+</main>
+
+<script src="./add-registration.js"></script>
+
+</body>
+</html>
