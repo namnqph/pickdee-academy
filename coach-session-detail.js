@@ -349,23 +349,114 @@ async function loadSession() {
   */
 
   if (
-    data.status === "Chờ học"
-  ) {
+  data.status === "Chờ học"
+) {
 
-    messageEl.textContent =
-      "Buổi học đang Chờ học. Nút điểm danh sẽ được kích hoạt ở bước tiếp theo.";
+  completeBtn.disabled = false;
+  absentBtn.disabled = false;
 
-  } else {
+  messageEl.textContent =
+    "Buổi học đang Chờ học. Bạn có thể điểm danh.";
 
-    messageEl.textContent =
-      `Buổi học hiện có trạng thái: ${data.status}`;
-  }
+} else {
 
+  completeBtn.disabled = true;
+  absentBtn.disabled = true;
+
+  messageEl.textContent =
+    `Buổi học đã được xử lý: ${data.status}`;
+}
 
   return true;
 }
 
+/* =====================================
+   ĐIỂM DANH BUỔI HỌC
+===================================== */
 
+async function markSession(action) {
+
+  if (!currentSession) {
+    return;
+  }
+
+  const isComplete =
+    action === "completed";
+
+
+  const confirmText =
+    isComplete
+      ? "Xác nhận HOÀN THÀNH buổi học này?"
+      : "Xác nhận học viên VẮNG buổi này?";
+
+
+  if (!window.confirm(confirmText)) {
+    return;
+  }
+
+
+  completeBtn.disabled = true;
+  absentBtn.disabled = true;
+
+  messageEl.textContent =
+    "Đang xử lý...";
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "coach_mark_session",
+      {
+        p_session_id:
+          currentSession.id,
+
+        p_action:
+          action
+      }
+    );
+
+
+  if (error) {
+
+    console.error(error);
+
+    messageEl.textContent =
+      "Không xử lý được buổi học: " +
+      error.message;
+
+    completeBtn.disabled = false;
+    absentBtn.disabled = false;
+
+    return;
+  }
+
+
+  messageEl.textContent =
+    isComplete
+      ? "✓ Đã hoàn thành buổi học."
+      : "✓ Đã ghi nhận học viên vắng.";
+
+
+  setTimeout(() => {
+
+    location.reload();
+
+  }, 700);
+}
+
+
+completeBtn.addEventListener(
+  "click",
+  () => markSession("completed")
+);
+
+
+absentBtn.addEventListener(
+  "click",
+  () => markSession("absent")
+);
 /* =====================================
    START
 ===================================== */
