@@ -894,46 +894,47 @@
 
 
     /* ===============================
-       LẤY AVATAR_PATH
-    ================================ */
+   LẤY AVATAR CỦA CHÍNH HỌC VIÊN
+   QUA RPC BẢO MẬT
+================================ */
 
-    const {
-      data: student,
-      error: studentError
-    } =
-      await avatarSb
-        .from("students")
-        .select(`
-          id,
-          avatar_path
-        `)
-        .eq(
-          "id",
-          Number(studentId)
-        )
-        .single();
+const {
+  data: avatarPath,
+  error: avatarError
+} =
+  await avatarSb.rpc(
+    "get_my_student_avatar"
+  );
 
 
-    if (
-      studentError ||
-      !student
-    ) {
+if (avatarError) {
 
-      console.error(
-        "Không tải được hồ sơ avatar:",
-        studentError
-      );
+  console.error(
+    "Không lấy được avatar:",
+    avatarError
+  );
 
+  showAvatarMessage(
+    "Không tải được thông tin ảnh đại diện.",
+    true
+  );
 
-      showAvatarMessage(
-        "Không tải được thông tin ảnh đại diện.",
-        true
-      );
-
-      return;
-    }
+  return;
+}
 
 
+currentStudent = {
+  id: Number(studentId),
+  avatar_path: avatarPath || null
+};
+
+
+await showAvatar(
+  avatarPath || null
+);
+
+
+showAvatarMessage("");
     currentStudent =
       student;
 
