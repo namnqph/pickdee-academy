@@ -98,6 +98,87 @@
       font-size: 21px;
     }
 
+    /* =========================================
+       ẢNH ĐẠI DIỆN
+    ========================================== */
+
+    .profile-main {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .avatar-area {
+      text-align: center;
+    }
+
+    .avatar-frame {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      overflow: hidden;
+      background:
+        linear-gradient(
+          145deg,
+          rgba(216,255,69,.18),
+          rgba(255,255,255,.05)
+        );
+      border: 3px solid rgba(216,255,69,.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #avatarImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #avatarPlaceholder {
+      font-size: 62px;
+      opacity: .75;
+    }
+
+    .avatar-button {
+      width: 100%;
+      max-width: 150px;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 10px;
+      background: #d8ff45;
+      color: #172600;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .avatar-button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #avatarInput {
+      display: none;
+    }
+
+    #avatarMessage {
+      margin-top: 9px;
+      min-height: 18px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(255,255,255,.62);
+    }
+
+    .avatar-help {
+      margin-top: 7px;
+      color: rgba(255,255,255,.45);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
     .profile-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -177,6 +258,10 @@
     }
 
     @media (max-width: 700px) {
+      .profile-main {
+        grid-template-columns: 1fr;
+      }
+
       .profile-grid,
       .menu-grid {
         grid-template-columns: 1fr;
@@ -188,6 +273,11 @@
 
       #userEmail {
         display: none;
+      }
+
+      .avatar-frame {
+        width: 135px;
+        height: 135px;
       }
     }
   </style>
@@ -238,86 +328,151 @@
 
     <h2>👤 Hồ sơ của tôi</h2>
 
-    <div class="profile-grid">
+    <div class="profile-main">
 
-      <div>
+      <!-- =================================
+           ẢNH ĐẠI DIỆN
+      ================================== -->
 
-        <div class="item">
-          <div class="label">
-            Số điện thoại
-          </div>
-          <div
-            class="value"
-            id="phone"
+      <div class="avatar-area">
+
+        <div class="avatar-frame">
+
+          <img
+            id="avatarImage"
+            alt="Ảnh đại diện học viên"
           >
-            —
+
+          <div id="avatarPlaceholder">
+            👤
           </div>
+
         </div>
 
-        <div class="item">
-          <div class="label">
-            Email
-          </div>
-          <div
-            class="value"
-            id="email"
-          >
-            —
-          </div>
-        </div>
 
-        <div class="item">
-          <div class="label">
-            Giới tính
-          </div>
-          <div
-            class="value"
-            id="gender"
-          >
-            —
-          </div>
+        <input
+          id="avatarInput"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+        >
+
+
+        <button
+          id="changeAvatarBtn"
+          class="avatar-button"
+          type="button"
+        >
+          📷 ĐỔI ẢNH
+        </button>
+
+
+        <div id="avatarMessage"></div>
+
+        <div class="avatar-help">
+          JPG, PNG hoặc WEBP.<br>
+          Tối đa 5MB.
         </div>
 
       </div>
 
 
-      <div>
+      <!-- =================================
+           THÔNG TIN HỌC VIÊN
+      ================================== -->
 
-        <div class="item">
-          <div class="label">
-            Khu vực muốn học
+      <div class="profile-grid">
+
+        <div>
+
+          <div class="item">
+            <div class="label">
+              Số điện thoại
+            </div>
+
+            <div
+              class="value"
+              id="phone"
+            >
+              —
+            </div>
           </div>
-          <div
-            class="value"
-            id="area"
-          >
-            —
+
+
+          <div class="item">
+            <div class="label">
+              Email
+            </div>
+
+            <div
+              class="value"
+              id="email"
+            >
+              —
+            </div>
           </div>
+
+
+          <div class="item">
+            <div class="label">
+              Giới tính
+            </div>
+
+            <div
+              class="value"
+              id="gender"
+            >
+              —
+            </div>
+          </div>
+
         </div>
 
-        <div class="item">
-          <div class="label">
-            Xã/Phường muốn học
-          </div>
-          <div
-            class="value"
-            id="ward"
-          >
-            —
-          </div>
-        </div>
 
-        <div class="item">
-          <div class="label">
-            Trạng thái
+        <div>
+
+          <div class="item">
+            <div class="label">
+              Khu vực muốn học
+            </div>
+
+            <div
+              class="value"
+              id="area"
+            >
+              —
+            </div>
           </div>
 
-          <span
-            class="badge"
-            id="status"
-          >
-            —
-          </span>
+
+          <div class="item">
+            <div class="label">
+              Xã/Phường muốn học
+            </div>
+
+            <div
+              class="value"
+              id="ward"
+            >
+              —
+            </div>
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Trạng thái
+            </div>
+
+            <span
+              class="badge"
+              id="status"
+            >
+              —
+            </span>
+
+          </div>
+
         </div>
 
       </div>
@@ -331,7 +486,7 @@
 
     <a
       class="menu-card"
-      href="./student-registrations.html"
+      href="./student-registrations"
     >
       <div class="menu-icon">📚</div>
 
@@ -347,7 +502,7 @@
 
     <a
       class="menu-card"
-      href="./student-sessions.html"
+      href="./student-sessions"
     >
       <div class="menu-icon">📅</div>
 
@@ -363,7 +518,7 @@
 
     <a
       class="menu-card"
-      href="./student-payments.html"
+      href="./student-payments"
     >
       <div class="menu-icon">💰</div>
 
@@ -379,7 +534,7 @@
 
     <a
       class="menu-card"
-      href="./student.html"
+      href="./student"
     >
       <div class="menu-icon">👤</div>
 
@@ -388,7 +543,7 @@
       </div>
 
       <div class="menu-sub">
-        Xem thông tin cá nhân và khu vực học.
+        Xem thông tin cá nhân và ảnh đại diện.
       </div>
     </a>
 
@@ -400,7 +555,427 @@
 </main>
 
 
+<!-- JS cũ đang chạy hồ sơ học viên -->
 <script src="./student.js?v=20260910-1"></script>
+
+
+<!-- =========================================
+     UPLOAD ẢNH ĐẠI DIỆN
+========================================== -->
+
+<script>
+(async function () {
+
+  const avatarInput =
+    document.getElementById("avatarInput");
+
+  const changeAvatarBtn =
+    document.getElementById("changeAvatarBtn");
+
+  const avatarImage =
+    document.getElementById("avatarImage");
+
+  const avatarPlaceholder =
+    document.getElementById("avatarPlaceholder");
+
+  const avatarMessage =
+    document.getElementById("avatarMessage");
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const avatarSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let currentUser = null;
+  let currentStudent = null;
+
+
+  function showAvatarMessage(
+    text,
+    error = false
+  ) {
+
+    avatarMessage.textContent =
+      text || "";
+
+    avatarMessage.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+  }
+
+
+  async function showAvatar(path) {
+
+    if (!path) {
+
+      avatarImage.style.display =
+        "none";
+
+      avatarPlaceholder.style.display =
+        "block";
+
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await avatarSb
+        .storage
+        .from("profile-photos")
+        .createSignedUrl(
+          path,
+          3600
+        );
+
+
+    if (
+      error ||
+      !data?.signedUrl
+    ) {
+
+      console.error(
+        "Không tạo được URL ảnh:",
+        error
+      );
+
+      avatarImage.style.display =
+        "none";
+
+      avatarPlaceholder.style.display =
+        "block";
+
+      return;
+    }
+
+
+    avatarImage.src =
+      data.signedUrl;
+
+
+    avatarImage.onload =
+      () => {
+
+        avatarPlaceholder.style.display =
+          "none";
+
+        avatarImage.style.display =
+          "block";
+
+      };
+
+
+    avatarImage.onerror =
+      () => {
+
+        avatarImage.style.display =
+          "none";
+
+        avatarPlaceholder.style.display =
+          "block";
+
+      };
+  }
+
+
+  async function loadCurrentStudent() {
+
+    const {
+      data: { session }
+    } =
+      await avatarSb.auth.getSession();
+
+
+    if (!session) {
+      return;
+    }
+
+
+    currentUser =
+      session.user;
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await avatarSb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          currentUser.id
+        )
+        .single();
+
+
+    if (
+      profileError ||
+      !profile ||
+      profile.role !== "student"
+    ) {
+      return;
+    }
+
+
+    const {
+      data: student,
+      error
+    } =
+      await avatarSb
+        .from("students")
+        .select(`
+          id,
+          email,
+          avatar_path
+        `)
+        .eq(
+          "email",
+          currentUser.email
+        )
+        .maybeSingle();
+
+
+    if (
+      error ||
+      !student
+    ) {
+
+      console.error(
+        "Không tải được avatar học viên:",
+        error
+      );
+
+      return;
+    }
+
+
+    currentStudent =
+      student;
+
+
+    await showAvatar(
+      student.avatar_path
+    );
+  }
+
+
+  changeAvatarBtn.addEventListener(
+    "click",
+    () => {
+
+      avatarInput.click();
+
+    }
+  );
+
+
+  avatarInput.addEventListener(
+    "change",
+    async () => {
+
+      const file =
+        avatarInput.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+
+      if (
+        !allowedTypes.includes(
+          file.type
+        )
+      ) {
+
+        showAvatarMessage(
+          "Chỉ nhận ảnh JPG, PNG hoặc WEBP.",
+          true
+        );
+
+        avatarInput.value =
+          "";
+
+        return;
+      }
+
+
+      if (
+        file.size >
+        5 * 1024 * 1024
+      ) {
+
+        showAvatarMessage(
+          "Ảnh vượt quá 5MB.",
+          true
+        );
+
+        avatarInput.value =
+          "";
+
+        return;
+      }
+
+
+      if (
+        !currentUser ||
+        !currentStudent
+      ) {
+
+        showAvatarMessage(
+          "Chưa xác định được tài khoản học viên.",
+          true
+        );
+
+        return;
+      }
+
+
+      changeAvatarBtn.disabled =
+        true;
+
+
+      changeAvatarBtn.textContent =
+        "ĐANG TẢI ẢNH...";
+
+
+      showAvatarMessage(
+        "Đang cập nhật ảnh đại diện..."
+      );
+
+
+      try {
+
+        /*
+          Mỗi tài khoản chỉ có 1 object avatar.
+
+          Path:
+          <auth.uid()>/avatar
+
+          Dùng cùng path + upsert=true
+          nên thay ảnh sẽ ghi đè ảnh cũ.
+        */
+
+        const avatarPath =
+          `${currentUser.id}/avatar`;
+
+
+        const {
+          error: uploadError
+        } =
+          await avatarSb
+            .storage
+            .from("profile-photos")
+            .upload(
+              avatarPath,
+              file,
+              {
+                upsert: true,
+                contentType:
+                  file.type,
+                cacheControl:
+                  "3600"
+              }
+            );
+
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+
+        /*
+          RPC chỉ cập nhật avatar_path
+          của đúng học viên đang đăng nhập.
+        */
+
+        const {
+          error: rpcError
+        } =
+          await avatarSb
+            .rpc(
+              "set_my_student_avatar",
+              {
+                p_avatar_path:
+                  avatarPath
+              }
+            );
+
+
+        if (rpcError) {
+          throw rpcError;
+        }
+
+
+        currentStudent.avatar_path =
+          avatarPath;
+
+
+        await showAvatar(
+          avatarPath
+        );
+
+
+        showAvatarMessage(
+          "✓ Đã cập nhật ảnh đại diện."
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+
+        showAvatarMessage(
+          "Không cập nhật được ảnh: " +
+          (error.message || error),
+          true
+        );
+
+      }
+
+      finally {
+
+        changeAvatarBtn.disabled =
+          false;
+
+
+        changeAvatarBtn.textContent =
+          "📷 ĐỔI ẢNH";
+
+
+        avatarInput.value =
+          "";
+
+      }
+
+    }
+  );
+
+
+  await loadCurrentStudent();
+
+})();
+</script>
 
 </body>
 </html>
