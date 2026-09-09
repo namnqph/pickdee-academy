@@ -14,6 +14,10 @@
       box-sizing: border-box;
     }
 
+    html {
+      color-scheme: dark;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -59,6 +63,13 @@
       font-size: 13px;
       font-weight: 800;
       letter-spacing: 1px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
     }
 
     h1 {
@@ -139,9 +150,132 @@
       color: rgba(255,255,255,.6);
     }
 
+    .edit-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      background: #d8ff45;
+      color: #172600;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .edit-form {
+      display: none;
+      margin-bottom: 18px;
+    }
+
+    .edit-form.active {
+      display: block;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 9px;
+      background: #08111d;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select {
+      color-scheme: dark;
+    }
+
+    select option {
+      color: #fff;
+      background: #08111d;
+    }
+
+    select:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 5px;
+    }
+
+    .save-btn,
+    .cancel-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 9px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      border: 0;
+      background: #d8ff45;
+      color: #172600;
+    }
+
+    .cancel-btn {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.07);
+      color: #fff;
+    }
+
+    .save-btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 14px;
+      min-height: 22px;
+    }
+
+    .success {
+      color: #d8ff45;
+    }
+
+    .error {
+      color: #ffb4b4;
+    }
+
     @media (max-width: 760px) {
-      .grid {
+      .grid,
+      .form-grid {
         grid-template-columns: 1fr;
+      }
+
+      .field.full {
+        grid-column: auto;
       }
 
       .container {
@@ -150,6 +284,11 @@
 
       .table-wrap {
         overflow-x: auto;
+      }
+
+      .title-row {
+        align-items: flex-start;
+        flex-direction: column;
       }
     }
   </style>
@@ -175,90 +314,286 @@
     HỒ SƠ HỌC VIÊN
   </div>
 
-  <h1 id="studentName">Đang tải...</h1>
+  <div class="title-row">
+
+    <h1 id="studentName">
+      Đang tải...
+    </h1>
+
+    <button
+      id="editBtn"
+      class="edit-btn"
+      type="button"
+    >
+      ✏️ SỬA HỌC VIÊN
+    </button>
+
+  </div>
+
   <div class="code" id="studentCode"></div>
 
-  <section class="grid">
 
-    <div class="card">
-      <h2>👤 Thông tin học viên</h2>
+  <!-- ==========================
+       FORM SỬA
+  =========================== -->
 
-      <div class="item">
-        <div class="label">Số điện thoại</div>
-        <div class="value" id="phone">—</div>
+  <form
+    id="editForm"
+    class="card edit-form"
+  >
+
+    <h2>✏️ Chỉnh sửa học viên</h2>
+
+    <div class="form-grid">
+
+      <div class="field full">
+        <label>Họ và tên *</label>
+        <input id="editFullName" required>
       </div>
 
-      <div class="item">
-        <div class="label">Email</div>
-        <div class="value" id="email">—</div>
+      <div class="field">
+        <label>Số điện thoại</label>
+        <input
+          id="editPhone"
+          inputmode="tel"
+        >
       </div>
 
-      <div class="item">
-        <div class="label">Ngày sinh</div>
-        <div class="value" id="birthDate">—</div>
+      <div class="field">
+        <label>Email</label>
+        <input
+          id="editEmail"
+          type="email"
+        >
       </div>
 
-      <div class="item">
-        <div class="label">Giới tính</div>
-        <div class="value" id="gender">—</div>
+      <div class="field">
+        <label>Ngày sinh</label>
+        <input
+          id="editBirthDate"
+          type="date"
+        >
       </div>
 
-      <div class="item">
-        <div class="label">Trạng thái</div>
-        <div class="value">
-          <span class="badge" id="status">—</span>
+      <div class="field">
+        <label>Giới tính</label>
+
+        <select id="editGender">
+          <option value="">Chọn</option>
+          <option value="Nam">Nam</option>
+          <option value="Nữ">Nữ</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Khu vực muốn học</label>
+
+        <select id="editArea">
+          <option value="">
+            Chọn Tỉnh/Thành
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Xã/Phường muốn học</label>
+
+        <select
+          id="editWard"
+          disabled
+        >
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label>Địa chỉ</label>
+        <input id="editAddress">
+      </div>
+
+      <div class="field full">
+        <label>Ghi chú</label>
+        <textarea id="editNote"></textarea>
+      </div>
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        id="cancelBtn"
+        class="cancel-btn"
+        type="button"
+      >
+        HỦY
+      </button>
+
+      <button
+        id="saveBtn"
+        class="save-btn"
+        type="submit"
+      >
+        LƯU THAY ĐỔI
+      </button>
+
+    </div>
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </form>
+
+
+  <!-- ==========================
+       CHẾ ĐỘ XEM
+  =========================== -->
+
+  <div id="viewMode">
+
+    <section class="grid">
+
+      <div class="card">
+        <h2>👤 Thông tin học viên</h2>
+
+        <div class="item">
+          <div class="label">
+            Số điện thoại
+          </div>
+          <div class="value" id="phone">
+            —
+          </div>
         </div>
+
+        <div class="item">
+          <div class="label">
+            Email
+          </div>
+          <div class="value" id="email">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Ngày sinh
+          </div>
+          <div class="value" id="birthDate">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Giới tính
+          </div>
+          <div class="value" id="gender">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Trạng thái
+          </div>
+
+          <div class="value">
+            <span
+              class="badge"
+              id="status"
+            >
+              —
+            </span>
+          </div>
+        </div>
+
       </div>
-    </div>
 
-    <div class="card">
-      <h2>📍 Khu vực & ghi chú</h2>
 
-      <div class="item">
-        <div class="label">Khu vực muốn học</div>
-        <div class="value" id="area">—</div>
+      <div class="card">
+
+        <h2>📍 Khu vực & ghi chú</h2>
+
+        <div class="item">
+          <div class="label">
+            Khu vực muốn học
+          </div>
+
+          <div class="value" id="area">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Xã/Phường muốn học
+          </div>
+
+          <div class="value" id="ward">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Địa chỉ
+          </div>
+
+          <div class="value" id="address">
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Ghi chú
+          </div>
+
+          <div class="value" id="note">
+            —
+          </div>
+        </div>
+
       </div>
 
-      <div class="item">
-        <div class="label">Xã/Phường muốn học</div>
-        <div class="value" id="ward">—</div>
-      </div>
+    </section>
 
-      <div class="item">
-        <div class="label">Địa chỉ</div>
-        <div class="value" id="address">—</div>
-      </div>
+  </div>
 
-      <div class="item">
-        <div class="label">Ghi chú</div>
-        <div class="value" id="note">—</div>
-      </div>
-    </div>
 
-  </section>
+  <!-- ==========================
+       ĐĂNG KÝ HỌC
+  =========================== -->
 
   <section class="card registrations">
 
     <h2>📚 Đăng ký học</h2>
-<a
-  id="addRegistrationBtn"
-  href="#"
-  style="
-    display:inline-block;
-    margin-bottom:18px;
-    padding:10px 14px;
-    border-radius:9px;
-    background:#d8ff45;
-    color:#172600;
-    font-weight:800;
-    text-decoration:none;
-  "
->
-  + TẠO ĐĂNG KÝ HỌC
-</a>
+
+    <a
+      id="addRegistrationBtn"
+      href="#"
+      style="
+        display:inline-block;
+        margin-bottom:18px;
+        padding:10px 14px;
+        border-radius:9px;
+        background:#d8ff45;
+        color:#172600;
+        font-weight:800;
+        text-decoration:none;
+      "
+    >
+      + TẠO ĐĂNG KÝ HỌC
+    </a>
+
     <div class="table-wrap">
 
       <table>
+
         <thead>
           <tr>
             <th>Mã ĐK</th>
@@ -271,12 +606,15 @@
         </thead>
 
         <tbody id="registrationBody">
+
           <tr>
             <td colspan="6">
               Đang tải...
             </td>
           </tr>
+
         </tbody>
+
       </table>
 
     </div>
@@ -285,194 +623,931 @@
 
 </main>
 
-<script>
-  const cfg = window.PICKDEE_CONFIG || {};
 
-  const sb = window.supabase.createClient(
+<script>
+
+const cfg =
+  window.PICKDEE_CONFIG || {};
+
+const sb =
+  window.supabase.createClient(
     cfg.SUPABASE_URL,
     cfg.SUPABASE_PUBLISHABLE_KEY
   );
 
-  const params = new URLSearchParams(
+
+const params =
+  new URLSearchParams(
     window.location.search
   );
 
-  const studentId = params.get("id");
+const studentId =
+  params.get("id");
+
+
 document.getElementById(
   "addRegistrationBtn"
 ).href =
   `./add-registration.html?student_id=${encodeURIComponent(studentId)}`;
-  function show(id, value) {
-    document.getElementById(id).textContent =
+
+
+let currentStudent = null;
+
+
+const editForm =
+  document.getElementById("editForm");
+
+const viewMode =
+  document.getElementById("viewMode");
+
+const editBtn =
+  document.getElementById("editBtn");
+
+const cancelBtn =
+  document.getElementById("cancelBtn");
+
+const saveBtn =
+  document.getElementById("saveBtn");
+
+const message =
+  document.getElementById("message");
+
+const editArea =
+  document.getElementById("editArea");
+
+const editWard =
+  document.getElementById("editWard");
+
+
+function show(id, value) {
+
+  document
+    .getElementById(id)
+    .textContent =
       value || "—";
+}
+
+
+function dateVN(value) {
+
+  if (!value) {
+    return "—";
   }
 
-  function dateVN(value) {
-    if (!value) return "—";
+  return new Intl.DateTimeFormat(
+    "vi-VN",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }
+  ).format(
+    new Date(value)
+  );
+}
 
-    return new Intl.DateTimeFormat(
-      "vi-VN",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      }
-    ).format(new Date(value));
+
+/* =========================
+   ADMIN
+========================= */
+
+async function checkAdmin() {
+
+  const {
+    data: { session }
+  } =
+    await sb.auth
+      .getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return false;
   }
 
-  async function checkAdmin() {
 
-    const {
-      data: { session }
-    } = await sb.auth.getSession();
+  show(
+    "userEmail",
+    session.user.email
+  );
 
-    if (!session) {
-      location.replace("./login.html");
-      return false;
-    }
 
-    show(
-      "userEmail",
-      session.user.email
+  const {
+    data: profile
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    !profile ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
     );
 
-    const { data: profile } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-
-    if (!profile || profile.role !== "admin") {
-      location.replace("./login.html");
-      return false;
-    }
-
-    return true;
+    return false;
   }
 
-  async function loadStudent() {
 
-    if (!studentId) {
-      alert("Không tìm thấy ID học viên.");
-      location.replace("./students.html");
-      return;
-    }
+  return true;
+}
 
-    const { data, error } =
-      await sb
-        .from("students")
-        .select("*")
-        .eq("id", studentId)
-        .single();
 
-    if (error || !data) {
-      console.error(error);
-      alert("Không tải được hồ sơ học viên.");
-      return;
-    }
+/* =========================
+   LOAD HỌC VIÊN
+========================= */
 
-    show("studentName", data.full_name);
-    show("studentCode", data.student_code);
+async function loadStudent() {
 
-    show("phone", data.phone);
-    show("email", data.email);
-    show("birthDate", dateVN(data.birth_date));
-    show("gender", data.gender);
-    show("status", data.status);
+  if (!studentId) {
 
-    show(
-      "area",
-      data.preferred_area
+    alert(
+      "Không tìm thấy ID học viên."
     );
 
-    show(
-      "ward",
-      data.preferred_ward
+    location.replace(
+      "./students.html"
     );
 
-    show(
-      "address",
-      data.address
-    );
-
-    show(
-      "note",
-      data.note
-    );
+    return;
   }
 
-  async function loadRegistrations() {
 
-    const body =
-      document.getElementById(
-        "registrationBody"
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("students")
+      .select("*")
+      .eq(
+        "id",
+        studentId
+      )
+      .single();
+
+
+  if (
+    error ||
+    !data
+  ) {
+
+    console.error(error);
+
+    alert(
+      "Không tải được hồ sơ học viên."
+    );
+
+    return;
+  }
+
+
+  currentStudent =
+    data;
+
+
+  renderStudent();
+}
+
+
+/* =========================
+   HIỂN THỊ
+========================= */
+
+function renderStudent() {
+
+  if (!currentStudent) {
+    return;
+  }
+
+
+  show(
+    "studentName",
+    currentStudent.full_name
+  );
+
+  show(
+    "studentCode",
+    currentStudent.student_code
+  );
+
+  show(
+    "phone",
+    currentStudent.phone
+  );
+
+  show(
+    "email",
+    currentStudent.email
+  );
+
+  show(
+    "birthDate",
+    dateVN(
+      currentStudent.birth_date
+    )
+  );
+
+  show(
+    "gender",
+    currentStudent.gender
+  );
+
+  show(
+    "status",
+    currentStudent.status
+  );
+
+  show(
+    "area",
+    currentStudent.preferred_area
+  );
+
+  show(
+    "ward",
+    currentStudent.preferred_ward
+  );
+
+  show(
+    "address",
+    currentStudent.address
+  );
+
+  show(
+    "note",
+    currentStudent.note
+  );
+}
+
+
+/* =========================
+   34 TỈNH / THÀNH
+========================= */
+
+async function loadAreas() {
+
+  editArea.disabled = true;
+
+  editArea.innerHTML =
+    `<option value="">
+      Đang tải Tỉnh/Thành...
+    </option>`;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("dm_khu_vuc")
+      .select(
+        "ma_khu_vuc, tinh_thanh"
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "tinh_thanh",
+        { ascending: true }
       );
 
-    const { data, error } =
+
+  if (error) {
+
+    console.error(error);
+
+    editArea.innerHTML =
+      `<option value="">
+        Không tải được Tỉnh/Thành
+      </option>`;
+
+    return;
+  }
+
+
+  editArea.innerHTML =
+    `<option value="">
+      Chọn Tỉnh/Thành
+    </option>`;
+
+
+  data.forEach(area => {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value =
+      area.tinh_thanh;
+
+
+    option.textContent =
+      area.tinh_thanh;
+
+
+    option.dataset.maKhuVuc =
+      area.ma_khu_vuc;
+
+
+    editArea.appendChild(
+      option
+    );
+
+  });
+
+
+  editArea.disabled = false;
+}
+
+
+/* =========================
+   XÃ / PHƯỜNG
+========================= */
+
+async function loadWards(
+  maKhuVuc,
+  selectedWard = ""
+) {
+
+  editWard.disabled = true;
+
+  editWard.innerHTML =
+    `<option value="">
+      Đang tải Xã/Phường...
+    </option>`;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("dm_xa_phuong")
+      .select(
+        "ma_xa_phuong, ten_xa_phuong"
+      )
+      .eq(
+        "ma_khu_vuc",
+        maKhuVuc
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "ten_xa_phuong",
+        { ascending: true }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    editWard.innerHTML =
+      `<option value="">
+        Không tải được Xã/Phường
+      </option>`;
+
+    return;
+  }
+
+
+  editWard.innerHTML =
+    `<option value="">
+      Chọn Xã/Phường
+    </option>`;
+
+
+  data.forEach(ward => {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value =
+      ward.ten_xa_phuong;
+
+
+    option.textContent =
+      ward.ten_xa_phuong;
+
+
+    editWard.appendChild(
+      option
+    );
+
+  });
+
+
+  editWard.disabled =
+    false;
+
+
+  if (selectedWard) {
+
+    editWard.value =
+      selectedWard;
+  }
+}
+
+
+/* =========================
+   MỞ FORM SỬA
+========================= */
+
+async function openEdit() {
+
+  if (!currentStudent) {
+    return;
+  }
+
+
+  message.textContent = "";
+
+
+  document.getElementById(
+    "editFullName"
+  ).value =
+    currentStudent.full_name || "";
+
+
+  document.getElementById(
+    "editPhone"
+  ).value =
+    currentStudent.phone || "";
+
+
+  document.getElementById(
+    "editEmail"
+  ).value =
+    currentStudent.email || "";
+
+
+  document.getElementById(
+    "editBirthDate"
+  ).value =
+    currentStudent.birth_date || "";
+
+
+  document.getElementById(
+    "editGender"
+  ).value =
+    currentStudent.gender || "";
+
+
+  document.getElementById(
+    "editAddress"
+  ).value =
+    currentStudent.address || "";
+
+
+  document.getElementById(
+    "editNote"
+  ).value =
+    currentStudent.note || "";
+
+
+  await loadAreas();
+
+
+  editArea.value =
+    currentStudent.preferred_area || "";
+
+
+  if (
+    currentStudent.preferred_area
+  ) {
+
+    const selectedOption =
+      editArea.options[
+        editArea.selectedIndex
+      ];
+
+
+    const maKhuVuc =
+      selectedOption?.dataset
+        ?.maKhuVuc;
+
+
+    if (maKhuVuc) {
+
+      await loadWards(
+        maKhuVuc,
+        currentStudent.preferred_ward || ""
+      );
+    }
+
+  }
+
+
+  viewMode.style.display =
+    "none";
+
+
+  editForm.classList.add(
+    "active"
+  );
+
+
+  editBtn.style.display =
+    "none";
+}
+
+
+/* =========================
+   ĐỔI TỈNH
+========================= */
+
+editArea.addEventListener(
+  "change",
+  async () => {
+
+    editWard.disabled =
+      true;
+
+
+    editWard.innerHTML =
+      `<option value="">
+        Chọn Tỉnh/Thành trước
+      </option>`;
+
+
+    const selectedOption =
+      editArea.options[
+        editArea.selectedIndex
+      ];
+
+
+    const maKhuVuc =
+      selectedOption?.dataset
+        ?.maKhuVuc;
+
+
+    if (!maKhuVuc) {
+      return;
+    }
+
+
+    await loadWards(
+      maKhuVuc
+    );
+
+  }
+);
+
+
+/* =========================
+   NÚT SỬA
+========================= */
+
+editBtn.addEventListener(
+  "click",
+  openEdit
+);
+
+
+/* =========================
+   HỦY
+========================= */
+
+cancelBtn.addEventListener(
+  "click",
+  () => {
+
+    editForm.classList.remove(
+      "active"
+    );
+
+
+    viewMode.style.display =
+      "block";
+
+
+    editBtn.style.display =
+      "inline-block";
+
+
+    message.textContent = "";
+
+  }
+);
+
+
+/* =========================
+   LƯU THAY ĐỔI
+========================= */
+
+editForm.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+
+    const fullName =
+      document.getElementById(
+        "editFullName"
+      ).value.trim();
+
+
+    if (!fullName) {
+
+      message.textContent =
+        "Hãy nhập họ và tên học viên.";
+
+      message.className =
+        "message error";
+
+      return;
+    }
+
+
+    saveBtn.disabled =
+      true;
+
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    const updateData = {
+
+      full_name:
+        fullName,
+
+      phone:
+        document.getElementById(
+          "editPhone"
+        ).value.trim() || null,
+
+      email:
+        document.getElementById(
+          "editEmail"
+        ).value.trim() || null,
+
+      birth_date:
+        document.getElementById(
+          "editBirthDate"
+        ).value || null,
+
+      gender:
+        document.getElementById(
+          "editGender"
+        ).value || null,
+
+      preferred_area:
+        editArea.value.trim() || null,
+
+      preferred_ward:
+        editWard.value.trim() || null,
+
+      address:
+        document.getElementById(
+          "editAddress"
+        ).value.trim() || null,
+
+      note:
+        document.getElementById(
+          "editNote"
+        ).value.trim() || null
+    };
+
+
+    const {
+      data,
+      error
+    } =
       await sb
-        .from("registrations")
+        .from("students")
+        .update(
+          updateData
+        )
+        .eq(
+          "id",
+          studentId
+        )
         .select("*")
-        .eq("student_id", studentId)
-        .order(
-          "created_at",
-          { ascending: false }
-        );
+        .single();
+
 
     if (error) {
-      body.innerHTML = `
-        <tr>
-          <td colspan="6">
-            Không tải được đăng ký học.
-          </td>
-        </tr>
-      `;
+
+      console.error(error);
+
+
+      message.textContent =
+        "Không lưu được thay đổi: " +
+        error.message;
+
+
+      message.className =
+        "message error";
+
+
+      saveBtn.disabled =
+        false;
+
+
+      saveBtn.textContent =
+        "LƯU THAY ĐỔI";
+
+
       return;
     }
 
-    if (!data || !data.length) {
-      body.innerHTML = `
-        <tr>
-          <td colspan="6" class="empty">
-            Học viên này chưa có đăng ký học.
-          </td>
-        </tr>
-      `;
-      return;
-    }
 
-    body.innerHTML =
-      data.map(r => `
+    currentStudent =
+      data;
+
+
+    renderStudent();
+
+
+    message.textContent =
+      "Đã cập nhật học viên thành công.";
+
+
+    message.className =
+      "message success";
+
+
+    setTimeout(
+      () => {
+
+        editForm.classList.remove(
+          "active"
+        );
+
+
+        viewMode.style.display =
+          "block";
+
+
+        editBtn.style.display =
+          "inline-block";
+
+
+        saveBtn.disabled =
+          false;
+
+
+        saveBtn.textContent =
+          "LƯU THAY ĐỔI";
+
+
+        message.textContent = "";
+
+      },
+      700
+    );
+
+  }
+);
+
+
+/* =========================
+   ĐĂNG KÝ HỌC
+========================= */
+
+async function loadRegistrations() {
+
+  const body =
+    document.getElementById(
+      "registrationBody"
+    );
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("registrations")
+      .select("*")
+      .eq(
+        "student_id",
+        studentId
+      )
+      .order(
+        "created_at",
+        { ascending: false }
+      );
+
+
+  if (error) {
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="6">
+          Không tải được đăng ký học.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  if (
+    !data ||
+    !data.length
+  ) {
+
+    body.innerHTML = `
+      <tr>
+        <td
+          colspan="6"
+          class="empty"
+        >
+          Học viên này chưa có đăng ký học.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  body.innerHTML =
+    data.map(r => `
       <tr
-  style="cursor:pointer"
-  onclick="window.location.href='./registration-detail.html?id=${r.id}'"
->
-          <td>${r.registration_code || "—"}</td>
-          <td>${r.package_name || "—"}</td>
-          <td>
-            <span class="badge">
-              ${r.status || "—"}
-            </span>
-          </td>
-          <td>${r.source || "—"}</td>
-          <td>${r.referral_code || "—"}</td>
-          <td>${dateVN(r.created_at)}</td>
-        </tr>
-      `).join("");
+        style="cursor:pointer"
+        onclick="window.location.href='./registration-detail.html?id=${r.id}'"
+      >
+
+        <td>
+          ${r.registration_code || "—"}
+        </td>
+
+        <td>
+          ${r.package_name || "—"}
+        </td>
+
+        <td>
+          <span class="badge">
+            ${r.status || "—"}
+          </span>
+        </td>
+
+        <td>
+          ${r.source || "—"}
+        </td>
+
+        <td>
+          ${r.referral_code || "—"}
+        </td>
+
+        <td>
+          ${dateVN(r.created_at)}
+        </td>
+
+      </tr>
+    `).join("");
+}
+
+
+/* =========================
+   START
+========================= */
+
+async function init() {
+
+  const ok =
+    await checkAdmin();
+
+
+  if (!ok) {
+    return;
   }
 
-  async function init() {
 
-    const ok =
-      await checkAdmin();
+  await loadStudent();
 
-    if (!ok) return;
+  await loadRegistrations();
+}
 
-    await loadStudent();
-    await loadRegistrations();
-  }
 
-  init();
+init();
+
 </script>
 
 </body>
