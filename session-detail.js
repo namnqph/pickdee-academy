@@ -25,6 +25,7 @@ const messageEl =
 
 let currentSession = null;
 
+
 function one(value) {
   if (Array.isArray(value)) {
     return value[0] || null;
@@ -32,6 +33,7 @@ function one(value) {
 
   return value || null;
 }
+
 
 function show(id, value) {
   const el = document.getElementById(id);
@@ -46,6 +48,7 @@ function show(id, value) {
       : value;
 }
 
+
 function formatDate(value) {
   if (!value) return "—";
 
@@ -56,18 +59,23 @@ function formatDate(value) {
   );
 }
 
+
 function formatTime(value) {
   if (!value) return "—";
 
   return String(value).slice(0, 5);
 }
 
+
 function message(text, error = false) {
+  if (!messageEl) return;
+
   messageEl.textContent = text;
 
   messageEl.style.color =
     error ? "#ff8a8a" : "#b7ff00";
 }
+
 
 async function checkLogin() {
   const {
@@ -79,14 +87,21 @@ async function checkLogin() {
     return false;
   }
 
-  userEmail.textContent =
-    session.user.email || "";
+  if (userEmail) {
+    userEmail.textContent =
+      session.user.email || "";
+  }
 
   return true;
 }
 
+
 function updateButtons() {
-  if (!currentSession) return;
+  if (!currentSession) {
+    completeBtn.disabled = true;
+    absentBtn.disabled = true;
+    return;
+  }
 
   const status =
     currentSession.status || "";
@@ -98,6 +113,7 @@ function updateButtons() {
   completeBtn.disabled = finished;
   absentBtn.disabled = finished;
 }
+
 
 async function loadSession() {
   if (!sessionId) {
@@ -230,6 +246,7 @@ async function loadSession() {
   updateButtons();
 }
 
+
 async function changeStatus(
   nextStatus,
   confirmText
@@ -263,7 +280,7 @@ async function changeStatus(
 
     message(
       "Không xử lý được buổi học: " +
-        (error.message || error),
+      (error.message || error),
       true
     );
 
@@ -293,56 +310,7 @@ async function changeStatus(
 
   updateButtons();
 }
-  if (!currentSession) return;
 
-  const ok =
-    window.confirm(confirmText);
-
-  if (!ok) return;
-
-  completeBtn.disabled = true;
-  absentBtn.disabled = true;
-
-  message("Đang cập nhật...");
-
-  const { error } = await sb
-    .from("class_sessions")
-    .update({
-      status: nextStatus,
-      updated_at:
-        new Date().toISOString()
-    })
-    .eq("id", currentSession.id);
-
-  if (error) {
-    console.error(error);
-
-    message(
-      "Không cập nhật được: " +
-      (error.message || error),
-      true
-    );
-
-    completeBtn.disabled = false;
-    absentBtn.disabled = false;
-
-    return;
-  }
-
-  currentSession.status =
-    nextStatus;
-
-  show(
-    "status",
-    nextStatus
-  );
-
-  message(
-    `Đã chuyển buổi học sang "${nextStatus}".`
-  );
-
-  updateButtons();
-}
 
 completeBtn.addEventListener(
   "click",
@@ -354,6 +322,7 @@ completeBtn.addEventListener(
   }
 );
 
+
 absentBtn.addEventListener(
   "click",
   () => {
@@ -364,7 +333,11 @@ absentBtn.addEventListener(
   }
 );
 
+
 async function init() {
+  completeBtn.disabled = true;
+  absentBtn.disabled = true;
+
   const ok =
     await checkLogin();
 
@@ -372,5 +345,6 @@ async function init() {
 
   await loadSession();
 }
+
 
 init();
