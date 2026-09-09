@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Lịch học của tôi | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+    }
+
+    .logout {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .container {
+      width: min(1150px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin-top: 25px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.62);
+      margin-bottom: 22px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .summary-card,
+    .card {
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+    }
+
+    .summary-card {
+      padding: 18px;
+    }
+
+    .summary-label {
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .summary-value {
+      color: #d8ff45;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .card {
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+    }
+
+    th,
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.12);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    #message {
+      margin-bottom: 15px;
+      color: #ffb0b0;
+      font-weight: 700;
+    }
+
+    #empty {
+      display: none;
+      padding: 32px;
+      text-align: center;
+      color: rgba(255,255,255,.62);
+    }
+
+    @media (max-width: 700px) {
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      #userEmail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="user-area">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    class="back"
+    href="./student.html"
+  >
+    ← Khu vực học viên
+  </a>
+
+  <div class="eyebrow">
+    KHU VỰC HỌC VIÊN
+  </div>
+
+  <h1>Lịch học của tôi</h1>
+
+  <div class="sub">
+    Theo dõi các buổi học thuộc gói học của bạn.
+  </div>
+
+
+  <section class="summary">
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Đã sử dụng
+      </div>
+
+      <div
+        id="usedSessions"
+        class="summary-value"
+      >
+        0
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Tổng số buổi
+      </div>
+
+      <div
+        id="totalSessions"
+        class="summary-value"
+      >
+        —
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Còn lại
+      </div>
+
+      <div
+        id="remainingSessions"
+        class="summary-value"
+      >
+        —
+      </div>
+    </div>
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <section class="card">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Mã buổi</th>
+            <th>Buổi số</th>
+            <th>Ngày</th>
+            <th>Giờ</th>
+            <th>Coach</th>
+            <th>Sân</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+
+        <tbody id="sessionBody">
+
+          <tr>
+            <td colspan="7">
+              Đang tải lịch học...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <div id="empty">
+        Bạn chưa có lịch học nào.
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script src="./student-sessions.js?v=20260910-1"></script>
+
+</body>
+</html>
