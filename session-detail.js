@@ -97,11 +97,35 @@ async function checkLogin() {
 
 
 function updateButtons() {
+  if (!completeBtn || !absentBtn) {
+    return;
+  }
+
   if (!currentSession) {
     completeBtn.disabled = true;
     absentBtn.disabled = true;
     return;
   }
+
+  const status = String(
+    currentSession.status || ""
+  ).trim();
+
+  const finished =
+    status === "Đã hoàn thành" ||
+    status === "Vắng";
+
+  if (finished) {
+    completeBtn.disabled = true;
+    absentBtn.disabled = true;
+  } else {
+    completeBtn.disabled = false;
+    absentBtn.disabled = false;
+
+    completeBtn.removeAttribute("disabled");
+    absentBtn.removeAttribute("disabled");
+  }
+}
 
   const status =
     currentSession.status || "";
@@ -335,15 +359,13 @@ absentBtn.addEventListener(
 
 
 async function init() {
-  completeBtn.disabled = true;
-  absentBtn.disabled = true;
-
-  const ok =
-    await checkLogin();
+  const ok = await checkLogin();
 
   if (!ok) return;
 
   await loadSession();
+
+  updateButtons();
 }
 
 
