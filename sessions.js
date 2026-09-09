@@ -83,8 +83,18 @@ function renderSessions(rows) {
       return `
         <tr>
           <td>
-            <strong>${escapeHtml(item.session_code)}</strong>
-          </td>
+           <td>
+  <a
+    href="./session-detail.html?id=${encodeURIComponent(item.id)}"
+    style="
+      color:inherit;
+      text-decoration:none;
+      font-weight:800;
+    "
+  >
+    ${escapeHtml(item.session_code)}
+  </a>
+</td>
 
           <td>
             ${escapeHtml(studentName)}
