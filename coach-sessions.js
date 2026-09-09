@@ -29,6 +29,43 @@ const searchInput =
   );
 
 
+const logoutBtn =
+  document.getElementById(
+    "logoutBtn"
+  );
+
+
+logoutBtn.addEventListener(
+  "click",
+  async () => {
+
+    logoutBtn.disabled = true;
+
+
+    const { error } =
+      await sb.auth.signOut();
+
+
+    if (error) {
+
+      console.error(error);
+
+      messageEl.textContent =
+        "Không đăng xuất được. Vui lòng thử lại.";
+
+      logoutBtn.disabled = false;
+
+      return;
+    }
+
+
+    window.location.replace(
+      "/login.html"
+    );
+  }
+);
+
+
 let currentCoach = null;
 let sessions = [];
 
