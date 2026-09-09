@@ -244,6 +244,65 @@ async function changeStatus(
   completeBtn.disabled = true;
   absentBtn.disabled = true;
 
+  message("Đang xử lý...");
+
+  const { data, error } =
+    await sb.rpc(
+      "mark_session_result",
+      {
+        p_session_id:
+          currentSession.id,
+
+        p_result:
+          nextStatus
+      }
+    );
+
+  if (error) {
+    console.error(error);
+
+    message(
+      "Không xử lý được buổi học: " +
+        (error.message || error),
+      true
+    );
+
+    completeBtn.disabled = false;
+    absentBtn.disabled = false;
+
+    return;
+  }
+
+  currentSession.status =
+    nextStatus;
+
+  show(
+    "status",
+    nextStatus
+  );
+
+  if (nextStatus === "Đã hoàn thành") {
+    message(
+      "Đã hoàn thành buổi học, ghi Có mặt và tạo Công Coach."
+    );
+  } else {
+    message(
+      "Đã ghi học viên Vắng."
+    );
+  }
+
+  updateButtons();
+}
+  if (!currentSession) return;
+
+  const ok =
+    window.confirm(confirmText);
+
+  if (!ok) return;
+
+  completeBtn.disabled = true;
+  absentBtn.disabled = true;
+
   message("Đang cập nhật...");
 
   const { error } = await sb
