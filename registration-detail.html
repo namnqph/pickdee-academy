@@ -581,19 +581,144 @@ async function setupCoachAssignment() {
         : "Chưa gán Coach"
     );
 
-    registration.coach_id = coachId;
+   registration.coach_id =
+  coachId;
 
-    btn.disabled = false;
-    btn.textContent = "ĐỔI COACH";
+btn.disabled = false;
 
-    alert("Đã gán Coach thành công.");
-  });
+btn.textContent =
+  "ĐỔI COACH";
+
+await setupCreateSessionButton();
+
+alert(
+  "Đã gán Coach thành công."
+);
 
   wrap.appendChild(label);
   wrap.appendChild(select);
   wrap.appendChild(btn);
 
   infoCard.appendChild(wrap);
+}async function setupCreateSessionButton() {
+
+  const infoCard =
+    document.querySelector(".grid .card");
+
+  const statusEl =
+    document.getElementById("status");
+
+  if (
+    !infoCard ||
+    !statusEl ||
+    !registrationId
+  ) {
+    return;
+  }
+
+  /*
+    Xóa nút cũ nếu hàm được gọi lại
+  */
+  const oldBtn =
+    document.getElementById(
+      "createSessionBtn"
+    );
+
+  if (oldBtn) {
+    oldBtn.remove();
+  }
+
+  /*
+    Chỉ đăng ký Đã duyệt
+    mới được tạo buổi học
+  */
+  if (
+    statusEl.textContent.trim() !==
+    "Đã duyệt"
+  ) {
+    return;
+  }
+
+  /*
+    Kiểm tra đăng ký đã có Coach
+  */
+  const {
+    data: registration,
+    error
+  } =
+    await sb
+      .from("registrations")
+      .select("coach_id")
+      .eq(
+        "id",
+        Number(registrationId)
+      )
+      .single();
+
+  if (error) {
+    console.error(
+      "Lỗi kiểm tra đăng ký:",
+      error
+    );
+    return;
+  }
+
+  if (
+    !registration ||
+    !registration.coach_id
+  ) {
+    return;
+  }
+
+  /*
+    Tạo nút
+  */
+  const btn =
+    document.createElement("button");
+
+  btn.id =
+    "createSessionBtn";
+
+  btn.type =
+    "button";
+
+  btn.textContent =
+    "+ TẠO BUỔI HỌC";
+
+  btn.style.width =
+    "100%";
+
+  btn.style.marginTop =
+    "18px";
+
+  btn.style.padding =
+    "13px 16px";
+
+  btn.style.border =
+    "0";
+
+  btn.style.borderRadius =
+    "10px";
+
+  btn.style.background =
+    "#d8ff45";
+
+  btn.style.color =
+    "#172600";
+
+  btn.style.fontWeight =
+    "900";
+
+  btn.style.cursor =
+    "pointer";
+
+  btn.onclick = function () {
+
+    window.location.href =
+      `./add-session.html?registration_id=${encodeURIComponent(registrationId)}`;
+  };
+
+  infoCard.appendChild(btn);
 }
 async function init() {
 
@@ -606,6 +731,7 @@ async function init() {
 await setupCoachAssignment();
 
 await setupApproveButton();
+await setupCreateSessionButton();
 }
 
 init();
