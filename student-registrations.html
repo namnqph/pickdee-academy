@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Gói học của tôi | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+    }
+
+    .logout {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .container {
+      width: min(1050px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin-top: 25px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.62);
+      margin-bottom: 24px;
+    }
+
+    .student-card {
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .student-name {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .student-code {
+      color: #d8ff45;
+      margin-top: 5px;
+      font-weight: 800;
+    }
+
+    .registration {
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 14px;
+    }
+
+    .registration-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .registration-code {
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .5px;
+    }
+
+    .package-name {
+      margin-top: 5px;
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #d8ff45;
+      background: rgba(216,255,69,.12);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .label {
+      color: rgba(255,255,255,.48);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    #message {
+      margin: 16px 0;
+      color: #ffb0b0;
+      font-weight: 700;
+    }
+
+    #empty {
+      display: none;
+      padding: 35px;
+      text-align: center;
+      border-radius: 16px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.65);
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .registration-top {
+        flex-direction: column;
+      }
+
+      #userEmail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="user-area">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    class="back"
+    href="./student.html"
+  >
+    ← Khu vực học viên
+  </a>
+
+  <div class="eyebrow">
+    KHU VỰC HỌC VIÊN
+  </div>
+
+  <h1>Gói học của tôi</h1>
+
+  <div class="sub">
+    Các đăng ký học thuộc tài khoản của bạn.
+  </div>
+
+
+  <section class="student-card">
+
+    <div
+      id="studentName"
+      class="student-name"
+    >
+      Đang tải...
+    </div>
+
+    <div
+      id="studentCode"
+      class="student-code"
+    ></div>
+
+  </section>
+
+
+  <div id="message"></div>
+
+  <div id="registrationList"></div>
+
+  <div id="empty">
+    Bạn chưa có đăng ký học nào.
+  </div>
+
+</main>
+
+
+<script src="./student-registrations.js?v=20260910-1"></script>
+
+</body>
+</html>
