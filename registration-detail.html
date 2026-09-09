@@ -347,7 +347,7 @@ show(
     }
   }
 
- async function setupApproveButton() {
+async function setupApproveButton() {
 
   const statusEl =
     document.getElementById("status");
@@ -372,8 +372,11 @@ show(
   const btn =
     document.createElement("button");
 
-  btn.id = "approveRegistrationBtn";
-  btn.textContent = "DUYỆT ĐĂNG KÝ";
+  btn.id =
+    "approveRegistrationBtn";
+
+  btn.textContent =
+    "DUYỆT ĐĂNG KÝ";
 
   btn.style.marginTop = "18px";
   btn.style.padding = "12px 16px";
@@ -384,81 +387,113 @@ show(
   btn.style.fontWeight = "900";
   btn.style.cursor = "pointer";
 
-  btn.onclick = async function () {
+  btn.onclick =
+    async function () {
 
-  btn.disabled = true;
-  btn.textContent = "ĐANG DUYỆT...";
+      btn.disabled = true;
+      btn.textContent =
+        "ĐANG DUYỆT...";
 
-  try {
+      try {
 
-    const { data, error } =
-      await sb
-        .from("registrations")
-        .update({
-          status: "Đã duyệt"
-        })
-        .eq(
-          "id",
-          Number(registrationId)
-        )
-        .select("id, status")
-        .single();
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from("registrations")
+            .update({
+              status: "Đã duyệt"
+            })
+            .eq(
+              "id",
+              Number(registrationId)
+            )
+            .select(
+              "id, status"
+            )
+            .single();
 
-    if (error) {
-      throw error;
-    }
+        if (error) {
+          throw error;
+        }
 
-    if (!data) {
-      throw new Error(
-        "Supabase không trả về đăng ký vừa cập nhật."
-      );
-    }
+        statusEl.textContent =
+          data.status;
 
-    statusEl.textContent =
-      data.status;
+        btn.remove();
 
-    btn.remove();
+        await setupCreateSessionButton();
 
-    alert("Đã duyệt đăng ký thành công.");
+        alert(
+          "Đã duyệt đăng ký thành công."
+        );
 
-  } catch (error) {
+      } catch (error) {
 
-    console.error(error);
+        console.error(error);
 
-    alert(
-      "Lỗi duyệt đăng ký: " +
-      (error.message || error)
-    );
+        alert(
+          "Lỗi duyệt đăng ký: " +
+          (error.message || error)
+        );
 
-    btn.disabled = false;
-    btn.textContent =
-      "DUYỆT ĐĂNG KÝ";
-  }
-};
+        btn.disabled = false;
+
+        btn.textContent =
+          "DUYỆT ĐĂNG KÝ";
+      }
+    };
 
   infoCard.appendChild(btn);
 }
 
-async function setupCoachAssignment() {
-  const infoCard = document.querySelector(".grid .card");
 
-  if (!infoCard || !registrationId) {
+/* =====================================
+   GÁN / ĐỔI COACH
+===================================== */
+
+async function setupCoachAssignment() {
+
+  const infoCard =
+    document.querySelector(
+      ".grid .card"
+    );
+
+  if (
+    !infoCard ||
+    !registrationId
+  ) {
     return;
   }
 
-  const { data: registration, error: registrationError } =
+  const {
+    data: registration,
+    error: registrationError
+  } =
     await sb
       .from("registrations")
       .select("coach_id")
-      .eq("id", registrationId)
+      .eq(
+        "id",
+        registrationId
+      )
       .single();
 
   if (registrationError) {
-    console.error("Lỗi tải Coach của đăng ký:", registrationError);
+
+    console.error(
+      "Lỗi tải Coach của đăng ký:",
+      registrationError
+    );
+
     return;
   }
 
-  const { data: coaches, error: coachesError } =
+  const {
+    data: coaches,
+    error: coachesError
+  } =
     await sb
       .from("coaches")
       .select(`
@@ -466,60 +501,101 @@ async function setupCoachAssignment() {
         coach_code,
         full_name
       `)
-      .order("full_name", { ascending: true });
+      .order(
+        "full_name",
+        { ascending: true }
+      );
 
   if (coachesError) {
-    console.error("Lỗi tải danh sách Coach:", coachesError);
+
+    console.error(
+      "Lỗi tải danh sách Coach:",
+      coachesError
+    );
+
     return;
   }
 
-  if (!coaches || coaches.length === 0) {
+  if (
+    !coaches ||
+    coaches.length === 0
+  ) {
     return;
   }
 
-  const wrap = document.createElement("div");
+  const wrap =
+    document.createElement("div");
+
+  wrap.id =
+    "coachAssignmentWrap";
 
   wrap.style.marginTop = "20px";
   wrap.style.paddingTop = "16px";
-  wrap.style.borderTop = "1px solid rgba(255,255,255,0.12)";
+  wrap.style.borderTop =
+    "1px solid rgba(255,255,255,0.12)";
 
-  const label = document.createElement("div");
+  const label =
+    document.createElement("div");
 
-  label.textContent = "Gán Coach phụ trách";
+  label.textContent =
+    "Gán Coach phụ trách";
+
   label.style.marginBottom = "8px";
   label.style.fontWeight = "700";
 
-  const select = document.createElement("select");
+  const select =
+    document.createElement("select");
 
   select.style.width = "100%";
   select.style.padding = "12px";
   select.style.borderRadius = "10px";
   select.style.marginBottom = "10px";
 
-  const emptyOption = document.createElement("option");
+  const emptyOption =
+    document.createElement("option");
 
   emptyOption.value = "";
-  emptyOption.textContent = "— Chọn Coach —";
 
-  select.appendChild(emptyOption);
+  emptyOption.textContent =
+    "— Chọn Coach —";
 
-  coaches.forEach((coach) => {
-    const option = document.createElement("option");
+  select.appendChild(
+    emptyOption
+  );
 
-    option.value = String(coach.id);
-    option.textContent =
-      `${coach.full_name || "—"} (${coach.coach_code || "—"})`;
+  coaches.forEach(
+    coach => {
 
-    select.appendChild(option);
-  });
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        String(coach.id);
+
+      option.textContent =
+        `${coach.full_name || "—"} (${coach.coach_code || "—"})`;
+
+      select.appendChild(
+        option
+      );
+    }
+  );
 
   if (registration.coach_id) {
-    select.value = String(registration.coach_id);
+
+    select.value =
+      String(
+        registration.coach_id
+      );
   }
 
-  const btn = document.createElement("button");
+  const btn =
+    document.createElement("button");
 
   btn.type = "button";
+
   btn.textContent =
     registration.coach_id
       ? "ĐỔI COACH"
@@ -532,81 +608,112 @@ async function setupCoachAssignment() {
   btn.style.fontWeight = "800";
   btn.style.cursor = "pointer";
 
-  btn.addEventListener("click", async () => {
-    if (!select.value) {
-      alert("Hãy chọn Coach.");
-      return;
-    }
+  btn.addEventListener(
+    "click",
+    async () => {
 
-    btn.disabled = true;
-    btn.textContent = "ĐANG LƯU...";
+      if (!select.value) {
 
-    const coachId = Number(select.value);
+        alert(
+          "Hãy chọn Coach."
+        );
 
-    const { error } =
-      await sb
-        .from("registrations")
-        .update({
-          coach_id: coachId
-        })
-        .eq("id", registrationId);
+        return;
+      }
 
-    if (error) {
-      console.error(error);
+      btn.disabled = true;
 
-      alert(
-        "Không thể gán Coach: " +
-        (error.message || error)
+      btn.textContent =
+        "ĐANG LƯU...";
+
+      const coachId =
+        Number(select.value);
+
+      const {
+        error
+      } =
+        await sb
+          .from("registrations")
+          .update({
+            coach_id: coachId
+          })
+          .eq(
+            "id",
+            registrationId
+          );
+
+      if (error) {
+
+        console.error(error);
+
+        alert(
+          "Không thể gán Coach: " +
+          (error.message || error)
+        );
+
+        btn.disabled = false;
+
+        btn.textContent =
+          registration.coach_id
+            ? "ĐỔI COACH"
+            : "GÁN COACH";
+
+        return;
+      }
+
+      const selectedCoach =
+        coaches.find(
+          coach =>
+            String(coach.id) ===
+            select.value
+        );
+
+      show(
+        "coachLine",
+        selectedCoach
+          ? `${selectedCoach.full_name || "—"} (${selectedCoach.coach_code || "—"})`
+          : "Chưa gán Coach"
       );
+
+      registration.coach_id =
+        coachId;
 
       btn.disabled = false;
+
       btn.textContent =
-        registration.coach_id
-          ? "ĐỔI COACH"
-          : "GÁN COACH";
+        "ĐỔI COACH";
 
-      return;
-    }
+      await setupCreateSessionButton();
 
-    const selectedCoach =
-      coaches.find(
-        (coach) =>
-          String(coach.id) === select.value
+      alert(
+        "Đã gán Coach thành công."
       );
-
-    show(
-      "coachLine",
-      selectedCoach
-        ? `${selectedCoach.full_name || "—"} (${selectedCoach.coach_code || "—"})`
-        : "Chưa gán Coach"
-    );
-
-   registration.coach_id =
-  coachId;
-
-btn.disabled = false;
-
-btn.textContent =
-  "ĐỔI COACH";
-
-await setupCreateSessionButton();
-
-alert(
-  "Đã gán Coach thành công."
-);
+    }
+  );
 
   wrap.appendChild(label);
   wrap.appendChild(select);
   wrap.appendChild(btn);
 
   infoCard.appendChild(wrap);
-}async function setupCreateSessionButton() {
+}
+
+
+/* =====================================
+   NÚT TẠO BUỔI HỌC
+===================================== */
+
+async function setupCreateSessionButton() {
 
   const infoCard =
-    document.querySelector(".grid .card");
+    document.querySelector(
+      ".grid .card"
+    );
 
   const statusEl =
-    document.getElementById("status");
+    document.getElementById(
+      "status"
+    );
 
   if (
     !infoCard ||
@@ -616,9 +723,6 @@ alert(
     return;
   }
 
-  /*
-    Xóa nút cũ nếu hàm được gọi lại
-  */
   const oldBtn =
     document.getElementById(
       "createSessionBtn"
@@ -630,7 +734,6 @@ alert(
 
   /*
     Chỉ đăng ký Đã duyệt
-    mới được tạo buổi học
   */
   if (
     statusEl.textContent.trim() !==
@@ -639,9 +742,6 @@ alert(
     return;
   }
 
-  /*
-    Kiểm tra đăng ký đã có Coach
-  */
   const {
     data: registration,
     error
@@ -656,13 +756,18 @@ alert(
       .single();
 
   if (error) {
+
     console.error(
       "Lỗi kiểm tra đăng ký:",
       error
     );
+
     return;
   }
 
+  /*
+    Phải có Coach
+  */
   if (
     !registration ||
     !registration.coach_id
@@ -670,11 +775,10 @@ alert(
     return;
   }
 
-  /*
-    Tạo nút
-  */
   const btn =
-    document.createElement("button");
+    document.createElement(
+      "button"
+    );
 
   btn.id =
     "createSessionBtn";
@@ -685,53 +789,47 @@ alert(
   btn.textContent =
     "+ TẠO BUỔI HỌC";
 
-  btn.style.width =
-    "100%";
+  btn.style.width = "100%";
+  btn.style.marginTop = "18px";
+  btn.style.padding = "13px 16px";
+  btn.style.border = "0";
+  btn.style.borderRadius = "10px";
+  btn.style.background = "#d8ff45";
+  btn.style.color = "#172600";
+  btn.style.fontWeight = "900";
+  btn.style.cursor = "pointer";
 
-  btn.style.marginTop =
-    "18px";
+  btn.onclick =
+    function () {
 
-  btn.style.padding =
-    "13px 16px";
-
-  btn.style.border =
-    "0";
-
-  btn.style.borderRadius =
-    "10px";
-
-  btn.style.background =
-    "#d8ff45";
-
-  btn.style.color =
-    "#172600";
-
-  btn.style.fontWeight =
-    "900";
-
-  btn.style.cursor =
-    "pointer";
-
-  btn.onclick = function () {
-
-    window.location.href =
-      `./add-session.html?registration_id=${encodeURIComponent(registrationId)}`;
-  };
+      window.location.href =
+        `./add-session.html?registration_id=${encodeURIComponent(registrationId)}`;
+    };
 
   infoCard.appendChild(btn);
 }
+
+
+/* =====================================
+   START
+===================================== */
+
 async function init() {
 
-  const ok = await checkAdmin();
+  const ok =
+    await checkAdmin();
 
-  if (!ok) return;
+  if (!ok) {
+    return;
+  }
 
- await loadRegistration();
+  await loadRegistration();
 
-await setupCoachAssignment();
+  await setupCoachAssignment();
 
-await setupApproveButton();
-await setupCreateSessionButton();
+  await setupApproveButton();
+
+  await setupCreateSessionButton();
 }
 
 init();
