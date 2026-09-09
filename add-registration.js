@@ -8,14 +8,21 @@ const supabaseClient =
   );
 
 const params =
-  new URLSearchParams(
-    window.location.search
-  );
+  new URLSearchParams(window.location.search);
 
 const studentId =
   params.get("student_id");
 
 let currentStudent = null;
+
+const packageSelect =
+  document.getElementById("packageName");
+
+const coachSelect =
+  document.getElementById("coachId");
+
+const startDateInput =
+  document.getElementById("startDate");
 
 const preferredAreaSelect =
   document.getElementById("preferredArea");
@@ -69,13 +76,97 @@ async function init() {
     !profile ||
     profile.role !== "admin"
   ) {
-    window.location.href =
-      "./login.html";
+    window.location.href = "./login.html";
     return;
   }
 
+  await loadPackages();
   await loadAreas();
   await loadStudent();
+}
+
+
+/* ======================================
+   LOAD GÓI HỌC THẬT
+====================================== */
+
+async function loadPackages() {
+
+  packageSelect.disabled = true;
+
+  packageSelect.innerHTML =
+    `<option value="">Đang tải gói học...</option>`;
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("packages")
+      .select(`
+        id,
+        package_code,
+        package_name,
+        total_sessions,
+        price,
+        status
+      `)
+      .eq("status", "Hoạt động")
+      .order("id", { ascending: true });
+
+  if (error) {
+
+    console.error(
+      "Lỗi tải gói học:",
+      error
+    );
+
+    packageSelect.innerHTML =
+      `<option value="">Không tải được gói học</option>`;
+
+    return;
+  }
+
+  packageSelect.innerHTML =
+    `<option value="">-- Chọn gói học --</option>`;
+
+  data.forEach(pkg => {
+
+    const option =
+      document.createElement("option");
+
+    /*
+      value = ID thật của packages
+    */
+    option.value = pkg.id;
+
+    /*
+      Giữ tên gói để lưu package_name
+      tương thích dữ liệu cũ
+    */
+    option.dataset.packageName =
+      pkg.package_name;
+
+    let label =
+      pkg.package_name;
+
+    if (pkg.total_sessions) {
+      label += ` · ${pkg.total_sessions} buổi`;
+    }
+
+    if (pkg.price !== null) {
+
+      label +=
+        ` · ${Number(pkg.price)
+          .toLocaleString("vi-VN")}đ`;
+    }
+
+    option.textContent = label;
+
+    packageSelect.appendChild(option);
+  });
+
+  packageSelect.disabled = false;
 }
 
 
@@ -96,8 +187,13 @@ async function loadAreas() {
   } =
     await supabaseClient
       .from("dm_khu_vuc")
-      .select("ma_khu_vuc, tinh_thanh")
-      .eq("dang_hoat_dong", true)
+      .select(
+        "ma_khu_vuc, tinh_thanh"
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
       .order(
         "tinh_thanh",
         { ascending: true }
@@ -220,6 +316,149 @@ async function loadWards(
 
 
 /* ======================================
+   LOAD COACH PHÙ HỢP
+====================================== */
+
+async function loadCoaches(
+  area = "",
+  ward = ""
+) {
+
+  coachSelect.disabled = true;
+
+  coachSelect.innerHTML =
+    `<option value="">Đang tải Coach...</option>`;
+
+  /*
+    Chưa chọn tỉnh
+    → chưa lọc Coach
+  */
+  if (!area) {
+
+    coachSelect.innerHTML =
+      `<option value="">Chưa phân Coach</option>`;
+
+    coachSelect.disabled = false;
+
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name,
+        preferred_area,
+        preferred_ward,
+        status
+      `)
+      .eq(
+        "preferred_area",
+        area
+      )
+      .in(
+        "status",
+        [
+          "Hoạt động",
+          "Đang hoạt động"
+        ]
+      );
+
+  if (error) {
+
+    console.error(
+      "Lỗi tải Coach:",
+      error
+    );
+
+    coachSelect.innerHTML =
+      `<option value="">Không tải được Coach</option>`;
+
+    return;
+  }
+
+  /*
+    Coach cùng Xã/Phường
+    được ưu tiên lên đầu.
+  */
+
+  const coaches =
+    [...(data || [])]
+      .sort((a, b) => {
+
+        const aSameWard =
+          ward &&
+          a.preferred_ward === ward
+            ? 1
+            : 0;
+
+        const bSameWard =
+          ward &&
+          b.preferred_ward === ward
+            ? 1
+            : 0;
+
+        if (
+          aSameWard !== bSameWard
+        ) {
+          return bSameWard - aSameWard;
+        }
+
+        return (
+          a.full_name || ""
+        ).localeCompare(
+          b.full_name || "",
+          "vi"
+        );
+      });
+
+
+  coachSelect.innerHTML =
+    `<option value="">Chưa phân Coach</option>`;
+
+
+  coaches.forEach(coach => {
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      coach.id;
+
+    let label =
+      `${coach.coach_code || ""} - ${coach.full_name || ""}`;
+
+    if (
+      ward &&
+      coach.preferred_ward === ward
+    ) {
+      label += " · Cùng Xã/Phường";
+    }
+    else if (
+      coach.preferred_ward
+    ) {
+      label +=
+        ` · ${coach.preferred_ward}`;
+    }
+
+    option.textContent = label;
+
+    coachSelect.appendChild(
+      option
+    );
+  });
+
+
+  coachSelect.disabled = false;
+}
+
+
+/* ======================================
    KHI ĐỔI TỈNH
 ====================================== */
 
@@ -238,19 +477,46 @@ preferredAreaSelect.addEventListener(
       ];
 
     const maKhuVuc =
-      selectedOption?.dataset?.maKhuVuc;
+      selectedOption?.dataset
+        ?.maKhuVuc;
 
     if (!maKhuVuc) {
+
+      await loadCoaches("", "");
+
       return;
     }
 
-    await loadWards(maKhuVuc);
+    await loadWards(
+      maKhuVuc
+    );
+
+    await loadCoaches(
+      preferredAreaSelect.value,
+      ""
+    );
   }
 );
 
 
 /* ======================================
-   ĐỌC HỌC VIÊN
+   KHI ĐỔI XÃ / PHƯỜNG
+====================================== */
+
+preferredWardSelect.addEventListener(
+  "change",
+  async () => {
+
+    await loadCoaches(
+      preferredAreaSelect.value,
+      preferredWardSelect.value
+    );
+  }
+);
+
+
+/* ======================================
+   LOAD HỌC VIÊN
 ====================================== */
 
 async function loadStudent() {
@@ -268,10 +534,16 @@ async function loadStudent() {
         preferred_area,
         preferred_ward
       `)
-      .eq("id", studentId)
+      .eq(
+        "id",
+        studentId
+      )
       .single();
 
-  if (error || !data) {
+  if (
+    error ||
+    !data
+  ) {
 
     console.error(error);
 
@@ -284,10 +556,12 @@ async function loadStudent() {
 
   currentStudent = data;
 
+
   document.getElementById(
     "studentName"
   ).textContent =
     data.full_name || "—";
+
 
   document.getElementById(
     "studentCode"
@@ -296,13 +570,20 @@ async function loadStudent() {
       ? ` · ${data.student_code}`
       : "";
 
+
   document.getElementById(
     "backLink"
   ).href =
     `./student-detail.html?id=${encodeURIComponent(studentId)}`;
 
+
+  /*
+    Tự lấy khu vực từ hồ sơ HV
+  */
+
   preferredAreaSelect.value =
     data.preferred_area || "";
+
 
   if (data.preferred_area) {
 
@@ -312,7 +593,8 @@ async function loadStudent() {
       ];
 
     const maKhuVuc =
-      selectedOption?.dataset?.maKhuVuc;
+      selectedOption?.dataset
+        ?.maKhuVuc;
 
     if (maKhuVuc) {
 
@@ -322,6 +604,17 @@ async function loadStudent() {
       );
     }
   }
+
+
+  /*
+    Tải Coach theo địa phương
+    của học viên.
+  */
+
+  await loadCoaches(
+    data.preferred_area || "",
+    data.preferred_ward || ""
+  );
 }
 
 
@@ -330,47 +623,74 @@ async function loadStudent() {
 ====================================== */
 
 document
-  .getElementById("registrationForm")
+  .getElementById(
+    "registrationForm"
+  )
   .addEventListener(
     "submit",
     async event => {
 
       event.preventDefault();
 
+
       const saveBtn =
         document.getElementById(
           "saveBtn"
         );
 
+
       message.textContent = "";
       message.className = "message";
 
+
+      const packageId =
+        packageSelect.value;
+
+
+      const selectedPackage =
+        packageSelect.options[
+          packageSelect.selectedIndex
+        ];
+
+
       const packageName =
-        document.getElementById(
-          "packageName"
-        ).value.trim();
+        selectedPackage?.dataset
+          ?.packageName || "";
+
+
+      const coachId =
+        coachSelect.value;
+
+
+      const startDate =
+        startDateInput.value;
+
 
       const preferredArea =
         preferredAreaSelect
           .value
           .trim();
 
+
       const preferredWard =
         preferredWardSelect
           .value
           .trim();
+
 
       const referralCode =
         document.getElementById(
           "referralCode"
         ).value.trim();
 
+
       const note =
         document.getElementById(
           "note"
         ).value.trim();
 
-      if (!packageName) {
+
+      if (!packageId) {
 
         message.textContent =
           "Hãy chọn gói học.";
@@ -381,10 +701,12 @@ document
         return;
       }
 
+
       saveBtn.disabled = true;
 
       saveBtn.textContent =
         "ĐANG LƯU...";
+
 
       const {
         data,
@@ -393,11 +715,27 @@ document
         await supabaseClient
           .from("registrations")
           .insert({
+
             student_id:
               Number(studentId),
 
+            package_id:
+              Number(packageId),
+
+            /*
+              Vẫn lưu package_name
+              để tương thích dữ liệu cũ
+            */
             package_name:
               packageName,
+
+            coach_id:
+              coachId
+                ? Number(coachId)
+                : null,
+
+            start_date:
+              startDate || null,
 
             preferred_area:
               preferredArea || null,
@@ -416,11 +754,13 @@ document
 
             note:
               note || null
+
           })
           .select(
             "id, registration_code"
           )
           .single();
+
 
       if (error) {
 
@@ -441,12 +781,14 @@ document
         return;
       }
 
+
       message.textContent =
         "Đã tạo đăng ký " +
         data.registration_code;
 
       message.className =
         "message success";
+
 
       setTimeout(
         () => {
