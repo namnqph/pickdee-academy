@@ -57,6 +57,32 @@ function dateVN(value) {
     return "—";
   }
 
+  const text =
+    String(value);
+
+  /*
+    Với cột DATE như:
+    2026-10-16
+
+    Không dùng new Date trực tiếp
+    để tránh lệch ngày do timezone.
+  */
+
+  if (
+    /^\d{4}-\d{2}-\d{2}$/.test(text)
+  ) {
+
+    const [
+      year,
+      month,
+      day
+    ] =
+      text.split("-");
+
+    return `${day}/${month}/${year}`;
+  }
+
+
   return new Intl.DateTimeFormat(
     "vi-VN",
     {
@@ -67,6 +93,105 @@ function dateVN(value) {
   ).format(
     new Date(value)
   );
+}
+
+
+/* =====================================
+   TÍNH SỐ NGÀY CÒN LẠI
+===================================== */
+
+function getRemainingDays(endDate) {
+
+  if (!endDate) {
+    return null;
+  }
+
+
+  const [
+    year,
+    month,
+    day
+  ] =
+    String(endDate)
+      .split("-")
+      .map(Number);
+
+
+  const end =
+    Date.UTC(
+      year,
+      month - 1,
+      day
+    );
+
+
+  const now =
+    new Date();
+
+
+  const today =
+    Date.UTC(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+
+  return Math.ceil(
+    (end - today) /
+    (1000 * 60 * 60 * 24)
+  );
+}
+
+
+function getExpiryText(endDate) {
+
+  if (!endDate) {
+
+    return {
+      text: "Không giới hạn",
+      color: "#d8ff45"
+    };
+  }
+
+
+  const days =
+    getRemainingDays(endDate);
+
+
+  if (days < 0) {
+
+    return {
+      text: "Đã hết hạn",
+      color: "#ff9d9d"
+    };
+  }
+
+
+  if (days === 0) {
+
+    return {
+      text: "Hết hạn hôm nay",
+      color: "#ffcf70"
+    };
+  }
+
+
+  if (days <= 7) {
+
+    return {
+      text:
+        `Còn ${days} ngày · Sắp hết hạn`,
+      color: "#ffcf70"
+    };
+  }
+
+
+  return {
+    text:
+      `Còn ${days} ngày`,
+    color: "#d8ff45"
+  };
 }
 
 
@@ -188,7 +313,7 @@ async function loadStudent(email) {
 
 
 /* =====================================
-   LOAD ĐĂNG KÝ CỦA CHÍNH HỌC VIÊN
+   LOAD GÓI HỌC CỦA CHÍNH HỌC VIÊN
 ===================================== */
 
 async function loadRegistrations() {
@@ -210,6 +335,7 @@ async function loadRegistrations() {
         source,
         referral_code,
         start_date,
+        end_date,
         created_at
       `)
       .eq(
@@ -238,7 +364,9 @@ async function loadRegistrations() {
     data || [];
 
 
-  if (registrations.length === 0) {
+  if (
+    registrations.length === 0
+  ) {
 
     listEl.innerHTML = "";
 
@@ -255,7 +383,15 @@ async function loadRegistrations() {
 
   listEl.innerHTML =
     registrations
-      .map(row => `
+      .map(row => {
+
+        const expiry =
+          getExpiryText(
+            row.end_date
+          );
+
+
+        return `
 
         <section class="registration">
 
@@ -292,6 +428,7 @@ async function loadRegistrations() {
           <div class="grid">
 
             <div>
+
               <div class="label">
                 Ngày đăng ký
               </div>
@@ -301,10 +438,12 @@ async function loadRegistrations() {
                   row.created_at
                 )}
               </div>
+
             </div>
 
 
             <div>
+
               <div class="label">
                 Ngày bắt đầu
               </div>
@@ -314,10 +453,47 @@ async function loadRegistrations() {
                   row.start_date
                 )}
               </div>
+
             </div>
 
 
             <div>
+
+              <div class="label">
+                Hạn gói
+              </div>
+
+              <div class="value">
+                ${dateVN(
+                  row.end_date
+                )}
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <div class="label">
+                Thời gian còn lại
+              </div>
+
+              <div
+                class="value"
+                style="
+                  color:${expiry.color};
+                "
+              >
+                ${escapeHTML(
+                  expiry.text
+                )}
+              </div>
+
+            </div>
+
+
+            <div>
+
               <div class="label">
                 Nguồn
               </div>
@@ -328,10 +504,12 @@ async function loadRegistrations() {
                   "—"
                 )}
               </div>
+
             </div>
 
 
             <div>
+
               <div class="label">
                 Khu vực muốn học
               </div>
@@ -342,10 +520,12 @@ async function loadRegistrations() {
                   "—"
                 )}
               </div>
+
             </div>
 
 
             <div>
+
               <div class="label">
                 Xã/Phường muốn học
               </div>
@@ -356,10 +536,12 @@ async function loadRegistrations() {
                   "—"
                 )}
               </div>
+
             </div>
 
 
             <div>
+
               <div class="label">
                 Mã giới thiệu
               </div>
@@ -370,13 +552,16 @@ async function loadRegistrations() {
                   "—"
                 )}
               </div>
+
             </div>
 
           </div>
 
         </section>
 
-      `)
+      `;
+
+      })
       .join("");
 }
 
