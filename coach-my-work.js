@@ -1,0 +1,518 @@
+const cfg =
+  window.PICKDEE_CONFIG || {};
+
+const sb =
+  window.supabase.createClient(
+    cfg.SUPABASE_URL,
+    cfg.SUPABASE_PUBLISHABLE_KEY
+  );
+
+
+const body =
+  document.getElementById("workBody");
+
+const emptyEl =
+  document.getElementById("empty");
+
+const messageEl =
+  document.getElementById("message");
+
+const searchInput =
+  document.getElementById("search");
+
+
+let currentCoach = null;
+let works = [];
+
+
+/* =====================================
+   HELPERS
+===================================== */
+
+function show(id, value) {
+
+  const el =
+    document.getElementById(id);
+
+  if (!el) return;
+
+  el.textContent =
+    value;
+}
+
+
+function moneyVN(value) {
+
+  return new Intl.NumberFormat(
+    "vi-VN",
+    {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0
+    }
+  ).format(
+    Number(value || 0)
+  );
+}
+
+
+function dateVN(value) {
+
+  if (!value) return "—";
+
+  return new Intl.DateTimeFormat(
+    "vi-VN"
+  ).format(
+    new Date(
+      `${value}T00:00:00`
+    )
+  );
+}
+
+
+function one(value) {
+
+  if (Array.isArray(value)) {
+    return value[0] || null;
+  }
+
+  return value || null;
+}
+
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+/* =====================================
+   LOGIN
+===================================== */
+
+async function checkCoach() {
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return null;
+  }
+
+
+  show(
+    "userEmail",
+    session.user.email || ""
+  );
+
+
+  const {
+    data: profile,
+    error
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    error ||
+    !profile ||
+    profile.role !== "coach"
+  ) {
+
+    alert(
+      "Trang này chỉ dành cho Coach."
+    );
+
+    location.replace(
+      "./login.html"
+    );
+
+    return null;
+  }
+
+
+  return session;
+}
+
+
+/* =====================================
+   COACH HIỆN TẠI
+===================================== */
+
+async function loadCoach(email) {
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name,
+        email
+      `)
+      .eq(
+        "email",
+        email
+      )
+      .maybeSingle();
+
+
+  if (
+    error ||
+    !data
+  ) {
+
+    console.error(error);
+
+    messageEl.textContent =
+      "Không tìm thấy hồ sơ Coach.";
+
+    return false;
+  }
+
+
+  currentCoach = data;
+
+  return true;
+}
+
+
+/* =====================================
+   LOAD CÔNG
+===================================== */
+
+async function loadWorks() {
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("coach_work")
+      .select(`
+        id,
+        session_id,
+        registration_id,
+        coach_id,
+        work_date,
+        pay_period,
+        base_amount,
+        bonus,
+        deduction,
+        total_amount,
+        status,
+        paid_at,
+        class_sessions (
+          id,
+          session_code
+        )
+      `)
+      .eq(
+        "coach_id",
+        currentCoach.id
+      )
+      .order(
+        "work_date",
+        { ascending: false }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="8">
+          Không tải được Công Coach.
+        </td>
+      </tr>
+    `;
+
+    messageEl.textContent =
+      error.message || String(error);
+
+    return;
+  }
+
+
+  works =
+    data || [];
+
+
+  renderSummary();
+
+  renderWorks(
+    works
+  );
+}
+
+
+/* =====================================
+   SUMMARY
+===================================== */
+
+function renderSummary() {
+
+  const totalSessions =
+    works.length;
+
+
+  const totalAmount =
+    works.reduce(
+      (sum, row) =>
+        sum +
+        Number(row.total_amount || 0),
+      0
+    );
+
+
+  const unpaidAmount =
+    works
+      .filter(
+        row =>
+          row.status !== "Đã thanh toán"
+      )
+      .reduce(
+        (sum, row) =>
+          sum +
+          Number(row.total_amount || 0),
+        0
+      );
+
+
+  show(
+    "totalSessions",
+    totalSessions
+  );
+
+  show(
+    "totalAmount",
+    moneyVN(totalAmount)
+  );
+
+  show(
+    "unpaidAmount",
+    moneyVN(unpaidAmount)
+  );
+}
+
+
+/* =====================================
+   RENDER TABLE
+===================================== */
+
+function renderWorks(rows) {
+
+  if (
+    !rows ||
+    rows.length === 0
+  ) {
+
+    body.innerHTML = "";
+
+    emptyEl.style.display =
+      "block";
+
+    return;
+  }
+
+
+  emptyEl.style.display =
+    "none";
+
+
+  body.innerHTML =
+    rows.map(row => {
+
+      const session =
+        one(
+          row.class_sessions
+        );
+
+
+      return `
+        <tr>
+
+          <td>
+            <strong>
+              ${escapeHTML(
+                session?.session_code ||
+                row.session_id
+              )}
+            </strong>
+          </td>
+
+          <td>
+            ${dateVN(
+              row.work_date
+            )}
+          </td>
+
+          <td>
+            ${escapeHTML(
+              row.pay_period ||
+              "—"
+            )}
+          </td>
+
+          <td class="money">
+            ${moneyVN(
+              row.base_amount
+            )}
+          </td>
+
+          <td>
+            ${moneyVN(
+              row.bonus
+            )}
+          </td>
+
+          <td>
+            ${moneyVN(
+              row.deduction
+            )}
+          </td>
+
+          <td class="money">
+            ${moneyVN(
+              row.total_amount
+            )}
+          </td>
+
+          <td>
+            <span class="badge">
+              ${escapeHTML(
+                row.status ||
+                "—"
+              )}
+            </span>
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+}
+
+
+/* =====================================
+   SEARCH
+===================================== */
+
+searchInput.addEventListener(
+  "input",
+  () => {
+
+    const keyword =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+
+    if (!keyword) {
+
+      renderWorks(
+        works
+      );
+
+      return;
+    }
+
+
+    const filtered =
+      works.filter(row => {
+
+        const session =
+          one(
+            row.class_sessions
+          );
+
+
+        const text = [
+          session?.session_code,
+          row.work_date,
+          row.pay_period,
+          row.base_amount,
+          row.total_amount,
+          row.status
+        ]
+          .join(" ")
+          .toLowerCase();
+
+
+        return text.includes(
+          keyword
+        );
+      });
+
+
+    renderWorks(
+      filtered
+    );
+  }
+);
+
+
+/* =====================================
+   START
+===================================== */
+
+async function init() {
+
+  try {
+
+    const login =
+      await checkCoach();
+
+
+    if (!login) return;
+
+
+    const coachOK =
+      await loadCoach(
+        login.user.email
+      );
+
+
+    if (!coachOK) return;
+
+
+    await loadWorks();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    messageEl.textContent =
+      "Có lỗi khi tải Công Coach: " +
+      (error.message || error);
+  }
+}
+
+
+init();
