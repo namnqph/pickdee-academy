@@ -13,17 +13,28 @@
     * {
       box-sizing: border-box;
     }
-html {
-  color-scheme: dark;
-}
+
+    html {
+      color-scheme: dark;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Arial, Helvetica, sans-serif;
       color: white;
       background:
-        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
-        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
     }
 
     .topbar {
@@ -102,20 +113,21 @@ html {
       outline: none;
     }
 
-   select {
-  color: #fff;
-  color-scheme: dark;
-}
+    select {
+      color: #fff;
+      color-scheme: dark;
+    }
 
-select option {
-  color: #fff;
-  background: #08111d;
-}
+    select option {
+      color: #fff;
+      background: #08111d;
+    }
 
-select:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-}
+    select:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
     textarea {
       resize: vertical;
       min-height: 90px;
@@ -125,6 +137,76 @@ select:disabled {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
+    }
+
+    /* ================================
+       THÔNG TIN GIÁ GÓI HỌC
+    ================================= */
+
+    .package-info {
+      display: none;
+      margin: -2px 0 20px;
+      padding: 18px;
+      border-radius: 14px;
+      background: rgba(216,255,69,.07);
+      border: 1px solid rgba(216,255,69,.25);
+    }
+
+    .package-info-title {
+      margin-bottom: 14px;
+      color: #d8ff45;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .package-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .package-item {
+      min-width: 0;
+    }
+
+    .package-label {
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .package-value {
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 900;
+      word-break: break-word;
+    }
+
+    .package-price {
+      color: #d8ff45;
+      font-size: 19px;
+    }
+
+    .court-note {
+      margin-top: 15px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    #customSessionsWrap {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .hint {
+      margin-top: 7px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      line-height: 1.5;
     }
 
     button {
@@ -158,117 +240,377 @@ select:disabled {
     }
 
     @media (max-width: 650px) {
-      .two {
+      .two,
+      .package-grid {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 
+
 <body>
 
 <header class="topbar">
+
   <div class="brand">
     PickDee <span>Academy</span>
   </div>
 
   <div id="userEmail"></div>
+
 </header>
+
 
 <main class="container">
 
-  <a id="backLink" class="back" href="./students.html">
+  <a
+    id="backLink"
+    class="back"
+    href="./students.html"
+  >
     ← Hồ sơ học viên
   </a>
+
 
   <div class="eyebrow">
     QUẢN LÝ HỌC VIÊN
   </div>
 
+
   <h1>Tạo đăng ký học</h1>
 
+
   <div class="student">
+
     Học viên:
-    <strong id="studentName">Đang tải...</strong>
+
+    <strong id="studentName">
+      Đang tải...
+    </strong>
+
     <span id="studentCode"></span>
+
   </div>
 
-  <form id="registrationForm" class="card">
+
+  <form
+    id="registrationForm"
+    class="card"
+  >
+
+    <!-- ================================
+         GÓI HỌC
+    ================================= -->
 
     <div class="field">
-  <label>Gói học *</label>
 
-  <select id="packageName" required>
-    <option value="">Đang tải gói học...</option>
-  </select>
-</div>
-<div class="two">
+      <label>
+        Gói học *
+      </label>
 
-  <div class="field">
-    <label>Coach</label>
+      <select
+        id="packageName"
+        required
+      >
+        <option value="">
+          Đang tải gói học...
+        </option>
+      </select>
 
-    <select id="coachId">
-      <option value="">Chưa phân Coach</option>
-    </select>
-  </div>
+    </div>
 
-  <div class="field">
-    <label>Ngày bắt đầu</label>
 
-    <input
-      id="startDate"
-      type="date"
+    <!-- ================================
+         THÔNG TIN GÓI ĐÃ CHỌN
+    ================================= -->
+
+    <section
+      id="packageInfo"
+      class="package-info"
     >
-  </div>
 
-</div>
-  <div class="two">
+      <div class="package-info-title">
+        💳 Thông tin gói học
+      </div>
 
-  <div class="field">
-    <label>Khu vực muốn học</label>
 
-    <select id="preferredArea">
-      <option value="">Chọn Tỉnh/Thành</option>
-    </select>
-  </div>
+      <div class="package-grid">
 
-  <div class="field">
-    <label>Xã/Phường muốn học</label>
+        <div class="package-item">
 
-    <select id="preferredWard" disabled>
-      <option value="">Chọn Tỉnh/Thành trước</option>
-    </select>
-  </div>
+          <div class="package-label">
+            Số người
+          </div>
 
-</div>
+          <div
+            id="packageGroupSize"
+            class="package-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="package-item">
+
+          <div class="package-label">
+            Đơn giá
+          </div>
+
+          <div
+            id="packageUnitPrice"
+            class="package-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="package-item">
+
+          <div class="package-label">
+            Số buổi
+          </div>
+
+          <div
+            id="packageSessions"
+            class="package-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="package-item">
+
+          <div class="package-label">
+            Thời hạn
+          </div>
+
+          <div
+            id="packageDuration"
+            class="package-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="package-item">
+
+          <div class="package-label">
+            Học phí / người
+          </div>
+
+          <div
+            id="packagePrice"
+            class="package-value package-price"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="package-item">
+
+          <div class="package-label">
+            Ngày dự kiến hết hạn
+          </div>
+
+          <div
+            id="packageEndDate"
+            class="package-value"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Chỉ hiện khi chọn Theo yêu cầu -->
+
+      <div
+        id="customSessionsWrap"
+        class="field"
+      >
+
+        <label>
+          Số buổi mua *
+        </label>
+
+        <input
+          id="purchasedSessions"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="Ví dụ: 3"
+        >
+
+        <div class="hint">
+          Gói Theo yêu cầu tính 550.000đ/người/buổi.
+        </div>
+
+      </div>
+
+
+      <div
+        id="packageCourtNote"
+        class="court-note"
+      >
+        ✓ Học phí đã bao gồm tiền sân.
+      </div>
+
+    </section>
+
+
+    <!-- ================================
+         COACH + NGÀY BẮT ĐẦU
+    ================================= -->
+
+    <div class="two">
+
+      <div class="field">
+
+        <label>
+          Coach
+        </label>
+
+        <select id="coachId">
+
+          <option value="">
+            Chưa phân Coach
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Ngày bắt đầu
+        </label>
+
+        <input
+          id="startDate"
+          type="date"
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================
+         KHU VỰC
+    ================================= -->
+
+    <div class="two">
+
+      <div class="field">
+
+        <label>
+          Khu vực muốn học
+        </label>
+
+        <select id="preferredArea">
+
+          <option value="">
+            Chọn Tỉnh/Thành
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Xã/Phường muốn học
+        </label>
+
+        <select
+          id="preferredWard"
+          disabled
+        >
+
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================
+         REFERRAL
+    ================================= -->
+
     <div class="field">
-      <label>Mã người giới thiệu</label>
+
+      <label>
+        Mã người giới thiệu
+      </label>
+
       <input
         id="referralCode"
         type="text"
         placeholder="Có thể để trống"
       >
+
     </div>
 
+
+    <!-- ================================
+         GHI CHÚ
+    ================================= -->
+
     <div class="field">
-      <label>Ghi chú</label>
+
+      <label>
+        Ghi chú
+      </label>
+
       <textarea
         id="note"
         placeholder="Nhu cầu học, giờ học mong muốn..."
       ></textarea>
+
     </div>
 
-    <button id="saveBtn" type="submit">
+
+    <button
+      id="saveBtn"
+      type="submit"
+    >
       TẠO ĐĂNG KÝ HỌC
     </button>
 
-    <div id="message" class="message"></div>
+
+    <div
+      id="message"
+      class="message"
+    ></div>
 
   </form>
 
 </main>
 
-<script src="./add-registration.js?v=20260909-2"></script>
+
+<script src="./add-registration.js?v=20260910-3"></script>
 
 </body>
 </html>
