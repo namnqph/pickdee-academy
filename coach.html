@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Coach | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .user-area {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+    }
+
+    .logout {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .container {
+      width: min(1050px, calc(100% - 28px));
+      margin: auto;
+      padding: 34px 0 60px;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 56px);
+    }
+
+    .code {
+      color: rgba(255,255,255,.6);
+      margin-bottom: 28px;
+    }
+
+    .profile-card {
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .profile-card h2 {
+      margin: 0 0 18px;
+      font-size: 21px;
+    }
+
+    /* =====================================
+       AVATAR
+    ====================================== */
+
+    .profile-main {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .avatar-area {
+      text-align: center;
+    }
+
+    .avatar-frame {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      overflow: hidden;
+      background:
+        linear-gradient(
+          145deg,
+          rgba(216,255,69,.18),
+          rgba(255,255,255,.05)
+        );
+      border: 3px solid rgba(216,255,69,.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #avatarImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #avatarPlaceholder {
+      font-size: 62px;
+      opacity: .75;
+    }
+
+    .avatar-button {
+      width: 100%;
+      max-width: 150px;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 10px;
+      background: #d8ff45;
+      color: #172600;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .avatar-button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #avatarInput {
+      display: none;
+    }
+
+    #avatarMessage {
+      margin-top: 9px;
+      min-height: 18px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .avatar-help {
+      margin-top: 7px;
+      color: rgba(255,255,255,.45);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    /* =====================================
+       PROFILE
+    ====================================== */
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .item {
+      margin-bottom: 14px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #d8ff45;
+      background: rgba(216,255,69,.12);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    /* =====================================
+       MENU
+    ====================================== */
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .menu-card {
+      display: block;
+      min-height: 135px;
+      padding: 20px;
+      border-radius: 16px;
+      color: white;
+      text-decoration: none;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: .15s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(216,255,69,.45);
+    }
+
+    .menu-icon {
+      font-size: 27px;
+      margin-bottom: 12px;
+    }
+
+    .menu-title {
+      color: #d8ff45;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .menu-sub {
+      color: rgba(255,255,255,.62);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    #message {
+      margin-top: 18px;
+      color: #ffb0b0;
+      font-weight: 700;
+    }
+
+    @media (max-width: 700px) {
+      .profile-main {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-grid,
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding: 15px;
+      }
+
+      #userEmail {
+        display: none;
+      }
+
+      .avatar-frame {
+        width: 135px;
+        height: 135px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="user-area">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="eyebrow">
+    KHU VỰC COACH
+  </div>
+
+  <h1 id="coachName">
+    Đang tải...
+  </h1>
+
+  <div
+    class="code"
+    id="coachCode"
+  ></div>
+
+
+  <!-- =====================================
+       HỒ SƠ COACH
+  ====================================== -->
+
+  <section class="profile-card">
+
+    <h2>🏓 Hồ sơ Coach</h2>
+
+    <div class="profile-main">
+
+      <!-- AVATAR -->
+
+      <div class="avatar-area">
+
+        <div class="avatar-frame">
+
+          <img
+            id="avatarImage"
+            alt="Ảnh đại diện Coach"
+          >
+
+          <div id="avatarPlaceholder">
+            👤
+          </div>
+
+        </div>
+
+        <input
+          id="avatarInput"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+        >
+
+        <button
+          id="changeAvatarBtn"
+          class="avatar-button"
+          type="button"
+        >
+          📷 ĐỔI ẢNH
+        </button>
+
+        <div id="avatarMessage"></div>
+
+        <div class="avatar-help">
+          JPG, PNG hoặc WEBP.<br>
+          Tối đa 5MB.
+        </div>
+
+      </div>
+
+
+      <!-- PROFILE INFO -->
+
+      <div class="profile-grid">
+
+        <div>
+
+          <div class="item">
+            <div class="label">
+              Số điện thoại
+            </div>
+
+            <div
+              class="value"
+              id="phone"
+            >
+              —
+            </div>
+          </div>
+
+
+          <div class="item">
+            <div class="label">
+              Email
+            </div>
+
+            <div
+              class="value"
+              id="email"
+            >
+              —
+            </div>
+          </div>
+
+
+          <div class="item">
+            <div class="label">
+              Đơn giá / buổi
+            </div>
+
+            <div
+              class="value"
+              id="sessionRate"
+            >
+              —
+            </div>
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="item">
+            <div class="label">
+              Khu vực phụ trách
+            </div>
+
+            <div
+              class="value"
+              id="area"
+            >
+              —
+            </div>
+          </div>
+
+
+          <div class="item">
+            <div class="label">
+              Xã/Phường
+            </div>
+
+            <div
+              class="value"
+              id="ward"
+            >
+              —
+            </div>
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Trạng thái
+            </div>
+
+            <span
+              class="badge"
+              id="status"
+            >
+              —
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================
+       MENU COACH
+  ====================================== -->
+
+  <section class="menu-grid">
+
+    <a
+      class="menu-card"
+      href="./coach-sessions"
+    >
+      <div class="menu-icon">📅</div>
+
+      <div class="menu-title">
+        Lịch dạy của tôi
+      </div>
+
+      <div class="menu-sub">
+        Xem các buổi học được phân công, học viên, sân và điểm danh.
+      </div>
+    </a>
+
+
+    <a
+      class="menu-card"
+      href="./coach-my-work"
+    >
+      <div class="menu-icon">💰</div>
+
+      <div class="menu-title">
+        Công của tôi
+      </div>
+
+      <div class="menu-sub">
+        Theo dõi số buổi đã phát sinh công, tiền công và trạng thái thanh toán.
+      </div>
+    </a>
+
+
+    <a
+      class="menu-card"
+      href="./coach"
+    >
+      <div class="menu-icon">👤</div>
+
+      <div class="menu-title">
+        Hồ sơ của tôi
+      </div>
+
+      <div class="menu-sub">
+        Xem thông tin cá nhân, khu vực phụ trách và ảnh đại diện.
+      </div>
+    </a>
+
+  </section>
+
+
+  <div id="message"></div>
+
+</main>
+
+
+<script>
+(async function () {
+
+  /* =====================================
+     SUPABASE
+  ====================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================
+     ELEMENTS
+  ====================================== */
+
+  const userEmailEl =
+    document.getElementById("userEmail");
+
+  const coachNameEl =
+    document.getElementById("coachName");
+
+  const coachCodeEl =
+    document.getElementById("coachCode");
+
+  const phoneEl =
+    document.getElementById("phone");
+
+  const emailEl =
+    document.getElementById("email");
+
+  const areaEl =
+    document.getElementById("area");
+
+  const wardEl =
+    document.getElementById("ward");
+
+  const statusEl =
+    document.getElementById("status");
+
+  const sessionRateEl =
+    document.getElementById("sessionRate");
+
+  const logoutBtn =
+    document.getElementById("logoutBtn");
+
+  const messageEl =
+    document.getElementById("message");
+
+
+  const avatarInput =
+    document.getElementById("avatarInput");
+
+  const changeAvatarBtn =
+    document.getElementById("changeAvatarBtn");
+
+  const avatarImage =
+    document.getElementById("avatarImage");
+
+  const avatarPlaceholder =
+    document.getElementById("avatarPlaceholder");
+
+  const avatarMessage =
+    document.getElementById("avatarMessage");
+
+
+  /* =====================================
+     STATE
+  ====================================== */
+
+  let currentUser = null;
+
+  let currentCoach = null;
+
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+  function formatMoney(value) {
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return "—";
+    }
+
+    return (
+      Number(value)
+        .toLocaleString("vi-VN") +
+      "đ"
+    );
+  }
+
+
+  function showAvatarMessage(
+    text,
+    isError = false
+  ) {
+
+    avatarMessage.textContent =
+      text || "";
+
+    avatarMessage.style.color =
+      isError
+        ? "#ffaaaa"
+        : "#d8ff45";
+  }
+
+
+  /* =====================================
+     HIỂN THỊ AVATAR PRIVATE
+  ====================================== */
+
+  async function showAvatar(path) {
+
+    if (!path) {
+
+      avatarImage.style.display =
+        "none";
+
+      avatarPlaceholder.style.display =
+        "block";
+
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .storage
+        .from("profile-photos")
+        .createSignedUrl(
+          path,
+          3600
+        );
+
+
+    if (
+      error ||
+      !data?.signedUrl
+    ) {
+
+      console.error(
+        "Không tạo được URL avatar Coach:",
+        error
+      );
+
+      avatarImage.style.display =
+        "none";
+
+      avatarPlaceholder.style.display =
+        "block";
+
+      return;
+    }
+
+
+    avatarImage.src =
+      data.signedUrl +
+      "&t=" +
+      Date.now();
+
+
+    avatarImage.onload =
+      function () {
+
+        avatarPlaceholder.style.display =
+          "none";
+
+        avatarImage.style.display =
+          "block";
+      };
+
+
+    avatarImage.onerror =
+      function () {
+
+        avatarImage.style.display =
+          "none";
+
+        avatarPlaceholder.style.display =
+          "block";
+      };
+  }
+
+
+  /* =====================================
+     LOAD COACH
+  ====================================== */
+
+  async function loadCoach() {
+
+    const {
+      data: { session },
+      error: sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError ||
+      !session
+    ) {
+
+      window.location.href =
+        "./login.html";
+
+      return;
+    }
+
+
+    currentUser =
+      session.user;
+
+
+    userEmailEl.textContent =
+      currentUser.email || "";
+
+
+    /* ================================
+       CHECK ROLE
+    ================================= */
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          currentUser.id
+        )
+        .single();
+
+
+    if (
+      profileError ||
+      !profile ||
+      profile.role !== "coach"
+    ) {
+
+      window.location.href =
+        "./login.html";
+
+      return;
+    }
+
+
+    /* ================================
+       CURRENT COACH ID
+    ================================= */
+
+    const {
+      data: coachId,
+      error: coachIdError
+    } =
+      await sb.rpc(
+        "current_coach_id"
+      );
+
+
+    if (
+      coachIdError ||
+      !coachId
+    ) {
+
+      console.error(
+        "Không lấy được coach_id:",
+        coachIdError
+      );
+
+
+      messageEl.textContent =
+        "Tài khoản Coach chưa được liên kết với hồ sơ Coach.";
+
+      return;
+    }
+
+
+    /* ================================
+       PROFILE COACH
+    ================================= */
+
+    const {
+      data: coach,
+      error: coachError
+    } =
+      await sb
+        .from("coaches")
+        .select(`
+          id,
+          coach_code,
+          full_name,
+          phone,
+          email,
+          preferred_area,
+          preferred_ward,
+          status,
+          session_rate
+        `)
+        .eq(
+          "id",
+          Number(coachId)
+        )
+        .single();
+
+
+    if (
+      coachError ||
+      !coach
+    ) {
+
+      console.error(
+        "Không tải được Coach:",
+        coachError
+      );
+
+
+      messageEl.textContent =
+        "Không tải được hồ sơ Coach.";
+
+      return;
+    }
+
+
+    currentCoach =
+      coach;
+
+
+    coachNameEl.textContent =
+      coach.full_name || "Coach";
+
+
+    coachCodeEl.textContent =
+      coach.coach_code || "";
+
+
+    phoneEl.textContent =
+      coach.phone || "—";
+
+
+    emailEl.textContent =
+      coach.email || "—";
+
+
+    areaEl.textContent =
+      coach.preferred_area || "—";
+
+
+    wardEl.textContent =
+      coach.preferred_ward || "—";
+
+
+    statusEl.textContent =
+      coach.status || "—";
+
+
+    sessionRateEl.textContent =
+      formatMoney(
+        coach.session_rate
+      ) + "/buổi";
+
+
+    /* ================================
+       AVATAR QUA RPC
+    ================================= */
+
+    const {
+      data: avatarPath,
+      error: avatarError
+    } =
+      await sb.rpc(
+        "get_my_coach_avatar"
+      );
+
+
+    if (avatarError) {
+
+      console.error(
+        "Không lấy được avatar Coach:",
+        avatarError
+      );
+
+
+      showAvatarMessage(
+        "Không tải được ảnh đại diện.",
+        true
+      );
+
+      return;
+    }
+
+
+    currentCoach.avatar_path =
+      avatarPath || null;
+
+
+    await showAvatar(
+      avatarPath || null
+    );
+
+
+    showAvatarMessage("");
+  }
+
+
+  /* =====================================
+     ĐỔI ẢNH
+  ====================================== */
+
+  changeAvatarBtn.addEventListener(
+    "click",
+    function () {
+
+      if (
+        !currentUser ||
+        !currentCoach
+      ) {
+
+        showAvatarMessage(
+          "Chưa xác định được tài khoản Coach.",
+          true
+        );
+
+        return;
+      }
+
+
+      avatarInput.click();
+    }
+  );
+
+
+  avatarInput.addEventListener(
+    "change",
+    async function () {
+
+      const file =
+        avatarInput.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+      ];
+
+
+      if (
+        !allowedTypes.includes(
+          file.type
+        )
+      ) {
+
+        showAvatarMessage(
+          "Chỉ nhận ảnh JPG, PNG hoặc WEBP.",
+          true
+        );
+
+        avatarInput.value =
+          "";
+
+        return;
+      }
+
+
+      if (
+        file.size >
+        5 * 1024 * 1024
+      ) {
+
+        showAvatarMessage(
+          "Ảnh vượt quá 5MB.",
+          true
+        );
+
+        avatarInput.value =
+          "";
+
+        return;
+      }
+
+
+      if (
+        !currentUser ||
+        !currentCoach
+      ) {
+
+        showAvatarMessage(
+          "Chưa xác định được tài khoản Coach.",
+          true
+        );
+
+        return;
+      }
+
+
+      changeAvatarBtn.disabled =
+        true;
+
+
+      changeAvatarBtn.textContent =
+        "ĐANG TẢI ẢNH...";
+
+
+      showAvatarMessage(
+        "Đang cập nhật ảnh đại diện..."
+      );
+
+
+      try {
+
+        /*
+          Coach và Student đều dùng:
+
+          <auth.uid()>/avatar
+
+          Vì mỗi tài khoản Auth có UUID riêng
+          nên không đè ảnh của nhau.
+        */
+
+        const avatarPath =
+          `${currentUser.id}/avatar`;
+
+
+        const {
+          error: uploadError
+        } =
+          await sb
+            .storage
+            .from("profile-photos")
+            .upload(
+              avatarPath,
+              file,
+              {
+                upsert: true,
+                contentType:
+                  file.type,
+                cacheControl:
+                  "3600"
+              }
+            );
+
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+
+        /* ================================
+           RPC CHỈ SỬA AVATAR CỦA
+           CHÍNH COACH ĐANG ĐĂNG NHẬP
+        ================================= */
+
+        const {
+          error: rpcError
+        } =
+          await sb.rpc(
+            "set_my_coach_avatar",
+            {
+              p_avatar_path:
+                avatarPath
+            }
+          );
+
+
+        if (rpcError) {
+          throw rpcError;
+        }
+
+
+        currentCoach.avatar_path =
+          avatarPath;
+
+
+        await showAvatar(
+          avatarPath
+        );
+
+
+        showAvatarMessage(
+          "✓ Đã cập nhật ảnh đại diện."
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Lỗi cập nhật avatar Coach:",
+          error
+        );
+
+
+        showAvatarMessage(
+          "Không cập nhật được ảnh: " +
+          (
+            error.message ||
+            error
+          ),
+          true
+        );
+
+      }
+
+      finally {
+
+        changeAvatarBtn.disabled =
+          false;
+
+
+        changeAvatarBtn.textContent =
+          "📷 ĐỔI ẢNH";
+
+
+        avatarInput.value =
+          "";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================
+     LOGOUT
+  ====================================== */
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+      await sb.auth.signOut();
+
+      window.location.href =
+        "./login.html";
+    }
+  );
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  await loadCoach();
+
+})();
+</script>
+
+</body>
+</html>
