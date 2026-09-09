@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Học viên | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .user-area {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+    }
+
+    .logout {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .container {
+      width: min(1050px, calc(100% - 28px));
+      margin: auto;
+      padding: 34px 0 60px;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 56px);
+    }
+
+    .code {
+      color: rgba(255,255,255,.6);
+      margin-bottom: 28px;
+    }
+
+    .profile-card {
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .profile-card h2 {
+      margin: 0 0 18px;
+      font-size: 21px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .item {
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #d8ff45;
+      background: rgba(216,255,69,.12);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .menu-card {
+      display: block;
+      min-height: 135px;
+      padding: 20px;
+      border-radius: 16px;
+      color: white;
+      text-decoration: none;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: .15s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(216,255,69,.45);
+    }
+
+    .menu-icon {
+      font-size: 27px;
+      margin-bottom: 12px;
+    }
+
+    .menu-title {
+      color: #d8ff45;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .menu-sub {
+      color: rgba(255,255,255,.62);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    #message {
+      margin-top: 18px;
+      color: #ffb0b0;
+      font-weight: 700;
+    }
+
+    @media (max-width: 700px) {
+      .profile-grid,
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding: 15px;
+      }
+
+      #userEmail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="user-area">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="eyebrow">
+    KHU VỰC HỌC VIÊN
+  </div>
+
+  <h1 id="studentName">
+    Đang tải...
+  </h1>
+
+  <div
+    class="code"
+    id="studentCode"
+  ></div>
+
+
+  <section class="profile-card">
+
+    <h2>👤 Hồ sơ của tôi</h2>
+
+    <div class="profile-grid">
+
+      <div>
+
+        <div class="item">
+          <div class="label">
+            Số điện thoại
+          </div>
+          <div
+            class="value"
+            id="phone"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Email
+          </div>
+          <div
+            class="value"
+            id="email"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Giới tính
+          </div>
+          <div
+            class="value"
+            id="gender"
+          >
+            —
+          </div>
+        </div>
+
+      </div>
+
+
+      <div>
+
+        <div class="item">
+          <div class="label">
+            Khu vực muốn học
+          </div>
+          <div
+            class="value"
+            id="area"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Xã/Phường muốn học
+          </div>
+          <div
+            class="value"
+            id="ward"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Trạng thái
+          </div>
+
+          <span
+            class="badge"
+            id="status"
+          >
+            —
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section class="menu-grid">
+
+    <a
+      class="menu-card"
+      href="./student-registrations.html"
+    >
+      <div class="menu-icon">📚</div>
+
+      <div class="menu-title">
+        Gói học của tôi
+      </div>
+
+      <div class="menu-sub">
+        Xem đăng ký học, gói học và trạng thái hiện tại.
+      </div>
+    </a>
+
+
+    <a
+      class="menu-card"
+      href="./student-sessions.html"
+    >
+      <div class="menu-icon">📅</div>
+
+      <div class="menu-title">
+        Lịch học của tôi
+      </div>
+
+      <div class="menu-sub">
+        Xem ngày học, Coach, giờ học, sân và trạng thái buổi học.
+      </div>
+    </a>
+
+
+    <a
+      class="menu-card"
+      href="./student-payments.html"
+    >
+      <div class="menu-icon">💰</div>
+
+      <div class="menu-title">
+        Học phí của tôi
+      </div>
+
+      <div class="menu-sub">
+        Theo dõi học phí, số tiền đã đóng và công nợ.
+      </div>
+    </a>
+
+
+    <a
+      class="menu-card"
+      href="./student.html"
+    >
+      <div class="menu-icon">👤</div>
+
+      <div class="menu-title">
+        Hồ sơ của tôi
+      </div>
+
+      <div class="menu-sub">
+        Xem thông tin cá nhân và khu vực học.
+      </div>
+    </a>
+
+  </section>
+
+
+  <div id="message"></div>
+
+</main>
+
+
+<script src="./student.js?v=20260910-1"></script>
+
+</body>
+</html>
