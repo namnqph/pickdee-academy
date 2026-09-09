@@ -162,7 +162,10 @@
           <span class="badge" id="status">—</span>
         </div>
       </div>
-
+<div class="item">
+  <div class="label">Coach phụ trách</div>
+  <div class="value" id="coachLine">—</div>
+</div>
       <div class="item">
         <div class="label">Nguồn</div>
         <div class="value" id="source">—</div>
@@ -271,9 +274,10 @@
         .from("registrations")
         .select(`
           id,
-          registration_code,
-          student_id,
-          package_name,
+registration_code,
+student_id,
+coach_id,
+package_name,
           preferred_area,
           preferred_ward,
           status,
@@ -297,7 +301,26 @@
         .select("id, student_code, full_name")
         .eq("id", data.student_id)
         .single();
+let coach = null;
 
+if (data.coach_id) {
+  const { data: coachData, error: coachError } =
+    await sb
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name
+      `)
+      .eq("id", data.coach_id)
+      .maybeSingle();
+
+  if (coachError) {
+    console.error("Lỗi tải Coach:", coachError);
+  } else {
+    coach = coachData;
+  }
+}
     show("registrationCode", data.registration_code);
     show("packageName", data.package_name);
     show("status", data.status);
@@ -307,7 +330,12 @@
     show("preferredWard", data.preferred_ward);
     show("createdAt", dateVN(data.created_at));
     show("note", data.note);
-
+show(
+  "coachLine",
+  coach
+    ? `${coach.full_name || "—"} (${coach.coach_code || "—"})`
+    : "Chưa gán Coach"
+);
     if (student) {
       show(
         "studentLine",
@@ -411,16 +439,173 @@
   infoCard.appendChild(btn);
 }
 
+async function setupCoachAssignment() {
+  const infoCard = document.querySelector(".grid .card");
 
+  if (!infoCard || !registrationId) {
+    return;
+  }
+
+  const { data: registration, error: registrationError } =
+    await sb
+      .from("registrations")
+      .select("coach_id")
+      .eq("id", registrationId)
+      .single();
+
+  if (registrationError) {
+    console.error("Lỗi tải Coach của đăng ký:", registrationError);
+    return;
+  }
+
+  const { data: coaches, error: coachesError } =
+    await sb
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name
+      `)
+      .order("full_name", { ascending: true });
+
+  if (coachesError) {
+    console.error("Lỗi tải danh sách Coach:", coachesError);
+    return;
+  }
+
+  if (!coaches || coaches.length === 0) {
+    return;
+  }
+
+  const wrap = document.createElement("div");
+
+  wrap.style.marginTop = "20px";
+  wrap.style.paddingTop = "16px";
+  wrap.style.borderTop = "1px solid rgba(255,255,255,0.12)";
+
+  const label = document.createElement("div");
+
+  label.textContent = "Gán Coach phụ trách";
+  label.style.marginBottom = "8px";
+  label.style.fontWeight = "700";
+
+  const select = document.createElement("select");
+
+  select.style.width = "100%";
+  select.style.padding = "12px";
+  select.style.borderRadius = "10px";
+  select.style.marginBottom = "10px";
+
+  const emptyOption = document.createElement("option");
+
+  emptyOption.value = "";
+  emptyOption.textContent = "— Chọn Coach —";
+
+  select.appendChild(emptyOption);
+
+  coaches.forEach((coach) => {
+    const option = document.createElement("option");
+
+    option.value = String(coach.id);
+    option.textContent =
+      `${coach.full_name || "—"} (${coach.coach_code || "—"})`;
+
+    select.appendChild(option);
+  });
+
+  if (registration.coach_id) {
+    select.value = String(registration.coach_id);
+  }
+
+  const btn = document.createElement("button");
+
+  btn.type = "button";
+  btn.textContent =
+    registration.coach_id
+      ? "ĐỔI COACH"
+      : "GÁN COACH";
+
+  btn.style.width = "100%";
+  btn.style.padding = "12px 16px";
+  btn.style.border = "0";
+  btn.style.borderRadius = "10px";
+  btn.style.fontWeight = "800";
+  btn.style.cursor = "pointer";
+
+  btn.addEventListener("click", async () => {
+    if (!select.value) {
+      alert("Hãy chọn Coach.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "ĐANG LƯU...";
+
+    const coachId = Number(select.value);
+
+    const { error } =
+      await sb
+        .from("registrations")
+        .update({
+          coach_id: coachId
+        })
+        .eq("id", registrationId);
+
+    if (error) {
+      console.error(error);
+
+      alert(
+        "Không thể gán Coach: " +
+        (error.message || error)
+      );
+
+      btn.disabled = false;
+      btn.textContent =
+        registration.coach_id
+          ? "ĐỔI COACH"
+          : "GÁN COACH";
+
+      return;
+    }
+
+    const selectedCoach =
+      coaches.find(
+        (coach) =>
+          String(coach.id) === select.value
+      );
+
+    show(
+      "coachLine",
+      selectedCoach
+        ? `${selectedCoach.full_name || "—"} (${selectedCoach.coach_code || "—"})`
+        : "Chưa gán Coach"
+    );
+
+    registration.coach_id = coachId;
+
+    btn.disabled = false;
+    btn.textContent = "ĐỔI COACH";
+
+    alert("Đã gán Coach thành công.");
+  });
+
+  wrap.appendChild(label);
+  wrap.appendChild(select);
+  wrap.appendChild(btn);
+
+  infoCard.appendChild(wrap);
+}
 async function init() {
 
   const ok = await checkAdmin();
 
   if (!ok) return;
 
-  await loadRegistration();
+ await loadRegistration();
 
-  await setupApproveButton();
+await setupCoachAssignment();
+
+await setupApproveButton();
 }
 
 init();
