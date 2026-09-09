@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Công của tôi | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .container {
+      width: min(1150px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin-top: 26px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.65);
+      margin-bottom: 22px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .summary-card,
+    .card {
+      background: rgba(6,39,88,.72);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+    }
+
+    .summary-card {
+      padding: 18px;
+    }
+
+    .summary-label {
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .summary-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #d8ff45;
+    }
+
+    .toolbar {
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: white;
+      outline: none;
+    }
+
+    .card {
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    .money {
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.12);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    #message {
+      margin-bottom: 15px;
+      color: #ffb0b0;
+    }
+
+    #empty {
+      display: none;
+      padding: 30px;
+      text-align: center;
+      color: rgba(255,255,255,.6);
+    }
+
+    @media (max-width: 700px) {
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+</header>
+
+<main class="container">
+
+  <a class="back" href="./coach-sessions.html">
+    ← Lịch dạy của tôi
+  </a>
+
+  <div class="eyebrow">
+    KHU VỰC COACH
+  </div>
+
+  <h1>Công của tôi</h1>
+
+  <div class="sub">
+    Theo dõi các buổi đã phát sinh công và trạng thái thanh toán.
+  </div>
+
+
+  <section class="summary">
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Số buổi có công
+      </div>
+
+      <div
+        id="totalSessions"
+        class="summary-value"
+      >
+        0
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Tổng tiền công
+      </div>
+
+      <div
+        id="totalAmount"
+        class="summary-value"
+      >
+        0đ
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Chưa thanh toán
+      </div>
+
+      <div
+        id="unpaidAmount"
+        class="summary-value"
+      >
+        0đ
+      </div>
+    </div>
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <div class="toolbar">
+    <input
+      id="search"
+      type="search"
+      placeholder="Tìm mã buổi, kỳ lương, trạng thái..."
+    >
+  </div>
+
+
+  <section class="card">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Mã buổi</th>
+            <th>Ngày dạy</th>
+            <th>Kỳ lương</th>
+            <th>Đơn giá</th>
+            <th>Thưởng</th>
+            <th>Khấu trừ</th>
+            <th>Thành tiền</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+
+        <tbody id="workBody">
+          <tr>
+            <td colspan="8">
+              Đang tải công Coach...
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+
+      <div id="empty">
+        Chưa có buổi nào phát sinh công.
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="./coach-my-work.js?v=20260910-1"></script>
+
+</body>
+</html>
