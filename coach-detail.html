@@ -10,7 +10,9 @@
   <script src="./config.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -56,6 +58,14 @@
       font-size: 13px;
       font-weight: 800;
       letter-spacing: 1px;
+    }
+
+    .titleRow {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 6px;
     }
 
     h1 {
@@ -115,9 +125,124 @@
       margin-top: 16px;
     }
 
+    .editBtn {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      background: #d8ff45;
+      color: #172600;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .editForm {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .editForm.active {
+      display: block;
+    }
+
+    .formGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.07);
+      color: white;
+      outline: none;
+    }
+
+    select option {
+      color: black;
+    }
+
+    select:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .saveBtn,
+    .cancelBtn {
+      flex: 1;
+      border: 0;
+      border-radius: 11px;
+      padding: 15px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .saveBtn {
+      background: #d8ff45;
+      color: #172600;
+    }
+
+    .cancelBtn {
+      background: rgba(255,255,255,.10);
+      color: white;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .saveBtn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 14px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #ffb0b0;
+    }
+
+    .success {
+      color: #d8ff45;
+    }
+
     @media (max-width: 760px) {
-      .grid {
+      .grid,
+      .formGrid {
         grid-template-columns: 1fr;
+      }
+
+      .titleRow {
+        align-items: flex-start;
+        flex-direction: column;
       }
     }
   </style>
@@ -143,113 +268,907 @@
     HỒ SƠ COACH
   </div>
 
-  <h1 id="coachName">Đang tải...</h1>
+  <div class="titleRow">
+    <h1 id="coachName">Đang tải...</h1>
+
+    <button
+      class="editBtn"
+      id="editBtn"
+      type="button"
+    >
+      ✏️ SỬA COACH
+    </button>
+  </div>
+
   <div class="code" id="coachCode"></div>
 
-  <section class="grid">
 
-    <div class="card">
-      <h2>👤 Thông tin Coach</h2>
+  <!-- =========================
+       CHẾ ĐỘ XEM
+  ========================== -->
 
-      <div class="item">
-        <div class="label">Số điện thoại</div>
-        <div class="value" id="phone">—</div>
-      </div>
+  <div id="viewMode">
 
-      <div class="item">
-        <div class="label">Email</div>
-        <div class="value" id="email">—</div>
-      </div>
+    <section class="grid">
 
-      <div class="item">
-        <div class="label">Trạng thái</div>
-        <div class="value">
-          <span class="badge" id="status">—</span>
+      <div class="card">
+        <h2>👤 Thông tin Coach</h2>
+
+        <div class="item">
+          <div class="label">Số điện thoại</div>
+          <div class="value" id="phone">—</div>
+        </div>
+
+        <div class="item">
+          <div class="label">Email</div>
+          <div class="value" id="email">—</div>
+        </div>
+
+        <div class="item">
+          <div class="label">Trạng thái</div>
+
+          <div class="value">
+            <span class="badge" id="status">—</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>📍 Khu vực phụ trách</h2>
 
-      <div class="item">
-        <div class="label">Khu vực</div>
-        <div class="value" id="area">—</div>
+      <div class="card">
+        <h2>📍 Khu vực phụ trách</h2>
+
+        <div class="item">
+          <div class="label">Khu vực</div>
+          <div class="value" id="area">—</div>
+        </div>
+
+        <div class="item">
+          <div class="label">Xã/Phường</div>
+          <div class="value" id="ward">—</div>
+        </div>
       </div>
 
-      <div class="item">
-        <div class="label">Xã/Phường</div>
-        <div class="value" id="ward">—</div>
-      </div>
+    </section>
+
+
+    <section class="card full">
+      <h2>📝 Ghi chú</h2>
+      <div id="note">—</div>
+    </section>
+
+  </div>
+
+
+  <!-- =========================
+       CHẾ ĐỘ SỬA
+  ========================== -->
+
+  <form
+    id="editForm"
+    class="card editForm"
+  >
+
+    <h2>✏️ Chỉnh sửa Coach</h2>
+
+
+    <div class="field">
+      <label>Họ và tên *</label>
+
+      <input
+        id="editFullName"
+        type="text"
+        required
+      >
     </div>
 
-  </section>
 
-  <section class="card full">
-    <h2>📝 Ghi chú</h2>
-    <div id="note">—</div>
-  </section>
+    <div class="formGrid">
+
+      <div class="field">
+        <label>Số điện thoại</label>
+
+        <input
+          id="editPhone"
+          type="tel"
+        >
+      </div>
+
+
+      <div class="field">
+        <label>Email</label>
+
+        <input
+          id="editEmail"
+          type="email"
+        >
+      </div>
+
+    </div>
+
+
+    <div class="formGrid">
+
+      <div class="field">
+        <label>Khu vực phụ trách</label>
+
+        <select id="editArea">
+          <option value="">
+            Chọn Tỉnh/Thành
+          </option>
+        </select>
+      </div>
+
+
+      <div class="field">
+        <label>Xã/Phường</label>
+
+        <select
+          id="editWard"
+          disabled
+        >
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+
+    <div class="field">
+      <label>Trạng thái</label>
+
+      <select id="editStatus">
+        <option value="Hoạt động">
+          Hoạt động
+        </option>
+
+        <option value="Tạm nghỉ">
+          Tạm nghỉ
+        </option>
+
+        <option value="Ngừng hoạt động">
+          Ngừng hoạt động
+        </option>
+      </select>
+    </div>
+
+
+    <div class="field">
+      <label>Ghi chú</label>
+
+      <textarea
+        id="editNote"
+      ></textarea>
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        id="cancelBtn"
+        class="cancelBtn"
+        type="button"
+      >
+        HỦY
+      </button>
+
+      <button
+        id="saveBtn"
+        class="saveBtn"
+        type="submit"
+      >
+        LƯU THAY ĐỔI
+      </button>
+
+    </div>
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </form>
 
 </main>
 
-<script>
-  const cfg = window.PICKDEE_CONFIG || {};
 
-  const sb = window.supabase.createClient(
+<script>
+
+const cfg =
+  window.PICKDEE_CONFIG || {};
+
+const sb =
+  window.supabase.createClient(
     cfg.SUPABASE_URL,
     cfg.SUPABASE_PUBLISHABLE_KEY
   );
 
-  const params =
-    new URLSearchParams(window.location.search);
 
-  const coachId =
-    params.get("id");
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
 
-  function show(id, value) {
-    document.getElementById(id).textContent =
+const coachId =
+  params.get("id");
+
+
+let currentCoach = null;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const viewMode =
+  document.getElementById("viewMode");
+
+const editForm =
+  document.getElementById("editForm");
+
+const editBtn =
+  document.getElementById("editBtn");
+
+const cancelBtn =
+  document.getElementById("cancelBtn");
+
+const saveBtn =
+  document.getElementById("saveBtn");
+
+const message =
+  document.getElementById("message");
+
+const editArea =
+  document.getElementById("editArea");
+
+const editWard =
+  document.getElementById("editWard");
+
+
+function show(id, value) {
+
+  document
+    .getElementById(id)
+    .textContent =
       value || "—";
+}
+
+
+/* =====================================================
+   ADMIN
+===================================================== */
+
+async function checkAdmin() {
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return false;
   }
 
-  async function checkAdmin() {
 
-    const {
-      data: { session }
-    } = await sb.auth.getSession();
+  show(
+    "userEmail",
+    session.user.email
+  );
 
-    if (!session) {
-      location.replace("./login.html");
-      return false;
-    }
 
-    show("userEmail", session.user.email);
+  const {
+    data: profile
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
 
-    const { data: profile } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
 
-    if (!profile || profile.role !== "admin") {
-      location.replace("./login.html");
-      return false;
-    }
+  if (
+    !profile ||
+    profile.role !== "admin"
+  ) {
 
-    return true;
+    location.replace(
+      "./login.html"
+    );
+
+    return false;
   }
 
-  async function loadCoach() {
 
-    if (!coachId) {
-      alert("Không tìm thấy ID Coach.");
-      location.replace("./coaches.html");
+  return true;
+}
+
+
+/* =====================================================
+   LOAD COACH
+===================================================== */
+
+async function loadCoach() {
+
+  if (!coachId) {
+
+    alert(
+      "Không tìm thấy ID Coach."
+    );
+
+    location.replace(
+      "./coaches.html"
+    );
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name,
+        phone,
+        email,
+        preferred_area,
+        preferred_ward,
+        status,
+        note
+      `)
+      .eq(
+        "id",
+        coachId
+      )
+      .single();
+
+
+  if (
+    error ||
+    !data
+  ) {
+
+    console.error(error);
+
+    alert(
+      "Không tải được hồ sơ Coach."
+    );
+
+    return;
+  }
+
+
+  currentCoach = data;
+
+
+  renderCoach();
+}
+
+
+/* =====================================================
+   HIỂN THỊ COACH
+===================================================== */
+
+function renderCoach() {
+
+  if (!currentCoach) return;
+
+
+  show(
+    "coachName",
+    currentCoach.full_name
+  );
+
+  show(
+    "coachCode",
+    currentCoach.coach_code
+  );
+
+  show(
+    "phone",
+    currentCoach.phone
+  );
+
+  show(
+    "email",
+    currentCoach.email
+  );
+
+  show(
+    "area",
+    currentCoach.preferred_area
+  );
+
+  show(
+    "ward",
+    currentCoach.preferred_ward
+  );
+
+  show(
+    "status",
+    currentCoach.status
+  );
+
+  show(
+    "note",
+    currentCoach.note
+  );
+}
+
+
+/* =====================================================
+   LOAD 34 TỈNH / THÀNH
+===================================================== */
+
+async function loadAreas() {
+
+  editArea.innerHTML =
+    `<option value="">
+      Chọn Tỉnh/Thành
+    </option>`;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("dm_khu_vuc")
+      .select(
+        "ma_khu_vuc, tinh_thanh"
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "tinh_thanh",
+        { ascending: true }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "Không tải được danh sách Tỉnh/Thành.";
+
+    message.className =
+      "message error";
+
+    return;
+  }
+
+
+  data.forEach(area => {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+    option.value =
+      area.tinh_thanh;
+
+    option.textContent =
+      area.tinh_thanh;
+
+    option.dataset.maKhuVuc =
+      area.ma_khu_vuc;
+
+    editArea.appendChild(
+      option
+    );
+  });
+}
+
+
+/* =====================================================
+   LOAD XÃ / PHƯỜNG
+===================================================== */
+
+async function loadWards(
+  maKhuVuc,
+  selectedWard = ""
+) {
+
+  editWard.disabled = true;
+
+  editWard.innerHTML =
+    `<option value="">
+      Đang tải Xã/Phường...
+    </option>`;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("dm_xa_phuong")
+      .select(
+        "ma_xa_phuong, ten_xa_phuong"
+      )
+      .eq(
+        "ma_khu_vuc",
+        maKhuVuc
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "ten_xa_phuong",
+        { ascending: true }
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    editWard.innerHTML =
+      `<option value="">
+        Không tải được Xã/Phường
+      </option>`;
+
+    return;
+  }
+
+
+  editWard.innerHTML =
+    `<option value="">
+      Chọn Xã/Phường
+    </option>`;
+
+
+  data.forEach(ward => {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+    option.value =
+      ward.ten_xa_phuong;
+
+    option.textContent =
+      ward.ten_xa_phuong;
+
+    editWard.appendChild(
+      option
+    );
+  });
+
+
+  editWard.disabled = false;
+
+
+  if (selectedWard) {
+
+    editWard.value =
+      selectedWard;
+  }
+}
+
+
+/* =====================================================
+   MỞ FORM SỬA
+===================================================== */
+
+async function openEdit() {
+
+  if (!currentCoach) return;
+
+
+  message.textContent = "";
+  message.className = "message";
+
+
+  document.getElementById(
+    "editFullName"
+  ).value =
+    currentCoach.full_name || "";
+
+
+  document.getElementById(
+    "editPhone"
+  ).value =
+    currentCoach.phone || "";
+
+
+  document.getElementById(
+    "editEmail"
+  ).value =
+    currentCoach.email || "";
+
+
+  document.getElementById(
+    "editNote"
+  ).value =
+    currentCoach.note || "";
+
+
+  /*
+    Trạng thái cũ nếu không nằm
+    trong danh sách hiện tại
+    thì tự thêm để không mất dữ liệu.
+  */
+
+  const statusSelect =
+    document.getElementById(
+      "editStatus"
+    );
+
+
+  const exists =
+    [...statusSelect.options]
+      .some(
+        option =>
+          option.value ===
+          currentCoach.status
+      );
+
+
+  if (
+    currentCoach.status &&
+    !exists
+  ) {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+    option.value =
+      currentCoach.status;
+
+    option.textContent =
+      currentCoach.status;
+
+    statusSelect.appendChild(
+      option
+    );
+  }
+
+
+  statusSelect.value =
+    currentCoach.status ||
+    "Hoạt động";
+
+
+  await loadAreas();
+
+
+  editArea.value =
+    currentCoach.preferred_area || "";
+
+
+  if (
+    currentCoach.preferred_area
+  ) {
+
+    const selectedOption =
+      editArea.options[
+        editArea.selectedIndex
+      ];
+
+    const maKhuVuc =
+      selectedOption?.dataset
+        ?.maKhuVuc;
+
+
+    if (maKhuVuc) {
+
+      await loadWards(
+        maKhuVuc,
+        currentCoach.preferred_ward || ""
+      );
+    }
+  }
+
+
+  viewMode.style.display =
+    "none";
+
+  editForm.classList.add(
+    "active"
+  );
+
+  editBtn.style.display =
+    "none";
+}
+
+
+/* =====================================================
+   ĐỔI TỈNH
+===================================================== */
+
+editArea.addEventListener(
+  "change",
+  async () => {
+
+    editWard.disabled = true;
+
+    editWard.innerHTML =
+      `<option value="">
+        Chọn Tỉnh/Thành trước
+      </option>`;
+
+
+    const selectedOption =
+      editArea.options[
+        editArea.selectedIndex
+      ];
+
+
+    const maKhuVuc =
+      selectedOption?.dataset
+        ?.maKhuVuc;
+
+
+    if (!maKhuVuc) {
       return;
     }
 
-    const { data, error } =
+
+    await loadWards(
+      maKhuVuc
+    );
+  }
+);
+
+
+/* =====================================================
+   NÚT SỬA
+===================================================== */
+
+editBtn.addEventListener(
+  "click",
+  openEdit
+);
+
+
+/* =====================================================
+   HỦY
+===================================================== */
+
+cancelBtn.addEventListener(
+  "click",
+  () => {
+
+    editForm.classList.remove(
+      "active"
+    );
+
+    viewMode.style.display =
+      "block";
+
+    editBtn.style.display =
+      "inline-block";
+
+    message.textContent = "";
+  }
+);
+
+
+/* =====================================================
+   LƯU THAY ĐỔI
+===================================================== */
+
+editForm.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+
+    const fullName =
+      document.getElementById(
+        "editFullName"
+      ).value.trim();
+
+
+    const phone =
+      document.getElementById(
+        "editPhone"
+      ).value.trim();
+
+
+    const email =
+      document.getElementById(
+        "editEmail"
+      ).value.trim();
+
+
+    const preferredArea =
+      editArea.value.trim();
+
+
+    const preferredWard =
+      editWard.value.trim();
+
+
+    const status =
+      document.getElementById(
+        "editStatus"
+      ).value;
+
+
+    const note =
+      document.getElementById(
+        "editNote"
+      ).value.trim();
+
+
+    if (!fullName) {
+
+      message.textContent =
+        "Hãy nhập họ và tên Coach.";
+
+      message.className =
+        "message error";
+
+      return;
+    }
+
+
+    saveBtn.disabled =
+      true;
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    const {
+      data,
+      error
+    } =
       await sb
         .from("coaches")
+        .update({
+
+          full_name:
+            fullName,
+
+          phone:
+            phone || null,
+
+          email:
+            email || null,
+
+          preferred_area:
+            preferredArea || null,
+
+          preferred_ward:
+            preferredWard || null,
+
+          status:
+            status,
+
+          note:
+            note || null
+
+        })
+        .eq(
+          "id",
+          coachId
+        )
         .select(`
           id,
           coach_code,
@@ -261,36 +1180,89 @@
           status,
           note
         `)
-        .eq("id", coachId)
         .single();
 
-    if (error || !data) {
+
+    if (error) {
+
       console.error(error);
-      alert("Không tải được hồ sơ Coach.");
+
+      message.textContent =
+        "Không lưu được thay đổi: " +
+        error.message;
+
+      message.className =
+        "message error";
+
+      saveBtn.disabled =
+        false;
+
+      saveBtn.textContent =
+        "LƯU THAY ĐỔI";
+
       return;
     }
 
-    show("coachName", data.full_name);
-    show("coachCode", data.coach_code);
-    show("phone", data.phone);
-    show("email", data.email);
-    show("area", data.preferred_area);
-    show("ward", data.preferred_ward);
-    show("status", data.status);
-    show("note", data.note);
+
+    currentCoach =
+      data;
+
+
+    renderCoach();
+
+
+    message.textContent =
+      "Đã cập nhật Coach thành công.";
+
+    message.className =
+      "message success";
+
+
+    setTimeout(
+      () => {
+
+        editForm.classList.remove(
+          "active"
+        );
+
+        viewMode.style.display =
+          "block";
+
+        editBtn.style.display =
+          "inline-block";
+
+        saveBtn.disabled =
+          false;
+
+        saveBtn.textContent =
+          "LƯU THAY ĐỔI";
+
+        message.textContent = "";
+
+      },
+      700
+    );
   }
+);
 
-  async function init() {
 
-    const ok =
-      await checkAdmin();
+/* =====================================================
+   START
+===================================================== */
 
-    if (!ok) return;
+async function init() {
 
-    await loadCoach();
-  }
+  const ok =
+    await checkAdmin();
 
-  init();
+  if (!ok) return;
+
+  await loadCoach();
+}
+
+
+init();
+
 </script>
 
 </body>
