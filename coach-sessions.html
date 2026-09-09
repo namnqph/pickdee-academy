@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Lịch dạy của tôi | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .container {
+      width: min(1150px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.65);
+      margin-bottom: 24px;
+    }
+
+    .coach-card {
+      padding: 18px;
+      margin-bottom: 18px;
+      border-radius: 15px;
+      background: rgba(6,39,88,.72);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .coach-name {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .coach-code {
+      margin-top: 5px;
+      color: #d8ff45;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: white;
+      outline: none;
+      font-size: 15px;
+    }
+
+    .card {
+      overflow: hidden;
+      border-radius: 16px;
+      background: rgba(6,39,88,.72);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,.045);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.13);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .today {
+      color: #d8ff45;
+      font-weight: 900;
+    }
+
+    #message {
+      margin-bottom: 15px;
+      color: #ffb0b0;
+    }
+
+    #empty {
+      display: none;
+      padding: 30px;
+      text-align: center;
+      color: rgba(255,255,255,.6);
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        padding: 15px;
+      }
+
+      th,
+      td {
+        padding: 12px 9px;
+      }
+
+      .container {
+        width: calc(100% - 20px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+</header>
+
+<main class="container">
+
+  <div class="eyebrow">
+    KHU VỰC COACH
+  </div>
+
+  <h1>Lịch dạy của tôi</h1>
+
+  <div class="sub">
+    Chỉ hiển thị các buổi học được phân công cho bạn.
+  </div>
+
+
+  <section class="coach-card">
+    <div class="coach-name" id="coachName">
+      Đang tải Coach...
+    </div>
+
+    <div class="coach-code" id="coachCode"></div>
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <div class="toolbar">
+    <input
+      id="search"
+      type="search"
+      placeholder="Tìm mã buổi, học viên, sân, trạng thái..."
+    >
+  </div>
+
+
+  <section class="card">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Mã buổi</th>
+            <th>Học viên</th>
+            <th>Buổi số</th>
+            <th>Ngày</th>
+            <th>Giờ</th>
+            <th>Sân</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+
+        <tbody id="sessionBody">
+          <tr>
+            <td colspan="7">
+              Đang tải lịch dạy...
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+
+      <div id="empty">
+        Bạn chưa có lịch dạy.
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="./coach-sessions.js?v=20260910-1"></script>
+
+</body>
+</html>
