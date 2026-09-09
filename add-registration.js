@@ -17,6 +17,15 @@ const studentId =
 
 let currentStudent = null;
 
+const preferredAreaSelect =
+  document.getElementById("preferredArea");
+
+const preferredWardSelect =
+  document.getElementById("preferredWard");
+
+const message =
+  document.getElementById("message");
+
 
 /* ======================================
    KHỞI ĐỘNG
@@ -65,12 +74,183 @@ async function init() {
     return;
   }
 
+  await loadAreas();
   await loadStudent();
 }
 
 
 /* ======================================
-   ĐỌC THÔNG TIN HỌC VIÊN
+   LOAD 34 TỈNH / THÀNH
+====================================== */
+
+async function loadAreas() {
+
+  preferredAreaSelect.disabled = true;
+
+  preferredAreaSelect.innerHTML =
+    `<option value="">Đang tải Tỉnh/Thành...</option>`;
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("dm_khu_vuc")
+      .select("ma_khu_vuc, tinh_thanh")
+      .eq("dang_hoat_dong", true)
+      .order(
+        "tinh_thanh",
+        { ascending: true }
+      );
+
+  if (error) {
+
+    console.error(
+      "Lỗi tải Tỉnh/Thành:",
+      error
+    );
+
+    preferredAreaSelect.innerHTML =
+      `<option value="">Không tải được Tỉnh/Thành</option>`;
+
+    return;
+  }
+
+  preferredAreaSelect.innerHTML =
+    `<option value="">Chọn Tỉnh/Thành</option>`;
+
+  data.forEach(area => {
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      area.tinh_thanh;
+
+    option.textContent =
+      area.tinh_thanh;
+
+    option.dataset.maKhuVuc =
+      area.ma_khu_vuc;
+
+    preferredAreaSelect.appendChild(
+      option
+    );
+  });
+
+  preferredAreaSelect.disabled = false;
+}
+
+
+/* ======================================
+   LOAD XÃ / PHƯỜNG
+====================================== */
+
+async function loadWards(
+  maKhuVuc,
+  selectedWard = ""
+) {
+
+  preferredWardSelect.disabled = true;
+
+  preferredWardSelect.innerHTML =
+    `<option value="">Đang tải Xã/Phường...</option>`;
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("dm_xa_phuong")
+      .select(
+        "ma_xa_phuong, ten_xa_phuong"
+      )
+      .eq(
+        "ma_khu_vuc",
+        maKhuVuc
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "ten_xa_phuong",
+        { ascending: true }
+      );
+
+  if (error) {
+
+    console.error(
+      "Lỗi tải Xã/Phường:",
+      error
+    );
+
+    preferredWardSelect.innerHTML =
+      `<option value="">Không tải được Xã/Phường</option>`;
+
+    return;
+  }
+
+  preferredWardSelect.innerHTML =
+    `<option value="">Chọn Xã/Phường</option>`;
+
+  data.forEach(ward => {
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      ward.ten_xa_phuong;
+
+    option.textContent =
+      ward.ten_xa_phuong;
+
+    preferredWardSelect.appendChild(
+      option
+    );
+  });
+
+  preferredWardSelect.disabled = false;
+
+  if (selectedWard) {
+    preferredWardSelect.value =
+      selectedWard;
+  }
+}
+
+
+/* ======================================
+   KHI ĐỔI TỈNH
+====================================== */
+
+preferredAreaSelect.addEventListener(
+  "change",
+  async () => {
+
+    preferredWardSelect.disabled = true;
+
+    preferredWardSelect.innerHTML =
+      `<option value="">Chọn Tỉnh/Thành trước</option>`;
+
+    const selectedOption =
+      preferredAreaSelect.options[
+        preferredAreaSelect.selectedIndex
+      ];
+
+    const maKhuVuc =
+      selectedOption?.dataset?.maKhuVuc;
+
+    if (!maKhuVuc) {
+      return;
+    }
+
+    await loadWards(maKhuVuc);
+  }
+);
+
+
+/* ======================================
+   ĐỌC HỌC VIÊN
 ====================================== */
 
 async function loadStudent() {
@@ -117,19 +297,31 @@ async function loadStudent() {
       : "";
 
   document.getElementById(
-    "preferredArea"
-  ).value =
-    data.preferred_area || "";
-
-  document.getElementById(
-    "preferredWard"
-  ).value =
-    data.preferred_ward || "";
-
-  document.getElementById(
     "backLink"
   ).href =
     `./student-detail.html?id=${encodeURIComponent(studentId)}`;
+
+  preferredAreaSelect.value =
+    data.preferred_area || "";
+
+  if (data.preferred_area) {
+
+    const selectedOption =
+      preferredAreaSelect.options[
+        preferredAreaSelect.selectedIndex
+      ];
+
+    const maKhuVuc =
+      selectedOption?.dataset?.maKhuVuc;
+
+    if (maKhuVuc) {
+
+      await loadWards(
+        maKhuVuc,
+        data.preferred_ward || ""
+      );
+    }
+  }
 }
 
 
@@ -138,9 +330,7 @@ async function loadStudent() {
 ====================================== */
 
 document
-  .getElementById(
-    "registrationForm"
-  )
+  .getElementById("registrationForm")
   .addEventListener(
     "submit",
     async event => {
@@ -152,11 +342,6 @@ document
           "saveBtn"
         );
 
-      const message =
-        document.getElementById(
-          "message"
-        );
-
       message.textContent = "";
       message.className = "message";
 
@@ -166,14 +351,14 @@ document
         ).value.trim();
 
       const preferredArea =
-        document.getElementById(
-          "preferredArea"
-        ).value.trim();
+        preferredAreaSelect
+          .value
+          .trim();
 
       const preferredWard =
-        document.getElementById(
-          "preferredWard"
-        ).value.trim();
+        preferredWardSelect
+          .value
+          .trim();
 
       const referralCode =
         document.getElementById(
@@ -263,12 +448,15 @@ document
       message.className =
         "message success";
 
-      setTimeout(() => {
+      setTimeout(
+        () => {
 
-        window.location.href =
-          `./student-detail.html?id=${encodeURIComponent(studentId)}`;
+          window.location.href =
+            `./student-detail.html?id=${encodeURIComponent(studentId)}`;
 
-      }, 700);
+        },
+        700
+      );
     }
   );
 
