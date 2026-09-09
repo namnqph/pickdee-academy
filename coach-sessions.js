@@ -392,14 +392,18 @@ function renderSessions(
 
 
           return `
-            <tr>
-              <td>
-                <strong>
-                  ${escapeHTML(
-                    session.session_code
-                  )}
-                </strong>
-              </td>
+  <tr
+    style="cursor:pointer"
+    onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
+    title="Mở chi tiết buổi học"
+  >
+    <td>
+      <strong>
+        ${escapeHTML(
+          session.session_code
+        )}
+      </strong>
+    </td>
 
               <td>
                 ${escapeHTML(
