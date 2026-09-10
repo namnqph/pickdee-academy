@@ -253,6 +253,28 @@
       color: #ff9f9f;
     }
 
+    .value-revenue {
+      color: #b9ff18;
+    }
+
+    .value-cost {
+      color: #ffbf69;
+    }
+
+    .value-profit {
+      color: #b9ff18;
+    }
+
+    .value-loss {
+      color: #ff8e8e;
+    }
+
+    .month-label {
+      margin-top: 6px;
+      color: #8291a4;
+      font-size: 12px;
+    }
+
 
     #loading {
       padding: 40px;
@@ -673,15 +695,80 @@
           </h2>
 
           <p>
-            Doanh thu,
-            chi phí Coach,
-            chi phí vận hành
+            Doanh thu, tổng chi phí
             và lợi nhuận Academy.
           </p>
 
-          <span class="status">
-            ĐÃ KẾT NỐI
-          </span>
+
+          <div
+            id="financeMonthLabel"
+            class="month-label"
+          >
+            Tháng hiện tại
+          </div>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💰 Doanh thu
+              </span>
+
+              <span
+                id="financeRevenue"
+                class="
+                  card-stat-value
+                  value-revenue
+                "
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💸 Tổng chi phí
+              </span>
+
+              <span
+                id="financeTotalCost"
+                class="
+                  card-stat-value
+                  value-cost
+                "
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                📈 Lợi nhuận
+              </span>
+
+              <span
+                id="financeProfit"
+                class="
+                  card-stat-value
+                  value-profit
+                "
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
 
         </div>
 
@@ -1290,8 +1377,7 @@
         const registrationStatus =
           String(
             registration.status || ""
-          )
-            .trim();
+          ).trim();
 
 
         if (
@@ -1529,40 +1615,23 @@
       data || [];
 
 
-    /* =====================================
-       CÔNG CHƯA CHỐT
-    ====================================== */
-
     const unclosedRows =
       rows.filter(
         row =>
           String(
             row.status || ""
-          )
-            .trim()
+          ).trim()
           ===
           "Chưa chốt"
       );
 
-
-    /* =====================================
-       CHƯA THANH TOÁN
-
-       Bao gồm:
-       Chưa chốt
-       Đã chốt
-
-       Không gồm:
-       Đã thanh toán
-    ====================================== */
 
     const unpaidRows =
       rows.filter(
         row =>
           String(
             row.status || ""
-          )
-            .trim()
+          ).trim()
           !==
           "Đã thanh toán"
       );
@@ -1607,6 +1676,366 @@
 
   setInterval(
     loadCoachWorkSummary,
+    60000
+  );
+
+
+})();
+
+</script>
+
+
+<!-- =====================================================
+     TÀI CHÍNH THÁNG
+====================================================== -->
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const financeSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const financeRevenue =
+    document.getElementById(
+      "financeRevenue"
+    );
+
+
+  const financeTotalCost =
+    document.getElementById(
+      "financeTotalCost"
+    );
+
+
+  const financeProfit =
+    document.getElementById(
+      "financeProfit"
+    );
+
+
+  const financeMonthLabel =
+    document.getElementById(
+      "financeMonthLabel"
+    );
+
+
+  function money(value) {
+
+
+    return (
+      Number(value || 0)
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function getMonthKey() {
+
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+
+    return `${year}-${month}`;
+
+  }
+
+
+  function getNumber(
+    row,
+    possibleKeys
+  ) {
+
+
+    for (
+      const key
+      of possibleKeys
+    ) {
+
+
+      if (
+        row[key] !== undefined
+        &&
+        row[key] !== null
+        &&
+        row[key] !== ""
+      ) {
+
+
+        const number =
+          Number(
+            row[key]
+          );
+
+
+        if (
+          Number.isFinite(
+            number
+          )
+        ) {
+
+
+          return number;
+
+        }
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  async function loadFinanceSummary() {
+
+
+    const {
+      data: { session }
+    } =
+      await financeSb.auth
+        .getSession();
+
+
+    if (!session) {
+      return;
+    }
+
+
+    const monthKey =
+      getMonthKey();
+
+
+    const [
+      year,
+      month
+    ] =
+      monthKey.split(
+        "-"
+      );
+
+
+    financeMonthLabel.textContent =
+      `Tháng ${month}/${year}`;
+
+
+    const {
+      data,
+      error
+    } =
+      await financeSb.rpc(
+        "admin_get_finance_month",
+        {
+          p_month:
+            monthKey
+        }
+      );
+
+
+    if (error) {
+
+
+      console.error(
+        "Không tải được thống kê tài chính:",
+        error
+      );
+
+
+      financeRevenue.textContent =
+        "—";
+
+
+      financeTotalCost.textContent =
+        "—";
+
+
+      financeProfit.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const row =
+      Array.isArray(data)
+        ?
+        (
+          data[0]
+          ||
+          {}
+        )
+        :
+        (
+          data
+          ||
+          {}
+        );
+
+
+    /*
+      Dùng nhiều tên cột dự phòng
+      để tương thích RPC hiện tại.
+    */
+
+    const revenue =
+      getNumber(
+        row,
+        [
+          "revenue",
+          "tuition_revenue",
+          "total_revenue"
+        ]
+      )
+      ??
+      0;
+
+
+    const coachCost =
+      getNumber(
+        row,
+        [
+          "coach_cost",
+          "coach_costs",
+          "total_coach_cost"
+        ]
+      )
+      ??
+      0;
+
+
+    const operatingCost =
+      getNumber(
+        row,
+        [
+          "operating_cost",
+          "operating_costs",
+          "operating_expense",
+          "operating_expenses",
+          "total_operating_cost"
+        ]
+      )
+      ??
+      0;
+
+
+    const totalCost =
+      coachCost
+      +
+      operatingCost;
+
+
+    const rpcProfit =
+      getNumber(
+        row,
+        [
+          "profit",
+          "net_profit",
+          "total_profit"
+        ]
+      );
+
+
+    const profit =
+      rpcProfit
+      ??
+      (
+        revenue
+        -
+        totalCost
+      );
+
+
+    financeRevenue.textContent =
+      money(
+        revenue
+      );
+
+
+    financeTotalCost.textContent =
+      money(
+        totalCost
+      );
+
+
+    financeProfit.textContent =
+      money(
+        profit
+      );
+
+
+    if (
+      profit < 0
+    ) {
+
+
+      financeProfit.classList.remove(
+        "value-profit"
+      );
+
+
+      financeProfit.classList.add(
+        "value-loss"
+      );
+
+    }
+    else {
+
+
+      financeProfit.classList.remove(
+        "value-loss"
+      );
+
+
+      financeProfit.classList.add(
+        "value-profit"
+      );
+
+    }
+
+  }
+
+
+  await loadFinanceSummary();
+
+
+  /*
+    Tự cập nhật mỗi 60 giây.
+  */
+
+  setInterval(
+    loadFinanceSummary,
     60000
   );
 
