@@ -1,20 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 
 <head>
-  <meta charset="UTF-8">
+
+  <meta charset="utf-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0"
+    content="width=device-width,initial-scale=1"
   >
 
   <title>Tạo buổi học | PickDee Academy</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -25,138 +25,81 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
-      color: white;
-
-      background:
-        radial-gradient(
-          circle at 80% 10%,
-          rgba(90,255,180,.13),
-          transparent 30%
-        ),
-        linear-gradient(
-          145deg,
-          #041733,
-          #062456 50%,
-          #03142d
-        );
+      background: #09111f;
+      color: #fff;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        sans-serif;
     }
 
-    .topbar {
-      padding: 18px 24px;
+    header {
+      padding: 18px 22px;
+      border-bottom: 1px solid #26364b;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-
-      border-bottom:
-        1px solid rgba(255,255,255,.12);
+      gap: 20px;
     }
 
-    .brand {
-      font-size: 19px;
-      font-weight: 800;
-    }
-
-    .brand span {
-      color: #d8ff45;
-    }
-
-    #userEmail {
-      color: rgba(255,255,255,.72);
-      font-size: 14px;
-    }
-
-    .container {
-      width: min(
-        760px,
-        calc(100% - 28px)
-      );
-
-      margin: auto;
-      padding: 32px 0 60px;
-    }
-
-    .back {
-      color: #d8ff45;
+    a {
+      color: #b9ff18;
       text-decoration: none;
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    .eyebrow {
-      margin-top: 26px;
-      color: #d8ff45;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1px;
+    main {
+      max-width: 820px;
+      margin: auto;
+      padding: 35px 20px 70px;
     }
 
     h1 {
+      font-size: 40px;
       margin: 8px 0 8px;
-
-      font-size:
-        clamp(
-          34px,
-          6vw,
-          52px
-        );
     }
 
     .sub {
-      margin-bottom: 26px;
-      color: rgba(255,255,255,.68);
+      color: #9dacbe;
+      margin-bottom: 28px;
       line-height: 1.5;
     }
 
-    .card {
-      background: rgba(6,39,88,.76);
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
 
-      border:
-        1px solid rgba(255,255,255,.12);
-
-      border-radius: 18px;
-      padding: 22px;
+    .full {
+      grid-column: 1 / -1;
     }
 
     label {
       display: block;
-      margin: 0 0 7px;
-      font-size: 13px;
+      margin-bottom: 7px;
       font-weight: 700;
-    }
-
-    .field {
-      margin-bottom: 18px;
     }
 
     input,
     select,
     textarea {
+
       width: 100%;
-      padding: 14px;
-      border-radius: 10px;
+
+      padding: 13px;
 
       border:
-        1px solid rgba(255,255,255,.18);
+        1px solid #394b62;
 
-      background:
-        rgba(255,255,255,.07);
+      border-radius: 9px;
+
+      background: #08111d;
 
       color: white;
-      outline: none;
-      font-size: 15px;
-    }
 
-    input[readonly] {
-      color: rgba(255,255,255,.82);
+      font-size: 16px;
 
-      background:
-        rgba(255,255,255,.045);
-    }
-
-    select {
-      color: #fff;
-      color-scheme: dark;
     }
 
     select option {
@@ -164,102 +107,106 @@
       background: #08111d;
     }
 
+    select:disabled,
+    input:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    input[readonly] {
+      color: #c8d2df;
+      background: #101a28;
+    }
+
     textarea {
-      resize: vertical;
       min-height: 90px;
+      resize: vertical;
     }
 
-    .two {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    .court-info {
 
-    /* =========================
-       THÔNG TIN SÂN
-    ========================= */
+      margin-top: 10px;
 
-    .court-box {
-      padding: 15px;
-      margin-top: -4px;
-      margin-bottom: 18px;
-      border-radius: 12px;
+      padding: 13px;
 
-      background:
-        rgba(216,255,69,.07);
+      border-radius: 9px;
 
       border:
-        1px solid rgba(216,255,69,.18);
+        1px solid #26364b;
+
+      background: #0e1b2d;
+
+      display: none;
+
     }
 
-    .court-summary {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+    .court-name {
+      font-weight: 900;
+      margin-bottom: 5px;
     }
 
-    .summary-label {
-      color: rgba(255,255,255,.48);
-      font-size: 12px;
-      margin-bottom: 4px;
-    }
-
-    .summary-value {
-      color: #d8ff45;
+    .court-price {
+      color: #b9ff18;
       font-weight: 900;
     }
 
-    .court-help {
-      margin-top: 11px;
-      color: rgba(255,255,255,.55);
-      font-size: 12px;
-      line-height: 1.5;
+    .court-address {
+      margin-top: 5px;
+      color: #9dacbe;
+      font-size: 14px;
+    }
+
+    .hint {
+      margin-top: 6px;
+      color: #8190a3;
+      font-size: 13px;
     }
 
     button {
+
       width: 100%;
-      padding: 15px;
+
+      height: 52px;
+
+      margin-top: 22px;
+
       border: 0;
-      border-radius: 11px;
-      background: #d8ff45;
-      color: #172600;
+
+      border-radius: 9px;
+
+      background: #b9ff18;
+
+      color: #07101b;
+
       font-weight: 900;
+
       cursor: pointer;
+
     }
 
     button:disabled {
       opacity: .5;
-      cursor: not-allowed;
+      cursor: wait;
     }
 
     #message {
-      margin-top: 15px;
-      font-size: 14px;
-      line-height: 1.5;
+      margin-top: 16px;
+      min-height: 24px;
+      font-weight: 800;
     }
 
-    .error {
-      color: #ffb0b0;
-    }
+    @media(max-width:650px) {
 
-    .success {
-      color: #d8ff45;
-    }
-
-    @media (max-width: 650px) {
-      .two,
-      .court-summary {
+      .grid {
         grid-template-columns: 1fr;
       }
 
-      .topbar {
-        padding: 15px;
+      .full {
+        grid-column: auto;
       }
 
-      #userEmail {
-        display: none;
-      }
     }
+
   </style>
 
 </head>
@@ -268,31 +215,32 @@
 <body>
 
 
-<header class="topbar">
+<header>
 
-  <div class="brand">
-    PickDee <span>Academy</span>
-  </div>
+  <strong>
+    PickDee Academy
+  </strong>
 
-  <div id="userEmail"></div>
+  <a
+    id="backLink"
+    href="/sessions"
+  >
+    ← Lịch học
+  </a>
 
 </header>
 
 
-<main class="container">
+<main>
 
 
-  <a
-    id="backLink"
-    class="back"
-    href="#"
+  <div
+    style="
+      color:#b9ff18;
+      font-weight:900
+    "
   >
-    ← Chi tiết đăng ký
-  </a>
-
-
-  <div class="eyebrow">
-    QUẢN LÝ HỌC VIÊN
+    QUẢN LÝ LỊCH HỌC
   </div>
 
 
@@ -302,100 +250,120 @@
 
 
   <div class="sub">
-    Tạo lịch học từ đăng ký đã duyệt.
-    Chọn sân từ danh mục để hệ thống tự lấy đúng chi phí sân.
+
+    Tạo lịch học từ đăng ký đã được duyệt.
+    Chọn khu vực để hệ thống tự lọc danh sách sân.
+
   </div>
 
 
-  <form
-    id="sessionForm"
-    class="card"
-  >
+  <form id="sessionForm">
 
 
-    <!-- ĐĂNG KÝ -->
-
-    <div class="field">
-
-      <label>
-        Đăng ký đã duyệt *
-      </label>
-
-      <select
-        id="registrationId"
-        required
-      >
-
-        <option value="">
-          — Chọn đăng ký —
-        </option>
-
-      </select>
-
-    </div>
+    <div class="grid">
 
 
-    <!-- HỌC VIÊN -->
+      <!-- ĐĂNG KÝ -->
 
-    <div class="field">
+      <div class="full">
 
-      <label>
-        Học viên
-      </label>
+        <label>
+          Đăng ký học *
+        </label>
 
-      <input
-        id="studentName"
-        type="text"
-        placeholder="Tự động theo đăng ký"
-        readonly
-      >
+        <select
+          id="registrationId"
+          required
+        >
 
-    </div>
+          <option value="">
+            Đang tải đăng ký...
+          </option>
 
+        </select>
 
-    <!-- COACH -->
-
-    <div class="field">
-
-      <label>
-        Coach phụ trách
-      </label>
-
-      <input
-        id="coachName"
-        type="text"
-        placeholder="Tự động theo đăng ký"
-        readonly
-      >
-
-    </div>
+      </div>
 
 
-    <!-- BUỔI SỐ -->
+      <!-- HỌC VIÊN -->
 
-    <div class="field">
+      <div>
 
-      <label>
-        Buổi số *
-      </label>
+        <label>
+          Học viên
+        </label>
 
-      <input
-        id="sessionNo"
-        type="number"
-        min="1"
-        required
-        readonly
-      >
+        <input
+          id="studentName"
+          readonly
+        >
 
-    </div>
+      </div>
 
 
-    <!-- NGÀY + GIỜ -->
+      <!-- COACH -->
 
-    <div class="two">
+      <div>
+
+        <label>
+          Coach
+        </label>
+
+        <input
+          id="coachName"
+          readonly
+        >
+
+      </div>
 
 
-      <div class="field">
+      <!-- BUỔI SỐ -->
+
+      <div>
+
+        <label>
+          Buổi số
+        </label>
+
+        <input
+          id="sessionNo"
+          type="number"
+          readonly
+        >
+
+      </div>
+
+
+      <!-- THỜI LƯỢNG -->
+
+      <div>
+
+        <label>
+          Thời lượng
+        </label>
+
+        <select id="duration">
+
+          <option value="60">
+            60 phút
+          </option>
+
+          <option value="90">
+            90 phút
+          </option>
+
+          <option value="120">
+            120 phút
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- NGÀY -->
+
+      <div>
 
         <label>
           Ngày học *
@@ -410,7 +378,9 @@
       </div>
 
 
-      <div class="field">
+      <!-- GIỜ -->
+
+      <div>
 
         <label>
           Giờ bắt đầu *
@@ -425,132 +395,136 @@
       </div>
 
 
-    </div>
+      <!-- ===================================
+           TỈNH / THÀNH
+      ==================================== -->
+
+      <div>
+
+        <label>
+          Tỉnh / Thành *
+        </label>
+
+        <select
+          id="areaSelect"
+          required
+        >
+
+          <option value="">
+            Đang tải Tỉnh/Thành...
+          </option>
+
+        </select>
+
+      </div>
 
 
-    <!-- THỜI LƯỢNG -->
+      <!-- ===================================
+           PHƯỜNG / XÃ
+      ==================================== -->
 
-    <div class="field">
+      <div>
 
-      <label>
-        Thời lượng (phút) *
-      </label>
+        <label>
+          Phường / Xã
+        </label>
 
-      <input
-        id="durationMinutes"
-        type="number"
-        min="30"
-        step="15"
-        value="60"
-        required
-      >
+        <select
+          id="wardSelect"
+          disabled
+        >
 
-    </div>
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
 
+        </select>
 
-    <!-- CHỌN SÂN -->
-
-    <div class="field">
-
-      <label>
-        Sân học *
-      </label>
-
-      <select
-        id="courtId"
-        required
-      >
-
-        <option value="">
-          — Chọn sân —
-        </option>
-
-      </select>
-
-    </div>
+      </div>
 
 
-    <!--
-      GIỮ COURTNAME ĐỂ
-      CÁC TRANG CŨ VẪN ĐỌC ĐƯỢC TÊN SÂN
-    -->
+      <!-- ===================================
+           SÂN
+      ==================================== -->
 
-    <input
-      id="courtName"
-      type="hidden"
-      value=""
-    >
+      <div class="full">
+
+        <label>
+          Sân học *
+        </label>
+
+        <select
+          id="courtId"
+          disabled
+          required
+        >
+
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
+
+        </select>
 
 
-    <!-- THÔNG TIN SÂN -->
+        <!--
+          Giữ lại courtName để tương thích
+          với dữ liệu / code cũ.
+        -->
 
-    <div
-      id="courtInfo"
-      class="court-box"
-    >
-
-      <div class="court-summary">
+        <input
+          id="courtName"
+          type="hidden"
+        >
 
 
-        <div>
+        <div class="hint">
 
-          <div class="summary-label">
-            Sân đã chọn
-          </div>
+          Chọn Tỉnh/Thành để xem các sân đang hoạt động.
+          Chọn thêm Phường/Xã để lọc chính xác hơn.
+
+        </div>
+
+
+        <div
+          id="courtInfo"
+          class="court-info"
+        >
 
           <div
             id="courtDisplayName"
-            class="summary-value"
-          >
-            Chưa chọn sân
-          </div>
-
-        </div>
-
-
-        <div>
-
-          <div class="summary-label">
-            Chi phí sân / buổi
-          </div>
+            class="court-name"
+          ></div>
 
           <div
             id="courtCostDisplay"
-            class="summary-value"
-          >
-            0đ
-          </div>
+            class="court-price"
+          ></div>
+
+          <div
+            id="courtAddressDisplay"
+            class="court-address"
+          ></div>
 
         </div>
 
-
       </div>
 
 
-      <div class="court-help">
+      <!-- GHI CHÚ -->
 
-        Chi phí sân được lấy tự động từ danh mục sân.
-        Khi buổi học hoàn thành, hệ thống sẽ tự ghi nhận
-        chi phí thuê sân tương ứng.
+      <div class="full">
+
+        <label>
+          Ghi chú
+        </label>
+
+        <textarea
+          id="note"
+          placeholder="Không bắt buộc"
+        ></textarea>
 
       </div>
 
-    </div>
-
-
-    <!-- GHI CHÚ -->
-
-    <div class="field">
-
-      <label>
-        Ghi chú
-      </label>
-
-      <textarea
-        id="note"
-        rows="4"
-        placeholder="Ghi chú cho buổi học..."
-      ></textarea>
 
     </div>
 
@@ -559,7 +533,9 @@
       id="submitBtn"
       type="submit"
     >
-      + TẠO BUỔI HỌC
+
+      TẠO BUỔI HỌC
+
     </button>
 
 
@@ -568,10 +544,17 @@
 
   </form>
 
+
 </main>
 
 
-<script src="./add-session.js?v=20260910-4"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="./config.js"></script>
+
+<script src="./add-session.js?v=20260910-5"></script>
 
 
 </body>
