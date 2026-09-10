@@ -159,7 +159,7 @@
 
 
     /* =====================================
-       ALERT TỔNG
+       CẢNH BÁO ADMIN
     ====================================== */
 
     .admin-alert {
@@ -204,6 +204,8 @@
       color: #d7dee8;
 
       font-size: 14px;
+
+      line-height: 1.5;
 
     }
 
@@ -316,10 +318,10 @@
 
 
     /* =====================================
-       THỐNG KÊ LỊCH HỌC
+       THỐNG KÊ TRONG CARD
     ====================================== */
 
-    .session-stats {
+    .card-stats {
 
       margin-top: 16px;
 
@@ -335,7 +337,7 @@
     }
 
 
-    .session-stat {
+    .card-stat {
 
       display: flex;
 
@@ -352,18 +354,20 @@
     }
 
 
-    .session-stat-label {
+    .card-stat-label {
 
       color: #b8c4d1;
 
     }
 
 
-    .session-stat-value {
+    .card-stat-value {
 
       font-weight: 900;
 
       font-size: 15px;
+
+      text-align: right;
 
     }
 
@@ -385,6 +389,20 @@
     .value-upcoming {
 
       color: #ffd66b;
+
+    }
+
+
+    .value-debt {
+
+      color: #ffd66b;
+
+    }
+
+
+    .value-debtor {
+
+      color: #ffb0b0;
 
     }
 
@@ -502,7 +520,7 @@
 
 
     <!-- =====================================
-         CẢNH BÁO ADMIN
+         CẢNH BÁO LỊCH QUÁ HẠN
     ====================================== -->
 
     <div
@@ -515,6 +533,7 @@
         ⚠️ Có lịch học cần xử lý
 
       </div>
+
 
       <div
         id="adminAlertText"
@@ -604,23 +623,24 @@
 
           <p>
             Theo dõi lịch hôm nay,
-            buổi quá hạn và các buổi sắp tới.
+            buổi quá hạn
+            và các buổi sắp tới.
           </p>
 
 
-          <div class="session-stats">
+          <div class="card-stats">
 
 
-            <div class="session-stat">
+            <div class="card-stat">
 
-              <span class="session-stat-label">
+              <span class="card-stat-label">
                 🔴 Quá hạn
               </span>
 
               <span
                 id="overdueCount"
                 class="
-                  session-stat-value
+                  card-stat-value
                   value-overdue
                 "
               >
@@ -630,16 +650,16 @@
             </div>
 
 
-            <div class="session-stat">
+            <div class="card-stat">
 
-              <span class="session-stat-label">
+              <span class="card-stat-label">
                 🟢 Hôm nay
               </span>
 
               <span
                 id="todayCount"
                 class="
-                  session-stat-value
+                  card-stat-value
                   value-today
                 "
               >
@@ -649,16 +669,16 @@
             </div>
 
 
-            <div class="session-stat">
+            <div class="card-stat">
 
-              <span class="session-stat-label">
+              <span class="card-stat-label">
                 🟡 Sắp tới
               </span>
 
               <span
                 id="upcomingCount"
                 class="
-                  session-stat-value
+                  card-stat-value
                   value-upcoming
                 "
               >
@@ -696,9 +716,49 @@
             và lịch sử thanh toán.
           </p>
 
-          <span class="status">
-            ĐÃ KẾT NỐI
-          </span>
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💵 Còn phải thu
+              </span>
+
+              <span
+                id="tuitionDebt"
+                class="
+                  card-stat-value
+                  value-debt
+                "
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                👤 Học viên còn nợ
+              </span>
+
+              <span
+                id="tuitionDebtorCount"
+                class="
+                  card-stat-value
+                  value-debtor
+                "
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
 
         </div>
 
@@ -814,7 +874,7 @@
 
 
 <!-- =====================================================
-     THỐNG KÊ LỊCH HỌC CHO ADMIN
+     THỐNG KÊ LỊCH HỌC
 ====================================================== -->
 
 <script>
@@ -863,13 +923,7 @@
     );
 
 
-  /* =====================================
-     SESSION DATETIME
-  ====================================== */
-
-  function getStart(
-    item
-  ) {
+  function getStart(item) {
 
 
     if (!item.session_date) {
@@ -907,9 +961,7 @@
   }
 
 
-  function getEnd(
-    item
-  ) {
+  function getEnd(item) {
 
 
     const start =
@@ -944,13 +996,7 @@
   }
 
 
-  /* =====================================
-     TODAY
-  ====================================== */
-
-  function isToday(
-    value
-  ) {
+  function isToday(value) {
 
 
     if (!value) {
@@ -993,17 +1039,14 @@
   }
 
 
-  /* =====================================
-     LOAD COUNTS
-  ====================================== */
-
   async function loadSessionCounts() {
 
 
     const {
       data: { session }
     } =
-      await dashboardSb.auth.getSession();
+      await dashboardSb.auth
+        .getSession();
 
 
     if (!session) {
@@ -1085,21 +1128,12 @@
 
 
         const start =
-          getStart(
-            item
-          );
+          getStart(item);
 
 
         const end =
-          getEnd(
-            item
-          );
+          getEnd(item);
 
-
-        /*
-          QUÁ HẠN:
-          đã qua hết thời lượng buổi.
-        */
 
         if (
           end
@@ -1118,11 +1152,6 @@
         }
 
 
-        /*
-          HÔM NAY:
-          chưa quá hạn.
-        */
-
         if (
           isToday(
             item.session_date
@@ -1137,11 +1166,6 @@
 
         }
 
-
-        /*
-          SẮP TỚI:
-          buổi tương lai.
-        */
 
         if (
           start
@@ -1172,10 +1196,6 @@
     upcomingCount.textContent =
       upcoming;
 
-
-    /* ===================================
-       CẢNH BÁO TOÀN TRANG
-    ==================================== */
 
     if (
       overdue > 0
@@ -1208,26 +1228,346 @@
   }
 
 
-  /* =====================================
-     START
-  ====================================== */
-
   await loadSessionCounts();
 
 
+  setInterval(
+    loadSessionCounts,
+    60000
+  );
+
+
+})();
+
+</script>
+
+
+<!-- =====================================================
+     THỐNG KÊ CÔNG NỢ HỌC PHÍ
+====================================================== -->
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const tuitionSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const tuitionDebt =
+    document.getElementById(
+      "tuitionDebt"
+    );
+
+
+  const tuitionDebtorCount =
+    document.getElementById(
+      "tuitionDebtorCount"
+    );
+
+
+  function money(value) {
+
+
+    return (
+      Number(value || 0)
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  async function loadTuitionSummary() {
+
+
+    const {
+      data: { session }
+    } =
+      await tuitionSb.auth
+        .getSession();
+
+
+    if (!session) {
+
+      return;
+
+    }
+
+
+    /* =====================================
+       LOAD ĐĂNG KÝ
+    ====================================== */
+
+    const {
+      data: registrations,
+      error: registrationError
+    } =
+      await tuitionSb
+        .from(
+          "registrations"
+        )
+        .select(`
+          id,
+          student_id,
+          tuition_fee,
+          status
+        `);
+
+
+    if (registrationError) {
+
+
+      console.error(
+        "Lỗi tải đăng ký học phí:",
+        registrationError
+      );
+
+
+      tuitionDebt.textContent =
+        "—";
+
+
+      tuitionDebtorCount.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    /* =====================================
+       LOAD CÁC KHOẢN ĐÃ THU
+    ====================================== */
+
+    const {
+      data: payments,
+      error: paymentError
+    } =
+      await tuitionSb
+        .from(
+          "tuition_payments"
+        )
+        .select(`
+          registration_id,
+          amount,
+          status
+        `)
+        .eq(
+          "status",
+          "Đã thu"
+        );
+
+
+    if (paymentError) {
+
+
+      console.error(
+        "Lỗi tải phiếu thu:",
+        paymentError
+      );
+
+
+      tuitionDebt.textContent =
+        "—";
+
+
+      tuitionDebtorCount.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    /* =====================================
+       TỔNG TIỀN ĐÃ THU THEO ĐĂNG KÝ
+    ====================================== */
+
+    const paidByRegistration =
+      new Map();
+
+
+    (payments || []).forEach(
+      payment => {
+
+
+        const registrationId =
+          Number(
+            payment.registration_id
+          );
+
+
+        const oldAmount =
+          paidByRegistration.get(
+            registrationId
+          )
+          ||
+          0;
+
+
+        paidByRegistration.set(
+
+          registrationId,
+
+          oldAmount
+          +
+          Number(
+            payment.amount || 0
+          )
+
+        );
+
+      }
+    );
+
+
+    /* =====================================
+       TÍNH CÔNG NỢ
+    ====================================== */
+
+    let totalDebt =
+      0;
+
+
+    const debtorStudents =
+      new Set();
+
+
+    const excludedStatuses =
+      new Set([
+        "Từ chối",
+        "Đã từ chối",
+        "Đã hủy",
+        "Hủy"
+      ]);
+
+
+    (registrations || []).forEach(
+      registration => {
+
+
+        /*
+          Không tính những đăng ký
+          đã bị từ chối / hủy.
+        */
+
+        if (
+          excludedStatuses.has(
+            String(
+              registration.status || ""
+            ).trim()
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const tuitionFee =
+          Number(
+            registration.tuition_fee || 0
+          );
+
+
+        if (
+          tuitionFee <= 0
+        ) {
+
+          return;
+
+        }
+
+
+        const paid =
+          paidByRegistration.get(
+            Number(
+              registration.id
+            )
+          )
+          ||
+          0;
+
+
+        const debt =
+          Math.max(
+            tuitionFee - paid,
+            0
+          );
+
+
+        if (
+          debt <= 0
+        ) {
+
+          return;
+
+        }
+
+
+        totalDebt +=
+          debt;
+
+
+        if (
+          registration.student_id
+        ) {
+
+
+          debtorStudents.add(
+            registration.student_id
+          );
+
+        }
+
+
+      }
+    );
+
+
+    /* =====================================
+       HIỂN THỊ
+    ====================================== */
+
+    tuitionDebt.textContent =
+      money(
+        totalDebt
+      );
+
+
+    tuitionDebtorCount.textContent =
+      debtorStudents.size;
+
+  }
+
+
+  await loadTuitionSummary();
+
+
   /*
-    Tự cập nhật mỗi 60 giây.
+    Cập nhật mỗi 60 giây.
 
-    Ví dụ BH006:
-    09:00 - 10:00.
-
-    Khi qua 10:00,
-    nếu vẫn Chờ học thì
-    số Quá hạn sẽ tự tăng.
+    Nếu Admin vừa thu học phí
+    rồi quay về trang Admin,
+    số công nợ sẽ tự cập nhật.
   */
 
   setInterval(
-    loadSessionCounts,
+    loadTuitionSummary,
     60000
   );
 
