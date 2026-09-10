@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Tài chính | PickDee Academy
+  </title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+
+    }
+
+
+    .topbar {
+
+      padding:
+        18px 24px;
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .brand {
+
+      font-size:
+        19px;
+
+      font-weight:
+        900;
+
+    }
+
+
+    .brand span {
+
+      color:
+        #d8ff45;
+
+    }
+
+
+    .top-actions {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        12px;
+
+    }
+
+
+    #userEmail {
+
+      color:
+        rgba(255,255,255,.75);
+
+      font-size:
+        14px;
+
+    }
+
+
+    .logout {
+
+      padding:
+        9px 12px;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        white;
+
+      font-weight:
+        800;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .container {
+
+      width:
+        min(
+          1150px,
+          calc(100% - 28px)
+        );
+
+      margin:
+        auto;
+
+      padding:
+        32px 0 60px;
+
+    }
+
+
+    .back {
+
+      color:
+        #d8ff45;
+
+      text-decoration:
+        none;
+
+      font-weight:
+        900;
+
+    }
+
+
+    .eyebrow {
+
+      margin-top:
+        25px;
+
+      color:
+        #d8ff45;
+
+      font-size:
+        13px;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        1px;
+
+    }
+
+
+    h1 {
+
+      margin:
+        8px 0 5px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+
+    }
+
+
+    .sub {
+
+      color:
+        rgba(255,255,255,.62);
+
+      margin-bottom:
+        24px;
+
+    }
+
+
+    /* ===============================
+       MONTH
+    =============================== */
+
+    .month-bar {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        12px;
+
+      margin-bottom:
+        18px;
+
+    }
+
+
+    .month-bar label {
+
+      font-weight:
+        900;
+
+    }
+
+
+    input,
+    select,
+    textarea {
+
+      padding:
+        12px;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        #09285a;
+
+      color:
+        white;
+
+      font-size:
+        15px;
+
+      outline:
+        none;
+
+    }
+
+
+    /* ===============================
+       SUMMARY
+    =============================== */
+
+    .summary {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap:
+        14px;
+
+      margin-bottom:
+        25px;
+
+    }
+
+
+    .summary-card,
+    .card {
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius:
+        16px;
+
+    }
+
+
+    .summary-card {
+
+      padding:
+        18px;
+
+    }
+
+
+    .summary-label {
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size:
+        12px;
+
+      margin-bottom:
+        7px;
+
+    }
+
+
+    .summary-value {
+
+      color:
+        #d8ff45;
+
+      font-size:
+        24px;
+
+      font-weight:
+        900;
+
+    }
+
+
+    .profit-card {
+
+      border-color:
+        rgba(216,255,69,.38);
+
+    }
+
+
+    /* ===============================
+       FORM
+    =============================== */
+
+    .card {
+
+      padding:
+        20px;
+
+      margin-bottom:
+        20px;
+
+    }
+
+
+    .section-title {
+
+      font-size:
+        20px;
+
+      font-weight:
+        900;
+
+      margin-bottom:
+        15px;
+
+    }
+
+
+    .form-grid {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr 1fr 1fr;
+
+      gap:
+        13px;
+
+    }
+
+
+    .field {
+
+      margin-bottom:
+        14px;
+
+    }
+
+
+    .field label {
+
+      display:
+        block;
+
+      margin-bottom:
+        6px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size:
+        12px;
+
+      font-weight:
+        800;
+
+    }
+
+
+    .field input,
+    .field select,
+    .field textarea {
+
+      width:
+        100%;
+
+    }
+
+
+    textarea {
+
+      min-height:
+        80px;
+
+      resize:
+        vertical;
+
+    }
+
+
+    .submit-btn {
+
+      width:
+        100%;
+
+      border:
+        0;
+
+      border-radius:
+        10px;
+
+      padding:
+        14px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #172600;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .submit-btn:disabled {
+
+      opacity:
+        .5;
+
+      cursor:
+        wait;
+
+    }
+
+
+    /* ===============================
+       TABLE
+    =============================== */
+
+    .table-wrap {
+
+      overflow-x:
+        auto;
+
+    }
+
+
+    table {
+
+      width:
+        100%;
+
+      border-collapse:
+        collapse;
+
+      min-width:
+        760px;
+
+    }
+
+
+    th,
+    td {
+
+      padding:
+        13px 10px;
+
+      text-align:
+        left;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      font-size:
+        14px;
+
+    }
+
+
+    th {
+
+      color:
+        #d8ff45;
+
+    }
+
+
+    .money {
+
+      font-weight:
+        900;
+
+    }
+
+
+    .badge {
+
+      display:
+        inline-block;
+
+      padding:
+        6px 9px;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(216,255,69,.12);
+
+      color:
+        #d8ff45;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+    }
+
+
+    #message {
+
+      min-height:
+        20px;
+
+      margin-bottom:
+        15px;
+
+      font-weight:
+        800;
+
+    }
+
+
+    .empty {
+
+      text-align:
+        center;
+
+      color:
+        rgba(255,255,255,.55);
+
+      padding:
+        25px;
+
+    }
+
+
+    @media(max-width:850px) {
+
+      .summary {
+
+        grid-template-columns:
+          1fr 1fr;
+
+      }
+
+
+      .form-grid {
+
+        grid-template-columns:
+          1fr;
+
+      }
+
+    }
+
+
+    @media(max-width:560px) {
+
+      .summary {
+
+        grid-template-columns:
+          1fr;
+
+      }
+
+
+      #userEmail {
+
+        display:
+          none;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>Academy</span>
+
+  </div>
+
+
+  <div class="top-actions">
+
+    <div id="userEmail"></div>
+
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+
+      ĐĂNG XUẤT
+
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <a
+    href="./admin"
+    class="back"
+  >
+
+    ← Khu vực Admin
+
+  </a>
+
+
+  <div class="eyebrow">
+
+    QUẢN LÝ TÀI CHÍNH
+
+  </div>
+
+
+  <h1>
+
+    Tài chính
+
+  </h1>
+
+
+  <div class="sub">
+
+    Theo dõi doanh thu,
+    chi phí Coach,
+    chi phí vận hành
+    và lợi nhuận PickDee Academy.
+
+  </div>
+
+
+  <!-- ===============================
+       MONTH
+  ================================ -->
+
+  <div class="month-bar">
+
+    <label for="monthFilter">
+      Tháng
+    </label>
+
+
+    <input
+      id="monthFilter"
+      type="month"
+    >
+
+  </div>
+
+
+  <!-- ===============================
+       SUMMARY
+  ================================ -->
+
+  <section class="summary">
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+
+        Doanh thu học phí
+
+      </div>
+
+      <div
+        id="revenueValue"
+        class="summary-value"
+      >
+
+        0đ
+
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+
+        Chi phí Coach
+
+      </div>
+
+      <div
+        id="coachCostValue"
+        class="summary-value"
+      >
+
+        0đ
+
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+
+        Chi phí vận hành
+
+      </div>
+
+      <div
+        id="operatingCostValue"
+        class="summary-value"
+      >
+
+        0đ
+
+      </div>
+
+    </div>
+
+
+    <div class="summary-card profit-card">
+
+      <div class="summary-label">
+
+        Lợi nhuận
+
+      </div>
+
+      <div
+        id="profitValue"
+        class="summary-value"
+      >
+
+        0đ
+
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <!-- ===============================
+       ADD EXPENSE
+  ================================ -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+
+      ➕ Thêm chi phí vận hành
+
+    </div>
+
+
+    <form id="expenseForm">
+
+
+      <div class="form-grid">
+
+
+        <div class="field">
+
+          <label>
+            Ngày chi phí
+          </label>
+
+          <input
+            id="expenseDate"
+            type="date"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Loại chi phí
+          </label>
+
+          <select
+            id="expenseType"
+            required
+          >
+
+            <option value="">
+              -- Chọn loại --
+            </option>
+
+            <option value="Thuê sân">
+              Thuê sân
+            </option>
+
+            <option value="Bóng tập">
+              Bóng tập
+            </option>
+
+            <option value="Dụng cụ">
+              Dụng cụ
+            </option>
+
+            <option value="Thưởng giới thiệu">
+              Thưởng giới thiệu
+            </option>
+
+            <option value="Marketing">
+              Marketing
+            </option>
+
+            <option value="Chi phí vận hành khác">
+              Chi phí vận hành khác
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Số tiền
+          </label>
+
+          <input
+            id="expenseAmount"
+            type="number"
+            min="1000"
+            step="1000"
+            placeholder="Ví dụ: 100000"
+            required
+          >
+
+        </div>
+
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Nội dung / ghi chú
+        </label>
+
+        <textarea
+          id="expenseDescription"
+          placeholder="Ví dụ: Tiền sân buổi BH004"
+        ></textarea>
+
+      </div>
+
+
+      <button
+        id="submitBtn"
+        class="submit-btn"
+        type="submit"
+      >
+
+        + GHI NHẬN CHI PHÍ
+
+      </button>
+
+
+    </form>
+
+  </section>
+
+
+  <!-- ===============================
+       EXPENSE LIST
+  ================================ -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+
+      📋 Chi phí vận hành trong tháng
+
+    </div>
+
+
+    <div class="table-wrap">
+
+
+      <table>
+
+
+        <thead>
+
+          <tr>
+
+            <th>Mã</th>
+
+            <th>Ngày</th>
+
+            <th>Loại</th>
+
+            <th>Nội dung</th>
+
+            <th>Số tiền</th>
+
+            <th>Trạng thái</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="expenseBody">
+
+          <tr>
+
+            <td colspan="6">
+
+              Đang tải chi phí...
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+
+      </table>
+
+
+    </div>
+
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const monthFilter =
+    document.getElementById(
+      "monthFilter"
+    );
+
+
+  const expenseForm =
+    document.getElementById(
+      "expenseForm"
+    );
+
+
+  const expenseDate =
+    document.getElementById(
+      "expenseDate"
+    );
+
+
+  const expenseType =
+    document.getElementById(
+      "expenseType"
+    );
+
+
+  const expenseAmount =
+    document.getElementById(
+      "expenseAmount"
+    );
+
+
+  const expenseDescription =
+    document.getElementById(
+      "expenseDescription"
+    );
+
+
+  const expenseBody =
+    document.getElementById(
+      "expenseBody"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+
+  /* ===============================
+     HELPERS
+  ================================ */
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function dateVN(value) {
+
+    if (!value) {
+
+      return "—";
+
+    }
+
+
+    const parts =
+      String(value)
+        .split("-");
+
+
+    if (
+      parts.length === 3
+    ) {
+
+      return (
+        parts[2]
+        +
+        "/"
+        +
+        parts[1]
+        +
+        "/"
+        +
+        parts[0]
+      );
+
+    }
+
+
+    return value;
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showMessage(
+    text,
+    error = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+
+  }
+
+
+  function localToday() {
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      )
+        .padStart(
+          2,
+          "0"
+        );
+
+
+    const day =
+      String(
+        now.getDate()
+      )
+        .padStart(
+          2,
+          "0"
+        );
+
+
+    return (
+      year
+      +
+      "-"
+      +
+      month
+      +
+      "-"
+      +
+      day
+    );
+
+  }
+
+
+  function localMonth() {
+
+    const now =
+      new Date();
+
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      )
+        .padStart(
+          2,
+          "0"
+        )
+    );
+
+  }
+
+
+  /* ===============================
+     AUTH ADMIN
+  ================================ */
+
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    session.user.email || "";
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError
+    ||
+    !profile
+    ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  /* ===============================
+     DEFAULTS
+  ================================ */
+
+
+  monthFilter.value =
+    localMonth();
+
+
+  expenseDate.value =
+    localToday();
+
+
+  /* ===============================
+     FINANCE SUMMARY
+  ================================ */
+
+
+  async function loadFinance() {
+
+
+    const month =
+      monthFilter.value;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_finance_month",
+        {
+          p_month:
+            month
+        }
+      );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    const row =
+      Array.isArray(data)
+        ?
+        data[0]
+        :
+        data;
+
+
+    document.getElementById(
+      "revenueValue"
+    ).textContent =
+      money(
+        row?.tuition_revenue
+      );
+
+
+    document.getElementById(
+      "coachCostValue"
+    ).textContent =
+      money(
+        row?.coach_cost
+      );
+
+
+    document.getElementById(
+      "operatingCostValue"
+    ).textContent =
+      money(
+        row?.operating_cost
+      );
+
+
+    const profit =
+      Number(
+        row?.profit || 0
+      );
+
+
+    const profitEl =
+      document.getElementById(
+        "profitValue"
+      );
+
+
+    profitEl.textContent =
+      money(
+        profit
+      );
+
+
+    profitEl.style.color =
+      profit >= 0
+        ?
+        "#d8ff45"
+        :
+        "#ff9f9f";
+
+  }
+
+
+  /* ===============================
+     OPERATING EXPENSES
+  ================================ */
+
+
+  async function loadExpenses() {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_operating_expenses",
+        {
+
+          p_month:
+            monthFilter.value
+
+        }
+      );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    const rows =
+      data || [];
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      expenseBody.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="6"
+              class="empty"
+            >
+
+              Chưa có chi phí vận hành trong tháng này.
+
+            </td>
+
+          </tr>
+        `;
+
+
+      return;
+
+    }
+
+
+    expenseBody.innerHTML =
+      rows.map(
+        row => `
+
+          <tr>
+
+            <td>
+
+              ${escapeHTML(
+                row.expense_code
+              )}
+
+            </td>
+
+
+            <td>
+
+              ${dateVN(
+                row.expense_date
+              )}
+
+            </td>
+
+
+            <td>
+
+              ${escapeHTML(
+                row.expense_type
+              )}
+
+            </td>
+
+
+            <td>
+
+              ${escapeHTML(
+                row.description ||
+                "—"
+              )}
+
+            </td>
+
+
+            <td class="money">
+
+              ${money(
+                row.amount
+              )}
+
+            </td>
+
+
+            <td>
+
+              <span class="badge">
+
+                ${escapeHTML(
+                  row.status
+                )}
+
+              </span>
+
+            </td>
+
+          </tr>
+
+        `
+      )
+      .join("");
+
+  }
+
+
+  /* ===============================
+     LOAD ALL
+  ================================ */
+
+
+  async function reloadAll() {
+
+
+    showMessage(
+      "Đang tải tài chính..."
+    );
+
+
+    try {
+
+
+      await Promise.all([
+
+        loadFinance(),
+
+        loadExpenses()
+
+      ]);
+
+
+      showMessage("");
+
+
+    }
+
+
+    catch (error) {
+
+
+      console.error(
+        error
+      );
+
+
+      showMessage(
+        "Không tải được tài chính: "
+        +
+        (
+          error.message ||
+          error
+        ),
+        true
+      );
+
+    }
+
+  }
+
+
+  /* ===============================
+     MONTH CHANGE
+  ================================ */
+
+
+  monthFilter.addEventListener(
+    "change",
+    reloadAll
+  );
+
+
+  /* ===============================
+     ADD EXPENSE
+  ================================ */
+
+
+  expenseForm.addEventListener(
+    "submit",
+    async function (event) {
+
+
+      event.preventDefault();
+
+
+      const amount =
+        Number(
+          expenseAmount.value
+        );
+
+
+      if (
+        !expenseType.value
+      ) {
+
+        showMessage(
+          "Vui lòng chọn loại chi phí.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !amount
+        ||
+        amount <= 0
+      ) {
+
+        showMessage(
+          "Vui lòng nhập số tiền.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "ĐANG GHI NHẬN...";
+
+
+      showMessage(
+        "Đang ghi nhận chi phí..."
+      );
+
+
+      try {
+
+
+        const {
+          error
+        } =
+          await sb.rpc(
+            "admin_add_operating_expense",
+            {
+
+              p_expense_date:
+                expenseDate.value,
+
+              p_expense_type:
+                expenseType.value,
+
+              p_amount:
+                amount,
+
+              p_description:
+                expenseDescription.value.trim()
+                ||
+                null
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        monthFilter.value =
+          expenseDate.value.slice(
+            0,
+            7
+          );
+
+
+        expenseAmount.value =
+          "";
+
+
+        expenseDescription.value =
+          "";
+
+
+        expenseType.value =
+          "";
+
+
+        await reloadAll();
+
+
+        showMessage(
+          "✓ Đã ghi nhận chi phí thành công."
+        );
+
+
+      }
+
+
+      catch (error) {
+
+
+        console.error(
+          error
+        );
+
+
+        showMessage(
+          "Không ghi nhận được: "
+          +
+          (
+            error.message ||
+            error
+          ),
+          true
+        );
+
+
+      }
+
+
+      finally {
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "+ GHI NHẬN CHI PHÍ";
+
+      }
+
+
+    }
+  );
+
+
+  /* ===============================
+     LOGOUT
+  ================================ */
+
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      await sb.auth.signOut();
+
+
+      location.replace(
+        "./login.html"
+      );
+
+    }
+  );
+
+
+  /* ===============================
+     START
+  ================================ */
+
+
+  await reloadAll();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
