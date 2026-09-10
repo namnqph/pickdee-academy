@@ -1,16 +1,23 @@
 const cfg =
   window.PICKDEE_CONFIG || {};
 
+
 const sb =
   window.supabase.createClient(
     cfg.SUPABASE_URL,
     cfg.SUPABASE_PUBLISHABLE_KEY
   );
 
+
+/* ======================================
+   URL PARAM
+====================================== */
+
 const params =
   new URLSearchParams(
     window.location.search
   );
+
 
 const requestedRegistrationId =
   Number(
@@ -18,51 +25,89 @@ const requestedRegistrationId =
   );
 
 
+/* ======================================
+   ELEMENTS
+====================================== */
+
 const form =
   document.getElementById("sessionForm");
+
 
 const registrationSelect =
   document.getElementById("registrationId");
 
+
 const studentNameInput =
   document.getElementById("studentName");
+
 
 const coachNameInput =
   document.getElementById("coachName");
 
+
 const sessionNoInput =
   document.getElementById("sessionNo");
+
 
 const sessionDateInput =
   document.getElementById("sessionDate");
 
+
 const startTimeInput =
   document.getElementById("startTime");
+
 
 const durationInput =
   document.getElementById("durationMinutes");
 
-const courtInput =
+
+/* ======================================
+   COURT ELEMENTS
+====================================== */
+
+const courtSelect =
+  document.getElementById("courtId");
+
+
+const courtNameInput =
   document.getElementById("courtName");
+
+
+const courtDisplayName =
+  document.getElementById("courtDisplayName");
+
+
+const courtCostDisplay =
+  document.getElementById("courtCostDisplay");
+
 
 const noteInput =
   document.getElementById("note");
 
+
 const submitBtn =
   document.getElementById("submitBtn");
 
+
 const messageEl =
   document.getElementById("message");
+
 
 const backLink =
   document.getElementById("backLink");
 
 
+/* ======================================
+   DATA
+====================================== */
+
 let registrations = [];
+
+let courts = [];
 
 
 /* ======================================
-   HELPER
+   HELPERS
 ====================================== */
 
 function one(value) {
@@ -80,12 +125,18 @@ function showMessage(
   isError = false
 ) {
 
-  if (!messageEl) return;
+  if (!messageEl) {
+    return;
+  }
 
-  messageEl.textContent = text;
+
+  messageEl.textContent =
+    text || "";
+
 
   messageEl.style.marginTop =
     "12px";
+
 
   messageEl.style.color =
     isError
@@ -94,8 +145,19 @@ function showMessage(
 }
 
 
+function money(value) {
+
+  return (
+    Number(value || 0)
+      .toLocaleString("vi-VN")
+    +
+    "đ"
+  );
+}
+
+
 /* ======================================
-   KIỂM TRA ADMIN
+   CHECK ADMIN
 ====================================== */
 
 async function checkAdmin() {
@@ -121,7 +183,9 @@ async function checkAdmin() {
       "userEmail"
     );
 
+
   if (userEmail) {
+
     userEmail.textContent =
       session.user.email || "";
   }
@@ -160,6 +224,220 @@ async function checkAdmin() {
 
 
 /* ======================================
+   LOAD COURTS
+====================================== */
+
+async function loadCourts() {
+
+  courtSelect.disabled =
+    true;
+
+
+  courtSelect.innerHTML =
+    `
+      <option value="">
+        Đang tải danh sách sân...
+      </option>
+    `;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("courts")
+      .select(`
+        id,
+        court_code,
+        name,
+        area,
+        ward,
+        address,
+        price_per_session,
+        status
+      `)
+      .eq(
+        "status",
+        "Hoạt động"
+      )
+      .order(
+        "name",
+        {
+          ascending: true
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Lỗi tải courts:",
+      error
+    );
+
+
+    courtSelect.innerHTML =
+      `
+        <option value="">
+          Không tải được danh sách sân
+        </option>
+      `;
+
+
+    showMessage(
+      "Không tải được danh sách sân: "
+      +
+      (
+        error.message ||
+        error
+      ),
+      true
+    );
+
+
+    return;
+  }
+
+
+  courts =
+    data || [];
+
+
+  courtSelect.innerHTML =
+    `
+      <option value="">
+        — Chọn sân —
+      </option>
+    `;
+
+
+  courts.forEach(
+    court => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        String(court.id);
+
+
+      const areaText =
+        court.area
+          ? ` · ${court.area}`
+          : "";
+
+
+      option.textContent =
+        `${court.name}${areaText} · ${money(
+          court.price_per_session
+        )}/buổi`;
+
+
+      courtSelect.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  courtSelect.disabled =
+    false;
+
+
+  if (
+    courts.length === 0
+  ) {
+
+    showMessage(
+      "Chưa có sân Hoạt động trong danh mục Courts.",
+      true
+    );
+  }
+}
+
+
+/* ======================================
+   APPLY COURT
+====================================== */
+
+function applyCourt() {
+
+  const courtId =
+    Number(
+      courtSelect.value || 0
+    );
+
+
+  const court =
+    courts.find(
+      item =>
+        Number(item.id) ===
+        courtId
+    );
+
+
+  if (!court) {
+
+    courtNameInput.value =
+      "";
+
+
+    courtDisplayName.textContent =
+      "Chưa chọn sân";
+
+
+    courtCostDisplay.textContent =
+      "0đ";
+
+
+    return null;
+  }
+
+
+  /*
+    court_name vẫn được lưu để
+    các trang cũ đang hiển thị sân
+    tiếp tục hoạt động bình thường.
+  */
+
+  courtNameInput.value =
+    court.name || "";
+
+
+  courtDisplayName.textContent =
+    court.name || "—";
+
+
+  courtCostDisplay.textContent =
+    money(
+      court.price_per_session
+    );
+
+
+  return court;
+}
+
+
+/* ======================================
+   COURT CHANGE
+====================================== */
+
+courtSelect.addEventListener(
+  "change",
+  function () {
+
+    applyCourt();
+
+  }
+);
+
+
+/* ======================================
    TẢI ĐĂNG KÝ ĐÃ DUYỆT
 ====================================== */
 
@@ -186,11 +464,13 @@ async function loadRegistrations() {
         package_name,
         start_date,
         status,
+
         students (
           id,
           student_code,
           full_name
         ),
+
         coaches (
           id,
           coach_code,
@@ -208,13 +488,18 @@ async function loadRegistrations() {
       )
       .order(
         "created_at",
-        { ascending: false }
+        {
+          ascending: false
+        }
       );
 
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     registrationSelect.innerHTML = `
       <option value="">
@@ -222,11 +507,17 @@ async function loadRegistrations() {
       </option>
     `;
 
+
     showMessage(
-      "Không tải được danh sách đăng ký: " +
-        (error.message || error),
+      "Không tải được danh sách đăng ký: "
+      +
+      (
+        error.message ||
+        error
+      ),
       true
     );
+
 
     return;
   }
@@ -247,38 +538,55 @@ async function loadRegistrations() {
     registration => {
 
       const student =
-        one(registration.students);
+        one(
+          registration.students
+        );
+
 
       const coach =
-        one(registration.coaches);
+        one(
+          registration.coaches
+        );
+
 
       const option =
         document.createElement(
           "option"
         );
 
-      option.value =
-        String(registration.id);
 
-      option.textContent = [
-        registration.registration_code ||
+      option.value =
+        String(
+          registration.id
+        );
+
+
+      option.textContent =
+        [
+          registration.registration_code ||
           "—",
 
-        student?.full_name ||
+          student?.full_name ||
           student?.student_code ||
           "—",
 
-        registration.package_name ||
+          registration.package_name ||
           "—",
 
-        coach?.full_name ||
+          coach?.full_name ||
           coach?.coach_code ||
           "—"
-      ].join(" | ");
+        ]
+        .join(
+          " | "
+        );
 
 
       registrationSelect
-        .appendChild(option);
+        .appendChild(
+          option
+        );
+
     }
   );
 
@@ -301,7 +609,9 @@ async function loadRegistrations() {
     → tự chọn đúng đăng ký đó
   */
 
-  if (requestedRegistrationId) {
+  if (
+    requestedRegistrationId
+  ) {
 
     const registration =
       registrations.find(
@@ -318,11 +628,14 @@ async function loadRegistrations() {
           requestedRegistrationId
         );
 
+
       await applyRegistration(
         registration
       );
 
-    } else {
+    }
+
+    else {
 
       showMessage(
         "Đăng ký này chưa đủ điều kiện tạo buổi học.",
@@ -347,19 +660,24 @@ async function getNextSessionNo(
   } =
     await sb
       .from("class_sessions")
-      .select("session_no")
+      .select(
+        "session_no"
+      )
       .eq(
         "registration_id",
         registrationId
       )
       .order(
         "session_no",
-        { ascending: false }
+        {
+          ascending: false
+        }
       )
       .limit(1);
 
 
   if (error) {
+
     throw error;
   }
 
@@ -376,7 +694,9 @@ async function getNextSessionNo(
   return (
     Number(
       data[0].session_no || 0
-    ) + 1
+    )
+    +
+    1
   );
 }
 
@@ -393,15 +713,19 @@ async function getNextSessionCode() {
   } =
     await sb
       .from("class_sessions")
-      .select("session_code");
+      .select(
+        "session_code"
+      );
 
 
   if (error) {
+
     throw error;
   }
 
 
-  let maxNumber = 0;
+  let maxNumber =
+    0;
 
 
   (data || []).forEach(
@@ -412,23 +736,31 @@ async function getNextSessionCode() {
           row.session_code || ""
         )
           .toUpperCase()
-          .match(/^BH(\d+)$/);
+          .match(
+            /^BH(\d+)$/
+          );
 
 
-      if (!match) return;
+      if (!match) {
+        return;
+      }
 
 
       const number =
-        Number(match[1]);
+        Number(
+          match[1]
+        );
 
 
       if (
-        number > maxNumber
+        number >
+        maxNumber
       ) {
 
         maxNumber =
           number;
       }
+
     }
   );
 
@@ -438,8 +770,15 @@ async function getNextSessionCode() {
 
 
   return (
-    `BH${String(nextNumber)
-      .padStart(3, "0")}`
+    `BH${
+      String(
+        nextNumber
+      )
+        .padStart(
+          3,
+          "0"
+        )
+    }`
   );
 }
 
@@ -453,10 +792,15 @@ async function applyRegistration(
 ) {
 
   const student =
-    one(registration.students);
+    one(
+      registration.students
+    );
+
 
   const coach =
-    one(registration.coaches);
+    one(
+      registration.coaches
+    );
 
 
   studentNameInput.value =
@@ -467,13 +811,17 @@ async function applyRegistration(
 
   coachNameInput.value =
     coach?.full_name
-      ? `${coach.full_name}${
-          coach.coach_code
-            ? ` (${coach.coach_code})`
-            : ""
-        }`
-      : coach?.coach_code ||
-        "—";
+      ?
+      `${coach.full_name}${
+        coach.coach_code
+          ?
+          ` (${coach.coach_code})`
+          :
+          ""
+      }`
+      :
+      coach?.coach_code ||
+      "—";
 
 
   /*
@@ -508,16 +856,26 @@ async function applyRegistration(
         registration.id
       );
 
+
     sessionNoInput.value =
       nextSessionNo;
 
-  } catch (error) {
+  }
 
-    console.error(error);
+  catch (error) {
+
+    console.error(
+      error
+    );
+
 
     showMessage(
-      "Không tính được số buổi tiếp theo: " +
-        (error.message || error),
+      "Không tính được số buổi tiếp theo: "
+      +
+      (
+        error.message ||
+        error
+      ),
       true
     );
   }
@@ -530,11 +888,18 @@ async function applyRegistration(
 
 registrationSelect.addEventListener(
   "change",
-  async () => {
+  async function () {
 
-    studentNameInput.value = "";
-    coachNameInput.value = "";
-    sessionNoInput.value = "";
+    studentNameInput.value =
+      "";
+
+
+    coachNameInput.value =
+      "";
+
+
+    sessionNoInput.value =
+      "";
 
 
     const registrationId =
@@ -544,6 +909,7 @@ registrationSelect.addEventListener(
 
 
     if (!registrationId) {
+
       return;
     }
 
@@ -557,6 +923,7 @@ registrationSelect.addEventListener(
 
 
     if (!registration) {
+
       return;
     }
 
@@ -564,6 +931,7 @@ registrationSelect.addEventListener(
     await applyRegistration(
       registration
     );
+
   }
 );
 
@@ -574,12 +942,17 @@ registrationSelect.addEventListener(
 
 form.addEventListener(
   "submit",
-  async event => {
+  async function (event) {
 
     event.preventDefault();
 
+
     showMessage("");
 
+
+    /* ==================================
+       REGISTRATION
+    ================================== */
 
     const registrationId =
       Number(
@@ -617,7 +990,9 @@ form.addEventListener(
     }
 
 
-    if (!registration.coach_id) {
+    if (
+      !registration.coach_id
+    ) {
 
       showMessage(
         "Đăng ký này chưa được gán Coach.",
@@ -628,7 +1003,13 @@ form.addEventListener(
     }
 
 
-    if (!sessionDateInput.value) {
+    /* ==================================
+       DATE
+    ================================== */
+
+    if (
+      !sessionDateInput.value
+    ) {
 
       showMessage(
         "Hãy chọn ngày học.",
@@ -639,7 +1020,13 @@ form.addEventListener(
     }
 
 
-    if (!startTimeInput.value) {
+    /* ==================================
+       TIME
+    ================================== */
+
+    if (
+      !startTimeInput.value
+    ) {
 
       showMessage(
         "Hãy chọn giờ bắt đầu.",
@@ -650,8 +1037,32 @@ form.addEventListener(
     }
 
 
+    /* ==================================
+       COURT
+    ================================== */
+
+    const selectedCourt =
+      applyCourt();
+
+
+    if (!selectedCourt) {
+
+      showMessage(
+        "Hãy chọn sân học.",
+        true
+      );
+
+      return;
+    }
+
+
+    /* ==================================
+       DISABLE
+    ================================== */
+
     submitBtn.disabled =
       true;
+
 
     submitBtn.textContent =
       "ĐANG TẠO...";
@@ -659,22 +1070,37 @@ form.addEventListener(
 
     try {
 
+
+      /* ==================================
+         NEXT SESSION NUMBER
+      ================================== */
+
       const sessionNo =
         await getNextSessionNo(
           registrationId
         );
 
 
+      /* ==================================
+         NEXT SESSION CODE
+      ================================== */
+
       const sessionCode =
         await getNextSessionCode();
 
+
+      /* ==================================
+         INSERT CLASS SESSION
+      ================================== */
 
       const {
         data,
         error
       } =
         await sb
-          .from("class_sessions")
+          .from(
+            "class_sessions"
+          )
           .insert({
 
             session_code:
@@ -701,10 +1127,35 @@ form.addEventListener(
                 60
               ),
 
+            /*
+              SÂN CHUẨN MỚI
+
+              court_id:
+              liên kết bảng courts.
+
+              court_name:
+              vẫn lưu tên sân để các
+              trang cũ tiếp tục hiển thị.
+            */
+
+            court_id:
+              Number(
+                selectedCourt.id
+              ),
+
             court_name:
-              courtInput.value
-                .trim() ||
-              null,
+              selectedCourt.name,
+
+            /*
+              KHÔNG cần gửi court_cost.
+
+              Trigger Supabase:
+              trg_sync_session_court_cost
+
+              sẽ tự lấy:
+              courts.price_per_session
+              → class_sessions.court_cost
+            */
 
             status:
               "Chờ học",
@@ -720,17 +1171,23 @@ form.addEventListener(
 
 
       if (error) {
+
         throw error;
       }
 
 
       showMessage(
-        `Đã tạo ${data.session_code} thành công.`
+        `✓ Đã tạo ${data.session_code} thành công.`
       );
 
 
+      /*
+        Sau khi tạo thành công
+        quay lại danh sách lịch.
+      */
+
       setTimeout(
-        () => {
+        function () {
 
           location.href =
             "./sessions.html";
@@ -740,14 +1197,24 @@ form.addEventListener(
       );
 
 
-    } catch (error) {
+    }
 
-      console.error(error);
+    catch (error) {
+
+
+      console.error(
+        "Lỗi tạo buổi học:",
+        error
+      );
 
 
       showMessage(
-        "Không tạo được buổi học: " +
-          (error.message || error),
+        "Không tạo được buổi học: "
+        +
+        (
+          error.message ||
+          error
+        ),
         true
       );
 
@@ -758,7 +1225,9 @@ form.addEventListener(
 
       submitBtn.textContent =
         "+ TẠO BUỔI HỌC";
+
     }
+
   }
 );
 
@@ -774,6 +1243,7 @@ async function init() {
 
 
   if (!ok) {
+
     return;
   }
 
@@ -781,7 +1251,7 @@ async function init() {
   /*
     Nếu mở trực tiếp
     không có registration_id
-    thì nút quay lại danh sách lịch
+    thì nút quay lại danh sách lịch.
   */
 
   if (
@@ -794,7 +1264,21 @@ async function init() {
   }
 
 
+  /*
+    Load sân trước để form
+    luôn có danh mục sân sẵn.
+  */
+
+  await loadCourts();
+
+
+  /*
+    Sau đó load đăng ký.
+    Giữ nguyên luồng cũ.
+  */
+
   await loadRegistrations();
+
 }
 
 
