@@ -22,6 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
 
+
   <style>
 
     * {
@@ -274,6 +275,29 @@
     }
 
 
+    #message {
+
+      min-height: 20px;
+
+      margin-bottom: 15px;
+
+      font-weight: 800;
+
+      line-height: 1.5;
+
+    }
+
+
+    .success {
+      color: #d8ff45;
+    }
+
+
+    .error {
+      color: #ffaaaa;
+    }
+
+
     #list {
 
       display: grid;
@@ -317,7 +341,7 @@
 
       color: #d8ff45;
 
-      font-size: 19px;
+      font-size: 20px;
 
       font-weight: 900;
 
@@ -326,7 +350,7 @@
 
     .request-sub {
 
-      margin-top: 4px;
+      margin-top: 5px;
 
       color:
         rgba(255,255,255,.48);
@@ -425,16 +449,16 @@
 
       font-weight: 800;
 
-      line-height: 1.4;
+      line-height: 1.45;
 
     }
 
 
-    .result-box {
+    .note-box {
 
       margin-top: 14px;
 
-      padding: 14px;
+      padding: 13px;
 
       border-radius: 11px;
 
@@ -444,7 +468,31 @@
       border:
         1px solid rgba(255,255,255,.08);
 
-      line-height: 1.5;
+      color:
+        rgba(255,255,255,.72);
+
+      line-height: 1.55;
+
+      font-size: 13px;
+
+    }
+
+
+    .result-box {
+
+      margin-top: 14px;
+
+      padding: 15px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.04);
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      line-height: 1.55;
 
     }
 
@@ -452,7 +500,10 @@
     .result-approved {
 
       border-color:
-        rgba(216,255,69,.2);
+        rgba(216,255,69,.28);
+
+      background:
+        rgba(216,255,69,.05);
 
     }
 
@@ -460,14 +511,30 @@
     .result-rejected {
 
       border-color:
-        rgba(255,120,120,.25);
+        rgba(255,110,110,.32);
+
+      background:
+        rgba(255,80,80,.05);
+
+    }
+
+
+    .result-pending {
+
+      border-color:
+        rgba(255,196,107,.26);
+
+      background:
+        rgba(255,196,107,.04);
 
     }
 
 
     .result-title {
 
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+
+      font-size: 15px;
 
       font-weight: 900;
 
@@ -488,12 +555,29 @@
     }
 
 
-    .result-detail {
+    .result-pending .result-title {
 
-      color:
-        rgba(255,255,255,.68);
+      color: #ffc46b;
 
-      font-size: 13px;
+    }
+
+
+    .reason {
+
+      margin-top: 8px;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,80,80,.09);
+
+      color: #ffd0d0;
+
+      font-weight: 800;
+
+      line-height: 1.5;
 
     }
 
@@ -502,7 +586,7 @@
 
       display: inline-block;
 
-      margin-top: 9px;
+      margin-top: 10px;
 
       color: #d8ff45;
 
@@ -533,19 +617,6 @@
         rgba(255,255,255,.62);
 
       line-height: 1.6;
-
-    }
-
-
-    #message {
-
-      min-height: 20px;
-
-      margin-bottom: 15px;
-
-      color: #ffaaaa;
-
-      font-weight: 700;
 
     }
 
@@ -585,9 +656,14 @@
 
 <header class="topbar">
 
+
   <div class="brand">
-    PickDee <span>Academy</span>
+
+    PickDee
+    <span>Academy</span>
+
   </div>
+
 
   <a
     class="back"
@@ -596,6 +672,7 @@
     ← Khu vực học viên
   </a>
 
+
 </header>
 
 
@@ -603,24 +680,29 @@
 
 
   <div class="eyebrow">
+
     HỌC VIÊN · ĐẶT LỊCH
+
   </div>
 
 
   <h1>
+
     Yêu cầu lịch học
+
   </h1>
 
 
   <div class="intro">
 
-    Theo dõi toàn bộ yêu cầu đặt lịch đã gửi cho Coach:
+    Theo dõi các yêu cầu bạn đã gửi cho Coach:
     đang chờ, đã duyệt hoặc bị từ chối.
 
   </div>
 
 
   <div class="top-actions">
+
 
     <a
       class="new-request"
@@ -629,6 +711,7 @@
       + TẠO YÊU CẦU MỚI
     </a>
 
+
     <button
       id="refreshBtn"
       class="refresh"
@@ -636,6 +719,7 @@
     >
       ↻ CẬP NHẬT
     </button>
+
 
   </div>
 
@@ -700,7 +784,9 @@
   <section id="list">
 
     <div class="empty">
+
       Đang tải lịch sử yêu cầu...
+
     </div>
 
   </section>
@@ -713,6 +799,10 @@
 
 (async function () {
 
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
 
   const cfg =
     window.PICKDEE_CONFIG || {};
@@ -785,64 +875,152 @@
 
   function formatDate(value) {
 
-    if (!value) {
-      return "—";
-    }
-
-    return new Intl.DateTimeFormat(
-      "vi-VN"
-    ).format(
-      new Date(
-        `${value}T00:00:00`
-      )
-    );
-
-  }
-
-
-  function formatDateTime(value) {
 
     if (!value) {
-      return "—";
-    }
-
-    const date =
-      new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
 
       return "—";
 
     }
 
-    return new Intl.DateTimeFormat(
-      "vi-VN",
-      {
-        dateStyle: "short",
-        timeStyle: "short"
-      }
-    ).format(date);
+
+    const raw =
+      String(value).trim();
+
+
+    const match =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
+
+
+    if (match) {
+
+      return (
+        match[3]
+        +
+        "/"
+        +
+        match[2]
+        +
+        "/"
+        +
+        match[1]
+      );
+
+    }
+
+
+    return raw;
 
   }
 
 
   function formatTime(value) {
 
+
     if (!value) {
+
       return "—";
+
     }
 
-    return String(value)
-      .slice(0,5);
+
+    const raw =
+      String(value).trim();
+
+
+    const match =
+      raw.match(
+        /^(\d{1,2}):(\d{2})/
+      );
+
+
+    if (match) {
+
+      return (
+        String(
+          Number(match[1])
+        ).padStart(
+          2,
+          "0"
+        )
+        +
+        ":"
+        +
+        match[2]
+      );
+
+    }
+
+
+    return raw;
+
+  }
+
+
+  function formatDateTime(value) {
+
+
+    if (!value) {
+
+      return "—";
+
+    }
+
+
+    /*
+      KHÔNG dùng Intl.DateTimeFormat
+      để tránh Invalid time value.
+    */
+
+
+    const raw =
+      String(value).trim();
+
+
+    /*
+      Ví dụ:
+      2026-09-10T12:15:30+00:00
+    */
+
+    const match =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
+      );
+
+
+    if (match) {
+
+      return (
+        match[3]
+        +
+        "/"
+        +
+        match[2]
+        +
+        "/"
+        +
+        match[1]
+        +
+        " · "
+        +
+        match[4]
+        +
+        ":"
+        +
+        match[5]
+      );
+
+    }
+
+
+    return raw;
 
   }
 
 
   function statusClass(status) {
+
 
     if (
       status === "Đã duyệt"
@@ -852,6 +1030,7 @@
 
     }
 
+
     if (
       status === "Từ chối"
     ) {
@@ -860,7 +1039,28 @@
 
     }
 
+
     return "pending";
+
+  }
+
+
+  function showMessage(
+    text,
+    isError = false
+  ) {
+
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.className =
+      isError
+        ?
+        "error"
+        :
+        "success";
 
   }
 
@@ -873,7 +1073,7 @@
 
 
     const {
-      data: { session },
+      data: sessionData,
       error: sessionError
     } =
       await sb.auth
@@ -883,43 +1083,14 @@
     if (
       sessionError
       ||
-      !session
+      !sessionData?.session
     ) {
+
 
       location.replace(
         "./login.html"
       );
 
-      return false;
-
-    }
-
-
-    const {
-      data: profile,
-      error: profileError
-    } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq(
-          "id",
-          session.user.id
-        )
-        .single();
-
-
-    if (
-      profileError
-      ||
-      !profile
-      ||
-      profile.role !== "student"
-    ) {
-
-      location.replace(
-        "./login.html"
-      );
 
       return false;
 
@@ -941,8 +1112,12 @@
       !studentId
     ) {
 
-      messageEl.textContent =
-        "Không xác định được hồ sơ Học viên.";
+
+      showMessage(
+        "Không xác định được hồ sơ Học viên.",
+        true
+      );
+
 
       return false;
 
@@ -959,7 +1134,7 @@
 
 
   /* =====================================================
-     LOAD
+     LOAD REQUESTS
   ====================================================== */
 
   async function loadRequests() {
@@ -973,12 +1148,21 @@
       "ĐANG TẢI...";
 
 
-    messageEl.textContent =
-      "";
+    showMessage(
+      "Đang tải lịch sử yêu cầu..."
+    );
+
+
+    /*
+      QUAN TRỌNG:
+      Chỉ lấy trực tiếp session_requests trước.
+      Không JOIN để tránh 1 bảng phụ lỗi
+      làm biến mất toàn bộ card.
+    */
 
 
     const {
-      data,
+      data: rows,
       error
     } =
       await sb
@@ -1002,30 +1186,7 @@
           session_id,
           created_at,
           approved_at,
-          rejected_at,
-          registrations (
-            id,
-            registration_code,
-            package_name
-          ),
-          coaches (
-            id,
-            coach_code,
-            full_name
-          ),
-          courts (
-            id,
-            name
-          ),
-          class_sessions (
-            id,
-            session_code,
-            session_no,
-            session_date,
-            start_time,
-            court_name,
-            status
-          )
+          rejected_at
         `)
         .eq(
           "student_id",
@@ -1034,9 +1195,1000 @@
         .order(
           "created_at",
           {
-            ascending: false
+            ascending:false
           }
         );
+
+
+    if (error) {
+
+
+      console.error(
+        "REQUEST ERROR:",
+        error
+      );
+
+
+      refreshBtn.disabled =
+        false;
+
+
+      refreshBtn.textContent =
+        "↻ CẬP NHẬT";
+
+
+      showMessage(
+        error.message
+        ||
+        "Không tải được yêu cầu.",
+        true
+      );
+
+
+      return;
+
+    }
+
+
+    const requests =
+      rows || [];
+
+
+    /* =================================================
+       COUNTERS
+    ================================================== */
+
+
+    pendingCount.textContent =
+      requests.filter(
+        item =>
+          item.status === "Chờ Coach"
+      ).length;
+
+
+    approvedCount.textContent =
+      requests.filter(
+        item =>
+          item.status === "Đã duyệt"
+      ).length;
+
+
+    rejectedCount.textContent =
+      requests.filter(
+        item =>
+          item.status === "Từ chối"
+      ).length;
+
+
+    if (
+      requests.length === 0
+    ) {
+
+
+      listEl.innerHTML =
+        `
+          <div class="empty">
+
+            Bạn chưa có yêu cầu lịch học nào.
+
+          </div>
+        `;
+
+
+      refreshBtn.disabled =
+        false;
+
+
+      refreshBtn.textContent =
+        "↻ CẬP NHẬT";
+
+
+      showMessage("");
+
+
+      return;
+
+    }
+
+
+    /* =================================================
+       LOAD DỮ LIỆU PHỤ
+    ================================================== */
+
+
+    const registrationIds =
+      [
+        ...new Set(
+          requests
+            .map(
+              item =>
+                Number(
+                  item.registration_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const coachIds =
+      [
+        ...new Set(
+          requests
+            .map(
+              item =>
+                Number(
+                  item.coach_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const courtIds =
+      [
+        ...new Set(
+          requests
+            .map(
+              item =>
+                Number(
+                  item.court_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const sessionIds =
+      [
+        ...new Set(
+          requests
+            .map(
+              item =>
+                Number(
+                  item.session_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    let registrations =
+      [];
+
+
+    let coaches =
+      [];
+
+
+    let courts =
+      [];
+
+
+    let sessions =
+      [];
+
+
+    /* =================================================
+       REGISTRATION
+    ================================================== */
+
+
+    if (
+      registrationIds.length > 0
+    ) {
+
+
+      const result =
+        await sb
+          .from("registrations")
+          .select(`
+            id,
+            registration_code,
+            package_name
+          `)
+          .in(
+            "id",
+            registrationIds
+          );
+
+
+      if (!result.error) {
+
+        registrations =
+          result.data || [];
+
+      }
+      else {
+
+        console.warn(
+          "REGISTRATION:",
+          result.error
+        );
+
+      }
+
+    }
+
+
+    /* =================================================
+       COACH
+    ================================================== */
+
+
+    if (
+      coachIds.length > 0
+    ) {
+
+
+      const result =
+        await sb
+          .from("coaches")
+          .select(`
+            id,
+            coach_code,
+            full_name
+          `)
+          .in(
+            "id",
+            coachIds
+          );
+
+
+      if (!result.error) {
+
+        coaches =
+          result.data || [];
+
+      }
+      else {
+
+        console.warn(
+          "COACH:",
+          result.error
+        );
+
+      }
+
+    }
+
+
+    /* =================================================
+       COURT
+    ================================================== */
+
+
+    if (
+      courtIds.length > 0
+    ) {
+
+
+      const result =
+        await sb
+          .from("courts")
+          .select(`
+            id,
+            name
+          `)
+          .in(
+            "id",
+            courtIds
+          );
+
+
+      if (!result.error) {
+
+        courts =
+          result.data || [];
+
+      }
+      else {
+
+        console.warn(
+          "COURT:",
+          result.error
+        );
+
+      }
+
+    }
+
+
+    /* =================================================
+       SESSION
+    ================================================== */
+
+
+    if (
+      sessionIds.length > 0
+    ) {
+
+
+      const result =
+        await sb
+          .from("class_sessions")
+          .select(`
+            id,
+            session_code,
+            session_no,
+            session_date,
+            start_time,
+            court_name,
+            status
+          `)
+          .in(
+            "id",
+            sessionIds
+          );
+
+
+      if (!result.error) {
+
+        sessions =
+          result.data || [];
+
+      }
+      else {
+
+        console.warn(
+          "SESSION:",
+          result.error
+        );
+
+      }
+
+    }
+
+
+    /* =================================================
+       MAP
+    ================================================== */
+
+
+    const registrationMap =
+      new Map(
+        registrations.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const coachMap =
+      new Map(
+        coaches.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const courtMap =
+      new Map(
+        courts.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const sessionMap =
+      new Map(
+        sessions.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    /* =================================================
+       RENDER
+    ================================================== */
+
+
+    listEl.innerHTML =
+      "";
+
+
+    requests.forEach(
+      request => {
+
+
+        try {
+
+
+          const registration =
+            registrationMap.get(
+              Number(
+                request.registration_id
+              )
+            )
+            ||
+            {};
+
+
+          const coach =
+            coachMap.get(
+              Number(
+                request.coach_id
+              )
+            )
+            ||
+            {};
+
+
+          const court =
+            courtMap.get(
+              Number(
+                request.court_id
+              )
+            )
+            ||
+            {};
+
+
+          const session =
+            sessionMap.get(
+              Number(
+                request.session_id
+              )
+            )
+            ||
+            {};
+
+
+          let resultHtml =
+            "";
+
+
+          /* =============================================
+             CHỜ COACH
+          ============================================== */
+
+
+          if (
+            request.status === "Chờ Coach"
+          ) {
+
+
+            resultHtml =
+              `
+
+                <div class="result-box result-pending">
+
+                  <div class="result-title">
+
+                    ⏳ Đang chờ Coach xử lý
+
+                  </div>
+
+                  <div>
+
+                    Coach sẽ xác nhận lịch và chọn sân phù hợp.
+
+                  </div>
+
+                </div>
+
+              `;
+
+          }
+
+
+          /* =============================================
+             ĐÃ DUYỆT
+          ============================================== */
+
+
+          if (
+            request.status === "Đã duyệt"
+          ) {
+
+
+            resultHtml =
+              `
+
+                <div class="result-box result-approved">
+
+                  <div class="result-title">
+
+                    ✅ Coach đã duyệt lịch
+
+                  </div>
+
+
+                  <div>
+
+                    ${
+                      session.session_code
+                        ?
+                        `
+                          Buổi học:
+                          <strong>
+                            ${escapeHtml(
+                              session.session_code
+                            )}
+                          </strong>
+                          <br>
+                        `
+                        :
+                        ""
+                    }
+
+
+                    Sân:
+
+                    <strong>
+
+                      ${escapeHtml(
+                        court.name
+                        ||
+                        session.court_name
+                        ||
+                        "Đã xác nhận"
+                      )}
+
+                    </strong>
+
+
+                    ${
+                      request.approved_at
+                        ?
+                        `
+                          <br>
+                          Duyệt lúc:
+                          ${escapeHtml(
+                            formatDateTime(
+                              request.approved_at
+                            )
+                          )}
+                        `
+                        :
+                        ""
+                    }
+
+
+                    ${
+                      request.coach_note
+                        ?
+                        `
+                          <br><br>
+
+                          <strong>
+                            Ghi chú Coach:
+                          </strong>
+
+                          ${escapeHtml(
+                            request.coach_note
+                          )}
+                        `
+                        :
+                        ""
+                    }
+
+                  </div>
+
+
+                  <a
+                    href="./student-sessions"
+                    class="session-link"
+                  >
+
+                    XEM LỊCH HỌC →
+
+                  </a>
+
+                </div>
+
+              `;
+
+          }
+
+
+          /* =============================================
+             TỪ CHỐI
+          ============================================== */
+
+
+          if (
+            request.status === "Từ chối"
+          ) {
+
+
+            resultHtml =
+              `
+
+                <div class="result-box result-rejected">
+
+
+                  <div class="result-title">
+
+                    ✕ Coach đã từ chối yêu cầu
+
+                  </div>
+
+
+                  <div>
+
+                    Yêu cầu Buổi ${escapeHtml(
+                      request.session_no
+                      ||
+                      "—"
+                    )} chưa được tạo thành lịch học.
+
+                  </div>
+
+
+                  <div class="reason">
+
+                    <strong>
+                      Lý do:
+                    </strong>
+
+                    <br>
+
+                    ${escapeHtml(
+                      request.coach_note
+                      ||
+                      "Coach chưa nhập lý do."
+                    )}
+
+                  </div>
+
+
+                  ${
+                    request.rejected_at
+                      ?
+                      `
+                        <div
+                          style="
+                            margin-top:10px;
+                            color:rgba(255,255,255,.55);
+                            font-size:12px;
+                          "
+                        >
+
+                          Từ chối lúc:
+
+                          ${escapeHtml(
+                            formatDateTime(
+                              request.rejected_at
+                            )
+                          )}
+
+                        </div>
+                      `
+                      :
+                      ""
+                  }
+
+
+                  <a
+                    href="./student-book-session"
+                    class="session-link"
+                  >
+
+                    ĐẶT LẠI BUỔI HỌC →
+
+                  </a>
+
+
+                </div>
+
+              `;
+
+          }
+
+
+          /* =============================================
+             CARD
+          ============================================== */
+
+
+          const card =
+            document.createElement(
+              "article"
+            );
+
+
+          card.className =
+            "request-card";
+
+
+          card.innerHTML =
+            `
+
+              <div class="request-head">
+
+
+                <div>
+
+
+                  <div class="request-code">
+
+                    ${escapeHtml(
+                      request.request_code
+                      ||
+                      `YC${request.id}`
+                    )}
+
+                  </div>
+
+
+                  <div class="request-sub">
+
+                    ${escapeHtml(
+                      registration.registration_code
+                      ||
+                      `Đăng ký #${request.registration_id}`
+                    )}
+
+                    ${
+
+                      registration.package_name
+
+                        ?
+
+                        ` · ${escapeHtml(
+                          registration.package_name
+                        )}`
+
+                        :
+
+                        ""
+
+                    }
+
+                  </div>
+
+
+                </div>
+
+
+                <div
+                  class="badge ${statusClass(
+                    request.status
+                  )}"
+                >
+
+                  ${escapeHtml(
+                    request.status
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+
+              </div>
+
+
+              <div class="info-grid">
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Buổi
+                  </div>
+
+                  <div class="info-value">
+
+                    Buổi ${escapeHtml(
+                      request.session_no
+                      ||
+                      "—"
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Ngày / giờ yêu cầu
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+                      formatDate(
+                        request.requested_date
+                      )
+                    )}
+
+                    ·
+
+                    ${escapeHtml(
+                      formatTime(
+                        request.requested_time
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Coach phụ trách
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+                      coach.full_name
+                      ||
+                      coach.coach_code
+                      ||
+                      "Coach phụ trách"
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Khu vực
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+
+                      [
+                        request.requested_ward,
+                        request.requested_area
+                      ]
+                      .filter(Boolean)
+                      .join(" · ")
+
+                      ||
+
+                      "—"
+
+                    )}
+
+                  </div>
+
+                </div>
+
+
+              </div>
+
+
+              ${
+                request.note
+                  ?
+                  `
+                    <div class="note-box">
+
+                      <strong>
+                        Ghi chú của bạn:
+                      </strong>
+
+                      <br>
+
+                      ${escapeHtml(
+                        request.note
+                      )}
+
+                    </div>
+                  `
+                  :
+                  ""
+              }
+
+
+              ${resultHtml}
+
+            `;
+
+
+          listEl.appendChild(
+            card
+          );
+
+
+        }
+        catch (renderError) {
+
+
+          console.error(
+            "CARD ERROR:",
+            renderError,
+            request
+          );
+
+
+          const card =
+            document.createElement(
+              "article"
+            );
+
+
+          card.className =
+            "request-card";
+
+
+          card.innerHTML =
+            `
+
+              <div class="request-code">
+
+                ${escapeHtml(
+                  request.request_code
+                  ||
+                  `YC${request.id}`
+                )}
+
+              </div>
+
+
+              <div class="note-box">
+
+                Trạng thái:
+
+                <strong>
+
+                  ${escapeHtml(
+                    request.status
+                    ||
+                    "—"
+                  )}
+
+                </strong>
+
+                <br><br>
+
+                ${
+                  request.coach_note
+                    ?
+                    `
+                      Lý do / ghi chú Coach:
+                      <br>
+                      <strong>
+                        ${escapeHtml(
+                          request.coach_note
+                        )}
+                      </strong>
+                    `
+                    :
+                    ""
+                }
+
+              </div>
+
+            `;
+
+
+          listEl.appendChild(
+            card
+          );
+
+
+        }
+
+      }
+    );
 
 
     refreshBtn.disabled =
@@ -1047,509 +2199,8 @@
       "↻ CẬP NHẬT";
 
 
-    if (error) {
-
-
-      console.error(
-        "Không tải được lịch sử:",
-        error
-      );
-
-
-      messageEl.textContent =
-        error.message
-        ||
-        "Không tải được lịch sử yêu cầu.";
-
-
-      listEl.innerHTML =
-        `
-          <div class="empty">
-            Không tải được dữ liệu.
-          </div>
-        `;
-
-
-      return;
-
-    }
-
-
-    const rows =
-      data || [];
-
-
-    pendingCount.textContent =
-      rows.filter(
-        item =>
-          item.status === "Chờ Coach"
-      ).length;
-
-
-    approvedCount.textContent =
-      rows.filter(
-        item =>
-          item.status === "Đã duyệt"
-      ).length;
-
-
-    rejectedCount.textContent =
-      rows.filter(
-        item =>
-          item.status === "Từ chối"
-      ).length;
-
-
-    if (
-      rows.length === 0
-    ) {
-
-
-      listEl.innerHTML =
-        `
-          <div class="empty">
-
-            Bạn chưa gửi yêu cầu lịch học nào.<br><br>
-
-            <a
-              class="session-link"
-              href="./student-book-session"
-            >
-              + TẠO YÊU CẦU ĐẦU TIÊN
-            </a>
-
-          </div>
-        `;
-
-
-      return;
-
-    }
-
-
-    listEl.innerHTML =
-      "";
-
-
-    rows.forEach(
-      request => {
-
-
-        const registration =
-          request.registrations
-          ||
-          {};
-
-
-        const coach =
-          request.coaches
-          ||
-          {};
-
-
-        const court =
-          request.courts
-          ||
-          {};
-
-
-        const classSession =
-          request.class_sessions
-          ||
-          {};
-
-
-        const card =
-          document.createElement(
-            "article"
-          );
-
-
-        card.className =
-          "request-card";
-
-
-        let resultHtml =
-          "";
-
-
-        /* ===============================
-           ĐÃ DUYỆT
-        ================================ */
-
-        if (
-          request.status === "Đã duyệt"
-        ) {
-
-
-          resultHtml =
-            `
-
-              <div class="result-box result-approved">
-
-                <div class="result-title">
-
-                  ✅ Coach đã duyệt lịch
-
-                </div>
-
-                <div class="result-detail">
-
-                  ${
-                    classSession.session_code
-                      ?
-                      `
-                        Buổi học:
-                        <strong>
-                          ${escapeHtml(
-                            classSession.session_code
-                          )}
-                        </strong>
-                        <br>
-                      `
-                      :
-                      ""
-                  }
-
-                  Sân:
-                  <strong>
-                    ${escapeHtml(
-                      court.name
-                      ||
-                      classSession.court_name
-                      ||
-                      "Đã xác nhận"
-                    )}
-                  </strong>
-
-                  ${
-                    request.approved_at
-                      ?
-                      `
-                        <br>
-                        Duyệt lúc:
-                        ${formatDateTime(
-                          request.approved_at
-                        )}
-                      `
-                      :
-                      ""
-                  }
-
-                  ${
-                    request.coach_note
-                      ?
-                      `
-                        <br>
-                        Ghi chú Coach:
-                        ${escapeHtml(
-                          request.coach_note
-                        )}
-                      `
-                      :
-                      ""
-                  }
-
-                </div>
-
-
-                ${
-                  classSession.id
-                    ?
-                    `
-                      <a
-                        class="session-link"
-                        href="./student-sessions"
-                      >
-                        XEM LỊCH HỌC →
-                      </a>
-                    `
-                    :
-                    ""
-                }
-
-              </div>
-
-            `;
-
-        }
-
-
-        /* ===============================
-           TỪ CHỐI
-        ================================ */
-
-        if (
-          request.status === "Từ chối"
-        ) {
-
-
-          resultHtml =
-            `
-
-              <div class="result-box result-rejected">
-
-                <div class="result-title">
-
-                  ✕ Coach đã từ chối
-
-                </div>
-
-                <div class="result-detail">
-
-                  Lý do:
-
-                  <strong>
-                    ${escapeHtml(
-                      request.coach_note
-                      ||
-                      "Coach chưa ghi lý do."
-                    )}
-                  </strong>
-
-                  ${
-                    request.rejected_at
-                      ?
-                      `
-                        <br>
-                        Xử lý lúc:
-                        ${formatDateTime(
-                          request.rejected_at
-                        )}
-                      `
-                      :
-                      ""
-                  }
-
-                </div>
-
-              </div>
-
-            `;
-
-        }
-
-
-        /* ===============================
-           CHỜ COACH
-        ================================ */
-
-        if (
-          request.status === "Chờ Coach"
-        ) {
-
-
-          resultHtml =
-            `
-
-              <div class="result-box">
-
-                <div class="result-title">
-
-                  ⏳ Đang chờ Coach xử lý
-
-                </div>
-
-                <div class="result-detail">
-
-                  Coach sẽ chọn sân và xác nhận lịch học.
-                  Bạn chưa cần gửi thêm yêu cầu khác.
-
-                </div>
-
-              </div>
-
-            `;
-
-        }
-
-
-        card.innerHTML =
-          `
-
-            <div class="request-head">
-
-
-              <div>
-
-                <div class="request-code">
-
-                  ${escapeHtml(
-                    request.request_code
-                    ||
-                    `YC${request.id}`
-                  )}
-
-                </div>
-
-
-                <div class="request-sub">
-
-                  ${
-                    registration.registration_code
-                    ?
-                    escapeHtml(
-                      registration.registration_code
-                    )
-                    :
-                    ""
-                  }
-
-                  ${
-                    registration.package_name
-                    ?
-                    ` · ${escapeHtml(
-                      registration.package_name
-                    )}`
-                    :
-                    ""
-                  }
-
-                </div>
-
-              </div>
-
-
-              <div class="badge ${statusClass(
-                request.status
-              )}">
-
-                ${escapeHtml(
-                  request.status
-                  ||
-                  "—"
-                )}
-
-              </div>
-
-
-            </div>
-
-
-            <div class="info-grid">
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Buổi
-                </div>
-
-                <div class="info-value">
-                  Buổi ${escapeHtml(
-                    request.session_no
-                  )}
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Ngày / giờ yêu cầu
-                </div>
-
-                <div class="info-value">
-
-                  ${formatDate(
-                    request.requested_date
-                  )}
-
-                  ·
-
-                  ${formatTime(
-                    request.requested_time
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Coach
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
-                    coach.full_name
-                    ||
-                    coach.coach_code
-                    ||
-                    "Coach phụ trách"
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Khu vực
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
-                    [
-                      request.requested_ward,
-                      request.requested_area
-                    ]
-                    .filter(Boolean)
-                    .join(" · ")
-                    ||
-                    "—"
-                  )}
-
-                </div>
-
-              </div>
-
-
-            </div>
-
-
-            ${
-              request.note
-                ?
-                `
-                  <div class="result-box">
-
-                    <div class="result-detail">
-
-                      <strong>
-                        Ghi chú của bạn:
-                      </strong>
-
-                      ${escapeHtml(
-                        request.note
-                      )}
-
-                    </div>
-
-                  </div>
-                `
-                :
-                ""
-            }
-
-
-            ${resultHtml}
-
-          `;
-
-
-        listEl.appendChild(
-          card
-        );
-
-      }
+    showMessage(
+      `✓ Đã tải ${requests.length} yêu cầu.`
     );
 
   }
@@ -1558,6 +2209,7 @@
   /* =====================================================
      REFRESH
   ====================================================== */
+
 
   refreshBtn.addEventListener(
     "click",
@@ -1569,22 +2221,55 @@
      START
   ====================================================== */
 
-  const ok =
-    await checkStudent();
+
+  try {
 
 
-  if (!ok) {
-    return;
+    const ok =
+      await checkStudent();
+
+
+    if (!ok) {
+
+      return;
+
+    }
+
+
+    await loadRequests();
+
+
+    setInterval(
+      loadRequests,
+      60000
+    );
+
+
   }
+  catch (error) {
 
 
-  await loadRequests();
+    console.error(
+      "PAGE ERROR:",
+      error
+    );
 
 
-  setInterval(
-    loadRequests,
-    60000
-  );
+    showMessage(
+      "Lỗi trang: "
+      +
+      (
+        error?.message
+        ||
+        error
+        ||
+        "Không xác định"
+      ),
+      true
+    );
+
+
+  }
 
 
 })();
