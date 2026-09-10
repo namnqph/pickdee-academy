@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Thu học phí | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.75);
+      font-size: 14px;
+    }
+
+    .logout {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .container {
+      width: min(950px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .eyebrow {
+      margin-top: 25px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.62);
+      margin-bottom: 24px;
+    }
+
+    .card {
+      padding: 22px;
+      border-radius: 17px;
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: rgba(255,255,255,.58);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #09285a;
+      color: white;
+      outline: none;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 8px 0 22px;
+    }
+
+    .summary-item {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .summary-label {
+      color: rgba(255,255,255,.5);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .lime {
+      color: #d8ff45;
+    }
+
+    .debt {
+      color: #ffcf70;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 11px;
+      background: #d8ff45;
+      color: #172600;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: .5;
+      cursor: wait;
+    }
+
+    #message {
+      margin-top: 14px;
+      min-height: 22px;
+      font-weight: 800;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 13px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    @media (max-width: 700px) {
+      .form-grid,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      #userEmail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="top-actions">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    href="./admin"
+    class="back"
+  >
+    ← Khu vực Admin
+  </a>
+
+  <div class="eyebrow">
+    QUẢN LÝ TÀI CHÍNH
+  </div>
+
+  <h1>Thu học phí</h1>
+
+  <div class="sub">
+    Ghi nhận tiền học viên đã thanh toán cho PickDee Academy.
+  </div>
+
+
+  <section class="card">
+
+    <div class="form-grid">
+
+      <div class="field">
+
+        <label>
+          Học viên
+        </label>
+
+        <select id="studentSelect">
+          <option value="">
+            -- Chọn học viên --
+          </option>
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Đăng ký / Gói học
+        </label>
+
+        <select
+          id="registrationSelect"
+          disabled
+        >
+          <option value="">
+            -- Chọn đăng ký --
+          </option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="summary">
+
+      <div class="summary-item">
+
+        <div class="summary-label">
+          Học phí
+        </div>
+
+        <div
+          id="tuitionValue"
+          class="summary-value"
+        >
+          0đ
+        </div>
+
+      </div>
+
+
+      <div class="summary-item">
+
+        <div class="summary-label">
+          Đã thu
+        </div>
+
+        <div
+          id="paidValue"
+          class="summary-value lime"
+        >
+          0đ
+        </div>
+
+      </div>
+
+
+      <div class="summary-item">
+
+        <div class="summary-label">
+          Còn phải thu
+        </div>
+
+        <div
+          id="remainingValue"
+          class="summary-value debt"
+        >
+          0đ
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <form id="paymentForm">
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label>
+            Số tiền thu
+          </label>
+
+          <input
+            id="amount"
+            type="number"
+            min="1000"
+            step="1000"
+            placeholder="Ví dụ: 2000000"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Hình thức thanh toán
+          </label>
+
+          <select
+            id="paymentMethod"
+            required
+          >
+            <option value="Chuyển khoản">
+              Chuyển khoản
+            </option>
+
+            <option value="Tiền mặt">
+              Tiền mặt
+            </option>
+
+            <option value="Khác">
+              Khác
+            </option>
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Ghi chú
+        </label>
+
+        <textarea
+          id="note"
+          placeholder="Không bắt buộc"
+        ></textarea>
+
+      </div>
+
+
+      <button
+        id="submitBtn"
+        class="submit-btn"
+        type="submit"
+      >
+        ✓ XÁC NHẬN ĐÃ THU
+      </button>
+
+
+      <div id="message"></div>
+
+    </form>
+
+  </section>
+
+
+  <section class="card">
+
+    <div class="section-title">
+      Lịch sử thu của đăng ký này
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Mã phiếu</th>
+            <th>Ngày</th>
+            <th>Số tiền</th>
+            <th>Hình thức</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+
+        <tbody id="historyBody">
+
+          <tr>
+            <td colspan="5">
+              Chọn một đăng ký để xem.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const studentSelect =
+    document.getElementById("studentSelect");
+
+  const registrationSelect =
+    document.getElementById("registrationSelect");
+
+  const tuitionValue =
+    document.getElementById("tuitionValue");
+
+  const paidValue =
+    document.getElementById("paidValue");
+
+  const remainingValue =
+    document.getElementById("remainingValue");
+
+  const amountInput =
+    document.getElementById("amount");
+
+  const paymentMethod =
+    document.getElementById("paymentMethod");
+
+  const noteInput =
+    document.getElementById("note");
+
+  const paymentForm =
+    document.getElementById("paymentForm");
+
+  const submitBtn =
+    document.getElementById("submitBtn");
+
+  const messageEl =
+    document.getElementById("message");
+
+  const historyBody =
+    document.getElementById("historyBody");
+
+  const logoutBtn =
+    document.getElementById("logoutBtn");
+
+
+  let registrations = [];
+  let currentPayments = [];
+  let currentRemaining = 0;
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN") +
+      "đ"
+    );
+  }
+
+
+  function dateVN(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    const parts =
+      String(value).split("-");
+
+    if (parts.length === 3) {
+
+      return (
+        parts[2] +
+        "/" +
+        parts[1] +
+        "/" +
+        parts[0]
+      );
+    }
+
+    return value;
+  }
+
+
+  function showMessage(
+    text,
+    error = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+    messageEl.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+  }
+
+
+  /* =====================================
+     AUTH ADMIN
+  ====================================== */
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+  }
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    session.user.email || "";
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError ||
+    !profile ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+  }
+
+
+  /* =====================================
+     LOAD STUDENTS
+  ====================================== */
+
+  async function loadStudents() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("students")
+        .select(`
+          id,
+          student_code,
+          full_name,
+          email,
+          status
+        `)
+        .order(
+          "full_name",
+          { ascending: true }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    studentSelect.innerHTML =
+      `
+        <option value="">
+          -- Chọn học viên --
+        </option>
+      `;
+
+
+    (data || []).forEach(
+      student => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          student.id;
+
+
+        option.textContent =
+          `${
+            student.full_name ||
+            "Chưa có tên"
+          } · ${
+            student.student_code ||
+            ""
+          }`;
+
+
+        studentSelect.appendChild(
+          option
+        );
+
+      }
+    );
+  }
+
+
+  /* =====================================
+     LOAD REGISTRATIONS
+  ====================================== */
+
+  async function loadRegistrations(
+    studentId
+  ) {
+
+    registrationSelect.disabled =
+      true;
+
+
+    registrationSelect.innerHTML =
+      `
+        <option value="">
+          -- Chọn đăng ký --
+        </option>
+      `;
+
+
+    resetPaymentContext();
+
+
+    if (!studentId) {
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("registrations")
+        .select(`
+          id,
+          registration_code,
+          student_id,
+          package_name,
+          tuition_fee,
+          status,
+          created_at
+        `)
+        .eq(
+          "student_id",
+          Number(studentId)
+        )
+        .order(
+          "created_at",
+          { ascending: false }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    registrations =
+      data || [];
+
+
+    registrations.forEach(
+      row => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          row.id;
+
+
+        option.textContent =
+          `${
+            row.registration_code ||
+            "—"
+          } · ${
+            row.package_name ||
+            "Chưa có gói"
+          } · ${
+            money(
+              row.tuition_fee
+            )
+          }`;
+
+
+        registrationSelect.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    registrationSelect.disabled =
+      false;
+  }
+
+
+  /* =====================================
+     PAYMENT CONTEXT
+  ====================================== */
+
+  function resetPaymentContext() {
+
+    tuitionValue.textContent =
+      "0đ";
+
+    paidValue.textContent =
+      "0đ";
+
+    remainingValue.textContent =
+      "0đ";
+
+    currentRemaining =
+      0;
+
+    amountInput.value =
+      "";
+
+    amountInput.max =
+      "";
+
+    historyBody.innerHTML =
+      `
+        <tr>
+          <td colspan="5">
+            Chọn một đăng ký để xem.
+          </td>
+        </tr>
+      `;
+  }
+
+
+  async function loadPaymentContext(
+    registrationId
+  ) {
+
+    resetPaymentContext();
+
+
+    if (!registrationId) {
+      return;
+    }
+
+
+    const registration =
+      registrations.find(
+        row =>
+          Number(row.id) ===
+          Number(registrationId)
+      );
+
+
+    if (!registration) {
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("tuition_payments")
+        .select(`
+          id,
+          payment_code,
+          registration_id,
+          amount,
+          payment_date,
+          payment_method,
+          status,
+          note
+        `)
+        .eq(
+          "registration_id",
+          Number(registrationId)
+        )
+        .order(
+          "payment_date",
+          { ascending: false }
+        )
+        .order(
+          "id",
+          { ascending: false }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    currentPayments =
+      data || [];
+
+
+    const tuition =
+      Number(
+        registration.tuition_fee || 0
+      );
+
+
+    const paid =
+      currentPayments
+        .filter(
+          row =>
+            row.status === "Đã thu"
+        )
+        .reduce(
+          (sum, row) =>
+            sum +
+            Number(row.amount || 0),
+          0
+        );
+
+
+    currentRemaining =
+      Math.max(
+        tuition - paid,
+        0
+      );
+
+
+    tuitionValue.textContent =
+      money(tuition);
+
+
+    paidValue.textContent =
+      money(paid);
+
+
+    remainingValue.textContent =
+      money(currentRemaining);
+
+
+    amountInput.max =
+      currentRemaining;
+
+
+    if (currentRemaining <= 0) {
+
+      amountInput.disabled =
+        true;
+
+      submitBtn.disabled =
+        true;
+
+      showMessage(
+        "✓ Gói học này đã thanh toán đủ."
+      );
+
+    } else {
+
+      amountInput.disabled =
+        false;
+
+      submitBtn.disabled =
+        false;
+
+      showMessage("");
+    }
+
+
+    renderHistory();
+  }
+
+
+  /* =====================================
+     HISTORY
+  ====================================== */
+
+  function renderHistory() {
+
+    if (
+      currentPayments.length === 0
+    ) {
+
+      historyBody.innerHTML =
+        `
+          <tr>
+            <td colspan="5">
+              Chưa có phiếu thu nào.
+            </td>
+          </tr>
+        `;
+
+      return;
+    }
+
+
+    historyBody.innerHTML =
+      currentPayments
+        .map(
+          row => `
+
+            <tr>
+
+              <td>
+                ${row.payment_code || "—"}
+              </td>
+
+              <td>
+                ${dateVN(row.payment_date)}
+              </td>
+
+              <td>
+                <strong>
+                  ${money(row.amount)}
+                </strong>
+              </td>
+
+              <td>
+                ${row.payment_method || "—"}
+              </td>
+
+              <td>
+                ${row.status || "—"}
+              </td>
+
+            </tr>
+
+          `
+        )
+        .join("");
+  }
+
+
+  /* =====================================
+     EVENTS
+  ====================================== */
+
+  studentSelect.addEventListener(
+    "change",
+    async function () {
+
+      try {
+
+        await loadRegistrations(
+          studentSelect.value
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message ||
+          "Không tải được đăng ký.",
+          true
+        );
+      }
+
+    }
+  );
+
+
+  registrationSelect.addEventListener(
+    "change",
+    async function () {
+
+      try {
+
+        await loadPaymentContext(
+          registrationSelect.value
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message ||
+          "Không tải được học phí.",
+          true
+        );
+      }
+
+    }
+  );
+
+
+  paymentForm.addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+
+      const registrationId =
+        Number(
+          registrationSelect.value
+        );
+
+
+      const amount =
+        Number(
+          amountInput.value
+        );
+
+
+      if (!registrationId) {
+
+        showMessage(
+          "Vui lòng chọn đăng ký học.",
+          true
+        );
+
+        return;
+      }
+
+
+      if (
+        !amount ||
+        amount <= 0
+      ) {
+
+        showMessage(
+          "Vui lòng nhập số tiền thu.",
+          true
+        );
+
+        return;
+      }
+
+
+      if (
+        amount >
+        currentRemaining
+      ) {
+
+        showMessage(
+          "Số tiền thu không được vượt số còn phải thu.",
+          true
+        );
+
+        return;
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "ĐANG GHI NHẬN...";
+
+
+      showMessage(
+        "Đang ghi nhận học phí..."
+      );
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "admin_create_tuition_payment",
+          {
+            p_registration_id:
+              registrationId,
+
+            p_amount:
+              amount,
+
+            p_payment_method:
+              paymentMethod.value,
+
+            p_note:
+              noteInput.value.trim() ||
+              null
+          }
+        );
+
+
+      if (error) {
+
+        console.error(error);
+
+        showMessage(
+          "Không ghi nhận được: " +
+          error.message,
+          true
+        );
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "✓ XÁC NHẬN ĐÃ THU";
+
+        return;
+      }
+
+
+      amountInput.value =
+        "";
+
+      noteInput.value =
+        "";
+
+
+      await loadPaymentContext(
+        registrationId
+      );
+
+
+      showMessage(
+        "✓ Đã ghi nhận học phí thành công."
+      );
+
+
+      submitBtn.textContent =
+        "✓ XÁC NHẬN ĐÃ THU";
+
+
+      if (currentRemaining > 0) {
+
+        submitBtn.disabled =
+          false;
+      }
+
+    }
+  );
+
+
+  /* =====================================
+     LOGOUT
+  ====================================== */
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+      await sb.auth.signOut();
+
+      location.replace(
+        "./login.html"
+      );
+    }
+  );
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  try {
+
+    await loadStudents();
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    showMessage(
+      "Không tải được dữ liệu: " +
+      error.message,
+      true
+    );
+  }
+
+})();
+</script>
+
+</body>
+</html>
