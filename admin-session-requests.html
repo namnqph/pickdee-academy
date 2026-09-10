@@ -199,7 +199,7 @@
     .summary-card.alert {
 
       border-color:
-        rgba(255,100,100,.35);
+        rgba(255,100,100,.38);
 
     }
 
@@ -235,7 +235,7 @@
 
 
     /* =====================================================
-       CONTROLS
+       FILTER
     ====================================================== */
 
     .controls {
@@ -324,9 +324,9 @@
 
       color: #d8ff45;
 
-      font-weight: 800;
-
       font-size: 13px;
+
+      font-weight: 800;
 
     }
 
@@ -361,13 +361,13 @@
 
     .request-card.overdue {
 
-      border:
-        1px solid rgba(255,100,100,.45);
+      border-color:
+        rgba(255,90,90,.45);
 
       background:
         linear-gradient(
           145deg,
-          rgba(65,24,42,.48),
+          rgba(80,28,42,.45),
           rgba(6,39,88,.82)
         );
 
@@ -382,7 +382,7 @@
 
       align-items: flex-start;
 
-      gap: 15px;
+      gap: 14px;
 
       margin-bottom: 16px;
 
@@ -400,7 +400,7 @@
     }
 
 
-    .request-person {
+    .student-name {
 
       margin-top: 5px;
 
@@ -416,11 +416,11 @@
       margin-top: 4px;
 
       color:
-        rgba(255,255,255,.5);
+        rgba(255,255,255,.48);
 
       font-size: 12px;
 
-      line-height: 1.4;
+      line-height: 1.45;
 
     }
 
@@ -476,7 +476,7 @@
       color: white;
 
       background:
-        rgba(255,70,70,.75);
+        rgba(255,65,65,.75);
 
     }
 
@@ -537,14 +537,14 @@
 
       border-radius: 11px;
 
-      border:
-        1px solid rgba(255,255,255,.08);
-
       background:
         rgba(255,255,255,.04);
 
+      border:
+        1px solid rgba(255,255,255,.08);
+
       color:
-        rgba(255,255,255,.72);
+        rgba(255,255,255,.74);
 
       font-size: 13px;
 
@@ -553,18 +553,18 @@
     }
 
 
-    .result-box.rejected {
+    .result-box.approved {
 
       border-color:
-        rgba(255,100,100,.28);
+        rgba(216,255,69,.25);
 
     }
 
 
-    .result-box.approved {
+    .result-box.rejected {
 
       border-color:
-        rgba(216,255,69,.24);
+        rgba(255,100,100,.3);
 
     }
 
@@ -578,18 +578,18 @@
     }
 
 
-    .result-box.rejected
+    .approved
     .result-title {
 
-      color: #ffaaaa;
+      color: #d8ff45;
 
     }
 
 
-    .result-box.approved
+    .rejected
     .result-title {
 
-      color: #d8ff45;
+      color: #ffaaaa;
 
     }
 
@@ -602,13 +602,15 @@
 
       border-radius: 11px;
 
-      color: #ffb0b0;
+      border:
+        1px solid rgba(255,100,100,.3);
 
       background:
-        rgba(255,70,70,.09);
+        rgba(255,70,70,.08);
 
-      border:
-        1px solid rgba(255,100,100,.24);
+      color: #ffb0b0;
+
+      font-size: 13px;
 
       font-weight: 800;
 
@@ -641,14 +643,7 @@
 
     @media(max-width:850px) {
 
-      .summary-grid {
-
-        grid-template-columns:
-          repeat(2,1fr);
-
-      }
-
-
+      .summary-grid,
       .info-grid {
 
         grid-template-columns:
@@ -735,8 +730,8 @@
 
   <div class="intro">
 
-    Theo dõi yêu cầu đặt lịch của toàn hệ thống.
-    Admin chỉ cần chú ý các yêu cầu quá thời gian nhưng Coach chưa xử lý.
+    Theo dõi toàn bộ yêu cầu lịch học.
+    Admin chỉ cần can thiệp khi yêu cầu vẫn Chờ Coach nhưng đã quá thời gian học.
 
   </div>
 
@@ -817,7 +812,7 @@
     <input
       id="searchInput"
       type="search"
-      placeholder="Tìm học viên, Coach, mã YC, mã đăng ký..."
+      placeholder="Tìm Học viên, Coach, mã YC, mã đăng ký..."
     >
 
 
@@ -859,13 +854,19 @@
   </section>
 
 
-  <div id="message"></div>
+  <div id="message">
+
+    Đang tải dữ liệu...
+
+  </div>
 
 
   <section id="list">
 
     <div class="empty">
+
       Đang tải yêu cầu...
+
     </div>
 
   </section>
@@ -940,15 +941,15 @@
     );
 
 
-  const listEl =
-    document.getElementById(
-      "list"
-    );
-
-
   const messageEl =
     document.getElementById(
       "message"
+    );
+
+
+  const listEl =
+    document.getElementById(
+      "list"
     );
 
 
@@ -978,7 +979,9 @@
 
 
     if (!value) {
+
       return "—";
+
     }
 
 
@@ -1018,7 +1021,9 @@
 
 
     if (!value) {
+
       return "—";
+
     }
 
 
@@ -1055,10 +1060,10 @@
   }
 
 
-  function requestTimestamp(row) {
+  function requestDateTime(row) {
 
 
-    const dateMatch =
+    const date =
       String(
         row.requested_date || ""
       ).match(
@@ -1066,7 +1071,7 @@
       );
 
 
-    const timeMatch =
+    const time =
       String(
         row.requested_time || ""
       ).match(
@@ -1075,9 +1080,9 @@
 
 
     if (
-      !dateMatch
+      !date
       ||
-      !timeMatch
+      !time
     ) {
 
       return null;
@@ -1085,18 +1090,18 @@
     }
 
 
-    const date =
+    const result =
       new Date(
 
-        Number(dateMatch[1]),
+        Number(date[1]),
 
-        Number(dateMatch[2]) - 1,
+        Number(date[2]) - 1,
 
-        Number(dateMatch[3]),
+        Number(date[3]),
 
-        Number(timeMatch[1]),
+        Number(time[1]),
 
-        Number(timeMatch[2]),
+        Number(time[2]),
 
         0,
 
@@ -1107,7 +1112,7 @@
 
     if (
       Number.isNaN(
-        date.getTime()
+        result.getTime()
       )
     ) {
 
@@ -1116,7 +1121,7 @@
     }
 
 
-    return date;
+    return result;
 
   }
 
@@ -1133,11 +1138,11 @@
     }
 
 
-    const start =
-      requestTimestamp(row);
+    const date =
+      requestDateTime(row);
 
 
-    if (!start) {
+    if (!date) {
 
       return false;
 
@@ -1145,7 +1150,7 @@
 
 
     return (
-      start.getTime()
+      date.getTime()
       <
       Date.now()
     );
@@ -1214,60 +1219,31 @@
 
 
   /* =====================================================
-     CHECK ADMIN
+     AUTH
   ====================================================== */
 
   async function checkAdmin() {
 
 
     const {
-      data: sessionData,
-      error: sessionError
+      data,
+      error
     } =
       await sb.auth
         .getSession();
 
 
     if (
-      sessionError
+      error
       ||
-      !sessionData?.session
+      !data?.session
     ) {
+
 
       location.replace(
         "./login.html"
       );
 
-      return false;
-
-    }
-
-
-    const {
-      data: profile,
-      error: profileError
-    } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq(
-          "id",
-          sessionData.session.user.id
-        )
-        .maybeSingle();
-
-
-    if (
-      profileError
-      ||
-      !profile
-      ||
-      profile.role !== "admin"
-    ) {
-
-      location.replace(
-        "./login.html"
-      );
 
       return false;
 
@@ -1280,7 +1256,7 @@
 
 
   /* =====================================================
-     LOAD
+     LOAD RPC
   ====================================================== */
 
   async function loadData() {
@@ -1299,62 +1275,31 @@
     );
 
 
+    listEl.innerHTML =
+      `
+        <div class="empty">
+
+          Đang tải yêu cầu...
+
+        </div>
+      `;
+
+
     const {
-      data: requests,
+      data,
       error
     } =
-      await sb
-        .from("session_requests")
-        .select(`
-          id,
-          request_code,
-          registration_id,
-          student_id,
-          coach_id,
-          session_no,
-          requested_date,
-          requested_time,
-          duration_minutes,
-          requested_area,
-          requested_ward,
-          note,
-          status,
-          coach_note,
-          court_id,
-          session_id,
-          created_at,
-          approved_at,
-          rejected_at
-        `)
-        .order(
-          "created_at",
-          {
-            ascending:false
-          }
-        );
+      await sb.rpc(
+        "admin_get_session_requests"
+      );
 
 
     if (error) {
 
 
       console.error(
-        "REQUEST ERROR:",
+        "RPC ERROR:",
         error
-      );
-
-
-      listEl.innerHTML =
-        `
-          <div class="empty">
-            Không tải được yêu cầu lịch học.
-          </div>
-        `;
-
-
-      showMessage(
-        error.message
-        ||
-        "Không tải được dữ liệu."
       );
 
 
@@ -1366,238 +1311,830 @@
         "↻ CẬP NHẬT";
 
 
+      showMessage(
+        "Lỗi: "
+        +
+        (
+          error.message
+          ||
+          "Không tải được dữ liệu"
+        )
+      );
+
+
+      listEl.innerHTML =
+        `
+          <div class="empty">
+
+            Không tải được yêu cầu lịch học.
+
+          </div>
+        `;
+
+
       return;
 
     }
 
 
+    let rows =
+      data;
+
+
+    /*
+      Phòng trường hợp RPC trả JSON dạng chuỗi.
+    */
+
+    if (
+      typeof rows === "string"
+    ) {
+
+
+      try {
+
+        rows =
+          JSON.parse(rows);
+
+      }
+      catch {
+
+        rows =
+          [];
+
+      }
+
+    }
+
+
+    if (
+      !Array.isArray(rows)
+    ) {
+
+      rows =
+        [];
+
+    }
+
+
+    allRows =
+      rows;
+
+
+    updateSummary();
+
+
+    render();
+
+
+    refreshBtn.disabled =
+      false;
+
+
+    refreshBtn.textContent =
+      "↻ CẬP NHẬT";
+
+
+    showMessage(
+      `✓ Đã tải ${allRows.length} yêu cầu.`
+    );
+
+  }
+
+
+  /* =====================================================
+     SUMMARY
+  ====================================================== */
+
+  function updateSummary() {
+
+
+    pendingCount.textContent =
+      allRows.filter(
+        row =>
+          row.status
+          ===
+          "Chờ Coach"
+      ).length;
+
+
+    overdueCount.textContent =
+      allRows.filter(
+        isOverdue
+      ).length;
+
+
+    approvedCount.textContent =
+      allRows.filter(
+        row =>
+          row.status
+          ===
+          "Đã duyệt"
+      ).length;
+
+
+    rejectedCount.textContent =
+      allRows.filter(
+        row =>
+          row.status
+          ===
+          "Từ chối"
+      ).length;
+
+  }
+
+
+  /* =====================================================
+     FILTER
+  ====================================================== */
+
+  function getFilteredRows() {
+
+
+    const keyword =
+      String(
+        searchInput.value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const filter =
+      statusFilter.value;
+
+
+    return allRows
+      .filter(
+        row => {
+
+
+          if (
+            filter === "OVERDUE"
+            &&
+            !isOverdue(row)
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            filter !== "ALL"
+            &&
+            filter !== "OVERDUE"
+            &&
+            row.status !== filter
+          ) {
+
+            return false;
+
+          }
+
+
+          if (!keyword) {
+
+            return true;
+
+          }
+
+
+          const text =
+            [
+
+              row.request_code,
+
+              row.registration_code,
+
+              row.package_name,
+
+              row.student_code,
+
+              row.student_name,
+
+              row.coach_code,
+
+              row.coach_name,
+
+              row.requested_area,
+
+              row.requested_ward,
+
+              row.session_code,
+
+              row.coach_note
+
+            ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+
+          return text.includes(
+            keyword
+          );
+
+        }
+      )
+      .sort(
+        (a,b) => {
+
+
+          const aOverdue =
+            isOverdue(a)
+              ?
+              1
+              :
+              0;
+
+
+          const bOverdue =
+            isOverdue(b)
+              ?
+              1
+              :
+              0;
+
+
+          if (
+            aOverdue !== bOverdue
+          ) {
+
+            return (
+              bOverdue
+              -
+              aOverdue
+            );
+
+          }
+
+
+          if (
+            a.status === "Chờ Coach"
+            &&
+            b.status !== "Chờ Coach"
+          ) {
+
+            return -1;
+
+          }
+
+
+          if (
+            b.status === "Chờ Coach"
+            &&
+            a.status !== "Chờ Coach"
+          ) {
+
+            return 1;
+
+          }
+
+
+          return (
+            Number(b.id || 0)
+            -
+            Number(a.id || 0)
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render() {
+
+
     const rows =
-      requests || [];
-
-
-    const registrationIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              x =>
-                Number(
-                  x.registration_id
-                )
-            )
-            .filter(Boolean)
-        )
-      ];
-
-
-    const studentIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              x =>
-                Number(
-                  x.student_id
-                )
-            )
-            .filter(Boolean)
-        )
-      ];
-
-
-    const coachIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              x =>
-                Number(
-                  x.coach_id
-                )
-            )
-            .filter(Boolean)
-        )
-      ];
-
-
-    const courtIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              x =>
-                Number(
-                  x.court_id
-                )
-            )
-            .filter(Boolean)
-        )
-      ];
-
-
-    const sessionIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              x =>
-                Number(
-                  x.session_id
-                )
-            )
-            .filter(Boolean)
-        )
-      ];
-
-
-    let registrations =
-      [];
-
-
-    let students =
-      [];
-
-
-    let coaches =
-      [];
-
-
-    let courts =
-      [];
-
-
-    let sessions =
-      [];
+      getFilteredRows();
 
 
     if (
-      registrationIds.length
+      rows.length === 0
     ) {
 
-      const result =
-        await sb
-          .from("registrations")
-          .select(`
-            id,
-            registration_code,
-            package_name
-          `)
-          .in(
-            "id",
-            registrationIds
-          );
+
+      listEl.innerHTML =
+        `
+          <div class="empty">
+
+            Không có yêu cầu phù hợp.
+
+          </div>
+        `;
 
 
-      if (!result.error) {
-
-        registrations =
-          result.data || [];
-
-      }
+      return;
 
     }
 
 
-    if (
-      studentIds.length
-    ) {
+    listEl.innerHTML =
+      "";
 
-      const result =
-        await sb
-          .from("students")
-          .select(`
-            id,
-            student_code,
-            full_name
-          `)
-          .in(
-            "id",
-            studentIds
+
+    rows.forEach(
+      row => {
+
+
+        const overdue =
+          isOverdue(row);
+
+
+        const card =
+          document.createElement(
+            "article"
           );
 
 
-      if (!result.error) {
+        card.className =
+          overdue
+            ?
+            "request-card overdue"
+            :
+            "request-card";
 
-        students =
-          result.data || [];
+
+        let resultHtml =
+          "";
+
+
+        /* =================================================
+           ĐÃ DUYỆT
+        ================================================== */
+
+        if (
+          row.status === "Đã duyệt"
+        ) {
+
+
+          resultHtml =
+            `
+
+              <div class="result-box approved">
+
+                <div class="result-title">
+
+                  ✅ Coach đã duyệt
+
+                </div>
+
+
+                ${
+                  row.session_code
+                    ?
+                    `
+                      Buổi học:
+                      <strong>
+                        ${escapeHtml(
+                          row.session_code
+                        )}
+                      </strong>
+                      <br>
+                    `
+                    :
+                    ""
+                }
+
+
+                Sân:
+
+                <strong>
+
+                  ${escapeHtml(
+                    row.court_name
+                    ||
+                    "—"
+                  )}
+
+                </strong>
+
+
+                ${
+                  row.coach_note
+                    ?
+                    `
+                      <br><br>
+
+                      Ghi chú Coach:
+
+                      <strong>
+
+                        ${escapeHtml(
+                          row.coach_note
+                        )}
+
+                      </strong>
+                    `
+                    :
+                    ""
+                }
+
+
+              </div>
+
+            `;
+
+        }
+
+
+        /* =================================================
+           TỪ CHỐI
+        ================================================== */
+
+        if (
+          row.status === "Từ chối"
+        ) {
+
+
+          resultHtml =
+            `
+
+              <div class="result-box rejected">
+
+                <div class="result-title">
+
+                  ✕ Coach đã từ chối
+
+                </div>
+
+
+                Lý do:
+
+                <strong>
+
+                  ${escapeHtml(
+                    row.coach_note
+                    ||
+                    "Chưa có lý do"
+                  )}
+
+                </strong>
+
+
+              </div>
+
+            `;
+
+        }
+
+
+        /* =================================================
+           CẦN CAN THIỆP
+        ================================================== */
+
+        if (overdue) {
+
+
+          resultHtml +=
+            `
+
+              <div class="warning">
+
+                ⚠ Yêu cầu đã đến thời gian học
+                nhưng Coach vẫn chưa xử lý.
+
+                <br><br>
+
+                Admin cần kiểm tra Coach
+                hoặc liên hệ Học viên.
+
+              </div>
+
+            `;
+
+        }
+
+
+        /* =================================================
+           CARD
+        ================================================== */
+
+        card.innerHTML =
+          `
+
+            <div class="request-head">
+
+
+              <div>
+
+
+                <div class="request-code">
+
+                  ${escapeHtml(
+                    row.request_code
+                    ||
+                    `YC${row.id}`
+                  )}
+
+                </div>
+
+
+                <div class="student-name">
+
+                  ${escapeHtml(
+                    row.student_name
+                    ||
+                    "Học viên"
+                  )}
+
+                </div>
+
+
+                <div class="request-sub">
+
+                  ${escapeHtml(
+                    row.student_code
+                    ||
+                    ""
+                  )}
+
+                  ${
+                    row.registration_code
+                      ?
+                      ` · ${escapeHtml(
+                        row.registration_code
+                      )}`
+                      :
+                      ""
+                  }
+
+                </div>
+
+
+              </div>
+
+
+              <div
+                class="badge ${badgeClass(
+                  row
+                )}"
+              >
+
+                ${escapeHtml(
+                  badgeText(row)
+                )}
+
+              </div>
+
+
+            </div>
+
+
+            <div class="info-grid">
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Gói / Buổi
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    row.package_name
+                    ||
+                    "—"
+                  )}
+
+                  <br>
+
+                  Buổi ${escapeHtml(
+                    row.session_no
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Ngày / giờ yêu cầu
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    formatDate(
+                      row.requested_date
+                    )
+                  )}
+
+                  ·
+
+                  ${escapeHtml(
+                    formatTime(
+                      row.requested_time
+                    )
+                  )}
+
+                  <br>
+
+                  ${escapeHtml(
+                    row.duration_minutes
+                    ||
+                    60
+                  )}
+                  phút
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Coach phụ trách
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    row.coach_name
+                    ||
+                    row.coach_code
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Khu vực
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    [
+                      row.requested_ward,
+                      row.requested_area
+                    ]
+                    .filter(Boolean)
+                    .join(" · ")
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+            </div>
+
+
+            ${
+              row.note
+                ?
+                `
+                  <div class="result-box">
+
+                    <strong>
+                      Ghi chú Học viên:
+                    </strong>
+
+                    ${escapeHtml(
+                      row.note
+                    )}
+
+                  </div>
+                `
+                :
+                ""
+            }
+
+
+            ${resultHtml}
+
+
+          `;
+
+
+        listEl.appendChild(
+          card
+        );
+
 
       }
+    );
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  searchInput.addEventListener(
+    "input",
+    render
+  );
+
+
+  statusFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  refreshBtn.addEventListener(
+    "click",
+    loadData
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  try {
+
+
+    const ok =
+      await checkAdmin();
+
+
+    if (!ok) {
+
+      return;
 
     }
 
 
-    if (
-      coachIds.length
-    ) {
-
-      const result =
-        await sb
-          .from("coaches")
-          .select(`
-            id,
-            coach_code,
-            full_name
-          `)
-          .in(
-            "id",
-            coachIds
-          );
+    await loadData();
 
 
-      if (!result.error) {
-
-        coaches =
-          result.data || [];
-
-      }
-
-    }
+    setInterval(
+      loadData,
+      60000
+    );
 
 
-    if (
-      courtIds.length
-    ) {
-
-      const result =
-        await sb
-          .from("courts")
-          .select(`
-            id,
-            name
-          `)
-          .in(
-            "id",
-            courtIds
-          );
+  }
+  catch (error) {
 
 
-      if (!result.error) {
-
-        courts =
-          result.data || [];
-
-      }
-
-    }
+    console.error(
+      "PAGE ERROR:",
+      error
+    );
 
 
-    if (
-      sessionIds.length
-    ) {
-
-      const result =
-        await sb
-          .from("class_sessions")
-          .select(`
-            id,
-            session_code,
-            status,
-            court_name
-          `)
-          .in(
-            "id",
-            sessionIds
-          );
+    showMessage(
+      "Lỗi trang: "
+      +
+      (
+        error?.message
+        ||
+        error
+        ||
+        "Không xác định"
+      )
+    );
 
 
-      if (!result.error) {
+    listEl.innerHTML =
+      `
+        <div class="empty">
+
+          Có lỗi khi tải trang.
+
+        </div>
+      `;
+
+
+  }
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
