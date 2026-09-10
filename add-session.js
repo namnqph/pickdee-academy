@@ -535,6 +535,11 @@ async function loadWards(
 
 /* =====================================================
    LOAD SÂN THEO KHU VỰC
+
+   CHỈ CHO PHÉP SÂN:
+   - Hoạt động
+   - Đã xác minh giá
+   - Giá > 0
 ===================================================== */
 
 async function loadCourts() {
@@ -586,11 +591,20 @@ async function loadCourts() {
         ward,
         address,
         price_per_session,
+        price_verified,
         status
       `)
       .eq(
         "status",
         "Hoạt động"
+      )
+      .eq(
+        "price_verified",
+        true
+      )
+      .gt(
+        "price_per_session",
+        0
       )
       .eq(
         "area",
@@ -599,7 +613,7 @@ async function loadCourts() {
 
 
   /*
-    Nếu đã chọn Phường/Xã
+    Nếu Admin đã chọn Phường/Xã
     thì lọc sâu thêm.
   */
 
@@ -659,6 +673,10 @@ async function loadCourts() {
     data || [];
 
 
+  /*
+    Không có sân đủ điều kiện.
+  */
+
   if (
     courts.length === 0
   ) {
@@ -671,7 +689,7 @@ async function loadCourts() {
     courtSelect.innerHTML =
       `
         <option value="">
-          Chưa có sân tại khu vực này
+          Chưa có sân đã xác minh giá tại khu vực này
         </option>
       `;
 
@@ -707,7 +725,7 @@ async function loadCourts() {
         court.id;
 
 
-      let locationText =
+      const locationText =
         court.ward
           ?
           ` · ${court.ward}`
@@ -734,7 +752,7 @@ async function loadCourts() {
 
 
   /*
-    Nếu khu vực chỉ có đúng 1 sân
+    Nếu chỉ có đúng 1 sân phù hợp
     thì tự chọn luôn.
   */
 
@@ -813,7 +831,9 @@ function applyCourt() {
 
 
   courtAddressDisplay.textContent =
-    addressParts.join(" · ");
+    addressParts.join(
+      " · "
+    );
 
 
   courtInfo.style.display =
@@ -823,7 +843,7 @@ function applyCourt() {
 
 
 /* =====================================================
-   EVENT KHU VỰC
+   EVENT TỈNH / THÀNH
 ===================================================== */
 
 areaSelect.addEventListener(
@@ -874,9 +894,8 @@ areaSelect.addEventListener(
 
 
     /*
-      Chưa cần chọn phường.
-      Ngay sau khi chọn tỉnh
-      đã có thể xem toàn bộ sân
+      Ngay sau khi chọn tỉnh,
+      hiện toàn bộ sân đủ điều kiện
       của tỉnh đó.
     */
 
@@ -1061,8 +1080,8 @@ async function loadRegistrations() {
 
 
   /*
-    Nếu mở từ Chi tiết đăng ký
-    thì tự chọn đăng ký.
+    Nếu mở trang từ Chi tiết đăng ký
+    thì tự chọn đúng đăng ký.
   */
 
   if (
@@ -1242,7 +1261,7 @@ async function getNextSessionCode() {
 
 
 /* =====================================================
-   ÁP DỤNG KHU VỰC HỌC VIÊN
+   ÁP DỤNG KHU VỰC CỦA HỌC VIÊN
 ===================================================== */
 
 async function applyStudentLocation(
@@ -1255,8 +1274,8 @@ async function applyStudentLocation(
 
 
   /*
-    Nếu học viên chưa có khu vực,
-    Admin tự chọn.
+    Học viên chưa có khu vực
+    thì Admin tự chọn.
   */
 
   if (!preferredArea) {
@@ -1318,8 +1337,8 @@ async function applyStudentLocation(
 
 
   /*
-    Sau khi lấy tỉnh/phường của học viên,
-    tự động tải sân phù hợp.
+    Tự động tải sân phù hợp
+    với khu vực học viên.
   */
 
   await loadCourts();
@@ -1460,10 +1479,8 @@ async function applyRegistration() {
 
 
   /*
-    QUAN TRỌNG:
-
     Tự lấy khu vực muốn học
-    của học viên.
+    từ hồ sơ học viên.
   */
 
   await applyStudentLocation(
@@ -1475,7 +1492,7 @@ async function applyRegistration() {
 
 
 /* =====================================================
-   EVENT REGISTRATION
+   EVENT ĐĂNG KÝ
 ===================================================== */
 
 registrationSelect.addEventListener(
@@ -1587,7 +1604,37 @@ form.addEventListener(
 
 
       showMessage(
-        "Hãy chọn sân học.",
+        "Hãy chọn sân học đã được xác minh giá.",
+        true
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+      KIỂM TRA LẦN CUỐI TRƯỚC KHI INSERT.
+      Tránh trường hợp dữ liệu sân đã thay đổi
+      sau khi dropdown được tải.
+    */
+
+    if (
+      selectedCourt.status !==
+        "Hoạt động"
+      ||
+      selectedCourt.price_verified !==
+        true
+      ||
+      Number(
+        selectedCourt.price_per_session || 0
+      ) <= 0
+    ) {
+
+
+      showMessage(
+        "Sân này chưa đủ điều kiện sử dụng. Hãy kiểm tra lại giá sân.",
         true
       );
 
@@ -1671,8 +1718,12 @@ form.addEventListener(
 
             /*
               Chỉ truyền court_id.
-              Trigger database sẽ tự lấy
-              court_cost từ bảng courts.
+
+              Trigger database:
+              sync_session_court_cost()
+
+              sẽ tự lấy giá hiện tại
+              từ bảng courts.
             */
 
             court_id:
@@ -1681,8 +1732,8 @@ form.addEventListener(
               ),
 
             /*
-              Giữ court_name để tương thích
-              với các trang hiện tại.
+              Giữ court_name để các trang cũ
+              vẫn hiển thị bình thường.
             */
 
             court_name:
@@ -1786,9 +1837,11 @@ async function init() {
 
 
   /*
-    Bắt buộc load danh mục khu vực trước,
-    vì khi load đăng ký có thể phải
-    tự chọn tỉnh/phường của học viên.
+    Load khu vực trước.
+
+    Vì loadRegistrations()
+    có thể tự áp dụng Tỉnh/Phường
+    của học viên.
   */
 
   const areaLoaded =
