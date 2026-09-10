@@ -1,846 +1,307 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
-
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#041733">
 
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-
-  <meta
-    name="theme-color"
-    content="#041733"
-  >
-
-  <title>
-    Yêu cầu buổi học | PickDee Academy
-  </title>
+  <title>Yêu cầu buổi học | PickDee Academy</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
 
-
   <style>
+    *{box-sizing:border-box}
+    html{color-scheme:dark}
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      color-scheme: dark;
-    }
-
-    body {
-
-      margin: 0;
-
-      min-height: 100vh;
-
-      color: #fff;
-
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        sans-serif;
-
+    body{
+      margin:0;
+      min-height:100vh;
+      color:#fff;
+      font-family:Inter,system-ui,-apple-system,sans-serif;
       background:
-        radial-gradient(
-          circle at 80% 10%,
-          rgba(80,255,190,.12),
-          transparent 30%
-        ),
-        linear-gradient(
-          145deg,
-          #041733,
-          #062456 50%,
-          #03142d
-        );
-
+        radial-gradient(circle at 80% 10%,rgba(80,255,190,.12),transparent 30%),
+        linear-gradient(145deg,#041733,#062456 50%,#03142d);
     }
 
-
-    header {
-
-      padding: 18px 22px;
-
-      border-bottom:
-        1px solid rgba(255,255,255,.12);
-
-      display: flex;
-
-      justify-content:
-        space-between;
-
-      align-items: center;
-
-      gap: 15px;
-
+    header{
+      padding:18px 22px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:15px;
     }
 
-
-    .brand {
-
-      font-size: 19px;
-
-      font-weight: 900;
-
+    .brand{
+      font-size:19px;
+      font-weight:900;
     }
 
+    .brand span{color:#d8ff45}
 
-    .brand span {
-
-      color: #d8ff45;
-
+    a{
+      color:#d8ff45;
+      text-decoration:none;
+      font-weight:900;
     }
 
-
-    a {
-
-      color: #d8ff45;
-
-      text-decoration: none;
-
-      font-weight: 900;
-
+    main{
+      width:min(820px,calc(100% - 28px));
+      margin:auto;
+      padding:38px 0 70px;
     }
 
-
-    main {
-
-      width:
-        min(
-          820px,
-          calc(100% - 28px)
-        );
-
-      margin: auto;
-
-      padding:
-        38px 0 70px;
-
+    .eyebrow{
+      color:#d8ff45;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:1px;
     }
 
-
-    .eyebrow {
-
-      color: #d8ff45;
-
-      font-size: 13px;
-
-      font-weight: 900;
-
-      letter-spacing: 1px;
-
+    h1{
+      margin:8px 0 8px;
+      font-size:clamp(36px,7vw,54px);
     }
 
-
-    h1 {
-
-      margin:
-        8px 0 8px;
-
-      font-size:
-        clamp(
-          36px,
-          7vw,
-          54px
-        );
-
+    .intro{
+      margin-bottom:24px;
+      color:rgba(255,255,255,.62);
+      line-height:1.6;
     }
 
-
-    .intro {
-
-      margin-bottom: 24px;
-
-      color:
-        rgba(255,255,255,.62);
-
-      line-height: 1.6;
-
+    .card{
+      margin-bottom:18px;
+      padding:22px;
+      border-radius:18px;
+      background:rgba(6,39,88,.78);
+      border:1px solid rgba(255,255,255,.12);
     }
 
-
-    .card {
-
-      margin-bottom: 18px;
-
-      padding: 22px;
-
-      border-radius: 18px;
-
-      background:
-        rgba(6,39,88,.78);
-
-      border:
-        1px solid rgba(255,255,255,.12);
-
+    .card h2{
+      margin:0 0 18px;
+      font-size:21px;
     }
 
-
-    .card h2 {
-
-      margin:
-        0 0 18px;
-
-      font-size: 21px;
-
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
     }
 
-
-    .summary-grid {
-
-      display: grid;
-
-      grid-template-columns:
-        repeat(3,1fr);
-
-      gap: 10px;
-
+    .summary-box{
+      padding:13px;
+      border-radius:12px;
+      background:rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.08);
     }
 
-
-    .summary-box {
-
-      padding: 13px;
-
-      border-radius: 12px;
-
-      background:
-        rgba(0,0,0,.14);
-
-      border:
-        1px solid rgba(255,255,255,.08);
-
+    .summary-label{
+      margin-bottom:5px;
+      color:rgba(255,255,255,.5);
+      font-size:11px;
     }
 
-
-    .summary-label {
-
-      margin-bottom: 5px;
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 11px;
-
+    .summary-value{
+      color:#d8ff45;
+      font-size:17px;
+      font-weight:900;
+      line-height:1.35;
     }
 
-
-    .summary-value {
-
-      color: #d8ff45;
-
-      font-size: 17px;
-
-      font-weight: 900;
-
-      line-height: 1.35;
-
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
     }
 
+    .full{grid-column:1/-1}
 
-    .grid {
-
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 16px;
-
+    label{
+      display:block;
+      margin-bottom:7px;
+      font-weight:800;
+      font-size:14px;
     }
-
-
-    .full {
-
-      grid-column:
-        1 / -1;
-
-    }
-
-
-    label {
-
-      display: block;
-
-      margin-bottom: 7px;
-
-      font-weight: 800;
-
-      font-size: 14px;
-
-    }
-
 
     input,
     select,
-    textarea {
-
-      width: 100%;
-
-      min-height: 48px;
-
-      padding:
-        12px 13px;
-
-      border:
-        1px solid rgba(255,255,255,.18);
-
-      border-radius: 10px;
-
-      background: #07172d;
-
-      color: white;
-
-      font-size: 16px;
-
-      outline: none;
-
+    textarea{
+      width:100%;
+      min-height:48px;
+      padding:12px 13px;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:10px;
+      background:#07172d;
+      color:#fff;
+      font-size:16px;
+      outline:none;
     }
 
-
-    textarea {
-
-      min-height: 95px;
-
-      resize: vertical;
-
+    textarea{
+      min-height:95px;
+      resize:vertical;
     }
-
 
     input:focus,
     select:focus,
-    textarea:focus {
-
-      border-color:
-        rgba(216,255,69,.65);
-
+    textarea:focus{
+      border-color:rgba(216,255,69,.65);
     }
 
-
-    input:disabled,
-    select:disabled {
-
-      opacity: .55;
-
-      cursor: not-allowed;
-
+    select:disabled,
+    input:disabled{
+      opacity:.55;
     }
 
-
-    select option {
-
-      background: #07172d;
-
-      color: white;
-
+    select option{
+      background:#07172d;
+      color:#fff;
     }
 
-
-    .helper {
-
-      margin-top: 5px;
-
-      color:
-        rgba(255,255,255,.45);
-
-      font-size: 12px;
-
-      line-height: 1.45;
-
+    .helper{
+      margin-top:6px;
+      color:rgba(255,255,255,.45);
+      font-size:12px;
+      line-height:1.45;
     }
 
-
-    button {
-
-      width: 100%;
-
-      min-height: 54px;
-
-      margin-top: 22px;
-
-      border: 0;
-
-      border-radius: 11px;
-
-      background: #d8ff45;
-
-      color: #142300;
-
-      font-size: 15px;
-
-      font-weight: 900;
-
-      cursor: pointer;
-
+    button{
+      width:100%;
+      min-height:54px;
+      margin-top:22px;
+      border:0;
+      border-radius:11px;
+      background:#d8ff45;
+      color:#142300;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
     }
 
-
-    button:disabled {
-
-      opacity: .5;
-
-      cursor: wait;
-
+    button:disabled{
+      opacity:.5;
+      cursor:wait;
     }
 
-
-    .pending-card {
-
-      display: none;
-
-      margin-bottom: 18px;
-
-      padding: 22px;
-
-      border-radius: 18px;
-
-      border:
-        1px solid rgba(255,196,107,.35);
-
-      background:
-        rgba(255,166,70,.08);
-
+    #message{
+      min-height:24px;
+      margin-top:16px;
+      font-weight:800;
+      line-height:1.5;
     }
 
+    .success{color:#d8ff45}
+    .error{color:#ffaaaa}
 
-    .pending-card.show {
-
-      display: block;
-
+    .loading{
+      color:#ffc46b;
     }
 
-
-    .pending-title {
-
-      margin-bottom: 8px;
-
-      color: #ffc46b;
-
-      font-size: 18px;
-
-      font-weight: 900;
-
-    }
-
-
-    .pending-code {
-
-      margin-bottom: 14px;
-
-      color:
-        rgba(255,255,255,.55);
-
-      font-size: 13px;
-
-    }
-
-
-    .pending-grid {
-
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 10px;
-
-    }
-
-
-    .pending-item {
-
-      padding: 12px;
-
-      border-radius: 10px;
-
-      background:
-        rgba(0,0,0,.12);
-
-    }
-
-
-    .pending-label {
-
-      margin-bottom: 4px;
-
-      color:
-        rgba(255,255,255,.45);
-
-      font-size: 11px;
-
-    }
-
-
-    .pending-value {
-
-      font-weight: 800;
-
-      line-height: 1.4;
-
-    }
-
-
-    .pending-note {
-
-      margin-top: 15px;
-
-      color:
-        rgba(255,255,255,.62);
-
-      line-height: 1.55;
-
-      font-size: 13px;
-
-    }
-
-
-    #message {
-
-      min-height: 24px;
-
-      margin-top: 16px;
-
-      font-weight: 700;
-
-      line-height: 1.5;
-
-    }
-
-
-    .success {
-
-      color: #d8ff45;
-
-    }
-
-
-    .error {
-
-      color: #ffaaaa;
-
-    }
-
-
-    @media(max-width:650px) {
-
+    @media(max-width:650px){
       .grid,
-      .summary-grid,
-      .pending-grid {
-
-        grid-template-columns: 1fr;
-
+      .summary-grid{
+        grid-template-columns:1fr;
       }
 
-
-      .full {
-
-        grid-column: auto;
-
+      .full{
+        grid-column:auto;
       }
-
-
-      header {
-
-        align-items: flex-start;
-
-      }
-
     }
-
   </style>
-
 </head>
 
 
 <body>
 
-
 <header>
-
-
   <div class="brand">
-
-    PickDee
-    <span>Academy</span>
-
+    PickDee <span>Academy</span>
   </div>
 
-
   <a href="./student">
-
     ← Khu vực học viên
-
   </a>
-
-
 </header>
 
 
 <main>
 
-
   <div class="eyebrow">
-
     ĐẶT LỊCH HỌC
-
   </div>
-
 
   <h1>
-
     Yêu cầu buổi học
-
   </h1>
 
-
   <div class="intro">
-
     Chọn ngày, giờ và khu vực bạn muốn học.
-    Yêu cầu sẽ được gửi tới Coach đang phụ trách gói học
-    để xác nhận sân và duyệt lịch.
-
+    Yêu cầu sẽ được gửi tới Coach đang phụ trách gói học để xác nhận sân và duyệt lịch.
   </div>
 
-
-  <!-- YÊU CẦU ĐANG CHỜ -->
-
-  <section
-    id="pendingCard"
-    class="pending-card"
-  >
-
-
-    <div class="pending-title">
-
-      ⏳ Bạn đang có yêu cầu chờ Coach xử lý
-
-    </div>
-
-
-    <div
-      id="pendingCode"
-      class="pending-code"
-    >
-      —
-    </div>
-
-
-    <div class="pending-grid">
-
-
-      <div class="pending-item">
-
-        <div class="pending-label">
-          Buổi
-        </div>
-
-        <div
-          id="pendingSessionNo"
-          class="pending-value"
-        >
-          —
-        </div>
-
-      </div>
-
-
-      <div class="pending-item">
-
-        <div class="pending-label">
-          Ngày / giờ
-        </div>
-
-        <div
-          id="pendingDateTime"
-          class="pending-value"
-        >
-          —
-        </div>
-
-      </div>
-
-
-      <div class="pending-item">
-
-        <div class="pending-label">
-          Khu vực
-        </div>
-
-        <div
-          id="pendingArea"
-          class="pending-value"
-        >
-          —
-        </div>
-
-      </div>
-
-
-      <div class="pending-item">
-
-        <div class="pending-label">
-          Trạng thái
-        </div>
-
-        <div
-          id="pendingStatus"
-          class="pending-value"
-        >
-          —
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-    <div
-      id="pendingNote"
-      class="pending-note"
-    ></div>
-
-
-    <a
-      href="./student-session-requests"
-      style="
-        display:inline-block;
-        margin-top:16px;
-      "
-    >
-      XEM YÊU CẦU CỦA TÔI →
-    </a>
-
-
-  </section>
-
-
-  <!-- GÓI HỌC -->
 
   <section class="card">
 
-
-    <h2>
-
-      📚 Gói học
-
-    </h2>
-
+    <h2>📚 Gói học</h2>
 
     <div class="summary-grid">
 
-
       <div class="summary-box">
-
-        <div class="summary-label">
-          Gói hiện tại
-        </div>
-
-        <div
-          id="packageName"
-          class="summary-value"
-        >
+        <div class="summary-label">Gói hiện tại</div>
+        <div id="packageName" class="summary-value">
           Đang tải...
         </div>
-
       </div>
-
 
       <div class="summary-box">
-
-        <div class="summary-label">
-          Buổi tiếp theo
-        </div>
-
-        <div
-          id="nextSessionNo"
-          class="summary-value"
-        >
+        <div class="summary-label">Buổi tiếp theo</div>
+        <div id="nextSessionNo" class="summary-value">
           —
         </div>
-
       </div>
-
 
       <div class="summary-box">
-
-        <div class="summary-label">
-          Coach phụ trách
-        </div>
-
-        <div
-          id="coachName"
-          class="summary-value"
-        >
+        <div class="summary-label">Coach phụ trách</div>
+        <div id="coachName" class="summary-value">
           —
         </div>
-
       </div>
-
 
     </div>
-
 
   </section>
 
 
-  <!-- FORM -->
+  <section class="card">
 
-  <section
-    id="formCard"
-    class="card"
-  >
-
-
-    <h2>
-
-      📅 Chọn lịch mong muốn
-
-    </h2>
-
+    <h2>📅 Chọn lịch mong muốn</h2>
 
     <form id="requestForm">
-
 
       <div class="grid">
 
 
         <div class="full">
 
-
-          <label>
-            Gói học *
-          </label>
-
+          <label>Gói học *</label>
 
           <select
             id="registrationId"
             required
+            disabled
           >
-
             <option value="">
               Đang tải gói học...
             </option>
-
           </select>
-
 
         </div>
 
 
         <div>
 
-
-          <label>
-            Ngày muốn học *
-          </label>
-
+          <label>Ngày muốn học *</label>
 
           <input
             id="requestedDate"
@@ -848,17 +309,12 @@
             required
           >
 
-
         </div>
 
 
         <div>
 
-
-          <label>
-            Giờ bắt đầu *
-          </label>
-
+          <label>Giờ bắt đầu *</label>
 
           <input
             id="requestedTime"
@@ -866,17 +322,12 @@
             required
           >
 
-
         </div>
 
 
         <div>
 
-
-          <label>
-            Thời lượng
-          </label>
-
+          <label>Thời lượng</label>
 
           <select id="durationMinutes">
 
@@ -894,81 +345,57 @@
 
           </select>
 
-
         </div>
 
 
         <div>
 
-
-          <label>
-            Khu vực / Tỉnh *
-          </label>
-
+          <label>Khu vực / Tỉnh *</label>
 
           <select
             id="requestedArea"
             required
+            disabled
           >
-
             <option value="">
               Đang tải Tỉnh/Thành...
             </option>
-
           </select>
-
 
         </div>
 
 
         <div class="full">
 
-
-          <label>
-            Phường / Xã *
-          </label>
-
+          <label>Phường / Xã *</label>
 
           <select
             id="requestedWard"
             required
             disabled
           >
-
             <option value="">
               Chọn Tỉnh/Thành trước
             </option>
-
           </select>
 
-
           <div class="helper">
-
-            Coach sẽ chỉ chọn được sân đã xác minh
-            thuộc đúng khu vực này.
-
+            Coach sẽ chỉ chọn được sân đã xác minh thuộc đúng khu vực này.
           </div>
-
 
         </div>
 
 
         <div class="full">
 
-
-          <label>
-            Ghi chú cho Coach
-          </label>
-
+          <label>Ghi chú cho Coach</label>
 
           <textarea
             id="note"
             placeholder="Ví dụ: Em muốn tập kỹ dink và reset bóng..."
           ></textarea>
 
-
         </div>
-
 
       </div>
 
@@ -976,21 +403,22 @@
       <button
         id="submitBtn"
         type="submit"
+        disabled
       >
-
-        GỬI YÊU CẦU CHO COACH
-
+        ĐANG TẢI DỮ LIỆU...
       </button>
 
 
-      <div id="message"></div>
-
+      <div
+        id="message"
+        class="loading"
+      >
+        Đang kết nối dữ liệu PickDee Academy...
+      </div>
 
     </form>
 
-
   </section>
-
 
 </main>
 
@@ -999,277 +427,102 @@
 
 (async function () {
 
-
-  /* =====================================================
-     SUPABASE
-  ====================================================== */
-
-  const cfg =
-    window.PICKDEE_CONFIG || {};
-
-
-  const sb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
-
-
-  /* =====================================================
-     ELEMENTS
-  ====================================================== */
+  const message =
+    document.getElementById("message");
 
   const form =
-    document.getElementById(
-      "requestForm"
-    );
-
-
-  const formCard =
-    document.getElementById(
-      "formCard"
-    );
-
-
-  const registrationSelect =
-    document.getElementById(
-      "registrationId"
-    );
-
-
-  const requestedDate =
-    document.getElementById(
-      "requestedDate"
-    );
-
-
-  const requestedTime =
-    document.getElementById(
-      "requestedTime"
-    );
-
-
-  const durationMinutes =
-    document.getElementById(
-      "durationMinutes"
-    );
-
-
-  const requestedArea =
-    document.getElementById(
-      "requestedArea"
-    );
-
-
-  const requestedWard =
-    document.getElementById(
-      "requestedWard"
-    );
-
-
-  const note =
-    document.getElementById(
-      "note"
-    );
-
+    document.getElementById("requestForm");
 
   const submitBtn =
-    document.getElementById(
-      "submitBtn"
-    );
+    document.getElementById("submitBtn");
 
+  const registrationSelect =
+    document.getElementById("registrationId");
 
-  const message =
-    document.getElementById(
-      "message"
-    );
+  const requestedDate =
+    document.getElementById("requestedDate");
 
+  const requestedTime =
+    document.getElementById("requestedTime");
+
+  const durationMinutes =
+    document.getElementById("durationMinutes");
+
+  const requestedArea =
+    document.getElementById("requestedArea");
+
+  const requestedWard =
+    document.getElementById("requestedWard");
+
+  const note =
+    document.getElementById("note");
 
   const packageName =
-    document.getElementById(
-      "packageName"
-    );
-
+    document.getElementById("packageName");
 
   const nextSessionNo =
-    document.getElementById(
-      "nextSessionNo"
-    );
-
+    document.getElementById("nextSessionNo");
 
   const coachName =
-    document.getElementById(
-      "coachName"
-    );
+    document.getElementById("coachName");
 
 
-  const pendingCard =
-    document.getElementById(
-      "pendingCard"
-    );
+  let sb = null;
 
+  let currentStudentId = null;
 
-  const pendingCode =
-    document.getElementById(
-      "pendingCode"
-    );
+  let currentStudent = null;
 
+  let registrations = [];
 
-  const pendingSessionNo =
-    document.getElementById(
-      "pendingSessionNo"
-    );
-
-
-  const pendingDateTime =
-    document.getElementById(
-      "pendingDateTime"
-    );
-
-
-  const pendingArea =
-    document.getElementById(
-      "pendingArea"
-    );
-
-
-  const pendingStatus =
-    document.getElementById(
-      "pendingStatus"
-    );
-
-
-  const pendingNote =
-    document.getElementById(
-      "pendingNote"
-    );
-
-
-  /* =====================================================
-     STATE
-  ====================================================== */
-
-  let currentStudentId =
-    null;
-
-
-  let currentStudent =
-    null;
-
-
-  let registrations =
-    [];
-
-
-  /* =====================================================
-     HELPERS
-  ====================================================== */
 
   function showMessage(
     text,
-    isError = false
+    type = ""
   ) {
-
 
     message.textContent =
       text || "";
 
-
     message.className =
-      isError
-        ?
-        "error"
-        :
-        "success";
+      type;
 
   }
 
 
-  function formatDate(value) {
+  function todayKey() {
 
+    const now =
+      new Date();
 
-    if (!value) {
-
-      return "—";
-
-    }
-
-
-    return new Intl.DateTimeFormat(
-      "vi-VN"
-    ).format(
-      new Date(
-        `${value}T00:00:00`
-      )
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(2,"0")
+      +
+      "-"
+      +
+      String(
+        now.getDate()
+      ).padStart(2,"0")
     );
 
   }
 
 
-  function formatTime(value) {
-
-
-    if (!value) {
-
-      return "—";
-
-    }
-
-
-    return String(value)
-      .slice(
-        0,
-        5
-      );
-
-  }
-
-
-  function localDateKey() {
-
-
-    const now =
-      new Date();
-
-
-    const year =
-      now.getFullYear();
-
-
-    const month =
-      String(
-        now.getMonth() + 1
-      ).padStart(
-        2,
-        "0"
-      );
-
-
-    const day =
-      String(
-        now.getDate()
-      ).padStart(
-        2,
-        "0"
-      );
-
-
-    return `${year}-${month}-${day}`;
-
-  }
-
-
-  function selectedAreaCode() {
-
+  function getAreaCode() {
 
     const option =
       requestedArea.options[
         requestedArea.selectedIndex
       ];
 
-
     return (
-      option?.dataset?.maKhuVuc
+      option?.dataset?.code
       ||
       ""
     );
@@ -1278,64 +531,75 @@
 
 
   /* =====================================================
-     CHECK STUDENT
+     KHỞI TẠO SUPABASE
   ====================================================== */
 
-  async function checkStudent() {
-
-
-    const {
-      data: { session },
-      error
-    } =
-      await sb.auth
-        .getSession();
-
+  function initSupabase() {
 
     if (
-      error
-      ||
-      !session
+      !window.supabase
     ) {
 
-
-      location.replace(
-        "./login.html"
+      throw new Error(
+        "Không tải được thư viện Supabase."
       );
-
-
-      return false;
 
     }
 
 
-    const {
-      data: profile,
-      error: profileError
-    } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq(
-          "id",
-          session.user.id
-        )
-        .single();
+    const cfg =
+      window.PICKDEE_CONFIG;
 
 
     if (
-      profileError
+      !cfg?.SUPABASE_URL
       ||
-      !profile
-      ||
-      profile.role !== "student"
+      !cfg?.SUPABASE_PUBLISHABLE_KEY
     ) {
 
+      throw new Error(
+        "Không đọc được config.js."
+      );
+
+    }
+
+
+    sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+  }
+
+
+  /* =====================================================
+     XÁC ĐỊNH HỌC VIÊN
+  ====================================================== */
+
+  async function loadCurrentStudent() {
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (sessionError) {
+
+      throw sessionError;
+
+    }
+
+
+    if (
+      !sessionData?.session
+    ) {
 
       location.replace(
         "./login.html"
       );
-
 
       return false;
 
@@ -1344,40 +608,36 @@
 
     const {
       data: studentId,
-      error: studentError
+      error: studentIdError
     } =
       await sb.rpc(
         "current_student_id"
       );
 
 
-    if (
-      studentError
-      ||
-      !studentId
-    ) {
+    if (studentIdError) {
+
+      throw studentIdError;
+
+    }
 
 
-      showMessage(
-        "Không xác định được hồ sơ học viên.",
-        true
+    if (!studentId) {
+
+      throw new Error(
+        "Tài khoản chưa liên kết với hồ sơ Học viên."
       );
-
-
-      return false;
 
     }
 
 
     currentStudentId =
-      Number(
-        studentId
-      );
+      Number(studentId);
 
 
     const {
       data: student,
-      error: infoError
+      error: studentError
     } =
       await sb
         .from("students")
@@ -1392,15 +652,18 @@
           "id",
           currentStudentId
         )
-        .single();
+        .maybeSingle();
 
 
-    if (!infoError) {
+    if (studentError) {
 
-      currentStudent =
-        student;
+      throw studentError;
 
     }
+
+
+    currentStudent =
+      student || null;
 
 
     return true;
@@ -1409,23 +672,356 @@
 
 
   /* =====================================================
-     LOAD TỈNH
+     KIỂM TRA YÊU CẦU ĐANG CHỜ
   ====================================================== */
 
-  async function loadAreas() {
+  async function checkPendingRequest() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("session_requests")
+        .select("id")
+        .eq(
+          "student_id",
+          currentStudentId
+        )
+        .eq(
+          "status",
+          "Chờ Coach"
+        )
+        .limit(1);
 
 
-    requestedArea.disabled =
-      true;
+    if (error) {
+
+      throw error;
+
+    }
 
 
-    requestedArea.innerHTML =
+    if (
+      data &&
+      data.length > 0
+    ) {
+
+      location.replace(
+        "./student-session-requests"
+      );
+
+      return true;
+
+    }
+
+
+    return false;
+
+  }
+
+
+  /* =====================================================
+     LOAD GÓI HỌC
+  ====================================================== */
+
+  async function loadRegistrations() {
+
+    registrationSelect.innerHTML =
       `
         <option value="">
-          Đang tải Tỉnh/Thành...
+          Đang tải gói học...
         </option>
       `;
 
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("registrations")
+        .select(`
+          id,
+          registration_code,
+          coach_id,
+          package_name,
+          purchased_sessions,
+          start_date,
+          end_date,
+          status
+        `)
+        .eq(
+          "student_id",
+          currentStudentId
+        )
+        .eq(
+          "status",
+          "Đã duyệt"
+        )
+        .order(
+          "start_date",
+          {
+            ascending:false
+          }
+        );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    registrations =
+      data || [];
+
+
+    registrationSelect.innerHTML =
+      `
+        <option value="">
+          Chọn gói học
+        </option>
+      `;
+
+
+    if (
+      registrations.length === 0
+    ) {
+
+      packageName.textContent =
+        "Chưa có gói học";
+
+      nextSessionNo.textContent =
+        "—";
+
+      coachName.textContent =
+        "—";
+
+      registrationSelect.disabled =
+        true;
+
+      return;
+
+    }
+
+
+    registrations.forEach(
+      item => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          item.id;
+
+        option.textContent =
+          `${item.registration_code || "Đăng ký"} · ${item.package_name || "Gói học"}`;
+
+        registrationSelect.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    registrationSelect.disabled =
+      false;
+
+
+    registrationSelect.value =
+      registrations[0].id;
+
+
+    await applyRegistration();
+
+  }
+
+
+  /* =====================================================
+     LOAD COACH
+  ====================================================== */
+
+  async function loadCoach(
+    coachId
+  ) {
+
+    if (!coachId) {
+
+      coachName.textContent =
+        "Chưa phân Coach";
+
+      return;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("coaches")
+        .select(`
+          id,
+          coach_code,
+          full_name
+        `)
+        .eq(
+          "id",
+          Number(coachId)
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    coachName.textContent =
+      data?.full_name
+      ||
+      data?.coach_code
+      ||
+      "Coach phụ trách";
+
+  }
+
+
+  /* =====================================================
+     BUỔI TIẾP THEO
+  ====================================================== */
+
+  async function loadNextSessionNo(
+    registrationId
+  ) {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("class_sessions")
+        .select("session_no")
+        .eq(
+          "registration_id",
+          Number(registrationId)
+        )
+        .order(
+          "session_no",
+          {
+            ascending:false
+          }
+        )
+        .limit(1);
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    const last =
+      Number(
+        data?.[0]?.session_no
+        ||
+        0
+      );
+
+
+    nextSessionNo.textContent =
+      `Buổi ${last + 1}`;
+
+  }
+
+
+  async function applyRegistration() {
+
+    const registration =
+      registrations.find(
+        item =>
+          Number(item.id)
+          ===
+          Number(
+            registrationSelect.value
+          )
+      );
+
+
+    if (!registration) {
+
+      packageName.textContent =
+        "Chưa chọn";
+
+      nextSessionNo.textContent =
+        "—";
+
+      coachName.textContent =
+        "—";
+
+      return;
+
+    }
+
+
+    packageName.textContent =
+      registration.package_name
+      ||
+      "Gói học";
+
+
+    await loadNextSessionNo(
+      registration.id
+    );
+
+
+    await loadCoach(
+      registration.coach_id
+    );
+
+  }
+
+
+  registrationSelect.addEventListener(
+    "change",
+    async function () {
+
+      try {
+
+        await applyRegistration();
+
+      }
+      catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message
+          ||
+          "Không tải được gói học.",
+          "error"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     LOAD TỈNH THÀNH
+  ====================================================== */
+
+  async function loadAreas() {
 
     const {
       data,
@@ -1444,29 +1040,14 @@
         .order(
           "tinh_thanh",
           {
-            ascending: true
+            ascending:true
           }
         );
 
 
     if (error) {
 
-
-      console.error(
-        "Lỗi tải Tỉnh/Thành:",
-        error
-      );
-
-
-      requestedArea.innerHTML =
-        `
-          <option value="">
-            Không tải được Tỉnh/Thành
-          </option>
-        `;
-
-
-      return;
+      throw error;
 
     }
 
@@ -1480,26 +1061,21 @@
 
 
     (data || []).forEach(
-      area => {
-
+      item => {
 
         const option =
           document.createElement(
             "option"
           );
 
-
         option.value =
-          area.tinh_thanh;
-
+          item.tinh_thanh;
 
         option.textContent =
-          area.tinh_thanh;
+          item.tinh_thanh;
 
-
-        option.dataset.maKhuVuc =
-          area.ma_khu_vuc;
-
+        option.dataset.code =
+          item.ma_khu_vuc;
 
         requestedArea.appendChild(
           option
@@ -1512,6 +1088,48 @@
     requestedArea.disabled =
       false;
 
+
+    if (
+      currentStudent?.preferred_area
+    ) {
+
+      const exists =
+        Array.from(
+          requestedArea.options
+        )
+        .some(
+          option =>
+            option.value
+            ===
+            currentStudent.preferred_area
+        );
+
+
+      if (exists) {
+
+        requestedArea.value =
+          currentStudent.preferred_area;
+
+
+        const areaCode =
+          getAreaCode();
+
+
+        if (areaCode) {
+
+          await loadWards(
+            areaCode,
+            currentStudent.preferred_ward
+            ||
+            ""
+          );
+
+        }
+
+      }
+
+    }
+
   }
 
 
@@ -1520,10 +1138,9 @@
   ====================================================== */
 
   async function loadWards(
-    maKhuVuc,
-    selectedValue = ""
+    areaCode,
+    selectedWard = ""
   ) {
-
 
     requestedWard.disabled =
       true;
@@ -1549,7 +1166,7 @@
         `)
         .eq(
           "ma_khu_vuc",
-          maKhuVuc
+          areaCode
         )
         .eq(
           "dang_hoat_dong",
@@ -1558,29 +1175,14 @@
         .order(
           "ten_xa_phuong",
           {
-            ascending: true
+            ascending:true
           }
         );
 
 
     if (error) {
 
-
-      console.error(
-        "Lỗi tải Phường/Xã:",
-        error
-      );
-
-
-      requestedWard.innerHTML =
-        `
-          <option value="">
-            Không tải được Phường/Xã
-          </option>
-        `;
-
-
-      return;
+      throw error;
 
     }
 
@@ -1594,22 +1196,18 @@
 
 
     (data || []).forEach(
-      ward => {
-
+      item => {
 
         const option =
           document.createElement(
             "option"
           );
 
-
         option.value =
-          ward.ten_xa_phuong;
-
+          item.ten_xa_phuong;
 
         option.textContent =
-          ward.ten_xa_phuong;
-
+          item.ten_xa_phuong;
 
         requestedWard.appendChild(
           option
@@ -1623,8 +1221,7 @@
       false;
 
 
-    if (selectedValue) {
-
+    if (selectedWard) {
 
       const exists =
         Array.from(
@@ -1634,14 +1231,14 @@
           option =>
             option.value
             ===
-            selectedValue
+            selectedWard
         );
 
 
       if (exists) {
 
         requestedWard.value =
-          selectedValue;
+          selectedWard;
 
       }
 
@@ -1653,7 +1250,6 @@
   requestedArea.addEventListener(
     "change",
     async function () {
-
 
       requestedWard.disabled =
         true;
@@ -1667,500 +1263,55 @@
         `;
 
 
-      const code =
-        selectedAreaCode();
+      const areaCode =
+        getAreaCode();
 
 
-      if (!code) {
+      if (!areaCode) {
 
         return;
 
       }
 
 
-      await loadWards(
-        code
-      );
+      try {
 
-    }
-  );
-
-
-  /* =====================================================
-     ÁP DỤNG KHU VỰC HỌC VIÊN
-  ====================================================== */
-
-  async function applyStudentArea() {
-
-
-    if (
-      !currentStudent
-      ||
-      !currentStudent.preferred_area
-    ) {
-
-      return;
-
-    }
-
-
-    const exists =
-      Array.from(
-        requestedArea.options
-      )
-      .some(
-        option =>
-          option.value
-          ===
-          currentStudent.preferred_area
-      );
-
-
-    if (!exists) {
-
-      return;
-
-    }
-
-
-    requestedArea.value =
-      currentStudent.preferred_area;
-
-
-    const code =
-      selectedAreaCode();
-
-
-    if (!code) {
-
-      return;
-
-    }
-
-
-    await loadWards(
-      code,
-      currentStudent.preferred_ward
-      ||
-      ""
-    );
-
-  }
-
-
-  /* =====================================================
-     LOAD REGISTRATIONS
-  ====================================================== */
-
-  async function loadRegistrations() {
-
-
-    registrationSelect.disabled =
-      true;
-
-
-    registrationSelect.innerHTML =
-      `
-        <option value="">
-          Đang tải gói học...
-        </option>
-      `;
-
-
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from("registrations")
-        .select(`
-          id,
-          registration_code,
-          student_id,
-          coach_id,
-          package_name,
-          purchased_sessions,
-          start_date,
-          end_date,
-          status,
-          coaches (
-            id,
-            coach_code,
-            full_name,
-            status
-          )
-        `)
-        .eq(
-          "student_id",
-          currentStudentId
-        )
-        .eq(
-          "status",
-          "Đã duyệt"
-        )
-        .order(
-          "start_date",
-          {
-            ascending: false
-          }
-        );
-
-
-    if (error) {
-
-
-      console.error(
-        "Lỗi tải đăng ký:",
-        error
-      );
-
-
-      showMessage(
-        "Không tải được gói học.",
-        true
-      );
-
-
-      return;
-
-    }
-
-
-    registrations =
-      data || [];
-
-
-    registrationSelect.innerHTML =
-      `
-        <option value="">
-          Chọn gói học
-        </option>
-      `;
-
-
-    registrations.forEach(
-      registration => {
-
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          registration.id;
-
-
-        option.textContent =
-          `${registration.registration_code || "Đăng ký"} · ${registration.package_name || "Gói học"}`;
-
-
-        registrationSelect.appendChild(
-          option
+        await loadWards(
+          areaCode
         );
 
       }
-    );
+      catch (error) {
 
+        console.error(error);
 
-    registrationSelect.disabled =
-      false;
+        showMessage(
+          error.message
+          ||
+          "Không tải được Phường/Xã.",
+          "error"
+        );
 
-
-    if (
-      registrations.length === 1
-    ) {
-
-
-      registrationSelect.value =
-        registrations[0].id;
-
-
-      await applyRegistration();
+      }
 
     }
-
-  }
-
-
-  /* =====================================================
-     BUỔI TIẾP THEO
-  ====================================================== */
-
-  async function getNextSessionNo(
-    registrationId
-  ) {
-
-
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from("class_sessions")
-        .select("session_no")
-        .eq(
-          "registration_id",
-          Number(registrationId)
-        )
-        .order(
-          "session_no",
-          {
-            ascending: false
-          }
-        )
-        .limit(1);
-
-
-    if (error) {
-
-
-      console.error(
-        error
-      );
-
-
-      return "—";
-
-    }
-
-
-    const last =
-      Number(
-        data?.[0]?.session_no
-        ||
-        0
-      );
-
-
-    return last + 1;
-
-  }
-
-
-  async function applyRegistration() {
-
-
-    const id =
-      Number(
-        registrationSelect.value
-      );
-
-
-    const registration =
-      registrations.find(
-        item =>
-          Number(item.id)
-          ===
-          id
-      );
-
-
-    if (!registration) {
-
-
-      packageName.textContent =
-        "Chưa chọn";
-
-
-      nextSessionNo.textContent =
-        "—";
-
-
-      coachName.textContent =
-        "—";
-
-
-      return;
-
-    }
-
-
-    packageName.textContent =
-      registration.package_name
-      ||
-      "Gói học";
-
-
-    const nextNo =
-      await getNextSessionNo(
-        registration.id
-      );
-
-
-    nextSessionNo.textContent =
-      nextNo === "—"
-        ?
-        "—"
-        :
-        `Buổi ${nextNo}`;
-
-
-    const coach =
-      registration.coaches
-      ||
-      {};
-
-
-    coachName.textContent =
-      coach.full_name
-      ||
-      coach.coach_code
-      ||
-      "Coach đã phân công";
-
-  }
-
-
-  registrationSelect.addEventListener(
-    "change",
-    applyRegistration
   );
 
 
   /* =====================================================
-     PENDING REQUEST
-  ====================================================== */
-
-  async function loadPendingRequest() {
-
-
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from("session_requests")
-        .select(`
-          id,
-          request_code,
-          registration_id,
-          session_no,
-          requested_date,
-          requested_time,
-          requested_area,
-          requested_ward,
-          note,
-          status
-        `)
-        .eq(
-          "student_id",
-          currentStudentId
-        )
-        .eq(
-          "status",
-          "Chờ Coach"
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-        .limit(1)
-        .maybeSingle();
-
-
-    if (error) {
-
-
-      console.error(
-        error
-      );
-
-
-      return false;
-
-    }
-
-
-    if (!data) {
-
-
-      pendingCard.classList.remove(
-        "show"
-      );
-
-
-      formCard.style.display =
-        "block";
-
-
-      return false;
-
-    }
-
-
-    pendingCode.textContent =
-      data.request_code
-      ||
-      `Yêu cầu #${data.id}`;
-
-
-    pendingSessionNo.textContent =
-      `Buổi ${data.session_no}`;
-
-
-    pendingDateTime.textContent =
-      `${formatDate(data.requested_date)} · ${formatTime(data.requested_time)}`;
-
-
-    pendingArea.textContent =
-      [
-        data.requested_ward,
-        data.requested_area
-      ]
-      .filter(Boolean)
-      .join(" · ")
-      ||
-      "—";
-
-
-    pendingStatus.textContent =
-      data.status
-      ||
-      "Chờ Coach";
-
-
-    pendingNote.textContent =
-      data.note
-        ?
-        `Ghi chú: ${data.note}`
-        :
-        "Coach sẽ xác nhận sân và xử lý yêu cầu này.";
-
-
-    pendingCard.classList.add(
-      "show"
-    );
-
-
-    formCard.style.display =
-      "none";
-
-
-    return true;
-
-  }
-
-
-  /* =====================================================
-     SUBMIT
+     GỬI YÊU CẦU
   ====================================================== */
 
   form.addEventListener(
     "submit",
-    async function (
-      event
-    ) {
-
+    async function (event) {
 
       event.preventDefault();
 
 
       showMessage(
-        "Đang gửi yêu cầu..."
+        "",
+        ""
       );
 
 
@@ -2172,92 +1323,64 @@
 
       if (!registrationId) {
 
-
         showMessage(
           "Hãy chọn gói học.",
-          true
+          "error"
         );
-
 
         return;
 
       }
 
 
-      if (!requestedDate.value) {
-
+      if (
+        !requestedDate.value
+        ||
+        !requestedTime.value
+      ) {
 
         showMessage(
-          "Hãy chọn ngày muốn học.",
-          true
+          "Hãy chọn ngày và giờ muốn học.",
+          "error"
         );
-
 
         return;
 
       }
 
 
-      if (!requestedTime.value) {
-
+      if (
+        !requestedArea.value
+        ||
+        !requestedWard.value
+      ) {
 
         showMessage(
-          "Hãy chọn giờ muốn học.",
-          true
+          "Hãy chọn Tỉnh/Thành và Phường/Xã.",
+          "error"
         );
-
 
         return;
 
       }
 
 
-      if (!requestedArea.value) {
-
-
-        showMessage(
-          "Hãy chọn Tỉnh/Thành.",
-          true
-        );
-
-
-        return;
-
-      }
-
-
-      if (!requestedWard.value) {
-
-
-        showMessage(
-          "Hãy chọn Phường/Xã.",
-          true
-        );
-
-
-        return;
-
-      }
-
-
-      const selectedDateTime =
+      const selected =
         new Date(
           `${requestedDate.value}T${requestedTime.value}`
         );
 
 
       if (
-        selectedDateTime.getTime()
+        selected.getTime()
         <=
         Date.now()
       ) {
 
-
         showMessage(
           "Ngày giờ học phải nằm trong tương lai.",
-          true
+          "error"
         );
-
 
         return;
 
@@ -2273,13 +1396,11 @@
 
 
       const {
-        data,
         error
       } =
         await sb.rpc(
           "student_create_session_request",
           {
-
             p_registration_id:
               registrationId,
 
@@ -2306,25 +1427,20 @@
               note.value.trim()
               ||
               null
-
           }
         );
 
 
       if (error) {
 
-
-        console.error(
-          "Lỗi tạo yêu cầu:",
-          error
-        );
+        console.error(error);
 
 
         showMessage(
           error.message
           ||
           "Không gửi được yêu cầu.",
-          true
+          "error"
         );
 
 
@@ -2341,13 +1457,9 @@
       }
 
 
-      /* =================================================
-         GỬI THÀNH CÔNG
-         → TỰ CHUYỂN SANG YÊU CẦU CỦA TÔI
-      ================================================== */
-
       showMessage(
-        "✓ Đã gửi yêu cầu thành công. Đang chuyển tới Yêu cầu của tôi..."
+        "✓ Đã gửi yêu cầu. Đang chuyển tới Yêu cầu của tôi...",
+        "success"
       );
 
 
@@ -2358,15 +1470,13 @@
       setTimeout(
         function () {
 
-
-          window.location.href =
-            "./student-session-requests";
-
+          location.replace(
+            "./student-session-requests"
+          );
 
         },
-        800
+        700
       );
-
 
     }
   );
@@ -2378,41 +1488,105 @@
 
   async function init() {
 
+    try {
 
-    requestedDate.min =
-      localDateKey();
-
-
-    const ok =
-      await checkStudent();
+      requestedDate.min =
+        todayKey();
 
 
-    if (!ok) {
+      initSupabase();
 
-      return;
+
+      const ok =
+        await loadCurrentStudent();
+
+
+      if (!ok) {
+
+        return;
+
+      }
+
+
+      const pending =
+        await checkPendingRequest();
+
+
+      if (pending) {
+
+        return;
+
+      }
+
+
+      await loadRegistrations();
+
+
+      await loadAreas();
+
+
+      submitBtn.disabled =
+        false;
+
+
+      submitBtn.textContent =
+        "GỬI YÊU CẦU CHO COACH";
+
+
+      showMessage(
+        "✓ Sẵn sàng tạo yêu cầu Buổi học.",
+        "success"
+      );
 
     }
+    catch (error) {
+
+      console.error(
+        "INIT ERROR:",
+        error
+      );
 
 
-    const pending =
-      await loadPendingRequest();
+      packageName.textContent =
+        "Không tải được";
 
 
-    await Promise.all([
-
-      loadAreas(),
-
-      loadRegistrations()
-
-    ]);
-
-
-    await applyStudentArea();
+      registrationSelect.innerHTML =
+        `
+          <option value="">
+            Không tải được gói học
+          </option>
+        `;
 
 
-    if (pending) {
+      requestedArea.innerHTML =
+        `
+          <option value="">
+            Không tải được Tỉnh/Thành
+          </option>
+        `;
 
-      return;
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "CHƯA THỂ GỬI";
+
+
+      showMessage(
+        "Lỗi tải dữ liệu: "
+        +
+        (
+          error?.message
+          ||
+          error
+          ||
+          "Không xác định"
+        ),
+        "error"
+      );
 
     }
 
@@ -2421,12 +1595,9 @@
 
   await init();
 
-
 })();
 
 </script>
 
-
 </body>
-
 </html>
