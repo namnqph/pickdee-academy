@@ -66,6 +66,8 @@
       align-items:
         center;
 
+      gap: 20px;
+
       border-bottom:
         1px solid rgba(255,255,255,.12);
     }
@@ -111,6 +113,12 @@
       font-weight: 800;
 
       cursor: pointer;
+    }
+
+
+    .logout:hover {
+      background:
+        rgba(255,255,255,.13);
     }
 
 
@@ -229,11 +237,10 @@
 
 
     /* ==================================
-       FILTER
+       FILTERS
     ================================== */
 
     .filters {
-
       display: grid;
 
       grid-template-columns:
@@ -263,6 +270,8 @@
       outline: none;
 
       font-size: 14px;
+
+      cursor: pointer;
     }
 
 
@@ -352,15 +361,18 @@
     }
 
 
-    .action-btn {
+    /* ==================================
+       BUTTONS
+    ================================== */
 
+    .action-btn {
       border: 0;
 
       border-radius:
         8px;
 
       padding:
-        8px 10px;
+        9px 11px;
 
       background:
         #d8ff45;
@@ -376,11 +388,20 @@
 
       white-space:
         nowrap;
+
+      position: relative;
+
+      z-index: 5;
+    }
+
+
+    .action-btn:hover {
+      filter:
+        brightness(.95);
     }
 
 
     .action-btn.pay {
-
       background:
         white;
 
@@ -390,10 +411,15 @@
 
 
     .action-btn:disabled {
-      opacity: .45;
+      opacity: .5;
+
       cursor: wait;
     }
 
+
+    /* ==================================
+       MESSAGE
+    ================================== */
 
     #message {
       margin:
@@ -418,6 +444,10 @@
     }
 
 
+    /* ==================================
+       MOBILE
+    ================================== */
+
     @media(
       max-width: 700px
     ) {
@@ -431,6 +461,11 @@
 
       #userEmail {
         display: none;
+      }
+
+
+      .topbar {
+        padding: 15px;
       }
 
     }
@@ -553,7 +588,7 @@
 
 
   <!-- ==============================
-       FILTER
+       FILTERS
   =============================== -->
 
   <section class="filters">
@@ -670,6 +705,10 @@
 (async function () {
 
 
+  /* ==================================
+     SUPABASE
+  ================================== */
+
   const cfg =
     window.PICKDEE_CONFIG || {};
 
@@ -680,6 +719,10 @@
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
 
+
+  /* ==================================
+     ELEMENTS
+  ================================== */
 
   const workBody =
     document.getElementById(
@@ -723,7 +766,6 @@
   /* ==================================
      HELPERS
   ================================== */
-
 
   function money(value) {
 
@@ -820,17 +862,20 @@
 
 
   /* ==================================
-     AUTH ADMIN
+     CHECK ADMIN
   ================================== */
 
-
   const {
-    data: { session }
+    data: { session },
+    error: sessionError
   } =
     await sb.auth.getSession();
 
 
-  if (!session) {
+  if (
+    sessionError ||
+    !session
+  ) {
 
     location.replace(
       "./login.html"
@@ -880,7 +925,6 @@
      LOAD DATA
   ================================== */
 
-
   async function loadData() {
 
 
@@ -912,9 +956,8 @@
 
 
   /* ==================================
-     FILTER OPTIONS
+     BUILD FILTERS
   ================================== */
-
 
   function buildFilters() {
 
@@ -927,15 +970,26 @@
       periodFilter.value;
 
 
-    const coaches =
-      [...new Map(
-        allRows.map(
-          row => [
+    const coachesMap =
+      new Map();
+
+
+    allRows.forEach(
+      row => {
+
+        if (
+          row.coach_id
+        ) {
+
+          coachesMap.set(
             String(row.coach_id),
-            row.coach_name
-          ]
-        )
-      ).entries()];
+            row.coach_name || "Coach"
+          );
+
+        }
+
+      }
+    );
 
 
     coachFilter.innerHTML =
@@ -946,8 +1000,8 @@
       `;
 
 
-    coaches.forEach(
-      ([id, name]) => {
+    coachesMap.forEach(
+      (name, id) => {
 
 
         const option =
@@ -961,7 +1015,7 @@
 
 
         option.textContent =
-          name || "Coach";
+          name;
 
 
         coachFilter.appendChild(
@@ -981,8 +1035,8 @@
           )
           .filter(Boolean)
       )]
-      .sort()
-      .reverse();
+        .sort()
+        .reverse();
 
 
     periodFilter.innerHTML =
@@ -1019,20 +1073,41 @@
     );
 
 
-    coachFilter.value =
-      currentCoach;
+    if (
+      [...coachFilter.options]
+        .some(
+          option =>
+            option.value ===
+            currentCoach
+        )
+    ) {
+
+      coachFilter.value =
+        currentCoach;
+
+    }
 
 
-    periodFilter.value =
-      currentPeriod;
+    if (
+      [...periodFilter.options]
+        .some(
+          option =>
+            option.value ===
+            currentPeriod
+        )
+    ) {
+
+      periodFilter.value =
+        currentPeriod;
+
+    }
 
   }
 
 
   /* ==================================
-     GET FILTERED
+     FILTER DATA
   ================================== */
-
 
   function getFilteredRows() {
 
@@ -1046,7 +1121,7 @@
           &&
           String(row.coach_id)
             !==
-          coachFilter.value
+          String(coachFilter.value)
         ) {
 
           return false;
@@ -1091,7 +1166,6 @@
   /* ==================================
      SUMMARY
   ================================== */
-
 
   function renderSummary(rows) {
 
@@ -1152,9 +1226,8 @@
 
 
   /* ==================================
-     TABLE
+     RENDER TABLE
   ================================== */
-
 
   function render() {
 
@@ -1192,286 +1265,408 @@
 
 
     workBody.innerHTML =
-      rows.map(
-        row => {
+      rows
+        .map(
+          row => {
 
 
-          let actionHTML = "";
+            const status =
+              row.status ||
+              "Chưa chốt";
 
 
-          if (
-            row.status ===
-            "Chưa chốt"
-          ) {
-
-            actionHTML =
-              `
-                <button
-                  class="action-btn"
-                  data-id="${row.work_id}"
-                  data-action="CHOT"
-                >
-                  CHỐT CÔNG
-                </button>
-              `;
-
-          }
+            let actionHTML = "";
 
 
-          else if (
-            row.status ===
-            "Đã chốt"
-          ) {
+            /* =========================
+               CHƯA CHỐT
+            ========================= */
 
-            actionHTML =
-              `
-                <button
-                  class="action-btn pay"
-                  data-id="${row.work_id}"
-                  data-action="THANH_TOAN"
-                >
-                  ĐÃ THANH TOÁN
-                </button>
-              `;
+            if (
+              status ===
+              "Chưa chốt"
+            ) {
 
-          }
+              actionHTML =
+                `
+                  <button
+                    type="button"
+                    class="action-btn"
+                    data-id="${Number(row.work_id)}"
+                    data-action="CHOT"
+                  >
+                    CHỐT CÔNG
+                  </button>
+                `;
 
-
-          else {
-
-            actionHTML =
-              `
-                <span class="badge">
-                  ✓ Hoàn tất
-                </span>
-              `;
-
-          }
+            }
 
 
-          return `
+            /* =========================
+               ĐÃ CHỐT
+            ========================= */
 
-            <tr>
+            else if (
+              status ===
+              "Đã chốt"
+            ) {
 
-              <td>
-                <strong>
-                  ${escapeHTML(
-                    row.coach_name ||
-                    "Coach"
-                  )}
-                </strong>
-              </td>
+              actionHTML =
+                `
+                  <button
+                    type="button"
+                    class="action-btn pay"
+                    data-id="${Number(row.work_id)}"
+                    data-action="THANH_TOAN"
+                  >
+                    ĐÃ THANH TOÁN
+                  </button>
+                `;
 
-
-              <td>
-                ${escapeHTML(
-                  row.session_code ||
-                  row.session_id ||
-                  "—"
-                )}
-              </td>
-
-
-              <td>
-                ${dateVN(
-                  row.work_date
-                )}
-              </td>
+            }
 
 
-              <td>
-                ${escapeHTML(
-                  row.pay_period ||
-                  "—"
-                )}
-              </td>
+            /* =========================
+               ĐÃ THANH TOÁN
+            ========================= */
+
+            else {
+
+              actionHTML =
+                `
+                  <span class="badge">
+                    ✓ Hoàn tất
+                  </span>
+                `;
+
+            }
 
 
-              <td class="money">
-                ${money(
-                  row.base_amount
-                )}
-              </td>
+            return `
+
+              <tr>
+
+                <td>
+
+                  <strong>
+                    ${escapeHTML(
+                      row.coach_name ||
+                      "Coach"
+                    )}
+                  </strong>
+
+                </td>
 
 
-              <td>
-                ${money(
-                  row.bonus
-                )}
-              </td>
-
-
-              <td>
-                ${money(
-                  row.deduction
-                )}
-              </td>
-
-
-              <td class="money">
-                ${money(
-                  row.total_amount
-                )}
-              </td>
-
-
-              <td>
-
-                <span class="badge">
+                <td>
 
                   ${escapeHTML(
-                    row.status ||
-                    "Chưa chốt"
+                    row.session_code ||
+                    row.session_id ||
+                    "—"
                   )}
 
-                </span>
-
-              </td>
+                </td>
 
 
-              <td>
-                ${actionHTML}
-              </td>
+                <td>
 
-            </tr>
+                  ${dateVN(
+                    row.work_date
+                  )}
 
-          `;
-
-        }
-      )
-      .join("");
+                </td>
 
 
-    bindActionButtons();
+                <td>
+
+                  ${escapeHTML(
+                    row.pay_period ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td class="money">
+
+                  ${money(
+                    row.base_amount
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${money(
+                    row.bonus
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${money(
+                    row.deduction
+                  )}
+
+                </td>
+
+
+                <td class="money">
+
+                  ${money(
+                    row.total_amount
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  <span class="badge">
+
+                    ${escapeHTML(
+                      status
+                    )}
+
+                  </span>
+
+                </td>
+
+
+                <td>
+
+                  ${actionHTML}
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }
+        )
+        .join("");
 
   }
 
 
   /* ==================================
      ACTION BUTTON
+     EVENT DELEGATION
   ================================== */
 
-
-  function bindActionButtons() {
-
-
-    document
-      .querySelectorAll(
-        ".action-btn[data-id]"
-      )
-      .forEach(
-        button => {
+  workBody.addEventListener(
+    "click",
+    async function (event) {
 
 
-          button.addEventListener(
-            "click",
-            async function () {
+      const button =
+        event.target.closest(
+          ".action-btn[data-id]"
+        );
 
 
-              const workId =
-                Number(
-                  button.dataset.id
-                );
+      if (!button) {
+        return;
+      }
 
 
-              const action =
-                button.dataset.action;
+      event.preventDefault();
+
+      event.stopPropagation();
 
 
-              const confirmText =
-                action === "CHOT"
-                  ?
-                  "Xác nhận chốt công này?"
-                  :
-                  "Xác nhận PickDee đã thanh toán công này?";
+      const workId =
+        Number(
+          button.dataset.id
+        );
 
 
-              if (
-                !window.confirm(
-                  confirmText
-                )
-              ) {
-
-                return;
-
-              }
+      const action =
+        button.dataset.action;
 
 
-              button.disabled =
-                true;
+      if (
+        !workId ||
+        !action
+      ) {
+
+        showMessage(
+          "Không xác định được dòng công Coach.",
+          true
+        );
+
+        return;
+
+      }
 
 
-              showMessage(
-                action === "CHOT"
-                  ?
-                  "Đang chốt công..."
-                  :
-                  "Đang xác nhận thanh toán..."
-              );
+      /* =========================
+         CONFIRM
+      ========================= */
+
+      let confirmText = "";
 
 
-              const {
-                error
-              } =
-                await sb.rpc(
-                  "admin_update_coach_work",
-                  {
-                    p_work_id:
-                      workId,
+      if (
+        action === "CHOT"
+      ) {
 
-                    p_action:
-                      action
-                  }
-                );
+        confirmText =
+          "Xác nhận CHỐT CÔNG này?";
+
+      }
 
 
-              if (error) {
+      else if (
+        action === "THANH_TOAN"
+      ) {
 
-                console.error(
-                  error
-                );
+        confirmText =
+          "Xác nhận PickDee ĐÃ THANH TOÁN công này?";
 
-
-                showMessage(
-                  error.message ||
-                  "Không cập nhật được.",
-                  true
-                );
+      }
 
 
-                button.disabled =
-                  false;
+      else {
+
+        showMessage(
+          "Hành động không hợp lệ.",
+          true
+        );
+
+        return;
+
+      }
 
 
-                return;
-
-              }
-
-
-              await loadData();
+      const accepted =
+        window.confirm(
+          confirmText
+        );
 
 
-              showMessage(
-                action === "CHOT"
-                  ?
-                  "✓ Đã chốt công."
-                  :
-                  "✓ Đã xác nhận thanh toán."
-              );
+      if (!accepted) {
+        return;
+      }
+
+
+      /* =========================
+         DISABLE BUTTON
+      ========================= */
+
+      const oldText =
+        button.textContent;
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "ĐANG XỬ LÝ...";
+
+
+      showMessage(
+        action === "CHOT"
+          ?
+          "Đang chốt công..."
+          :
+          "Đang xác nhận thanh toán..."
+      );
+
+
+      /* =========================
+         CALL RPC
+      ========================= */
+
+      try {
+
+
+        const {
+          error
+        } =
+          await sb.rpc(
+            "admin_update_coach_work",
+            {
+
+              p_work_id:
+                workId,
+
+              p_action:
+                action
 
             }
           );
 
-        }
-      );
 
-  }
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        /* =========================
+           RELOAD DATA
+        ========================= */
+
+        await loadData();
+
+
+        showMessage(
+          action === "CHOT"
+            ?
+            "✓ Đã chốt công thành công."
+            :
+            "✓ Đã xác nhận thanh toán thành công."
+        );
+
+
+      }
+
+
+      catch (error) {
+
+
+        console.error(
+          "Lỗi cập nhật công Coach:",
+          error
+        );
+
+
+        showMessage(
+          "Không cập nhật được: "
+          +
+          (
+            error.message ||
+            error
+          ),
+          true
+        );
+
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          oldText;
+
+      }
+
+
+    }
+  );
 
 
   /* ==================================
      FILTER EVENTS
   ================================== */
-
 
   coachFilter.addEventListener(
     "change",
@@ -1495,10 +1690,13 @@
      LOGOUT
   ================================== */
 
-
   logoutBtn.addEventListener(
     "click",
     async function () {
+
+
+      logoutBtn.disabled =
+        true;
 
 
       await sb.auth.signOut();
@@ -1508,6 +1706,7 @@
         "./login.html"
       );
 
+
     }
   );
 
@@ -1516,10 +1715,19 @@
      START
   ================================== */
 
-
   try {
 
+
+    showMessage(
+      "Đang tải công Coach..."
+    );
+
+
     await loadData();
+
+
+    showMessage("");
+
 
   }
 
@@ -1528,6 +1736,7 @@
 
 
     console.error(
+      "Không tải được công Coach:",
       error
     );
 
