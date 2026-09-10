@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Công Coach | PickDee Academy
+  </title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+
+    .topbar {
+      padding: 18px 24px;
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+    }
+
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+
+    #userEmail {
+      color: rgba(255,255,255,.75);
+      font-size: 14px;
+    }
+
+
+    .logout {
+      padding: 9px 12px;
+
+      border-radius: 9px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      font-weight: 800;
+
+      cursor: pointer;
+    }
+
+
+    .container {
+      width:
+        min(
+          1200px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        32px 0 60px;
+    }
+
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+    }
+
+
+    .eyebrow {
+      margin-top: 25px;
+
+      color: #d8ff45;
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+
+    h1 {
+      margin:
+        8px 0 5px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+    }
+
+
+    .sub {
+      color:
+        rgba(255,255,255,.62);
+
+      margin-bottom:
+        24px;
+    }
+
+
+    /* ==================================
+       SUMMARY
+    ================================== */
+
+    .summary {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 14px;
+
+      margin-bottom:
+        20px;
+    }
+
+
+    .summary-card,
+    .panel {
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius:
+        16px;
+    }
+
+
+    .summary-card {
+      padding: 18px;
+    }
+
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 12px;
+
+      margin-bottom:
+        7px;
+    }
+
+
+    .summary-value {
+      color: #d8ff45;
+
+      font-size: 25px;
+
+      font-weight: 900;
+    }
+
+
+    /* ==================================
+       FILTER
+    ================================== */
+
+    .filters {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 12px;
+
+      margin-bottom:
+        18px;
+    }
+
+
+    select {
+      width: 100%;
+
+      padding: 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background: #09285a;
+
+      color: white;
+
+      outline: none;
+
+      font-size: 14px;
+    }
+
+
+    /* ==================================
+       TABLE
+    ================================== */
+
+    .panel {
+      overflow: hidden;
+    }
+
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+
+    table {
+      width: 100%;
+
+      border-collapse:
+        collapse;
+
+      min-width:
+        1050px;
+    }
+
+
+    th,
+    td {
+      padding:
+        13px 11px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      text-align: left;
+
+      font-size:
+        14px;
+
+      vertical-align:
+        middle;
+    }
+
+
+    th {
+      color: #d8ff45;
+    }
+
+
+    tbody tr:hover {
+      background:
+        rgba(255,255,255,.045);
+    }
+
+
+    .money {
+      font-weight: 900;
+    }
+
+
+    .badge {
+      display:
+        inline-block;
+
+      padding:
+        6px 9px;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(216,255,69,.12);
+
+      color:
+        #d8ff45;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+      white-space:
+        nowrap;
+    }
+
+
+    .action-btn {
+
+      border: 0;
+
+      border-radius:
+        8px;
+
+      padding:
+        8px 10px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #172600;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+      white-space:
+        nowrap;
+    }
+
+
+    .action-btn.pay {
+
+      background:
+        white;
+
+      color:
+        #062456;
+    }
+
+
+    .action-btn:disabled {
+      opacity: .45;
+      cursor: wait;
+    }
+
+
+    #message {
+      margin:
+        0 0 15px;
+
+      min-height:
+        20px;
+
+      font-weight:
+        800;
+    }
+
+
+    .empty {
+      padding: 30px;
+
+      text-align:
+        center;
+
+      color:
+        rgba(255,255,255,.6);
+    }
+
+
+    @media(
+      max-width: 700px
+    ) {
+
+      .summary,
+      .filters {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      #userEmail {
+        display: none;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee
+    <span>Academy</span>
+  </div>
+
+
+  <div class="user-area">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <a
+    href="./admin"
+    class="back"
+  >
+    ← Khu vực Admin
+  </a>
+
+
+  <div class="eyebrow">
+    QUẢN LÝ COACH
+  </div>
+
+
+  <h1>
+    Công Coach
+  </h1>
+
+
+  <div class="sub">
+    Tổng hợp công dạy, chốt công và xác nhận thanh toán cho Coach.
+  </div>
+
+
+  <!-- ==============================
+       SUMMARY
+  =============================== -->
+
+  <section class="summary">
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Số buổi có công
+      </div>
+
+      <div
+        id="totalSessions"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Tổng tiền công
+      </div>
+
+      <div
+        id="totalAmount"
+        class="summary-value"
+      >
+        0đ
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Chưa thanh toán
+      </div>
+
+      <div
+        id="unpaidAmount"
+        class="summary-value"
+      >
+        0đ
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+  <!-- ==============================
+       FILTER
+  =============================== -->
+
+  <section class="filters">
+
+
+    <select id="coachFilter">
+
+      <option value="">
+        Tất cả Coach
+      </option>
+
+    </select>
+
+
+    <select id="periodFilter">
+
+      <option value="">
+        Tất cả kỳ lương
+      </option>
+
+    </select>
+
+
+    <select id="statusFilter">
+
+      <option value="">
+        Tất cả trạng thái
+      </option>
+
+      <option value="Chưa chốt">
+        Chưa chốt
+      </option>
+
+      <option value="Đã chốt">
+        Đã chốt
+      </option>
+
+      <option value="Đã thanh toán">
+        Đã thanh toán
+      </option>
+
+    </select>
+
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <!-- ==============================
+       TABLE
+  =============================== -->
+
+  <section class="panel">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Coach</th>
+
+            <th>Mã buổi</th>
+
+            <th>Ngày dạy</th>
+
+            <th>Kỳ lương</th>
+
+            <th>Đơn giá</th>
+
+            <th>Thưởng</th>
+
+            <th>Khấu trừ</th>
+
+            <th>Thành tiền</th>
+
+            <th>Trạng thái</th>
+
+            <th>Thao tác</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="workBody">
+
+          <tr>
+
+            <td colspan="10">
+              Đang tải công Coach...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const workBody =
+    document.getElementById(
+      "workBody"
+    );
+
+
+  const coachFilter =
+    document.getElementById(
+      "coachFilter"
+    );
+
+
+  const periodFilter =
+    document.getElementById(
+      "periodFilter"
+    );
+
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+
+  let allRows = [];
+
+
+  /* ==================================
+     HELPERS
+  ================================== */
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function dateVN(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const parts =
+      String(value)
+        .split("-");
+
+
+    if (
+      parts.length === 3
+    ) {
+
+      return (
+        parts[2]
+        +
+        "/"
+        +
+        parts[1]
+        +
+        "/"
+        +
+        parts[0]
+      );
+
+    }
+
+
+    return value;
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showMessage(
+    text,
+    error = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+
+  }
+
+
+  /* ==================================
+     AUTH ADMIN
+  ================================== */
+
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    session.user.email || "";
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError ||
+    !profile ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  /* ==================================
+     LOAD DATA
+  ================================== */
+
+
+  async function loadData() {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_coach_work"
+      );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    allRows =
+      data || [];
+
+
+    buildFilters();
+
+    render();
+
+  }
+
+
+  /* ==================================
+     FILTER OPTIONS
+  ================================== */
+
+
+  function buildFilters() {
+
+
+    const currentCoach =
+      coachFilter.value;
+
+
+    const currentPeriod =
+      periodFilter.value;
+
+
+    const coaches =
+      [...new Map(
+        allRows.map(
+          row => [
+            String(row.coach_id),
+            row.coach_name
+          ]
+        )
+      ).entries()];
+
+
+    coachFilter.innerHTML =
+      `
+        <option value="">
+          Tất cả Coach
+        </option>
+      `;
+
+
+    coaches.forEach(
+      ([id, name]) => {
+
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          id;
+
+
+        option.textContent =
+          name || "Coach";
+
+
+        coachFilter.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    const periods =
+      [...new Set(
+        allRows
+          .map(
+            row =>
+              row.pay_period
+          )
+          .filter(Boolean)
+      )]
+      .sort()
+      .reverse();
+
+
+    periodFilter.innerHTML =
+      `
+        <option value="">
+          Tất cả kỳ lương
+        </option>
+      `;
+
+
+    periods.forEach(
+      period => {
+
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          period;
+
+
+        option.textContent =
+          period;
+
+
+        periodFilter.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    coachFilter.value =
+      currentCoach;
+
+
+    periodFilter.value =
+      currentPeriod;
+
+  }
+
+
+  /* ==================================
+     GET FILTERED
+  ================================== */
+
+
+  function getFilteredRows() {
+
+
+    return allRows.filter(
+      row => {
+
+
+        if (
+          coachFilter.value
+          &&
+          String(row.coach_id)
+            !==
+          coachFilter.value
+        ) {
+
+          return false;
+
+        }
+
+
+        if (
+          periodFilter.value
+          &&
+          row.pay_period
+            !==
+          periodFilter.value
+        ) {
+
+          return false;
+
+        }
+
+
+        if (
+          statusFilter.value
+          &&
+          row.status
+            !==
+          statusFilter.value
+        ) {
+
+          return false;
+
+        }
+
+
+        return true;
+
+      }
+    );
+
+  }
+
+
+  /* ==================================
+     SUMMARY
+  ================================== */
+
+
+  function renderSummary(rows) {
+
+
+    const totalAmount =
+      rows.reduce(
+        (sum, row) =>
+          sum
+          +
+          Number(
+            row.total_amount || 0
+          ),
+        0
+      );
+
+
+    const unpaidAmount =
+      rows
+        .filter(
+          row =>
+            row.status
+              !==
+            "Đã thanh toán"
+        )
+        .reduce(
+          (sum, row) =>
+            sum
+            +
+            Number(
+              row.total_amount || 0
+            ),
+          0
+        );
+
+
+    document.getElementById(
+      "totalSessions"
+    ).textContent =
+      rows.length;
+
+
+    document.getElementById(
+      "totalAmount"
+    ).textContent =
+      money(
+        totalAmount
+      );
+
+
+    document.getElementById(
+      "unpaidAmount"
+    ).textContent =
+      money(
+        unpaidAmount
+      );
+
+  }
+
+
+  /* ==================================
+     TABLE
+  ================================== */
+
+
+  function render() {
+
+
+    const rows =
+      getFilteredRows();
+
+
+    renderSummary(
+      rows
+    );
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      workBody.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="10"
+              class="empty"
+            >
+              Không có công Coach phù hợp.
+            </td>
+
+          </tr>
+        `;
+
+      return;
+
+    }
+
+
+    workBody.innerHTML =
+      rows.map(
+        row => {
+
+
+          let actionHTML = "";
+
+
+          if (
+            row.status ===
+            "Chưa chốt"
+          ) {
+
+            actionHTML =
+              `
+                <button
+                  class="action-btn"
+                  data-id="${row.work_id}"
+                  data-action="CHOT"
+                >
+                  CHỐT CÔNG
+                </button>
+              `;
+
+          }
+
+
+          else if (
+            row.status ===
+            "Đã chốt"
+          ) {
+
+            actionHTML =
+              `
+                <button
+                  class="action-btn pay"
+                  data-id="${row.work_id}"
+                  data-action="THANH_TOAN"
+                >
+                  ĐÃ THANH TOÁN
+                </button>
+              `;
+
+          }
+
+
+          else {
+
+            actionHTML =
+              `
+                <span class="badge">
+                  ✓ Hoàn tất
+                </span>
+              `;
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+                <strong>
+                  ${escapeHTML(
+                    row.coach_name ||
+                    "Coach"
+                  )}
+                </strong>
+              </td>
+
+
+              <td>
+                ${escapeHTML(
+                  row.session_code ||
+                  row.session_id ||
+                  "—"
+                )}
+              </td>
+
+
+              <td>
+                ${dateVN(
+                  row.work_date
+                )}
+              </td>
+
+
+              <td>
+                ${escapeHTML(
+                  row.pay_period ||
+                  "—"
+                )}
+              </td>
+
+
+              <td class="money">
+                ${money(
+                  row.base_amount
+                )}
+              </td>
+
+
+              <td>
+                ${money(
+                  row.bonus
+                )}
+              </td>
+
+
+              <td>
+                ${money(
+                  row.deduction
+                )}
+              </td>
+
+
+              <td class="money">
+                ${money(
+                  row.total_amount
+                )}
+              </td>
+
+
+              <td>
+
+                <span class="badge">
+
+                  ${escapeHTML(
+                    row.status ||
+                    "Chưa chốt"
+                  )}
+
+                </span>
+
+              </td>
+
+
+              <td>
+                ${actionHTML}
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+    bindActionButtons();
+
+  }
+
+
+  /* ==================================
+     ACTION BUTTON
+  ================================== */
+
+
+  function bindActionButtons() {
+
+
+    document
+      .querySelectorAll(
+        ".action-btn[data-id]"
+      )
+      .forEach(
+        button => {
+
+
+          button.addEventListener(
+            "click",
+            async function () {
+
+
+              const workId =
+                Number(
+                  button.dataset.id
+                );
+
+
+              const action =
+                button.dataset.action;
+
+
+              const confirmText =
+                action === "CHOT"
+                  ?
+                  "Xác nhận chốt công này?"
+                  :
+                  "Xác nhận PickDee đã thanh toán công này?";
+
+
+              if (
+                !window.confirm(
+                  confirmText
+                )
+              ) {
+
+                return;
+
+              }
+
+
+              button.disabled =
+                true;
+
+
+              showMessage(
+                action === "CHOT"
+                  ?
+                  "Đang chốt công..."
+                  :
+                  "Đang xác nhận thanh toán..."
+              );
+
+
+              const {
+                error
+              } =
+                await sb.rpc(
+                  "admin_update_coach_work",
+                  {
+                    p_work_id:
+                      workId,
+
+                    p_action:
+                      action
+                  }
+                );
+
+
+              if (error) {
+
+                console.error(
+                  error
+                );
+
+
+                showMessage(
+                  error.message ||
+                  "Không cập nhật được.",
+                  true
+                );
+
+
+                button.disabled =
+                  false;
+
+
+                return;
+
+              }
+
+
+              await loadData();
+
+
+              showMessage(
+                action === "CHOT"
+                  ?
+                  "✓ Đã chốt công."
+                  :
+                  "✓ Đã xác nhận thanh toán."
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  /* ==================================
+     FILTER EVENTS
+  ================================== */
+
+
+  coachFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  periodFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  statusFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  /* ==================================
+     LOGOUT
+  ================================== */
+
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      await sb.auth.signOut();
+
+
+      location.replace(
+        "./login.html"
+      );
+
+    }
+  );
+
+
+  /* ==================================
+     START
+  ================================== */
+
+
+  try {
+
+    await loadData();
+
+  }
+
+
+  catch (error) {
+
+
+    console.error(
+      error
+    );
+
+
+    showMessage(
+      "Không tải được công Coach: "
+      +
+      (
+        error.message ||
+        error
+      ),
+      true
+    );
+
+
+    workBody.innerHTML =
+      `
+        <tr>
+
+          <td
+            colspan="10"
+            class="empty"
+          >
+            Không tải được dữ liệu.
+          </td>
+
+        </tr>
+      `;
+
+  }
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
