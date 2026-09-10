@@ -1,0 +1,1603 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#041733"
+  >
+
+  <title>
+    Quản lý yêu cầu lịch | PickDee Academy
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+
+    }
+
+
+    header {
+
+      padding: 18px 24px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 15px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .brand {
+
+      font-size: 19px;
+
+      font-weight: 900;
+
+    }
+
+
+    .brand span {
+
+      color: #d8ff45;
+
+    }
+
+
+    .back {
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+
+    }
+
+
+    main {
+
+      width:
+        min(
+          1100px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        38px 0 70px;
+
+    }
+
+
+    .eyebrow {
+
+      color: #d8ff45;
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      letter-spacing: 1px;
+
+    }
+
+
+    h1 {
+
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+
+    }
+
+
+    .intro {
+
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.55;
+
+    }
+
+
+    /* =====================================================
+       SUMMARY
+    ====================================================== */
+
+    .summary-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap: 12px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    .summary-card {
+
+      padding: 17px;
+
+      border-radius: 15px;
+
+      background:
+        rgba(6,39,88,.78);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .summary-card.alert {
+
+      border-color:
+        rgba(255,100,100,.35);
+
+    }
+
+
+    .summary-label {
+
+      margin-bottom: 5px;
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 12px;
+
+    }
+
+
+    .summary-value {
+
+      color: #d8ff45;
+
+      font-size: 25px;
+
+      font-weight: 900;
+
+    }
+
+
+    .summary-value.red {
+
+      color: #ff9c9c;
+
+    }
+
+
+    /* =====================================================
+       CONTROLS
+    ====================================================== */
+
+    .controls {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 220px auto;
+
+      gap: 10px;
+
+      margin-bottom: 18px;
+
+    }
+
+
+    input,
+    select {
+
+      min-height: 48px;
+
+      padding:
+        11px 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.16);
+
+      background: #07172d;
+
+      color: white;
+
+      font-size: 14px;
+
+      outline: none;
+
+    }
+
+
+    input:focus,
+    select:focus {
+
+      border-color:
+        rgba(216,255,69,.55);
+
+    }
+
+
+    button {
+
+      min-height: 48px;
+
+      padding:
+        0 17px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.15);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+    }
+
+
+    button:disabled {
+
+      opacity: .5;
+
+    }
+
+
+    #message {
+
+      min-height: 22px;
+
+      margin-bottom: 15px;
+
+      color: #d8ff45;
+
+      font-weight: 800;
+
+      font-size: 13px;
+
+    }
+
+
+    /* =====================================================
+       LIST
+    ====================================================== */
+
+    #list {
+
+      display: grid;
+
+      gap: 15px;
+
+    }
+
+
+    .request-card {
+
+      padding: 20px;
+
+      border-radius: 17px;
+
+      background:
+        rgba(6,39,88,.78);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .request-card.overdue {
+
+      border:
+        1px solid rgba(255,100,100,.45);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(65,24,42,.48),
+          rgba(6,39,88,.82)
+        );
+
+    }
+
+
+    .request-head {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: flex-start;
+
+      gap: 15px;
+
+      margin-bottom: 16px;
+
+    }
+
+
+    .request-code {
+
+      color: #d8ff45;
+
+      font-size: 20px;
+
+      font-weight: 900;
+
+    }
+
+
+    .request-person {
+
+      margin-top: 5px;
+
+      font-size: 17px;
+
+      font-weight: 900;
+
+    }
+
+
+    .request-sub {
+
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 12px;
+
+      line-height: 1.4;
+
+    }
+
+
+    .badge {
+
+      padding:
+        7px 10px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+
+      font-weight: 900;
+
+      white-space: nowrap;
+
+    }
+
+
+    .badge.pending {
+
+      color: #ffc46b;
+
+      background:
+        rgba(255,196,107,.12);
+
+    }
+
+
+    .badge.approved {
+
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.12);
+
+    }
+
+
+    .badge.rejected {
+
+      color: #ffaaaa;
+
+      background:
+        rgba(255,100,100,.12);
+
+    }
+
+
+    .badge.overdue {
+
+      color: white;
+
+      background:
+        rgba(255,70,70,.75);
+
+    }
+
+
+    .info-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap: 10px;
+
+    }
+
+
+    .info-box {
+
+      padding: 12px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(0,0,0,.13);
+
+      border:
+        1px solid rgba(255,255,255,.07);
+
+    }
+
+
+    .info-label {
+
+      margin-bottom: 4px;
+
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 11px;
+
+    }
+
+
+    .info-value {
+
+      font-weight: 800;
+
+      line-height: 1.45;
+
+    }
+
+
+    .result-box {
+
+      margin-top: 14px;
+
+      padding: 14px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.04);
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+
+    }
+
+
+    .result-box.rejected {
+
+      border-color:
+        rgba(255,100,100,.28);
+
+    }
+
+
+    .result-box.approved {
+
+      border-color:
+        rgba(216,255,69,.24);
+
+    }
+
+
+    .result-title {
+
+      margin-bottom: 6px;
+
+      font-weight: 900;
+
+    }
+
+
+    .result-box.rejected
+    .result-title {
+
+      color: #ffaaaa;
+
+    }
+
+
+    .result-box.approved
+    .result-title {
+
+      color: #d8ff45;
+
+    }
+
+
+    .warning {
+
+      margin-top: 14px;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      color: #ffb0b0;
+
+      background:
+        rgba(255,70,70,.09);
+
+      border:
+        1px solid rgba(255,100,100,.24);
+
+      font-weight: 800;
+
+      line-height: 1.5;
+
+    }
+
+
+    .empty {
+
+      padding: 38px 20px;
+
+      border-radius: 17px;
+
+      background:
+        rgba(6,39,88,.72);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.6;
+
+    }
+
+
+    @media(max-width:850px) {
+
+      .summary-grid {
+
+        grid-template-columns:
+          repeat(2,1fr);
+
+      }
+
+
+      .info-grid {
+
+        grid-template-columns:
+          repeat(2,1fr);
+
+      }
+
+
+      .controls {
+
+        grid-template-columns: 1fr;
+
+      }
+
+    }
+
+
+    @media(max-width:550px) {
+
+      .summary-grid,
+      .info-grid {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .request-head {
+
+        flex-direction: column;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+
+  <div class="brand">
+
+    PickDee
+    <span>Academy</span>
+
+  </div>
+
+
+  <a
+    class="back"
+    href="./admin"
+  >
+
+    ← Trung tâm quản trị
+
+  </a>
+
+
+</header>
+
+
+<main>
+
+
+  <div class="eyebrow">
+
+    ADMIN · ĐIỀU PHỐI LỊCH
+
+  </div>
+
+
+  <h1>
+
+    Yêu cầu lịch học
+
+  </h1>
+
+
+  <div class="intro">
+
+    Theo dõi yêu cầu đặt lịch của toàn hệ thống.
+    Admin chỉ cần chú ý các yêu cầu quá thời gian nhưng Coach chưa xử lý.
+
+  </div>
+
+
+  <section class="summary-grid">
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Chờ Coach
+      </div>
+
+      <div
+        id="pendingCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card alert">
+
+      <div class="summary-label">
+        Cần can thiệp
+      </div>
+
+      <div
+        id="overdueCount"
+        class="summary-value red"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Đã duyệt
+      </div>
+
+      <div
+        id="approvedCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Từ chối
+      </div>
+
+      <div
+        id="rejectedCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+  <section class="controls">
+
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm học viên, Coach, mã YC, mã đăng ký..."
+    >
+
+
+    <select id="statusFilter">
+
+      <option value="ALL">
+        Tất cả trạng thái
+      </option>
+
+      <option value="OVERDUE">
+        ⚠ Cần can thiệp
+      </option>
+
+      <option value="Chờ Coach">
+        Chờ Coach
+      </option>
+
+      <option value="Đã duyệt">
+        Đã duyệt
+      </option>
+
+      <option value="Từ chối">
+        Từ chối
+      </option>
+
+    </select>
+
+
+    <button
+      id="refreshBtn"
+      type="button"
+    >
+
+      ↻ CẬP NHẬT
+
+    </button>
+
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <section id="list">
+
+    <div class="empty">
+      Đang tải yêu cầu...
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ELEMENTS
+  ====================================================== */
+
+  const pendingCount =
+    document.getElementById(
+      "pendingCount"
+    );
+
+
+  const overdueCount =
+    document.getElementById(
+      "overdueCount"
+    );
+
+
+  const approvedCount =
+    document.getElementById(
+      "approvedCount"
+    );
+
+
+  const rejectedCount =
+    document.getElementById(
+      "rejectedCount"
+    );
+
+
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+
+  const listEl =
+    document.getElementById(
+      "list"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  let allRows =
+    [];
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function formatDate(value) {
+
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const raw =
+      String(value).trim();
+
+
+    const match =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
+
+
+    if (!match) {
+
+      return raw;
+
+    }
+
+
+    return (
+      match[3]
+      +
+      "/"
+      +
+      match[2]
+      +
+      "/"
+      +
+      match[1]
+    );
+
+  }
+
+
+  function formatTime(value) {
+
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const raw =
+      String(value).trim();
+
+
+    const match =
+      raw.match(
+        /^(\d{1,2}):(\d{2})/
+      );
+
+
+    if (!match) {
+
+      return raw;
+
+    }
+
+
+    return (
+      String(
+        Number(match[1])
+      ).padStart(
+        2,
+        "0"
+      )
+      +
+      ":"
+      +
+      match[2]
+    );
+
+  }
+
+
+  function requestTimestamp(row) {
+
+
+    const dateMatch =
+      String(
+        row.requested_date || ""
+      ).match(
+        /^(\d{4})-(\d{2})-(\d{2})/
+      );
+
+
+    const timeMatch =
+      String(
+        row.requested_time || ""
+      ).match(
+        /^(\d{1,2}):(\d{2})/
+      );
+
+
+    if (
+      !dateMatch
+      ||
+      !timeMatch
+    ) {
+
+      return null;
+
+    }
+
+
+    const date =
+      new Date(
+
+        Number(dateMatch[1]),
+
+        Number(dateMatch[2]) - 1,
+
+        Number(dateMatch[3]),
+
+        Number(timeMatch[1]),
+
+        Number(timeMatch[2]),
+
+        0,
+
+        0
+
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return null;
+
+    }
+
+
+    return date;
+
+  }
+
+
+  function isOverdue(row) {
+
+
+    if (
+      row.status !== "Chờ Coach"
+    ) {
+
+      return false;
+
+    }
+
+
+    const start =
+      requestTimestamp(row);
+
+
+    if (!start) {
+
+      return false;
+
+    }
+
+
+    return (
+      start.getTime()
+      <
+      Date.now()
+    );
+
+  }
+
+
+  function badgeClass(row) {
+
+
+    if (
+      isOverdue(row)
+    ) {
+
+      return "overdue";
+
+    }
+
+
+    if (
+      row.status === "Đã duyệt"
+    ) {
+
+      return "approved";
+
+    }
+
+
+    if (
+      row.status === "Từ chối"
+    ) {
+
+      return "rejected";
+
+    }
+
+
+    return "pending";
+
+  }
+
+
+  function badgeText(row) {
+
+
+    if (
+      isOverdue(row)
+    ) {
+
+      return "⚠ CẦN CAN THIỆP";
+
+    }
+
+
+    return row.status || "—";
+
+  }
+
+
+  function showMessage(text) {
+
+    messageEl.textContent =
+      text || "";
+
+  }
+
+
+  /* =====================================================
+     CHECK ADMIN
+  ====================================================== */
+
+  async function checkAdmin() {
+
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await sb.auth
+        .getSession();
+
+
+    if (
+      sessionError
+      ||
+      !sessionData?.session
+    ) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          sessionData.session.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      profileError
+      ||
+      !profile
+      ||
+      profile.role !== "admin"
+    ) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+
+    refreshBtn.disabled =
+      true;
+
+
+    refreshBtn.textContent =
+      "ĐANG TẢI...";
+
+
+    showMessage(
+      "Đang cập nhật yêu cầu lịch..."
+    );
+
+
+    const {
+      data: requests,
+      error
+    } =
+      await sb
+        .from("session_requests")
+        .select(`
+          id,
+          request_code,
+          registration_id,
+          student_id,
+          coach_id,
+          session_no,
+          requested_date,
+          requested_time,
+          duration_minutes,
+          requested_area,
+          requested_ward,
+          note,
+          status,
+          coach_note,
+          court_id,
+          session_id,
+          created_at,
+          approved_at,
+          rejected_at
+        `)
+        .order(
+          "created_at",
+          {
+            ascending:false
+          }
+        );
+
+
+    if (error) {
+
+
+      console.error(
+        "REQUEST ERROR:",
+        error
+      );
+
+
+      listEl.innerHTML =
+        `
+          <div class="empty">
+            Không tải được yêu cầu lịch học.
+          </div>
+        `;
+
+
+      showMessage(
+        error.message
+        ||
+        "Không tải được dữ liệu."
+      );
+
+
+      refreshBtn.disabled =
+        false;
+
+
+      refreshBtn.textContent =
+        "↻ CẬP NHẬT";
+
+
+      return;
+
+    }
+
+
+    const rows =
+      requests || [];
+
+
+    const registrationIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              x =>
+                Number(
+                  x.registration_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const studentIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              x =>
+                Number(
+                  x.student_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const coachIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              x =>
+                Number(
+                  x.coach_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const courtIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              x =>
+                Number(
+                  x.court_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const sessionIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              x =>
+                Number(
+                  x.session_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    let registrations =
+      [];
+
+
+    let students =
+      [];
+
+
+    let coaches =
+      [];
+
+
+    let courts =
+      [];
+
+
+    let sessions =
+      [];
+
+
+    if (
+      registrationIds.length
+    ) {
+
+      const result =
+        await sb
+          .from("registrations")
+          .select(`
+            id,
+            registration_code,
+            package_name
+          `)
+          .in(
+            "id",
+            registrationIds
+          );
+
+
+      if (!result.error) {
+
+        registrations =
+          result.data || [];
+
+      }
+
+    }
+
+
+    if (
+      studentIds.length
+    ) {
+
+      const result =
+        await sb
+          .from("students")
+          .select(`
+            id,
+            student_code,
+            full_name
+          `)
+          .in(
+            "id",
+            studentIds
+          );
+
+
+      if (!result.error) {
+
+        students =
+          result.data || [];
+
+      }
+
+    }
+
+
+    if (
+      coachIds.length
+    ) {
+
+      const result =
+        await sb
+          .from("coaches")
+          .select(`
+            id,
+            coach_code,
+            full_name
+          `)
+          .in(
+            "id",
+            coachIds
+          );
+
+
+      if (!result.error) {
+
+        coaches =
+          result.data || [];
+
+      }
+
+    }
+
+
+    if (
+      courtIds.length
+    ) {
+
+      const result =
+        await sb
+          .from("courts")
+          .select(`
+            id,
+            name
+          `)
+          .in(
+            "id",
+            courtIds
+          );
+
+
+      if (!result.error) {
+
+        courts =
+          result.data || [];
+
+      }
+
+    }
+
+
+    if (
+      sessionIds.length
+    ) {
+
+      const result =
+        await sb
+          .from("class_sessions")
+          .select(`
+            id,
+            session_code,
+            status,
+            court_name
+          `)
+          .in(
+            "id",
+            sessionIds
+          );
+
+
+      if (!result.error) {
