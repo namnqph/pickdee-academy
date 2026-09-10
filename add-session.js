@@ -536,10 +536,11 @@ async function loadWards(
 /* =====================================================
    LOAD SÂN THEO KHU VỰC
 
-   CHỈ CHO PHÉP SÂN:
-   - Hoạt động
-   - Đã xác minh giá
-   - Giá > 0
+   CHỈ CHO PHÉP:
+   1. Hoạt động
+   2. PickDee đã xác minh sân
+   3. Đã xác minh giá
+   4. Giá > 0
 ===================================================== */
 
 async function loadCourts() {
@@ -591,12 +592,17 @@ async function loadCourts() {
         ward,
         address,
         price_per_session,
+        verified,
         price_verified,
         status
       `)
       .eq(
         "status",
         "Hoạt động"
+      )
+      .eq(
+        "verified",
+        true
       )
       .eq(
         "price_verified",
@@ -613,8 +619,8 @@ async function loadCourts() {
 
 
   /*
-    Nếu Admin đã chọn Phường/Xã
-    thì lọc sâu thêm.
+    Nếu chọn Phường/Xã
+    thì lọc tiếp theo Phường/Xã.
   */
 
   if (selectedWard) {
@@ -689,7 +695,7 @@ async function loadCourts() {
     courtSelect.innerHTML =
       `
         <option value="">
-          Chưa có sân đã xác minh giá tại khu vực này
+          Chưa có sân đã xác minh tại khu vực này
         </option>
       `;
 
@@ -752,7 +758,7 @@ async function loadCourts() {
 
 
   /*
-    Nếu chỉ có đúng 1 sân phù hợp
+    Nếu chỉ có đúng 1 sân
     thì tự chọn luôn.
   */
 
@@ -894,9 +900,8 @@ areaSelect.addEventListener(
 
 
     /*
-      Ngay sau khi chọn tỉnh,
-      hiện toàn bộ sân đủ điều kiện
-      của tỉnh đó.
+      Chọn tỉnh xong:
+      hiện toàn bộ sân hợp lệ của tỉnh.
     */
 
     await loadCourts();
@@ -1080,7 +1085,7 @@ async function loadRegistrations() {
 
 
   /*
-    Nếu mở trang từ Chi tiết đăng ký
+    Nếu mở từ Chi tiết đăng ký
     thì tự chọn đúng đăng ký.
   */
 
@@ -1337,8 +1342,8 @@ async function applyStudentLocation(
 
 
   /*
-    Tự động tải sân phù hợp
-    với khu vực học viên.
+    Sau khi lấy khu vực học viên,
+    tải sân phù hợp.
   */
 
   await loadCourts();
@@ -1419,7 +1424,7 @@ async function applyRegistration() {
 
 
   /*
-    Tự tính số buổi tiếp theo.
+    Tự tính buổi tiếp theo.
   */
 
   try {
@@ -1452,7 +1457,7 @@ async function applyRegistration() {
 
   /*
     Nếu chưa nhập ngày,
-    lấy ngày bắt đầu của đăng ký.
+    lấy ngày bắt đầu đăng ký.
   */
 
   if (
@@ -1479,8 +1484,7 @@ async function applyRegistration() {
 
 
   /*
-    Tự lấy khu vực muốn học
-    từ hồ sơ học viên.
+    Tự lấy khu vực muốn học.
   */
 
   await applyStudentLocation(
@@ -1604,7 +1608,7 @@ form.addEventListener(
 
 
       showMessage(
-        "Hãy chọn sân học đã được xác minh giá.",
+        "Hãy chọn sân học đã được PickDee xác minh.",
         true
       );
 
@@ -1615,14 +1619,21 @@ form.addEventListener(
 
 
     /*
-      KIỂM TRA LẦN CUỐI TRƯỚC KHI INSERT.
-      Tránh trường hợp dữ liệu sân đã thay đổi
-      sau khi dropdown được tải.
+      KIỂM TRA LẦN CUỐI TRƯỚC INSERT.
+
+      Phải đủ 4 điều kiện:
+      - Hoạt động
+      - verified = true
+      - price_verified = true
+      - price > 0
     */
 
     if (
       selectedCourt.status !==
         "Hoạt động"
+      ||
+      selectedCourt.verified !==
+        true
       ||
       selectedCourt.price_verified !==
         true
@@ -1634,7 +1645,7 @@ form.addEventListener(
 
 
       showMessage(
-        "Sân này chưa đủ điều kiện sử dụng. Hãy kiểm tra lại giá sân.",
+        "Sân này chưa đủ điều kiện sử dụng. Hãy xác minh sân và giá trước.",
         true
       );
 
@@ -1717,13 +1728,10 @@ form.addEventListener(
               ),
 
             /*
-              Chỉ truyền court_id.
+              Chỉ lưu court_id.
 
-              Trigger database:
-              sync_session_court_cost()
-
-              sẽ tự lấy giá hiện tại
-              từ bảng courts.
+              Trigger database sẽ tự lấy
+              court_cost từ bảng courts.
             */
 
             court_id:
@@ -1732,8 +1740,8 @@ form.addEventListener(
               ),
 
             /*
-              Giữ court_name để các trang cũ
-              vẫn hiển thị bình thường.
+              Giữ court_name
+              để tương thích các trang cũ.
             */
 
             court_name:
@@ -1837,11 +1845,11 @@ async function init() {
 
 
   /*
-    Load khu vực trước.
+    Phải load Tỉnh/Thành trước.
 
-    Vì loadRegistrations()
-    có thể tự áp dụng Tỉnh/Phường
-    của học viên.
+    Sau đó load đăng ký,
+    vì đăng ký có thể tự lấy
+    khu vực học viên.
   */
 
   const areaLoaded =
