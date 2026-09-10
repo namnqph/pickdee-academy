@@ -229,6 +229,8 @@
 
     .request-card {
 
+      position: relative;
+
       padding: 22px;
 
       border-radius: 18px;
@@ -424,7 +426,7 @@
 
     textarea {
 
-      min-height: 80px;
+      min-height: 90px;
 
       resize: vertical;
 
@@ -463,6 +465,20 @@
     }
 
 
+    .coach-note-help {
+
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 12px;
+
+      line-height: 1.45;
+
+    }
+
+
     .actions {
 
       display: grid;
@@ -479,6 +495,10 @@
 
     button {
 
+      position: relative;
+
+      z-index: 2;
+
       min-height: 50px;
 
       border-radius: 10px;
@@ -488,6 +508,8 @@
       font-weight: 900;
 
       cursor: pointer;
+
+      pointer-events: auto;
 
     }
 
@@ -506,21 +528,38 @@
     .reject {
 
       border:
-        1px solid rgba(255,110,110,.3);
+        1px solid rgba(255,110,110,.5);
 
       background:
-        rgba(255,90,90,.12);
+        rgba(255,90,90,.14);
 
-      color: #ffaaaa;
+      color: #ffb0b0;
+
+    }
+
+
+    .reject:hover {
+
+      background:
+        rgba(255,90,90,.22);
 
     }
 
 
     button:disabled {
 
-      opacity: .5;
+      opacity: .45;
 
-      cursor: wait;
+      cursor: not-allowed;
+
+    }
+
+
+    .reject:not(:disabled) {
+
+      opacity: 1;
+
+      cursor: pointer;
 
     }
 
@@ -612,7 +651,7 @@
   <div class="intro">
 
     Xem lịch Học viên mong muốn, chọn sân phù hợp và duyệt.
-    Sau khi duyệt, hệ thống tự tạo buổi học chính thức.
+    Nếu không thể nhận lịch, Coach nhập lý do và từ chối để Học viên chọn lại lịch khác.
 
   </div>
 
@@ -716,32 +755,35 @@
   }
 
 
+  function showMessage(
+    text,
+    isError = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.className =
+      isError
+        ?
+        "error"
+        :
+        "success";
+
+  }
+
+
   /* =====================================================
      SAFE DATE
-     Không để ngày lỗi làm chết cả trang
   ====================================================== */
 
-  function parseSafeDate(value) {
+  function formatDate(value) {
 
 
     if (!value) {
 
-      return null;
-
-    }
-
-
-    if (
-      value instanceof Date
-    ) {
-
-      return Number.isNaN(
-        value.getTime()
-      )
-        ?
-        null
-        :
-        value;
+      return "—";
 
     }
 
@@ -775,23 +817,30 @@
         Number(match[3]);
 
 
-      const date =
-        new Date(
-          year,
-          month - 1,
-          day
-        );
-
-
       if (
-        date.getFullYear() === year
+        year > 1900
         &&
-        date.getMonth() === month - 1
+        month >= 1
         &&
-        date.getDate() === day
+        month <= 12
+        &&
+        day >= 1
+        &&
+        day <= 31
       ) {
 
-        return date;
+
+        return (
+          String(day).padStart(2,"0")
+          +
+          "/"
+          +
+          String(month).padStart(2,"0")
+          +
+          "/"
+          +
+          String(year)
+        );
 
       }
 
@@ -804,117 +853,38 @@
 
     match =
       raw.match(
-        /^(\d{2})\/(\d{2})\/(\d{4})$/
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
       );
 
 
     if (match) {
 
 
-      const day =
-        Number(match[1]);
-
-
-      const month =
-        Number(match[2]);
-
-
-      const year =
-        Number(match[3]);
-
-
-      const date =
-        new Date(
-          year,
-          month - 1,
-          day
-        );
-
-
-      if (
-        date.getFullYear() === year
-        &&
-        date.getMonth() === month - 1
-        &&
-        date.getDate() === day
-      ) {
-
-        return date;
-
-      }
+      return (
+        String(
+          Number(match[1])
+        ).padStart(2,"0")
+        +
+        "/"
+        +
+        String(
+          Number(match[2])
+        ).padStart(2,"0")
+        +
+        "/"
+        +
+        match[3]
+      );
 
     }
 
 
     /*
-      TIMESTAMP fallback
+      Không dùng Intl.DateTimeFormat ở đây.
+      Nếu format lạ thì hiển thị nguyên dữ liệu.
     */
 
-    const fallback =
-      new Date(raw);
-
-
-    if (
-      !Number.isNaN(
-        fallback.getTime()
-      )
-    ) {
-
-      return fallback;
-
-    }
-
-
-    return null;
-
-  }
-
-
-  function formatDate(value) {
-
-
-    const date =
-      parseSafeDate(value);
-
-
-    if (!date) {
-
-      return value
-        ?
-        String(value)
-        :
-        "—";
-
-    }
-
-
-    try {
-
-
-      return new Intl.DateTimeFormat(
-        "vi-VN",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        }
-      ).format(date);
-
-
-    }
-    catch (error) {
-
-
-      console.warn(
-        "DATE FORMAT ERROR:",
-        value,
-        error
-      );
-
-
-      return String(value);
-
-    }
+    return raw;
 
   }
 
@@ -933,12 +903,6 @@
       String(value).trim();
 
 
-    /*
-      09:00
-      hoặc
-      09:00:00
-    */
-
     const match =
       raw.match(
         /^(\d{1,2}):(\d{2})/
@@ -948,49 +912,20 @@
     if (match) {
 
 
-      const hour =
+      return (
         String(
           Number(match[1])
-        ).padStart(
-          2,
-          "0"
-        );
-
-
-      const minute =
-        match[2];
-
-
-      return `${hour}:${minute}`;
+        ).padStart(2,"0")
+        +
+        ":"
+        +
+        match[2]
+      );
 
     }
 
 
-    /*
-      Nếu format lạ:
-      hiện dữ liệu gốc thay vì crash
-    */
-
     return raw;
-
-  }
-
-
-  function showMessage(
-    text,
-    isError = false
-  ) {
-
-    messageEl.textContent =
-      text || "";
-
-
-    messageEl.className =
-      isError
-        ?
-        "error"
-        :
-        "success";
 
   }
 
@@ -1003,22 +938,43 @@
 
 
     const {
-      data: { session },
+      data: sessionData,
       error: sessionError
     } =
       await sb.auth
         .getSession();
 
 
-    if (
-      sessionError
-      ||
-      !session
-    ) {
+    if (sessionError) {
+
+
+      console.error(
+        "SESSION ERROR:",
+        sessionError
+      );
+
 
       location.replace(
         "./login.html"
       );
+
+
+      return false;
+
+    }
+
+
+    const session =
+      sessionData?.session;
+
+
+    if (!session) {
+
+
+      location.replace(
+        "./login.html"
+      );
+
 
       return false;
 
@@ -1047,9 +1003,11 @@
       profile.role !== "coach"
     ) {
 
+
       location.replace(
         "./login.html"
       );
+
 
       return false;
 
@@ -1071,10 +1029,12 @@
       !coachId
     ) {
 
+
       showMessage(
         "Không xác định được hồ sơ Coach.",
         true
       );
+
 
       return false;
 
@@ -1186,7 +1146,9 @@
       listEl.innerHTML =
         `
           <div class="empty">
+
             Không tải được yêu cầu lịch học.
+
           </div>
         `;
 
@@ -1302,10 +1264,12 @@
     registrations.forEach(
       item => {
 
+
         registrationMap.set(
           Number(item.id),
           item
         );
+
 
       }
     );
@@ -1384,10 +1348,12 @@
     students.forEach(
       item => {
 
+
         studentMap.set(
           Number(item.id),
           item
         );
+
 
       }
     );
@@ -1472,347 +1438,184 @@
       request => {
 
 
-        try {
-
-
-          const registration =
-            registrationMap.get(
-              Number(
-                request.registration_id
-              )
+        const registration =
+          registrationMap.get(
+            Number(
+              request.registration_id
             )
-            ||
-            {};
+          )
+          ||
+          {};
 
 
-          const student =
-            studentMap.get(
-              Number(
-                request.student_id
-              )
+        const student =
+          studentMap.get(
+            Number(
+              request.student_id
             )
-            ||
-            {};
+          )
+          ||
+          {};
 
 
-          /* =============================================
-             LỌC SÂN
-          ============================================== */
+        /* =============================================
+           LỌC SÂN
+        ============================================== */
 
-          const matchingCourts =
-            courts.filter(
-              court => {
-
-
-                const requestArea =
-                  String(
-                    request.requested_area
-                    ||
-                    ""
-                  ).trim();
+        const matchingCourts =
+          courts.filter(
+            court => {
 
 
-                const requestWard =
-                  String(
-                    request.requested_ward
-                    ||
-                    ""
-                  ).trim();
-
-
-                const courtArea =
-                  String(
-                    court.area
-                    ||
-                    ""
-                  ).trim();
-
-
-                const courtWard =
-                  String(
-                    court.ward
-                    ||
-                    ""
-                  ).trim();
-
-
-                const sameArea =
-                  !requestArea
+              const requestArea =
+                String(
+                  request.requested_area
                   ||
-                  courtArea === requestArea;
+                  ""
+                ).trim();
 
 
-                const sameWard =
-                  !requestWard
+              const requestWard =
+                String(
+                  request.requested_ward
                   ||
-                  courtWard === requestWard;
+                  ""
+                ).trim();
 
 
-                return (
-                  sameArea
-                  &&
-                  sameWard
-                );
-
-              }
-            );
+              const courtArea =
+                String(
+                  court.area
+                  ||
+                  ""
+                ).trim();
 
 
-          const courtOptions =
-
-            matchingCourts.length > 0
-
-              ?
-
-              matchingCourts
-                .map(
-                  court =>
-                    `
-                      <option value="${court.id}">
-
-                        ${escapeHtml(
-                          court.name
-                        )}
-
-                        ·
-
-                        ${escapeHtml(
-                          court.ward
-                          ||
-                          court.area
-                          ||
-                          ""
-                        )}
-
-                        ·
-
-                        ${money(
-                          court.price_per_session
-                        )}
-
-                      </option>
-                    `
-                )
-                .join("")
-
-              :
-
-              `
-                <option value="">
-                  Không có sân phù hợp
-                </option>
-              `;
+              const courtWard =
+                String(
+                  court.ward
+                  ||
+                  ""
+                ).trim();
 
 
-          /* =============================================
-             CARD
-          ============================================== */
-
-          const card =
-            document.createElement(
-              "article"
-            );
+              const sameArea =
+                !requestArea
+                ||
+                courtArea === requestArea;
 
 
-          card.className =
-            "request-card";
+              const sameWard =
+                !requestWard
+                ||
+                courtWard === requestWard;
 
 
-          card.dataset.requestId =
-            request.id;
+              return (
+                sameArea
+                &&
+                sameWard
+              );
+
+            }
+          );
 
 
-          card.innerHTML =
-            `
-
-              <div class="request-head">
-
-
-                <div>
-
-
-                  <div class="request-code">
+        const courtOptions =
+          matchingCourts
+            .map(
+              court =>
+                `
+                  <option value="${court.id}">
 
                     ${escapeHtml(
-                      request.request_code
-                      ||
-                      `YC${request.id}`
-                    )}
-
-                  </div>
-
-
-                  <div class="student-name">
-
-                    ${escapeHtml(
-                      student.full_name
-                      ||
-                      "Học viên"
-                    )}
-
-                  </div>
-
-
-                  <div class="student-code">
-
-                    ${escapeHtml(
-                      student.student_code
-                      ||
-                      ""
-                    )}
-
-                    ${
-                      registration.registration_code
-
-                        ?
-
-                        ` · ${escapeHtml(
-                          registration.registration_code
-                        )}`
-
-                        :
-
-                        ""
-                    }
-
-                  </div>
-
-
-                </div>
-
-
-                <div class="status">
-
-                  CHỜ COACH
-
-                </div>
-
-
-              </div>
-
-
-              <div class="info-grid">
-
-
-                <div class="info-box">
-
-                  <div class="info-label">
-                    Gói học
-                  </div>
-
-                  <div class="info-value">
-
-                    ${escapeHtml(
-                      registration.package_name
-                      ||
-                      "—"
-                    )}
-
-                  </div>
-
-                </div>
-
-
-                <div class="info-box">
-
-                  <div class="info-label">
-                    Buổi
-                  </div>
-
-                  <div class="info-value">
-
-                    Buổi ${escapeHtml(
-                      request.session_no
-                      ||
-                      "—"
-                    )}
-
-                  </div>
-
-                </div>
-
-
-                <div class="info-box">
-
-                  <div class="info-label">
-                    Ngày / giờ
-                  </div>
-
-                  <div class="info-value">
-
-                    ${escapeHtml(
-                      formatDate(
-                        request.requested_date
-                      )
+                      court.name
                     )}
 
                     ·
 
                     ${escapeHtml(
-                      formatTime(
-                        request.requested_time
-                      )
+                      court.ward
+                      ||
+                      court.area
+                      ||
+                      ""
                     )}
 
-                  </div>
+                    ·
+
+                    ${money(
+                      court.price_per_session
+                    )}
+
+                  </option>
+                `
+            )
+            .join("");
+
+
+        const card =
+          document.createElement(
+            "article"
+          );
+
+
+        card.className =
+          "request-card";
+
+
+        card.dataset.requestId =
+          request.id;
+
+
+        card.innerHTML =
+          `
+
+            <div class="request-head">
+
+
+              <div>
+
+
+                <div class="request-code">
+
+                  ${escapeHtml(
+                    request.request_code
+                    ||
+                    `YC${request.id}`
+                  )}
 
                 </div>
 
 
-                <div class="info-box">
+                <div class="student-name">
 
-                  <div class="info-label">
-                    Thời lượng
-                  </div>
-
-                  <div class="info-value">
-
-                    ${escapeHtml(
-                      request.duration_minutes
-                      ||
-                      60
-                    )}
-                    phút
-
-                  </div>
+                  ${escapeHtml(
+                    student.full_name
+                    ||
+                    "Học viên"
+                  )}
 
                 </div>
 
 
-                <div class="info-box">
+                <div class="student-code">
 
-                  <div class="info-label">
-                    Tỉnh / Thành
-                  </div>
+                  ${escapeHtml(
+                    student.student_code
+                    ||
+                    ""
+                  )}
 
-                  <div class="info-value">
-
-                    ${escapeHtml(
-                      request.requested_area
-                      ||
-                      "—"
-                    )}
-
-                  </div>
-
-                </div>
-
-
-                <div class="info-box">
-
-                  <div class="info-label">
-                    Phường / Xã
-                  </div>
-
-                  <div class="info-value">
-
-                    ${escapeHtml(
-                      request.requested_ward
-                      ||
-                      "—"
-                    )}
-
-                  </div>
+                  ${
+                    registration.registration_code
+                      ?
+                      ` · ${escapeHtml(
+                        registration.registration_code
+                      )}`
+                      :
+                      ""
+                  }
 
                 </div>
 
@@ -1820,40 +1623,251 @@
               </div>
 
 
-              <div class="note-box">
+              <div class="status">
+
+                CHỜ COACH
+
+              </div>
+
+
+            </div>
+
+
+            <div class="info-grid">
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Gói học
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    registration.package_name
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Buổi
+
+                </div>
+
+                <div class="info-value">
+
+                  Buổi ${escapeHtml(
+                    request.session_no
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Ngày / giờ
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    formatDate(
+                      request.requested_date
+                    )
+                  )}
+
+                  ·
+
+                  ${escapeHtml(
+                    formatTime(
+                      request.requested_time
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Thời lượng
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    request.duration_minutes
+                    ||
+                    60
+                  )}
+                  phút
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Tỉnh / Thành
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    request.requested_area
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div class="info-box">
+
+                <div class="info-label">
+
+                  Phường / Xã
+
+                </div>
+
+                <div class="info-value">
+
+                  ${escapeHtml(
+                    request.requested_ward
+                    ||
+                    "—"
+                  )}
+
+                </div>
+
+              </div>
+
+
+            </div>
+
+
+            <div class="note-box">
+
+              ${
+                request.note
+                  ?
+                  `
+                    <strong>
+                      Ghi chú Học viên:
+                    </strong>
+
+                    ${escapeHtml(
+                      request.note
+                    )}
+                  `
+                  :
+                  "Học viên không có ghi chú."
+              }
+
+            </div>
+
+
+            <label>
+
+              Sân học
+
+            </label>
+
+
+            <select
+              class="court-select"
+              ${
+                matchingCourts.length > 0
+                  ?
+                  ""
+                  :
+                  "disabled"
+              }
+            >
+
+              <option value="">
 
                 ${
-                  request.note
-
+                  matchingCourts.length > 0
                     ?
-
-                    `
-                      <strong>
-                        Ghi chú Học viên:
-                      </strong>
-
-                      ${escapeHtml(
-                        request.note
-                      )}
-                    `
-
+                    "Chọn sân"
                     :
-
-                    "Học viên không có ghi chú."
+                    "Không có sân phù hợp"
                 }
 
-              </div>
+              </option>
+
+              ${courtOptions}
+
+            </select>
 
 
-              <label>
+            <div class="court-note">
 
-                Sân học *
+              ${
+                matchingCourts.length > 0
 
-              </label>
+                  ?
+
+                  `${matchingCourts.length} sân phù hợp với khu vực Học viên yêu cầu.`
+
+                  :
+
+                  "⚠ Chưa có sân đã xác minh đúng Tỉnh/Phường. Coach vẫn có thể TỪ CHỐI yêu cầu."
+              }
+
+            </div>
 
 
-              <select
-                class="court-select"
+            <textarea
+              class="coach-note"
+              placeholder="Nhập ghi chú khi duyệt hoặc nhập LÝ DO TỪ CHỐI tại đây..."
+            ></textarea>
+
+
+            <div class="coach-note-help">
+
+              Khi từ chối, Coach bắt buộc nhập lý do vào ô trên để Học viên biết và chọn lịch khác.
+
+            </div>
+
+
+            <div class="actions">
+
+
+              <button
+                type="button"
+                class="approve"
+                data-action="approve"
+                data-request-id="${request.id}"
                 ${
                   matchingCourts.length > 0
                     ?
@@ -1863,133 +1877,35 @@
                 }
               >
 
-                <option value="">
-                  Chọn sân
-                </option>
+                ✅ DUYỆT & TẠO BUỔI HỌC
 
-                ${courtOptions}
-
-              </select>
+              </button>
 
 
-              <div class="court-note">
+              <button
+                type="button"
+                class="reject"
+                data-action="reject"
+                data-request-id="${request.id}"
+              >
 
-                ${
-                  matchingCourts.length > 0
+                ✕ TỪ CHỐI
 
-                    ?
-
-                    `${matchingCourts.length} sân phù hợp với khu vực yêu cầu.`
-
-                    :
-
-                    "⚠ Chưa có sân đã xác minh đúng Tỉnh/Phường của yêu cầu này."
-                }
-
-              </div>
+              </button>
 
 
-              <textarea
-                class="coach-note"
-                placeholder="Ghi chú của Coach nếu cần..."
-              ></textarea>
+            </div>
+
+          `;
 
 
-              <div class="actions">
+        listEl.appendChild(
+          card
+        );
 
-
-                <button
-                  type="button"
-                  class="approve"
-                  ${
-                    matchingCourts.length > 0
-                      ?
-                      ""
-                      :
-                      "disabled"
-                  }
-                >
-
-                  ✅ DUYỆT & TẠO BUỔI HỌC
-
-                </button>
-
-
-                <button
-                  type="button"
-                  class="reject"
-                >
-
-                  ✕ TỪ CHỐI
-
-                </button>
-
-
-              </div>
-
-            `;
-
-
-          listEl.appendChild(
-            card
-          );
-
-
-        }
-        catch (renderError) {
-
-
-          console.error(
-            "CARD RENDER ERROR:",
-            renderError,
-            request
-          );
-
-
-          const errorCard =
-            document.createElement(
-              "article"
-            );
-
-
-          errorCard.className =
-            "request-card";
-
-
-          errorCard.innerHTML =
-            `
-
-              <div class="request-code">
-
-                ${escapeHtml(
-                  request.request_code
-                  ||
-                  `YC${request.id}`
-                )}
-
-              </div>
-
-              <div class="note-box">
-
-                ⚠ Yêu cầu này có dữ liệu hiển thị chưa chuẩn,
-                nhưng dữ liệu vẫn còn trong hệ thống.
-
-              </div>
-
-            `;
-
-
-          listEl.appendChild(
-            errorCard
-          );
-
-        }
 
       }
     );
-
-
-    bindActions();
 
 
     showMessage(
@@ -2000,297 +1916,373 @@
 
 
   /* =====================================================
-     ACTIONS
+     CLICK ACTION
+     Dùng event delegation để nút luôn hoạt động
+     kể cả sau khi danh sách được render lại.
   ====================================================== */
 
-  function bindActions() {
+  listEl.addEventListener(
+    "click",
+    async function (event) {
 
 
-    const cards =
-      document.querySelectorAll(
-        ".request-card[data-request-id]"
-      );
+      const button =
+        event.target.closest(
+          "button[data-action]"
+        );
 
 
-    cards.forEach(
-      card => {
+      if (!button) {
+
+        return;
+
+      }
 
 
-        const requestId =
+      event.preventDefault();
+
+
+      const action =
+        button.dataset.action;
+
+
+      const requestId =
+        Number(
+          button.dataset.requestId
+        );
+
+
+      const card =
+        button.closest(
+          ".request-card"
+        );
+
+
+      if (
+        !card
+        ||
+        !requestId
+      ) {
+
+        return;
+
+      }
+
+
+      const courtSelect =
+        card.querySelector(
+          ".court-select"
+        );
+
+
+      const coachNote =
+        card.querySelector(
+          ".coach-note"
+        );
+
+
+      const approveBtn =
+        card.querySelector(
+          '[data-action="approve"]'
+        );
+
+
+      const rejectBtn =
+        card.querySelector(
+          '[data-action="reject"]'
+        );
+
+
+      /* =================================================
+         DUYỆT
+      ================================================== */
+
+      if (
+        action === "approve"
+      ) {
+
+
+        const courtId =
           Number(
-            card.dataset.requestId
+            courtSelect?.value
+            ||
+            0
           );
 
 
-        const courtSelect =
-          card.querySelector(
-            ".court-select"
+        if (!courtId) {
+
+
+          showMessage(
+            "Hãy chọn sân trước khi duyệt.",
+            true
           );
 
 
-        const coachNote =
-          card.querySelector(
-            ".coach-note"
+          return;
+
+        }
+
+
+        approveBtn.disabled =
+          true;
+
+
+        rejectBtn.disabled =
+          true;
+
+
+        approveBtn.textContent =
+          "ĐANG TẠO BUỔI HỌC...";
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "coach_approve_session_request",
+            {
+
+              p_request_id:
+                requestId,
+
+              p_court_id:
+                courtId,
+
+              p_coach_note:
+                String(
+                  coachNote?.value
+                  ||
+                  ""
+                ).trim()
+                ||
+                null
+
+            }
           );
 
 
-        const approveBtn =
-          card.querySelector(
-            ".approve"
+        if (error) {
+
+
+          console.error(
+            "APPROVE ERROR:",
+            error
           );
 
 
-        const rejectBtn =
-          card.querySelector(
-            ".reject"
+          showMessage(
+            error.message
+            ||
+            "Không duyệt được yêu cầu.",
+            true
           );
 
 
-        /* =================================================
-           DUYỆT
-        ================================================== */
+          approveBtn.disabled =
+            false;
+
+
+          rejectBtn.disabled =
+            false;
+
+
+          approveBtn.textContent =
+            "✅ DUYỆT & TẠO BUỔI HỌC";
+
+
+          return;
+
+        }
+
+
+        showMessage(
+          `✓ Đã duyệt và tạo buổi học ID ${data}.`
+        );
+
+
+        await loadRequests();
+
+
+        return;
+
+      }
+
+
+      /* =================================================
+         TỪ CHỐI
+      ================================================== */
+
+      if (
+        action === "reject"
+      ) {
+
+
+        const reason =
+          String(
+            coachNote?.value
+            ||
+            ""
+          ).trim();
+
+
+        /*
+          KHÔNG DÙNG WINDOW.PROMPT.
+          Coach nhập lý do ngay trên trang.
+        */
+
+        if (!reason) {
+
+
+          showMessage(
+            "Hãy nhập lý do từ chối vào ô Ghi chú của Coach trước.",
+            true
+          );
+
+
+          if (coachNote) {
+
+
+            coachNote.focus();
+
+
+            coachNote.placeholder =
+              "Ví dụ: Coach bận khung giờ này, vui lòng chọn lịch khác.";
+
+
+          }
+
+
+          return;
+
+        }
+
+
+        /*
+          Hỏi xác nhận bằng confirm.
+          Nếu môi trường chặn confirm thì
+          người dùng vẫn có thể bỏ đoạn này sau.
+        */
+
+        const confirmed =
+          window.confirm(
+            "Xác nhận từ chối yêu cầu lịch học này?"
+          );
+
+
+        if (!confirmed) {
+
+          return;
+
+        }
+
 
         if (approveBtn) {
 
+          approveBtn.disabled =
+            true;
 
-          approveBtn.addEventListener(
-            "click",
-            async function () {
-
-
-              const courtId =
-                Number(
-                  courtSelect?.value
-                  ||
-                  0
-                );
+        }
 
 
-              if (!courtId) {
+        rejectBtn.disabled =
+          true;
 
 
-                showMessage(
-                  "Hãy chọn sân trước khi duyệt.",
-                  true
-                );
+        rejectBtn.textContent =
+          "ĐANG TỪ CHỐI...";
 
 
-                return;
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "coach_reject_session_request",
+            {
 
-              }
+              p_request_id:
+                requestId,
 
+              p_reason:
+                reason
+
+            }
+          );
+
+
+        if (error) {
+
+
+          console.error(
+            "REJECT ERROR:",
+            error
+          );
+
+
+          showMessage(
+            error.message
+            ||
+            "Không từ chối được yêu cầu.",
+            true
+          );
+
+
+          if (approveBtn) {
+
+            /*
+              Chỉ mở lại DUYỆT nếu có sân.
+            */
+
+            if (
+              courtSelect
+              &&
+              !courtSelect.disabled
+            ) {
 
               approveBtn.disabled =
-                true;
-
-
-              rejectBtn.disabled =
-                true;
-
-
-              approveBtn.textContent =
-                "ĐANG TẠO BUỔI HỌC...";
-
-
-              const {
-                data,
-                error
-              } =
-                await sb.rpc(
-                  "coach_approve_session_request",
-                  {
-
-                    p_request_id:
-                      requestId,
-
-                    p_court_id:
-                      courtId,
-
-                    p_coach_note:
-                      coachNote?.value.trim()
-                      ||
-                      null
-
-                  }
-                );
-
-
-              if (error) {
-
-
-                console.error(
-                  "APPROVE ERROR:",
-                  error
-                );
-
-
-                showMessage(
-                  error.message
-                  ||
-                  "Không duyệt được yêu cầu.",
-                  true
-                );
-
-
-                approveBtn.disabled =
-                  false;
-
-
-                rejectBtn.disabled =
-                  false;
-
-
-                approveBtn.textContent =
-                  "✅ DUYỆT & TẠO BUỔI HỌC";
-
-
-                return;
-
-              }
-
-
-              showMessage(
-                `✓ Đã duyệt và tạo buổi học ID ${data}.`
-              );
-
-
-              await loadRequests();
+                false;
 
             }
-          );
+
+          }
+
+
+          rejectBtn.disabled =
+            false;
+
+
+          rejectBtn.textContent =
+            "✕ TỪ CHỐI";
+
+
+          return;
 
         }
 
 
-        /* =================================================
-           TỪ CHỐI
-        ================================================== */
-
-        if (rejectBtn) {
-
-
-          rejectBtn.addEventListener(
-            "click",
-            async function () {
+        console.log(
+          "REJECT RESULT:",
+          data
+        );
 
 
-              const reason =
-                window.prompt(
-                  "Nhập lý do từ chối yêu cầu lịch học:"
-                );
+        showMessage(
+          "✓ Đã từ chối yêu cầu lịch học."
+        );
 
 
-              if (reason === null) {
-
-                return;
-
-              }
+        await loadRequests();
 
 
-              if (
-                !reason.trim()
-              ) {
-
-
-                showMessage(
-                  "Coach cần nhập lý do từ chối.",
-                  true
-                );
-
-
-                return;
-
-              }
-
-
-              if (approveBtn) {
-
-                approveBtn.disabled =
-                  true;
-
-              }
-
-
-              rejectBtn.disabled =
-                true;
-
-
-              rejectBtn.textContent =
-                "ĐANG TỪ CHỐI...";
-
-
-              const {
-                error
-              } =
-                await sb.rpc(
-                  "coach_reject_session_request",
-                  {
-
-                    p_request_id:
-                      requestId,
-
-                    p_reason:
-                      reason.trim()
-
-                  }
-                );
-
-
-              if (error) {
-
-
-                console.error(
-                  "REJECT ERROR:",
-                  error
-                );
-
-
-                showMessage(
-                  error.message
-                  ||
-                  "Không từ chối được yêu cầu.",
-                  true
-                );
-
-
-                if (approveBtn) {
-
-                  approveBtn.disabled =
-                    false;
-
-                }
-
-
-                rejectBtn.disabled =
-                  false;
-
-
-                rejectBtn.textContent =
-                  "✕ TỪ CHỐI";
-
-
-                return;
-
-              }
-
-
-              showMessage(
-                "✓ Đã từ chối yêu cầu lịch học."
-              );
-
-
-              await loadRequests();
-
-            }
-          );
-
-        }
-
+        return;
 
       }
-    );
 
-  }
+
+    }
+  );
 
 
   /* =====================================================
