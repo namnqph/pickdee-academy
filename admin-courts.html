@@ -29,6 +29,11 @@
     }
 
 
+    html {
+      color-scheme: dark;
+    }
+
+
     body {
 
       margin: 0;
@@ -64,8 +69,11 @@
 
       display: flex;
 
-      justify-content: space-between;
-      align-items: center;
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
 
       border-bottom:
         1px solid rgba(255,255,255,.12);
@@ -76,6 +84,7 @@
     .brand {
 
       font-size: 19px;
+
       font-weight: 900;
 
     }
@@ -91,7 +100,9 @@
     .top-actions {
 
       display: flex;
+
       align-items: center;
+
       gap: 12px;
 
     }
@@ -102,7 +113,8 @@
       color:
         rgba(255,255,255,.72);
 
-      font-size: 14px;
+      font-size:
+        14px;
 
     }
 
@@ -316,6 +328,36 @@
 
       font-size:
         15px;
+
+    }
+
+
+    select {
+
+      color-scheme:
+        dark;
+
+    }
+
+
+    select option {
+
+      color:
+        white;
+
+      background:
+        #08111d;
+
+    }
+
+
+    select:disabled {
+
+      opacity:
+        .55;
+
+      cursor:
+        not-allowed;
 
     }
 
@@ -719,7 +761,7 @@
   <div class="sub">
 
     Quản lý sân học và giá thuê sân.
-    Giá này sẽ tự động được lấy khi tạo buổi học.
+    Khu vực và Phường/Xã sử dụng chung danh mục với Học viên và Coach.
 
   </div>
 
@@ -808,6 +850,8 @@
       <div class="form-grid">
 
 
+        <!-- TÊN SÂN -->
+
         <div class="field">
 
           <label>
@@ -824,20 +868,26 @@
         </div>
 
 
+        <!-- TỈNH / THÀNH -->
+
         <div class="field">
 
           <label>
             Khu vực / Tỉnh
           </label>
 
-          <input
-            id="courtArea"
-            type="text"
-            placeholder="Ví dụ: Bắc Giang"
-          >
+          <select id="courtArea">
+
+            <option value="">
+              Đang tải Tỉnh/Thành...
+            </option>
+
+          </select>
 
         </div>
 
+
+        <!-- XÃ / PHƯỜNG -->
 
         <div class="field">
 
@@ -845,14 +895,21 @@
             Phường / xã
           </label>
 
-          <input
+          <select
             id="courtWard"
-            type="text"
-            placeholder="Không bắt buộc"
+            disabled
           >
+
+            <option value="">
+              Chọn Tỉnh/Thành trước
+            </option>
+
+          </select>
 
         </div>
 
+
+        <!-- GIÁ -->
 
         <div class="field">
 
@@ -875,6 +932,8 @@
       </div>
 
 
+      <!-- ĐỊA CHỈ -->
+
       <div class="field">
 
         <label>
@@ -884,11 +943,13 @@
         <input
           id="courtAddress"
           type="text"
-          placeholder="Địa chỉ sân"
+          placeholder="Địa chỉ cụ thể của sân"
         >
 
       </div>
 
+
+      <!-- TRẠNG THÁI -->
 
       <div class="field">
 
@@ -1027,12 +1088,9 @@
     );
 
 
-  let courts =
-    [];
+  let courts = [];
 
-
-  let editingCourtId =
-    null;
+  let editingCourtId = null;
 
 
   const courtBody =
@@ -1135,26 +1193,11 @@
     return String(
       value ?? ""
     )
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
   }
 
@@ -1231,6 +1274,305 @@
     return;
 
   }
+
+
+  /* =====================================
+     LOAD TỈNH / THÀNH
+  ====================================== */
+
+
+  async function loadAreas() {
+
+
+    courtArea.disabled =
+      true;
+
+
+    courtArea.innerHTML =
+      `
+        <option value="">
+          Đang tải Tỉnh/Thành...
+        </option>
+      `;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("dm_khu_vuc")
+        .select(
+          "ma_khu_vuc, tinh_thanh"
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        )
+        .order(
+          "tinh_thanh",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi tải khu vực:",
+        error
+      );
+
+
+      courtArea.innerHTML =
+        `
+          <option value="">
+            Không tải được Tỉnh/Thành
+          </option>
+        `;
+
+
+      showMessage(
+        "Không tải được danh sách Tỉnh/Thành.",
+        true
+      );
+
+
+      return false;
+
+    }
+
+
+    courtArea.innerHTML =
+      `
+        <option value="">
+          Chọn Tỉnh/Thành
+        </option>
+      `;
+
+
+    (data || []).forEach(
+      area => {
+
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          area.tinh_thanh;
+
+
+        option.textContent =
+          area.tinh_thanh;
+
+
+        option.dataset.maKhuVuc =
+          area.ma_khu_vuc;
+
+
+        courtArea.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    courtArea.disabled =
+      false;
+
+
+    return true;
+
+  }
+
+
+  /* =====================================
+     LOAD XÃ / PHƯỜNG
+  ====================================== */
+
+
+  async function loadWards(
+    maKhuVuc,
+    selectedWard = ""
+  ) {
+
+
+    courtWard.disabled =
+      true;
+
+
+    courtWard.innerHTML =
+      `
+        <option value="">
+          Đang tải Xã/Phường...
+        </option>
+      `;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("dm_xa_phuong")
+        .select(
+          "ma_xa_phuong, ten_xa_phuong"
+        )
+        .eq(
+          "ma_khu_vuc",
+          maKhuVuc
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        )
+        .order(
+          "ten_xa_phuong",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi tải xã/phường:",
+        error
+      );
+
+
+      courtWard.innerHTML =
+        `
+          <option value="">
+            Không tải được Xã/Phường
+          </option>
+        `;
+
+
+      showMessage(
+        "Không tải được danh sách Xã/Phường.",
+        true
+      );
+
+
+      return false;
+
+    }
+
+
+    courtWard.innerHTML =
+      `
+        <option value="">
+          Chọn Xã/Phường
+        </option>
+      `;
+
+
+    (data || []).forEach(
+      ward => {
+
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          ward.ten_xa_phuong;
+
+
+        option.textContent =
+          ward.ten_xa_phuong;
+
+
+        option.dataset.maXaPhuong =
+          ward.ma_xa_phuong;
+
+
+        courtWard.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    courtWard.disabled =
+      false;
+
+
+    if (selectedWard) {
+
+      courtWard.value =
+        selectedWard;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================
+     KHI ĐỔI TỈNH / THÀNH
+  ====================================== */
+
+
+  courtArea.addEventListener(
+    "change",
+    async function () {
+
+
+      showMessage("");
+
+
+      courtWard.disabled =
+        true;
+
+
+      courtWard.innerHTML =
+        `
+          <option value="">
+            Chọn Tỉnh/Thành trước
+          </option>
+        `;
+
+
+      const selectedOption =
+        courtArea.options[
+          courtArea.selectedIndex
+        ];
+
+
+      const maKhuVuc =
+        selectedOption
+          ?.dataset
+          ?.maKhuVuc;
+
+
+      if (!maKhuVuc) {
+
+        return;
+
+      }
+
+
+      await loadWards(
+        maKhuVuc
+      );
+
+    }
+  );
 
 
   /* =====================================
@@ -1326,6 +1668,7 @@
     if (
       courts.length === 0
     ) {
+
 
       courtBody.innerHTML =
         `
@@ -1431,9 +1774,7 @@
                 <button
                   type="button"
                   class="edit-btn"
-                  data-id="${
-                    court.id
-                  }"
+                  data-id="${court.id}"
                 >
 
                   SỬA
@@ -1452,6 +1793,28 @@
 
 
   /* =====================================
+     RESET PHƯỜNG / XÃ
+  ====================================== */
+
+
+  function resetWardSelect() {
+
+
+    courtWard.disabled =
+      true;
+
+
+    courtWard.innerHTML =
+      `
+        <option value="">
+          Chọn Tỉnh/Thành trước
+        </option>
+      `;
+
+  }
+
+
+  /* =====================================
      RESET FORM
   ====================================== */
 
@@ -1464,6 +1827,13 @@
 
 
     courtForm.reset();
+
+
+    courtArea.value =
+      "";
+
+
+    resetWardSelect();
 
 
     courtStatus.value =
@@ -1485,13 +1855,68 @@
 
 
   /* =====================================
+     LOAD KHU VỰC KHI SỬA
+  ====================================== */
+
+
+  async function applyAreaAndWard(
+    areaName,
+    wardName
+  ) {
+
+
+    courtArea.value =
+      areaName || "";
+
+
+    if (!areaName) {
+
+      resetWardSelect();
+
+      return;
+
+    }
+
+
+    const selectedOption =
+      courtArea.options[
+        courtArea.selectedIndex
+      ];
+
+
+    const maKhuVuc =
+      selectedOption
+        ?.dataset
+        ?.maKhuVuc;
+
+
+    if (!maKhuVuc) {
+
+
+      resetWardSelect();
+
+
+      return;
+
+    }
+
+
+    await loadWards(
+      maKhuVuc,
+      wardName || ""
+    );
+
+  }
+
+
+  /* =====================================
      EDIT
   ====================================== */
 
 
   courtBody.addEventListener(
     "click",
-    function (event) {
+    async function (event) {
 
 
       const button =
@@ -1501,7 +1926,9 @@
 
 
       if (!button) {
+
         return;
+
       }
 
 
@@ -1516,7 +1943,9 @@
 
 
       if (!court) {
+
         return;
+
       }
 
 
@@ -1526,14 +1955,6 @@
 
       courtName.value =
         court.name || "";
-
-
-      courtArea.value =
-        court.area || "";
-
-
-      courtWard.value =
-        court.ward || "";
 
 
       courtAddress.value =
@@ -1549,6 +1970,17 @@
         "Hoạt động";
 
 
+      /*
+        Tự chọn đúng Tỉnh/Thành
+        rồi tải đúng Xã/Phường.
+      */
+
+      await applyAreaAndWard(
+        court.area,
+        court.ward
+      );
+
+
       formTitle.textContent =
         "✏️ Sửa sân";
 
@@ -1562,17 +1994,33 @@
 
 
       window.scrollTo({
+
         top: 0,
+
         behavior: "smooth"
+
       });
 
     }
   );
 
 
+  /* =====================================
+     HỦY SỬA
+  ====================================== */
+
+
   cancelBtn.addEventListener(
     "click",
-    resetForm
+    function () {
+
+
+      resetForm();
+
+
+      showMessage("");
+
+    }
   );
 
 
@@ -1599,10 +2047,12 @@
         !courtName.value.trim()
       ) {
 
+
         showMessage(
           "Vui lòng nhập tên sân.",
           true
         );
+
 
         return;
 
@@ -1615,14 +2065,25 @@
         price < 0
       ) {
 
+
         showMessage(
           "Giá sân không hợp lệ.",
           true
         );
 
+
         return;
 
       }
+
+
+      /*
+        Ghi nhớ đang sửa hay tạo mới
+        trước khi reset form.
+      */
+
+      const wasEditing =
+        editingCourtId !== null;
 
 
       saveBtn.disabled =
@@ -1630,7 +2091,7 @@
 
 
       showMessage(
-        editingCourtId
+        wasEditing
           ?
           "Đang cập nhật sân..."
           :
@@ -1655,17 +2116,20 @@
                 courtName.value.trim(),
 
               p_area:
-                courtArea.value.trim()
+                courtArea.value
+                  .trim()
                 ||
                 null,
 
               p_ward:
-                courtWard.value.trim()
+                courtWard.value
+                  .trim()
                 ||
                 null,
 
               p_address:
-                courtAddress.value.trim()
+                courtAddress.value
+                  .trim()
                 ||
                 null,
 
@@ -1693,11 +2157,11 @@
 
 
         showMessage(
-          editingCourtId
+          wasEditing
             ?
-            "✓ Đã cập nhật sân."
+            "✓ Đã cập nhật sân thành công."
             :
-            "✓ Đã lưu sân thành công."
+            "✓ Đã thêm sân thành công."
         );
 
 
@@ -1734,7 +2198,6 @@
 
       }
 
-
     }
   );
 
@@ -1768,6 +2231,25 @@
   try {
 
 
+    /*
+      Load danh mục tỉnh trước.
+    */
+
+    const areaLoaded =
+      await loadAreas();
+
+
+    if (!areaLoaded) {
+
+      return;
+
+    }
+
+
+    /*
+      Sau đó load danh sách sân.
+    */
+
     await loadCourts();
 
 
@@ -1783,7 +2265,7 @@
 
 
     showMessage(
-      "Không tải được danh sách sân: "
+      "Không tải được dữ liệu: "
       +
       (
         error.message ||
@@ -1791,7 +2273,6 @@
       ),
       true
     );
-
 
   }
 
