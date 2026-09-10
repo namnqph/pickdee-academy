@@ -29,11 +29,9 @@
       box-sizing: border-box;
     }
 
-
     html {
       color-scheme: dark;
     }
-
 
     body {
 
@@ -207,12 +205,16 @@
 
 
     .success {
+
       color: #d8ff45;
+
     }
 
 
     .error {
+
       color: #ffaaaa;
+
     }
 
 
@@ -714,36 +716,262 @@
   }
 
 
-  function formatDate(value) {
+  /* =====================================================
+     SAFE DATE
+     Không để ngày lỗi làm chết cả trang
+  ====================================================== */
+
+  function parseSafeDate(value) {
+
 
     if (!value) {
-      return "—";
+
+      return null;
+
     }
 
 
-    return new Intl.DateTimeFormat(
-      "vi-VN"
-    ).format(
-      new Date(
-        `${value}T00:00:00`
+    if (
+      value instanceof Date
+    ) {
+
+      return Number.isNaN(
+        value.getTime()
       )
-    );
+        ?
+        null
+        :
+        value;
+
+    }
+
+
+    const raw =
+      String(value).trim();
+
+
+    /*
+      YYYY-MM-DD
+    */
+
+    let match =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/
+      );
+
+
+    if (match) {
+
+
+      const year =
+        Number(match[1]);
+
+
+      const month =
+        Number(match[2]);
+
+
+      const day =
+        Number(match[3]);
+
+
+      const date =
+        new Date(
+          year,
+          month - 1,
+          day
+        );
+
+
+      if (
+        date.getFullYear() === year
+        &&
+        date.getMonth() === month - 1
+        &&
+        date.getDate() === day
+      ) {
+
+        return date;
+
+      }
+
+    }
+
+
+    /*
+      DD/MM/YYYY
+    */
+
+    match =
+      raw.match(
+        /^(\d{2})\/(\d{2})\/(\d{4})$/
+      );
+
+
+    if (match) {
+
+
+      const day =
+        Number(match[1]);
+
+
+      const month =
+        Number(match[2]);
+
+
+      const year =
+        Number(match[3]);
+
+
+      const date =
+        new Date(
+          year,
+          month - 1,
+          day
+        );
+
+
+      if (
+        date.getFullYear() === year
+        &&
+        date.getMonth() === month - 1
+        &&
+        date.getDate() === day
+      ) {
+
+        return date;
+
+      }
+
+    }
+
+
+    /*
+      TIMESTAMP fallback
+    */
+
+    const fallback =
+      new Date(raw);
+
+
+    if (
+      !Number.isNaN(
+        fallback.getTime()
+      )
+    ) {
+
+      return fallback;
+
+    }
+
+
+    return null;
+
+  }
+
+
+  function formatDate(value) {
+
+
+    const date =
+      parseSafeDate(value);
+
+
+    if (!date) {
+
+      return value
+        ?
+        String(value)
+        :
+        "—";
+
+    }
+
+
+    try {
+
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }
+      ).format(date);
+
+
+    }
+    catch (error) {
+
+
+      console.warn(
+        "DATE FORMAT ERROR:",
+        value,
+        error
+      );
+
+
+      return String(value);
+
+    }
 
   }
 
 
   function formatTime(value) {
 
+
     if (!value) {
+
       return "—";
+
     }
 
 
-    return String(value)
-      .slice(
-        0,
-        5
+    const raw =
+      String(value).trim();
+
+
+    /*
+      09:00
+      hoặc
+      09:00:00
+    */
+
+    const match =
+      raw.match(
+        /^(\d{1,2}):(\d{2})/
       );
+
+
+    if (match) {
+
+
+      const hour =
+        String(
+          Number(match[1])
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      const minute =
+        match[2];
+
+
+      return `${hour}:${minute}`;
+
+    }
+
+
+    /*
+      Nếu format lạ:
+      hiện dữ liệu gốc thay vì crash
+    */
+
+    return raw;
 
   }
 
@@ -883,7 +1111,7 @@
 
 
     /* =================================================
-       1. REQUEST
+       REQUEST
     ================================================== */
 
     const {
@@ -932,6 +1160,7 @@
 
     if (requestError) {
 
+
       console.error(
         "REQUEST ERROR:",
         requestError
@@ -979,6 +1208,7 @@
       requests.length === 0
     ) {
 
+
       showMessage("");
 
 
@@ -999,7 +1229,7 @@
 
 
     /* =================================================
-       2. REGISTRATIONS + STUDENT
+       REGISTRATIONS
     ================================================== */
 
     const registrationIds =
@@ -1036,12 +1266,7 @@
             id,
             registration_code,
             package_name,
-            student_id,
-            students (
-              id,
-              student_code,
-              full_name
-            )
+            student_id
           `)
           .in(
             "id",
@@ -1051,13 +1276,16 @@
 
       if (error) {
 
-        console.error(
+
+        console.warn(
           "REGISTRATION ERROR:",
           error
         );
 
+
       }
       else {
+
 
         registrations =
           data || [];
@@ -1084,7 +1312,89 @@
 
 
     /* =================================================
-       3. COURTS
+       STUDENTS
+    ================================================== */
+
+    const studentIds =
+      [
+        ...new Set(
+          requests
+            .map(
+              item =>
+                Number(
+                  item.student_id
+                )
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    let students =
+      [];
+
+
+    if (
+      studentIds.length > 0
+    ) {
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from("students")
+          .select(`
+            id,
+            student_code,
+            full_name
+          `)
+          .in(
+            "id",
+            studentIds
+          );
+
+
+      if (error) {
+
+
+        console.warn(
+          "STUDENT ERROR:",
+          error
+        );
+
+
+      }
+      else {
+
+
+        students =
+          data || [];
+
+      }
+
+    }
+
+
+    const studentMap =
+      new Map();
+
+
+    students.forEach(
+      item => {
+
+        studentMap.set(
+          Number(item.id),
+          item
+        );
+
+      }
+    );
+
+
+    /* =================================================
+       COURTS
     ================================================== */
 
     let courts =
@@ -1133,13 +1443,16 @@
 
     if (courtError) {
 
-      console.error(
+
+      console.warn(
         "COURT ERROR:",
         courtError
       );
 
+
     }
     else {
+
 
       courts =
         courtRows || [];
@@ -1148,7 +1461,7 @@
 
 
     /* =================================================
-       4. RENDER
+       RENDER
     ================================================== */
 
     listEl.innerHTML =
@@ -1159,426 +1472,388 @@
       request => {
 
 
-        const registration =
-          registrationMap.get(
-            Number(
-              request.registration_id
+        try {
+
+
+          const registration =
+            registrationMap.get(
+              Number(
+                request.registration_id
+              )
             )
-          )
-          ||
-          {};
-
-
-        let student =
-          registration.students
-          ||
-          {};
-
-
-        /*
-          Supabase đôi khi trả relation dạng array.
-        */
-
-        if (
-          Array.isArray(student)
-        ) {
-
-          student =
-            student[0]
             ||
             {};
 
-        }
 
-
-        /*
-          Lọc sân ở frontend.
-
-          Chỉ sân:
-          - Hoạt động
-          - đã xác minh
-          - đúng tỉnh
-          - đúng phường
-        */
-
-        const matchingCourts =
-          courts.filter(
-            court => {
-
-
-              const sameArea =
-
-                !request.requested_area
-
-                ||
-
-                String(
-                  court.area || ""
-                ).trim()
-                ===
-                String(
-                  request.requested_area
-                ).trim();
-
-
-              const sameWard =
-
-                !request.requested_ward
-
-                ||
-
-                String(
-                  court.ward || ""
-                ).trim()
-                ===
-                String(
-                  request.requested_ward
-                ).trim();
-
-
-              return (
-                sameArea
-                &&
-                sameWard
-              );
-
-            }
-          );
-
-
-        const courtOptions =
-
-          matchingCourts.length > 0
-
-            ?
-
-            matchingCourts
-              .map(
-                court =>
-                  `
-                    <option value="${court.id}">
-
-                      ${escapeHtml(
-                        court.name
-                      )}
-
-                      ·
-
-                      ${escapeHtml(
-                        court.ward
-                        ||
-                        court.area
-                        ||
-                        ""
-                      )}
-
-                      ·
-
-                      ${money(
-                        court.price_per_session
-                      )}
-
-                    </option>
-                  `
+          const student =
+            studentMap.get(
+              Number(
+                request.student_id
               )
-              .join("")
+            )
+            ||
+            {};
 
-            :
 
-            `
-              <option value="">
-                Không có sân phù hợp
-              </option>
-            `;
+          /* =============================================
+             LỌC SÂN
+          ============================================== */
 
+          const matchingCourts =
+            courts.filter(
+              court => {
 
-        const card =
-          document.createElement(
-            "article"
-          );
 
-
-        card.className =
-          "request-card";
-
-
-        card.dataset.requestId =
-          request.id;
-
-
-        card.innerHTML =
-          `
-
-            <div class="request-head">
-
-
-              <div>
-
-
-                <div class="request-code">
-
-                  ${escapeHtml(
-                    request.request_code
-                    ||
-                    `YC${request.id}`
-                  )}
-
-                </div>
-
-
-                <div class="student-name">
-
-                  ${escapeHtml(
-                    student.full_name
-                    ||
-                    "Học viên"
-                  )}
-
-                </div>
-
-
-                <div class="student-code">
-
-                  ${escapeHtml(
-                    student.student_code
-                    ||
-                    ""
-                  )}
-
-                  ${
-                    registration.registration_code
-
-                      ?
-
-                      ` · ${escapeHtml(
-                        registration.registration_code
-                      )}`
-
-                      :
-
-                      ""
-                  }
-
-                </div>
-
-
-              </div>
-
-
-              <div class="status">
-
-                CHỜ COACH
-
-              </div>
-
-
-            </div>
-
-
-            <div class="info-grid">
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Gói học
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
-                    registration.package_name
-                    ||
-                    "—"
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Buổi
-                </div>
-
-                <div class="info-value">
-
-                  Buổi ${escapeHtml(
-                    request.session_no
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Ngày / giờ
-                </div>
-
-                <div class="info-value">
-
-                  ${formatDate(
-                    request.requested_date
-                  )}
-
-                  ·
-
-                  ${formatTime(
-                    request.requested_time
-                  )}
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Thời lượng
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
-                    request.duration_minutes
-                    ||
-                    60
-                  )}
-                  phút
-
-                </div>
-
-              </div>
-
-
-              <div class="info-box">
-
-                <div class="info-label">
-                  Tỉnh / Thành
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
+                const requestArea =
+                  String(
                     request.requested_area
                     ||
-                    "—"
-                  )}
-
-                </div>
-
-              </div>
+                    ""
+                  ).trim();
 
 
-              <div class="info-box">
-
-                <div class="info-label">
-                  Phường / Xã
-                </div>
-
-                <div class="info-value">
-
-                  ${escapeHtml(
+                const requestWard =
+                  String(
                     request.requested_ward
                     ||
-                    "—"
-                  )}
+                    ""
+                  ).trim();
+
+
+                const courtArea =
+                  String(
+                    court.area
+                    ||
+                    ""
+                  ).trim();
+
+
+                const courtWard =
+                  String(
+                    court.ward
+                    ||
+                    ""
+                  ).trim();
+
+
+                const sameArea =
+                  !requestArea
+                  ||
+                  courtArea === requestArea;
+
+
+                const sameWard =
+                  !requestWard
+                  ||
+                  courtWard === requestWard;
+
+
+                return (
+                  sameArea
+                  &&
+                  sameWard
+                );
+
+              }
+            );
+
+
+          const courtOptions =
+
+            matchingCourts.length > 0
+
+              ?
+
+              matchingCourts
+                .map(
+                  court =>
+                    `
+                      <option value="${court.id}">
+
+                        ${escapeHtml(
+                          court.name
+                        )}
+
+                        ·
+
+                        ${escapeHtml(
+                          court.ward
+                          ||
+                          court.area
+                          ||
+                          ""
+                        )}
+
+                        ·
+
+                        ${money(
+                          court.price_per_session
+                        )}
+
+                      </option>
+                    `
+                )
+                .join("")
+
+              :
+
+              `
+                <option value="">
+                  Không có sân phù hợp
+                </option>
+              `;
+
+
+          /* =============================================
+             CARD
+          ============================================== */
+
+          const card =
+            document.createElement(
+              "article"
+            );
+
+
+          card.className =
+            "request-card";
+
+
+          card.dataset.requestId =
+            request.id;
+
+
+          card.innerHTML =
+            `
+
+              <div class="request-head">
+
+
+                <div>
+
+
+                  <div class="request-code">
+
+                    ${escapeHtml(
+                      request.request_code
+                      ||
+                      `YC${request.id}`
+                    )}
+
+                  </div>
+
+
+                  <div class="student-name">
+
+                    ${escapeHtml(
+                      student.full_name
+                      ||
+                      "Học viên"
+                    )}
+
+                  </div>
+
+
+                  <div class="student-code">
+
+                    ${escapeHtml(
+                      student.student_code
+                      ||
+                      ""
+                    )}
+
+                    ${
+                      registration.registration_code
+
+                        ?
+
+                        ` · ${escapeHtml(
+                          registration.registration_code
+                        )}`
+
+                        :
+
+                        ""
+                    }
+
+                  </div>
+
 
                 </div>
+
+
+                <div class="status">
+
+                  CHỜ COACH
+
+                </div>
+
 
               </div>
 
 
-            </div>
+              <div class="info-grid">
 
 
-            <div class="note-box">
+                <div class="info-box">
 
-              ${
-                request.note
+                  <div class="info-label">
+                    Gói học
+                  </div>
 
-                  ?
-
-                  `
-                    <strong>
-                      Ghi chú Học viên:
-                    </strong>
+                  <div class="info-value">
 
                     ${escapeHtml(
-                      request.note
+                      registration.package_name
+                      ||
+                      "—"
                     )}
-                  `
 
-                  :
+                  </div>
 
-                  "Học viên không có ghi chú."
-              }
-
-            </div>
+                </div>
 
 
-            <label>
+                <div class="info-box">
 
-              Sân học *
+                  <div class="info-label">
+                    Buổi
+                  </div>
 
-            </label>
+                  <div class="info-value">
 
+                    Buổi ${escapeHtml(
+                      request.session_no
+                      ||
+                      "—"
+                    )}
 
-            <select
-              class="court-select"
-              ${
-                matchingCourts.length > 0
-                  ?
-                  ""
-                  :
-                  "disabled"
-              }
-            >
+                  </div>
 
-              <option value="">
-                Chọn sân
-              </option>
-
-              ${courtOptions}
-
-            </select>
+                </div>
 
 
-            <div class="court-note">
+                <div class="info-box">
 
-              ${
-                matchingCourts.length > 0
+                  <div class="info-label">
+                    Ngày / giờ
+                  </div>
 
-                  ?
+                  <div class="info-value">
 
-                  `${matchingCourts.length} sân phù hợp với khu vực yêu cầu.`
+                    ${escapeHtml(
+                      formatDate(
+                        request.requested_date
+                      )
+                    )}
 
-                  :
+                    ·
 
-                  "⚠ Chưa có sân đã xác minh đúng Tỉnh/Phường của yêu cầu này."
-              }
+                    ${escapeHtml(
+                      formatTime(
+                        request.requested_time
+                      )
+                    )}
 
-            </div>
+                  </div>
 
-
-            <textarea
-              class="coach-note"
-              placeholder="Ghi chú của Coach nếu cần..."
-            ></textarea>
-
-
-            <div class="actions">
+                </div>
 
 
-              <button
-                type="button"
-                class="approve"
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Thời lượng
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+                      request.duration_minutes
+                      ||
+                      60
+                    )}
+                    phút
+
+                  </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Tỉnh / Thành
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+                      request.requested_area
+                      ||
+                      "—"
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                  <div class="info-label">
+                    Phường / Xã
+                  </div>
+
+                  <div class="info-value">
+
+                    ${escapeHtml(
+                      request.requested_ward
+                      ||
+                      "—"
+                    )}
+
+                  </div>
+
+                </div>
+
+
+              </div>
+
+
+              <div class="note-box">
+
+                ${
+                  request.note
+
+                    ?
+
+                    `
+                      <strong>
+                        Ghi chú Học viên:
+                      </strong>
+
+                      ${escapeHtml(
+                        request.note
+                      )}
+                    `
+
+                    :
+
+                    "Học viên không có ghi chú."
+                }
+
+              </div>
+
+
+              <label>
+
+                Sân học *
+
+              </label>
+
+
+              <select
+                class="court-select"
                 ${
                   matchingCourts.length > 0
                     ?
@@ -1588,37 +1863,131 @@
                 }
               >
 
-                ✅ DUYỆT & TẠO BUỔI HỌC
+                <option value="">
+                  Chọn sân
+                </option>
 
-              </button>
+                ${courtOptions}
 
-
-              <button
-                type="button"
-                class="reject"
-              >
-
-                ✕ TỪ CHỐI
-
-              </button>
+              </select>
 
 
-            </div>
+              <div class="court-note">
 
-          `;
+                ${
+                  matchingCourts.length > 0
+
+                    ?
+
+                    `${matchingCourts.length} sân phù hợp với khu vực yêu cầu.`
+
+                    :
+
+                    "⚠ Chưa có sân đã xác minh đúng Tỉnh/Phường của yêu cầu này."
+                }
+
+              </div>
 
 
-        listEl.appendChild(
-          card
-        );
+              <textarea
+                class="coach-note"
+                placeholder="Ghi chú của Coach nếu cần..."
+              ></textarea>
+
+
+              <div class="actions">
+
+
+                <button
+                  type="button"
+                  class="approve"
+                  ${
+                    matchingCourts.length > 0
+                      ?
+                      ""
+                      :
+                      "disabled"
+                  }
+                >
+
+                  ✅ DUYỆT & TẠO BUỔI HỌC
+
+                </button>
+
+
+                <button
+                  type="button"
+                  class="reject"
+                >
+
+                  ✕ TỪ CHỐI
+
+                </button>
+
+
+              </div>
+
+            `;
+
+
+          listEl.appendChild(
+            card
+          );
+
+
+        }
+        catch (renderError) {
+
+
+          console.error(
+            "CARD RENDER ERROR:",
+            renderError,
+            request
+          );
+
+
+          const errorCard =
+            document.createElement(
+              "article"
+            );
+
+
+          errorCard.className =
+            "request-card";
+
+
+          errorCard.innerHTML =
+            `
+
+              <div class="request-code">
+
+                ${escapeHtml(
+                  request.request_code
+                  ||
+                  `YC${request.id}`
+                )}
+
+              </div>
+
+              <div class="note-box">
+
+                ⚠ Yêu cầu này có dữ liệu hiển thị chưa chuẩn,
+                nhưng dữ liệu vẫn còn trong hệ thống.
+
+              </div>
+
+            `;
+
+
+          listEl.appendChild(
+            errorCard
+          );
+
+        }
 
       }
     );
 
-
-    /* =================================================
-       5. BIND BUTTONS
-    ================================================== */
 
     bindActions();
 
@@ -1631,7 +2000,7 @@
 
 
   /* =====================================================
-     BUTTON ACTIONS
+     ACTIONS
   ====================================================== */
 
   function bindActions() {
@@ -1639,7 +2008,7 @@
 
     const cards =
       document.querySelectorAll(
-        ".request-card"
+        ".request-card[data-request-id]"
       );
 
 
@@ -1677,225 +2046,245 @@
           );
 
 
-        /* =============================================
+        /* =================================================
            DUYỆT
-        ============================================== */
+        ================================================== */
 
-        approveBtn.addEventListener(
-          "click",
-          async function () {
+        if (approveBtn) {
 
 
-            const courtId =
-              Number(
-                courtSelect.value
-              );
+          approveBtn.addEventListener(
+            "click",
+            async function () {
 
 
-            if (!courtId) {
+              const courtId =
+                Number(
+                  courtSelect?.value
+                  ||
+                  0
+                );
 
 
-              showMessage(
-                "Hãy chọn sân trước khi duyệt.",
-                true
-              );
+              if (!courtId) {
 
 
-              return;
-
-            }
-
-
-            approveBtn.disabled =
-              true;
+                showMessage(
+                  "Hãy chọn sân trước khi duyệt.",
+                  true
+                );
 
 
-            rejectBtn.disabled =
-              true;
+                return;
 
-
-            approveBtn.textContent =
-              "ĐANG TẠO BUỔI HỌC...";
-
-
-            const {
-              data,
-              error
-            } =
-              await sb.rpc(
-                "coach_approve_session_request",
-                {
-
-                  p_request_id:
-                    requestId,
-
-                  p_court_id:
-                    courtId,
-
-                  p_coach_note:
-                    coachNote.value.trim()
-                    ||
-                    null
-
-                }
-              );
-
-
-            if (error) {
-
-
-              console.error(
-                "APPROVE ERROR:",
-                error
-              );
-
-
-              showMessage(
-                error.message
-                ||
-                "Không duyệt được yêu cầu.",
-                true
-              );
+              }
 
 
               approveBtn.disabled =
-                false;
+                true;
 
 
               rejectBtn.disabled =
-                false;
+                true;
 
 
               approveBtn.textContent =
-                "✅ DUYỆT & TẠO BUỔI HỌC";
+                "ĐANG TẠO BUỔI HỌC...";
 
 
-              return;
-
-            }
-
-
-            showMessage(
-              `✓ Đã duyệt và tạo buổi học ID ${data}.`
-            );
-
-
-            await loadRequests();
-
-          }
-        );
-
-
-        /* =============================================
-           TỪ CHỐI
-        ============================================== */
-
-        rejectBtn.addEventListener(
-          "click",
-          async function () {
-
-
-            const reason =
-              window.prompt(
-                "Nhập lý do từ chối yêu cầu lịch học:"
-              );
-
-
-            if (reason === null) {
-
-              return;
-
-            }
-
-
-            if (
-              !reason.trim()
-            ) {
-
-
-              showMessage(
-                "Coach cần nhập lý do từ chối.",
-                true
-              );
-
-
-              return;
-
-            }
-
-
-            approveBtn.disabled =
-              true;
-
-
-            rejectBtn.disabled =
-              true;
-
-
-            rejectBtn.textContent =
-              "ĐANG TỪ CHỐI...";
-
-
-            const {
-              error
-            } =
-              await sb.rpc(
-                "coach_reject_session_request",
-                {
-
-                  p_request_id:
-                    requestId,
-
-                  p_reason:
-                    reason.trim()
-
-                }
-              );
-
-
-            if (error) {
-
-
-              console.error(
-                "REJECT ERROR:",
+              const {
+                data,
                 error
-              );
+              } =
+                await sb.rpc(
+                  "coach_approve_session_request",
+                  {
+
+                    p_request_id:
+                      requestId,
+
+                    p_court_id:
+                      courtId,
+
+                    p_coach_note:
+                      coachNote?.value.trim()
+                      ||
+                      null
+
+                  }
+                );
+
+
+              if (error) {
+
+
+                console.error(
+                  "APPROVE ERROR:",
+                  error
+                );
+
+
+                showMessage(
+                  error.message
+                  ||
+                  "Không duyệt được yêu cầu.",
+                  true
+                );
+
+
+                approveBtn.disabled =
+                  false;
+
+
+                rejectBtn.disabled =
+                  false;
+
+
+                approveBtn.textContent =
+                  "✅ DUYỆT & TẠO BUỔI HỌC";
+
+
+                return;
+
+              }
 
 
               showMessage(
-                error.message
-                ||
-                "Không từ chối được yêu cầu.",
-                true
+                `✓ Đã duyệt và tạo buổi học ID ${data}.`
               );
 
 
-              approveBtn.disabled =
-                false;
+              await loadRequests();
+
+            }
+          );
+
+        }
+
+
+        /* =================================================
+           TỪ CHỐI
+        ================================================== */
+
+        if (rejectBtn) {
+
+
+          rejectBtn.addEventListener(
+            "click",
+            async function () {
+
+
+              const reason =
+                window.prompt(
+                  "Nhập lý do từ chối yêu cầu lịch học:"
+                );
+
+
+              if (reason === null) {
+
+                return;
+
+              }
+
+
+              if (
+                !reason.trim()
+              ) {
+
+
+                showMessage(
+                  "Coach cần nhập lý do từ chối.",
+                  true
+                );
+
+
+                return;
+
+              }
+
+
+              if (approveBtn) {
+
+                approveBtn.disabled =
+                  true;
+
+              }
 
 
               rejectBtn.disabled =
-                false;
+                true;
 
 
               rejectBtn.textContent =
-                "✕ TỪ CHỐI";
+                "ĐANG TỪ CHỐI...";
 
 
-              return;
+              const {
+                error
+              } =
+                await sb.rpc(
+                  "coach_reject_session_request",
+                  {
+
+                    p_request_id:
+                      requestId,
+
+                    p_reason:
+                      reason.trim()
+
+                  }
+                );
+
+
+              if (error) {
+
+
+                console.error(
+                  "REJECT ERROR:",
+                  error
+                );
+
+
+                showMessage(
+                  error.message
+                  ||
+                  "Không từ chối được yêu cầu.",
+                  true
+                );
+
+
+                if (approveBtn) {
+
+                  approveBtn.disabled =
+                    false;
+
+                }
+
+
+                rejectBtn.disabled =
+                  false;
+
+
+                rejectBtn.textContent =
+                  "✕ TỪ CHỐI";
+
+
+                return;
+
+              }
+
+
+              showMessage(
+                "✓ Đã từ chối yêu cầu lịch học."
+              );
+
+
+              await loadRequests();
 
             }
+          );
 
-
-            showMessage(
-              "✓ Đã từ chối yêu cầu lịch học."
-            );
-
-
-            await loadRequests();
-
-          }
-        );
+        }
 
 
       }
@@ -1952,7 +2341,9 @@
     listEl.innerHTML =
       `
         <div class="empty">
+
           Có lỗi khi hiển thị yêu cầu.
+
         </div>
       `;
 
