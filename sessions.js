@@ -1,5 +1,5 @@
 const cfg =
-  window.PICKDEE_CONFIG;
+  window.PICKDEE_CONFIG || {};
 
 
 const sb =
@@ -30,9 +30,9 @@ const userEmail =
 let allSessions = [];
 
 
-/* =====================================
+/* =====================================================
    HELPERS
-===================================== */
+===================================================== */
 
 function escapeHtml(value) {
 
@@ -42,6 +42,7 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+
 }
 
 
@@ -59,6 +60,7 @@ function formatDate(value) {
       `${value}T00:00:00`
     )
   );
+
 }
 
 
@@ -71,174 +73,395 @@ function formatTime(value) {
 
   return String(value)
     .slice(0, 5);
+
 }
 
 
-/* =====================================
-   ƯU TIÊN TRẠNG THÁI
-===================================== */
+function normalizeStatus(value) {
 
-function getStatusPriority(status) {
+  return String(
+    value || ""
+  )
+    .trim()
+    .toLowerCase();
 
-  const value =
-    String(status || "")
-      .trim()
-      .toLowerCase();
+}
 
 
-  /*
-    ƯU TIÊN CAO NHẤT
-    Các buổi đang chờ học
-  */
+/* =====================================================
+   THỜI GIAN BUỔI HỌC
+===================================================== */
+
+function getSessionStart(item) {
+
+  if (!item.session_date) {
+    return null;
+  }
+
+
+  const time =
+    item.start_time
+    ||
+    "00:00:00";
+
+
+  const date =
+    new Date(
+      `${item.session_date}T${time}`
+    );
+
 
   if (
-    value === "chờ học"
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return null;
+
+  }
+
+
+  return date;
+
+}
+
+
+function getSessionEnd(item) {
+
+  const start =
+    getSessionStart(
+      item
+    );
+
+
+  if (!start) {
+    return null;
+  }
+
+
+  const duration =
+    Number(
+      item.duration_minutes || 60
+    );
+
+
+  return new Date(
+    start.getTime()
+    +
+    duration * 60 * 1000
+  );
+
+}
+
+
+/* =====================================================
+   KIỂM TRA CÓ PHẢI HÔM NAY
+===================================================== */
+
+function isTodayDate(
+  value
+) {
+
+  if (!value) {
+    return false;
+  }
+
+
+  const date =
+    new Date(
+      `${value}T00:00:00`
+    );
+
+
+  const today =
+    new Date();
+
+
+  return (
+
+    date.getFullYear()
+      ===
+    today.getFullYear()
+
+    &&
+
+    date.getMonth()
+      ===
+    today.getMonth()
+
+    &&
+
+    date.getDate()
+      ===
+    today.getDate()
+
+  );
+
+}
+
+
+/* =====================================================
+   TRẠNG THÁI VẬN HÀNH
+
+   overdue   = quá hạn nhưng vẫn Chờ học
+   today     = buổi hôm nay
+   pending   = buổi tương lai
+   completed = đã hoàn thành
+   other     = trạng thái khác
+===================================================== */
+
+function getOperationalState(
+  item
+) {
+
+  const status =
+    normalizeStatus(
+      item.status
+    );
+
+
+  /* =========================
+     ĐÃ HOÀN THÀNH
+  ========================= */
+
+  if (
+    status ===
+    "đã hoàn thành"
+  ) {
+
+    return "completed";
+
+  }
+
+
+  /* =========================
+     CHỜ HỌC
+  ========================= */
+
+  if (
+    status ===
+    "chờ học"
+  ) {
+
+
+    const end =
+      getSessionEnd(
+        item
+      );
+
+
+    const now =
+      new Date();
+
+
+    /*
+      Chỉ coi là QUÁ HẠN
+      khi đã qua hết thời lượng buổi.
+
+      Ví dụ:
+      học 09:00 - 10:00
+      thì 09:30 chưa bị báo quá hạn.
+    */
+
+    if (
+      end
+      &&
+      end.getTime()
+        <
+      now.getTime()
+    ) {
+
+      return "overdue";
+
+    }
+
+
+    if (
+      isTodayDate(
+        item.session_date
+      )
+    ) {
+
+      return "today";
+
+    }
+
+
+    return "pending";
+
+  }
+
+
+  return "other";
+
+}
+
+
+/* =====================================================
+   ƯU TIÊN SẮP XẾP
+
+   1. QUÁ HẠN
+   2. HÔM NAY
+   3. CHỜ HỌC TƯƠNG LAI
+   4. TRẠNG THÁI KHÁC
+   5. ĐÃ HOÀN THÀNH
+===================================================== */
+
+function getPriority(
+  item
+) {
+
+  const state =
+    getOperationalState(
+      item
+    );
+
+
+  if (
+    state === "overdue"
   ) {
 
     return 1;
+
   }
 
 
-  /*
-    CÁC TRẠNG THÁI TRUNG GIAN
-
-    Ví dụ sau này:
-    Chờ duyệt
-    Đã duyệt
-    Đang học
-    Vắng
-    ...
-  */
-
   if (
-    value !== "đã hoàn thành"
+    state === "today"
   ) {
 
     return 2;
+
   }
 
 
-  /*
-    ĐÃ HOÀN THÀNH
-    LUÔN XUỐNG CUỐI
-  */
+  if (
+    state === "pending"
+  ) {
 
-  return 3;
+    return 3;
+
+  }
+
+
+  if (
+    state === "other"
+  ) {
+
+    return 4;
+
+  }
+
+
+  return 5;
+
 }
 
 
-/* =====================================
-   SORT LỊCH HỌC
-===================================== */
+/* =====================================================
+   SORT
+===================================================== */
 
-function sortSessions(rows) {
+function sortSessions(
+  rows
+) {
 
   return [...rows]
     .sort(
       (a, b) => {
 
 
-        /* ===========================
-           1. TRẠNG THÁI
-        =========================== */
+        const priorityA =
+          getPriority(a);
 
-        const statusDifference =
-          getStatusPriority(
-            a.status
-          )
-          -
-          getStatusPriority(
-            b.status
+
+        const priorityB =
+          getPriority(b);
+
+
+        if (
+          priorityA !==
+          priorityB
+        ) {
+
+          return (
+            priorityA
+            -
+            priorityB
           );
 
-
-        if (
-          statusDifference !== 0
-        ) {
-
-          return statusDifference;
         }
 
 
-        /* ===========================
-           2. NGÀY HỌC
-        =========================== */
-
-        const dateA =
-          a.session_date || "9999-12-31";
+        const startA =
+          getSessionStart(a);
 
 
-        const dateB =
-          b.session_date || "9999-12-31";
+        const startB =
+          getSessionStart(b);
 
-
-        const dateCompare =
-          String(dateA)
-            .localeCompare(
-              String(dateB)
-            );
-
-
-        if (
-          dateCompare !== 0
-        ) {
-
-          return dateCompare;
-        }
-
-
-        /* ===========================
-           3. GIỜ HỌC
-        =========================== */
 
         const timeA =
-          a.start_time || "23:59:59";
+          startA
+            ?
+            startA.getTime()
+            :
+            0;
 
 
         const timeB =
-          b.start_time || "23:59:59";
+          startB
+            ?
+            startB.getTime()
+            :
+            0;
 
 
-        const timeCompare =
-          String(timeA)
-            .localeCompare(
-              String(timeB)
+        /*
+          Đã hoàn thành:
+          buổi mới nhất nằm trên.
+
+          Các nhóm còn lại:
+          buổi gần nhất nằm trên.
+        */
+
+        if (
+          getOperationalState(a)
+          ===
+          "completed"
+        ) {
+
+          if (
+            timeA !== timeB
+          ) {
+
+            return (
+              timeB
+              -
+              timeA
             );
 
+          }
 
-        if (
-          timeCompare !== 0
-        ) {
+        }
+        else {
 
-          return timeCompare;
+
+          if (
+            timeA !== timeB
+          ) {
+
+            return (
+              timeA
+              -
+              timeB
+            );
+
+          }
+
         }
 
-
-        /* ===========================
-           4. BUỔI SỐ
-        =========================== */
-
-        const sessionNoDifference =
-          Number(
-            a.session_no || 0
-          )
-          -
-          Number(
-            b.session_no || 0
-          );
-
-
-        if (
-          sessionNoDifference !== 0
-        ) {
-
-          return sessionNoDifference;
-        }
-
-
-        /* ===========================
-           5. ID
-        =========================== */
 
         return (
           Number(a.id || 0)
@@ -248,12 +471,161 @@ function sortSessions(rows) {
 
       }
     );
+
 }
 
 
-/* =====================================
+/* =====================================================
+   HIỂN THỊ TRẠNG THÁI
+===================================================== */
+
+function getStatusView(
+  item
+) {
+
+  const state =
+    getOperationalState(
+      item
+    );
+
+
+  /* =========================
+     QUÁ HẠN
+  ========================= */
+
+  if (
+    state ===
+    "overdue"
+  ) {
+
+    return {
+
+      label:
+        "⚠ QUÁ HẠN",
+
+      rowStyle:
+        "background:rgba(255,80,80,.08);",
+
+      badgeStyle:
+        `
+          background:rgba(255,80,80,.18);
+          color:#ffaaaa;
+          border:1px solid rgba(255,100,100,.35);
+        `
+
+    };
+
+  }
+
+
+  /* =========================
+     HÔM NAY
+  ========================= */
+
+  if (
+    state ===
+    "today"
+  ) {
+
+    return {
+
+      label:
+        "📍 HÔM NAY · CHỜ HỌC",
+
+      rowStyle:
+        "background:rgba(185,255,24,.055);",
+
+      badgeStyle:
+        `
+          background:rgba(185,255,24,.15);
+          color:#d8ff45;
+          border:1px solid rgba(185,255,24,.28);
+        `
+
+    };
+
+  }
+
+
+  /* =========================
+     CHỜ HỌC
+  ========================= */
+
+  if (
+    state ===
+    "pending"
+  ) {
+
+    return {
+
+      label:
+        "CHỜ HỌC",
+
+      rowStyle:
+        "",
+
+      badgeStyle:
+        `
+          background:rgba(185,255,24,.11);
+          color:#d8ff45;
+        `
+
+    };
+
+  }
+
+
+  /* =========================
+     ĐÃ HOÀN THÀNH
+  ========================= */
+
+  if (
+    state ===
+    "completed"
+  ) {
+
+    return {
+
+      label:
+        "ĐÃ HOÀN THÀNH",
+
+      rowStyle:
+        "opacity:.66;",
+
+      badgeStyle:
+        `
+          background:rgba(255,255,255,.08);
+          color:#aeb9c6;
+        `
+
+    };
+
+  }
+
+
+  /* =========================
+     KHÁC
+  ========================= */
+
+  return {
+
+    label:
+      item.status || "—",
+
+    rowStyle:
+      "",
+
+    badgeStyle:
+      ""
+
+  };
+
+}
+
+
+/* =====================================================
    LOGIN
-===================================== */
+===================================================== */
 
 async function checkLogin() {
 
@@ -269,7 +641,9 @@ async function checkLogin() {
       "./login.html"
     );
 
+
     return false;
+
   }
 
 
@@ -277,42 +651,47 @@ async function checkLogin() {
 
     userEmail.textContent =
       session.user.email || "";
+
   }
 
 
   return true;
+
 }
 
 
-/* =====================================
+/* =====================================================
    RENDER
-===================================== */
+===================================================== */
 
-function renderSessions(rows) {
-
-  /*
-    Luôn sort lại trước khi render.
-    Vì vậy cả danh sách chính
-    và kết quả tìm kiếm đều đúng thứ tự.
-  */
+function renderSessions(
+  rows
+) {
 
   const sortedRows =
-    sortSessions(rows);
+    sortSessions(
+      rows
+    );
 
 
   if (
     !sortedRows.length
   ) {
 
-    body.innerHTML = `
-      <tr>
-        <td colspan="8">
-          Chưa có lịch học.
-        </td>
-      </tr>
-    `;
+    body.innerHTML =
+      `
+        <tr>
+
+          <td colspan="8">
+            Chưa có lịch học.
+          </td>
+
+        </tr>
+      `;
+
 
     return;
+
   }
 
 
@@ -334,9 +713,17 @@ function renderSessions(rows) {
             item.coaches || {};
 
 
+          const statusView =
+            getStatusView(
+              item
+            );
+
+
           const studentName =
-            student.full_name ||
-            student.student_code ||
+            student.full_name
+            ||
+            student.student_code
+            ||
             "—";
 
 
@@ -351,13 +738,16 @@ function renderSessions(rows) {
                   ""
               }`
               :
-              coach.coach_code ||
+              coach.coach_code
+              ||
               "—";
 
 
           return `
 
-            <tr>
+            <tr
+              style="${statusView.rowStyle}"
+            >
 
 
               <!-- MÃ BUỔI -->
@@ -369,15 +759,17 @@ function renderSessions(rows) {
                     item.id
                   )}"
                   style="
-                    color: inherit;
-                    text-decoration: none;
-                    font-weight: 800;
+                    color:inherit;
+                    text-decoration:none;
+                    font-weight:800;
                   "
                 >
+
                   ${escapeHtml(
                     item.session_code ||
                     "—"
                   )}
+
                 </a>
 
               </td>
@@ -386,59 +778,71 @@ function renderSessions(rows) {
               <!-- HỌC VIÊN -->
 
               <td>
+
                 ${escapeHtml(
                   studentName
                 )}
+
               </td>
 
 
               <!-- COACH -->
 
               <td>
+
                 ${escapeHtml(
                   coachName
                 )}
+
               </td>
 
 
               <!-- BUỔI SỐ -->
 
               <td>
+
                 ${escapeHtml(
                   item.session_no
                 )}
+
               </td>
 
 
               <!-- NGÀY -->
 
               <td>
+
                 ${escapeHtml(
                   formatDate(
                     item.session_date
                   )
                 )}
+
               </td>
 
 
               <!-- GIỜ -->
 
               <td>
+
                 ${escapeHtml(
                   formatTime(
                     item.start_time
                   )
                 )}
+
               </td>
 
 
               <!-- SÂN -->
 
               <td>
+
                 ${escapeHtml(
                   item.court_name ||
                   "—"
                 )}
+
               </td>
 
 
@@ -446,11 +850,13 @@ function renderSessions(rows) {
 
               <td>
 
-                <span class="badge">
+                <span
+                  class="badge"
+                  style="${statusView.badgeStyle}"
+                >
 
                   ${escapeHtml(
-                    item.status ||
-                    "—"
+                    statusView.label
                   )}
 
                 </span>
@@ -465,22 +871,26 @@ function renderSessions(rows) {
         }
       )
       .join("");
+
 }
 
 
-/* =====================================
+/* =====================================================
    LOAD SESSIONS
-===================================== */
+===================================================== */
 
 async function loadSessions() {
 
-  body.innerHTML = `
-    <tr>
-      <td colspan="8">
-        Đang tải lịch học...
-      </td>
-    </tr>
-  `;
+  body.innerHTML =
+    `
+      <tr>
+
+        <td colspan="8">
+          Đang tải lịch học...
+        </td>
+
+      </tr>
+    `;
 
 
   const {
@@ -488,76 +898,103 @@ async function loadSessions() {
     error
   } =
     await sb
-      .from("class_sessions")
+      .from(
+        "class_sessions"
+      )
       .select(`
+
         id,
+
         session_code,
+
         registration_id,
+
         coach_id,
+
         session_no,
+
         session_date,
+
         start_time,
+
         duration_minutes,
+
         court_id,
+
         court_cost,
+
         court_name,
+
         status,
+
         note,
 
+
         registrations (
+
           id,
+
           registration_code,
+
           student_id,
 
+
           students (
+
             id,
+
             student_code,
+
             full_name
+
           )
+
         ),
 
+
         coaches (
+
           id,
+
           coach_code,
+
           full_name
+
         )
+
       `);
 
 
   if (error) {
+
 
     console.error(
       error
     );
 
 
-    body.innerHTML = `
-      <tr>
-        <td colspan="8">
-          Không tải được lịch học:
-          ${escapeHtml(
-            error.message ||
-            error
-          )}
-        </td>
-      </tr>
-    `;
+    body.innerHTML =
+      `
+        <tr>
+
+          <td colspan="8">
+
+            Không tải được lịch học:
+            ${escapeHtml(
+              error.message ||
+              error
+            )}
+
+          </td>
+
+        </tr>
+      `;
 
 
     return;
+
   }
 
-
-  /*
-    Sắp xếp ngay khi nhận dữ liệu:
-
-    1. Chờ học
-    2. Trạng thái khác
-    3. Đã hoàn thành
-
-    Trong từng nhóm:
-    ngày → giờ → buổi số
-  */
 
   allSessions =
     sortSessions(
@@ -568,12 +1005,13 @@ async function loadSessions() {
   renderSessions(
     allSessions
   );
+
 }
 
 
-/* =====================================
+/* =====================================================
    SEARCH
-===================================== */
+===================================================== */
 
 searchInput?.addEventListener(
   "input",
@@ -588,11 +1026,14 @@ searchInput?.addEventListener(
 
     if (!keyword) {
 
+
       renderSessions(
         allSessions
       );
 
+
       return;
+
     }
 
 
@@ -613,19 +1054,39 @@ searchInput?.addEventListener(
             item.coaches || {};
 
 
+          const operational =
+            getStatusView(
+              item
+            ).label;
+
+
           const text =
             [
+
               item.session_code,
+
               item.session_no,
+
               item.session_date,
+
               item.start_time,
+
               item.court_name,
+
               item.status,
+
+              operational,
+
               registration.registration_code,
+
               student.student_code,
+
               student.full_name,
+
               coach.coach_code,
+
               coach.full_name
+
             ]
               .filter(Boolean)
               .join(" ")
@@ -648,22 +1109,26 @@ searchInput?.addEventListener(
 );
 
 
-/* =====================================
+/* =====================================================
    START
-===================================== */
+===================================================== */
 
 async function init() {
+
 
   const ok =
     await checkLogin();
 
 
   if (!ok) {
+
     return;
+
   }
 
 
   await loadSessions();
+
 }
 
 
