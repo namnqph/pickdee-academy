@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Học phí của tôi | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: white;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+
+    .topbar {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.8);
+      font-size: 14px;
+    }
+
+    .logout {
+      padding: 9px 12px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 28px));
+      margin: auto;
+      padding: 32px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin-top: 25px;
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 5px;
+      font-size: clamp(36px, 6vw, 54px);
+    }
+
+    .sub {
+      color: rgba(255,255,255,.62);
+      margin-bottom: 24px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .summary-card,
+    .registration-card,
+    .card {
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+    }
+
+    .summary-card {
+      padding: 18px;
+    }
+
+    .summary-label {
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .summary-value {
+      color: #d8ff45;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .section-title {
+      margin: 28px 0 14px;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .registration-card {
+      padding: 19px;
+      margin-bottom: 14px;
+    }
+
+    .registration-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .registration-code {
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .package-name {
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(216,255,69,.12);
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .money-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .label {
+      color: rgba(255,255,255,.48);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 900;
+    }
+
+    .debt {
+      color: #ffcf70;
+    }
+
+    .paid {
+      color: #d8ff45;
+    }
+
+    .card {
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #d8ff45;
+    }
+
+    #message {
+      margin: 15px 0;
+      color: #ffb0b0;
+      font-weight: 700;
+    }
+
+    .empty {
+      padding: 30px;
+      text-align: center;
+      color: rgba(255,255,255,.58);
+    }
+
+    @media (max-width: 700px) {
+      .summary,
+      .money-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #userEmail {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee <span>Academy</span>
+  </div>
+
+  <div class="user-area">
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    class="back"
+    href="./student"
+  >
+    ← Khu vực học viên
+  </a>
+
+  <div class="eyebrow">
+    KHU VỰC HỌC VIÊN
+  </div>
+
+  <h1>Học phí của tôi</h1>
+
+  <div class="sub">
+    Theo dõi học phí, số tiền đã đóng và số tiền còn lại.
+  </div>
+
+
+  <section class="summary">
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Tổng học phí
+      </div>
+
+      <div
+        id="totalTuition"
+        class="summary-value"
+      >
+        0đ
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Đã đóng
+      </div>
+
+      <div
+        id="totalPaid"
+        class="summary-value"
+      >
+        0đ
+      </div>
+    </div>
+
+
+    <div class="summary-card">
+      <div class="summary-label">
+        Còn nợ
+      </div>
+
+      <div
+        id="totalDebt"
+        class="summary-value"
+      >
+        0đ
+      </div>
+    </div>
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <div class="section-title">
+    📚 Học phí theo gói
+  </div>
+
+  <div id="registrationList"></div>
+
+
+  <div class="section-title">
+    💳 Lịch sử thanh toán
+  </div>
+
+
+  <section class="card">
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Mã phiếu</th>
+            <th>Ngày</th>
+            <th>Gói học</th>
+            <th>Số tiền</th>
+            <th>Hình thức</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+
+        <tbody id="paymentBody">
+
+          <tr>
+            <td colspan="6">
+              Đang tải thanh toán...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script src="./student-payments.js?v=20260910-1"></script>
+
+</body>
+</html>
