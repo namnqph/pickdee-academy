@@ -19,11 +19,7 @@
     Yêu cầu buổi học | PickDee Academy
   </title>
 
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
 
 
@@ -169,10 +165,6 @@
     }
 
 
-    /* =====================================
-       CARD
-    ====================================== */
-
     .card {
 
       margin-bottom: 18px;
@@ -251,10 +243,6 @@
 
     }
 
-
-    /* =====================================
-       FORM
-    ====================================== */
 
     .grid {
 
@@ -402,10 +390,6 @@
     }
 
 
-    /* =====================================
-       PENDING
-    ====================================== */
-
     .pending-card {
 
       display: none;
@@ -516,10 +500,6 @@
     }
 
 
-    /* =====================================
-       MESSAGE
-    ====================================== */
-
     #message {
 
       min-height: 24px;
@@ -622,14 +602,13 @@
   <div class="intro">
 
     Chọn ngày, giờ và khu vực bạn muốn học.
-    Yêu cầu sẽ được gửi tới Coach đang phụ trách gói học để xác nhận sân và duyệt lịch.
+    Yêu cầu sẽ được gửi tới Coach đang phụ trách gói học
+    để xác nhận sân và duyệt lịch.
 
   </div>
 
 
-  <!-- =====================================
-       YÊU CẦU ĐANG CHỜ
-  ====================================== -->
+  <!-- YÊU CẦU ĐANG CHỜ -->
 
   <section
     id="pendingCard"
@@ -728,12 +707,21 @@
     ></div>
 
 
+    <a
+      href="./student-session-requests"
+      style="
+        display:inline-block;
+        margin-top:16px;
+      "
+    >
+      XEM YÊU CẦU CỦA TÔI →
+    </a>
+
+
   </section>
 
 
-  <!-- =====================================
-       THÔNG TIN GÓI
-  ====================================== -->
+  <!-- GÓI HỌC -->
 
   <section class="card">
 
@@ -802,9 +790,7 @@
   </section>
 
 
-  <!-- =====================================
-       FORM
-  ====================================== -->
+  <!-- FORM -->
 
   <section
     id="formCard"
@@ -829,9 +815,7 @@
 
 
           <label>
-
             Gói học *
-
           </label>
 
 
@@ -854,9 +838,7 @@
 
 
           <label>
-
             Ngày muốn học *
-
           </label>
 
 
@@ -874,9 +856,7 @@
 
 
           <label>
-
             Giờ bắt đầu *
-
           </label>
 
 
@@ -894,9 +874,7 @@
 
 
           <label>
-
             Thời lượng
-
           </label>
 
 
@@ -924,9 +902,7 @@
 
 
           <label>
-
             Khu vực / Tỉnh *
-
           </label>
 
 
@@ -949,9 +925,7 @@
 
 
           <label>
-
             Phường / Xã *
-
           </label>
 
 
@@ -970,7 +944,8 @@
 
           <div class="helper">
 
-            Coach sẽ chỉ chọn được sân đã xác minh thuộc đúng khu vực này.
+            Coach sẽ chỉ chọn được sân đã xác minh
+            thuộc đúng khu vực này.
 
           </div>
 
@@ -982,9 +957,7 @@
 
 
           <label>
-
             Ghi chú cho Coach
-
           </label>
 
 
@@ -1188,10 +1161,6 @@
     [];
 
 
-  let areas =
-    [];
-
-
   /* =====================================================
      HELPERS
   ====================================================== */
@@ -1207,15 +1176,10 @@
 
 
     message.className =
-
       isError
-
         ?
-
         "error"
-
         :
-
         "success";
 
   }
@@ -1225,7 +1189,9 @@
 
 
     if (!value) {
+
       return "—";
+
     }
 
 
@@ -1244,7 +1210,9 @@
 
 
     if (!value) {
+
       return "—";
+
     }
 
 
@@ -1320,7 +1288,8 @@
       data: { session },
       error
     } =
-      await sb.auth.getSession();
+      await sb.auth
+        .getSession();
 
 
     if (
@@ -1426,21 +1395,12 @@
         .single();
 
 
-    if (infoError) {
+    if (!infoError) {
 
-
-      console.error(
-        infoError
-      );
-
-
-      return true;
+      currentStudent =
+        student;
 
     }
-
-
-    currentStudent =
-      student;
 
 
     return true;
@@ -1511,10 +1471,6 @@
     }
 
 
-    areas =
-      data || [];
-
-
     requestedArea.innerHTML =
       `
         <option value="">
@@ -1523,7 +1479,7 @@
       `;
 
 
-    areas.forEach(
+    (data || []).forEach(
       area => {
 
 
@@ -1560,7 +1516,7 @@
 
 
   /* =====================================================
-     LOAD XÃ PHƯỜNG
+     LOAD PHƯỜNG XÃ
   ====================================================== */
 
   async function loadWards(
@@ -1674,16 +1630,15 @@
         Array.from(
           requestedWard.options
         )
-          .some(
-            option =>
-              option.value
-              ===
-              selectedValue
-          );
+        .some(
+          option =>
+            option.value
+            ===
+            selectedValue
+        );
 
 
       if (exists) {
-
 
         requestedWard.value =
           selectedValue;
@@ -1695,16 +1650,9 @@
   }
 
 
-  /* =====================================================
-     ĐỔI TỈNH
-  ====================================================== */
-
   requestedArea.addEventListener(
     "change",
     async function () {
-
-
-      showMessage("");
 
 
       requestedWard.disabled =
@@ -1724,7 +1672,9 @@
 
 
       if (!code) {
+
         return;
+
       }
 
 
@@ -1737,7 +1687,7 @@
 
 
   /* =====================================================
-     MẶC ĐỊNH KHU VỰC HỌC VIÊN
+     ÁP DỤNG KHU VỰC HỌC VIÊN
   ====================================================== */
 
   async function applyStudentArea() {
@@ -1758,16 +1708,18 @@
       Array.from(
         requestedArea.options
       )
-        .some(
-          option =>
-            option.value
-            ===
-            currentStudent.preferred_area
-        );
+      .some(
+        option =>
+          option.value
+          ===
+          currentStudent.preferred_area
+      );
 
 
     if (!exists) {
+
       return;
+
     }
 
 
@@ -1780,7 +1732,9 @@
 
 
     if (!code) {
+
       return;
+
     }
 
 
@@ -1795,7 +1749,7 @@
 
 
   /* =====================================================
-     LOAD ĐĂNG KÝ
+     LOAD REGISTRATIONS
   ====================================================== */
 
   async function loadRegistrations() {
@@ -1867,14 +1821,6 @@
       );
 
 
-      registrationSelect.innerHTML =
-        `
-          <option value="">
-            Không tải được gói học
-          </option>
-        `;
-
-
       return;
 
     }
@@ -1907,7 +1853,6 @@
 
 
         option.textContent =
-
           `${registration.registration_code || "Đăng ký"} · ${registration.package_name || "Gói học"}`;
 
 
@@ -1940,7 +1885,7 @@
 
 
   /* =====================================================
-     TÍNH BUỔI TIẾP THEO
+     BUỔI TIẾP THEO
   ====================================================== */
 
   async function getNextSessionNo(
@@ -1954,14 +1899,10 @@
     } =
       await sb
         .from("class_sessions")
-        .select(`
-          session_no
-        `)
+        .select("session_no")
         .eq(
           "registration_id",
-          Number(
-            registrationId
-          )
+          Number(registrationId)
         )
         .order(
           "session_no",
@@ -1976,7 +1917,6 @@
 
 
       console.error(
-        "Không tính được buổi tiếp theo:",
         error
       );
 
@@ -1994,16 +1934,10 @@
       );
 
 
-    return (
-      last + 1
-    );
+    return last + 1;
 
   }
 
-
-  /* =====================================================
-     ÁP DỤNG GÓI
-  ====================================================== */
 
   async function applyRegistration() {
 
@@ -2017,9 +1951,7 @@
     const registration =
       registrations.find(
         item =>
-          Number(
-            item.id
-          )
+          Number(item.id)
           ===
           id
       );
@@ -2046,15 +1978,8 @@
 
 
     packageName.textContent =
-
       registration.package_name
-
       ||
-
-      registration.registration_code
-
-      ||
-
       "Gói học";
 
 
@@ -2065,15 +1990,10 @@
 
 
     nextSessionNo.textContent =
-
       nextNo === "—"
-
         ?
-
         "—"
-
         :
-
         `Buổi ${nextNo}`;
 
 
@@ -2084,15 +2004,10 @@
 
 
     coachName.textContent =
-
       coach.full_name
-
       ||
-
       coach.coach_code
-
       ||
-
       "Coach đã phân công";
 
   }
@@ -2105,7 +2020,7 @@
 
 
   /* =====================================================
-     KIỂM TRA YÊU CẦU ĐANG CHỜ
+     PENDING REQUEST
   ====================================================== */
 
   async function loadPendingRequest() {
@@ -2151,7 +2066,6 @@
 
 
       console.error(
-        "Không tải được yêu cầu đang chờ:",
         error
       );
 
@@ -2179,53 +2093,41 @@
 
 
     pendingCode.textContent =
-
       data.request_code
       ||
       `Yêu cầu #${data.id}`;
 
 
     pendingSessionNo.textContent =
-
       `Buổi ${data.session_no}`;
 
 
     pendingDateTime.textContent =
-
-      `${formatDate(
-        data.requested_date
-      )} · ${formatTime(
-        data.requested_time
-      )}`;
+      `${formatDate(data.requested_date)} · ${formatTime(data.requested_time)}`;
 
 
     pendingArea.textContent =
-
       [
         data.requested_ward,
         data.requested_area
       ]
-        .filter(Boolean)
-        .join(" · ")
+      .filter(Boolean)
+      .join(" · ")
       ||
       "—";
 
 
     pendingStatus.textContent =
-
-      data.status || "Chờ Coach";
+      data.status
+      ||
+      "Chờ Coach";
 
 
     pendingNote.textContent =
-
       data.note
-
         ?
-
         `Ghi chú: ${data.note}`
-
         :
-
         "Coach sẽ xác nhận sân và xử lý yêu cầu này.";
 
 
@@ -2233,11 +2135,6 @@
       "show"
     );
 
-
-    /*
-      Khi đang có yêu cầu Chờ Coach,
-      ẩn form để tránh gửi trùng.
-    */
 
     formCard.style.display =
       "none";
@@ -2287,9 +2184,7 @@
       }
 
 
-      if (
-        !requestedDate.value
-      ) {
+      if (!requestedDate.value) {
 
 
         showMessage(
@@ -2303,9 +2198,7 @@
       }
 
 
-      if (
-        !requestedTime.value
-      ) {
+      if (!requestedTime.value) {
 
 
         showMessage(
@@ -2319,9 +2212,7 @@
       }
 
 
-      if (
-        !requestedArea.value
-      ) {
+      if (!requestedArea.value) {
 
 
         showMessage(
@@ -2335,9 +2226,7 @@
       }
 
 
-      if (
-        !requestedWard.value
-      ) {
+      if (!requestedWard.value) {
 
 
         showMessage(
@@ -2452,30 +2341,32 @@
       }
 
 
+      /* =================================================
+         GỬI THÀNH CÔNG
+         → TỰ CHUYỂN SANG YÊU CẦU CỦA TÔI
+      ================================================== */
+
       showMessage(
-
-        `✓ Đã gửi yêu cầu thành công. Mã yêu cầu #${data}.`
-
+        "✓ Đã gửi yêu cầu thành công. Đang chuyển tới Yêu cầu của tôi..."
       );
-
-
-      setTimeout(
-        async function () {
-
-
-          await loadPendingRequest();
-
-        },
-        500
-      );
-
-
-      submitBtn.disabled =
-        false;
 
 
       submitBtn.textContent =
-        "GỬI YÊU CẦU CHO COACH";
+        "✓ ĐÃ GỬI";
+
+
+      setTimeout(
+        function () {
+
+
+          window.location.href =
+            "./student-session-requests";
+
+
+        },
+        800
+      );
+
 
     }
   );
@@ -2497,22 +2388,15 @@
 
 
     if (!ok) {
+
       return;
+
     }
 
-
-    /*
-      Kiểm tra pending trước.
-    */
 
     const pending =
       await loadPendingRequest();
 
-
-    /*
-      Vẫn tải thông tin gói để phần trên
-      có dữ liệu dù đang chờ Coach.
-    */
 
     await Promise.all([
 
@@ -2525,11 +2409,6 @@
 
     await applyStudentArea();
 
-
-    /*
-      Nếu đã có pending thì không cần
-      tương tác form nữa.
-    */
 
     if (pending) {
 
