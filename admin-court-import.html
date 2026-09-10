@@ -166,6 +166,15 @@ select {
 }
 
 
+select option {
+
+  background: #08111d;
+
+  color: white;
+
+}
+
+
 .action {
 
   width: 100%;
@@ -282,7 +291,7 @@ table {
 
   width: 100%;
 
-  min-width: 850px;
+  min-width: 900px;
 
   border-collapse:
     collapse;
@@ -324,6 +333,8 @@ th {
 
   margin-top: 4px;
 
+  line-height: 1.45;
+
 }
 
 
@@ -361,6 +372,8 @@ th {
 
   font-weight: 800;
 
+  line-height: 1.5;
+
 }
 
 
@@ -369,6 +382,17 @@ input[type="checkbox"] {
   width: 20px;
 
   height: 20px;
+
+}
+
+
+.empty {
+
+  color: #9dacbe;
+
+  text-align: center;
+
+  padding: 30px;
 
 }
 
@@ -386,6 +410,12 @@ input[type="checkbox"] {
     align-items: stretch;
 
     flex-direction: column;
+
+  }
+
+  #importBtn {
+
+    width: 100% !important;
 
   }
 
@@ -432,10 +462,9 @@ input[type="checkbox"] {
 
 <div class="sub">
 
-  Tìm các địa điểm Pickleball
-  đang có trên OpenStreetMap theo
-  từng Tỉnh/Thành, sau đó đưa
-  những sân cần dùng vào hệ thống PickDee.
+  Tìm các địa điểm Pickleball theo từng Tỉnh/Thành
+  từ OpenStreetMap, sau đó chọn những sân phù hợp
+  để đưa vào kho sân PickDee Academy.
 
 </div>
 
@@ -595,7 +624,7 @@ Chọn tất cả
 
 <th>Tên sân</th>
 
-<th>Thông tin OSM</th>
+<th>Nguồn</th>
 
 <th>Địa chỉ</th>
 
@@ -637,6 +666,10 @@ Chọn tất cả
 (async function () {
 
 
+/* =====================================================
+   SUPABASE
+===================================================== */
+
 const cfg =
   window.PICKDEE_CONFIG || {};
 
@@ -647,6 +680,10 @@ const sb =
     cfg.SUPABASE_PUBLISHABLE_KEY
   );
 
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
 
 const areaSelect =
   document.getElementById(
@@ -708,21 +745,27 @@ const importedCount =
   );
 
 
-let results = [];
+/* =====================================================
+   DATA
+===================================================== */
+
+let results =
+  [];
+
 
 let imported =
   0;
 
 
-
-/* =====================================
+/* =====================================================
    MESSAGE
-===================================== */
+===================================================== */
 
 function showMessage(
   text,
   error = false
 ) {
+
 
   message.textContent =
     text || "";
@@ -736,12 +779,12 @@ function showMessage(
 }
 
 
-
-/* =====================================
+/* =====================================================
    ESCAPE HTML
-===================================== */
+===================================================== */
 
 function escapeHTML(value) {
+
 
   return String(
     value ?? ""
@@ -775,10 +818,9 @@ function escapeHTML(value) {
 }
 
 
-
-/* =====================================
+/* =====================================================
    AUTH ADMIN
-===================================== */
+===================================================== */
 
 const {
   data: { session }
@@ -788,9 +830,11 @@ const {
 
 if (!session) {
 
+
   location.replace(
     "./login.html"
   );
+
 
   return;
 
@@ -812,111 +856,156 @@ const {
 
 
 if (
-  profileError ||
-  !profile ||
+  profileError
+  ||
+  !profile
+  ||
   profile.role !== "admin"
 ) {
+
 
   location.replace(
     "./login.html"
   );
 
+
   return;
 
 }
 
 
-
-/* =====================================
-   LOAD 34 TỈNH / THÀNH
-===================================== */
+/* =====================================================
+   LOAD TỈNH / THÀNH
+===================================================== */
 
 async function loadAreas() {
 
 
-const {
-  data,
-  error
-} =
-  await sb
-    .from("dm_khu_vuc")
-    .select(
-      "ma_khu_vuc,tinh_thanh"
-    )
-    .eq(
-      "dang_hoat_dong",
-      true
-    )
-    .order(
-      "tinh_thanh",
-      {
-        ascending: true
-      }
-    );
+  areaSelect.disabled =
+    true;
 
 
-if (error) {
-
-  showMessage(
-    "Không tải được danh sách Tỉnh/Thành.",
-    true
-  );
-
-  return;
-
-}
+  areaSelect.innerHTML =
+    `
+      <option value="">
+        Đang tải Tỉnh/Thành...
+      </option>
+    `;
 
 
-areaSelect.innerHTML =
-  `
-    <option value="">
-      Chọn Tỉnh/Thành
-    </option>
-  `;
-
-
-(data || []).forEach(
-  area => {
-
-
-    const option =
-      document.createElement(
-        "option"
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("dm_khu_vuc")
+      .select(
+        "ma_khu_vuc,tinh_thanh"
+      )
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "tinh_thanh",
+        {
+          ascending: true
+        }
       );
 
 
-    option.value =
-      area.tinh_thanh;
+  if (error) {
 
 
-    option.textContent =
-      area.tinh_thanh;
-
-
-    areaSelect.appendChild(
-      option
+    console.error(
+      "Lỗi tải tỉnh/thành:",
+      error
     );
 
 
-  }
-);
+    areaSelect.innerHTML =
+      `
+        <option value="">
+          Không tải được Tỉnh/Thành
+        </option>
+      `;
 
+
+    showMessage(
+      "Không tải được danh sách Tỉnh/Thành.",
+      true
+    );
+
+
+    return false;
+
+  }
+
+
+  areaSelect.innerHTML =
+    `
+      <option value="">
+        Chọn Tỉnh/Thành
+      </option>
+    `;
+
+
+  (data || []).forEach(
+    area => {
+
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        area.tinh_thanh;
+
+
+      option.textContent =
+        area.tinh_thanh;
+
+
+      option.dataset.maKhuVuc =
+        area.ma_khu_vuc;
+
+
+      areaSelect.appendChild(
+        option
+      );
+
+
+    }
+  );
+
+
+  areaSelect.disabled =
+    false;
+
+
+  return true;
 
 }
 
 
-
-/* =====================================
-   ESCAPE OVERPASS STRING
-===================================== */
+/* =====================================================
+   ESCAPE OVERPASS
+===================================================== */
 
 function escapeOverpass(value) {
 
-  return String(value || "")
+
+  return String(
+    value || ""
+  )
+
     .replaceAll(
       "\\",
       "\\\\"
     )
+
     .replaceAll(
       '"',
       '\\"'
@@ -925,200 +1014,649 @@ function escapeOverpass(value) {
 }
 
 
+/* =====================================================
+   OVERPASS SERVERS
+===================================================== */
 
-/* =====================================
-   LẤY TỌA ĐỘ
-===================================== */
+/*
+  Nếu server đầu lỗi,
+  tự chuyển server tiếp theo.
+*/
 
-function coordinates(element) {
+const OVERPASS_ENDPOINTS =
+  [
+
+    "https://overpass.kumi.systems/api/interpreter",
+
+    "https://overpass-api.de/api/interpreter",
+
+    "https://overpass.private.coffee/api/interpreter"
+
+  ];
 
 
-if (
-  typeof element.lat ===
-    "number"
-  &&
-  typeof element.lon ===
-    "number"
+/* =====================================================
+   FETCH CÓ TIMEOUT
+===================================================== */
+
+async function fetchWithTimeout(
+  url,
+  options = {},
+  timeoutMs = 45000
 ) {
 
-  return {
-    lat: element.lat,
-    lon: element.lon
-  };
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      function () {
+
+
+        controller.abort();
+
+
+      },
+      timeoutMs
+    );
+
+
+  try {
+
+
+    const response =
+      await fetch(
+        url,
+        {
+
+          ...options,
+
+          signal:
+            controller.signal
+
+        }
+      );
+
+
+    return response;
+
+
+  }
+  finally {
+
+
+    clearTimeout(
+      timer
+    );
+
+  }
 
 }
 
 
-if (
-  element.center
-  &&
-  typeof element.center.lat ===
-    "number"
-  &&
-  typeof element.center.lon ===
-    "number"
+/* =====================================================
+   GỌI OVERPASS
+===================================================== */
+
+async function fetchOverpass(
+  query
 ) {
+
+
+  let lastError =
+    null;
+
+
+  /*
+    Thử từng server.
+  */
+
+  for (
+    let i = 0;
+    i < OVERPASS_ENDPOINTS.length;
+    i++
+  ) {
+
+
+    const endpoint =
+      OVERPASS_ENDPOINTS[i];
+
+
+    const serverNumber =
+      i + 1;
+
+
+    /* =================================================
+       THỬ POST
+    ================================================= */
+
+    try {
+
+
+      showMessage(
+        `Đang tìm dữ liệu sân... Máy chủ ${serverNumber}/${OVERPASS_ENDPOINTS.length}`
+      );
+
+
+      const response =
+        await fetchWithTimeout(
+          endpoint,
+          {
+
+            method:
+              "POST",
+
+            /*
+              Không thêm custom headers.
+              Tránh phát sinh CORS preflight.
+            */
+
+            body:
+              "data="
+              +
+              encodeURIComponent(
+                query
+              )
+
+          }
+        );
+
+
+      if (!response.ok) {
+
+
+        throw new Error(
+          `HTTP ${response.status}`
+        );
+
+      }
+
+
+      const text =
+        await response.text();
+
+
+      if (!text) {
+
+
+        throw new Error(
+          "Máy chủ trả về dữ liệu trống"
+        );
+
+      }
+
+
+      const json =
+        JSON.parse(
+          text
+        );
+
+
+      return json;
+
+
+    }
+    catch (error) {
+
+
+      console.warn(
+        "Overpass POST lỗi:",
+        endpoint,
+        error
+      );
+
+
+      lastError =
+        error;
+
+    }
+
+
+    /* =================================================
+       NẾU POST LỖI → THỬ GET
+    ================================================= */
+
+    try {
+
+
+      showMessage(
+        `Máy chủ ${serverNumber} POST lỗi. Đang thử phương thức dự phòng...`
+      );
+
+
+      const getUrl =
+        endpoint
+        +
+        "?data="
+        +
+        encodeURIComponent(
+          query
+        );
+
+
+      const response =
+        await fetchWithTimeout(
+          getUrl,
+          {
+
+            method:
+              "GET"
+
+          }
+        );
+
+
+      if (!response.ok) {
+
+
+        throw new Error(
+          `HTTP ${response.status}`
+        );
+
+      }
+
+
+      const text =
+        await response.text();
+
+
+      if (!text) {
+
+
+        throw new Error(
+          "Máy chủ trả về dữ liệu trống"
+        );
+
+      }
+
+
+      const json =
+        JSON.parse(
+          text
+        );
+
+
+      return json;
+
+
+    }
+    catch (error) {
+
+
+      console.warn(
+        "Overpass GET lỗi:",
+        endpoint,
+        error
+      );
+
+
+      lastError =
+        error;
+
+    }
+
+  }
+
+
+  throw new Error(
+
+    "Không kết nối được máy chủ OpenStreetMap"
+
+    +
+
+    (
+      lastError?.message
+        ?
+        `: ${lastError.message}`
+        :
+        ""
+    )
+
+  );
+
+}
+
+
+/* =====================================================
+   TỌA ĐỘ
+===================================================== */
+
+function coordinates(
+  element
+) {
+
+
+  if (
+
+    typeof element.lat ===
+      "number"
+
+    &&
+
+    typeof element.lon ===
+      "number"
+
+  ) {
+
+
+    return {
+
+      lat:
+        element.lat,
+
+      lon:
+        element.lon
+
+    };
+
+  }
+
+
+  if (
+
+    element.center
+
+    &&
+
+    typeof element.center.lat ===
+      "number"
+
+    &&
+
+    typeof element.center.lon ===
+      "number"
+
+  ) {
+
+
+    return {
+
+      lat:
+        element.center.lat,
+
+      lon:
+        element.center.lon
+
+    };
+
+  }
+
 
   return {
 
     lat:
-      element.center.lat,
+      null,
 
     lon:
-      element.center.lon
+      null
 
   };
 
 }
 
 
-return {
-
-  lat: null,
-
-  lon: null
-
-};
-
-}
-
-
-
-/* =====================================
+/* =====================================================
    TÊN SÂN
-===================================== */
+===================================================== */
 
 function getCourtName(
   element
 ) {
 
 
-const tags =
-  element.tags || {};
+  const tags =
+    element.tags || {};
 
 
-return (
+  return (
 
-  tags.name
+    tags.name
 
-  ||
+    ||
 
-  tags["name:vi"]
+    tags["name:vi"]
 
-  ||
+    ||
 
-  tags.operator
+    tags.operator
 
-  ||
+    ||
 
-  `Sân Pickleball OSM ${element.id}`
+    tags.brand
 
-);
+    ||
+
+    `Sân Pickleball OSM ${element.id}`
+
+  );
 
 }
 
 
-
-/* =====================================
+/* =====================================================
    ĐỊA CHỈ
-===================================== */
+===================================================== */
 
 function getAddress(
   element
 ) {
 
 
-const tags =
-  element.tags || {};
+  const tags =
+    element.tags || {};
 
 
-const house =
-  tags["addr:housenumber"];
+  const parts =
+    [
+
+      tags["addr:housenumber"],
+
+      tags["addr:street"],
+
+      tags["addr:suburb"],
+
+      tags["addr:quarter"],
+
+      tags["addr:district"],
+
+      tags["addr:city"],
+
+      tags["addr:province"]
+
+    ]
+      .filter(Boolean);
 
 
-const street =
-  tags["addr:street"];
-
-
-const suburb =
-  tags["addr:suburb"];
-
-
-const district =
-  tags["addr:district"];
-
-
-const city =
-  tags["addr:city"];
-
-
-const parts =
-  [
-    house,
-    street,
-    suburb,
-    district,
-    city
-  ]
-    .filter(Boolean);
-
-
-return parts.join(", ");
+  return parts.join(
+    ", "
+  );
 
 }
 
 
-
-/* =====================================
-   PHƯỜNG/XÃ NẾU OSM CÓ
-===================================== */
+/* =====================================================
+   PHƯỜNG / XÃ
+===================================================== */
 
 function getWard(
   element
 ) {
 
 
-const tags =
-  element.tags || {};
+  const tags =
+    element.tags || {};
 
 
-return (
+  return (
 
-  tags["addr:suburb"]
+    tags["addr:suburb"]
 
-  ||
+    ||
 
-  tags["addr:quarter"]
+    tags["addr:quarter"]
 
-  ||
+    ||
 
-  tags["addr:neighbourhood"]
+    tags["addr:neighbourhood"]
 
-  ||
+    ||
 
-  null
+    null
 
-);
+  );
 
 }
 
 
+/* =====================================================
+   NHẬN BIẾT NGUỒN MATCH
+===================================================== */
 
-/* =====================================
+function getMatchType(
+  element
+) {
+
+
+  const tags =
+    element.tags || {};
+
+
+  const sport =
+    String(
+      tags.sport || ""
+    )
+      .toLowerCase();
+
+
+  const name =
+    String(
+      tags.name || ""
+    )
+      .toLowerCase();
+
+
+  if (
+    sport.includes(
+      "pickleball"
+    )
+  ) {
+
+
+    return "sport=pickleball";
+
+  }
+
+
+  if (
+    name.includes(
+      "pickleball"
+    )
+  ) {
+
+
+    return "Tên có Pickleball";
+
+  }
+
+
+  return "OpenStreetMap";
+
+}
+
+
+/* =====================================================
+   LOẠI BỎ KẾT QUẢ TRÙNG
+===================================================== */
+
+function uniqueElements(
+  elements
+) {
+
+
+  const map =
+    new Map();
+
+
+  (elements || []).forEach(
+    element => {
+
+
+      const key =
+        `${element.type}/${element.id}`;
+
+
+      if (
+        !map.has(
+          key
+        )
+      ) {
+
+
+        map.set(
+          key,
+          element
+        );
+
+      }
+
+    }
+  );
+
+
+  return [
+    ...map.values()
+  ];
+
+}
+
+
+/* =====================================================
    RENDER
-===================================== */
+===================================================== */
 
 function renderResults() {
 
 
-foundCount.textContent =
-  results.length;
+  foundCount.textContent =
+    results.length;
 
 
-resultBody.innerHTML =
-  results
-    .map(
-      (item,index) => `
+  if (
+    results.length === 0
+  ) {
+
+
+    resultBody.innerHTML =
+      `
+        <tr>
+
+          <td
+            colspan="5"
+            class="empty"
+          >
+
+            Chưa có kết quả.
+
+          </td>
+
+        </tr>
+      `;
+
+
+    updateSelectedCount();
+
+
+    return;
+
+  }
+
+
+  resultBody.innerHTML =
+    results
+      .map(
+        (item,index) => `
 
 
 <tr>
@@ -1138,14 +1676,18 @@ resultBody.innerHTML =
 <td>
 
 <strong>
-  ${escapeHTML(item.name)}
+  ${escapeHTML(
+    item.name
+  )}
 </strong>
+
 
 <div class="small">
 
 ${escapeHTML(
   item.type
-)} ${escapeHTML(
+)}
+${escapeHTML(
   item.osmId
 )}
 
@@ -1157,11 +1699,18 @@ ${escapeHTML(
 <td>
 
 <span class="badge">
-  sport=pickleball
+
+  ${escapeHTML(
+    item.matchType
+  )}
+
 </span>
 
+
 <div class="small">
+
   OpenStreetMap
+
 </div>
 
 </td>
@@ -1170,8 +1719,26 @@ ${escapeHTML(
 <td>
 
 ${escapeHTML(
-  item.address || "Chưa có địa chỉ"
+  item.address
+  ||
+  "Chưa có địa chỉ"
 )}
+
+
+${
+  item.ward
+    ?
+    `
+      <div class="small">
+        Khu vực OSM:
+        ${escapeHTML(
+          item.ward
+        )}
+      </div>
+    `
+    :
+    ""
+}
 
 </td>
 
@@ -1194,35 +1761,34 @@ ${item.longitude ?? "—"}
 </tr>
 
 
-      `
-    )
-    .join("");
+        `
+      )
+      .join("");
 
 
-updateSelectedCount();
+  updateSelectedCount();
 
 }
 
 
-
-/* =====================================
-   SELECT COUNT
-===================================== */
+/* =====================================================
+   SELECT
+===================================================== */
 
 function getSelectedIndexes() {
 
 
-return [
-  ...document.querySelectorAll(
-    ".court-checkbox:checked"
-  )
-]
-  .map(
-    checkbox =>
-      Number(
-        checkbox.dataset.index
-      )
-  );
+  return [
+    ...document.querySelectorAll(
+      ".court-checkbox:checked"
+    )
+  ]
+    .map(
+      checkbox =>
+        Number(
+          checkbox.dataset.index
+        )
+    );
 
 }
 
@@ -1230,89 +1796,141 @@ return [
 function updateSelectedCount() {
 
 
-selectedCount.textContent =
-  getSelectedIndexes()
-    .length;
+  selectedCount.textContent =
+    getSelectedIndexes()
+      .length;
+
+
+  const allCheckboxes =
+    [
+      ...document.querySelectorAll(
+        ".court-checkbox"
+      )
+    ];
+
+
+  if (
+    allCheckboxes.length === 0
+  ) {
+
+
+    selectAll.checked =
+      false;
+
+
+    return;
+
+  }
+
+
+  selectAll.checked =
+    allCheckboxes.every(
+      checkbox =>
+        checkbox.checked
+    );
 
 }
 
 
-
-/* =====================================
+/* =====================================================
    TÌM OSM
-===================================== */
+===================================================== */
 
 searchBtn.addEventListener(
   "click",
   async function () {
 
 
-const area =
-  areaSelect.value.trim();
+    const area =
+      areaSelect.value.trim();
 
 
-if (!area) {
-
-  showMessage(
-    "Hãy chọn Tỉnh/Thành.",
-    true
-  );
-
-  return;
-
-}
+    if (!area) {
 
 
-searchBtn.disabled =
-  true;
+      showMessage(
+        "Hãy chọn Tỉnh/Thành.",
+        true
+      );
 
 
-resultSection.style.display =
-  "none";
+      return;
+
+    }
 
 
-results = [];
+    searchBtn.disabled =
+      true;
 
 
-imported = 0;
+    importBtn.disabled =
+      false;
 
 
-importedCount.textContent =
-  "0";
+    selectAll.checked =
+      false;
 
 
-showMessage(
-  `Đang tìm sân Pickleball tại ${area}...`
-);
+    resultSection.style.display =
+      "none";
 
 
-try {
+    results =
+      [];
 
 
-const safeArea =
-  escapeOverpass(area);
+    imported =
+      0;
 
 
-/*
-  Tìm boundary cấp tỉnh.
-  Sau đó tìm node / way / relation
-  có sport=pickleball.
-*/
+    importedCount.textContent =
+      "0";
 
-const query = `
 
-[out:json][timeout:60];
+    showMessage(
+      `Đang tìm sân Pickleball tại ${area}...`
+    );
+
+
+    try {
+
+
+      const safeArea =
+        escapeOverpass(
+          area
+        );
+
+
+      /*
+        TÌM THEO 2 CÁCH:
+
+        1. Có tag sport=pickleball
+        2. Tên địa điểm có chữ pickleball
+
+        Như vậy rộng hơn bản cũ.
+      */
+
+      const query = `
+
+[out:json][timeout:45];
 
 area
   ["boundary"="administrative"]
-  ["admin_level"="4"]
   ["name"="${safeArea}"]
   ->.searchArea;
 
 (
 
   nwr
-    ["sport"~"(^|;)pickleball(;|$)"]
+    ["sport"~"(^|;)pickleball(;|$)",i]
+    (area.searchArea);
+
+  nwr
+    ["name"~"pickleball",i]
+    (area.searchArea);
+
+  nwr
+    ["operator"~"pickleball",i]
     (area.searchArea);
 
 );
@@ -1322,390 +1940,409 @@ out center tags;
 `;
 
 
-const response =
-  await fetch(
-    "https://overpass-api.de/api/interpreter",
-    {
-
-      method:
-        "POST",
-
-      headers: {
-
-        "Content-Type":
-          "application/x-www-form-urlencoded;charset=UTF-8"
-
-      },
-
-      body:
-        "data="
-        +
-        encodeURIComponent(
+      const json =
+        await fetchOverpass(
           query
-        )
-
-    }
-  );
+        );
 
 
-if (!response.ok) {
-
-  throw new Error(
-    `Overpass HTTP ${response.status}`
-  );
-
-}
+      const elements =
+        uniqueElements(
+          json.elements || []
+        );
 
 
-const json =
-  await response.json();
+      results =
+        elements
+          .map(
+            element => {
 
 
-const elements =
-  json.elements || [];
+              const coords =
+                coordinates(
+                  element
+                );
 
 
-results =
-  elements
-    .map(
-      element => {
+              return {
 
 
-        const coords =
-          coordinates(
-            element
+                externalId:
+                  `${element.type}/${element.id}`,
+
+
+                type:
+                  element.type,
+
+
+                osmId:
+                  element.id,
+
+
+                name:
+                  getCourtName(
+                    element
+                  ),
+
+
+                area:
+                  area,
+
+
+                ward:
+                  getWard(
+                    element
+                  ),
+
+
+                address:
+                  getAddress(
+                    element
+                  ),
+
+
+                latitude:
+                  coords.lat,
+
+
+                longitude:
+                  coords.lon,
+
+
+                matchType:
+                  getMatchType(
+                    element
+                  ),
+
+
+                sourceUrl:
+                  `https://www.openstreetmap.org/${element.type}/${element.id}`
+
+              };
+
+
+            }
           );
 
 
-        return {
+      renderResults();
 
 
-          externalId:
-            `${element.type}/${element.id}`,
+      resultSection.style.display =
+        "block";
 
 
-          type:
-            element.type,
+      if (
+        results.length === 0
+      ) {
 
 
-          osmId:
-            element.id,
+        showMessage(
 
+          `✓ Đã kết nối OpenStreetMap nhưng chưa tìm thấy sân Pickleball có dữ liệu tại ${area}.`
 
-          name:
-            getCourtName(
-              element
-            ),
-
-
-          area:
-            area,
-
-
-          ward:
-            getWard(
-              element
-            ),
-
-
-          address:
-            getAddress(
-              element
-            ),
-
-
-          latitude:
-            coords.lat,
-
-
-          longitude:
-            coords.lon,
-
-
-          sourceUrl:
-            `https://www.openstreetmap.org/${element.type}/${element.id}`
-
-        };
-
+        );
 
       }
-    );
+      else {
 
 
-renderResults();
+        showMessage(
+
+          `✓ Tìm thấy ${results.length} địa điểm tại ${area}. Kiểm tra danh sách rồi chọn sân cần nhập.`
+
+        );
+
+      }
 
 
-resultSection.style.display =
-  "block";
+    }
+    catch (error) {
 
 
-if (
-  results.length === 0
-) {
-
-  showMessage(
-    `Chưa tìm thấy sân Pickleball được gắn dữ liệu OSM tại ${area}.`
-  );
-
-}
-else {
-
-  showMessage(
-    `✓ Tìm thấy ${results.length} kết quả tại ${area}. Hãy kiểm tra rồi chọn sân cần nhập.`
-  );
-
-}
+      console.error(
+        "Lỗi tìm OSM:",
+        error
+      );
 
 
-}
-catch (error) {
+      showMessage(
+
+        "Không tìm được dữ liệu sân: "
+
+        +
+
+        (
+          error.message
+          ||
+          error
+        ),
+
+        true
+
+      );
+
+    }
+    finally {
 
 
-console.error(
-  error
-);
+      searchBtn.disabled =
+        false;
 
-
-showMessage(
-  "Không tìm được dữ liệu sân: "
-  +
-  (
-    error.message ||
-    error
-  ),
-  true
-);
-
-
-}
-finally {
-
-
-searchBtn.disabled =
-  false;
-
-
-}
-
+    }
 
   }
 );
 
 
-
-/* =====================================
+/* =====================================================
    CHECKBOX
-===================================== */
+===================================================== */
 
 resultBody.addEventListener(
   "change",
   function (event) {
 
 
-if (
-  event.target.classList.contains(
-    "court-checkbox"
-  )
-) {
+    if (
+      event.target.classList.contains(
+        "court-checkbox"
+      )
+    ) {
 
-  updateSelectedCount();
 
-}
+      updateSelectedCount();
 
+    }
 
   }
 );
 
 
+/* =====================================================
+   SELECT ALL
+===================================================== */
 
 selectAll.addEventListener(
   "change",
   function () {
 
 
-document.querySelectorAll(
-  ".court-checkbox"
-)
-.forEach(
-  checkbox => {
+    document.querySelectorAll(
+      ".court-checkbox"
+    )
+      .forEach(
+        checkbox => {
 
-    checkbox.checked =
-      selectAll.checked;
+
+          checkbox.checked =
+            selectAll.checked;
+
+        }
+      );
+
+
+    updateSelectedCount();
 
   }
 );
 
 
-updateSelectedCount();
-
-
-  }
-);
-
-
-
-/* =====================================
-   IMPORT
-===================================== */
+/* =====================================================
+   IMPORT SÂN
+===================================================== */
 
 importBtn.addEventListener(
   "click",
   async function () {
 
 
-const indexes =
-  getSelectedIndexes();
+    const indexes =
+      getSelectedIndexes();
 
 
-if (
-  indexes.length === 0
-) {
-
-  showMessage(
-    "Bạn chưa chọn sân nào.",
-    true
-  );
-
-  return;
-
-}
+    if (
+      indexes.length === 0
+    ) {
 
 
-importBtn.disabled =
-  true;
+      showMessage(
+        "Bạn chưa chọn sân nào.",
+        true
+      );
 
 
-showMessage(
-  `Đang nhập ${indexes.length} sân vào PickDee...`
-);
-
-
-let success =
-  0;
-
-
-let failed =
-  0;
-
-
-for (
-  const index of indexes
-) {
-
-
-const court =
-  results[index];
-
-
-try {
-
-
-const {
-  error
-} =
-  await sb.rpc(
-    "admin_import_osm_court",
-    {
-
-      p_external_id:
-        court.externalId,
-
-      p_name:
-        court.name,
-
-      p_area:
-        court.area,
-
-      p_ward:
-        court.ward,
-
-      p_address:
-        court.address
-        ||
-        null,
-
-      p_latitude:
-        court.latitude,
-
-      p_longitude:
-        court.longitude,
-
-      p_source_url:
-        court.sourceUrl
+      return;
 
     }
-  );
 
 
-if (error) {
-
-  throw error;
-
-}
+    importBtn.disabled =
+      true;
 
 
-success++;
+    searchBtn.disabled =
+      true;
 
 
-}
-catch (error) {
+    showMessage(
+      `Đang nhập ${indexes.length} sân vào kho PickDee...`
+    );
 
 
-failed++;
+    let success =
+      0;
 
 
-console.error(
-  "Import lỗi:",
-  court,
-  error
-);
+    let failed =
+      0;
 
 
-}
+    for (
+      const index
+      of indexes
+    ) {
 
 
-}
+      const court =
+        results[index];
 
 
-imported +=
-  success;
+      if (!court) {
+
+        continue;
+
+      }
 
 
-importedCount.textContent =
-  imported;
+      try {
 
 
-if (
-  failed === 0
-) {
-
-  showMessage(
-    `✓ Đã nhập ${success} sân vào kho PickDee.`
-  );
-
-}
-else {
-
-  showMessage(
-    `Đã nhập ${success} sân; ${failed} sân bị lỗi.`,
-    true
-  );
-
-}
+        const {
+          error
+        } =
+          await sb.rpc(
+            "admin_import_osm_court",
+            {
 
 
-importBtn.disabled =
-  false;
+              p_external_id:
+                court.externalId,
 
+
+              p_name:
+                court.name,
+
+
+              p_area:
+                court.area,
+
+
+              p_ward:
+                court.ward
+                ||
+                null,
+
+
+              p_address:
+                court.address
+                ||
+                null,
+
+
+              p_latitude:
+                court.latitude,
+
+
+              p_longitude:
+                court.longitude,
+
+
+              p_source_url:
+                court.sourceUrl
+
+
+            }
+          );
+
+
+        if (error) {
+
+
+          throw error;
+
+        }
+
+
+        success++;
+
+
+      }
+      catch (error) {
+
+
+        failed++;
+
+
+        console.error(
+          "Import lỗi:",
+          court,
+          error
+        );
+
+      }
+
+    }
+
+
+    imported +=
+      success;
+
+
+    importedCount.textContent =
+      imported;
+
+
+    if (
+      failed === 0
+    ) {
+
+
+      showMessage(
+
+        `✓ Đã nhập ${success} sân vào kho PickDee.`
+
+      );
+
+    }
+    else {
+
+
+      showMessage(
+
+        `Đã nhập ${success} sân. Có ${failed} sân bị lỗi.`,
+
+        true
+
+      );
+
+    }
+
+
+    importBtn.disabled =
+      false;
+
+
+    searchBtn.disabled =
+      false;
 
   }
 );
 
 
-
-/* =====================================
+/* =====================================================
    START
-===================================== */
+===================================================== */
 
 await loadAreas();
 
