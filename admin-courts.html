@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Quản lý sân | PickDee Academy
+  </title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+
+    }
+
+
+    .topbar {
+
+      padding: 18px 24px;
+
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .brand {
+
+      font-size: 19px;
+      font-weight: 900;
+
+    }
+
+
+    .brand span {
+
+      color: #d8ff45;
+
+    }
+
+
+    .top-actions {
+
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+    }
+
+
+    #userEmail {
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 14px;
+
+    }
+
+
+    .logout {
+
+      padding:
+        9px 12px;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        white;
+
+      font-weight:
+        800;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .container {
+
+      width:
+        min(
+          1150px,
+          calc(100% - 28px)
+        );
+
+      margin:
+        auto;
+
+      padding:
+        32px 0 60px;
+
+    }
+
+
+    .back {
+
+      color:
+        #d8ff45;
+
+      text-decoration:
+        none;
+
+      font-weight:
+        900;
+
+    }
+
+
+    .eyebrow {
+
+      margin-top:
+        25px;
+
+      color:
+        #d8ff45;
+
+      font-size:
+        13px;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        1px;
+
+    }
+
+
+    h1 {
+
+      margin:
+        8px 0 5px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+
+    }
+
+
+    .sub {
+
+      color:
+        rgba(255,255,255,.62);
+
+      margin-bottom:
+        24px;
+
+    }
+
+
+    .card {
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius:
+        16px;
+
+      padding:
+        20px;
+
+      margin-bottom:
+        20px;
+
+    }
+
+
+    .section-title {
+
+      font-size:
+        21px;
+
+      font-weight:
+        900;
+
+      margin-bottom:
+        17px;
+
+    }
+
+
+    /* =====================================
+       FORM
+    ====================================== */
+
+    .form-grid {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        14px;
+
+    }
+
+
+    .field {
+
+      margin-bottom:
+        15px;
+
+    }
+
+
+    label {
+
+      display:
+        block;
+
+      margin-bottom:
+        6px;
+
+      font-size:
+        12px;
+
+      font-weight:
+        800;
+
+      color:
+        rgba(255,255,255,.58);
+
+    }
+
+
+    input,
+    select {
+
+      width:
+        100%;
+
+      padding:
+        13px;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        #09285a;
+
+      color:
+        white;
+
+      outline:
+        none;
+
+      font-size:
+        15px;
+
+    }
+
+
+    .buttons {
+
+      display:
+        flex;
+
+      gap:
+        10px;
+
+      margin-top:
+        4px;
+
+    }
+
+
+    .save-btn {
+
+      flex:
+        1;
+
+      padding:
+        14px;
+
+      border:
+        0;
+
+      border-radius:
+        10px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #172600;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .cancel-btn {
+
+      display:
+        none;
+
+      padding:
+        14px 18px;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        white;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    button:disabled {
+
+      opacity:
+        .5;
+
+      cursor:
+        wait;
+
+    }
+
+
+    /* =====================================
+       SUMMARY
+    ====================================== */
+
+    .summary {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap:
+        13px;
+
+      margin-bottom:
+        20px;
+
+    }
+
+
+    .summary-card {
+
+      padding:
+        17px;
+
+      border-radius:
+        14px;
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+    }
+
+
+    .summary-label {
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size:
+        12px;
+
+      margin-bottom:
+        6px;
+
+    }
+
+
+    .summary-value {
+
+      color:
+        #d8ff45;
+
+      font-size:
+        24px;
+
+      font-weight:
+        900;
+
+    }
+
+
+    /* =====================================
+       TABLE
+    ====================================== */
+
+    .table-wrap {
+
+      overflow-x:
+        auto;
+
+    }
+
+
+    table {
+
+      width:
+        100%;
+
+      min-width:
+        900px;
+
+      border-collapse:
+        collapse;
+
+    }
+
+
+    th,
+    td {
+
+      padding:
+        13px 10px;
+
+      text-align:
+        left;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      font-size:
+        14px;
+
+    }
+
+
+    th {
+
+      color:
+        #d8ff45;
+
+    }
+
+
+    tbody tr:hover {
+
+      background:
+        rgba(255,255,255,.04);
+
+    }
+
+
+    .money {
+
+      font-weight:
+        900;
+
+    }
+
+
+    .badge {
+
+      display:
+        inline-block;
+
+      padding:
+        6px 9px;
+
+      border-radius:
+        999px;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+      background:
+        rgba(216,255,69,.12);
+
+      color:
+        #d8ff45;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .badge.off {
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        rgba(255,255,255,.55);
+
+    }
+
+
+    .edit-btn {
+
+      padding:
+        8px 11px;
+
+      border:
+        0;
+
+      border-radius:
+        8px;
+
+      background:
+        white;
+
+      color:
+        #062456;
+
+      font-weight:
+        900;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    #message {
+
+      min-height:
+        20px;
+
+      margin-bottom:
+        15px;
+
+      font-weight:
+        800;
+
+    }
+
+
+    .empty {
+
+      text-align:
+        center;
+
+      padding:
+        28px;
+
+      color:
+        rgba(255,255,255,.55);
+
+    }
+
+
+    @media(max-width:700px) {
+
+      .form-grid,
+      .summary {
+
+        grid-template-columns:
+          1fr;
+
+      }
+
+
+      #userEmail {
+
+        display:
+          none;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>Academy</span>
+
+  </div>
+
+
+  <div class="top-actions">
+
+    <div id="userEmail"></div>
+
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+
+      ĐĂNG XUẤT
+
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <a
+    href="./admin"
+    class="back"
+  >
+
+    ← Khu vực Admin
+
+  </a>
+
+
+  <div class="eyebrow">
+
+    HỆ THỐNG SÂN
+
+  </div>
+
+
+  <h1>
+
+    Sân & khu vực
+
+  </h1>
+
+
+  <div class="sub">
+
+    Quản lý sân học và giá thuê sân.
+    Giá này sẽ tự động được lấy khi tạo buổi học.
+
+  </div>
+
+
+  <!-- =====================================
+       SUMMARY
+  ====================================== -->
+
+  <section class="summary">
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Tổng số sân
+      </div>
+
+      <div
+        id="totalCourts"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Đang hoạt động
+      </div>
+
+      <div
+        id="activeCourts"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Khu vực
+      </div>
+
+      <div
+        id="totalAreas"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <!-- =====================================
+       FORM
+  ====================================== -->
+
+  <section class="card">
+
+
+    <div
+      id="formTitle"
+      class="section-title"
+    >
+
+      ➕ Thêm sân
+
+    </div>
+
+
+    <form id="courtForm">
+
+
+      <div class="form-grid">
+
+
+        <div class="field">
+
+          <label>
+            Tên sân *
+          </label>
+
+          <input
+            id="courtName"
+            type="text"
+            placeholder="Ví dụ: Sân PickDee Bắc Giang"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Khu vực / Tỉnh
+          </label>
+
+          <input
+            id="courtArea"
+            type="text"
+            placeholder="Ví dụ: Bắc Giang"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Phường / xã
+          </label>
+
+          <input
+            id="courtWard"
+            type="text"
+            placeholder="Không bắt buộc"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Giá sân / buổi *
+          </label>
+
+          <input
+            id="courtPrice"
+            type="number"
+            min="0"
+            step="1000"
+            placeholder="Ví dụ: 100000"
+            required
+          >
+
+        </div>
+
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Địa chỉ
+        </label>
+
+        <input
+          id="courtAddress"
+          type="text"
+          placeholder="Địa chỉ sân"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Trạng thái
+        </label>
+
+        <select id="courtStatus">
+
+          <option value="Hoạt động">
+            Hoạt động
+          </option>
+
+          <option value="Ngừng hoạt động">
+            Ngừng hoạt động
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="buttons">
+
+        <button
+          id="saveBtn"
+          class="save-btn"
+          type="submit"
+        >
+
+          + THÊM SÂN
+
+        </button>
+
+
+        <button
+          id="cancelBtn"
+          class="cancel-btn"
+          type="button"
+        >
+
+          HỦY SỬA
+
+        </button>
+
+      </div>
+
+
+    </form>
+
+
+  </section>
+
+
+  <!-- =====================================
+       LIST
+  ====================================== -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+
+      🏟️ Danh sách sân
+
+    </div>
+
+
+    <div class="table-wrap">
+
+
+      <table>
+
+
+        <thead>
+
+          <tr>
+
+            <th>Mã sân</th>
+
+            <th>Tên sân</th>
+
+            <th>Khu vực</th>
+
+            <th>Phường / xã</th>
+
+            <th>Giá / buổi</th>
+
+            <th>Trạng thái</th>
+
+            <th>Thao tác</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="courtBody">
+
+          <tr>
+
+            <td colspan="7">
+              Đang tải danh sách sân...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+
+      </table>
+
+
+    </div>
+
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let courts =
+    [];
+
+
+  let editingCourtId =
+    null;
+
+
+  const courtBody =
+    document.getElementById(
+      "courtBody"
+    );
+
+
+  const courtForm =
+    document.getElementById(
+      "courtForm"
+    );
+
+
+  const courtName =
+    document.getElementById(
+      "courtName"
+    );
+
+
+  const courtArea =
+    document.getElementById(
+      "courtArea"
+    );
+
+
+  const courtWard =
+    document.getElementById(
+      "courtWard"
+    );
+
+
+  const courtAddress =
+    document.getElementById(
+      "courtAddress"
+    );
+
+
+  const courtPrice =
+    document.getElementById(
+      "courtPrice"
+    );
+
+
+  const courtStatus =
+    document.getElementById(
+      "courtStatus"
+    );
+
+
+  const formTitle =
+    document.getElementById(
+      "formTitle"
+    );
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  const cancelBtn =
+    document.getElementById(
+      "cancelBtn"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showMessage(
+    text,
+    error = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+
+  }
+
+
+  /* =====================================
+     AUTH ADMIN
+  ====================================== */
+
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    session.user.email || "";
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError ||
+    !profile ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================
+     LOAD COURTS
+  ====================================== */
+
+
+  async function loadCourts() {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_courts"
+      );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    courts =
+      data || [];
+
+
+    renderSummary();
+
+    renderCourts();
+
+  }
+
+
+  /* =====================================
+     SUMMARY
+  ====================================== */
+
+
+  function renderSummary() {
+
+
+    const active =
+      courts.filter(
+        court =>
+          court.status ===
+          "Hoạt động"
+      );
+
+
+    const areas =
+      new Set(
+        courts
+          .map(
+            court =>
+              court.area
+          )
+          .filter(Boolean)
+      );
+
+
+    document.getElementById(
+      "totalCourts"
+    ).textContent =
+      courts.length;
+
+
+    document.getElementById(
+      "activeCourts"
+    ).textContent =
+      active.length;
+
+
+    document.getElementById(
+      "totalAreas"
+    ).textContent =
+      areas.size;
+
+  }
+
+
+  /* =====================================
+     RENDER COURTS
+  ====================================== */
+
+
+  function renderCourts() {
+
+
+    if (
+      courts.length === 0
+    ) {
+
+      courtBody.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="7"
+              class="empty"
+            >
+              Chưa có sân.
+            </td>
+
+          </tr>
+        `;
+
+
+      return;
+
+    }
+
+
+    courtBody.innerHTML =
+      courts
+        .map(
+          court => `
+
+            <tr>
+
+              <td>
+
+                ${escapeHTML(
+                  court.court_code ||
+                  "—"
+                )}
+
+              </td>
+
+
+              <td>
+
+                <strong>
+
+                  ${escapeHTML(
+                    court.name
+                  )}
+
+                </strong>
+
+              </td>
+
+
+              <td>
+
+                ${escapeHTML(
+                  court.area ||
+                  "—"
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${escapeHTML(
+                  court.ward ||
+                  "—"
+                )}
+
+              </td>
+
+
+              <td class="money">
+
+                ${money(
+                  court.price_per_session
+                )}
+
+              </td>
+
+
+              <td>
+
+                <span
+                  class="badge ${
+                    court.status ===
+                    "Hoạt động"
+                      ? ""
+                      : "off"
+                  }"
+                >
+
+                  ${escapeHTML(
+                    court.status
+                  )}
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <button
+                  type="button"
+                  class="edit-btn"
+                  data-id="${
+                    court.id
+                  }"
+                >
+
+                  SỬA
+
+                </button>
+
+              </td>
+
+            </tr>
+
+          `
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================
+     RESET FORM
+  ====================================== */
+
+
+  function resetForm() {
+
+
+    editingCourtId =
+      null;
+
+
+    courtForm.reset();
+
+
+    courtStatus.value =
+      "Hoạt động";
+
+
+    formTitle.textContent =
+      "➕ Thêm sân";
+
+
+    saveBtn.textContent =
+      "+ THÊM SÂN";
+
+
+    cancelBtn.style.display =
+      "none";
+
+  }
+
+
+  /* =====================================
+     EDIT
+  ====================================== */
+
+
+  courtBody.addEventListener(
+    "click",
+    function (event) {
+
+
+      const button =
+        event.target.closest(
+          ".edit-btn[data-id]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      const court =
+        courts.find(
+          item =>
+            Number(item.id) ===
+            Number(
+              button.dataset.id
+            )
+        );
+
+
+      if (!court) {
+        return;
+      }
+
+
+      editingCourtId =
+        Number(court.id);
+
+
+      courtName.value =
+        court.name || "";
+
+
+      courtArea.value =
+        court.area || "";
+
+
+      courtWard.value =
+        court.ward || "";
+
+
+      courtAddress.value =
+        court.address || "";
+
+
+      courtPrice.value =
+        court.price_per_session || 0;
+
+
+      courtStatus.value =
+        court.status ||
+        "Hoạt động";
+
+
+      formTitle.textContent =
+        "✏️ Sửa sân";
+
+
+      saveBtn.textContent =
+        "✓ LƯU THAY ĐỔI";
+
+
+      cancelBtn.style.display =
+        "block";
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+    }
+  );
+
+
+  cancelBtn.addEventListener(
+    "click",
+    resetForm
+  );
+
+
+  /* =====================================
+     SAVE
+  ====================================== */
+
+
+  courtForm.addEventListener(
+    "submit",
+    async function (event) {
+
+
+      event.preventDefault();
+
+
+      const price =
+        Number(
+          courtPrice.value
+        );
+
+
+      if (
+        !courtName.value.trim()
+      ) {
+
+        showMessage(
+          "Vui lòng nhập tên sân.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        Number.isNaN(price)
+        ||
+        price < 0
+      ) {
+
+        showMessage(
+          "Giá sân không hợp lệ.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+
+      showMessage(
+        editingCourtId
+          ?
+          "Đang cập nhật sân..."
+          :
+          "Đang tạo sân..."
+      );
+
+
+      try {
+
+
+        const {
+          error
+        } =
+          await sb.rpc(
+            "admin_save_court",
+            {
+
+              p_court_id:
+                editingCourtId,
+
+              p_name:
+                courtName.value.trim(),
+
+              p_area:
+                courtArea.value.trim()
+                ||
+                null,
+
+              p_ward:
+                courtWard.value.trim()
+                ||
+                null,
+
+              p_address:
+                courtAddress.value.trim()
+                ||
+                null,
+
+              p_price_per_session:
+                price,
+
+              p_status:
+                courtStatus.value
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        resetForm();
+
+
+        await loadCourts();
+
+
+        showMessage(
+          editingCourtId
+            ?
+            "✓ Đã cập nhật sân."
+            :
+            "✓ Đã lưu sân thành công."
+        );
+
+
+      }
+
+
+      catch (error) {
+
+
+        console.error(
+          error
+        );
+
+
+        showMessage(
+          "Không lưu được sân: "
+          +
+          (
+            error.message ||
+            error
+          ),
+          true
+        );
+
+
+      }
+
+
+      finally {
+
+
+        saveBtn.disabled =
+          false;
+
+      }
+
+
+    }
+  );
+
+
+  /* =====================================
+     LOGOUT
+  ====================================== */
+
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      await sb.auth.signOut();
+
+
+      location.replace(
+        "./login.html"
+      );
+
+    }
+  );
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+
+  try {
+
+
+    await loadCourts();
+
+
+  }
+
+
+  catch (error) {
+
+
+    console.error(
+      error
+    );
+
+
+    showMessage(
+      "Không tải được danh sách sân: "
+      +
+      (
+        error.message ||
+        error
+      ),
+      true
+    );
+
+
+  }
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
