@@ -3130,13 +3130,42 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
     "click",
     async function () {
 
-      await sb.auth
-        .signOut();
+      logoutBtn.addEventListener(
+  "click",
+  async function () {
 
+    try {
 
-      window.location.href =
-        "./login.html";
+      logoutBtn.disabled =
+        true;
 
+      logoutBtn.textContent =
+        "ĐANG ĐĂNG XUẤT...";
+
+      await sb.auth.signOut();
+
+      window.location.replace(
+        "/?v=" + Date.now()
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "LOGOUT ERROR:",
+        error
+      );
+
+      logoutBtn.disabled =
+        false;
+
+      logoutBtn.textContent =
+        "ĐĂNG XUẤT";
+
+    }
+
+  }
+);
     }
   );
 
