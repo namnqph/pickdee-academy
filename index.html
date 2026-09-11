@@ -48,7 +48,30 @@
   <!-- =====================================================
        STYLE RIÊNG CHO ĐĂNG KÝ / ĐĂNG NHẬP
   ====================================================== -->
+.forgot-password-btn {
 
+  border: 0;
+  background: transparent;
+  color: #d8ff45;
+
+  padding: 6px 0;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 900;
+
+  text-align: left;
+}
+
+.forgot-password-btn:hover {
+  text-decoration: underline;
+}
+
+.forgot-password-btn:disabled {
+  opacity: .55;
+  cursor: wait;
+}
   <style>
 
     .academy-access {
@@ -588,7 +611,13 @@
 
           </button>
 
-
+<button
+  id="forgotPasswordBtn"
+  type="button"
+  class="forgot-password-btn"
+>
+  QUÊN MẬT KHẨU?
+</button>
         </form>
 
 
@@ -1163,7 +1192,10 @@
     document.getElementById(
       "academyLoginMessage"
     );
-
+const forgotPasswordBtn =
+  document.getElementById(
+    "forgotPasswordBtn"
+  );
 
   /* =====================================================
      TAB
@@ -1394,7 +1426,117 @@
 
 
   }
+/* =====================================================
+   QUÊN MẬT KHẨU
+====================================================== */
 
+forgotPasswordBtn.addEventListener(
+  "click",
+  async function () {
+
+    const email =
+      document
+        .getElementById(
+          "loginEmail"
+        )
+        .value
+        .trim();
+
+
+    if (!email) {
+
+      loginMessage.className =
+        "login-message error";
+
+      loginMessage.textContent =
+        "Hãy nhập email tài khoản trước.";
+
+      document
+        .getElementById(
+          "loginEmail"
+        )
+        .focus();
+
+      return;
+    }
+
+
+    forgotPasswordBtn.disabled =
+      true;
+
+    forgotPasswordBtn.textContent =
+      "ĐANG GỬI EMAIL...";
+
+
+    loginMessage.className =
+      "login-message";
+
+    loginMessage.textContent =
+      "";
+
+
+    try {
+
+      const {
+        error
+      } =
+        await sb.auth
+          .resetPasswordForEmail(
+            email,
+            {
+              redirectTo:
+                window.location.origin
+                +
+                "/reset-password.html"
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      loginMessage.className =
+        "login-message success";
+
+      loginMessage.textContent =
+        "✓ Đã gửi email khôi phục mật khẩu. Hãy kiểm tra hộp thư của bạn.";
+
+    }
+    catch (error) {
+
+      console.error(
+        "RESET PASSWORD ERROR:",
+        error
+      );
+
+
+      loginMessage.className =
+        "login-message error";
+
+      loginMessage.textContent =
+        "Không gửi được email khôi phục mật khẩu: "
+        +
+        (
+          error.message
+          ||
+          error
+        );
+
+    }
+    finally {
+
+      forgotPasswordBtn.disabled =
+        false;
+
+      forgotPasswordBtn.textContent =
+        "QUÊN MẬT KHẨU?";
+
+    }
+
+  }
+);
 
   /* =====================================================
      LOGIN
