@@ -204,9 +204,9 @@ logoutBtn.addEventListener(
       .signOut();
 
 
-    window.location.replace(
-      "./login.html"
-    );
+   window.location.replace(
+  "/?v=" + Date.now()
+);
   }
 );
 
