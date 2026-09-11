@@ -5,27 +5,134 @@
   const CHECK_INTERVAL = 30000;
 
   let client = null;
-let panelOpen = false;
-let notificationRows = [];
-let currentRole = null;
+  let currentRole = null;
+  let panelOpen = false;
+  let notificationRows = [];
+
+  function isSupabaseClient(value) {
+    return Boolean(
+      value &&
+      typeof value.rpc === "function" &&
+      value.auth &&
+      typeof value.auth.getUser === "function"
+    );
+  }
 
   function getSupabaseClient() {
     try {
-      if (typeof sb !== "undefined" && sb) return sb;
+      if (typeof sb !== "undefined" && isSupabaseClient(sb)) return sb;
     } catch (_) {}
 
     try {
-      if (typeof supabaseClient !== "undefined" && supabaseClient) {
+      if (
+        typeof supabaseClient !== "undefined" &&
+        isSupabaseClient(supabaseClient)
+      ) {
         return supabaseClient;
       }
     } catch (_) {}
 
-    return (
-      window.sb ||
-      window.supabaseClient ||
-      window.supabase ||
-      null
-    );
+    const candidates = [
+      window.sb,
+      window.supabaseClient,
+      window.PICKDEE_SUPABASE,
+    ];
+
+    return candidates.find(isSupabaseClient) || null;
+  }
+
+  function normalizeRole(value) {
+    const role = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replaceAll("-", "_")
+      .replaceAll(" ", "_");
+
+    if (role === "admin" || role === "administrator") return "admin";
+    if (role === "coach" || role === "trainer") return "coach";
+
+    if (
+      role === "student" ||
+      role === "hoc_vien" ||
+      role === "hocvien" ||
+      role === "học_viên"
+    ) {
+      return "student";
+    }
+
+    return null;
+  }
+
+  function detectRoleFromPath() {
+    const explicitRole = normalizeRole(window.PICKDEE_NOTIFICATION_ROLE);
+
+    if (explicitRole) return explicitRole;
+
+    const path = (window.location.pathname || "")
+      .toLowerCase()
+      .replace(/\/+$/, "");
+
+    if (path === "/coach" || path.startsWith("/coach-")) {
+      return "coach";
+    }
+
+    if (path === "/admin" || path.startsWith("/admin-")) {
+      return "admin";
+    }
+
+    if (
+      path === "/student" ||
+      path === "/student-home" ||
+      path === "/student-dashboard" ||
+      path === "/student-my" ||
+      path === "/student-book-session" ||
+      path === "/student-payments"
+    ) {
+      return "student";
+    }
+
+    return null;
+  }
+
+  async function resolveNotificationRole() {
+    const pathRole = detectRoleFromPath();
+
+    if (pathRole) return pathRole;
+
+    if (!client) return null;
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await client.auth.getUser();
+
+      if (userError || !user) return null;
+
+      const { data, error } = await client
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn(
+          "PickDee Notifications profile role error:",
+          error
+        );
+
+        return null;
+      }
+
+      return normalizeRole(data?.role);
+    } catch (error) {
+      console.warn(
+        "PickDee Notifications resolve role error:",
+        error
+      );
+
+      return null;
+    }
   }
 
   function escapeHtml(value) {
@@ -53,7 +160,9 @@ let currentRole = null;
   }
 
   function addStyles() {
-    if (document.getElementById("pickdee-notification-style")) return;
+    if (document.getElementById("pickdee-notification-style")) {
+      return;
+    }
 
     const style = document.createElement("style");
 
@@ -74,7 +183,7 @@ let currentRole = null;
         height: 42px;
         border: 1px solid rgba(255,255,255,.18);
         border-radius: 12px;
-        background: rgba(10,31,58,.95);
+        background: rgba(10,31,58,.96);
         color: #fff;
         display: flex;
         align-items: center;
@@ -218,9 +327,12 @@ let currentRole = null;
   }
 
   function createBell() {
-    if (document.getElementById("pickdeeNotificationRoot")) return;
+    if (document.getElementById("pickdeeNotificationRoot")) {
+      return;
+    }
 
     const root = document.createElement("div");
+
     root.id = "pickdeeNotificationRoot";
 
     root.innerHTML = `
@@ -245,12 +357,22 @@ let currentRole = null;
           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
 
-        <span id="pickdeeNotificationBadge" class="pdn-badge">0</span>
+        <span
+          id="pickdeeNotificationBadge"
+          class="pdn-badge"
+        >
+          0
+        </span>
       </button>
 
-      <div id="pickdeeNotificationPanel" class="pdn-panel">
+      <div
+        id="pickdeeNotificationPanel"
+        class="pdn-panel"
+      >
         <div class="pdn-head">
-          <div class="pdn-title">🔔 Thông báo</div>
+          <div class="pdn-title">
+            🔔 Thông báo
+          </div>
 
           <button
             id="pickdeeNotificationReadAll"
@@ -261,8 +383,13 @@ let currentRole = null;
           </button>
         </div>
 
-        <div id="pickdeeNotificationList" class="pdn-list">
-          <div class="pdn-empty">Đang tải thông báo...</div>
+        <div
+          id="pickdeeNotificationList"
+          class="pdn-list"
+        >
+          <div class="pdn-empty">
+            Đang tải thông báo...
+          </div>
         </div>
       </div>
     `;
@@ -271,48 +398,73 @@ let currentRole = null;
 
     document
       .getElementById("pickdeeNotificationBell")
-      .addEventListener("click", async (event) => {
-        event.stopPropagation();
+      ?.addEventListener(
+        "click",
+        async (event) => {
+          event.stopPropagation();
 
-        panelOpen = !panelOpen;
+          panelOpen = !panelOpen;
 
-        document
-          .getElementById("pickdeeNotificationPanel")
-          .classList.toggle("open", panelOpen);
+          document
+            .getElementById(
+              "pickdeeNotificationPanel"
+            )
+            ?.classList.toggle(
+              "open",
+              panelOpen
+            );
 
-        if (panelOpen) {
-          await loadNotifications();
+          if (panelOpen) {
+            await loadNotifications();
+          }
         }
-      });
-
-    document
-      .getElementById("pickdeeNotificationReadAll")
-      .addEventListener("click", async (event) => {
-        event.stopPropagation();
-        await markAllRead();
-      });
-
-    document.addEventListener("click", (event) => {
-      const root = document.getElementById(
-        "pickdeeNotificationRoot"
       );
 
-      if (!root) return;
+    document
+      .getElementById(
+        "pickdeeNotificationReadAll"
+      )
+      ?.addEventListener(
+        "click",
+        async (event) => {
+          event.stopPropagation();
 
-      if (!root.contains(event.target)) {
-        panelOpen = false;
+          await markAllRead();
+        }
+      );
 
-        document
-          .getElementById("pickdeeNotificationPanel")
-          ?.classList.remove("open");
+    document.addEventListener(
+      "click",
+      (event) => {
+        const notificationRoot =
+          document.getElementById(
+            "pickdeeNotificationRoot"
+          );
+
+        if (!notificationRoot) return;
+
+        if (
+          !notificationRoot.contains(
+            event.target
+          )
+        ) {
+          panelOpen = false;
+
+          document
+            .getElementById(
+              "pickdeeNotificationPanel"
+            )
+            ?.classList.remove("open");
+        }
       }
-    });
+    );
   }
 
   function renderBadge(count) {
-    const badge = document.getElementById(
-      "pickdeeNotificationBadge"
-    );
+    const badge =
+      document.getElementById(
+        "pickdeeNotificationBadge"
+      );
 
     if (!badge) return;
 
@@ -321,17 +473,23 @@ let currentRole = null;
     if (number <= 0) {
       badge.textContent = "0";
       badge.classList.remove("show");
+
       return;
     }
 
-    badge.textContent = number > 99 ? "99+" : String(number);
+    badge.textContent =
+      number > 99
+        ? "99+"
+        : String(number);
+
     badge.classList.add("show");
   }
 
   function renderNotifications() {
-    const list = document.getElementById(
-      "pickdeeNotificationList"
-    );
+    const list =
+      document.getElementById(
+        "pickdeeNotificationList"
+      );
 
     if (!list) return;
 
@@ -341,107 +499,94 @@ let currentRole = null;
           ✅ Bạn chưa có thông báo nào.
         </div>
       `;
+
       return;
     }
 
-    list.innerHTML = notificationRows
-      .map((item) => {
-        return `
-          <div
-            class="pdn-item ${item.is_read ? "" : "unread"}"
-            data-notification-id="${item.id}"
-          >
-            <div class="pdn-item-title">
-              ${escapeHtml(item.title)}
-            </div>
+    list.innerHTML =
+      notificationRows
+        .map(
+          (item) => `
+            <div
+              class="pdn-item ${
+                item.is_read
+                  ? ""
+                  : "unread"
+              }"
+              data-notification-id="${Number(
+                item.id
+              )}"
+            >
+              <div
+                class="pdn-item-title"
+              >
+                ${escapeHtml(
+                  item.title
+                )}
+              </div>
 
-            <div class="pdn-item-message">
-              ${escapeHtml(item.message)}
-            </div>
+              <div
+                class="pdn-item-message"
+              >
+                ${escapeHtml(
+                  item.message
+                )}
+              </div>
 
-            <div class="pdn-item-time">
-              ${escapeHtml(formatTime(item.created_at))}
+              <div
+                class="pdn-item-time"
+              >
+                ${escapeHtml(
+                  formatTime(
+                    item.created_at
+                  )
+                )}
+              </div>
             </div>
-          </div>
-        `;
-      })
-      .join("");
+          `
+        )
+        .join("");
 
-    list.querySelectorAll(".pdn-item").forEach((element) => {
-      element.addEventListener("click", async () => {
-        const id = Number(
-          element.dataset.notificationId
+    list
+      .querySelectorAll(".pdn-item")
+      .forEach((element) => {
+        element.addEventListener(
+          "click",
+          async () => {
+            const id = Number(
+              element.dataset
+                .notificationId
+            );
+
+            const item =
+              notificationRows.find(
+                (row) =>
+                  Number(row.id) === id
+              );
+
+            if (!item) return;
+
+            await markRead(id);
+
+            if (item.link) {
+              window.location.href =
+                item.link;
+            }
+          }
         );
-
-        const item = notificationRows.find(
-          (row) => Number(row.id) === id
-        );
-
-        if (!item) return;
-
-        await markRead(id);
-
-        if (item.link) {
-          window.location.href = item.link;
-        }
       });
-    });
   }
-  function detectNotificationRole() {
-    const explicitRole = String(
-      window.PICKDEE_NOTIFICATION_ROLE || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    if (
-      explicitRole === "admin" ||
-      explicitRole === "coach" ||
-      explicitRole === "student"
-    ) {
-      return explicitRole;
-    }
-
-    const path = window.location.pathname
-      .toLowerCase()
-      .replace(/\/+$/, "");
-
-    if (
-      path === "/coach" ||
-      path.startsWith("/coach-")
-    ) {
-      return "coach";
-    }
-
-    if (
-      path === "/student" ||
-      path.startsWith("/student-home") ||
-      path.startsWith("/student-dashboard") ||
-      path.startsWith("/student-my")
-    ) {
-      return "student";
-    }
-
-    if (
-      path === "/admin" ||
-      path.startsWith("/admin-")
-    ) {
-      return "admin";
-    }
-
-    return null;
-  }
-
 
   async function loadUnreadCount() {
     if (!client || !currentRole) return;
 
-    const { data, error } = await client.rpc(
-      "get_unread_notification_count_for_role",
-      {
-        p_role: currentRole,
-      }
-    );
+    const { data, error } =
+      await client.rpc(
+        "get_unread_notification_count_for_role",
+        {
+          p_role: currentRole,
+        }
+      );
 
     if (error) {
       console.warn(
@@ -450,19 +595,20 @@ let currentRole = null;
       );
 
       renderBadge(0);
+
       return;
     }
 
     renderBadge(data || 0);
   }
 
-
   async function loadNotifications() {
     if (!client || !currentRole) return;
 
-    const list = document.getElementById(
-      "pickdeeNotificationList"
-    );
+    const list =
+      document.getElementById(
+        "pickdeeNotificationList"
+      );
 
     if (list) {
       list.innerHTML = `
@@ -472,15 +618,14 @@ let currentRole = null;
       `;
     }
 
-
-    const { data, error } = await client.rpc(
-      "get_notifications_for_role",
-      {
-        p_role: currentRole,
-        p_limit: 30,
-      }
-    );
-
+    const { data, error } =
+      await client.rpc(
+        "get_notifications_for_role",
+        {
+          p_role: currentRole,
+          p_limit: 30,
+        }
+      );
 
     if (error) {
       console.warn(
@@ -499,26 +644,25 @@ let currentRole = null;
       return;
     }
 
-
-    notificationRows = Array.isArray(data)
-      ? data
-      : [];
+    notificationRows =
+      Array.isArray(data)
+        ? data
+        : [];
 
     renderNotifications();
   }
 
-
   async function markRead(id) {
     if (!client || !currentRole) return;
 
-    const { error } = await client.rpc(
-      "mark_notification_read_for_role",
-      {
-        p_notification_id: id,
-        p_role: currentRole,
-      }
-    );
-
+    const { error } =
+      await client.rpc(
+        "mark_notification_read_for_role",
+        {
+          p_notification_id: id,
+          p_role: currentRole,
+        }
+      );
 
     if (error) {
       console.warn(
@@ -529,11 +673,12 @@ let currentRole = null;
       return;
     }
 
-
-    const item = notificationRows.find(
-      (row) =>
-        Number(row.id) === Number(id)
-    );
+    const item =
+      notificationRows.find(
+        (row) =>
+          Number(row.id) ===
+          Number(id)
+      );
 
     if (item) {
       item.is_read = true;
@@ -544,17 +689,16 @@ let currentRole = null;
     await loadUnreadCount();
   }
 
-
   async function markAllRead() {
     if (!client || !currentRole) return;
 
-    const { error } = await client.rpc(
-      "mark_all_notifications_read_for_role",
-      {
-        p_role: currentRole,
-      }
-    );
-
+    const { error } =
+      await client.rpc(
+        "mark_all_notifications_read_for_role",
+        {
+          p_role: currentRole,
+        }
+      );
 
     if (error) {
       console.warn(
@@ -565,32 +709,36 @@ let currentRole = null;
       return;
     }
 
-
-    notificationRows = notificationRows.map(
-      (row) => ({
-        ...row,
-        is_read: true,
-      })
-    );
+    notificationRows =
+      notificationRows.map(
+        (row) => ({
+          ...row,
+          is_read: true,
+        })
+      );
 
     renderNotifications();
-    renderBadge(0);
-  }
-    renderBadge(0);
+
+    await loadUnreadCount();
   }
 
   async function init() {
-    addStyles();
-    createBell();
-
     let attempts = 0;
 
-    while (!client && attempts < 30) {
-      client = getSupabaseClient();
+    while (
+      !client &&
+      attempts < 40
+    ) {
+      client =
+        getSupabaseClient();
 
       if (!client) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 200)
+        await new Promise(
+          (resolve) =>
+            setTimeout(
+              resolve,
+              200
+            )
         );
       }
 
@@ -601,39 +749,48 @@ let currentRole = null;
       console.warn(
         "PickDee Notifications: chưa tìm thấy Supabase client."
       );
+
       return;
     }
-    currentRole = detectNotificationRole();
+
+    currentRole =
+      await resolveNotificationRole();
 
     if (!currentRole) {
       console.warn(
-        "PickDee Notifications: không xác định được role của trang hiện tại."
+        "PickDee Notifications: không xác định được role người dùng."
       );
-
-      document
-        .getElementById("pickdeeNotificationRoot")
-        ?.remove();
 
       return;
     }
+
+    addStyles();
+    createBell();
 
     console.log(
       "PickDee Notifications role:",
       currentRole
     );
+
     await loadUnreadCount();
 
-    setInterval(() => {
-      loadUnreadCount();
+    setInterval(
+      async () => {
+        await loadUnreadCount();
 
-      if (panelOpen) {
-        loadNotifications();
+        if (panelOpen) {
+          await loadNotifications();
+        }
+      },
+      CHECK_INTERVAL
+    );
+
+    window.addEventListener(
+      "focus",
+      () => {
+        loadUnreadCount();
       }
-    }, CHECK_INTERVAL);
-
-    window.addEventListener("focus", () => {
-      loadUnreadCount();
-    });
+    );
 
     window.PickDeeNotifications = {
       refresh: async () => {
@@ -643,10 +800,15 @@ let currentRole = null;
           await loadNotifications();
         }
       },
+
+      role: () => currentRole,
     };
   }
 
-  if (document.readyState === "loading") {
+  if (
+    document.readyState ===
+    "loading"
+  ) {
     document.addEventListener(
       "DOMContentLoaded",
       init
