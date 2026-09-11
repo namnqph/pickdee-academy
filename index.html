@@ -1,78 +1,1577 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#09111f">
-<meta name="description" content="PickDee Academy kết nối học viên với Coach Pickleball phù hợp theo khu vực.">
-<title>PickDee Academy | Học Pickleball bài bản cùng Coach phù hợp</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="styles.css">
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#09111f"
+  >
+
+  <meta
+    name="description"
+    content="PickDee Academy kết nối học viên với Coach Pickleball phù hợp theo khu vực."
+  >
+
+  <title>
+    PickDee Academy | Học Pickleball bài bản cùng Coach phù hợp
+  </title>
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
+  <link
+    rel="icon"
+    href="icon-192.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="icon-192.png"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+
+  <!-- =====================================================
+       STYLE RIÊNG CHO ĐĂNG KÝ / ĐĂNG NHẬP
+  ====================================================== -->
+
+  <style>
+
+    .academy-access {
+
+      margin-top: 30px;
+
+      max-width: 620px;
+
+      padding: 18px;
+
+      border-radius: 18px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      background:
+        rgba(7,18,35,.72);
+
+      backdrop-filter:
+        blur(12px);
+
+      box-shadow:
+        0 18px 50px
+        rgba(0,0,0,.18);
+
+    }
+
+
+    .academy-tabs {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 8px;
+
+      margin-bottom: 18px;
+
+      padding: 5px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.06);
+
+    }
+
+
+    .academy-tab {
+
+      min-height: 46px;
+
+      border: 0;
+
+      border-radius: 9px;
+
+      cursor: pointer;
+
+      font-weight: 900;
+
+      font-size: 13px;
+
+      letter-spacing: .03em;
+
+      color:
+        rgba(255,255,255,.68);
+
+      background:
+        transparent;
+
+      transition: .15s ease;
+
+    }
+
+
+    .academy-tab.active {
+
+      background: #d8ff45;
+
+      color: #07101b;
+
+    }
+
+
+    .academy-panel {
+
+      display: none;
+
+    }
+
+
+    .academy-panel.active {
+
+      display: block;
+
+    }
+
+
+    .register-panel-title,
+    .login-panel-title {
+
+      margin-bottom: 7px;
+
+      font-size: 22px;
+
+      font-weight: 900;
+
+    }
+
+
+    .register-panel-text,
+    .login-panel-text {
+
+      margin:
+        0 0 17px;
+
+      color:
+        rgba(255,255,255,.68);
+
+      line-height: 1.55;
+
+      font-size: 14px;
+
+    }
+
+
+    .register-action {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      min-height: 48px;
+
+      padding:
+        0 20px;
+
+      border-radius: 10px;
+
+      text-decoration: none;
+
+      font-weight: 900;
+
+      color: #07101b;
+
+      background: #d8ff45;
+
+    }
+
+
+    .login-form {
+
+      display: grid;
+
+      gap: 13px;
+
+    }
+
+
+    .login-field {
+
+      display: grid;
+
+      gap: 7px;
+
+    }
+
+
+    .login-field label {
+
+      font-size: 12px;
+
+      font-weight: 900;
+
+      color:
+        rgba(255,255,255,.72);
+
+    }
+
+
+    .login-field input {
+
+      width: 100%;
+
+      min-height: 48px;
+
+      padding:
+        0 14px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.16);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.07);
+
+      color: white;
+
+      font-size: 15px;
+
+    }
+
+
+    .login-field input:focus {
+
+      border-color:
+        rgba(216,255,69,.7);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.08);
+
+    }
+
+
+    .login-submit {
+
+      min-height: 50px;
+
+      margin-top: 3px;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      cursor: pointer;
+
+      background: #d8ff45;
+
+      color: #07101b;
+
+      font-weight: 900;
+
+      font-size: 14px;
+
+    }
+
+
+    .login-submit:disabled {
+
+      opacity: .65;
+
+      cursor: wait;
+
+    }
+
+
+    .login-message {
+
+      min-height: 20px;
+
+      margin-top: 12px;
+
+      font-size: 13px;
+
+      font-weight: 700;
+
+      line-height: 1.5;
+
+    }
+
+
+    .login-message.error {
+
+      color: #ff9f9f;
+
+    }
+
+
+    .login-message.success {
+
+      color: #d8ff45;
+
+    }
+
+
+    .login-hint {
+
+      margin-top: 14px;
+
+      padding-top: 12px;
+
+      border-top:
+        1px solid rgba(255,255,255,.09);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 12px;
+
+      line-height: 1.5;
+
+    }
+
+
+    @media(max-width:600px) {
+
+      .academy-access {
+
+        padding: 14px;
+
+      }
+
+
+      .academy-tab {
+
+        font-size: 12px;
+
+      }
+
+    }
+
+  </style>
+
 </head>
+
+
 <body>
+
+
+<!-- =====================================================
+     HERO
+====================================================== -->
+
 <header class="hero">
-  <div class="topbar"><div class="brand">PickDee Academy</div><div class="tag">PICKLEBALL ACADEMY</div></div>
-  <div class="hero-inner">
-    <div class="eyebrow">HỌC ĐÚNG NGƯỜI • ĐÚNG KHU VỰC</div>
-    <h1>HỌC PICKLEBALL BÀI BẢN CÙNG COACH PHÙ HỢP VỚI BẠN</h1>
-    <p class="lead">Chọn khu vực • Kết nối Coach • Đặt lịch học • Theo dõi tiến trình</p>
-    <p class="sub">PickDee Academy giúp bạn tìm Coach phù hợp ngay tại khu vực mình muốn học, theo một lộ trình rõ ràng từ cơ bản đến nâng cao.</p>
-    <div class="actions">
-      <a id="registerBtn" class="btn primary" href="#">ĐĂNG KÝ HỌC</a>
-      <button class="btn ghost" disabled>HỌC VIÊN — SẮP MỞ</button>
-      <button class="btn ghost" disabled>COACH — SẮP MỞ</button>
+
+
+  <div class="topbar">
+
+    <div class="brand">
+      PickDee Academy
     </div>
+
+    <div class="tag">
+      PICKLEBALL ACADEMY
+    </div>
+
   </div>
+
+
+  <div class="hero-inner">
+
+
+    <div class="eyebrow">
+
+      HỌC ĐÚNG NGƯỜI • ĐÚNG KHU VỰC
+
+    </div>
+
+
+    <h1>
+
+      HỌC PICKLEBALL BÀI BẢN CÙNG COACH PHÙ HỢP VỚI BẠN
+
+    </h1>
+
+
+    <p class="lead">
+
+      Chọn khu vực • Kết nối Coach • Đặt lịch học • Theo dõi tiến trình
+
+    </p>
+
+
+    <p class="sub">
+
+      PickDee Academy giúp bạn tìm Coach phù hợp ngay tại khu vực mình muốn học,
+      theo một lộ trình rõ ràng từ cơ bản đến nâng cao.
+
+    </p>
+
+
+
+    <!-- =====================================================
+         ĐĂNG KÝ / ĐĂNG NHẬP
+    ====================================================== -->
+
+    <div class="academy-access">
+
+
+      <div class="academy-tabs">
+
+
+        <button
+          id="showRegisterTab"
+          class="academy-tab active"
+          type="button"
+        >
+
+          ĐĂNG KÝ HỌC
+
+        </button>
+
+
+        <button
+          id="showLoginTab"
+          class="academy-tab"
+          type="button"
+        >
+
+          ĐĂNG NHẬP
+
+        </button>
+
+
+      </div>
+
+
+
+      <!-- =================================================
+           TAB ĐĂNG KÝ
+      ================================================== -->
+
+      <div
+        id="registerPanel"
+        class="academy-panel active"
+      >
+
+
+        <div class="register-panel-title">
+
+          Bắt đầu học cùng PickDee
+
+        </div>
+
+
+        <p class="register-panel-text">
+
+          Đăng ký nhu cầu học.
+          PickDee sẽ kết nối bạn với Coach phù hợp theo khu vực.
+
+        </p>
+
+
+        <a
+          id="registerBtn"
+          class="register-action"
+          href="#"
+        >
+
+          ĐĂNG KÝ HỌC NGAY →
+
+        </a>
+
+
+      </div>
+
+
+
+      <!-- =================================================
+           TAB ĐĂNG NHẬP
+      ================================================== -->
+
+      <div
+        id="loginPanel"
+        class="academy-panel"
+      >
+
+
+        <div class="login-panel-title">
+
+          Chào mừng bạn quay lại
+
+        </div>
+
+
+        <p class="login-panel-text">
+
+          Đăng nhập để vào đúng khu vực
+          Học viên, Coach hoặc Admin của bạn.
+
+        </p>
+
+
+        <form
+          id="academyLoginForm"
+          class="login-form"
+        >
+
+
+          <div class="login-field">
+
+            <label for="loginEmail">
+
+              EMAIL
+
+            </label>
+
+
+            <input
+              id="loginEmail"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="Email đăng nhập"
+              required
+            >
+
+          </div>
+
+
+
+          <div class="login-field">
+
+            <label for="loginPassword">
+
+              MẬT KHẨU
+
+            </label>
+
+
+            <input
+              id="loginPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Mật khẩu"
+              required
+            >
+
+          </div>
+
+
+
+          <button
+            id="academyLoginBtn"
+            class="login-submit"
+            type="submit"
+          >
+
+            ĐĂNG NHẬP
+
+          </button>
+
+
+        </form>
+
+
+        <div
+          id="academyLoginMessage"
+          class="login-message"
+        ></div>
+
+
+        <div class="login-hint">
+
+          Sau khi đăng nhập,
+          hệ thống sẽ tự đưa bạn đến đúng khu vực tài khoản.
+
+        </div>
+
+
+      </div>
+
+
+    </div>
+
+
+  </div>
+
 </header>
+
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
 <main>
+
+
+
+<!-- =====================================================
+     VÌ SAO CHỌN PICKDEE
+====================================================== -->
+
 <section class="section light">
-  <div class="section-head"><span>LÝ DO ĐỂ BẮT ĐẦU</span><h2>VÌ SAO CHỌN PICKDEE ACADEMY</h2></div>
+
+
+  <div class="section-head">
+
+    <span>
+      LÝ DO ĐỂ BẮT ĐẦU
+    </span>
+
+    <h2>
+      VÌ SAO CHỌN PICKDEE ACADEMY
+    </h2>
+
+  </div>
+
+
   <div class="grid four">
-    <article class="card"><b>Coach phù hợp theo khu vực</b><p>Tìm người hướng dẫn phù hợp ngay gần nơi bạn muốn học.</p></article>
-    <article class="card"><b>Lộ trình học rõ ràng</b><p>Từ cơ bản đến nâng cao với mục tiêu rõ ràng từng giai đoạn.</p></article>
-    <article class="card"><b>Đặt lịch linh hoạt</b><p>Sắp xếp lịch học phù hợp giữa học viên và Coach.</p></article>
-    <article class="card"><b>Theo dõi tiến trình</b><p>Biết mình đã học bao nhiêu buổi và đang tiến bộ ở đâu.</p></article>
+
+
+    <article class="card">
+
+      <b>
+        Coach phù hợp theo khu vực
+      </b>
+
+      <p>
+        Tìm người hướng dẫn phù hợp ngay gần nơi bạn muốn học.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <b>
+        Lộ trình học rõ ràng
+      </b>
+
+      <p>
+        Từ cơ bản đến nâng cao với mục tiêu rõ ràng từng giai đoạn.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <b>
+        Đặt lịch linh hoạt
+      </b>
+
+      <p>
+        Sắp xếp lịch học phù hợp giữa học viên và Coach.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <b>
+        Theo dõi tiến trình
+      </b>
+
+      <p>
+        Biết mình đã học bao nhiêu buổi và đang tiến bộ ở đâu.
+      </p>
+
+    </article>
+
+
   </div>
+
 </section>
+
+
+
+<!-- =====================================================
+     QUY TRÌNH
+====================================================== -->
+
 <section class="section dark">
-  <div class="section-head"><span>4 BƯỚC ĐƠN GIẢN</span><h2>QUY TRÌNH HỌC</h2></div>
+
+
+  <div class="section-head">
+
+    <span>
+      4 BƯỚC ĐƠN GIẢN
+    </span>
+
+    <h2>
+      QUY TRÌNH HỌC
+    </h2>
+
+  </div>
+
+
   <div class="steps">
-    <div><strong>01</strong><span>Đăng ký nhu cầu</span></div>
-    <div><strong>02</strong><span>Chọn Coach phù hợp</span></div>
-    <div><strong>03</strong><span>Đặt lịch học</span></div>
-    <div><strong>04</strong><span>Theo dõi tiến trình</span></div>
+
+
+    <div>
+
+      <strong>
+        01
+      </strong>
+
+      <span>
+        Đăng ký nhu cầu
+      </span>
+
+    </div>
+
+
+    <div>
+
+      <strong>
+        02
+      </strong>
+
+      <span>
+        Chọn Coach phù hợp
+      </span>
+
+    </div>
+
+
+    <div>
+
+      <strong>
+        03
+      </strong>
+
+      <span>
+        Đặt lịch học
+      </span>
+
+    </div>
+
+
+    <div>
+
+      <strong>
+        04
+      </strong>
+
+      <span>
+        Theo dõi tiến trình
+      </span>
+
+    </div>
+
+
   </div>
+
 </section>
+
+
+
+<!-- =====================================================
+     CHƯƠNG TRÌNH
+====================================================== -->
+
 <section class="section light">
-  <div class="section-head"><span>LỘ TRÌNH RÕ RÀNG</span><h2>CHƯƠNG TRÌNH ĐÀO TẠO</h2></div>
+
+
+  <div class="section-head">
+
+    <span>
+      LỘ TRÌNH RÕ RÀNG
+    </span>
+
+    <h2>
+      CHƯƠNG TRÌNH ĐÀO TẠO
+    </h2>
+
+  </div>
+
+
   <div class="grid three">
-    <article class="program"><h3>CƠ BẢN</h3><p>12 buổi</p></article>
-    <article class="program"><h3>NÂNG CAO</h3><p>12 buổi</p></article>
-    <article class="program"><h3>THEO YÊU CẦU</h3><p>Linh hoạt theo mục tiêu</p></article>
+
+
+    <article class="program">
+
+      <h3>
+        CƠ BẢN
+      </h3>
+
+      <p>
+        12 buổi
+      </p>
+
+    </article>
+
+
+    <article class="program">
+
+      <h3>
+        NÂNG CAO
+      </h3>
+
+      <p>
+        12 buổi
+      </p>
+
+    </article>
+
+
+    <article class="program">
+
+      <h3>
+        THEO YÊU CẦU
+      </h3>
+
+      <p>
+        Linh hoạt theo mục tiêu
+      </p>
+
+    </article>
+
+
   </div>
+
 </section>
+
+
+
+<!-- =====================================================
+     DÀNH CHO AI
+====================================================== -->
+
 <section class="section dark">
-  <div class="section-head"><span>PHÙ HỢP VỚI NHIỀU MỤC TIÊU</span><h2>DÀNH CHO AI?</h2></div>
+
+
+  <div class="section-head">
+
+    <span>
+      PHÙ HỢP VỚI NHIỀU MỤC TIÊU
+    </span>
+
+    <h2>
+      DÀNH CHO AI?
+    </h2>
+
+  </div>
+
+
   <div class="grid two">
-    <div class="pill">Người mới bắt đầu</div><div class="pill">Người muốn cải thiện kỹ thuật</div>
-    <div class="pill">Người muốn luyện thi đấu</div><div class="pill">Người muốn học riêng theo mục tiêu</div>
+
+
+    <div class="pill">
+      Người mới bắt đầu
+    </div>
+
+
+    <div class="pill">
+      Người muốn cải thiện kỹ thuật
+    </div>
+
+
+    <div class="pill">
+      Người muốn luyện thi đấu
+    </div>
+
+
+    <div class="pill">
+      Người muốn học riêng theo mục tiêu
+    </div>
+
+
   </div>
+
 </section>
-<section class="section accent"><div class="cta"><span>ĐỘI NGŨ COACH PICKDEE</span><h2>ĐÚNG CHUYÊN MÔN. ĐÚNG KHU VỰC. ĐÚNG MỤC TIÊU.</h2><p>Coach được lựa chọn theo khu vực, chuyên môn và mục tiêu học tập phù hợp.</p></div></section>
+
+
+
+<!-- =====================================================
+     COACH
+====================================================== -->
+
+<section class="section accent">
+
+
+  <div class="cta">
+
+
+    <span>
+      ĐỘI NGŨ COACH PICKDEE
+    </span>
+
+
+    <h2>
+
+      ĐÚNG CHUYÊN MÔN.
+      ĐÚNG KHU VỰC.
+      ĐÚNG MỤC TIÊU.
+
+    </h2>
+
+
+    <p>
+
+      Coach được lựa chọn theo khu vực,
+      chuyên môn và mục tiêu học tập phù hợp.
+
+    </p>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FAQ
+====================================================== -->
+
 <section class="section dark">
-  <div class="section-head"><span>GIẢI ĐÁP NHANH</span><h2>CÂU HỎI THƯỜNG GẶP</h2></div>
-  <div class="faq">
-    <details><summary>Tôi chưa biết chơi có học được không?</summary><p>Có. Chương trình Cơ bản được thiết kế cho người mới bắt đầu.</p></details>
-    <details><summary>Tôi có được chọn Coach không?</summary><p>Có. PickDee sẽ gợi ý Coach phù hợp để bạn lựa chọn.</p></details>
-    <details><summary>Tôi có thể chọn khu vực học không?</summary><p>Có. Bạn có thể đăng ký khu vực và xã/phường muốn học.</p></details>
-    <details><summary>Tôi theo dõi lịch học ở đâu?</summary><p>Cổng học viên sẽ được mở sau khi hệ thống PWA hoàn thiện.</p></details>
-    <details><summary>Tôi có thể đổi lịch không?</summary><p>Có, tùy theo quy định và lịch trống của Coach.</p></details>
+
+
+  <div class="section-head">
+
+    <span>
+      GIẢI ĐÁP NHANH
+    </span>
+
+    <h2>
+      CÂU HỎI THƯỜNG GẶP
+    </h2>
+
   </div>
+
+
+  <div class="faq">
+
+
+    <details>
+
+      <summary>
+        Tôi chưa biết chơi có học được không?
+      </summary>
+
+      <p>
+        Có. Chương trình Cơ bản được thiết kế cho người mới bắt đầu.
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Tôi có được chọn Coach không?
+      </summary>
+
+      <p>
+        Có. PickDee sẽ gợi ý Coach phù hợp để bạn lựa chọn.
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Tôi có thể chọn khu vực học không?
+      </summary>
+
+      <p>
+        Có. Bạn có thể đăng ký khu vực và xã/phường muốn học.
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Tôi theo dõi lịch học ở đâu?
+      </summary>
+
+      <p>
+        Sau khi có tài khoản, bạn có thể đăng nhập trực tiếp
+        tại trang PickDee Academy để xem lịch học và tiến trình.
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Tôi có thể đổi lịch không?
+      </summary>
+
+      <p>
+        Có, tùy theo quy định và lịch trống của Coach.
+      </p>
+
+    </details>
+
+
+  </div>
+
 </section>
-<section class="section accent final"><h2>SẴN SÀNG BẮT ĐẦU HÀNH TRÌNH PICKLEBALL CỦA BẠN?</h2><a id="registerBtn2" class="btn darkbtn" href="#">ĐĂNG KÝ HỌC NGAY</a></section>
+
+
+
+<!-- =====================================================
+     CTA CUỐI
+====================================================== -->
+
+<section class="section accent final">
+
+
+  <h2>
+
+    SẴN SÀNG BẮT ĐẦU HÀNH TRÌNH PICKLEBALL CỦA BẠN?
+
+  </h2>
+
+
+  <a
+    id="registerBtn2"
+    class="btn darkbtn"
+    href="#"
+  >
+
+    ĐĂNG KÝ HỌC NGAY
+
+  </a>
+
+
+</section>
+
+
 </main>
-<footer><b>PickDee Academy</b><span>Học Pickleball bài bản • Coach phù hợp • Học đúng khu vực</span></footer>
-<script src="config.js"></script><script src="app.js"></script>
-</body></html>
+
+
+
+<!-- =====================================================
+     FOOTER
+====================================================== -->
+
+<footer>
+
+
+  <b>
+    PickDee Academy
+  </b>
+
+
+  <span>
+
+    Học Pickleball bài bản •
+    Coach phù hợp •
+    Học đúng khu vực
+
+  </span>
+
+
+</footer>
+
+
+
+<!-- =====================================================
+     SUPABASE
+====================================================== -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="config.js"></script>
+
+<!-- GIỮ APP.JS ĐỂ FORM ĐĂNG KÝ HIỆN TẠI VẪN CHẠY -->
+<script src="app.js"></script>
+
+
+
+<!-- =====================================================
+     TAB + LOGIN
+====================================================== -->
+
+<script>
+
+(function () {
+
+
+  /* =====================================================
+     ELEMENT
+  ====================================================== */
+
+  const showRegisterTab =
+    document.getElementById(
+      "showRegisterTab"
+    );
+
+
+  const showLoginTab =
+    document.getElementById(
+      "showLoginTab"
+    );
+
+
+  const registerPanel =
+    document.getElementById(
+      "registerPanel"
+    );
+
+
+  const loginPanel =
+    document.getElementById(
+      "loginPanel"
+    );
+
+
+  const loginForm =
+    document.getElementById(
+      "academyLoginForm"
+    );
+
+
+  const loginBtn =
+    document.getElementById(
+      "academyLoginBtn"
+    );
+
+
+  const loginMessage =
+    document.getElementById(
+      "academyLoginMessage"
+    );
+
+
+  /* =====================================================
+     TAB
+  ====================================================== */
+
+  function openRegisterTab() {
+
+
+    showRegisterTab.classList.add(
+      "active"
+    );
+
+
+    showLoginTab.classList.remove(
+      "active"
+    );
+
+
+    registerPanel.classList.add(
+      "active"
+    );
+
+
+    loginPanel.classList.remove(
+      "active"
+    );
+
+
+  }
+
+
+  function openLoginTab() {
+
+
+    showLoginTab.classList.add(
+      "active"
+    );
+
+
+    showRegisterTab.classList.remove(
+      "active"
+    );
+
+
+    loginPanel.classList.add(
+      "active"
+    );
+
+
+    registerPanel.classList.remove(
+      "active"
+    );
+
+
+    setTimeout(
+      function () {
+
+        document
+          .getElementById(
+            "loginEmail"
+          )
+          ?.focus();
+
+      },
+      100
+    );
+
+
+  }
+
+
+  showRegisterTab.addEventListener(
+    "click",
+    openRegisterTab
+  );
+
+
+  showLoginTab.addEventListener(
+    "click",
+    openLoginTab
+  );
+
+
+  /* =====================================================
+     SUPABASE CLIENT
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+
+    loginMessage.className =
+      "login-message error";
+
+
+    loginMessage.textContent =
+      "Không tải được hệ thống đăng nhập.";
+
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     REDIRECT THEO ROLE
+  ====================================================== */
+
+  async function redirectByRole(
+    userId
+  ) {
+
+
+    const {
+      data: profile,
+      error
+    } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          userId
+        )
+        .single();
+
+
+    if (error) {
+
+      console.error(
+        "PROFILE ERROR:",
+        error
+      );
+
+
+      throw new Error(
+        "Không xác định được quyền tài khoản."
+      );
+
+    }
+
+
+    const role =
+      String(
+        profile?.role || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    /* =================================================
+       ADMIN
+    ================================================== */
+
+    if (
+      role === "admin"
+    ) {
+
+
+      window.location.href =
+        "./admin";
+
+
+      return;
+
+    }
+
+
+    /* =================================================
+       COACH
+    ================================================== */
+
+    if (
+      role === "coach"
+    ) {
+
+
+      window.location.href =
+        "./coach";
+
+
+      return;
+
+    }
+
+
+    /* =================================================
+       HỌC VIÊN
+    ================================================== */
+
+    if (
+      role === "student"
+      ||
+      role === "hocvien"
+      ||
+      role === "học viên"
+    ) {
+
+
+      window.location.href =
+        "./student";
+
+
+      return;
+
+    }
+
+
+    throw new Error(
+      "Tài khoản chưa được gán quyền sử dụng PickDee Academy."
+    );
+
+
+  }
+
+
+  /* =====================================================
+     LOGIN
+  ====================================================== */
+
+  loginForm.addEventListener(
+    "submit",
+    async function (event) {
+
+
+      event.preventDefault();
+
+
+      const email =
+        document
+          .getElementById(
+            "loginEmail"
+          )
+          .value
+          .trim();
+
+
+      const password =
+        document
+          .getElementById(
+            "loginPassword"
+          )
+          .value;
+
+
+      if (
+        !email
+        ||
+        !password
+      ) {
+
+
+        loginMessage.className =
+          "login-message error";
+
+
+        loginMessage.textContent =
+          "Vui lòng nhập đầy đủ email và mật khẩu.";
+
+
+        return;
+
+      }
+
+
+      loginBtn.disabled =
+        true;
+
+
+      loginBtn.textContent =
+        "ĐANG ĐĂNG NHẬP...";
+
+
+      loginMessage.className =
+        "login-message";
+
+
+      loginMessage.textContent =
+        "";
+
+
+      try {
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.auth
+            .signInWithPassword(
+              {
+                email,
+                password
+              }
+            );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        if (
+          !data?.user
+        ) {
+
+
+          throw new Error(
+            "Không lấy được thông tin tài khoản."
+          );
+
+        }
+
+
+        loginMessage.className =
+          "login-message success";
+
+
+        loginMessage.textContent =
+          "✓ Đăng nhập thành công. Đang mở khu vực của bạn...";
+
+
+        await redirectByRole(
+          data.user.id
+        );
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "LOGIN ERROR:",
+          error
+        );
+
+
+        let text =
+          error?.message
+          ||
+          "Không đăng nhập được.";
+
+
+        if (
+          text
+            .toLowerCase()
+            .includes(
+              "invalid login credentials"
+            )
+        ) {
+
+
+          text =
+            "Email hoặc mật khẩu không đúng.";
+
+        }
+
+
+        loginMessage.className =
+          "login-message error";
+
+
+        loginMessage.textContent =
+          text;
+
+
+      }
+      finally {
+
+
+        loginBtn.disabled =
+          false;
+
+
+        loginBtn.textContent =
+          "ĐĂNG NHẬP";
+
+
+      }
+
+
+    }
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
