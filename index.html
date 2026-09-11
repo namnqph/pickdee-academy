@@ -1515,14 +1515,28 @@ forgotPasswordBtn.addEventListener(
       loginMessage.className =
         "login-message error";
 
-      loginMessage.textContent =
-        "Không gửi được email khôi phục mật khẩu: "
-        +
-        (
-          error.message
-          ||
-          error
-        );
+      const errorText =
+  String(
+    error?.message || error || ""
+  ).toLowerCase();
+
+
+if (
+  errorText.includes(
+    "email rate limit exceeded"
+  )
+) {
+
+  loginMessage.textContent =
+    "Bạn đã yêu cầu khôi phục mật khẩu quá nhiều lần. Vui lòng thử lại sau.";
+
+}
+else {
+
+  loginMessage.textContent =
+    "Không gửi được email khôi phục mật khẩu. Vui lòng thử lại.";
+
+}
 
     }
     finally {
