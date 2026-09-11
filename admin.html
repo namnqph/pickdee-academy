@@ -1111,315 +1111,412 @@
       </a>
 
 
-      <script>
+<script>
 
-        window.addEventListener(
-          "load",
-          function () {
+window.addEventListener(
+  "load",
+  function () {
 
-            async function loadScheduleRequestSummary() {
 
-              const totalElement =
-                document.getElementById(
-                  "scheduleRequestTotal"
-                );
+    async function loadScheduleRequestSummary() {
 
-              const pendingElement =
-                document.getElementById(
-                  "scheduleRequestPending"
-                );
 
-              const exceptionElement =
-                document.getElementById(
-                  "scheduleRequestException"
-                );
-
-              const card =
-                document.querySelector(
-                  "#scheduleRequestCard .card"
-                );
-
-
-              try {
-
-                const cfg =
-                  window.PICKDEE_CONFIG || {};
-
-                if (
-                  !window.supabase ||
-                  !cfg.SUPABASE_URL ||
-                  !cfg.SUPABASE_PUBLISHABLE_KEY
-                ) {
-
-                  throw new Error(
-                    "Chưa tải được cấu hình Supabase"
-                  );
-
-                }
-
-
-                const requestSb =
-                  window.supabase.createClient(
-                    cfg.SUPABASE_URL,
-                    cfg.SUPABASE_PUBLISHABLE_KEY
-                  );
-
-
-                const {
-                  data: authData
-                } =
-                  await requestSb.auth.getSession();
-
-
-                if (
-                  !authData ||
-                  !authData.session
-                ) {
-
-                  return;
-
-                }
-
-
-                const {
-                  data,
-                  error
-                } =
-                  await requestSb
-                    .from("session_requests")
-                    .select(`
-                      id,
-                      status,
-                      requested_date,
-                      requested_time
-                    `);
-
-
-                if (error) {
-
-                  throw error;
-
-                }
-
-
-                const rows =
-                  data || [];
-
-
-                /* =========================================
-                   TỔNG YÊU CẦU
-                ========================================== */
-
-                const total =
-                  rows.length;
-
-
-                /* =========================================
-                   ĐANG CHỜ COACH XỬ LÝ
-
-                   Chỉ trạng thái "Chờ Coach".
-                   Đã duyệt và Từ chối KHÔNG nằm ở đây.
-                ========================================== */
-
-                const pendingRows =
-                  rows.filter(
-                    function (item) {
-
-                      return (
-                        String(
-                          item.status || ""
-                        ).trim()
-                        ===
-                        "Chờ Coach"
-                      );
-
-                    }
-                  );
-
-
-                const pending =
-                  pendingRows.length;
-
-
-                /* =========================================
-                   NGOẠI LỆ CẦN ADMIN CAN THIỆP
-
-                   Chỉ tính:
-                   - vẫn Chờ Coach
-                   - ngày/giờ yêu cầu đã trôi qua
-
-                   Đã duyệt = không tính
-                   Từ chối   = không tính
-                ========================================== */
-
-                const now =
-                  new Date();
-
-
-                const exceptionRows =
-                  pendingRows.filter(
-                    function (item) {
-
-                      if (
-                        !item.requested_date
-                      ) {
-
-                        return false;
-
-                      }
-
-
-                      const requestedTime =
-                        item.requested_time
-                        ||
-                        "23:59:59";
-
-
-                      const requestedDateTime =
-                        new Date(
-                          item.requested_date
-                          +
-                          "T"
-                          +
-                          requestedTime
-                        );
-
-
-                      if (
-                        Number.isNaN(
-                          requestedDateTime.getTime()
-                        )
-                      ) {
-
-                        return false;
-
-                      }
-
-
-                      return (
-                        requestedDateTime.getTime()
-                        <
-                        now.getTime()
-                      );
-
-                    }
-                  );
-
-
-                const exceptionCount =
-                  exceptionRows.length;
-
-
-                /* =========================================
-                   HIỂN THỊ
-                ========================================== */
-
-                totalElement.textContent =
-                  total;
-
-
-                pendingElement.textContent =
-                  pending;
-
-
-                exceptionElement.textContent =
-                  exceptionCount;
-
-
-                /* =========================================
-                   CHỈ CẢNH BÁO KHI CÓ NGOẠI LỆ
-                ========================================== */
-
-                if (
-                  exceptionCount > 0
-                ) {
-
-                  exceptionElement.classList.remove(
-                    "value-green"
-                  );
-
-                  exceptionElement.classList.add(
-                    "value-red"
-                  );
-
-
-                  if (card) {
-
-                    card.style.borderColor =
-                      "rgba(255,142,142,.75)";
-
-                  }
-
-                }
-                else {
-
-                  exceptionElement.classList.remove(
-                    "value-red"
-                  );
-
-                  exceptionElement.classList.add(
-                    "value-green"
-                  );
-
-
-                  if (card) {
-
-                    card.style.borderColor =
-                      "";
-
-                  }
-
-                }
-
-              }
-              catch (error) {
-
-                console.error(
-                  "Lỗi thống kê yêu cầu lịch học:",
-                  error
-                );
-
-
-                if (totalElement) {
-
-                  totalElement.textContent =
-                    "—";
-
-                }
-
-
-                if (pendingElement) {
-
-                  pendingElement.textContent =
-                    "—";
-
-                }
-
-
-                if (exceptionElement) {
-
-                  exceptionElement.textContent =
-                    "—";
-
-                }
-
-              }
-
-            }
-
-
-            loadScheduleRequestSummary();
-
-
-            setInterval(
-              loadScheduleRequestSummary,
-              60000
-            );
-
-          }
+      const totalElement =
+        document.getElementById(
+          "scheduleRequestTotal"
         );
 
-      </script>
+
+      const pendingElement =
+        document.getElementById(
+          "scheduleRequestPending"
+        );
+
+
+      const exceptionElement =
+        document.getElementById(
+          "scheduleRequestException"
+        );
+
+
+      const card =
+        document.querySelector(
+          "#scheduleRequestCard .card"
+        );
+
+
+      try {
+
+
+        const cfg =
+          window.PICKDEE_CONFIG || {};
+
+
+        if (
+          !window.supabase
+          ||
+          !cfg.SUPABASE_URL
+          ||
+          !cfg.SUPABASE_PUBLISHABLE_KEY
+        ) {
+
+          throw new Error(
+            "Chưa tải được cấu hình Supabase"
+          );
+
+        }
+
+
+        const requestSb =
+          window.supabase.createClient(
+            cfg.SUPABASE_URL,
+            cfg.SUPABASE_PUBLISHABLE_KEY
+          );
+
+
+        const {
+          data: authData
+        } =
+          await requestSb.auth
+            .getSession();
+
+
+        if (
+          !authData
+          ||
+          !authData.session
+        ) {
+
+          return;
+
+        }
+
+
+        /* =========================================
+           1. LẤY ĐĂNG KÝ REAL
+        ========================================== */
+
+        const {
+          data: registrations,
+          error: registrationError
+        } =
+          await requestSb
+            .from("registrations")
+            .select("id")
+            .eq(
+              "is_test",
+              false
+            );
+
+
+        if (registrationError) {
+
+          throw registrationError;
+
+        }
+
+
+        const realRegistrationIds =
+          (registrations || [])
+            .map(
+              item =>
+                Number(item.id)
+            )
+            .filter(
+              id =>
+                Number.isFinite(id)
+            );
+
+
+        /* =========================================
+           KHÔNG CÓ REGISTRATION REAL
+        ========================================== */
+
+        if (
+          realRegistrationIds.length === 0
+        ) {
+
+          totalElement.textContent =
+            "0";
+
+          pendingElement.textContent =
+            "0";
+
+          exceptionElement.textContent =
+            "0";
+
+          exceptionElement.classList.remove(
+            "value-red"
+          );
+
+          exceptionElement.classList.add(
+            "value-green"
+          );
+
+
+          if (card) {
+
+            card.style.borderColor =
+              "";
+
+          }
+
+
+          return;
+
+        }
+
+
+        /* =========================================
+           2. CHỈ LẤY YÊU CẦU THUỘC REGISTRATION REAL
+        ========================================== */
+
+        const {
+          data,
+          error
+        } =
+          await requestSb
+            .from("session_requests")
+            .select(`
+              id,
+              registration_id,
+              status,
+              requested_date,
+              requested_time
+            `)
+            .in(
+              "registration_id",
+              realRegistrationIds
+            );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        const rows =
+          data || [];
+
+
+        /* =========================================
+           3. TỔNG YÊU CẦU REAL
+        ========================================== */
+
+        const total =
+          rows.length;
+
+
+        /* =========================================
+           4. YÊU CẦU ĐANG CHỜ COACH
+        ========================================== */
+
+        const pendingRows =
+          rows.filter(
+            item => {
+
+              return (
+                String(
+                  item.status || ""
+                ).trim()
+                ===
+                "Chờ Coach"
+              );
+
+            }
+          );
+
+
+        const pending =
+          pendingRows.length;
+
+
+        /* =========================================
+           5. NGOẠI LỆ ĐÃ QUÁ GIỜ
+        ========================================== */
+
+        const now =
+          new Date();
+
+
+        const exceptionRows =
+          pendingRows.filter(
+            item => {
+
+
+              if (
+                !item.requested_date
+              ) {
+
+                return false;
+
+              }
+
+
+              const requestedTime =
+                item.requested_time
+                ||
+                "23:59:59";
+
+
+              const requestedDateTime =
+                new Date(
+                  item.requested_date
+                  +
+                  "T"
+                  +
+                  requestedTime
+                );
+
+
+              if (
+                Number.isNaN(
+                  requestedDateTime.getTime()
+                )
+              ) {
+
+                return false;
+
+              }
+
+
+              return (
+                requestedDateTime.getTime()
+                <
+                now.getTime()
+              );
+
+            }
+          );
+
+
+        const exceptionCount =
+          exceptionRows.length;
+
+
+        /* =========================================
+           6. HIỂN THỊ
+        ========================================== */
+
+        totalElement.textContent =
+          total;
+
+
+        pendingElement.textContent =
+          pending;
+
+
+        exceptionElement.textContent =
+          exceptionCount;
+
+
+        /* =========================================
+           7. CẢNH BÁO CARD
+        ========================================== */
+
+        if (
+          exceptionCount > 0
+        ) {
+
+
+          exceptionElement.classList.remove(
+            "value-green"
+          );
+
+
+          exceptionElement.classList.add(
+            "value-red"
+          );
+
+
+          if (card) {
+
+            card.style.borderColor =
+              "rgba(255,142,142,.75)";
+
+          }
+
+
+        }
+        else {
+
+
+          exceptionElement.classList.remove(
+            "value-red"
+          );
+
+
+          exceptionElement.classList.add(
+            "value-green"
+          );
+
+
+          if (card) {
+
+            card.style.borderColor =
+              "";
+
+          }
+
+
+        }
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "Lỗi thống kê yêu cầu lịch học REAL:",
+          error
+        );
+
+
+        if (totalElement) {
+
+          totalElement.textContent =
+            "—";
+
+        }
+
+
+        if (pendingElement) {
+
+          pendingElement.textContent =
+            "—";
+
+        }
+
+
+        if (exceptionElement) {
+
+          exceptionElement.textContent =
+            "—";
+
+        }
+
+
+      }
+
+
+    }
+
+
+    loadScheduleRequestSummary();
+
+
+    setInterval(
+      loadScheduleRequestSummary,
+      60000
+    );
+
+
+  }
+);
+
+</script>
 
     </div>
 
@@ -3014,7 +3111,7 @@
      VIỆC CẦN XỬ LÝ
   ====================================================== */
 
-  async function loadAdminTaskCount() {
+    async function loadAdminTaskCount() {
 
 
     const adminTaskCount =
@@ -3023,119 +3120,110 @@
       );
 
 
-    if (!adminTaskCount) {
+    if (
+      !adminTaskCount
+    ) {
+
       return;
+
     }
 
 
-    const [
-      sessionsResult,
-      registrationsResult,
-      paymentsResult,
-      workResult,
-      courtsResult,
-      requestsResult
-    ] =
-      await Promise.all([
+    try {
 
 
-       sb
-  .from("class_sessions")
-  .select(`
-    id,
-    session_date,
-    start_time,
-    duration_minutes,
-    status,
+      /* ===============================================
+         CHỈ DÙNG 1 NGUỒN DUY NHẤT:
 
-    registrations!inner (
-      is_test
-    )
-  `)
-  .eq(
-    "status",
-    "Chờ học"
-  )
-  .eq(
-    "registrations.is_test",
-    false
-  ),
+         admin_get_pending_tasks()
 
-        sb
-  .from("registrations")
-  .select(`
-    id,
-    tuition_fee,
-    status,
-    is_test
-  `)
-  .eq(
-    "is_test",
-    false
-  ),
+         RPC này đã:
+         - gom toàn bộ việc cần xử lý
+         - loại dữ liệu TEST
+         - chỉ trả dữ liệu REAL
+      ================================================ */
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "admin_get_pending_tasks"
+        );
 
 
-        sb
-          .from("tuition_payments")
-          .select(`
-            registration_id,
-            amount,
-            status
-          `)
-          .eq(
-            "status",
-            "Đã thu"
-          ),
+      if (error) {
+
+        throw error;
+
+      }
 
 
-        sb.rpc(
-          "admin_get_coach_work"
-        ),
+      const rows =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
 
 
-        sb
-          .from("courts")
-          .select(`
-            id,
-            status,
-            verified,
-            price_verified,
-            price_per_session
-          `),
+      const total =
+        rows.length;
 
 
-        sb
-          .from("session_requests")
-          .select(`
-            id,
-            status,
-            requested_date,
-            requested_time
-          `)
+      /* ===============================================
+         HIỂN THỊ SỐ VIỆC
+      ================================================ */
+
+      adminTaskCount.textContent =
+        total;
 
 
-      ]);
+      /* ===============================================
+         ĐỔI MÀU BADGE
+
+         0 việc  = xanh
+         Có việc = đỏ
+      ================================================ */
+
+      if (
+        total === 0
+      ) {
 
 
-    const error =
-      sessionsResult.error
-      ||
-      registrationsResult.error
-      ||
-      paymentsResult.error
-      ||
-      workResult.error
-      ||
-      courtsResult.error
-      ||
-      requestsResult.error;
+        adminTaskCount.style.background =
+          "#b9ff18";
 
 
-    if (error) {
+      }
+      else {
+
+
+        adminTaskCount.style.background =
+          "#ff8e8e";
+
+
+      }
+
+
+      /* ===============================================
+         TOOLTIP NHỎ
+      ================================================ */
+
+      adminTaskCount.title =
+        total === 0
+          ?
+          "Không có việc REAL cần xử lý"
+          :
+          `${total} việc REAL cần Admin xử lý`;
+
+
+    }
+    catch (error) {
 
 
       console.error(
-        "Lỗi đếm việc cần xử lý:",
+        "Lỗi RPC admin_get_pending_tasks:",
         error
       );
 
@@ -3144,324 +3232,16 @@
         "!";
 
 
-      return;
-
-    }
-
-
-    /* =================================================
-       1. LỊCH QUÁ HẠN
-    ================================================== */
-
-    const now =
-      new Date();
-
-
-    const overdueTaskCount =
-      (sessionsResult.data || [])
-        .filter(
-          item => {
-
-
-            const end =
-              getSessionEnd(
-                item
-              );
-
-
-            return (
-              end
-              &&
-              end.getTime()
-              <
-              now.getTime()
-            );
-
-          }
-        )
-        .length;
-
-
-    /* =================================================
-       2. CÔNG NỢ HỌC PHÍ
-    ================================================== */
-
-    const paidMap =
-      new Map();
-
-
-    (paymentsResult.data || [])
-      .forEach(
-        payment => {
-
-
-          const id =
-            Number(
-              payment.registration_id
-            );
-
-
-          paidMap.set(
-
-            id,
-
-            (
-              paidMap.get(id)
-              ||
-              0
-            )
-
-            +
-
-            Number(
-              payment.amount || 0
-            )
-
-          );
-
-        }
-      );
-
-
-    const excludedStatuses =
-      new Set([
-        "Từ chối",
-        "Đã từ chối",
-        "Hủy",
-        "Đã hủy"
-      ]);
-
-
-    const debtTaskCount =
-      (registrationsResult.data || [])
-        .filter(
-          registration => {
-
-
-            if (
-              excludedStatuses.has(
-                String(
-                  registration.status || ""
-                ).trim()
-              )
-            ) {
-
-              return false;
-
-            }
-
-
-            const tuition =
-              Number(
-                registration.tuition_fee || 0
-              );
-
-
-            const paid =
-              paidMap.get(
-                Number(
-                  registration.id
-                )
-              )
-              ||
-              0;
-
-
-            return (
-              tuition - paid
-              >
-              0
-            );
-
-          }
-        )
-        .length;
-
-
-    /* =================================================
-       3. CÔNG COACH
-    ================================================== */
-
-    const pendingWorkTaskCount =
-      (workResult.data || [])
-        .filter(
-          item =>
-            String(
-              item.status || ""
-            ).trim()
-            !==
-            "Đã thanh toán"
-        )
-        .length;
-
-
-    /* =================================================
-       4. SÂN CHƯA XÁC MINH
-    ================================================== */
-
-    const unverifiedCourtTaskCount =
-      (courtsResult.data || [])
-        .filter(
-          court => {
-
-
-            const active =
-              String(
-                court.status || ""
-              ).trim()
-              ===
-              "Hoạt động";
-
-
-            const incomplete =
-
-              court.verified !== true
-
-              ||
-
-              court.price_verified !== true
-
-              ||
-
-              Number(
-                court.price_per_session || 0
-              ) <= 0;
-
-
-            return (
-              active
-              &&
-              incomplete
-            );
-
-          }
-        )
-        .length;
-
-
-    /* =================================================
-       5. YÊU CẦU LỊCH CẦN ADMIN CAN THIỆP
-
-       Chỉ tính khi:
-       - trạng thái vẫn là "Chờ Coach"
-       - ngày/giờ yêu cầu đã trôi qua
-
-       Đã duyệt / Từ chối KHÔNG tính.
-    ================================================== */
-
-    const scheduleRequestTaskCount =
-      (requestsResult.data || [])
-        .filter(
-          item => {
-
-
-            const status =
-              String(
-                item.status || ""
-              ).trim();
-
-
-            if (
-              status !== "Chờ Coach"
-            ) {
-
-              return false;
-
-            }
-
-
-            if (
-              !item.requested_date
-            ) {
-
-              return false;
-
-            }
-
-
-            const requestedTime =
-              item.requested_time
-              ||
-              "23:59:59";
-
-
-            const requestedDateTime =
-              new Date(
-                item.requested_date
-                +
-                "T"
-                +
-                requestedTime
-              );
-
-
-            if (
-              Number.isNaN(
-                requestedDateTime.getTime()
-              )
-            ) {
-
-              return false;
-
-            }
-
-
-            return (
-              requestedDateTime.getTime()
-              <
-              now.getTime()
-            );
-
-          }
-        )
-        .length;
-
-
-    /* =================================================
-       TỔNG VIỆC
-    ================================================== */
-
-    const total =
-
-      overdueTaskCount
-
-      +
-
-      debtTaskCount
-
-      +
-
-      pendingWorkTaskCount
-
-      +
-
-      unverifiedCourtTaskCount
-
-      +
-
-      scheduleRequestTaskCount;
-
-
-    adminTaskCount.textContent =
-      total;
-
-
-    if (
-      total === 0
-    ) {
-
-
       adminTaskCount.style.background =
-        "#b9ff18";
+        "#ffd66b";
+
+
+      adminTaskCount.title =
+        "Không tải được việc cần xử lý";
+
 
     }
-    else {
 
-
-      adminTaskCount.style.background =
-        "#ff8e8e";
-
-    }
 
   }
 
