@@ -3020,7 +3020,8 @@
       registrationsResult,
       paymentsResult,
       workResult,
-      courtsResult
+      courtsResult,
+      requestsResult
     ] =
       await Promise.all([
 
@@ -3075,6 +3076,16 @@
             verified,
             price_verified,
             price_per_session
+          `),
+
+
+        sb
+          .from("session_requests")
+          .select(`
+            id,
+            status,
+            requested_date,
+            requested_time
           `)
 
 
@@ -3090,7 +3101,9 @@
       ||
       workResult.error
       ||
-      courtsResult.error;
+      courtsResult.error
+      ||
+      requestsResult.error;
 
 
     if (error) {
@@ -3302,6 +3315,84 @@
 
 
     /* =================================================
+       5. YÊU CẦU LỊCH CẦN ADMIN CAN THIỆP
+
+       Chỉ tính khi:
+       - trạng thái vẫn là "Chờ Coach"
+       - ngày/giờ yêu cầu đã trôi qua
+
+       Đã duyệt / Từ chối KHÔNG tính.
+    ================================================== */
+
+    const scheduleRequestTaskCount =
+      (requestsResult.data || [])
+        .filter(
+          item => {
+
+
+            const status =
+              String(
+                item.status || ""
+              ).trim();
+
+
+            if (
+              status !== "Chờ Coach"
+            ) {
+
+              return false;
+
+            }
+
+
+            if (
+              !item.requested_date
+            ) {
+
+              return false;
+
+            }
+
+
+            const requestedTime =
+              item.requested_time
+              ||
+              "23:59:59";
+
+
+            const requestedDateTime =
+              new Date(
+                item.requested_date
+                +
+                "T"
+                +
+                requestedTime
+              );
+
+
+            if (
+              Number.isNaN(
+                requestedDateTime.getTime()
+              )
+            ) {
+
+              return false;
+
+            }
+
+
+            return (
+              requestedDateTime.getTime()
+              <
+              now.getTime()
+            );
+
+          }
+        )
+        .length;
+
+
+    /* =================================================
        TỔNG VIỆC
     ================================================== */
 
@@ -3319,7 +3410,11 @@
 
       +
 
-      unverifiedCourtTaskCount;
+      unverifiedCourtTaskCount
+
+      +
+
+      scheduleRequestTaskCount;
 
 
     adminTaskCount.textContent =
