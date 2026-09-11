@@ -2155,18 +2155,26 @@
       error
     } =
       await sb
-        .from("class_sessions")
-        .select(`
-          id,
-          session_date,
-          start_time,
-          duration_minutes,
-          status
-        `)
-        .eq(
-          "status",
-          "Chờ học"
-        );
+  .from("class_sessions")
+  .select(`
+    id,
+    session_date,
+    start_time,
+    duration_minutes,
+    status,
+
+    registrations!inner (
+      is_test
+    )
+  `)
+  .eq(
+    "status",
+    "Chờ học"
+  )
+  .eq(
+    "registrations.is_test",
+    false
+  );
 
 
     if (error) {
@@ -3026,20 +3034,27 @@
       await Promise.all([
 
 
-        sb
-          .from("class_sessions")
-          .select(`
-            id,
-            session_date,
-            start_time,
-            duration_minutes,
-            status
-          `)
-          .eq(
-            "status",
-            "Chờ học"
-          ),
+       sb
+  .from("class_sessions")
+  .select(`
+    id,
+    session_date,
+    start_time,
+    duration_minutes,
+    status,
 
+    registrations!inner (
+      is_test
+    )
+  `)
+  .eq(
+    "status",
+    "Chờ học"
+  )
+  .eq(
+    "registrations.is_test",
+    false
+  ),
 
         sb
           .from("registrations")
