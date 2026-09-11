@@ -5,8 +5,9 @@
   const CHECK_INTERVAL = 30000;
 
   let client = null;
-  let panelOpen = false;
-  let notificationRows = [];
+let panelOpen = false;
+let notificationRows = [];
+let currentRole = null;
 
   function getSupabaseClient() {
     try {
@@ -386,12 +387,60 @@
       });
     });
   }
+  function detectNotificationRole() {
+    const explicitRole = String(
+      window.PICKDEE_NOTIFICATION_ROLE || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (
+      explicitRole === "admin" ||
+      explicitRole === "coach" ||
+      explicitRole === "student"
+    ) {
+      return explicitRole;
+    }
+
+    const path = window.location.pathname
+      .toLowerCase()
+      .replace(/\/+$/, "");
+
+    if (
+      path === "/coach" ||
+      path.startsWith("/coach-")
+    ) {
+      return "coach";
+    }
+
+    if (
+      path === "/student" ||
+      path.startsWith("/student-home") ||
+      path.startsWith("/student-dashboard") ||
+      path.startsWith("/student-my")
+    ) {
+      return "student";
+    }
+
+    if (
+      path === "/admin" ||
+      path.startsWith("/admin-")
+    ) {
+      return "admin";
+    }
+
+    return null;
+  }
+
 
   async function loadUnreadCount() {
-    if (!client) return;
+    if (!client || !currentRole) return;
 
     const { data, error } = await client.rpc(
-      "get_my_unread_notification_count"
+      "get_unread_notification_count_for_role",
+      {
+        p_role: currentRole,
+      }
     );
 
     if (error) {
@@ -399,14 +448,17 @@
         "Notification unread count error:",
         error
       );
+
+      renderBadge(0);
       return;
     }
 
     renderBadge(data || 0);
   }
 
+
   async function loadNotifications() {
-    if (!client) return;
+    if (!client || !currentRole) return;
 
     const list = document.getElementById(
       "pickdeeNotificationList"
@@ -420,12 +472,15 @@
       `;
     }
 
+
     const { data, error } = await client.rpc(
-      "get_my_notifications",
+      "get_notifications_for_role",
       {
+        p_role: currentRole,
         p_limit: 30,
       }
     );
+
 
     if (error) {
       console.warn(
@@ -444,6 +499,7 @@
       return;
     }
 
+
     notificationRows = Array.isArray(data)
       ? data
       : [];
@@ -451,48 +507,64 @@
     renderNotifications();
   }
 
+
   async function markRead(id) {
-    if (!client) return;
+    if (!client || !currentRole) return;
 
     const { error } = await client.rpc(
-      "mark_notification_read",
+      "mark_notification_read_for_role",
       {
         p_notification_id: id,
+        p_role: currentRole,
       }
     );
+
 
     if (error) {
       console.warn(
         "Mark notification read error:",
         error
       );
+
       return;
     }
 
+
     const item = notificationRows.find(
-      (row) => Number(row.id) === Number(id)
+      (row) =>
+        Number(row.id) === Number(id)
     );
 
-    if (item) item.is_read = true;
+    if (item) {
+      item.is_read = true;
+    }
 
     renderNotifications();
+
     await loadUnreadCount();
   }
 
+
   async function markAllRead() {
-    if (!client) return;
+    if (!client || !currentRole) return;
 
     const { error } = await client.rpc(
-      "mark_all_notifications_read"
+      "mark_all_notifications_read_for_role",
+      {
+        p_role: currentRole,
+      }
     );
+
 
     if (error) {
       console.warn(
         "Mark all notifications read error:",
         error
       );
+
       return;
     }
+
 
     notificationRows = notificationRows.map(
       (row) => ({
@@ -502,6 +574,8 @@
     );
 
     renderNotifications();
+    renderBadge(0);
+  }
     renderBadge(0);
   }
 
@@ -529,7 +603,24 @@
       );
       return;
     }
+    currentRole = detectNotificationRole();
 
+    if (!currentRole) {
+      console.warn(
+        "PickDee Notifications: không xác định được role của trang hiện tại."
+      );
+
+      document
+        .getElementById("pickdeeNotificationRoot")
+        ?.remove();
+
+      return;
+    }
+
+    console.log(
+      "PickDee Notifications role:",
+      currentRole
+    );
     await loadUnreadCount();
 
     setInterval(() => {
