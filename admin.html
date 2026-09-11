@@ -1,3 +1,959 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#09111f"
+  >
+
+  <title>Admin | PickDee Academy</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #09111f;
+      color: white;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    header {
+      border-bottom: 1px solid #26364b;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    .brand span {
+      color: #b9ff18;
+    }
+
+    .user {
+      text-align: right;
+      font-size: 14px;
+      color: #aab6c5;
+    }
+
+    .logout {
+      margin-top: 5px;
+      background: none;
+      border: 0;
+      color: #b9ff18;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: auto;
+      padding: 42px 20px 70px;
+    }
+
+    .eyebrow {
+      color: #b9ff18;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      font-size: clamp(
+        34px,
+        6vw,
+        60px
+      );
+      margin: 10px 0;
+    }
+
+    .intro {
+      color: #aab6c5;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+
+    /* =====================================================
+       VIỆC CẦN XỬ LÝ
+    ====================================================== */
+
+    .task-shortcut {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+
+      margin-bottom: 24px;
+      padding: 20px 22px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,153,0,.35);
+
+      background:
+        rgba(255,153,0,.08);
+
+      text-decoration: none;
+      color: white;
+
+      transition:
+        transform .15s ease,
+        border-color .15s ease,
+        background .15s ease;
+    }
+
+    .task-shortcut:hover {
+      transform: translateY(-2px);
+
+      border-color:
+        rgba(185,255,24,.5);
+
+      background:
+        rgba(185,255,24,.07);
+    }
+
+    .task-shortcut-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .task-shortcut-text {
+      color: #aab6c5;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .task-shortcut-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
+
+    .task-shortcut-count {
+      min-width: 42px;
+      height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background: #ff8e8e;
+      color: #07101b;
+
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .task-shortcut-action {
+      color: #b9ff18;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+
+    /* =====================================================
+       ALERT
+    ====================================================== */
+
+    .admin-alert {
+      display: none;
+      margin-bottom: 24px;
+      padding: 18px;
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,100,100,.28);
+
+      background:
+        rgba(255,70,70,.07);
+    }
+
+    .admin-alert.show {
+      display: block;
+    }
+
+    .admin-alert-title {
+      font-weight: 900;
+      margin-bottom: 5px;
+      color: #ffb0b0;
+    }
+
+    .admin-alert-text {
+      color: #d7dee8;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       GRID
+    ====================================================== */
+
+    .grid {
+      display: grid;
+      grid-template-columns:
+        repeat(3,1fr);
+      gap: 16px;
+    }
+
+    .card-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card {
+      height: 100%;
+      min-height: 165px;
+      background: #0e1b2d;
+      border: 1px solid #26364b;
+      padding: 24px;
+      border-radius: 14px;
+
+      transition:
+        transform .15s ease,
+        border-color .15s ease,
+        background .15s ease;
+    }
+
+    .card-link:hover .card {
+      transform: translateY(-2px);
+      border-color:
+        rgba(185,255,24,.45);
+      background: #11223a;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #aab6c5;
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       CARD STATS
+    ====================================================== */
+
+    .card-stats {
+      margin-top: 16px;
+      padding-top: 14px;
+
+      border-top:
+        1px solid rgba(255,255,255,.09);
+
+      display: grid;
+      gap: 7px;
+    }
+
+    .card-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      font-size: 13px;
+    }
+
+    .card-stat-label {
+      color: #b8c4d1;
+    }
+
+    .card-stat-value {
+      font-weight: 900;
+      font-size: 15px;
+      text-align: right;
+    }
+
+    .value-green {
+      color: #b9ff18;
+    }
+
+    .value-yellow {
+      color: #ffd66b;
+    }
+
+    .value-red {
+      color: #ff8e8e;
+    }
+
+    .value-orange {
+      color: #ffbf69;
+    }
+
+    .month-label {
+      margin-top: 6px;
+      color: #8291a4;
+      font-size: 12px;
+    }
+
+    #loading {
+      padding: 40px;
+      text-align: center;
+      color: #aab6c5;
+    }
+
+    #app {
+      display: none;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media(max-width:800px) {
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        align-items: flex-start;
+      }
+
+    }
+
+
+    @media(max-width:600px) {
+
+      .task-shortcut {
+        align-items: flex-start;
+      }
+
+      .task-shortcut-right {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div id="loading">
+  Đang kiểm tra quyền Admin...
+</div>
+
+
+<div id="app">
+
+
+  <header>
+
+
+    <div class="brand">
+
+      PickDee
+      <span>Academy</span>
+
+    </div>
+
+
+    <div class="user">
+
+      <div id="adminEmail"></div>
+
+      <button
+        id="logoutBtn"
+        class="logout"
+        type="button"
+      >
+        ĐĂNG XUẤT
+      </button>
+
+    </div>
+
+
+  </header>
+
+
+  <main>
+
+
+    <div class="eyebrow">
+      PICKDEE ADMIN
+    </div>
+
+
+    <h1>
+      Trung tâm quản trị
+    </h1>
+
+
+    <p class="intro">
+
+      Quản lý hoạt động cốt lõi của PickDee Academy:
+      học viên, Coach, lịch học, học phí,
+      công Coach, sân và tài chính.
+
+    </p>
+
+
+    <!-- =================================================
+         VIỆC CẦN XỬ LÝ
+    ================================================== -->
+
+    <a
+      href="./admin-tasks.html"
+      class="task-shortcut"
+    >
+
+      <div>
+
+        <div class="task-shortcut-title">
+
+          ⚠️ VIỆC CẦN XỬ LÝ
+
+        </div>
+
+        <div class="task-shortcut-text">
+
+          Các việc đang chờ Admin xử lý trong toàn hệ thống.
+
+        </div>
+
+      </div>
+
+
+      <div class="task-shortcut-right">
+
+        <span
+          id="adminTaskCount"
+          class="task-shortcut-count"
+        >
+          ...
+        </span>
+
+
+        <span class="task-shortcut-action">
+
+          XEM NGAY →
+
+        </span>
+
+      </div>
+
+    </a>
+
+
+    <!-- =================================================
+         ALERT LỊCH QUÁ HẠN
+    ================================================== -->
+
+    <div
+      id="adminAlert"
+      class="admin-alert"
+    >
+
+      <div class="admin-alert-title">
+
+        ⚠️ Có lịch học cần xử lý
+
+      </div>
+
+      <div
+        id="adminAlertText"
+        class="admin-alert-text"
+      ></div>
+
+    </div>
+
+
+    <div class="grid">
+
+
+      <!-- =================================================
+           HỌC VIÊN
+      ================================================== -->
+
+      <a
+        href="./students"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            👥 Học viên
+          </h2>
+
+          <p>
+            Hồ sơ, đăng ký học,
+            khu vực muốn học
+            và tiến trình.
+          </p>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                👤 Tổng học viên
+              </span>
+
+              <span
+                id="studentTotal"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🏓 Đang học
+              </span>
+
+              <span
+                id="studentActive"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                ⚠️ Sắp hết gói
+              </span>
+
+              <span
+                id="studentNearEnd"
+                class="card-stat-value value-orange"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <!-- =================================================
+           COACH
+      ================================================== -->
+
+      <a
+        href="./coaches"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            🏓 Coach
+          </h2>
+
+          <p>
+            Hồ sơ Coach,
+            khu vực phụ trách
+            và trạng thái hoạt động.
+          </p>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                👤 Tổng Coach
+              </span>
+
+              <span
+                id="coachTotal"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟢 Đang hoạt động
+              </span>
+
+              <span
+                id="coachActive"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟠 Có công chưa xử lý
+              </span>
+
+              <span
+                id="coachPendingWork"
+                class="card-stat-value value-orange"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <!-- =================================================
+           LỊCH HỌC
+      ================================================== -->
+
+      <a
+        href="./sessions"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            📅 Lịch học
+          </h2>
+
+          <p>
+            Theo dõi lịch hôm nay,
+            buổi quá hạn
+            và các buổi sắp tới.
+          </p>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🔴 Quá hạn
+              </span>
+
+              <span
+                id="overdueCount"
+                class="card-stat-value value-red"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟢 Hôm nay
+              </span>
+
+              <span
+                id="todayCount"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟡 Sắp tới
+              </span>
+
+              <span
+                id="upcomingCount"
+                class="card-stat-value value-yellow"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <!-- =================================================
+           HỌC PHÍ
+      ================================================== -->
+
+      <a
+        href="./admin-tuition-payment"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            💰 Học phí
+          </h2>
+
+          <p>
+            Thu học phí,
+            theo dõi công nợ
+            và lịch sử thanh toán.
+          </p>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💵 Còn phải thu
+              </span>
+
+              <span
+                id="tuitionDebt"
+                class="card-stat-value value-yellow"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                👤 Học viên còn nợ
+              </span>
+
+              <span
+                id="tuitionDebtorCount"
+                class="card-stat-value value-red"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <!-- =================================================
+           CÔNG COACH
+      ================================================== -->
+
+      <a
+        href="./admin-coach-work"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            💼 Công Coach
+          </h2>
+
+          <p>
+            Tổng hợp công dạy,
+            chốt công và xác nhận
+            thanh toán cho Coach.
+          </p>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟠 Công chưa chốt
+              </span>
+
+              <span
+                id="coachUnclosedCount"
+                class="card-stat-value value-orange"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💸 Chưa thanh toán
+              </span>
+
+              <span
+                id="coachUnpaidAmount"
+                class="card-stat-value value-red"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <!-- =================================================
+           TÀI CHÍNH
+      ================================================== -->
+
+      <a
+        href="./admin-finance"
+        class="card-link"
+      >
+
+        <div class="card">
+
+          <h2>
+            📊 Tài chính
+          </h2>
+
+          <p>
+            Doanh thu,
+            tổng chi phí
+            và lợi nhuận Academy.
+          </p>
+
+
+          <div
+            id="financeMonthLabel"
+            class="month-label"
+          >
+            Tháng hiện tại
+          </div>
+
+
+          <div class="card-stats">
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💰 Doanh thu
+              </span>
+
+              <span
+                id="financeRevenue"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                💸 Tổng chi phí
+              </span>
+
+              <span
+                id="financeTotalCost"
+                class="card-stat-value value-orange"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                📈 Lợi nhuận
+              </span>
+
+              <span
+                id="financeProfit"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </a>
+
+
       <!-- =================================================
            SÂN
       ================================================== -->
@@ -77,67 +1033,1980 @@
       </a>
 
 
-      <!-- =================================================
-           YÊU CẦU LỊCH HỌC
-      ================================================== -->
-
-      <a
-        href="./admin-schedule-requests"
-        class="card-link"
-      >
-
-        <div class="card">
-
-          <h2>
-            🗓️ Yêu cầu lịch học
-          </h2>
-
-          <p>
-            Xem toàn bộ lịch sử yêu cầu đặt lịch
-            và các trường hợp cần Admin xử lý.
-          </p>
-
-
-          <div class="card-stats">
-
-
-            <div class="card-stat">
-
-              <span class="card-stat-label">
-                📋 Tổng yêu cầu
-              </span>
-
-              <span
-                id="scheduleRequestTotal"
-                class="card-stat-value value-green"
-              >
-                ...
-              </span>
-
-            </div>
-
-
-            <div class="card-stat">
-
-              <span class="card-stat-label">
-                🟠 Chờ xử lý
-              </span>
-
-              <span
-                id="scheduleRequestPending"
-                class="card-stat-value value-orange"
-              >
-                ...
-              </span>
-
-            </div>
-
-
-          </div>
-
-        </div>
-
-      </a>
-
-
     </div>
+
+
+  </main>
+
+
+</div>
+
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="./config.js"></script>
+
+<script src="./admin.js?v=20260910-6"></script>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function todayString() {
+
+    const now =
+      new Date();
+
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      )
+      +
+      "-"
+      +
+      String(
+        now.getDate()
+      ).padStart(
+        2,
+        "0"
+      )
+    );
+
+  }
+
+
+  function monthKey() {
+
+    const now =
+      new Date();
+
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      )
+    );
+
+  }
+
+
+  function getNumber(
+    row,
+    keys
+  ) {
+
+    for (
+      const key of keys
+    ) {
+
+
+      if (
+        row[key] !== undefined
+        &&
+        row[key] !== null
+        &&
+        row[key] !== ""
+      ) {
+
+
+        const number =
+          Number(
+            row[key]
+          );
+
+
+        if (
+          Number.isFinite(number)
+        ) {
+
+          return number;
+
+        }
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  function getSessionStart(item) {
+
+    if (!item.session_date) {
+      return null;
+    }
+
+
+    const time =
+      item.start_time
+      ||
+      "00:00:00";
+
+
+    const date =
+      new Date(
+        `${item.session_date}T${time}`
+      );
+
+
+    return Number.isNaN(
+      date.getTime()
+    )
+      ?
+      null
+      :
+      date;
+
+  }
+
+
+  function getSessionEnd(item) {
+
+    const start =
+      getSessionStart(item);
+
+
+    if (!start) {
+      return null;
+    }
+
+
+    return new Date(
+
+      start.getTime()
+
+      +
+
+      Number(
+        item.duration_minutes || 60
+      )
+      *
+      60000
+
+    );
+
+  }
+
+
+  function isToday(value) {
+
+
+    if (!value) {
+      return false;
+    }
+
+
+    const date =
+      new Date(
+        `${value}T00:00:00`
+      );
+
+
+    const now =
+      new Date();
+
+
+    return (
+
+      date.getFullYear()
+      ===
+      now.getFullYear()
+
+      &&
+
+      date.getMonth()
+      ===
+      now.getMonth()
+
+      &&
+
+      date.getDate()
+      ===
+      now.getDate()
+
+    );
+
+  }
+
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+    return;
+  }
+
+
+  /* =====================================================
+     HỌC VIÊN
+  ====================================================== */
+
+  async function loadStudentSummary() {
+
+
+    const studentTotal =
+      document.getElementById(
+        "studentTotal"
+      );
+
+
+    const studentActive =
+      document.getElementById(
+        "studentActive"
+      );
+
+
+    const studentNearEnd =
+      document.getElementById(
+        "studentNearEnd"
+      );
+
+
+    const [
+      studentsResult,
+      registrationsResult,
+      sessionsResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from("students")
+          .select("id"),
+
+
+        sb
+          .from("registrations")
+          .select(`
+            id,
+            student_id,
+            purchased_sessions,
+            end_date,
+            status
+          `)
+          .eq(
+            "status",
+            "Đã duyệt"
+          ),
+
+
+        sb
+          .from("class_sessions")
+          .select(`
+            registration_id,
+            status
+          `)
+          .eq(
+            "status",
+            "Đã hoàn thành"
+          )
+
+
+      ]);
+
+
+    if (
+      studentsResult.error
+      ||
+      registrationsResult.error
+      ||
+      sessionsResult.error
+    ) {
+
+
+      console.error(
+        "Lỗi thống kê học viên:",
+        studentsResult.error,
+        registrationsResult.error,
+        sessionsResult.error
+      );
+
+
+      studentTotal.textContent =
+        "—";
+
+
+      studentActive.textContent =
+        "—";
+
+
+      studentNearEnd.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const students =
+      studentsResult.data || [];
+
+
+    const registrations =
+      registrationsResult.data || [];
+
+
+    const completedSessions =
+      sessionsResult.data || [];
+
+
+    const completedMap =
+      new Map();
+
+
+    completedSessions.forEach(
+      item => {
+
+
+        const id =
+          Number(
+            item.registration_id
+          );
+
+
+        completedMap.set(
+
+          id,
+
+          (
+            completedMap.get(id)
+            ||
+            0
+          )
+          +
+          1
+
+        );
+
+      }
+    );
+
+
+    const activeStudents =
+      new Set();
+
+
+    const nearEndStudents =
+      new Set();
+
+
+    const today =
+      todayString();
+
+
+    const todayDate =
+      new Date(
+        `${today}T00:00:00`
+      );
+
+
+    registrations.forEach(
+      registration => {
+
+
+        if (
+          !registration.student_id
+        ) {
+
+          return;
+
+        }
+
+
+        const purchased =
+          Number(
+            registration.purchased_sessions || 0
+          );
+
+
+        const completed =
+          completedMap.get(
+            Number(
+              registration.id
+            )
+          )
+          ||
+          0;
+
+
+        const remaining =
+          Math.max(
+            purchased - completed,
+            0
+          );
+
+
+        const notExpired =
+          !registration.end_date
+          ||
+          registration.end_date >= today;
+
+
+        if (
+          remaining > 0
+          &&
+          notExpired
+        ) {
+
+
+          activeStudents.add(
+            registration.student_id
+          );
+
+
+          let expireSoon =
+            false;
+
+
+          if (
+            registration.end_date
+          ) {
+
+
+            const end =
+              new Date(
+                `${registration.end_date}T00:00:00`
+              );
+
+
+            const daysLeft =
+              Math.floor(
+                (
+                  end.getTime()
+                  -
+                  todayDate.getTime()
+                )
+                /
+                86400000
+              );
+
+
+            expireSoon =
+              daysLeft >= 0
+              &&
+              daysLeft <= 7;
+
+          }
+
+
+          if (
+            remaining <= 2
+            ||
+            expireSoon
+          ) {
+
+
+            nearEndStudents.add(
+              registration.student_id
+            );
+
+          }
+
+        }
+
+      }
+    );
+
+
+    studentTotal.textContent =
+      students.length;
+
+
+    studentActive.textContent =
+      activeStudents.size;
+
+
+    studentNearEnd.textContent =
+      nearEndStudents.size;
+
+  }
+
+
+  /* =====================================================
+     COACH
+  ====================================================== */
+
+  async function loadCoachSummary() {
+
+
+    const coachTotal =
+      document.getElementById(
+        "coachTotal"
+      );
+
+
+    const coachActive =
+      document.getElementById(
+        "coachActive"
+      );
+
+
+    const coachPendingWork =
+      document.getElementById(
+        "coachPendingWork"
+      );
+
+
+    const [
+      coachesResult,
+      workResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from("coaches")
+          .select(`
+            id,
+            status
+          `),
+
+
+        sb.rpc(
+          "admin_get_coach_work"
+        )
+
+
+      ]);
+
+
+    if (
+      coachesResult.error
+      ||
+      workResult.error
+    ) {
+
+
+      console.error(
+        "Lỗi thống kê Coach:",
+        coachesResult.error,
+        workResult.error
+      );
+
+
+      coachTotal.textContent =
+        "—";
+
+
+      coachActive.textContent =
+        "—";
+
+
+      coachPendingWork.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const coaches =
+      coachesResult.data || [];
+
+
+    const workRows =
+      workResult.data || [];
+
+
+    const active =
+      coaches.filter(
+        coach =>
+          String(
+            coach.status || ""
+          ).trim()
+          ===
+          "Hoạt động"
+      );
+
+
+    const pendingCoachIds =
+      new Set();
+
+
+    workRows.forEach(
+      row => {
+
+
+        const status =
+          String(
+            row.status || ""
+          ).trim();
+
+
+        if (
+          status !==
+          "Đã thanh toán"
+          &&
+          row.coach_id
+        ) {
+
+
+          pendingCoachIds.add(
+            Number(
+              row.coach_id
+            )
+          );
+
+        }
+
+      }
+    );
+
+
+    coachTotal.textContent =
+      coaches.length;
+
+
+    coachActive.textContent =
+      active.length;
+
+
+    coachPendingWork.textContent =
+      pendingCoachIds.size;
+
+  }
+
+
+  /* =====================================================
+     LỊCH HỌC
+  ====================================================== */
+
+  async function loadSessionCounts() {
+
+
+    const overdueCount =
+      document.getElementById(
+        "overdueCount"
+      );
+
+
+    const todayCount =
+      document.getElementById(
+        "todayCount"
+      );
+
+
+    const upcomingCount =
+      document.getElementById(
+        "upcomingCount"
+      );
+
+
+    const adminAlert =
+      document.getElementById(
+        "adminAlert"
+      );
+
+
+    const adminAlertText =
+      document.getElementById(
+        "adminAlertText"
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("class_sessions")
+        .select(`
+          id,
+          session_date,
+          start_time,
+          duration_minutes,
+          status
+        `)
+        .eq(
+          "status",
+          "Chờ học"
+        );
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi thống kê lịch:",
+        error
+      );
+
+
+      overdueCount.textContent =
+        "—";
+
+
+      todayCount.textContent =
+        "—";
+
+
+      upcomingCount.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const now =
+      new Date();
+
+
+    let overdue =
+      0;
+
+
+    let today =
+      0;
+
+
+    let upcoming =
+      0;
+
+
+    (data || []).forEach(
+      item => {
+
+
+        const start =
+          getSessionStart(
+            item
+          );
+
+
+        const end =
+          getSessionEnd(
+            item
+          );
+
+
+        if (
+          end
+          &&
+          end.getTime()
+          <
+          now.getTime()
+        ) {
+
+
+          overdue++;
+
+          return;
+
+        }
+
+
+        if (
+          isToday(
+            item.session_date
+          )
+        ) {
+
+
+          today++;
+
+          return;
+
+        }
+
+
+        if (
+          start
+          &&
+          start.getTime()
+          >
+          now.getTime()
+        ) {
+
+
+          upcoming++;
+
+        }
+
+      }
+    );
+
+
+    overdueCount.textContent =
+      overdue;
+
+
+    todayCount.textContent =
+      today;
+
+
+    upcomingCount.textContent =
+      upcoming;
+
+
+    if (
+      overdue > 0
+    ) {
+
+
+      adminAlert.classList.add(
+        "show"
+      );
+
+
+      adminAlertText.textContent =
+
+        `${overdue} buổi học đã quá giờ nhưng vẫn chưa được Coach hoàn thành. Bấm Lịch học để xử lý.`;
+
+    }
+    else {
+
+
+      adminAlert.classList.remove(
+        "show"
+      );
+
+
+      adminAlertText.textContent =
+        "";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     HỌC PHÍ
+  ====================================================== */
+
+  async function loadTuitionSummary() {
+
+
+    const tuitionDebt =
+      document.getElementById(
+        "tuitionDebt"
+      );
+
+
+    const tuitionDebtorCount =
+      document.getElementById(
+        "tuitionDebtorCount"
+      );
+
+
+    const [
+      registrationsResult,
+      paymentsResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from("registrations")
+          .select(`
+            id,
+            student_id,
+            tuition_fee,
+            status
+          `),
+
+
+        sb
+          .from("tuition_payments")
+          .select(`
+            registration_id,
+            amount,
+            status
+          `)
+          .eq(
+            "status",
+            "Đã thu"
+          )
+
+
+      ]);
+
+
+    if (
+      registrationsResult.error
+      ||
+      paymentsResult.error
+    ) {
+
+
+      console.error(
+        "Lỗi thống kê học phí:",
+        registrationsResult.error,
+        paymentsResult.error
+      );
+
+
+      tuitionDebt.textContent =
+        "—";
+
+
+      tuitionDebtorCount.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const paidMap =
+      new Map();
+
+
+    (paymentsResult.data || [])
+      .forEach(
+        payment => {
+
+
+          const id =
+            Number(
+              payment.registration_id
+            );
+
+
+          paidMap.set(
+
+            id,
+
+            (
+              paidMap.get(id)
+              ||
+              0
+            )
+
+            +
+
+            Number(
+              payment.amount || 0
+            )
+
+          );
+
+        }
+      );
+
+
+    const excluded =
+      new Set([
+        "Từ chối",
+        "Đã từ chối",
+        "Hủy",
+        "Đã hủy"
+      ]);
+
+
+    let totalDebt =
+      0;
+
+
+    const debtors =
+      new Set();
+
+
+    (registrationsResult.data || [])
+      .forEach(
+        registration => {
+
+
+          if (
+            excluded.has(
+              String(
+                registration.status || ""
+              ).trim()
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          const tuition =
+            Number(
+              registration.tuition_fee || 0
+            );
+
+
+          const paid =
+            paidMap.get(
+              Number(
+                registration.id
+              )
+            )
+            ||
+            0;
+
+
+          const debt =
+            Math.max(
+              tuition - paid,
+              0
+            );
+
+
+          if (
+            debt <= 0
+          ) {
+
+            return;
+
+          }
+
+
+          totalDebt +=
+            debt;
+
+
+          if (
+            registration.student_id
+          ) {
+
+
+            debtors.add(
+              registration.student_id
+            );
+
+          }
+
+        }
+      );
+
+
+    tuitionDebt.textContent =
+      money(
+        totalDebt
+      );
+
+
+    tuitionDebtorCount.textContent =
+      debtors.size;
+
+  }
+
+
+  /* =====================================================
+     CÔNG COACH
+  ====================================================== */
+
+  async function loadCoachWorkSummary() {
+
+
+    const coachUnclosedCount =
+      document.getElementById(
+        "coachUnclosedCount"
+      );
+
+
+    const coachUnpaidAmount =
+      document.getElementById(
+        "coachUnpaidAmount"
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_coach_work"
+      );
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi thống kê Công Coach:",
+        error
+      );
+
+
+      coachUnclosedCount.textContent =
+        "—";
+
+
+      coachUnpaidAmount.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const rows =
+      data || [];
+
+
+    const unclosed =
+      rows.filter(
+        row =>
+          String(
+            row.status || ""
+          ).trim()
+          ===
+          "Chưa chốt"
+      );
+
+
+    const unpaid =
+      rows.filter(
+        row =>
+          String(
+            row.status || ""
+          ).trim()
+          !==
+          "Đã thanh toán"
+      );
+
+
+    const unpaidAmount =
+      unpaid.reduce(
+        (
+          total,
+          row
+        ) => {
+
+
+          const amount =
+            row.total_amount !== null
+            &&
+            row.total_amount !== undefined
+
+              ?
+
+              Number(
+                row.total_amount || 0
+              )
+
+              :
+
+              (
+                Number(
+                  row.base_amount || 0
+                )
+                +
+                Number(
+                  row.bonus || 0
+                )
+                -
+                Number(
+                  row.deduction || 0
+                )
+              );
+
+
+          return (
+            total
+            +
+            amount
+          );
+
+        },
+        0
+      );
+
+
+    coachUnclosedCount.textContent =
+      `${unclosed.length} buổi`;
+
+
+    coachUnpaidAmount.textContent =
+      money(
+        unpaidAmount
+      );
+
+  }
+
+
+  /* =====================================================
+     TÀI CHÍNH
+  ====================================================== */
+
+  async function loadFinanceSummary() {
+
+
+    const financeRevenue =
+      document.getElementById(
+        "financeRevenue"
+      );
+
+
+    const financeTotalCost =
+      document.getElementById(
+        "financeTotalCost"
+      );
+
+
+    const financeProfit =
+      document.getElementById(
+        "financeProfit"
+      );
+
+
+    const financeMonthLabel =
+      document.getElementById(
+        "financeMonthLabel"
+      );
+
+
+    const key =
+      monthKey();
+
+
+    const [
+      year,
+      month
+    ] =
+      key.split("-");
+
+
+    financeMonthLabel.textContent =
+      `Tháng ${month}/${year}`;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_finance_month",
+        {
+          p_month:
+            key
+        }
+      );
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi thống kê tài chính:",
+        error
+      );
+
+
+      financeRevenue.textContent =
+        "—";
+
+
+      financeTotalCost.textContent =
+        "—";
+
+
+      financeProfit.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const row =
+      Array.isArray(data)
+        ?
+        (
+          data[0] || {}
+        )
+        :
+        (
+          data || {}
+        );
+
+
+    const revenue =
+      getNumber(
+        row,
+        [
+          "revenue",
+          "tuition_revenue",
+          "total_revenue"
+        ]
+      )
+      ??
+      0;
+
+
+    const coachCost =
+      getNumber(
+        row,
+        [
+          "coach_cost",
+          "coach_costs",
+          "total_coach_cost"
+        ]
+      )
+      ??
+      0;
+
+
+    const operatingCost =
+      getNumber(
+        row,
+        [
+          "operating_cost",
+          "operating_costs",
+          "operating_expense",
+          "operating_expenses",
+          "total_operating_cost"
+        ]
+      )
+      ??
+      0;
+
+
+    const totalCost =
+      coachCost
+      +
+      operatingCost;
+
+
+    const profit =
+      getNumber(
+        row,
+        [
+          "profit",
+          "net_profit",
+          "total_profit"
+        ]
+      )
+      ??
+      (
+        revenue
+        -
+        totalCost
+      );
+
+
+    financeRevenue.textContent =
+      money(
+        revenue
+      );
+
+
+    financeTotalCost.textContent =
+      money(
+        totalCost
+      );
+
+
+    financeProfit.textContent =
+      money(
+        profit
+      );
+
+
+    if (
+      profit < 0
+    ) {
+
+
+      financeProfit.classList.remove(
+        "value-green"
+      );
+
+
+      financeProfit.classList.add(
+        "value-red"
+      );
+
+    }
+    else {
+
+
+      financeProfit.classList.remove(
+        "value-red"
+      );
+
+
+      financeProfit.classList.add(
+        "value-green"
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SÂN
+  ====================================================== */
+
+  async function loadCourtSummary() {
+
+
+    const courtTotal =
+      document.getElementById(
+        "courtTotal"
+      );
+
+
+    const courtActive =
+      document.getElementById(
+        "courtActive"
+      );
+
+
+    const courtUnverified =
+      document.getElementById(
+        "courtUnverified"
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("courts")
+        .select(`
+          id,
+          status,
+          verified,
+          price_verified,
+          price_per_session
+        `);
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi thống kê sân:",
+        error
+      );
+
+
+      courtTotal.textContent =
+        "—";
+
+
+      courtActive.textContent =
+        "—";
+
+
+      courtUnverified.textContent =
+        "—";
+
+
+      return;
+
+    }
+
+
+    const courts =
+      data || [];
+
+
+    const active =
+      courts.filter(
+        court =>
+          String(
+            court.status || ""
+          ).trim()
+          ===
+          "Hoạt động"
+      );
+
+
+    const unverified =
+      courts.filter(
+        court => {
+
+
+          return (
+
+            court.verified !== true
+
+            ||
+
+            court.price_verified !== true
+
+            ||
+
+            Number(
+              court.price_per_session || 0
+            ) <= 0
+
+          );
+
+        }
+      );
+
+
+    courtTotal.textContent =
+      courts.length;
+
+
+    courtActive.textContent =
+      active.length;
+
+
+    courtUnverified.textContent =
+      unverified.length;
+
+  }
+
+
+  /* =====================================================
+     VIỆC CẦN XỬ LÝ
+  ====================================================== */
+
+  async function loadAdminTaskCount() {
+
+
+    const adminTaskCount =
+      document.getElementById(
+        "adminTaskCount"
+      );
+
+
+    if (!adminTaskCount) {
+      return;
+    }
+
+
+    const [
+      sessionsResult,
+      registrationsResult,
+      paymentsResult,
+      workResult,
+      courtsResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from("class_sessions")
+          .select(`
+            id,
+            session_date,
+            start_time,
+            duration_minutes,
+            status
+          `)
+          .eq(
+            "status",
+            "Chờ học"
+          ),
+
+
+        sb
+          .from("registrations")
+          .select(`
+            id,
+            tuition_fee,
+            status
+          `),
+
+
+        sb
+          .from("tuition_payments")
+          .select(`
+            registration_id,
+            amount,
+            status
+          `)
+          .eq(
+            "status",
+            "Đã thu"
+          ),
+
+
+        sb.rpc(
+          "admin_get_coach_work"
+        ),
+
+
+        sb
+          .from("courts")
+          .select(`
+            id,
+            status,
+            verified,
+            price_verified,
+            price_per_session
+          `)
+
+
+      ]);
+
+
+    const error =
+      sessionsResult.error
+      ||
+      registrationsResult.error
+      ||
+      paymentsResult.error
+      ||
+      workResult.error
+      ||
+      courtsResult.error;
+
+
+    if (error) {
+
+
+      console.error(
+        "Lỗi đếm việc cần xử lý:",
+        error
+      );
+
+
+      adminTaskCount.textContent =
+        "!";
+
+
+      return;
+
+    }
+
+
+    /* =================================================
+       1. LỊCH QUÁ HẠN
+    ================================================== */
+
+    const now =
+      new Date();
+
+
+    const overdueTaskCount =
+      (sessionsResult.data || [])
+        .filter(
+          item => {
+
+
+            const end =
+              getSessionEnd(
+                item
+              );
+
+
+            return (
+              end
+              &&
+              end.getTime()
+              <
+              now.getTime()
+            );
+
+          }
+        )
+        .length;
+
+
+    /* =================================================
+       2. CÔNG NỢ HỌC PHÍ
+    ================================================== */
+
+    const paidMap =
+      new Map();
+
+
+    (paymentsResult.data || [])
+      .forEach(
+        payment => {
+
+
+          const id =
+            Number(
+              payment.registration_id
+            );
+
+
+          paidMap.set(
+
+            id,
+
+            (
+              paidMap.get(id)
+              ||
+              0
+            )
+
+            +
+
+            Number(
+              payment.amount || 0
+            )
+
+          );
+
+        }
+      );
+
+
+    const excludedStatuses =
+      new Set([
+        "Từ chối",
+        "Đã từ chối",
+        "Hủy",
+        "Đã hủy"
+      ]);
+
+
+    const debtTaskCount =
+      (registrationsResult.data || [])
+        .filter(
+          registration => {
+
+
+            if (
+              excludedStatuses.has(
+                String(
+                  registration.status || ""
+                ).trim()
+              )
+            ) {
+
+              return false;
+
+            }
+
+
+            const tuition =
+              Number(
+                registration.tuition_fee || 0
+              );
+
+
+            const paid =
+              paidMap.get(
+                Number(
+                  registration.id
+                )
+              )
+              ||
+              0;
+
+
+            return (
+              tuition - paid
+              >
+              0
+            );
+
+          }
+        )
+        .length;
+
+
+    /* =================================================
+       3. CÔNG COACH
+    ================================================== */
+
+    const pendingWorkTaskCount =
+      (workResult.data || [])
+        .filter(
+          item =>
+            String(
+              item.status || ""
+            ).trim()
+            !==
+            "Đã thanh toán"
+        )
+        .length;
+
+
+    /* =================================================
+       4. SÂN CHƯA XÁC MINH
+    ================================================== */
+
+    const unverifiedCourtTaskCount =
+      (courtsResult.data || [])
+        .filter(
+          court => {
+
+
+            const active =
+              String(
+                court.status || ""
+              ).trim()
+              ===
+              "Hoạt động";
+
+
+            const incomplete =
+
+              court.verified !== true
+
+              ||
+
+              court.price_verified !== true
+
+              ||
+
+              Number(
+                court.price_per_session || 0
+              ) <= 0;
+
+
+            return (
+              active
+              &&
+              incomplete
+            );
+
+          }
+        )
+        .length;
+
+
+    /* =================================================
+       TỔNG VIỆC
+    ================================================== */
+
+    const total =
+
+      overdueTaskCount
+
+      +
+
+      debtTaskCount
+
+      +
+
+      pendingWorkTaskCount
+
+      +
+
+      unverifiedCourtTaskCount;
+
+
+    adminTaskCount.textContent =
+      total;
+
+
+    if (
+      total === 0
+    ) {
+
+
+      adminTaskCount.style.background =
+        "#b9ff18";
+
+    }
+    else {
+
+
+      adminTaskCount.style.background =
+        "#ff8e8e";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     REFRESH DASHBOARD
+  ====================================================== */
+
+  async function refreshDashboard() {
+
+
+    await Promise.all([
+
+      loadStudentSummary(),
+
+      loadCoachSummary(),
+
+      loadSessionCounts(),
+
+      loadTuitionSummary(),
+
+      loadCoachWorkSummary(),
+
+      loadFinanceSummary(),
+
+      loadCourtSummary(),
+
+      loadAdminTaskCount()
+
+    ]);
+
+  }
+
+
+  await refreshDashboard();
+
+
+  /*
+    Toàn bộ dashboard
+    tự cập nhật mỗi 60 giây.
+  */
+
+  setInterval(
+    refreshDashboard,
+    60000
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
