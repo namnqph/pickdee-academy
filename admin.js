@@ -56,11 +56,59 @@ async function startAdmin() {
 
 document
   .getElementById("logoutBtn")
-  .addEventListener("click", async () => {
+  .addEventListener(
+    "click",
+    async () => {
 
-    await supabaseClient.auth.signOut();
+      try {
 
-    window.location.href = "/login.html";
-  });
+        const logoutBtn =
+          document.getElementById(
+            "logoutBtn"
+          );
+
+        logoutBtn.disabled =
+          true;
+
+        logoutBtn.textContent =
+          "ĐANG ĐĂNG XUẤT...";
+
+
+        await supabaseClient.auth
+          .signOut();
+
+
+        /*
+          Quay về trang chủ và ép trình duyệt
+          lấy phiên bản mới thay vì cache cũ
+        */
+
+        window.location.replace(
+          "/?v=" + Date.now()
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "LOGOUT ERROR:",
+          error
+        );
+
+        const logoutBtn =
+          document.getElementById(
+            "logoutBtn"
+          );
+
+        logoutBtn.disabled =
+          false;
+
+        logoutBtn.textContent =
+          "ĐĂNG XUẤT";
+
+      }
+
+    }
+  );
 
 startAdmin();
