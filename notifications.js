@@ -9,6 +9,10 @@
   let panelOpen = false;
   let notificationRows = [];
 
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
   function isSupabaseClient(value) {
     return Boolean(
       value &&
@@ -19,68 +23,13 @@
   }
 
   function getSupabaseClient() {
-  try {
-    if (
-      typeof sb !== "undefined" &&
-      sb &&
-      typeof sb.rpc === "function"
-    ) {
-      return sb;
-    }
-  } catch (_) {}
-
-  try {
-    if (
-      typeof supabaseClient !== "undefined" &&
-      supabaseClient &&
-      typeof supabaseClient.rpc === "function"
-    ) {
-      return supabaseClient;
-    }
-  } catch (_) {}
-
-  if (
-    window.sb &&
-    typeof window.sb.rpc === "function"
-  ) {
-    return window.sb;
-  }
-
-  if (
-    window.supabaseClient &&
-    typeof window.supabaseClient.rpc === "function"
-  ) {
-    return window.supabaseClient;
-  }
-
-  /*
-    Nếu trang Coach/Admin/Học viên không expose client,
-    notifications.js tự tạo client riêng từ config.js.
-  */
-  const cfg =
-    window.PICKDEE_CONFIG || {};
-
-  if (
-    window.supabase &&
-    typeof window.supabase.createClient === "function" &&
-    cfg.SUPABASE_URL &&
-    cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
-    if (!window.__PICKDEE_NOTIFICATION_CLIENT__) {
-      window.__PICKDEE_NOTIFICATION_CLIENT__ =
-        window.supabase.createClient(
-          cfg.SUPABASE_URL,
-          cfg.SUPABASE_PUBLISHABLE_KEY
-        );
-    }
-
-    return window.__PICKDEE_NOTIFICATION_CLIENT__;
-  }
-
-  return null;
-}{
     try {
-      if (typeof sb !== "undefined" && isSupabaseClient(sb)) return sb;
+      if (
+        typeof sb !== "undefined" &&
+        isSupabaseClient(sb)
+      ) {
+        return sb;
+      }
     } catch (_) {}
 
     try {
@@ -92,24 +41,68 @@
       }
     } catch (_) {}
 
-    const candidates = [
+    const existingClients = [
       window.sb,
       window.supabaseClient,
       window.PICKDEE_SUPABASE,
+      window.__PICKDEE_NOTIFICATION_CLIENT__
     ];
 
-    return candidates.find(isSupabaseClient) || null;
+    const existing =
+      existingClients.find(
+        isSupabaseClient
+      );
+
+    if (existing) {
+      return existing;
+    }
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    if (
+      window.supabase &&
+      typeof window.supabase.createClient === "function" &&
+      cfg.SUPABASE_URL &&
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      window.__PICKDEE_NOTIFICATION_CLIENT__ =
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        );
+
+      return window.__PICKDEE_NOTIFICATION_CLIENT__;
+    }
+
+    return null;
   }
 
-  function normalizeRole(value) {
-    const role = String(value || "")
-      .trim()
-      .toLowerCase()
-      .replaceAll("-", "_")
-      .replaceAll(" ", "_");
+  /* =====================================================
+     ROLE
+  ====================================================== */
 
-    if (role === "admin" || role === "administrator") return "admin";
-    if (role === "coach" || role === "trainer") return "coach";
+  function normalizeRole(value) {
+    const role =
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll("-", "_")
+        .replaceAll(" ", "_");
+
+    if (
+      role === "admin" ||
+      role === "administrator"
+    ) {
+      return "admin";
+    }
+
+    if (
+      role === "coach" ||
+      role === "trainer"
+    ) {
+      return "coach";
+    }
 
     if (
       role === "student" ||
@@ -124,29 +117,37 @@
   }
 
   function detectRoleFromPath() {
-    const explicitRole = normalizeRole(window.PICKDEE_NOTIFICATION_ROLE);
+    const explicitRole =
+      normalizeRole(
+        window.PICKDEE_NOTIFICATION_ROLE
+      );
 
-    if (explicitRole) return explicitRole;
-
-    const path = (window.location.pathname || "")
-      .toLowerCase()
-      .replace(/\/+$/, "");
-
-    if (path === "/coach" || path.startsWith("/coach-")) {
-      return "coach";
+    if (explicitRole) {
+      return explicitRole;
     }
 
-    if (path === "/admin" || path.startsWith("/admin-")) {
+    const path =
+      (window.location.pathname || "")
+        .toLowerCase()
+        .replace(/\/+$/, "");
+
+    if (
+      path === "/admin" ||
+      path.startsWith("/admin-")
+    ) {
       return "admin";
     }
 
     if (
+      path === "/coach" ||
+      path.startsWith("/coach-")
+    ) {
+      return "coach";
+    }
+
+    if (
       path === "/student" ||
-      path === "/student-home" ||
-      path === "/student-dashboard" ||
-      path === "/student-my" ||
-      path === "/student-book-session" ||
-      path === "/student-payments"
+      path.startsWith("/student-")
     ) {
       return "student";
     }
@@ -154,46 +155,68 @@
     return null;
   }
 
-  async function resolveNotificationRole() {
-    const pathRole = detectRoleFromPath();
+  async function resolveRole() {
+    const pathRole =
+      detectRoleFromPath();
 
-    if (pathRole) return pathRole;
+    if (pathRole) {
+      return pathRole;
+    }
 
-    if (!client) return null;
+    if (!client) {
+      return null;
+    }
 
     try {
       const {
         data: { user },
-        error: userError,
-      } = await client.auth.getUser();
+        error: userError
+      } =
+        await client.auth.getUser();
 
-      if (userError || !user) return null;
+      if (
+        userError ||
+        !user
+      ) {
+        return null;
+      }
 
-      const { data, error } = await client
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const {
+        data,
+        error
+      } =
+        await client
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
 
       if (error) {
         console.warn(
-          "PickDee Notifications profile role error:",
+          "Notification profile role:",
           error
         );
 
         return null;
       }
 
-      return normalizeRole(data?.role);
-    } catch (error) {
+      return normalizeRole(
+        data?.role
+      );
+    }
+    catch (error) {
       console.warn(
-        "PickDee Notifications resolve role error:",
+        "Notification resolve role:",
         error
       );
 
       return null;
     }
   }
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -207,53 +230,86 @@
   function formatTime(value) {
     if (!value) return "";
 
-    const date = new Date(value);
+    const date =
+      new Date(value);
 
-    if (Number.isNaN(date.getTime())) return "";
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
 
-    return new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    ).format(date);
   }
 
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
   function addStyles() {
-    if (document.getElementById("pickdee-notification-style")) {
+    if (
+      document.getElementById(
+        "pickdee-notification-style"
+      )
+    ) {
       return;
     }
 
-    const style = document.createElement("style");
+    const style =
+      document.createElement(
+        "style"
+      );
 
-    style.id = "pickdee-notification-style";
+    style.id =
+      "pickdee-notification-style";
 
     style.textContent = `
       #pickdeeNotificationRoot {
         position: fixed;
-        top: 18px;
-        right: 175px;
-        z-index: 99999;
-        font-family: inherit;
+        top: 17px;
+        right: 165px;
+        z-index: 999999;
+        font-family:
+          Arial,
+          Helvetica,
+          sans-serif;
       }
 
       .pdn-bell {
         position: relative;
         width: 42px;
         height: 42px;
-        border: 1px solid rgba(255,255,255,.18);
         border-radius: 12px;
-        background: rgba(10,31,58,.96);
-        color: #fff;
+        border:
+          1px solid rgba(
+            255,
+            255,
+            255,
+            .20
+          );
+        background: #0b2342;
+        color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(0,0,0,.25);
+        box-shadow:
+          0 8px 25px
+          rgba(0,0,0,.30);
       }
 
       .pdn-bell:hover {
-        border-color: #b7ff00;
+        border-color: #d8ff45;
       }
 
       .pdn-badge {
@@ -264,14 +320,15 @@
         height: 20px;
         padding: 0 5px;
         border-radius: 999px;
-        background: #ff5c69;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 800;
+        background: #ff5263;
+        color: white;
         display: none;
         align-items: center;
         justify-content: center;
-        border: 2px solid #08172b;
+        font-size: 11px;
+        font-weight: 900;
+        border:
+          2px solid #041733;
       }
 
       .pdn-badge.show {
@@ -282,13 +339,18 @@
         position: absolute;
         top: 50px;
         right: 0;
-        width: min(390px, calc(100vw - 24px));
+        width: 380px;
+        max-width:
+          calc(100vw - 24px);
         max-height: 560px;
         overflow: hidden;
         background: #0d2038;
-        border: 1px solid #294362;
+        border:
+          1px solid #294362;
         border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,.45);
+        box-shadow:
+          0 20px 60px
+          rgba(0,0,0,.50);
         display: none;
       }
 
@@ -297,54 +359,58 @@
       }
 
       .pdn-head {
+        padding: 15px 16px;
+        border-bottom:
+          1px solid #294362;
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
+        justify-content:
+          space-between;
         align-items: center;
-        padding: 16px;
-        border-bottom: 1px solid #294362;
+        gap: 10px;
       }
 
       .pdn-title {
-        color: #fff;
+        color: white;
         font-size: 18px;
-        font-weight: 800;
+        font-weight: 900;
       }
 
       .pdn-read-all {
         border: 0;
         background: transparent;
-        color: #b7ff00;
-        font-size: 12px;
-        font-weight: 700;
+        color: #d8ff45;
+        font-weight: 800;
         cursor: pointer;
+        font-size: 12px;
       }
 
       .pdn-list {
-        overflow-y: auto;
         max-height: 480px;
+        overflow-y: auto;
       }
 
       .pdn-item {
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(255,255,255,.07);
+        border-bottom:
+          1px solid
+          rgba(255,255,255,.07);
         cursor: pointer;
-        background: transparent;
-      }
-
-      .pdn-item:hover {
-        background: rgba(255,255,255,.04);
       }
 
       .pdn-item.unread {
-        background: rgba(183,255,0,.07);
+        background:
+          rgba(216,255,69,.08);
+      }
+
+      .pdn-item:hover {
+        background:
+          rgba(255,255,255,.05);
       }
 
       .pdn-item-title {
-        color: #fff;
-        font-weight: 800;
+        color: white;
         font-size: 14px;
-        line-height: 1.35;
+        font-weight: 900;
       }
 
       .pdn-item-message {
@@ -361,47 +427,77 @@
       }
 
       .pdn-empty {
-        padding: 32px 18px;
-        text-align: center;
+        padding: 30px 16px;
         color: #94a4b8;
+        text-align: center;
         font-size: 13px;
       }
 
-      @media (max-width: 700px) {
+      @media(max-width:700px) {
         #pickdeeNotificationRoot {
-          top: 14px;
-          right: 72px;
+          top: 13px;
+          right: 78px;
         }
 
         .pdn-panel {
           position: fixed;
-          top: 66px;
-          right: 12px;
+          top: 65px;
           left: 12px;
+          right: 12px;
           width: auto;
         }
       }
     `;
 
-    document.head.appendChild(style);
+    document.head.appendChild(
+      style
+    );
   }
 
+  /* =====================================================
+     BELL
+  ====================================================== */
+
   function createBell() {
-    if (document.getElementById("pickdeeNotificationRoot")) {
-      return;
+    /*
+      Nếu trang Coach/Student cũ
+      đang có chuông trực tiếp,
+      không tạo chuông thứ hai.
+    */
+    if (
+      document.getElementById(
+        "coachNotificationRoot"
+      ) ||
+      document.getElementById(
+        "studentNotificationRoot"
+      )
+    ) {
+      return false;
     }
 
-    const root = document.createElement("div");
+    if (
+      document.getElementById(
+        "pickdeeNotificationRoot"
+      )
+    ) {
+      return true;
+    }
 
-    root.id = "pickdeeNotificationRoot";
+    const root =
+      document.createElement(
+        "div"
+      );
+
+    root.id =
+      "pickdeeNotificationRoot";
 
     root.innerHTML = `
       <button
         id="pickdeeNotificationBell"
         class="pdn-bell"
         type="button"
-        aria-label="Thông báo"
         title="Thông báo"
+        aria-label="Thông báo"
       >
         <svg
           width="21"
@@ -413,8 +509,13 @@
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          <path
+            d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"
+          ></path>
+
+          <path
+            d="M13.73 21a2 2 0 0 1-3.46 0"
+          ></path>
         </svg>
 
         <span
@@ -430,6 +531,7 @@
         class="pdn-panel"
       >
         <div class="pdn-head">
+
           <div class="pdn-title">
             🔔 Thông báo
           </div>
@@ -441,6 +543,7 @@
           >
             Đánh dấu tất cả đã đọc
           </button>
+
         </div>
 
         <div
@@ -454,16 +557,21 @@
       </div>
     `;
 
-    document.body.appendChild(root);
+    document.body.appendChild(
+      root
+    );
 
     document
-      .getElementById("pickdeeNotificationBell")
+      .getElementById(
+        "pickdeeNotificationBell"
+      )
       ?.addEventListener(
         "click",
         async (event) => {
           event.stopPropagation();
 
-          panelOpen = !panelOpen;
+          panelOpen =
+            !panelOpen;
 
           document
             .getElementById(
@@ -496,15 +604,15 @@
     document.addEventListener(
       "click",
       (event) => {
-        const notificationRoot =
+        const root =
           document.getElementById(
             "pickdeeNotificationRoot"
           );
 
-        if (!notificationRoot) return;
+        if (!root) return;
 
         if (
-          !notificationRoot.contains(
+          !root.contains(
             event.target
           )
         ) {
@@ -514,11 +622,19 @@
             .getElementById(
               "pickdeeNotificationPanel"
             )
-            ?.classList.remove("open");
+            ?.classList.remove(
+              "open"
+            );
         }
       }
     );
+
+    return true;
   }
+
+  /* =====================================================
+     BADGE
+  ====================================================== */
 
   function renderBadge(count) {
     const badge =
@@ -528,11 +644,15 @@
 
     if (!badge) return;
 
-    const number = Number(count || 0);
+    const number =
+      Number(count || 0);
 
     if (number <= 0) {
       badge.textContent = "0";
-      badge.classList.remove("show");
+
+      badge.classList.remove(
+        "show"
+      );
 
       return;
     }
@@ -542,8 +662,14 @@
         ? "99+"
         : String(number);
 
-    badge.classList.add("show");
+    badge.classList.add(
+      "show"
+    );
   }
+
+  /* =====================================================
+     RENDER LIST
+  ====================================================== */
 
   function renderNotifications() {
     const list =
@@ -553,7 +679,9 @@
 
     if (!list) return;
 
-    if (!notificationRows.length) {
+    if (
+      !notificationRows.length
+    ) {
       list.innerHTML = `
         <div class="pdn-empty">
           ✅ Bạn chưa có thông báo nào.
@@ -573,10 +701,11 @@
                   ? ""
                   : "unread"
               }"
-              data-notification-id="${Number(
-                item.id
-              )}"
+              data-notification-id="${
+                Number(item.id)
+              }"
             >
+
               <div
                 class="pdn-item-title"
               >
@@ -602,55 +731,77 @@
                   )
                 )}
               </div>
+
             </div>
           `
         )
         .join("");
 
     list
-      .querySelectorAll(".pdn-item")
-      .forEach((element) => {
-        element.addEventListener(
-          "click",
-          async () => {
-            const id = Number(
-              element.dataset
-                .notificationId
-            );
+      .querySelectorAll(
+        ".pdn-item"
+      )
+      .forEach(
+        (element) => {
+          element.addEventListener(
+            "click",
+            async () => {
 
-            const item =
-              notificationRows.find(
-                (row) =>
-                  Number(row.id) === id
-              );
+              const id =
+                Number(
+                  element.dataset
+                    .notificationId
+                );
 
-            if (!item) return;
+              const item =
+                notificationRows.find(
+                  (row) =>
+                    Number(row.id) === id
+                );
 
-            await markRead(id);
+              if (!item) return;
 
-            if (item.link) {
-              window.location.href =
-                item.link;
+              await markRead(id);
+
+              if (item.link) {
+                window.location.href =
+                  item.link;
+              }
+              else {
+                await loadNotifications();
+              }
             }
-          }
-        );
-      });
+          );
+        }
+      );
   }
 
-  async function loadUnreadCount() {
-    if (!client || !currentRole) return;
+  /* =====================================================
+     RPC
+  ====================================================== */
 
-    const { data, error } =
+  async function loadUnreadCount() {
+    if (
+      !client ||
+      !currentRole
+    ) {
+      return;
+    }
+
+    const {
+      data,
+      error
+    } =
       await client.rpc(
         "get_unread_notification_count_for_role",
         {
-          p_role: currentRole,
+          p_role: currentRole
         }
       );
 
     if (error) {
       console.warn(
-        "Notification unread count error:",
+        "Notification count:",
         error
       );
 
@@ -659,11 +810,18 @@
       return;
     }
 
-    renderBadge(data || 0);
+    renderBadge(
+      data || 0
+    );
   }
 
   async function loadNotifications() {
-    if (!client || !currentRole) return;
+    if (
+      !client ||
+      !currentRole
+    ) {
+      return;
+    }
 
     const list =
       document.getElementById(
@@ -678,18 +836,21 @@
       `;
     }
 
-    const { data, error } =
+    const {
+      data,
+      error
+    } =
       await client.rpc(
         "get_notifications_for_role",
         {
           p_role: currentRole,
-          p_limit: 30,
+          p_limit: 30
         }
       );
 
     if (error) {
       console.warn(
-        "Notification list error:",
+        "Notification list:",
         error
       );
 
@@ -713,20 +874,30 @@
   }
 
   async function markRead(id) {
-    if (!client || !currentRole) return;
+    if (
+      !client ||
+      !currentRole
+    ) {
+      return;
+    }
 
-    const { error } =
+    const {
+      error
+    } =
       await client.rpc(
         "mark_notification_read_for_role",
         {
-          p_notification_id: id,
-          p_role: currentRole,
+          p_notification_id:
+            id,
+
+          p_role:
+            currentRole
         }
       );
 
     if (error) {
       console.warn(
-        "Mark notification read error:",
+        "Mark notification:",
         error
       );
 
@@ -750,19 +921,27 @@
   }
 
   async function markAllRead() {
-    if (!client || !currentRole) return;
+    if (
+      !client ||
+      !currentRole
+    ) {
+      return;
+    }
 
-    const { error } =
+    const {
+      error
+    } =
       await client.rpc(
         "mark_all_notifications_read_for_role",
         {
-          p_role: currentRole,
+          p_role:
+            currentRole
         }
       );
 
     if (error) {
       console.warn(
-        "Mark all notifications read error:",
+        "Mark all notifications:",
         error
       );
 
@@ -773,7 +952,7 @@
       notificationRows.map(
         (row) => ({
           ...row,
-          is_read: true,
+          is_read: true
         })
       );
 
@@ -782,7 +961,30 @@
     await loadUnreadCount();
   }
 
+  /* =====================================================
+     INIT
+  ====================================================== */
+
   async function init() {
+    /*
+      Nếu trang chính Coach/Student
+      đang dùng chuông trực tiếp cũ,
+      để chuông đó chạy như hiện tại.
+    */
+    if (
+      document.getElementById(
+        "coachNotificationRoot"
+      ) ||
+      document.getElementById(
+        "studentNotificationRoot"
+      )
+    ) {
+      return;
+    }
+
+    addStyles();
+    createBell();
+
     let attempts = 0;
 
     while (
@@ -810,25 +1012,42 @@
         "PickDee Notifications: chưa tìm thấy Supabase client."
       );
 
+      const list =
+        document.getElementById(
+          "pickdeeNotificationList"
+        );
+
+      if (list) {
+        list.innerHTML = `
+          <div class="pdn-empty">
+            Không kết nối được hệ thống thông báo.
+          </div>
+        `;
+      }
+
       return;
     }
 
     currentRole =
-      await resolveNotificationRole();
+      await resolveRole();
 
     if (!currentRole) {
       console.warn(
-        "PickDee Notifications: không xác định được role người dùng."
+        "PickDee Notifications: không xác định được role."
       );
+
+      const root =
+        document.getElementById(
+          "pickdeeNotificationRoot"
+        );
+
+      root?.remove();
 
       return;
     }
 
-    addStyles();
-    createBell();
-
     console.log(
-      "PickDee Notifications role:",
+      "PickDee Notifications ready:",
       currentRole
     );
 
@@ -861,7 +1080,8 @@
         }
       },
 
-      role: () => currentRole,
+      role: () =>
+        currentRole
     };
   }
 
@@ -873,7 +1093,9 @@
       "DOMContentLoaded",
       init
     );
-  } else {
+  }
+  else {
     init();
   }
+
 })();
