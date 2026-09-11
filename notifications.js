@@ -19,6 +19,66 @@
   }
 
   function getSupabaseClient() {
+  try {
+    if (
+      typeof sb !== "undefined" &&
+      sb &&
+      typeof sb.rpc === "function"
+    ) {
+      return sb;
+    }
+  } catch (_) {}
+
+  try {
+    if (
+      typeof supabaseClient !== "undefined" &&
+      supabaseClient &&
+      typeof supabaseClient.rpc === "function"
+    ) {
+      return supabaseClient;
+    }
+  } catch (_) {}
+
+  if (
+    window.sb &&
+    typeof window.sb.rpc === "function"
+  ) {
+    return window.sb;
+  }
+
+  if (
+    window.supabaseClient &&
+    typeof window.supabaseClient.rpc === "function"
+  ) {
+    return window.supabaseClient;
+  }
+
+  /*
+    Nếu trang Coach/Admin/Học viên không expose client,
+    notifications.js tự tạo client riêng từ config.js.
+  */
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    window.supabase &&
+    typeof window.supabase.createClient === "function" &&
+    cfg.SUPABASE_URL &&
+    cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    if (!window.__PICKDEE_NOTIFICATION_CLIENT__) {
+      window.__PICKDEE_NOTIFICATION_CLIENT__ =
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        );
+    }
+
+    return window.__PICKDEE_NOTIFICATION_CLIENT__;
+  }
+
+  return null;
+}{
     try {
       if (typeof sb !== "undefined" && isSupabaseClient(sb)) return sb;
     } catch (_) {}
