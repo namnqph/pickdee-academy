@@ -1507,17 +1507,18 @@
     try {
 
 
-      const {
-        data: userData,
-        error: userError
+         const {
+        data: { session },
+        error: sessionError
       } =
-        await sb.auth.getUser();
+        await sb.auth
+          .getSession();
 
 
       if (
-        userError
+        sessionError
         ||
-        !userData?.user
+        !session
       ) {
 
         window.location.href =
@@ -1528,9 +1529,26 @@
       }
 
 
-      const user =
-        userData.user;
+      const {
+        data: studentId,
+        error: studentIdError
+      } =
+        await sb.rpc(
+          "current_student_id"
+        );
 
+
+      if (
+        studentIdError
+        ||
+        !studentId
+      ) {
+
+        throw new Error(
+          "Không xác định được hồ sơ Học viên."
+        );
+
+      }
 
 
       const {
@@ -1542,13 +1560,30 @@
             "students"
           )
           .select(
-            "id, student_code, full_name, preferred_area, preferred_ward, auth_user_id"
+            "id, student_code, full_name, preferred_area, preferred_ward"
           )
           .eq(
-            "auth_user_id",
-            user.id
+            "id",
+            Number(studentId)
           )
           .maybeSingle();
+
+
+      if (
+        studentError
+        ||
+        !studentData
+      ) {
+
+        throw new Error(
+          "Không tìm thấy hồ sơ Học viên."
+        );
+
+      }
+
+
+      student =
+        studentData;
 
 
       if (
