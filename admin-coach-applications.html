@@ -2134,7 +2134,520 @@
 </script>
 
 
+<!-- =====================================================
+     FIX NÚT DUYỆT COACH
+     ONE CLICK - KHÔNG CONFIRM - KHÔNG POPUP
+====================================================== -->
 
+<style>
+
+  .actions {
+    position: relative !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+  }
+
+  .approve-btn {
+    position: relative !important;
+    z-index: 51 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+  let approvingCoach =
+    false;
+
+
+  /*
+    BẮT CLICK Ở CAPTURE PHASE.
+
+    Nghĩa là đoạn này nhận click
+    TRƯỚC các listener cũ trong trang.
+  */
+
+  document.addEventListener(
+    "click",
+    async function (event) {
+
+
+      const button =
+        event.target.closest(
+          ".approve-btn[data-id]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      /*
+        Chặn handler cũ,
+        tránh chạy 2 lần.
+      */
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      event.stopImmediatePropagation();
+
+
+      if (approvingCoach) {
+        return;
+      }
+
+
+      const applicationId =
+        Number(
+          button.dataset.id
+        );
+
+
+      if (
+        !Number.isFinite(
+          applicationId
+        )
+      ) {
+
+        showApproveError(
+          "Không xác định được ID hồ sơ Coach."
+        );
+
+        return;
+      }
+
+
+      const originalText =
+        button.textContent;
+
+
+      approvingCoach =
+        true;
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "ĐANG DUYỆT...";
+
+
+      showApproveStatus(
+        "Đang duyệt hồ sơ Coach..."
+      );
+
+
+      try {
+
+
+        const cfg =
+          window.PICKDEE_CONFIG
+          ||
+          {};
+
+
+        if (
+          !window.supabase
+          ||
+          !cfg.SUPABASE_URL
+          ||
+          !cfg.SUPABASE_PUBLISHABLE_KEY
+        ) {
+
+          throw new Error(
+            "Không tìm thấy cấu hình Supabase."
+          );
+
+        }
+
+
+        /*
+          Dùng client riêng,
+          không phụ thuộc biến sb
+          bên trong script khác.
+        */
+
+        const approveSb =
+          window.supabase.createClient(
+            cfg.SUPABASE_URL,
+            cfg.SUPABASE_PUBLISHABLE_KEY
+          );
+
+
+        /*
+          Kiểm tra session Admin
+        */
+
+        const {
+          data: sessionData,
+          error: sessionError
+        } =
+          await approveSb.auth
+            .getSession();
+
+
+        if (sessionError) {
+
+          throw sessionError;
+
+        }
+
+
+        if (
+          !sessionData
+          ||
+          !sessionData.session
+        ) {
+
+          throw new Error(
+            "Phiên đăng nhập Admin đã hết. Hãy đăng nhập lại."
+          );
+
+        }
+
+
+        /*
+          GỌI RPC DUYỆT COACH
+        */
+
+        const {
+          data,
+          error
+        } =
+          await approveSb.rpc(
+            "admin_approve_coach_application",
+            {
+
+              p_application_id:
+                applicationId,
+
+              p_admin_note:
+                null
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        console.log(
+          "APPROVE COACH SUCCESS:",
+          data
+        );
+
+
+        showApproveSuccess(
+          "✓ ĐÃ DUYỆT COACH THÀNH CÔNG"
+        );
+
+
+        button.textContent =
+          "✓ ĐÃ DUYỆT";
+
+
+        /*
+          Cập nhật chuông nếu có
+        */
+
+        try {
+
+          if (
+            window.PickDeeNotifications
+            &&
+            typeof
+              window
+                .PickDeeNotifications
+                .refresh
+            ===
+            "function"
+          ) {
+
+            await window
+              .PickDeeNotifications
+              .refresh();
+
+          }
+
+        }
+        catch (_) {}
+
+
+        /*
+          Reload sau 1 giây
+          để trang lấy trạng thái mới.
+        */
+
+        setTimeout(
+          function () {
+
+            window.location.href =
+              "./admin-coach-applications?v="
+              +
+              Date.now();
+
+          },
+          1000
+        );
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "APPROVE COACH ERROR:",
+          error
+        );
+
+
+        showApproveError(
+          "KHÔNG DUYỆT ĐƯỢC COACH: "
+          +
+          (
+            error?.message
+            ||
+            String(error)
+          )
+        );
+
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          originalText;
+
+
+      }
+      finally {
+
+
+        approvingCoach =
+          false;
+
+
+      }
+
+
+    },
+
+    /*
+      QUAN TRỌNG:
+      true = capture phase.
+    */
+
+    true
+
+  );
+
+
+
+  /* =====================================================
+     HIỂN THỊ TRẠNG THÁI
+  ====================================================== */
+
+  function getStatusBox() {
+
+
+    let box =
+      document.getElementById(
+        "coachApproveStatusBox"
+      );
+
+
+    if (box) {
+      return box;
+    }
+
+
+    box =
+      document.createElement(
+        "div"
+      );
+
+
+    box.id =
+      "coachApproveStatusBox";
+
+
+    box.style.cssText = `
+
+      position: fixed;
+
+      left: 50%;
+
+      bottom: 24px;
+
+      transform:
+        translateX(-50%);
+
+      z-index: 999999;
+
+      width:
+        min(
+          600px,
+          calc(100vw - 30px)
+        );
+
+      padding:
+        15px 18px;
+
+      border-radius:
+        12px;
+
+      background:
+        #13243a;
+
+      color:
+        white;
+
+      border:
+        1px solid
+        #3a506b;
+
+      box-shadow:
+        0 15px 45px
+        rgba(0,0,0,.45);
+
+      font-size:
+        14px;
+
+      font-weight:
+        900;
+
+      line-height:
+        1.5;
+
+      display:
+        none;
+
+    `;
+
+
+    document.body.appendChild(
+      box
+    );
+
+
+    return box;
+
+  }
+
+
+
+  function showApproveStatus(
+    text
+  ) {
+
+
+    const box =
+      getStatusBox();
+
+
+    box.style.display =
+      "block";
+
+
+    box.style.background =
+      "#13243a";
+
+
+    box.style.borderColor =
+      "#54708f";
+
+
+    box.style.color =
+      "#ffffff";
+
+
+    box.textContent =
+      text;
+
+  }
+
+
+
+  function showApproveSuccess(
+    text
+  ) {
+
+
+    const box =
+      getStatusBox();
+
+
+    box.style.display =
+      "block";
+
+
+    box.style.background =
+      "#203514";
+
+
+    box.style.borderColor =
+      "#b9ff18";
+
+
+    box.style.color =
+      "#dfff85";
+
+
+    box.textContent =
+      text;
+
+  }
+
+
+
+  function showApproveError(
+    text
+  ) {
+
+
+    const box =
+      getStatusBox();
+
+
+    box.style.display =
+      "block";
+
+
+    box.style.background =
+      "#3b1820";
+
+
+    box.style.borderColor =
+      "#ff8e8e";
+
+
+    box.style.color =
+      "#ffb6b6";
+
+
+    box.textContent =
+      text;
+
+  }
+
+
+})();
+
+</script>
 <script
   src="./notifications.js?v=20260913-coach-approval-fix"
 ></script>
