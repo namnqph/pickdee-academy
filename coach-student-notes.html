@@ -913,20 +913,68 @@
 
           <div class="preview-grid">
 
-            <div class="preview-box">
+         <div class="preview-box">
 
-              <div class="preview-label">
-                Điểm kỹ thuật PickDee Academy
-              </div>
+  <div class="preview-label">
+    Điểm kỹ thuật PickDee Academy
+  </div>
 
-              <div
-                id="skillScorePreview"
-                class="preview-value"
-              >
-                —
-              </div>
+  <div
+    id="skillScorePreview"
+    class="preview-value"
+  >
+    —
+  </div>
 
-            </div>
+</div>
+
+
+<div class="preview-box">
+
+  <div class="preview-label">
+    Trình PickDee Academy
+  </div>
+
+  <div
+    id="skillLevelPreview"
+    class="preview-value"
+  >
+    —
+  </div>
+
+</div>
+
+
+<div class="preview-box">
+
+  <div class="preview-label">
+    SportConnect tham chiếu
+  </div>
+
+  <div
+    id="sportconnectPreview"
+    class="preview-value"
+  >
+    —
+  </div>
+
+</div>
+
+
+<div class="preview-box">
+
+  <div class="preview-label">
+    DUPR tham chiếu
+  </div>
+
+  <div
+    id="duprPreview"
+    class="preview-value"
+  >
+    —
+  </div>
+
+</div>
 
 
             <div class="preview-box">
@@ -1681,152 +1729,225 @@
     );
 
 
-  function calculateSkillPreview() {
+function calculateSkillPreview() {
 
-    const values =
-      skillSelects.map(
-        select =>
-          Number(
-            select.value
-          )
-      );
-
-
-    const allCompleted =
-      values.every(
-        value =>
-          Number.isFinite(value)
-          &&
-          value >= 1
-          &&
-          value <= 5
-      );
-
-
-    const scoreEl =
-      document.getElementById(
-        "skillScorePreview"
-      );
-
-
-    const levelEl =
-      document.getElementById(
-        "skillLevelPreview"
-      );
-
-
-    if (
-      !allCompleted
-    ) {
-
-      scoreEl.textContent =
-        "—";
-
-      levelEl.textContent =
-        "—";
-
-      return null;
-    }
-
-
-    const totalRaw =
-      values.reduce(
-        (sum, value) =>
-          sum + value,
-        0
-      );
-
-
-    const score =
-      Math.max(
-        0,
-        Math.min(
-          100,
-          Math.round(
-            (
-              (totalRaw - 6)
-              /
-              24
-            )
-            *
-            100
-          )
+  const values =
+    skillSelects.map(
+      select =>
+        Number(
+          select.value
         )
-      );
+    );
 
 
-    let level;
+  const allCompleted =
+    values.every(
+      value =>
+        Number.isFinite(value)
+        &&
+        value >= 1
+        &&
+        value <= 5
+    );
 
 
-    if (
-      score < 25
-    ) {
+  const scoreEl =
+    document.getElementById(
+      "skillScorePreview"
+    );
 
-      level =
-        "PickDee Academy 2.0";
 
-    }
-    else if (
-      score < 40
-    ) {
+  const levelEl =
+    document.getElementById(
+      "skillLevelPreview"
+    );
 
-      level =
-        "PickDee Academy 2.5";
 
-    }
-    else if (
-      score < 55
-    ) {
+  const sportconnectEl =
+    document.getElementById(
+      "sportconnectPreview"
+    );
 
-      level =
-        "PickDee Academy 3.0";
 
-    }
-    else if (
-      score < 70
-    ) {
+  const duprEl =
+    document.getElementById(
+      "duprPreview"
+    );
 
-      level =
-        "PickDee Academy 3.5";
 
-    }
-    else if (
-      score < 85
-    ) {
-
-      level =
-        "PickDee Academy 4.0";
-
-    }
-    else if (
-      score < 95
-    ) {
-
-      level =
-        "PickDee Academy 4.5";
-
-    }
-    else {
-
-      level =
-        "PickDee Academy 5.0";
-
-    }
-
+  if (
+    !allCompleted
+  ) {
 
     scoreEl.textContent =
-      `${score} / 100`;
-
+      "—";
 
     levelEl.textContent =
-      level;
+      "—";
 
+    sportconnectEl.textContent =
+      "—";
 
-    return {
-      score,
-      level
-    };
+    duprEl.textContent =
+      "—";
+
+    return null;
   }
+
+
+  const totalRaw =
+    values.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    );
+
+
+  const score =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          (
+            (totalRaw - 6)
+            /
+            24
+          )
+          *
+          100
+        )
+      )
+    );
+
+
+  let level;
+  let sportconnect;
+  let dupr;
+
+
+  if (
+    score < 25
+  ) {
+
+    level =
+      "PickDee Academy 2.0";
+
+    sportconnect =
+      "2.0 - 2.2";
+
+    dupr =
+      "2.00 - 2.49";
+
+  }
+  else if (
+    score < 40
+  ) {
+
+    level =
+      "PickDee Academy 2.5";
+
+    sportconnect =
+      "2.2 - 2.4";
+
+    dupr =
+      "2.50 - 2.99";
+
+  }
+  else if (
+    score < 55
+  ) {
+
+    level =
+      "PickDee Academy 3.0";
+
+    sportconnect =
+      "2.4 - 2.5";
+
+    dupr =
+      "3.00 - 3.49";
+
+  }
+  else if (
+    score < 70
+  ) {
+
+    level =
+      "PickDee Academy 3.5";
+
+    sportconnect =
+      "2.5 - 2.7";
+
+    dupr =
+      "3.50 - 3.99";
+
+  }
+  else if (
+    score < 85
+  ) {
+
+    level =
+      "PickDee Academy 4.0";
+
+    sportconnect =
+      "2.8 - 3.0";
+
+    dupr =
+      "4.00 - 4.49";
+
+  }
+  else if (
+    score < 95
+  ) {
+
+    level =
+      "PickDee Academy 4.5";
+
+    sportconnect =
+      "3.1 - 3.3";
+
+    dupr =
+      "4.50 - 4.99";
+
+  }
+  else {
+
+    level =
+      "PickDee Academy 5.0";
+
+    sportconnect =
+      "3.4+";
+
+    dupr =
+      "5.00+";
+
+  }
+
+
+  scoreEl.textContent =
+    `${score} / 100`;
+
+
+  levelEl.textContent =
+    level;
+
+
+  sportconnectEl.textContent =
+    sportconnect;
+
+
+  duprEl.textContent =
+    dupr;
+
+
+  return {
+    score,
+    level,
+    sportconnect,
+    dupr
+  };
+
+}
 
 
   skillSelects
@@ -2148,11 +2269,14 @@
           movement_control_score,
           strategy_decision_score,
 
-          skill_score,
-          skill_level,
+         skill_score,
+skill_level,
 
-          created_at,
-          updated_at
+sportconnect_reference,
+dupr_reference,
+
+created_at,
+updated_at
         `)
         .eq(
           "registration_id",
@@ -2301,49 +2425,86 @@
                 </div>
 
 
-                <div class="history-score-grid">
+              <div class="history-score-grid">
 
-                  <div class="history-score">
+  <div class="history-score">
 
-                    <div class="history-score-label">
-                      ĐIỂM KỸ THUẬT PICKDEE ACADEMY
-                    </div>
+    <div class="history-score-label">
+      ĐIỂM KỸ THUẬT PICKDEE ACADEMY
+    </div>
 
-                    <div class="history-score-value">
+    <div class="history-score-value">
 
-                      ${
-                        hasSkill
-                        ?
-                        `${escapeHtml(row.skill_score)} / 100`
-                        :
-                        "Chưa chấm"
-                      }
+      ${
+        hasSkill
+        ?
+        `${escapeHtml(row.skill_score)} / 100`
+        :
+        "Chưa chấm"
+      }
 
-                    </div>
+    </div>
 
-                  </div>
+  </div>
 
 
-                  <div class="history-score">
+  <div class="history-score">
 
-                    <div class="history-score-label">
-                      TRÌNH PICKDEE ACADEMY
-                    </div>
+    <div class="history-score-label">
+      TRÌNH PICKDEE ACADEMY
+    </div>
 
-                    <div class="history-score-value">
+    <div class="history-score-value">
 
-                      ${escapeHtml(
-                        row.skill_level
-                        ||
-                        "Chưa chấm"
-                      )}
+      ${escapeHtml(
+        row.skill_level
+        ||
+        "Chưa chấm"
+      )}
 
-                    </div>
+    </div>
 
-                  </div>
+  </div>
 
-                </div>
 
+  <div class="history-score">
+
+    <div class="history-score-label">
+      SPORTCONNECT THAM CHIẾU
+    </div>
+
+    <div class="history-score-value">
+
+      ${escapeHtml(
+        row.sportconnect_reference
+        ||
+        "Chưa có"
+      )}
+
+    </div>
+
+  </div>
+
+
+  <div class="history-score">
+
+    <div class="history-score-label">
+      DUPR THAM CHIẾU
+    </div>
+
+    <div class="history-score-value">
+
+      ${escapeHtml(
+        row.dupr_reference
+        ||
+        "Chưa có"
+      )}
+
+    </div>
+
+  </div>
+
+</div>
 
                 ${
                   hasSkill
