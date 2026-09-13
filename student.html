@@ -4058,6 +4058,415 @@
 
 })();
 </script>
+  <!-- =====================================================
+     PICKDEE ACADEMY
+     TRÌNH ĐỘ HỌC VIÊN - STUDENT DASHBOARD
+====================================================== -->
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.error(
+      "PickDee Academy Skill: thiếu cấu hình Supabase."
+    );
+
+    return;
+  }
+
+
+  const sbSkill =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     TẠO CARD
+  ====================================================== */
+
+  const dashboardGrid =
+    document.querySelector(
+      ".dashboard-grid"
+    );
+
+
+  if (!dashboardGrid) {
+
+    console.error(
+      "PickDee Academy Skill: không tìm thấy dashboard-grid."
+    );
+
+    return;
+  }
+
+
+  let skillCard =
+    document.getElementById(
+      "studentSkillCard"
+    );
+
+
+  if (!skillCard) {
+
+    skillCard =
+      document.createElement(
+        "div"
+      );
+
+
+    skillCard.id =
+      "studentSkillCard";
+
+
+    skillCard.className =
+      "dashboard-card highlight";
+
+
+    skillCard.innerHTML = `
+
+      <div class="dashboard-card-title">
+        🎯 Trình độ của tôi
+      </div>
+
+
+      <div
+        id="studentSkillLevel"
+        class="dashboard-main-value"
+      >
+        Đang tải...
+      </div>
+
+
+      <div
+        id="studentSkillScore"
+        class="dashboard-sub"
+      >
+        Đang kiểm tra đánh giá gần nhất...
+      </div>
+
+
+      <div class="info-area">
+
+
+        <div class="info-line">
+
+          <span class="info-line-label">
+            SportConnect tham chiếu
+          </span>
+
+          <span
+            id="studentSportconnectReference"
+            class="info-line-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+        <div class="info-line">
+
+          <span class="info-line-label">
+            DUPR tham chiếu
+          </span>
+
+          <span
+            id="studentDuprReference"
+            class="info-line-value"
+          >
+            —
+          </span>
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        style="
+          margin-top:13px;
+          color:rgba(255,255,255,.43);
+          font-size:10px;
+          line-height:1.5;
+        "
+      >
+        SportConnect và DUPR là mức tham chiếu
+        từ đánh giá kỹ thuật PickDee Academy,
+        không phải rating chính thức.
+      </div>
+
+    `;
+
+
+    dashboardGrid.appendChild(
+      skillCard
+    );
+
+  }
+
+
+  const levelEl =
+    document.getElementById(
+      "studentSkillLevel"
+    );
+
+
+  const scoreEl =
+    document.getElementById(
+      "studentSkillScore"
+    );
+
+
+  const sportconnectEl =
+    document.getElementById(
+      "studentSportconnectReference"
+    );
+
+
+  const duprEl =
+    document.getElementById(
+      "studentDuprReference"
+    );
+
+
+  /* =====================================================
+     LOAD ĐÁNH GIÁ MỚI NHẤT
+  ====================================================== */
+
+  async function loadStudentSkill() {
+
+    try {
+
+      const {
+        data: studentId,
+        error: studentError
+      } =
+        await sbSkill.rpc(
+          "current_student_id"
+        );
+
+
+      if (
+        studentError
+        ||
+        !studentId
+      ) {
+
+        console.error(
+          "PickDee Academy Skill student:",
+          studentError
+        );
+
+
+        levelEl.textContent =
+          "Chưa xác định học viên";
+
+
+        scoreEl.textContent =
+          "";
+
+
+        return;
+      }
+
+
+      const {
+        data: latestNote,
+        error: noteError
+      } =
+        await sbSkill
+          .from(
+            "coach_student_notes"
+          )
+          .select(`
+            id,
+            student_id,
+            registration_id,
+            skill_score,
+            skill_level,
+            sportconnect_reference,
+            dupr_reference,
+            created_at
+          `)
+          .eq(
+            "student_id",
+            Number(studentId)
+          )
+          .not(
+            "skill_score",
+            "is",
+            null
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false
+            }
+          )
+          .limit(1)
+          .maybeSingle();
+
+
+      if (noteError) {
+
+        console.error(
+          "PickDee Academy Skill note:",
+          noteError
+        );
+
+
+        levelEl.textContent =
+          "Chưa tải được trình độ";
+
+
+        scoreEl.textContent =
+          "Vui lòng thử lại sau.";
+
+
+        sportconnectEl.textContent =
+          "—";
+
+
+        duprEl.textContent =
+          "—";
+
+
+        return;
+      }
+
+
+      if (!latestNote) {
+
+        levelEl.textContent =
+          "Chưa được chấm trình";
+
+
+        scoreEl.textContent =
+          "Coach chưa có đánh giá trình PickDee Academy cho bạn.";
+
+
+        sportconnectEl.textContent =
+          "Chưa có";
+
+
+        duprEl.textContent =
+          "Chưa có";
+
+
+        return;
+      }
+
+
+      /* =================================================
+         HIỂN THỊ
+      ================================================== */
+
+
+      const cleanLevel =
+        String(
+          latestNote.skill_level
+          ||
+          ""
+        )
+          .replace(
+            /^PickDee Academy\s*/i,
+            ""
+          )
+          .trim();
+
+
+      levelEl.textContent =
+        cleanLevel
+          ?
+          `PickDee Academy ${cleanLevel}`
+          :
+          "Đã có đánh giá";
+
+
+      scoreEl.textContent =
+        Number.isFinite(
+          Number(
+            latestNote.skill_score
+          )
+        )
+          ?
+          `Điểm kỹ thuật PickDee Academy: ${Number(
+            latestNote.skill_score
+          )} / 100`
+          :
+          "Điểm kỹ thuật: —";
+
+
+      sportconnectEl.textContent =
+        latestNote.sportconnect_reference
+        ||
+        "Chưa có";
+
+
+      duprEl.textContent =
+        latestNote.dupr_reference
+        ||
+        "Chưa có";
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "PickDee Academy Student Skill Error:",
+        error
+      );
+
+
+      levelEl.textContent =
+        "Không tải được trình độ";
+
+
+      scoreEl.textContent =
+        "";
+
+    }
+
+  }
+
+
+  await loadStudentSkill();
+
+
+  /*
+    Tự đồng bộ nếu Coach vừa cập nhật đánh giá.
+  */
+
+  setInterval(
+    loadStudentSkill,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadStudentSkill
+  );
+
+
+})();
+
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
