@@ -1186,6 +1186,7 @@
         </div>
 
       </a>
+      
 <script>
 
 window.addEventListener(
@@ -3370,7 +3371,7 @@ window.addEventListener(
      VIỆC CẦN XỬ LÝ
   ====================================================== */
 
-    async function loadAdminTaskCount() {
+  async function loadAdminTaskCount() {
 
 
     const adminTaskCount =
@@ -3379,102 +3380,110 @@ window.addEventListener(
       );
 
 
-    if (
-      !adminTaskCount
-    ) {
-
+    if (!adminTaskCount) {
       return;
-
     }
 
 
     try {
 
 
-      /* ===============================================
-         CHỈ DÙNG 1 NGUỒN DUY NHẤT:
-
-         admin_get_pending_tasks()
-
-         RPC này đã:
-         - gom toàn bộ việc cần xử lý
-         - loại dữ liệu TEST
-         - chỉ trả dữ liệu REAL
-      ================================================ */
+      /* ================================================
+         CÁC VIỆC CŨ TRONG HỆ THỐNG
+      ================================================= */
 
       const {
-        data,
-        error
+        data: oldTasks,
+        error: oldTasksError
       } =
         await sb.rpc(
           "admin_get_pending_tasks"
         );
 
 
-      if (error) {
+      if (oldTasksError) {
 
-        throw error;
+        throw oldTasksError;
 
       }
 
 
-      const rows =
-        Array.isArray(data)
+      const oldRows =
+        Array.isArray(
+          oldTasks
+        )
           ?
-          data
+          oldTasks
           :
           [];
 
 
+      /* ================================================
+         YÊU CẦU ĐỔI COACH ĐANG CHỜ ADMIN
+      ================================================= */
+
+      const {
+        data: coachChangeRows,
+        error: coachChangeError
+      } =
+        await sb
+          .from(
+            "coach_change_requests"
+          )
+          .select(
+            "id, status"
+          )
+          .eq(
+            "status",
+            "pending"
+          );
+
+
+      if (coachChangeError) {
+
+        throw coachChangeError;
+
+      }
+
+
+      const coachChangePending =
+        Array.isArray(
+          coachChangeRows
+        )
+          ?
+          coachChangeRows.length
+          :
+          0;
+
+
+      /* ================================================
+         TỔNG VIỆC CẦN XỬ LÝ
+      ================================================= */
+
       const total =
-        rows.length;
+        oldRows.length
+        +
+        coachChangePending;
 
-
-      /* ===============================================
-         HIỂN THỊ SỐ VIỆC
-      ================================================ */
 
       adminTaskCount.textContent =
         total;
 
 
-      /* ===============================================
-         ĐỔI MÀU BADGE
-
-         0 việc  = xanh
-         Có việc = đỏ
-      ================================================ */
-
       if (
         total === 0
       ) {
 
-
         adminTaskCount.style.background =
           "#b9ff18";
-
 
       }
       else {
 
-
         adminTaskCount.style.background =
           "#ff8e8e";
 
-
       }
-
-
-      /* ===============================================
-         TOOLTIP NHỎ
-      ================================================ */
-
-      adminTaskCount.title =
-        total === 0
-          ?
-          "Không có việc REAL cần xử lý"
-          :
-          `${total} việc REAL cần Admin xử lý`;
 
 
     }
@@ -3482,7 +3491,7 @@ window.addEventListener(
 
 
       console.error(
-        "Lỗi RPC admin_get_pending_tasks:",
+        "Lỗi đếm việc cần xử lý:",
         error
       );
 
@@ -3492,12 +3501,7 @@ window.addEventListener(
 
 
       adminTaskCount.style.background =
-        "#ffd66b";
-
-
-      adminTaskCount.title =
-        "Không tải được việc cần xử lý";
-
+        "#ff8e8e";
 
     }
 
