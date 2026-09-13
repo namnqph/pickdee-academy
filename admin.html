@@ -1110,7 +1110,82 @@
 
       </a>
 
+      <!-- =================================================
+           YÊU CẦU ĐỔI COACH
+      ================================================== -->
 
+      <a
+        href="./admin-coach-change-requests"
+        class="card-link"
+        id="coachChangeRequestCard"
+      >
+
+        <div class="card">
+
+          <h2>
+            🔄 Yêu cầu đổi Coach
+          </h2>
+
+          <p>
+            Học viên yêu cầu đổi Coach
+            và các đề xuất Smart Matching đang chờ Admin xác nhận.
+          </p>
+
+
+          <div class="card-stats">
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟠 Chờ duyệt
+              </span>
+
+              <span
+                id="coachChangePending"
+                class="card-stat-value value-orange"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                ✅ Đã duyệt
+              </span>
+
+              <span
+                id="coachChangeApproved"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                ❌ Từ chối
+              </span>
+
+              <span
+                id="coachChangeRejected"
+                class="card-stat-value"
+              >
+                ...
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </a>
 <script>
 
 window.addEventListener(
@@ -1305,8 +1380,49 @@ window.addEventListener(
            3. TỔNG YÊU CẦU REAL
         ========================================== */
 
-        const total =
-          rows.length;
+            const {
+      count: coachChangePendingCount,
+      error: coachChangeError
+    } =
+      await sb
+        .from(
+          "coach_change_requests"
+        )
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        )
+        .eq(
+          "status",
+          "pending"
+        );
+
+
+    if (coachChangeError) {
+
+      console.error(
+        "Lỗi đếm yêu cầu đổi Coach:",
+        coachChangeError
+      );
+
+    }
+
+
+    const total =
+      rows.length
+      +
+      (
+        coachChangeError
+        ?
+        0
+        :
+        Number(
+          coachChangePendingCount || 0
+        )
+      );
 
 
         /* =========================================
@@ -3106,7 +3222,150 @@ window.addEventListener(
 
   }
 
+  /* =====================================================
+     YÊU CẦU ĐỔI COACH
+  ====================================================== */
 
+  async function loadCoachChangeSummary() {
+
+    const pendingElement =
+      document.getElementById(
+        "coachChangePending"
+      );
+
+    const approvedElement =
+      document.getElementById(
+        "coachChangeApproved"
+      );
+
+    const rejectedElement =
+      document.getElementById(
+        "coachChangeRejected"
+      );
+
+    const card =
+      document.querySelector(
+        "#coachChangeRequestCard .card"
+      );
+
+
+    if (
+      !pendingElement
+      ||
+      !approvedElement
+      ||
+      !rejectedElement
+    ) {
+
+      return;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "coach_change_requests"
+        )
+        .select(
+          "id, status"
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Lỗi thống kê yêu cầu đổi Coach:",
+        error
+      );
+
+      pendingElement.textContent = "—";
+      approvedElement.textContent = "—";
+      rejectedElement.textContent = "—";
+
+      return;
+
+    }
+
+
+    const rows =
+      data || [];
+
+
+    const pending =
+      rows.filter(
+        item =>
+          item.status === "pending"
+      ).length;
+
+
+    const approved =
+      rows.filter(
+        item =>
+          item.status === "approved"
+      ).length;
+
+
+    const rejected =
+      rows.filter(
+        item =>
+          item.status === "rejected"
+      ).length;
+
+
+    pendingElement.textContent =
+      pending;
+
+    approvedElement.textContent =
+      approved;
+
+    rejectedElement.textContent =
+      rejected;
+
+
+    if (pending > 0) {
+
+      pendingElement.classList.remove(
+        "value-orange"
+      );
+
+      pendingElement.classList.add(
+        "value-red"
+      );
+
+
+      if (card) {
+
+        card.style.borderColor =
+          "rgba(255,142,142,.75)";
+
+      }
+
+    }
+    else {
+
+      pendingElement.classList.remove(
+        "value-red"
+      );
+
+      pendingElement.classList.add(
+        "value-orange"
+      );
+
+
+      if (card) {
+
+        card.style.borderColor =
+          "";
+
+      }
+
+    }
+
+  }
   /* =====================================================
      VIỆC CẦN XỬ LÝ
   ====================================================== */
@@ -3267,8 +3526,8 @@ window.addEventListener(
 
       loadFinanceSummary(),
 
-      loadCourtSummary(),
-
+           loadCourtSummary(),
+      loadCoachChangeSummary(),
       loadAdminTaskCount()
 
     ]);
