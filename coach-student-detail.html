@@ -1,0 +1,1533 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    Chi tiết học viên | PickDee Academy
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 85% 8%,
+          rgba(80,255,190,.12),
+          transparent 28%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 70px;
+      padding: 16px 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(3,20,45,.78);
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    #userEmail {
+      color:
+        rgba(255,255,255,.75);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .container {
+      width:
+        min(
+          1100px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        30px 0 60px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 22px;
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+
+      font-size:
+        clamp(
+          34px,
+          6vw,
+          52px
+        );
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.55;
+    }
+
+    #message {
+      margin-bottom: 18px;
+
+      color:
+        rgba(255,255,255,.65);
+    }
+
+    .error {
+      color: #ffaaaa !important;
+    }
+
+    .layout {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1.45fr);
+
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(7,39,84,.78);
+
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 18px 20px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .student-name {
+      color: #d8ff45;
+
+      font-size: 26px;
+      font-weight: 900;
+
+      margin-bottom: 5px;
+    }
+
+    .student-code {
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 12px;
+
+      margin-bottom: 20px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+
+      padding: 10px 0;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.07);
+
+      font-size: 13px;
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .label {
+      color:
+        rgba(255,255,255,.48);
+    }
+
+    .value {
+      text-align: right;
+
+      color:
+        rgba(255,255,255,.92);
+
+      font-weight: 800;
+    }
+
+    .phone {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+    }
+
+    .session-summary {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(0,1fr)
+        );
+
+      gap: 10px;
+
+      margin-top: 18px;
+    }
+
+    .summary-box {
+      padding: 14px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(255,255,255,.055);
+    }
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 10px;
+    }
+
+    .summary-value {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .session-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .session-item {
+      padding: 15px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      border:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .session-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+
+      align-items: flex-start;
+    }
+
+    .session-code {
+      color: #fff;
+
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .session-number {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.46);
+
+      font-size: 11px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+    .badge-completed {
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.12);
+    }
+
+    .badge-absent {
+      color: #ffaaaa;
+
+      background:
+        rgba(255,90,90,.12);
+    }
+
+    .badge-other {
+      color: #ffd86b;
+
+      background:
+        rgba(255,216,107,.10);
+    }
+
+    .session-meta {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 8px;
+
+      margin-top: 13px;
+    }
+
+    .meta-box {
+      padding: 10px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(0,0,0,.12);
+    }
+
+    .meta-label {
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 9px;
+    }
+
+    .meta-value {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.88);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .empty {
+      padding: 30px 16px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.50);
+    }
+
+    @media(max-width:800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      #userEmail {
+        display: none;
+      }
+
+      .topbar {
+        padding: 14px 16px;
+      }
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee<span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    href="./coach-students"
+    class="back"
+  >
+    ← Danh sách học viên
+  </a>
+
+
+  <div class="eyebrow">
+    CHI TIẾT HỌC VIÊN
+  </div>
+
+  <h1 id="pageTitle">
+    Đang tải...
+  </h1>
+
+  <div class="subtitle">
+    Hồ sơ, gói học và lịch sử các buổi học của học viên.
+  </div>
+
+
+  <div id="message">
+    Đang tải dữ liệu học viên...
+  </div>
+
+
+  <section
+    id="content"
+    class="layout"
+    style="display:none;"
+  >
+
+    <div>
+
+      <div class="card">
+
+        <div class="card-head">
+
+          <div class="card-title">
+            👤 Hồ sơ học viên
+          </div>
+
+        </div>
+
+        <div class="card-body">
+
+          <div
+            id="studentName"
+            class="student-name"
+          ></div>
+
+          <div
+            id="studentCode"
+            class="student-code"
+          ></div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Số điện thoại
+            </span>
+
+            <span
+              id="studentPhone"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Email
+            </span>
+
+            <span
+              id="studentEmail"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Khu vực
+            </span>
+
+            <span
+              id="studentArea"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Xã/Phường
+            </span>
+
+            <span
+              id="studentWard"
+              class="value"
+            ></span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="card"
+        style="margin-top:16px;"
+      >
+
+        <div class="card-head">
+
+          <div class="card-title">
+            🎓 Gói học
+          </div>
+
+        </div>
+
+        <div class="card-body">
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Mã đăng ký
+            </span>
+
+            <span
+              id="registrationCode"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Gói học
+            </span>
+
+            <span
+              id="packageName"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Trạng thái
+            </span>
+
+            <span
+              id="registrationStatus"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Bắt đầu
+            </span>
+
+            <span
+              id="startDate"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="label">
+              Kết thúc
+            </span>
+
+            <span
+              id="endDate"
+              class="value"
+            ></span>
+
+          </div>
+
+
+          <div class="session-summary">
+
+            <div class="summary-box">
+
+              <div class="summary-label">
+                TỔNG BUỔI
+              </div>
+
+              <div
+                id="totalSessions"
+                class="summary-value"
+              >
+                0
+              </div>
+
+            </div>
+
+
+            <div class="summary-box">
+
+              <div class="summary-label">
+                ĐÃ HỌC
+              </div>
+
+              <div
+                id="completedSessions"
+                class="summary-value"
+              >
+                0
+              </div>
+
+            </div>
+
+
+            <div class="summary-box">
+
+              <div class="summary-label">
+                CÒN LẠI
+              </div>
+
+              <div
+                id="remainingSessions"
+                class="summary-value"
+              >
+                0
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-head">
+
+        <div class="card-title">
+          📅 Lịch sử buổi học
+        </div>
+
+      </div>
+
+      <div class="card-body">
+
+        <div
+          id="sessionList"
+          class="session-list"
+        ></div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const content =
+    document.getElementById(
+      "content"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    message.textContent =
+      "Không tải được cấu hình hệ thống.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN"
+      ).format(
+        new Date(
+          `${value}T00:00:00`
+        )
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
+
+  }
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const registrationId =
+    Number(
+      params.get(
+        "registration_id"
+      )
+    );
+
+
+  if (
+    !Number.isFinite(
+      registrationId
+    )
+    ||
+    registrationId <= 0
+  ) {
+
+    message.textContent =
+      "Thiếu mã đăng ký học.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ============================================
+    1. AUTH
+    ============================================
+  */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await sb.auth.getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    window.location.replace(
+      "./?v=login"
+    );
+
+    return;
+
+  }
+
+
+  const user =
+    userData.user;
+
+
+  document
+    .getElementById(
+      "userEmail"
+    )
+    .textContent =
+      user.email || "";
+
+
+  /*
+    ============================================
+    2. ROLE COACH
+    ============================================
+  */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+    ||
+    !profile
+    ||
+    String(
+      profile.role || ""
+    )
+      .trim()
+      .toLowerCase()
+      !==
+      "coach"
+  ) {
+
+    window.location.replace(
+      "./"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ============================================
+    3. COACH HIỆN TẠI
+    ============================================
+  */
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await sb
+      .from(
+        "coaches"
+      )
+      .select(
+        "id, coach_code, full_name"
+      )
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    coachError
+    ||
+    !coach
+  ) {
+
+    console.error(
+      "Coach:",
+      coachError
+    );
+
+    message.textContent =
+      "Không xác định được hồ sơ Coach.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ============================================
+    4. REGISTRATION
+    QUAN TRỌNG:
+    Chỉ cho xem registration thuộc Coach này
+    ============================================
+  */
+
+  const {
+    data: registration,
+    error: registrationError
+  } =
+    await sb
+      .from(
+        "registrations"
+      )
+      .select(`
+        id,
+        registration_code,
+        student_id,
+        coach_id,
+        package_name,
+        purchased_sessions,
+        start_date,
+        end_date,
+        status
+      `)
+      .eq(
+        "id",
+        registrationId
+      )
+      .eq(
+        "coach_id",
+        coach.id
+      )
+      .maybeSingle();
+
+
+  if (
+    registrationError
+    ||
+    !registration
+  ) {
+
+    console.error(
+      "Registration:",
+      registrationError
+    );
+
+    message.textContent =
+      "Không tìm thấy học viên hoặc bạn không có quyền xem hồ sơ này.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ============================================
+    5. STUDENT
+    ============================================
+  */
+
+  const {
+    data: student,
+    error: studentError
+  } =
+    await sb
+      .from(
+        "students"
+      )
+      .select(`
+        id,
+        student_code,
+        full_name,
+        phone,
+        email,
+        preferred_area,
+        preferred_ward,
+        status
+      `)
+      .eq(
+        "id",
+        registration.student_id
+      )
+      .maybeSingle();
+
+
+  if (
+    studentError
+    ||
+    !student
+  ) {
+
+    console.error(
+      "Student:",
+      studentError
+    );
+
+    message.textContent =
+      "Không tải được hồ sơ học viên.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    ============================================
+    6. SESSION HISTORY
+    ============================================
+  */
+
+  const {
+    data: sessionsData,
+    error: sessionsError
+  } =
+    await sb
+      .from(
+        "class_sessions"
+      )
+      .select(`
+        id,
+        session_code,
+        registration_id,
+        coach_id,
+        session_no,
+        session_date,
+        start_time,
+        status
+      `)
+      .eq(
+        "registration_id",
+        registration.id
+      )
+      .order(
+        "session_no",
+        {
+          ascending:
+            true
+        }
+      );
+
+
+  if (
+    sessionsError
+  ) {
+
+    console.error(
+      "Sessions:",
+      sessionsError
+    );
+
+  }
+
+
+  const sessions =
+    sessionsData || [];
+
+
+  const total =
+    Number(
+      registration
+        .purchased_sessions
+      ||
+      0
+    );
+
+
+  const completed =
+    sessions.filter(
+      row =>
+        row.status
+        ===
+        "Đã hoàn thành"
+    ).length;
+
+
+  const remaining =
+    Math.max(
+      total
+      -
+      completed,
+      0
+    );
+
+
+  /*
+    ============================================
+    7. RENDER STUDENT
+    ============================================
+  */
+
+  document
+    .getElementById(
+      "pageTitle"
+    )
+    .textContent =
+      student.full_name
+      ||
+      "Học viên";
+
+
+  document
+    .getElementById(
+      "studentName"
+    )
+    .textContent =
+      student.full_name
+      ||
+      "Học viên";
+
+
+  document
+    .getElementById(
+      "studentCode"
+    )
+    .textContent =
+      student.student_code
+      ||
+      "—";
+
+
+  const phone =
+    String(
+      student.phone || ""
+    ).trim();
+
+
+  document
+    .getElementById(
+      "studentPhone"
+    )
+    .innerHTML =
+      phone
+      ?
+      `
+        <a
+          class="phone"
+          href="tel:${escapeHtml(
+            phone
+          )}"
+        >
+          ${escapeHtml(
+            phone
+          )}
+        </a>
+      `
+      :
+      "—";
+
+
+  document
+    .getElementById(
+      "studentEmail"
+    )
+    .textContent =
+      student.email
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "studentArea"
+    )
+    .textContent =
+      student.preferred_area
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "studentWard"
+    )
+    .textContent =
+      student.preferred_ward
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "registrationCode"
+    )
+    .textContent =
+      registration.registration_code
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "packageName"
+    )
+    .textContent =
+      registration.package_name
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "registrationStatus"
+    )
+    .textContent =
+      registration.status
+      ||
+      "—";
+
+
+  document
+    .getElementById(
+      "startDate"
+    )
+    .textContent =
+      formatDate(
+        registration.start_date
+      );
+
+
+  document
+    .getElementById(
+      "endDate"
+    )
+    .textContent =
+      formatDate(
+        registration.end_date
+      );
+
+
+  document
+    .getElementById(
+      "totalSessions"
+    )
+    .textContent =
+      total;
+
+
+  document
+    .getElementById(
+      "completedSessions"
+    )
+    .textContent =
+      completed;
+
+
+  document
+    .getElementById(
+      "remainingSessions"
+    )
+    .textContent =
+      remaining;
+
+
+  /*
+    ============================================
+    8. RENDER SESSION HISTORY
+    ============================================
+  */
+
+  const sessionList =
+    document.getElementById(
+      "sessionList"
+    );
+
+
+  if (
+    sessions.length === 0
+  ) {
+
+    sessionList.innerHTML =
+      `
+        <div class="empty">
+          Chưa có buổi học nào.
+        </div>
+      `;
+
+  }
+  else {
+
+    sessionList.innerHTML =
+      sessions
+        .map(
+          row => {
+
+            let badgeClass =
+              "badge-other";
+
+
+            if (
+              row.status
+              ===
+              "Đã hoàn thành"
+            ) {
+
+              badgeClass =
+                "badge-completed";
+
+            }
+            else if (
+              row.status
+              ===
+              "Vắng"
+            ) {
+
+              badgeClass =
+                "badge-absent";
+
+            }
+
+
+            return `
+              <div class="session-item">
+
+                <div class="session-top">
+
+                  <div>
+
+                    <div class="session-code">
+                      ${escapeHtml(
+                        row.session_code
+                        ||
+                        `Buổi ${row.session_no || ""}`
+                      )}
+                    </div>
+
+                    <div class="session-number">
+                      Buổi số ${escapeHtml(
+                        row.session_no
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+                  <span
+                    class="badge ${badgeClass}"
+                  >
+                    ${escapeHtml(
+                      row.status
+                      ||
+                      "—"
+                    )}
+                  </span>
+
+                </div>
+
+
+                <div class="session-meta">
+
+                  <div class="meta-box">
+
+                    <div class="meta-label">
+                      NGÀY HỌC
+                    </div>
+
+                    <div class="meta-value">
+                      ${escapeHtml(
+                        formatDate(
+                          row.session_date
+                        )
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="meta-box">
+
+                    <div class="meta-label">
+                      GIỜ HỌC
+                    </div>
+
+                    <div class="meta-value">
+                      ${escapeHtml(
+                        formatTime(
+                          row.start_time
+                        )
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  message.textContent =
+    "✓ Dữ liệu học viên đã được cập nhật.";
+
+
+  content.style.display =
+    "grid";
+
+
+})();
+
+</script>
+
+
+<script src="./notifications.js?v=20260913-coach-student-detail"></script>
+
+
+</body>
+</html>
