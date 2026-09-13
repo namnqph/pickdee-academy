@@ -1587,6 +1587,387 @@ document
 
 <script src="./notifications.js?v=20260913-coach-student-detail"></script>
 
+<script>
+/* =========================================================
+   PICKDEE ACADEMY
+   HIỂN THỊ TRÌNH ĐỘ MỚI NHẤT TRÊN HỒ SƠ HỌC VIÊN
+========================================================= */
 
+(async function () {
+
+  try {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const registrationId =
+      Number(
+        params.get("registration_id")
+      );
+
+
+    if (
+      !Number.isFinite(registrationId)
+      ||
+      registrationId <= 0
+    ) {
+      return;
+    }
+
+
+    const sbSkill =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        }
+      );
+
+
+    const {
+      data: latestNote,
+      error
+    } =
+      await sbSkill
+        .from("coach_student_notes")
+        .select(`
+          id,
+          skill_score,
+          skill_level,
+          sportconnect_reference,
+          dupr_reference,
+          created_at
+        `)
+        .eq(
+          "registration_id",
+          registrationId
+        )
+        .not(
+          "skill_score",
+          "is",
+          null
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        )
+        .limit(1)
+        .maybeSingle();
+
+
+    if (
+      error
+      ||
+      !latestNote
+    ) {
+
+      console.log(
+        "PickDee Academy: chưa có đánh giá trình mới nhất.",
+        error || ""
+      );
+
+      return;
+    }
+
+
+    /* =============================================
+       TÌM CARD GÓI HỌC
+    ============================================== */
+
+    const possibleHeads =
+      Array.from(
+        document.querySelectorAll(
+          ".card-head, .card-title, h2, h3"
+        )
+      );
+
+
+    const packageHeading =
+      possibleHeads.find(
+        el =>
+          String(
+            el.textContent || ""
+          )
+            .toLowerCase()
+            .includes("gói học")
+      );
+
+
+    let packageCard =
+      packageHeading
+        ? packageHeading.closest(".card")
+        : null;
+
+
+    /* =============================================
+       TẠO CARD TRÌNH ĐỘ
+    ============================================== */
+
+    const skillCard =
+      document.createElement("section");
+
+
+    skillCard.className =
+      "card pickdee-academy-skill-card";
+
+
+    skillCard.innerHTML = `
+
+      <div
+        style="
+          padding:18px 20px;
+          border-bottom:1px solid rgba(255,255,255,.08);
+          font-size:18px;
+          font-weight:900;
+        "
+      >
+        🎯 Trình độ học viên
+      </div>
+
+
+      <div
+        style="
+          padding:20px;
+        "
+      >
+
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:10px;
+          "
+        >
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:11px;
+              background:rgba(216,255,69,.07);
+              border:1px solid rgba(216,255,69,.15);
+            "
+          >
+
+            <div
+              style="
+                font-size:10px;
+                color:rgba(255,255,255,.52);
+                margin-bottom:5px;
+              "
+            >
+              ĐIỂM KỸ THUẬT PICKDEE ACADEMY
+            </div>
+
+            <div
+              style="
+                color:#d8ff45;
+                font-size:22px;
+                font-weight:900;
+              "
+            >
+              ${latestNote.skill_score ?? "—"} / 100
+            </div>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:11px;
+              background:rgba(216,255,69,.07);
+              border:1px solid rgba(216,255,69,.15);
+            "
+          >
+
+            <div
+              style="
+                font-size:10px;
+                color:rgba(255,255,255,.52);
+                margin-bottom:5px;
+              "
+            >
+              TRÌNH PICKDEE ACADEMY
+            </div>
+
+            <div
+              style="
+                color:#d8ff45;
+                font-size:18px;
+                font-weight:900;
+              "
+            >
+              ${latestNote.skill_level || "Chưa chấm"}
+            </div>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:11px;
+              background:rgba(255,255,255,.04);
+            "
+          >
+
+            <div
+              style="
+                font-size:10px;
+                color:rgba(255,255,255,.46);
+                margin-bottom:5px;
+              "
+            >
+              SPORTCONNECT THAM CHIẾU
+            </div>
+
+            <div
+              style="
+                color:#fff;
+                font-size:17px;
+                font-weight:900;
+              "
+            >
+              ${latestNote.sportconnect_reference || "Chưa có"}
+            </div>
+
+          </div>
+
+
+          <div
+            style="
+              padding:14px;
+              border-radius:11px;
+              background:rgba(255,255,255,.04);
+            "
+          >
+
+            <div
+              style="
+                font-size:10px;
+                color:rgba(255,255,255,.46);
+                margin-bottom:5px;
+              "
+            >
+              DUPR THAM CHIẾU
+            </div>
+
+            <div
+              style="
+                color:#fff;
+                font-size:17px;
+                font-weight:900;
+              "
+            >
+              ${latestNote.dupr_reference || "Chưa có"}
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+        <div
+          style="
+            margin-top:12px;
+            color:rgba(255,255,255,.42);
+            font-size:10px;
+            line-height:1.5;
+          "
+        >
+          SportConnect và DUPR ở trên là mức tham chiếu
+          từ đánh giá kỹ thuật PickDee Academy,
+          không phải rating chính thức từ hai nền tảng.
+        </div>
+
+
+        <a
+          href="./coach-student-notes?registration_id=${registrationId}"
+          style="
+            display:inline-block;
+            margin-top:15px;
+            color:#d8ff45;
+            text-decoration:none;
+            font-size:12px;
+            font-weight:900;
+          "
+        >
+          XEM LỊCH SỬ ĐÁNH GIÁ →
+        </a>
+
+
+      </div>
+    `;
+
+
+    /* =============================================
+       CHÈN VÀO HỒ SƠ
+    ============================================== */
+
+    if (packageCard) {
+
+      packageCard.insertAdjacentElement(
+        "afterend",
+        skillCard
+      );
+
+    }
+    else {
+
+      const main =
+        document.querySelector("main");
+
+
+      if (main) {
+
+        main.appendChild(
+          skillCard
+        );
+
+      }
+
+    }
+
+
+  }
+  catch (error) {
+
+    console.error(
+      "PickDee Academy skill card error:",
+      error
+    );
+
+  }
+
+})();
+</script>
 </body>
 </html>
