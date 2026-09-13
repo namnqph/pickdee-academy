@@ -3367,146 +3367,175 @@ window.addEventListener(
     }
 
   }
-  /* =====================================================
+    /* =====================================================
      VIỆC CẦN XỬ LÝ
   ====================================================== */
 
   async function loadAdminTaskCount() {
-
 
     const adminTaskCount =
       document.getElementById(
         "adminTaskCount"
       );
 
-
     if (!adminTaskCount) {
       return;
     }
 
-
     try {
 
+      const [
+        oldTasksResult,
+        coachChangeResult,
+        coachApplicationResult
+      ] =
+        await Promise.all([
 
-      /* ================================================
-         CÁC VIỆC CŨ TRONG HỆ THỐNG
-      ================================================= */
+          /* =============================================
+             1. CÁC VIỆC CŨ
+          ============================================== */
 
-      const {
-        data: oldTasks,
-        error: oldTasksError
-      } =
-        await sb.rpc(
-          "admin_get_pending_tasks"
-        );
+          sb.rpc(
+            "admin_get_pending_tasks"
+          ),
 
 
-      if (oldTasksError) {
+          /* =============================================
+             2. YÊU CẦU ĐỔI COACH ĐANG CHỜ
+          ============================================== */
 
-        throw oldTasksError;
+          sb
+            .from(
+              "coach_change_requests"
+            )
+            .select(
+              "id",
+              {
+                count: "exact",
+                head: true
+              }
+            )
+            .eq(
+              "status",
+              "pending"
+            ),
 
+
+          /* =============================================
+             3. HỒ SƠ COACH ĐANG CHỜ DUYỆT
+          ============================================== */
+
+          sb
+            .from(
+              "coach_applications"
+            )
+            .select(
+              "id",
+              {
+                count: "exact",
+                head: true
+              }
+            )
+            .eq(
+              "status",
+              "pending"
+            )
+
+        ]);
+
+
+      if (oldTasksResult.error) {
+        throw oldTasksResult.error;
+      }
+
+
+      if (coachChangeResult.error) {
+        throw coachChangeResult.error;
+      }
+
+
+      if (coachApplicationResult.error) {
+        throw coachApplicationResult.error;
       }
 
 
       const oldRows =
         Array.isArray(
-          oldTasks
+          oldTasksResult.data
         )
           ?
-          oldTasks
+          oldTasksResult.data
           :
           [];
 
 
-      /* ================================================
-         YÊU CẦU ĐỔI COACH ĐANG CHỜ ADMIN
-      ================================================= */
-
-      const {
-        data: coachChangeRows,
-        error: coachChangeError
-      } =
-        await sb
-          .from(
-            "coach_change_requests"
-          )
-          .select(
-            "id, status"
-          )
-          .eq(
-            "status",
-            "pending"
-          );
-
-
-      if (coachChangeError) {
-
-        throw coachChangeError;
-
-      }
-
-
       const coachChangePending =
-        Array.isArray(
-          coachChangeRows
-        )
-          ?
-          coachChangeRows.length
-          :
-          0;
+        Number(
+          coachChangeResult.count || 0
+        );
 
 
-      /* ================================================
-         TỔNG VIỆC CẦN XỬ LÝ
-      ================================================= */
+      const coachApplicationPending =
+        Number(
+          coachApplicationResult.count || 0
+        );
+
 
       const total =
         oldRows.length
         +
-        coachChangePending;
+        coachChangePending
+        +
+        coachApplicationPending;
 
 
       adminTaskCount.textContent =
-        total;
+        String(total);
 
 
-      if (
-        total === 0
-      ) {
-
-        adminTaskCount.style.background =
+      adminTaskCount.style.background =
+        total > 0
+          ?
+          "#ff8e8e"
+          :
           "#b9ff18";
 
-      }
-      else {
 
-        adminTaskCount.style.background =
-          "#ff8e8e";
+      console.log(
+        "ADMIN TASK COUNT:",
+        {
+          oldTasks:
+            oldRows.length,
 
-      }
+          coachChanges:
+            coachChangePending,
 
+          coachApplications:
+            coachApplicationPending,
+
+          total:
+            total
+        }
+      );
 
     }
     catch (error) {
-
 
       console.error(
         "Lỗi đếm việc cần xử lý:",
         error
       );
 
-
       adminTaskCount.textContent =
         "!";
-
 
       adminTaskCount.style.background =
         "#ff8e8e";
 
     }
 
-
   }
+
 
 
   /* =====================================================
@@ -3514,7 +3543,6 @@ window.addEventListener(
   ====================================================== */
 
   async function refreshDashboard() {
-
 
     await Promise.all([
 
@@ -3530,8 +3558,10 @@ window.addEventListener(
 
       loadFinanceSummary(),
 
-           loadCourtSummary(),
+      loadCourtSummary(),
+
       loadCoachChangeSummary(),
+
       loadAdminTaskCount()
 
     ]);
@@ -3543,8 +3573,7 @@ window.addEventListener(
 
 
   /*
-    Toàn bộ dashboard
-    tự cập nhật mỗi 60 giây.
+    Dashboard tự cập nhật mỗi 60 giây.
   */
 
   setInterval(
@@ -3557,57 +3586,75 @@ window.addEventListener(
 
 </script>
 
+
+
+<!-- =====================================================
+     HỆ THỐNG THÔNG BÁO GỐC PICKDEE
+====================================================== -->
+
 <script src="/notifications.js"></script>
-  <!-- =====================================================
-     PICKDEE ADMIN - UNIFIED ACTION ALERTS
-     Gộp:
-     - Việc cũ
-     - Yêu cầu đổi Coach
-     - Hồ sơ Coach chờ duyệt
-     - Badge Dashboard
-     - Badge + nội dung chuông
+
+
+
+<!-- =====================================================
+     ADMIN - HỒ SƠ COACH TRONG CHUÔNG
+     SAFE VERSION
+     KHÔNG MUTATION OBSERVER
+     KHÔNG CHẶN CLICK CHUÔNG GỐC
 ====================================================== -->
 
 <script>
 
-(async function () {
+(function () {
 
-  const cfg =
-    window.PICKDEE_CONFIG || {};
+  let bellSb = null;
+
+  let coachApplicationRows = [];
+
+  let normalUnreadCount = 0;
+
+  let extraDataLoaded = false;
 
 
-  if (
-    !window.supabase
-    ||
-    !cfg.SUPABASE_URL
-    ||
-    !cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
 
-    console.error(
-      "Unified Admin Alerts: thiếu cấu hình Supabase."
-    );
+  /* =====================================================
+     SUPABASE CLIENT RIÊNG
+  ====================================================== */
 
-    return;
+  function getBellClient() {
+
+    if (bellSb) {
+      return bellSb;
+    }
+
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      return null;
+
+    }
+
+
+    bellSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    return bellSb;
 
   }
-
-
-  const alertSb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
-
-
-  let currentAdminTotal = 0;
-
-  let currentUnreadNotifications = 0;
-
-  let currentCoachApplications = [];
-
-  let renderingBell =
-    false;
 
 
 
@@ -3615,7 +3662,7 @@ window.addEventListener(
      ESCAPE HTML
   ====================================================== */
 
-  function escapeHtml(value) {
+  function escapeBellHtml(value) {
 
     return String(
       value ?? ""
@@ -3649,7 +3696,7 @@ window.addEventListener(
      FORMAT TIME
   ====================================================== */
 
-  function formatTime(value) {
+  function formatBellTime(value) {
 
     if (!value) {
       return "";
@@ -3657,9 +3704,7 @@ window.addEventListener(
 
 
     const date =
-      new Date(
-        value
-      );
+      new Date(value);
 
 
     if (
@@ -3673,80 +3718,171 @@ window.addEventListener(
     }
 
 
-    return date.toLocaleString(
+    return new Intl.DateTimeFormat(
       "vi-VN",
       {
-
-        timeZone:
-          "Asia/Ho_Chi_Minh",
-
-        day:
-          "2-digit",
-
-        month:
-          "2-digit",
-
-        hour:
-          "2-digit",
-
-        minute:
-          "2-digit"
-
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
       }
-    );
+    ).format(date);
 
   }
 
 
 
   /* =====================================================
-     DASHBOARD - VIỆC CẦN XỬ LÝ
+     LOAD DATA CHO CHUÔNG ADMIN
   ====================================================== */
 
-  function renderAdminTaskCount(
-    total
-  ) {
+  async function loadAdminBellExtraData() {
 
-    currentAdminTotal =
-      Number(
-        total || 0
+    const client =
+      getBellClient();
+
+
+    if (!client) {
+
+      console.warn(
+        "Admin Bell: chưa có Supabase client."
       );
 
-
-    const element =
-      document.getElementById(
-        "adminTaskCount"
-      );
-
-
-    if (!element) {
       return;
+
     }
 
 
-    const text =
-      String(
-        currentAdminTotal
+    try {
+
+      const [
+        applicationResult,
+        unreadResult
+      ] =
+        await Promise.all([
+
+
+          /* =============================================
+             HỒ SƠ COACH PENDING
+          ============================================== */
+
+          client
+            .from(
+              "coach_applications"
+            )
+            .select(`
+              id,
+              application_code,
+              full_name,
+              preferred_area,
+              preferred_ward,
+              created_at
+            `)
+            .eq(
+              "status",
+              "pending"
+            )
+            .order(
+              "created_at",
+              {
+                ascending: false
+              }
+            ),
+
+
+          /* =============================================
+             THÔNG BÁO GỐC CHƯA ĐỌC
+          ============================================== */
+
+          client.rpc(
+            "get_unread_notification_count_for_role",
+            {
+              p_role: "admin"
+            }
+          )
+
+        ]);
+
+
+      if (applicationResult.error) {
+
+        throw applicationResult.error;
+
+      }
+
+
+      coachApplicationRows =
+        Array.isArray(
+          applicationResult.data
+        )
+          ?
+          applicationResult.data
+          :
+          [];
+
+
+      if (unreadResult.error) {
+
+        console.warn(
+          "Admin Bell unread:",
+          unreadResult.error
+        );
+
+        normalUnreadCount = 0;
+
+      }
+      else {
+
+        normalUnreadCount =
+          Number(
+            unreadResult.data || 0
+          );
+
+      }
+
+
+      extraDataLoaded =
+        true;
+
+
+      renderAdminBellBadge();
+
+
+      if (
+        document
+          .getElementById(
+            "pickdeeNotificationPanel"
+          )
+          ?.classList.contains(
+            "open"
+          )
+      ) {
+
+        ensureCoachApplicationsInPanel();
+
+      }
+
+
+      console.log(
+        "ADMIN BELL:",
+        {
+          normalUnread:
+            normalUnreadCount,
+
+          coachApplications:
+            coachApplicationRows.length
+        }
       );
 
+    }
+    catch (error) {
 
-    if (
-      element.textContent !==
-      text
-    ) {
-
-      element.textContent =
-        text;
+      console.error(
+        "Admin Bell extra data:",
+        error
+      );
 
     }
-
-
-    element.style.background =
-      currentAdminTotal > 0
-        ?
-        "#ff8e8e"
-        :
-        "#b9ff18";
 
   }
 
@@ -3756,7 +3892,12 @@ window.addEventListener(
      BADGE CHUÔNG
   ====================================================== */
 
-  function renderUnifiedBellBadge() {
+  function renderAdminBellBadge() {
+
+    if (!extraDataLoaded) {
+      return;
+    }
+
 
     const badge =
       document.getElementById(
@@ -3769,47 +3910,21 @@ window.addEventListener(
     }
 
 
-    /*
-      Notification bình thường
-      +
-      hồ sơ Coach đang chờ xử lý.
-
-      Không cộng coach_change_requests ở đây
-      vì luồng đổi Coach đã có notification riêng.
-    */
-
     const total =
-      Number(
-        currentUnreadNotifications || 0
-      )
+      normalUnreadCount
       +
-      currentCoachApplications.length;
+      coachApplicationRows.length;
 
 
-    const text =
+    badge.textContent =
       total > 99
         ?
         "99+"
         :
-        String(
-          total
-        );
+        String(total);
 
 
-    if (
-      badge.textContent !==
-      text
-    ) {
-
-      badge.textContent =
-        text;
-
-    }
-
-
-    if (
-      total > 0
-    ) {
+    if (total > 0) {
 
       badge.classList.add(
         "show"
@@ -3829,18 +3944,15 @@ window.addEventListener(
 
 
   /* =====================================================
-     HỒ SƠ COACH TRONG PANEL CHUÔNG
+     CHÈN HỒ SƠ COACH VÀO PANEL CHUÔNG
   ====================================================== */
 
-  function renderCoachApplicationsInBell() {
+  function ensureCoachApplicationsInPanel() {
 
-    if (
-      renderingBell
-    ) {
-
-      return;
-
-    }
+    const panel =
+      document.getElementById(
+        "pickdeeNotificationPanel"
+      );
 
 
     const list =
@@ -3849,25 +3961,28 @@ window.addEventListener(
       );
 
 
-    if (!list) {
+    if (
+      !panel
+      ||
+      !list
+      ||
+      !panel.classList.contains(
+        "open"
+      )
+    ) {
+
       return;
+
     }
 
 
-    renderingBell =
-      true;
-
-
-    try {
-
-
-      /*
-        Xóa bản synthetic cũ
-      */
+    if (
+      coachApplicationRows.length === 0
+    ) {
 
       list
         .querySelectorAll(
-          ".pickdee-coach-application-alert"
+          ".pickdee-coach-application-item"
         )
         .forEach(
           function (element) {
@@ -3878,515 +3993,259 @@ window.addEventListener(
         );
 
 
-      if (
-        currentCoachApplications.length === 0
-      ) {
-
-        return;
-
-      }
-
-
-      /*
-        Nếu notifications.js đang báo
-        "chưa có thông báo",
-        bỏ dòng đó đi vì hiện đang có
-        hồ sơ Coach cần Admin xử lý.
-      */
-
-      list
-        .querySelectorAll(
-          ".pdn-empty"
-        )
-        .forEach(
-          function (element) {
-
-            const text =
-              String(
-                element.textContent || ""
-              );
-
-
-            if (
-              text.includes(
-                "chưa có thông báo"
-              )
-            ) {
-
-              element.remove();
-
-            }
-
-          }
-        );
-
-
-      const fragment =
-        document.createDocumentFragment();
-
-
-      currentCoachApplications
-        .slice(
-          0,
-          20
-        )
-        .forEach(
-          function (item) {
-
-
-            const row =
-              document.createElement(
-                "div"
-              );
-
-
-            row.className =
-              "pdn-item unread pickdee-coach-application-alert";
-
-
-            row.style.cursor =
-              "pointer";
-
-
-            const area =
-              [
-                item.preferred_area,
-                item.preferred_ward
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(
-                  " • "
-                );
-
-
-            row.innerHTML = `
-
-              <div class="pdn-item-title">
-
-                🧑‍🏫 Hồ sơ Coach mới:
-                ${escapeHtml(
-                  item.full_name
-                  ||
-                  "Coach đăng ký"
-                )}
-
-              </div>
-
-
-              <div class="pdn-item-message">
-
-                ${
-                  escapeHtml(
-                    item.application_code
-                    ||
-                    ""
-                  )
-                }
-
-                ${
-                  area
-                    ?
-                    " • "
-                    +
-                    escapeHtml(
-                      area
-                    )
-                    :
-                    ""
-                }
-
-                <br>
-
-                Đang chờ Admin duyệt hồ sơ.
-
-              </div>
-
-
-              <div class="pdn-item-time">
-
-                ${
-                  escapeHtml(
-                    formatTime(
-                      item.created_at
-                    )
-                  )
-                }
-
-              </div>
-
-            `;
-
-
-            row.addEventListener(
-              "click",
-              function (event) {
-
-                event.stopPropagation();
-
-                window.location.href =
-                  "./admin-coach-applications";
-
-              }
-            );
-
-
-            fragment.appendChild(
-              row
-            );
-
-          }
-        );
-
-
-      list.prepend(
-        fragment
-      );
-
-
-    }
-    finally {
-
-      renderingBell =
-        false;
-
-    }
-
-  }
-
-
-
-  /* =====================================================
-     LOAD DỮ LIỆU
-  ====================================================== */
-
-  async function loadUnifiedAdminAlerts() {
-
-    try {
-
-
-      const [
-
-        baseResult,
-
-        coachChangeResult,
-
-        coachApplicationResult,
-
-        unreadResult
-
-      ] =
-        await Promise.all([
-
-
-          /* =========================
-             VIỆC GỐC
-          ========================= */
-
-          alertSb.rpc(
-            "admin_get_pending_tasks"
-          ),
-
-
-          /* =========================
-             YÊU CẦU ĐỔI COACH
-          ========================= */
-
-          alertSb
-            .from(
-              "coach_change_requests"
-            )
-            .select(
-              "id",
-              {
-                count:
-                  "exact",
-
-                head:
-                  true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            ),
-
-
-          /* =========================
-             HỒ SƠ COACH
-          ========================= */
-
-          alertSb
-            .from(
-              "coach_applications"
-            )
-            .select(
-              `
-
-                id,
-                application_code,
-                full_name,
-                preferred_area,
-                preferred_ward,
-                created_at
-
-              `
-            )
-            .eq(
-              "status",
-              "pending"
-            )
-            .order(
-              "created_at",
-              {
-                ascending:
-                  false
-              }
-            ),
-
-
-          /* =========================
-             THÔNG BÁO CHƯA ĐỌC
-          ========================= */
-
-          alertSb.rpc(
-            "get_unread_notification_count_for_role",
-            {
-              p_role:
-                "admin"
-            }
-          )
-
-
-        ]);
-
-
-      /* =================================================
-         KIỂM TRA LỖI
-      ================================================== */
-
-      if (
-        baseResult.error
-      ) {
-
-        throw baseResult.error;
-
-      }
-
-
-      if (
-        coachChangeResult.error
-      ) {
-
-        throw coachChangeResult.error;
-
-      }
-
-
-      if (
-        coachApplicationResult.error
-      ) {
-
-        throw coachApplicationResult.error;
-
-      }
-
-
-      if (
-        unreadResult.error
-      ) {
-
-        console.warn(
-          "Unified bell unread:",
-          unreadResult.error
-        );
-
-      }
-
-
-      /* =================================================
-         SỐ VIỆC GỐC
-      ================================================== */
-
-      const baseRows =
-        Array.isArray(
-          baseResult.data
-        )
-          ?
-          baseResult.data
-          :
-          [];
-
-
-      const baseCount =
-        baseRows.length;
-
-
-      /* =================================================
-         ĐỔI COACH
-      ================================================== */
-
-      const coachChangeCount =
-        Number(
-          coachChangeResult.count
-          ||
-          0
-        );
-
-
-      /* =================================================
-         HỒ SƠ COACH
-      ================================================== */
-
-      currentCoachApplications =
-        Array.isArray(
-          coachApplicationResult.data
-        )
-          ?
-          coachApplicationResult.data
-          :
-          [];
-
-
-      const coachApplicationCount =
-        currentCoachApplications.length;
-
-
-      /* =================================================
-         TỔNG VIỆC ADMIN
-      ================================================== */
-
-      const total =
-        baseCount
-        +
-        coachChangeCount
-        +
-        coachApplicationCount;
-
-
-      renderAdminTaskCount(
-        total
-      );
-
-
-      /* =================================================
-         BADGE CHUÔNG
-      ================================================== */
-
-      currentUnreadNotifications =
-        Number(
-          unreadResult.data
-          ||
-          0
-        );
-
-
-      renderUnifiedBellBadge();
-
-
-      renderCoachApplicationsInBell();
-
-
-      console.log(
-        "PickDee Unified Admin Alerts:",
-        {
-
-          baseTasks:
-            baseCount,
-
-          coachChanges:
-            coachChangeCount,
-
-          coachApplications:
-            coachApplicationCount,
-
-          totalTasks:
-            total,
-
-          unreadNotifications:
-            currentUnreadNotifications
-
-        }
-      );
-
-
-    }
-    catch (error) {
-
-      console.error(
-        "Unified Admin Alerts:",
-        error
-      );
-
-    }
-
-  }
-
-
-
-  /* =====================================================
-     GIỮ DASHBOARD KHÔNG BỊ SCRIPT CŨ GHI ĐÈ
-  ====================================================== */
-
-  function protectAdminTaskCount() {
-
-    const element =
-      document.getElementById(
-        "adminTaskCount"
-      );
-
-
-    if (!element) {
       return;
+
     }
 
 
-    const observer =
-      new MutationObserver(
-        function () {
+    /*
+      Nếu danh sách gốc đang báo không có thông báo,
+      bỏ dòng empty để nhường chỗ cho hồ sơ Coach.
+    */
+
+    const emptyElement =
+      list.querySelector(
+        ".pdn-empty"
+      );
 
 
-          const expected =
+    if (
+      emptyElement
+      &&
+      (
+        emptyElement.textContent || ""
+      )
+        .toLowerCase()
+        .includes(
+          "chưa có thông báo"
+        )
+    ) {
+
+      emptyElement.remove();
+
+    }
+
+
+    coachApplicationRows
+      .slice(
+        0,
+        20
+      )
+      .reverse()
+      .forEach(
+        function (item) {
+
+          const elementId =
+            "pickdeeCoachApplication"
+            +
             String(
-              currentAdminTotal
+              item.id
             );
 
+
+          /*
+            Đã có rồi thì không tạo lại.
+          */
 
           if (
-            element.textContent !==
-            expected
+            document.getElementById(
+              elementId
+            )
           ) {
 
-            element.textContent =
-              expected;
+            return;
 
           }
 
 
-          element.style.background =
-            currentAdminTotal > 0
-              ?
-              "#ff8e8e"
-              :
-              "#b9ff18";
+          const area =
+            [
+              item.preferred_area,
+              item.preferred_ward
+            ]
+              .filter(Boolean)
+              .join(
+                " • "
+              );
+
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+
+          row.id =
+            elementId;
+
+
+          row.className =
+            "pdn-item unread pickdee-coach-application-item";
+
+
+          row.innerHTML = `
+
+            <div class="pdn-item-title">
+
+              🧑‍🏫 Hồ sơ Coach mới:
+              ${escapeBellHtml(
+                item.full_name
+                ||
+                "Coach đăng ký"
+              )}
+
+            </div>
+
+
+            <div class="pdn-item-message">
+
+              ${
+                escapeBellHtml(
+                  item.application_code
+                  ||
+                  ""
+                )
+              }
+
+              ${
+                area
+                  ?
+                  " • "
+                  +
+                  escapeBellHtml(
+                    area
+                  )
+                  :
+                  ""
+              }
+
+              <br>
+
+              Đang chờ Admin duyệt hồ sơ.
+
+            </div>
+
+
+            <div class="pdn-item-time">
+
+              ${
+                escapeBellHtml(
+                  formatBellTime(
+                    item.created_at
+                  )
+                )
+              }
+
+            </div>
+
+          `;
+
+
+          /*
+            CHỈ ITEM HỒ SƠ COACH CÓ LISTENER RIÊNG.
+            KHÔNG CAN THIỆP LISTENER CỦA CHUÔNG.
+          */
+
+          row.addEventListener(
+            "click",
+            function (event) {
+
+              event.stopPropagation();
+
+              window.location.href =
+                "./admin-coach-applications";
+
+            }
+          );
+
+
+          list.prepend(
+            row
+          );
 
         }
       );
 
+  }
 
-    observer.observe(
-      element,
-      {
 
-        childList:
-          true,
 
-        subtree:
-          true,
+  /* =====================================================
+     KẾT NỐI VỚI CHUÔNG GỐC
+  ====================================================== */
 
-        characterData:
-          true
+  function connectAdminBell() {
+
+    const bell =
+      document.getElementById(
+        "pickdeeNotificationBell"
+      );
+
+
+    if (!bell) {
+
+      setTimeout(
+        connectAdminBell,
+        250
+      );
+
+      return;
+
+    }
+
+
+    /*
+      Chống add listener nhiều lần.
+    */
+
+    if (
+      bell.dataset
+        .pickdeeCoachApplicationAttached
+      ===
+      "1"
+    ) {
+
+      return;
+
+    }
+
+
+    bell.dataset
+      .pickdeeCoachApplicationAttached =
+      "1";
+
+
+    /*
+      Listener chuông GỐC trong notifications.js
+      vẫn chạy bình thường.
+
+      Listener này KHÔNG preventDefault
+      KHÔNG stopPropagation.
+
+      Nó chỉ đợi notifications.js render xong
+      rồi thêm hồ sơ Coach vào.
+    */
+
+    bell.addEventListener(
+      "click",
+      function () {
+
+        setTimeout(
+          ensureCoachApplicationsInPanel,
+          300
+        );
+
+
+        setTimeout(
+          ensureCoachApplicationsInPanel,
+          800
+        );
+
+
+        setTimeout(
+          ensureCoachApplicationsInPanel,
+          1600
+        );
 
       }
     );
@@ -4396,117 +4255,34 @@ window.addEventListener(
 
 
   /* =====================================================
-     GIỮ BADGE CHUÔNG KHÔNG BỊ notifications.js GHI ĐÈ
+     GIỮ BADGE ĐÚNG NHƯNG KHÔNG DÙNG OBSERVER
   ====================================================== */
 
-  function protectBellBadge() {
+  function startSafeRenderLoop() {
 
-    const waitForBell =
-      setInterval(
-        function () {
+    setInterval(
+      function () {
 
-
-          const badge =
-            document.getElementById(
-              "pickdeeNotificationBadge"
-            );
+        renderAdminBellBadge();
 
 
-          const list =
-            document.getElementById(
-              "pickdeeNotificationList"
-            );
+        if (
+          document
+            .getElementById(
+              "pickdeeNotificationPanel"
+            )
+            ?.classList.contains(
+              "open"
+            )
+        ) {
 
+          ensureCoachApplicationsInPanel();
 
-          if (
-            !badge
-            ||
-            !list
-          ) {
+        }
 
-            return;
-
-          }
-
-
-          clearInterval(
-            waitForBell
-          );
-
-
-          const badgeObserver =
-            new MutationObserver(
-              function () {
-
-                renderUnifiedBellBadge();
-
-              }
-            );
-
-
-          badgeObserver.observe(
-            badge,
-            {
-
-              childList:
-                true,
-
-              attributes:
-                true,
-
-              subtree:
-                true
-
-            }
-          );
-
-
-          const listObserver =
-            new MutationObserver(
-              function () {
-
-                if (
-                  renderingBell
-                ) {
-
-                  return;
-
-                }
-
-
-                /*
-                  notifications.js vừa render lại panel.
-                  Ta chèn hồ sơ Coach lại ngay sau đó.
-                */
-
-                setTimeout(
-                  renderCoachApplicationsInBell,
-                  30
-                );
-
-              }
-            );
-
-
-          listObserver.observe(
-            list,
-            {
-
-              childList:
-                true
-
-            }
-          );
-
-
-          renderUnifiedBellBadge();
-
-          renderCoachApplicationsInBell();
-
-
-        },
-        200
-      );
+      },
+      3000
+    );
 
   }
 
@@ -4516,37 +4292,66 @@ window.addEventListener(
      START
   ====================================================== */
 
-  await loadUnifiedAdminAlerts();
+  async function startAdminBellExtension() {
+
+    /*
+      Đợi notifications.js tạo chuông trước.
+    */
+
+    connectAdminBell();
 
 
-  protectAdminTaskCount();
-
-  protectBellBadge();
+    await loadAdminBellExtraData();
 
 
-  /*
-    Tự cập nhật 30 giây.
-  */
-
-  setInterval(
-    loadUnifiedAdminAlerts,
-    30000
-  );
+    startSafeRenderLoop();
 
 
-  /*
-    Khi quay lại tab.
-  */
+    /*
+      Lấy dữ liệu thật mới mỗi 30 giây.
+    */
 
-  window.addEventListener(
-    "focus",
-    loadUnifiedAdminAlerts
-  );
+    setInterval(
+      loadAdminBellExtraData,
+      30000
+    );
+
+
+    /*
+      Quay lại tab thì cập nhật ngay.
+    */
+
+    window.addEventListener(
+      "focus",
+      loadAdminBellExtraData
+    );
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      startAdminBellExtension
+    );
+
+  }
+  else {
+
+    startAdminBellExtension();
+
+  }
 
 
 })();
 
 </script>
+
+
 </body>
 
 </html>
