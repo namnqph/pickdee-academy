@@ -3878,6 +3878,137 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
 })();
 </script>
+  <!-- =====================================================
+     COACH - BẮT BUỘC ĐỔI MẬT KHẨU TẠM
+====================================================== -->
+
+<script>
+
+(async function () {
+
+  try {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      console.warn(
+        "Coach password guard: thiếu cấu hình Supabase."
+      );
+
+      return;
+
+    }
+
+
+    /*
+      Dùng client riêng chỉ để kiểm tra Auth.
+      Không sửa bất kỳ logic Dashboard Coach hiện tại.
+    */
+
+    const guardSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await guardSb.auth.getUser();
+
+
+    if (
+      error
+      ||
+      !data?.user
+    ) {
+
+      return;
+
+    }
+
+
+    const user =
+      data.user;
+
+
+    const metadata =
+      user.user_metadata || {};
+
+
+    const mustChangePassword =
+      (
+        metadata.must_change_password === true
+        ||
+        metadata.must_change_password === "true"
+      );
+
+
+    /*
+      Coach được tạo bằng mật khẩu tạm
+      chưa đổi mật khẩu
+      → bắt buộc sang trang đổi mật khẩu.
+    */
+
+    if (
+      mustChangePassword
+    ) {
+
+      console.log(
+        "Coach phải đổi mật khẩu tạm."
+      );
+
+
+      window.location.replace(
+        "./coach-change-password"
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+      Đã đổi mật khẩu rồi
+      → tiếp tục sử dụng Dashboard Coach bình thường.
+    */
+
+    console.log(
+      "Coach password guard: OK"
+    );
+
+
+  }
+  catch (error) {
+
+    /*
+      Guard không được phép làm hỏng Dashboard
+      nếu có lỗi ngoài ý muốn.
+    */
+
+    console.error(
+      "Coach password guard:",
+      error
+    );
+
+  }
+
+
+})();
+
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
