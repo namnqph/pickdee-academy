@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>Đánh giá học viên | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 85% 8%,
+          rgba(80,255,190,.12),
+          transparent 28%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 70px;
+      padding: 16px 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(3,20,45,.78);
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    #userEmail {
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .container {
+      width:
+        min(
+          1050px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+      padding: 30px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .eyebrow {
+      margin-top: 24px;
+
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+
+      font-size:
+        clamp(
+          34px,
+          6vw,
+          50px
+        );
+    }
+
+    .sub {
+      margin-bottom: 24px;
+      color: rgba(255,255,255,.62);
+    }
+
+    .layout {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0,1fr)
+        minmax(0,1fr);
+
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(7,39,84,.78);
+
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 18px 20px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    label {
+      display: block;
+
+      margin:
+        0 0 7px;
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 90px;
+
+      margin-bottom: 16px;
+      padding: 13px 14px;
+
+      resize: vertical;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color: #fff;
+
+      font: inherit;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color:
+        rgba(216,255,69,.55);
+    }
+
+    button {
+      width: 100%;
+      min-height: 46px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: #d8ff45;
+      color: #172600;
+
+      font-size: 13px;
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    #message {
+      margin-top: 13px;
+
+      min-height: 18px;
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size: 12px;
+    }
+
+    .error {
+      color: #ffaaaa !important;
+    }
+
+    .success {
+      color: #d8ff45 !important;
+    }
+
+    .history {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .note-item {
+      padding: 16px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.045);
+    }
+
+    .note-date {
+      margin-bottom: 12px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .note-section {
+      margin-top: 11px;
+    }
+
+    .note-label {
+      margin-bottom: 4px;
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      text-transform: uppercase;
+    }
+
+    .note-value {
+      color:
+        rgba(255,255,255,.88);
+
+      font-size: 13px;
+      line-height: 1.55;
+
+      white-space: pre-wrap;
+    }
+
+    .empty {
+      padding: 30px 15px;
+
+      color:
+        rgba(255,255,255,.52);
+
+      text-align: center;
+    }
+
+    @media(max-width:760px) {
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      #userEmail {
+        display: none;
+      }
+
+      .topbar {
+        padding: 14px 16px;
+      }
+
+    }
+  </style>
+</head>
+
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee<span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    id="backLink"
+    class="back"
+    href="./coach-students"
+  >
+    ← Hồ sơ học viên
+  </a>
+
+
+  <div class="eyebrow">
+    ĐÁNH GIÁ TIẾN TRÌNH
+  </div>
+
+
+  <h1 id="studentTitle">
+    Đang tải...
+  </h1>
+
+
+  <div class="sub">
+    Ghi nhận tiến trình tập luyện để Coach hiện tại
+    và Coach tiếp theo có thể tiếp tục đúng lộ trình.
+  </div>
+
+
+  <section
+    id="mainContent"
+    class="layout"
+    style="display:none;"
+  >
+
+
+    <div class="card">
+
+      <div class="card-head">
+        📝 Tạo đánh giá mới
+      </div>
+
+      <div class="card-body">
+
+        <label for="strengths">
+          Điểm mạnh
+        </label>
+
+        <textarea
+          id="strengths"
+          placeholder="Ví dụ: Forehand ổn định, di chuyển tốt..."
+        ></textarea>
+
+
+        <label for="improvements">
+          Điểm cần cải thiện
+        </label>
+
+        <textarea
+          id="improvements"
+          placeholder="Ví dụ: Backhand chưa ổn định..."
+        ></textarea>
+
+
+        <label for="focusNext">
+          Nội dung cần tập tiếp
+        </label>
+
+        <textarea
+          id="focusNext"
+          placeholder="Ví dụ: Tập dink, reset và di chuyển lên NVZ..."
+        ></textarea>
+
+
+        <label for="coachNote">
+          Nhận xét của Coach
+        </label>
+
+        <textarea
+          id="coachNote"
+          placeholder="Nhận xét tổng thể về học viên..."
+        ></textarea>
+
+
+        <button id="saveBtn">
+          LƯU ĐÁNH GIÁ
+        </button>
+
+
+        <div id="message"></div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-head">
+        📚 Lịch sử đánh giá
+      </div>
+
+      <div class="card-body">
+
+        <div
+          id="history"
+          class="history"
+        >
+          <div class="empty">
+            Đang tải...
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    message.textContent =
+      "Không tải được cấu hình hệ thống.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+
+  function formatDateTime(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          dateStyle: "short",
+          timeStyle: "short"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+    }
+  }
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const registrationId =
+    Number(
+      params.get(
+        "registration_id"
+      )
+    );
+
+
+  if (
+    !Number.isFinite(
+      registrationId
+    )
+    ||
+    registrationId <= 0
+  ) {
+
+    message.textContent =
+      "Thiếu mã đăng ký học.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+
+  const {
+    data: userData
+  } =
+    await sb.auth.getUser();
+
+
+  if (
+    !userData?.user
+  ) {
+
+    window.location.replace(
+      "./?v=login"
+    );
+
+    return;
+  }
+
+
+  const user =
+    userData.user;
+
+
+  document
+    .getElementById(
+      "userEmail"
+    )
+    .textContent =
+      user.email || "";
+
+
+  const {
+    data: profile
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+
+  if (
+    String(
+      profile?.role || ""
+    )
+      .toLowerCase()
+      .trim()
+      !==
+      "coach"
+  ) {
+
+    window.location.replace(
+      "./"
+    );
+
+    return;
+  }
+
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await sb
+      .from("coaches")
+      .select(`
+        id,
+        coach_code,
+        full_name
+      `)
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    coachError
+    ||
+    !coach
+  ) {
+
+    message.textContent =
+      "Không xác định được hồ sơ Coach.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+
+  const {
+    data: registration,
+    error: registrationError
+  } =
+    await sb
+      .from("registrations")
+      .select(`
+        id,
+        student_id,
+        coach_id
+      `)
+      .eq(
+        "id",
+        registrationId
+      )
+      .eq(
+        "coach_id",
+        coach.id
+      )
+      .maybeSingle();
+
+
+  if (
+    registrationError
+    ||
+    !registration
+  ) {
+
+    message.textContent =
+      "Bạn không có quyền đánh giá học viên này.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+
+  const {
+    data: student,
+    error: studentError
+  } =
+    await sb
+      .from("students")
+      .select(`
+        id,
+        student_code,
+        full_name
+      `)
+      .eq(
+        "id",
+        registration.student_id
+      )
+      .maybeSingle();
+
+
+  if (
+    studentError
+    ||
+    !student
+  ) {
+
+    message.textContent =
+      "Không tải được học viên.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+  }
+
+
+  document
+    .getElementById(
+      "studentTitle"
+    )
+    .textContent =
+      student.full_name
+      ||
+      "Học viên";
+
+
+  document
+    .getElementById(
+      "backLink"
+    )
+    .href =
+      `./coach-student-detail?registration_id=${registration.id}`;
+
+
+  document
+    .getElementById(
+      "mainContent"
+    )
+    .style.display =
+      "grid";
+
+
+  const history =
+    document.getElementById(
+      "history"
+    );
+
+
+  async function loadHistory() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "coach_student_notes"
+        )
+        .select(`
+          id,
+          coach_id,
+          strengths,
+          improvements,
+          focus_next,
+          coach_note,
+          created_at,
+          updated_at
+        `)
+        .eq(
+          "registration_id",
+          registration.id
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        error
+      );
+
+      history.innerHTML =
+        `
+          <div class="empty">
+            Không tải được lịch sử đánh giá.
+          </div>
+        `;
+
+      return;
+    }
+
+
+    const rows =
+      data || [];
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      history.innerHTML =
+        `
+          <div class="empty">
+            Chưa có đánh giá nào.
+          </div>
+        `;
+
+      return;
+    }
+
+
+    history.innerHTML =
+      rows
+        .map(
+          row => {
+
+            const author =
+              Number(
+                row.coach_id
+              )
+              ===
+              Number(
+                coach.id
+              )
+              ?
+              "Coach hiện tại"
+              :
+              "Coach trước";
+
+
+            return `
+              <article class="note-item">
+
+                <div class="note-date">
+                  ${escapeHtml(
+                    formatDateTime(
+                      row.created_at
+                    )
+                  )}
+                  •
+                  ${escapeHtml(
+                    author
+                  )}
+                </div>
+
+
+                <div class="note-section">
+
+                  <div class="note-label">
+                    Điểm mạnh
+                  </div>
+
+                  <div class="note-value">
+                    ${escapeHtml(
+                      row.strengths
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="note-section">
+
+                  <div class="note-label">
+                    Điểm cần cải thiện
+                  </div>
+
+                  <div class="note-value">
+                    ${escapeHtml(
+                      row.improvements
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="note-section">
+
+                  <div class="note-label">
+                    Nội dung cần tập tiếp
+                  </div>
+
+                  <div class="note-value">
+                    ${escapeHtml(
+                      row.focus_next
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="note-section">
+
+                  <div class="note-label">
+                    Nhận xét của Coach
+                  </div>
+
+                  <div class="note-value">
+                    ${escapeHtml(
+                      row.coach_note
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+              </article>
+            `;
+
+          }
+        )
+        .join("");
+  }
+
+
+  await loadHistory();
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  saveBtn.addEventListener(
+    "click",
+    async function () {
+
+      message.textContent =
+        "";
+
+      message.className =
+        "";
+
+
+      const strengths =
+        document
+          .getElementById(
+            "strengths"
+          )
+          .value
+          .trim();
+
+
+      const improvements =
+        document
+          .getElementById(
+            "improvements"
+          )
+          .value
+          .trim();
+
+
+      const focusNext =
+        document
+          .getElementById(
+            "focusNext"
+          )
+          .value
+          .trim();
+
+
+      const coachNote =
+        document
+          .getElementById(
+            "coachNote"
+          )
+          .value
+          .trim();
+
+
+      if (
+        !strengths
+        &&
+        !improvements
+        &&
+        !focusNext
+        &&
+        !coachNote
+      ) {
+
+        message.textContent =
+          "Hãy nhập ít nhất một nội dung đánh giá.";
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+      saveBtn.textContent =
+        "ĐANG LƯU...";
+
+
+      const {
+        error
+      } =
+        await sb
+          .from(
+            "coach_student_notes"
+          )
+          .insert({
+            registration_id:
+              registration.id,
+
+            student_id:
+              student.id,
+
+            coach_id:
+              coach.id,
+
+            strengths:
+              strengths || null,
+
+            improvements:
+              improvements || null,
+
+            focus_next:
+              focusNext || null,
+
+            coach_note:
+              coachNote || null
+          });
+
+
+      saveBtn.disabled =
+        false;
+
+      saveBtn.textContent =
+        "LƯU ĐÁNH GIÁ";
+
+
+      if (error) {
+
+        console.error(
+          error
+        );
+
+        message.textContent =
+          `Không lưu được đánh giá: ${error.message}`;
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+      }
+
+
+      document
+        .getElementById(
+          "strengths"
+        )
+        .value = "";
+
+
+      document
+        .getElementById(
+          "improvements"
+        )
+        .value = "";
+
+
+      document
+        .getElementById(
+          "focusNext"
+        )
+        .value = "";
+
+
+      document
+        .getElementById(
+          "coachNote"
+        )
+        .value = "";
+
+
+      message.textContent =
+        "✓ Đã lưu đánh giá tiến trình.";
+
+      message.classList.add(
+        "success"
+      );
+
+
+      await loadHistory();
+
+    }
+  );
+
+})();
+
+</script>
+
+
+<script src="./notifications.js?v=20260914-coach-student-notes"></script>
+
+</body>
+</html>
