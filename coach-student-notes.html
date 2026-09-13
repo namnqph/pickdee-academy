@@ -72,7 +72,7 @@
     .container {
       width:
         min(
-          1050px,
+          1080px,
           calc(100% - 28px)
         );
 
@@ -110,6 +110,7 @@
     .sub {
       margin-bottom: 24px;
       color: rgba(255,255,255,.62);
+      line-height: 1.5;
     }
 
     .layout {
@@ -148,24 +149,164 @@
       padding: 20px;
     }
 
-    label {
-      display: block;
+    .field {
+      margin-bottom: 18px;
+    }
 
-      margin:
-        0 0 7px;
+    .field-title {
+      margin-bottom: 8px;
 
       color:
-        rgba(255,255,255,.72);
+        rgba(255,255,255,.82);
 
       font-size: 12px;
+      font-weight: 900;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-button {
+      width: 100%;
+      min-height: 46px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      padding: 10px 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      background:
+        rgba(255,255,255,.055);
+
+      color: #fff;
+
+      cursor: pointer;
+
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .dropdown-button:hover {
+      border-color:
+        rgba(216,255,69,.45);
+    }
+
+    .dropdown-text {
+      flex: 1;
+      line-height: 1.45;
+    }
+
+    .dropdown-arrow {
+      color: #d8ff45;
+      font-weight: 900;
+    }
+
+    .dropdown-panel {
+      display: none;
+
+      margin-top: 8px;
+      padding: 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        #082657;
+    }
+
+    .dropdown.open
+    .dropdown-panel {
+      display: block;
+    }
+
+    .option-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 8px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 9px 10px;
+
+      border-radius: 8px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      cursor: pointer;
+
+      font-size: 12px;
+
+      border:
+        1px solid transparent;
+    }
+
+    .option:hover {
+      border-color:
+        rgba(216,255,69,.30);
+    }
+
+    .option input {
+      accent-color: #d8ff45;
+    }
+
+    .option:has(input:checked) {
+      color: #d8ff45;
+
+      border-color:
+        rgba(216,255,69,.34);
+
+      background:
+        rgba(216,255,69,.08);
+    }
+
+    select {
+      width: 100%;
+      min-height: 46px;
+
+      padding: 0 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      background:
+        #0b2c62;
+
+      color: #fff;
+
+      outline: none;
+
+      font-size: 13px;
       font-weight: 800;
     }
 
     textarea {
       width: 100%;
-      min-height: 90px;
+      min-height: 80px;
 
-      margin-bottom: 16px;
       padding: 13px 14px;
 
       resize: vertical;
@@ -186,14 +327,26 @@
       line-height: 1.5;
     }
 
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color:
         rgba(216,255,69,.55);
     }
 
-    button {
+    .helper {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 10px;
+    }
+
+    .save-button {
       width: 100%;
-      min-height: 46px;
+      min-height: 48px;
+
+      margin-top: 4px;
 
       border: 0;
       border-radius: 10px;
@@ -207,7 +360,7 @@
       cursor: pointer;
     }
 
-    button:disabled {
+    .save-button:disabled {
       opacity: .55;
       cursor: wait;
     }
@@ -221,6 +374,7 @@
         rgba(255,255,255,.68);
 
       font-size: 12px;
+      line-height: 1.5;
     }
 
     .error {
@@ -263,7 +417,7 @@
     }
 
     .note-label {
-      margin-bottom: 4px;
+      margin-bottom: 5px;
 
       color:
         rgba(255,255,255,.42);
@@ -276,12 +430,29 @@
 
     .note-value {
       color:
-        rgba(255,255,255,.88);
+        rgba(255,255,255,.90);
 
       font-size: 13px;
       line-height: 1.55;
 
       white-space: pre-wrap;
+    }
+
+    .history-rating {
+      display: inline-flex;
+
+      margin-top: 4px;
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.10);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
     }
 
     .empty {
@@ -296,6 +467,10 @@
     @media(max-width:760px) {
 
       .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .option-grid {
         grid-template-columns: 1fr;
       }
 
@@ -347,8 +522,8 @@
 
 
   <div class="sub">
-    Ghi nhận tiến trình tập luyện để Coach hiện tại
-    và Coach tiếp theo có thể tiếp tục đúng lộ trình.
+    Coach chỉ cần chọn các mục phù hợp.
+    Không cần nhập tay trừ khi muốn ghi chú thêm.
   </div>
 
 
@@ -359,65 +534,440 @@
   >
 
 
+    <!-- =====================================================
+         TẠO ĐÁNH GIÁ
+    ====================================================== -->
+
     <div class="card">
 
       <div class="card-head">
         📝 Tạo đánh giá mới
       </div>
 
+
       <div class="card-body">
 
-        <label for="strengths">
-          Điểm mạnh
-        </label>
 
-        <textarea
-          id="strengths"
-          placeholder="Ví dụ: Forehand ổn định, di chuyển tốt..."
-        ></textarea>
+        <!-- ĐIỂM MẠNH -->
 
+        <div class="field">
 
-        <label for="improvements">
-          Điểm cần cải thiện
-        </label>
-
-        <textarea
-          id="improvements"
-          placeholder="Ví dụ: Backhand chưa ổn định..."
-        ></textarea>
+          <div class="field-title">
+            Điểm mạnh
+          </div>
 
 
-        <label for="focusNext">
-          Nội dung cần tập tiếp
-        </label>
+          <div
+            class="dropdown"
+            data-group="strengths"
+          >
 
-        <textarea
-          id="focusNext"
-          placeholder="Ví dụ: Tập dink, reset và di chuyển lên NVZ..."
-        ></textarea>
+            <button
+              type="button"
+              class="dropdown-button"
+            >
+
+              <span class="dropdown-text">
+                Chọn điểm mạnh
+              </span>
+
+              <span class="dropdown-arrow">
+                ▼
+              </span>
+
+            </button>
 
 
-        <label for="coachNote">
-          Nhận xét của Coach
-        </label>
+            <div class="dropdown-panel">
 
-        <textarea
-          id="coachNote"
-          placeholder="Nhận xét tổng thể về học viên..."
-        ></textarea>
+              <div class="option-grid">
+
+                <label class="option">
+                  <input type="checkbox" value="Serve">
+                  Serve
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Return">
+                  Return
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Forehand">
+                  Forehand
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Backhand">
+                  Backhand
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drive">
+                  Drive
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drop">
+                  Drop
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Dink">
+                  Dink
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Volley">
+                  Volley
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Reset">
+                  Reset
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Di chuyển chân">
+                  Di chuyển chân
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Kiểm soát bóng">
+                  Kiểm soát bóng
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Phán đoán bóng">
+                  Phán đoán bóng
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Chiến thuật">
+                  Chiến thuật
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Phối hợp đồng đội">
+                  Phối hợp đồng đội
+                </label>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
 
 
-        <button id="saveBtn">
+        <!-- CẦN CẢI THIỆN -->
+
+        <div class="field">
+
+          <div class="field-title">
+            Điểm cần cải thiện
+          </div>
+
+
+          <div
+            class="dropdown"
+            data-group="improvements"
+          >
+
+            <button
+              type="button"
+              class="dropdown-button"
+            >
+
+              <span class="dropdown-text">
+                Chọn nội dung cần cải thiện
+              </span>
+
+              <span class="dropdown-arrow">
+                ▼
+              </span>
+
+            </button>
+
+
+            <div class="dropdown-panel">
+
+              <div class="option-grid">
+
+                <label class="option">
+                  <input type="checkbox" value="Serve">
+                  Serve
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Return">
+                  Return
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Forehand">
+                  Forehand
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Backhand">
+                  Backhand
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drive">
+                  Drive
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drop">
+                  Drop
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Dink">
+                  Dink
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Volley">
+                  Volley
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Reset">
+                  Reset
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Di chuyển chân">
+                  Di chuyển chân
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Kiểm soát bóng">
+                  Kiểm soát bóng
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Phán đoán bóng">
+                  Phán đoán bóng
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Chiến thuật">
+                  Chiến thuật
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Phối hợp đồng đội">
+                  Phối hợp đồng đội
+                </label>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- TẬP TIẾP -->
+
+        <div class="field">
+
+          <div class="field-title">
+            Nội dung cần tập tiếp
+          </div>
+
+
+          <div
+            class="dropdown"
+            data-group="focus"
+          >
+
+            <button
+              type="button"
+              class="dropdown-button"
+            >
+
+              <span class="dropdown-text">
+                Chọn nội dung buổi tiếp theo
+              </span>
+
+              <span class="dropdown-arrow">
+                ▼
+              </span>
+
+            </button>
+
+
+            <div class="dropdown-panel">
+
+              <div class="option-grid">
+
+                <label class="option">
+                  <input type="checkbox" value="Serve & Return">
+                  Serve & Return
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Dink">
+                  Dink
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drop">
+                  Drop
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Drive">
+                  Drive
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Reset">
+                  Reset
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Volley">
+                  Volley
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Kitchen / NVZ">
+                  Kitchen / NVZ
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Transition Zone">
+                  Transition Zone
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Di chuyển chân">
+                  Di chuyển chân
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Chiến thuật đánh đơn">
+                  Chiến thuật đánh đơn
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Chiến thuật đánh đôi">
+                  Chiến thuật đánh đôi
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Phối hợp đồng đội">
+                  Phối hợp đồng đội
+                </label>
+
+                <label class="option">
+                  <input type="checkbox" value="Thi đấu tình huống">
+                  Thi đấu tình huống
+                </label>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ĐÁNH GIÁ TỔNG THỂ -->
+
+        <div class="field">
+
+          <div class="field-title">
+            Đánh giá tổng thể
+          </div>
+
+          <select id="overallRating">
+
+            <option value="">
+              -- Chọn mức đánh giá --
+            </option>
+
+            <option value="Cần cải thiện nhiều">
+              Cần cải thiện nhiều
+            </option>
+
+            <option value="Đang tiến bộ">
+              Đang tiến bộ
+            </option>
+
+            <option value="Đạt yêu cầu">
+              Đạt yêu cầu
+            </option>
+
+            <option value="Tốt">
+              Tốt
+            </option>
+
+            <option value="Rất tốt">
+              Rất tốt
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- GHI CHÚ THÊM -->
+
+        <div class="field">
+
+          <div class="field-title">
+            Ghi chú thêm
+            <span
+              style="
+                color:rgba(255,255,255,.38);
+                font-weight:500;
+              "
+            >
+              (không bắt buộc)
+            </span>
+          </div>
+
+          <textarea
+            id="extraNote"
+            placeholder="Chỉ nhập khi Coach có nhận xét đặc biệt..."
+          ></textarea>
+
+          <div class="helper">
+            Bình thường có thể để trống.
+          </div>
+
+        </div>
+
+
+        <button
+          id="saveBtn"
+          class="save-button"
+        >
           LƯU ĐÁNH GIÁ
         </button>
 
 
         <div id="message"></div>
 
+
       </div>
 
     </div>
 
+
+    <!-- =====================================================
+         LỊCH SỬ
+    ====================================================== -->
 
     <div class="card">
 
@@ -431,14 +981,17 @@
           id="history"
           class="history"
         >
+
           <div class="empty">
             Đang tải...
           </div>
+
         </div>
 
       </div>
 
     </div>
+
 
   </section>
 
@@ -448,6 +1001,7 @@
 <script>
 
 (async function () {
+
 
   const cfg =
     window.PICKDEE_CONFIG || {};
@@ -524,6 +1078,195 @@
   }
 
 
+  function getSelectedValues(groupName) {
+
+    return Array.from(
+      document.querySelectorAll(
+        `.dropdown[data-group="${groupName}"] input:checked`
+      )
+    )
+      .map(
+        input =>
+          input.value
+      );
+  }
+
+
+  function updateDropdownText(dropdown) {
+
+    const checked =
+      Array.from(
+        dropdown.querySelectorAll(
+          "input:checked"
+        )
+      )
+        .map(
+          input =>
+            input.value
+        );
+
+
+    const text =
+      dropdown.querySelector(
+        ".dropdown-text"
+      );
+
+
+    if (
+      checked.length === 0
+    ) {
+
+      const group =
+        dropdown.dataset.group;
+
+
+      if (
+        group === "strengths"
+      ) {
+
+        text.textContent =
+          "Chọn điểm mạnh";
+
+      }
+      else if (
+        group === "improvements"
+      ) {
+
+        text.textContent =
+          "Chọn nội dung cần cải thiện";
+
+      }
+      else {
+
+        text.textContent =
+          "Chọn nội dung buổi tiếp theo";
+
+      }
+
+      return;
+    }
+
+
+    if (
+      checked.length <= 2
+    ) {
+
+      text.textContent =
+        checked.join(
+          " • "
+        );
+
+    }
+    else {
+
+      text.textContent =
+        `${checked.length} mục đã chọn`;
+
+    }
+  }
+
+
+  document
+    .querySelectorAll(
+      ".dropdown"
+    )
+    .forEach(
+      dropdown => {
+
+
+        const button =
+          dropdown.querySelector(
+            ".dropdown-button"
+          );
+
+
+        button.addEventListener(
+          "click",
+          function (event) {
+
+            event.stopPropagation();
+
+
+            document
+              .querySelectorAll(
+                ".dropdown"
+              )
+              .forEach(
+                other => {
+
+                  if (
+                    other !== dropdown
+                  ) {
+
+                    other.classList.remove(
+                      "open"
+                    );
+                  }
+
+                }
+              );
+
+
+            dropdown.classList.toggle(
+              "open"
+            );
+
+          }
+        );
+
+
+        dropdown
+          .querySelectorAll(
+            "input"
+          )
+          .forEach(
+            input => {
+
+              input.addEventListener(
+                "change",
+                function () {
+
+                  updateDropdownText(
+                    dropdown
+                  );
+
+                }
+              );
+
+            }
+          );
+
+      }
+    );
+
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        !event.target.closest(
+          ".dropdown"
+        )
+      ) {
+
+        document
+          .querySelectorAll(
+            ".dropdown"
+          )
+          .forEach(
+            dropdown =>
+              dropdown.classList.remove(
+                "open"
+              )
+          );
+
+      }
+
+    }
+  );
+
+
   const params =
     new URLSearchParams(
       window.location.search
@@ -557,13 +1300,20 @@
   }
 
 
+  /* =====================================================
+     USER
+  ====================================================== */
+
   const {
-    data: userData
+    data: userData,
+    error: userError
   } =
     await sb.auth.getUser();
 
 
   if (
+    userError
+    ||
     !userData?.user
   ) {
 
@@ -587,17 +1337,31 @@
       user.email || "";
 
 
+  /* =====================================================
+     ROLE
+  ====================================================== */
+
   const {
-    data: profile
+    data: profile,
+    error: profileError
   } =
     await sb
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
       .maybeSingle();
 
 
   if (
+    profileError
+    ||
     String(
       profile?.role || ""
     )
@@ -615,12 +1379,18 @@
   }
 
 
+  /* =====================================================
+     COACH
+  ====================================================== */
+
   const {
     data: coach,
     error: coachError
   } =
     await sb
-      .from("coaches")
+      .from(
+        "coaches"
+      )
       .select(`
         id,
         coach_code,
@@ -650,12 +1420,18 @@
   }
 
 
+  /* =====================================================
+     REGISTRATION
+  ====================================================== */
+
   const {
     data: registration,
     error: registrationError
   } =
     await sb
-      .from("registrations")
+      .from(
+        "registrations"
+      )
       .select(`
         id,
         student_id,
@@ -689,12 +1465,18 @@
   }
 
 
+  /* =====================================================
+     STUDENT
+  ====================================================== */
+
   const {
     data: student,
     error: studentError
   } =
     await sb
-      .from("students")
+      .from(
+        "students"
+      )
       .select(`
         id,
         student_code,
@@ -750,6 +1532,10 @@
       "grid";
 
 
+  /* =====================================================
+     LỊCH SỬ
+  ====================================================== */
+
   const history =
     document.getElementById(
       "history"
@@ -757,6 +1543,7 @@
 
 
   async function loadHistory() {
+
 
     const {
       data,
@@ -792,8 +1579,10 @@
     if (error) {
 
       console.error(
+        "Load coach notes:",
         error
       );
+
 
       history.innerHTML =
         `
@@ -830,6 +1619,7 @@
         .map(
           row => {
 
+
             const author =
               Number(
                 row.coach_id
@@ -844,19 +1634,82 @@
               "Coach trước";
 
 
+            const noteText =
+              String(
+                row.coach_note
+                ||
+                ""
+              );
+
+
+            let rating =
+              "—";
+
+
+            let extra =
+              "";
+
+
+            const ratingMatch =
+              noteText.match(
+                /Đánh giá tổng thể:\s*(.*)/i
+              );
+
+
+            if (
+              ratingMatch
+            ) {
+
+              rating =
+                ratingMatch[1]
+                  .split("\n")[0]
+                  .trim();
+            }
+
+
+            const extraMatch =
+              noteText.match(
+                /Ghi chú thêm:\s*([\s\S]*)/i
+              );
+
+
+            if (
+              extraMatch
+            ) {
+
+              extra =
+                extraMatch[1]
+                  .trim();
+            }
+
+
             return `
               <article class="note-item">
 
+
                 <div class="note-date">
+
                   ${escapeHtml(
                     formatDateTime(
                       row.created_at
                     )
                   )}
+
                   •
+
                   ${escapeHtml(
                     author
                   )}
+
+                </div>
+
+
+                <div class="history-rating">
+
+                  ${escapeHtml(
+                    rating
+                  )}
+
                 </div>
 
 
@@ -867,11 +1720,13 @@
                   </div>
 
                   <div class="note-value">
+
                     ${escapeHtml(
                       row.strengths
                       ||
                       "—"
                     )}
+
                   </div>
 
                 </div>
@@ -884,11 +1739,13 @@
                   </div>
 
                   <div class="note-value">
+
                     ${escapeHtml(
                       row.improvements
                       ||
                       "—"
                     )}
+
                   </div>
 
                 </div>
@@ -901,31 +1758,42 @@
                   </div>
 
                   <div class="note-value">
+
                     ${escapeHtml(
                       row.focus_next
                       ||
                       "—"
                     )}
+
                   </div>
 
                 </div>
 
 
-                <div class="note-section">
+                ${
+                  extra
+                  ?
+                  `
+                    <div class="note-section">
 
-                  <div class="note-label">
-                    Nhận xét của Coach
-                  </div>
+                      <div class="note-label">
+                        Ghi chú thêm
+                      </div>
 
-                  <div class="note-value">
-                    ${escapeHtml(
-                      row.coach_note
-                      ||
-                      "—"
-                    )}
-                  </div>
+                      <div class="note-value">
 
-                </div>
+                        ${escapeHtml(
+                          extra
+                        )}
+
+                      </div>
+
+                    </div>
+                  `
+                  :
+                  ""
+                }
+
 
               </article>
             `;
@@ -933,11 +1801,16 @@
           }
         )
         .join("");
+
   }
 
 
   await loadHistory();
 
+
+  /* =====================================================
+     SAVE
+  ====================================================== */
 
   const saveBtn =
     document.getElementById(
@@ -949,6 +1822,7 @@
     "click",
     async function () {
 
+
       message.textContent =
         "";
 
@@ -957,53 +1831,67 @@
 
 
       const strengths =
-        document
-          .getElementById(
-            "strengths"
-          )
-          .value
-          .trim();
+        getSelectedValues(
+          "strengths"
+        );
 
 
       const improvements =
+        getSelectedValues(
+          "improvements"
+        );
+
+
+      const focus =
+        getSelectedValues(
+          "focus"
+        );
+
+
+      const rating =
         document
           .getElementById(
-            "improvements"
+            "overallRating"
           )
-          .value
-          .trim();
+          .value;
 
 
-      const focusNext =
+      const extraNote =
         document
           .getElementById(
-            "focusNext"
-          )
-          .value
-          .trim();
-
-
-      const coachNote =
-        document
-          .getElementById(
-            "coachNote"
+            "extraNote"
           )
           .value
           .trim();
 
 
       if (
-        !strengths
+        strengths.length === 0
         &&
-        !improvements
+        improvements.length === 0
         &&
-        !focusNext
+        focus.length === 0
         &&
-        !coachNote
+        !rating
       ) {
 
         message.textContent =
-          "Hãy nhập ít nhất một nội dung đánh giá.";
+          "Hãy chọn ít nhất một nội dung đánh giá.";
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+      }
+
+
+      if (
+        !rating
+      ) {
+
+        message.textContent =
+          "Hãy chọn Đánh giá tổng thể.";
 
         message.classList.add(
           "error"
@@ -1020,6 +1908,19 @@
         "ĐANG LƯU...";
 
 
+      const coachNote =
+        [
+          `Đánh giá tổng thể: ${rating}`,
+          extraNote
+            ?
+            `Ghi chú thêm: ${extraNote}`
+            :
+            ""
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+
       const {
         error
       } =
@@ -1028,6 +1929,7 @@
             "coach_student_notes"
           )
           .insert({
+
             registration_id:
               registration.id,
 
@@ -1038,16 +1940,35 @@
               coach.id,
 
             strengths:
-              strengths || null,
+              strengths.length
+              ?
+              strengths.join(
+                " • "
+              )
+              :
+              null,
 
             improvements:
-              improvements || null,
+              improvements.length
+              ?
+              improvements.join(
+                " • "
+              )
+              :
+              null,
 
             focus_next:
-              focusNext || null,
+              focus.length
+              ?
+              focus.join(
+                " • "
+              )
+              :
+              null,
 
             coach_note:
-              coachNote || null
+              coachNote
+
           });
 
 
@@ -1061,8 +1982,10 @@
       if (error) {
 
         console.error(
+          "Save coach note:",
           error
         );
+
 
         message.textContent =
           `Không lưu được đánh giá: ${error.message}`;
@@ -1075,32 +1998,55 @@
       }
 
 
-      document
-        .getElementById(
-          "strengths"
-        )
-        .value = "";
-
+      /* RESET CHECKBOX */
 
       document
-        .getElementById(
-          "improvements"
+        .querySelectorAll(
+          ".dropdown input"
         )
-        .value = "";
+        .forEach(
+          input => {
 
+            input.checked =
+              false;
 
-      document
-        .getElementById(
-          "focusNext"
-        )
-        .value = "";
+          }
+        );
 
 
       document
-        .getElementById(
-          "coachNote"
+        .querySelectorAll(
+          ".dropdown"
         )
-        .value = "";
+        .forEach(
+          dropdown => {
+
+            dropdown.classList.remove(
+              "open"
+            );
+
+            updateDropdownText(
+              dropdown
+            );
+
+          }
+        );
+
+
+      document
+        .getElementById(
+          "overallRating"
+        )
+        .value =
+          "";
+
+
+      document
+        .getElementById(
+          "extraNote"
+        )
+        .value =
+          "";
 
 
       message.textContent =
@@ -1116,12 +2062,13 @@
     }
   );
 
+
 })();
 
 </script>
 
 
-<script src="./notifications.js?v=20260914-coach-student-notes"></script>
+<script src="./notifications.js?v=20260914-coach-student-notes-v2"></script>
 
 </body>
 </html>
