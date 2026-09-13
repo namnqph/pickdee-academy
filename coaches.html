@@ -1,15 +1,29 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Coach | PickDee Academy</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>
+    Coach | PickDee Academy
+  </title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
   <script src="./config.js"></script>
 
+
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -17,221 +31,1999 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
       color: #fff;
+
       background:
-        radial-gradient(circle at 80% 10%, rgba(80,255,190,.12), transparent 30%),
-        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
     }
+
 
     .topbar {
       padding: 18px 24px;
+
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,.12);
+      align-items: center;
+
+      gap: 15px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
     }
+
 
     .brand {
       font-size: 19px;
       font-weight: 800;
     }
 
+
     .brand span {
       color: #d8ff45;
     }
 
-    .container {
-      width: min(1150px, calc(100% - 28px));
-      margin: auto;
-      padding: 32px 0 60px;
-    }
 
-    .back {
-      color: #d8ff45;
-      text-decoration: none;
+    #userEmail {
+      color:
+        rgba(255,255,255,.86);
+
+      font-size: 13px;
       font-weight: 700;
     }
 
+
+    .container {
+      width:
+        min(
+          1200px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        32px 0 60px;
+    }
+
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 700;
+    }
+
+
     .eyebrow {
       margin-top: 25px;
+
       color: #d8ff45;
+
       font-size: 13px;
       font-weight: 800;
+
       letter-spacing: 1px;
     }
 
+
     h1 {
-      margin: 8px 0 5px;
-      font-size: clamp(36px, 6vw, 54px);
+      margin:
+        8px 0 5px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
     }
 
+
     .sub {
-      color: rgba(255,255,255,.66);
+      color:
+        rgba(255,255,255,.66);
+
       margin-bottom: 24px;
     }
 
+
+    /* =====================================================
+       TOOLBAR
+    ====================================================== */
+
     .toolbar {
       display: flex;
+
       gap: 12px;
+
       margin-bottom: 18px;
     }
 
+
     input {
       flex: 1;
-      padding: 13px 14px;
+
+      padding:
+        13px 14px;
+
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.06);
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.06);
+
       color: white;
+
       outline: none;
     }
 
+
+    input:focus {
+      border-color: #d8ff45;
+    }
+
+
     .add {
       display: inline-flex;
+
       align-items: center;
-      padding: 12px 16px;
+
+      padding:
+        12px 16px;
+
       border-radius: 10px;
+
       background: #d8ff45;
+
       color: #172600;
+
       text-decoration: none;
+
       font-weight: 900;
+
       white-space: nowrap;
     }
 
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    #message {
+      display: none;
+
+      margin-bottom: 15px;
+
+      padding:
+        13px 15px;
+
+      border-radius: 10px;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      line-height: 1.5;
+    }
+
+
+    #message.show {
+      display: block;
+    }
+
+
+    #message.success {
+      color: #dfff8d;
+
+      background:
+        rgba(216,255,69,.08);
+
+      border:
+        1px solid rgba(216,255,69,.30);
+    }
+
+
+    #message.error {
+      color: #ffb4b4;
+
+      background:
+        rgba(255,90,90,.09);
+
+      border:
+        1px solid rgba(255,120,120,.30);
+    }
+
+
+    /* =====================================================
+       TABLE
+    ====================================================== */
+
     .card {
       overflow: hidden;
+
       border-radius: 16px;
-      background: rgba(6,39,88,.72);
-      border: 1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(6,39,88,.72);
+
+      border:
+        1px solid rgba(255,255,255,.12);
     }
+
 
     .table-wrap {
       overflow-x: auto;
     }
 
+
     table {
       width: 100%;
+
       border-collapse: collapse;
     }
 
+
     th,
     td {
-      padding: 14px 13px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding:
+        14px 13px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
       text-align: left;
+
       font-size: 14px;
+
+      vertical-align: middle;
     }
+
 
     th {
       color: #d8ff45;
+
+      white-space: nowrap;
     }
 
+
     tbody tr:hover {
-      background: rgba(255,255,255,.045);
+      background:
+        rgba(255,255,255,.045);
     }
+
 
     .badge {
       display: inline-block;
-      padding: 5px 9px;
+
+      padding:
+        5px 9px;
+
       border-radius: 999px;
+
       color: #d8ff45;
-      background: rgba(216,255,69,.12);
+
+      background:
+        rgba(216,255,69,.12);
+
       font-size: 12px;
       font-weight: 800;
+
+      white-space: nowrap;
     }
+
+
+    .account-ready {
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.10);
+
+      border:
+        1px solid rgba(216,255,69,.25);
+
+      padding:
+        7px 9px;
+
+      border-radius: 8px;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .account-btn {
+      min-height: 36px;
+
+      border: 0;
+
+      border-radius: 8px;
+
+      padding:
+        0 11px;
+
+      background: #d8ff45;
+
+      color: #132300;
+
+      cursor: pointer;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .account-btn:hover:not(:disabled) {
+      filter:
+        brightness(1.05);
+    }
+
+
+    .account-btn:disabled {
+      opacity: .55;
+
+      cursor: wait;
+    }
+
 
     #empty {
       padding: 25px;
-      color: rgba(255,255,255,.65);
+
+      color:
+        rgba(255,255,255,.65);
+
       display: none;
     }
 
-    #message {
-      margin-bottom: 15px;
-      color: #ffbbbb;
+
+    /* =====================================================
+       CREDENTIAL RESULT
+    ====================================================== */
+
+    #credentialOverlay {
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 999999;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        rgba(0,8,22,.82);
+
+      backdrop-filter:
+        blur(7px);
     }
 
-    @media (max-width: 650px) {
+
+    #credentialOverlay.show {
+      display: flex;
+    }
+
+
+    .credential-card {
+      width:
+        min(
+          540px,
+          100%
+        );
+
+      padding: 24px;
+
+      border-radius: 18px;
+
+      background:
+        #0a2448;
+
+      border:
+        1px solid rgba(216,255,69,.35);
+
+      box-shadow:
+        0 25px 80px
+        rgba(0,0,0,.55);
+    }
+
+
+    .credential-title {
+      color: #d8ff45;
+
+      font-size: 21px;
+      font-weight: 900;
+
+      margin-bottom: 8px;
+    }
+
+
+    .credential-note {
+      color:
+        rgba(255,255,255,.66);
+
+      font-size: 13px;
+
+      line-height: 1.5;
+
+      margin-bottom: 18px;
+    }
+
+
+    .credential-row {
+      margin-top: 10px;
+
+      padding:
+        12px 13px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.07);
+    }
+
+
+    .credential-label {
+      margin-bottom: 5px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+
+    .credential-value {
+      color: white;
+
+      font-size: 15px;
+      font-weight: 900;
+
+      word-break:
+        break-all;
+    }
+
+
+    .credential-actions {
+      margin-top: 18px;
+
+      display: flex;
+
+      gap: 10px;
+    }
+
+
+    .credential-actions button {
+      flex: 1;
+
+      min-height: 43px;
+
+      border-radius: 9px;
+
+      cursor: pointer;
+
+      font-weight: 900;
+    }
+
+
+    #copyCredentialBtn {
+      border: 0;
+
+      background: #d8ff45;
+
+      color: #132300;
+    }
+
+
+    #closeCredentialBtn {
+      border:
+        1px solid rgba(255,255,255,.20);
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: white;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media(max-width:650px) {
+
       .toolbar {
         flex-direction: column;
       }
+
+
+      .topbar {
+        align-items:
+          flex-start;
+      }
+
+
+      .credential-actions {
+        flex-direction: column;
+      }
+
     }
+
   </style>
+
 </head>
+
+
 
 <body>
 
+
 <header class="topbar">
+
   <div class="brand">
+
     PickDee <span>Academy</span>
+
   </div>
 
+
   <div id="userEmail"></div>
+
 </header>
+
+
 
 <main class="container">
 
-  <a class="back" href="./admin.html">
+
+  <a
+    class="back"
+    href="./admin"
+  >
+
     ← Trung tâm quản trị
+
   </a>
 
+
   <div class="eyebrow">
+
     QUẢN LÝ COACH
+
   </div>
 
-  <h1>Coach</h1>
+
+  <h1>
+
+    Coach
+
+  </h1>
+
 
   <div class="sub">
+
     Danh sách Coach của PickDee Academy.
+
   </div>
 
+
+
   <div class="toolbar">
+
 
     <input
       id="search"
       type="search"
       placeholder="Tìm tên, SĐT, email, mã Coach..."
+      autocomplete="off"
     >
 
-    <a class="add" href="./add-coach.html">
+
+    <a
+      class="add"
+      href="./add-coach"
+    >
+
       + THÊM COACH
+
     </a>
 
+
   </div>
+
+
 
   <div id="message"></div>
 
+
+
   <div class="card">
+
 
     <div class="table-wrap">
 
+
       <table>
+
+
         <thead>
+
           <tr>
-            <th>Mã Coach</th>
-            <th>Họ tên</th>
-            <th>SĐT</th>
-            <th>Email</th>
-            <th>Khu vực</th>
-            <th>Xã/Phường</th>
-            <th>Trạng thái</th>
+
+            <th>
+              Mã Coach
+            </th>
+
+            <th>
+              Họ tên
+            </th>
+
+            <th>
+              SĐT
+            </th>
+
+            <th>
+              Email
+            </th>
+
+            <th>
+              Khu vực
+            </th>
+
+            <th>
+              Xã/Phường
+            </th>
+
+            <th>
+              Trạng thái
+            </th>
+
+            <th>
+              Tài khoản
+            </th>
+
           </tr>
+
         </thead>
 
+
         <tbody id="coachRows"></tbody>
+
+
       </table>
 
+
     </div>
 
+
     <div id="empty">
+
       Chưa có Coach nào.
+
     </div>
+
 
   </div>
 
+
 </main>
 
-<script src="./coaches.js"></script>
+
+
+<!-- =====================================================
+     KẾT QUẢ TẠO TÀI KHOẢN
+====================================================== -->
+
+<div id="credentialOverlay">
+
+
+  <div class="credential-card">
+
+
+    <div class="credential-title">
+
+      ✓ TẠO TÀI KHOẢN THÀNH CÔNG
+
+    </div>
+
+
+    <div
+      id="credentialNote"
+      class="credential-note"
+    >
+
+      Hãy gửi thông tin đăng nhập này cho Coach.
+      Mật khẩu tạm chỉ hiển thị trong lần tạo tài khoản này.
+
+    </div>
+
+
+    <div class="credential-row">
+
+      <div class="credential-label">
+
+        COACH
+
+      </div>
+
+      <div
+        id="credentialCoach"
+        class="credential-value"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="credential-row">
+
+      <div class="credential-label">
+
+        EMAIL ĐĂNG NHẬP
+
+      </div>
+
+      <div
+        id="credentialEmail"
+        class="credential-value"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div
+      id="passwordCredentialRow"
+      class="credential-row"
+    >
+
+      <div class="credential-label">
+
+        MẬT KHẨU TẠM
+
+      </div>
+
+      <div
+        id="credentialPassword"
+        class="credential-value"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="credential-actions">
+
+
+      <button
+        id="copyCredentialBtn"
+        type="button"
+      >
+
+        SAO CHÉP THÔNG TIN
+
+      </button>
+
+
+      <button
+        id="closeCredentialBtn"
+        type="button"
+      >
+
+        ĐÓNG
+
+      </button>
+
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      "Không tải được cấu hình Supabase.";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+
+  /* =====================================================
+     ELEMENTS
+  ====================================================== */
+
+  const coachRows =
+    document.getElementById(
+      "coachRows"
+    );
+
+
+  const empty =
+    document.getElementById(
+      "empty"
+    );
+
+
+  const search =
+    document.getElementById(
+      "search"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const userEmail =
+    document.getElementById(
+      "userEmail"
+    );
+
+
+  const credentialOverlay =
+    document.getElementById(
+      "credentialOverlay"
+    );
+
+
+  const credentialCoach =
+    document.getElementById(
+      "credentialCoach"
+    );
+
+
+  const credentialEmail =
+    document.getElementById(
+      "credentialEmail"
+    );
+
+
+  const credentialPassword =
+    document.getElementById(
+      "credentialPassword"
+    );
+
+
+  const credentialNote =
+    document.getElementById(
+      "credentialNote"
+    );
+
+
+  const passwordCredentialRow =
+    document.getElementById(
+      "passwordCredentialRow"
+    );
+
+
+  const copyCredentialBtn =
+    document.getElementById(
+      "copyCredentialBtn"
+    );
+
+
+  const closeCredentialBtn =
+    document.getElementById(
+      "closeCredentialBtn"
+    );
+
+
+  let coaches = [];
+
+  let lastCredential = null;
+
+  let accountCreating =
+    false;
+
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showMessage(
+    text,
+    type = "success"
+  ) {
+
+    message.className =
+      `show ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "";
+
+    message.textContent =
+      "";
+
+  }
+
+
+
+  /* =====================================================
+     CHECK ADMIN
+  ====================================================== */
+
+  async function checkAdmin() {
+
+
+    const {
+      data: userData,
+      error: userError
+    } =
+      await sb.auth
+        .getUser();
+
+
+    if (
+      userError
+      ||
+      !userData?.user
+    ) {
+
+      window.location.replace(
+        "./?v=login"
+      );
+
+      return false;
+
+    }
+
+
+    userEmail.textContent =
+      userData.user.email || "";
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await sb
+        .from(
+          "profiles"
+        )
+        .select(
+          "role"
+        )
+        .eq(
+          "id",
+          userData.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      profileError
+      ||
+      !profile
+      ||
+      String(
+        profile.role || ""
+      )
+        .trim()
+        .toLowerCase()
+      !==
+      "admin"
+    ) {
+
+      window.location.replace(
+        "./"
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+
+  /* =====================================================
+     LOAD COACH
+  ====================================================== */
+
+  async function loadCoaches() {
+
+
+    clearMessage();
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "coaches"
+        )
+        .select(`
+          id,
+          coach_code,
+          full_name,
+          phone,
+          email,
+          preferred_area,
+          preferred_ward,
+          status,
+          auth_user_id
+        `)
+        .order(
+          "id",
+          {
+            ascending:
+              false
+          }
+        );
+
+
+    if (error) {
+
+
+      console.error(
+        "LOAD COACHES:",
+        error
+      );
+
+
+      showMessage(
+        "Không tải được danh sách Coach: "
+        +
+        (
+          error.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+
+      return;
+
+    }
+
+
+    coaches =
+      Array.isArray(data)
+        ?
+        data
+        :
+        [];
+
+
+    renderCoaches();
+
+  }
+
+
+
+  /* =====================================================
+     FILTER
+  ====================================================== */
+
+  function getFilteredCoaches() {
+
+
+    const keyword =
+      String(
+        search.value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (!keyword) {
+
+      return coaches;
+
+    }
+
+
+    return coaches.filter(
+      function (coach) {
+
+
+        const text =
+          [
+
+            coach.coach_code,
+
+            coach.full_name,
+
+            coach.phone,
+
+            coach.email,
+
+            coach.preferred_area,
+
+            coach.preferred_ward,
+
+            coach.status
+
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+
+        return text.includes(
+          keyword
+        );
+
+      }
+    );
+
+  }
+
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function renderCoaches() {
+
+
+    const rows =
+      getFilteredCoaches();
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      coachRows.innerHTML =
+        "";
+
+      empty.style.display =
+        "block";
+
+      return;
+
+    }
+
+
+    empty.style.display =
+      "none";
+
+
+    coachRows.innerHTML =
+      rows
+        .map(
+          function (coach) {
+
+
+            const hasAccount =
+              Boolean(
+                coach.auth_user_id
+              );
+
+
+            return `
+
+              <tr>
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.coach_code
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.full_name
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.phone
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.email
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.preferred_area
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  ${escapeHtml(
+                    coach.preferred_ward
+                    ||
+                    "—"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  <span class="badge">
+
+                    ${escapeHtml(
+                      coach.status
+                      ||
+                      "—"
+                    )}
+
+                  </span>
+
+                </td>
+
+
+                <td>
+
+                  ${
+                    hasAccount
+                      ?
+
+                      `
+
+                        <span
+                          class="account-ready"
+                        >
+
+                          ✓ ĐÃ CÓ TÀI KHOẢN
+
+                        </span>
+
+                      `
+
+                      :
+
+                      `
+
+                        <button
+                          type="button"
+                          class="account-btn"
+                          data-coach-id="${Number(
+                            coach.id
+                          )}"
+                          data-coach-name="${escapeHtml(
+                            coach.full_name
+                            ||
+                            ""
+                          )}"
+                        >
+
+                          TẠO TÀI KHOẢN
+
+                        </button>
+
+                      `
+                  }
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+
+  /* =====================================================
+     ĐỌC LỖI EDGE FUNCTION
+  ====================================================== */
+
+  async function getFunctionErrorMessage(
+    error
+  ) {
+
+
+    let result =
+      error?.message
+      ||
+      String(error);
+
+
+    try {
+
+
+      const context =
+        error?.context;
+
+
+      if (
+        context
+        &&
+        typeof context.json ===
+        "function"
+      ) {
+
+
+        const json =
+          await context.json();
+
+
+        if (
+          json?.error
+        ) {
+
+          result =
+            json.error;
+
+        }
+
+      }
+
+
+    }
+    catch (_) {}
+
+
+    return result;
+
+  }
+
+
+
+  /* =====================================================
+     TẠO TÀI KHOẢN
+  ====================================================== */
+
+  async function createCoachAccount(
+    coachId,
+    button
+  ) {
+
+
+    if (
+      accountCreating
+    ) {
+
+      return;
+
+    }
+
+
+    const coach =
+      coaches.find(
+        item =>
+          Number(item.id)
+          ===
+          Number(coachId)
+      );
+
+
+    if (!coach) {
+
+      showMessage(
+        "Không tìm thấy Coach.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      coach.auth_user_id
+    ) {
+
+      showMessage(
+        "Coach này đã có tài khoản đăng nhập.",
+        "success"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !coach.email
+    ) {
+
+      showMessage(
+        "Coach chưa có email nên chưa thể tạo tài khoản.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    accountCreating =
+      true;
+
+
+    const oldText =
+      button.textContent;
+
+
+    button.disabled =
+      true;
+
+
+    button.textContent =
+      "ĐANG TẠO...";
+
+
+    showMessage(
+      `Đang tạo tài khoản cho ${coach.full_name}...`,
+      "success"
+    );
+
+
+    try {
+
+
+      /*
+        Supabase JS tự gửi Access Token
+        của Admin hiện đang đăng nhập.
+      */
+
+      const {
+        data,
+        error
+      } =
+        await sb.functions.invoke(
+          "pickdee-coach-account",
+          {
+            body: {
+              coach_id:
+                Number(
+                  coach.id
+                )
+            }
+          }
+        );
+
+
+      if (error) {
+
+        const detail =
+          await getFunctionErrorMessage(
+            error
+          );
+
+
+        throw new Error(
+          detail
+        );
+
+      }
+
+
+      if (
+        !data
+        ||
+        data.success !== true
+      ) {
+
+        throw new Error(
+          data?.error
+          ||
+          "Edge Function không trả về kết quả thành công."
+        );
+
+      }
+
+
+      /*
+        Update local state ngay.
+      */
+
+      coach.auth_user_id =
+        data.auth_user_id
+        ||
+        "linked";
+
+
+      renderCoaches();
+
+
+      showMessage(
+        `✓ Đã tạo tài khoản cho ${coach.full_name}.`,
+        "success"
+      );
+
+
+      showCredential(
+        coach,
+        data
+      );
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "CREATE COACH ACCOUNT:",
+        error
+      );
+
+
+      showMessage(
+        "KHÔNG TẠO ĐƯỢC TÀI KHOẢN: "
+        +
+        (
+          error?.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        oldText;
+
+
+    }
+    finally {
+
+
+      accountCreating =
+        false;
+
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     HIỂN THỊ EMAIL + PASSWORD
+  ====================================================== */
+
+  function showCredential(
+    coach,
+    data
+  ) {
+
+
+    const password =
+      data.temporary_password
+      ||
+      "";
+
+
+    credentialCoach.textContent =
+      `${coach.coach_code || ""} - ${coach.full_name || ""}`;
+
+
+    credentialEmail.textContent =
+      data.email
+      ||
+      coach.email
+      ||
+      "—";
+
+
+    if (password) {
+
+
+      passwordCredentialRow.style.display =
+        "block";
+
+
+      credentialPassword.textContent =
+        password;
+
+
+      credentialNote.textContent =
+        "Tài khoản mới đã được tạo. Hãy gửi email và mật khẩu tạm này cho Coach. Mật khẩu này chỉ hiển thị trong lần tạo tài khoản này.";
+
+
+      copyCredentialBtn.style.display =
+        "block";
+
+
+      lastCredential = {
+
+        coach:
+          `${coach.coach_code || ""} - ${coach.full_name || ""}`,
+
+        email:
+          data.email
+          ||
+          coach.email
+          ||
+          "",
+
+        password:
+          password
+
+      };
+
+
+    }
+    else {
+
+
+      passwordCredentialRow.style.display =
+        "none";
+
+
+      credentialNote.textContent =
+        data.message
+        ||
+        "Coach đã được liên kết với tài khoản đăng nhập hiện có.";
+
+
+      copyCredentialBtn.style.display =
+        "none";
+
+
+      lastCredential =
+        null;
+
+    }
+
+
+    credentialOverlay.classList.add(
+      "show"
+    );
+
+  }
+
+
+
+  /* =====================================================
+     COPY CREDENTIAL
+  ====================================================== */
+
+  copyCredentialBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      if (!lastCredential) {
+        return;
+      }
+
+
+      const text =
+`PICKDEE ACADEMY - TÀI KHOẢN COACH
+
+Coach: ${lastCredential.coach}
+Email: ${lastCredential.email}
+Mật khẩu tạm: ${lastCredential.password}
+
+Đăng nhập tại:
+https://pickdee-academy.pages.dev/`;
+
+
+      try {
+
+
+        await navigator.clipboard
+          .writeText(
+            text
+          );
+
+
+        copyCredentialBtn.textContent =
+          "✓ ĐÃ SAO CHÉP";
+
+
+        setTimeout(
+          function () {
+
+            copyCredentialBtn.textContent =
+              "SAO CHÉP THÔNG TIN";
+
+          },
+          1800
+        );
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          error
+        );
+
+
+        window.prompt(
+          "Sao chép thông tin này:",
+          text
+        );
+
+
+      }
+
+    }
+  );
+
+
+
+  /* =====================================================
+     CLOSE RESULT
+  ====================================================== */
+
+  closeCredentialBtn.addEventListener(
+    "click",
+    function () {
+
+
+      credentialOverlay.classList.remove(
+        "show"
+      );
+
+
+      /*
+        Xóa password khỏi biến sau khi đóng.
+      */
+
+      lastCredential =
+        null;
+
+
+      credentialPassword.textContent =
+        "—";
+
+
+    }
+  );
+
+
+
+  credentialOverlay.addEventListener(
+    "click",
+    function (event) {
+
+
+      if (
+        event.target ===
+        credentialOverlay
+      ) {
+
+        closeCredentialBtn.click();
+
+      }
+
+    }
+  );
+
+
+
+  /* =====================================================
+     CLICK ACCOUNT BUTTON
+  ====================================================== */
+
+  coachRows.addEventListener(
+    "click",
+    async function (event) {
+
+
+      const button =
+        event.target.closest(
+          ".account-btn[data-coach-id]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      const coachId =
+        Number(
+          button.dataset.coachId
+        );
+
+
+      if (
+        !Number.isFinite(
+          coachId
+        )
+      ) {
+
+        showMessage(
+          "ID Coach không hợp lệ.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      await createCoachAccount(
+        coachId,
+        button
+      );
+
+
+    }
+  );
+
+
+
+  /* =====================================================
+     SEARCH
+  ====================================================== */
+
+  search.addEventListener(
+    "input",
+    renderCoaches
+  );
+
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  const adminOk =
+    await checkAdmin();
+
+
+  if (!adminOk) {
+    return;
+  }
+
+
+  await loadCoaches();
+
+
+})();
+
+</script>
+
 
 </body>
+
 </html>
