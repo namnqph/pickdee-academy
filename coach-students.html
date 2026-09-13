@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    Học viên của tôi | PickDee Academy
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 72px;
+      padding: 16px 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(3,20,45,.75);
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    #userEmail {
+      color:
+        rgba(255,255,255,.78);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .container {
+      width:
+        min(
+          1100px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        30px 0 60px;
+    }
+
+    .back {
+      display: inline-block;
+
+      margin-bottom: 24px;
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 8px 0 8px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.65);
+
+      line-height: 1.55;
+    }
+
+    .summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      margin-bottom: 20px;
+
+      padding: 16px 18px;
+
+      border:
+        1px solid rgba(216,255,69,.25);
+
+      border-radius: 14px;
+
+      background:
+        rgba(216,255,69,.06);
+    }
+
+    .summary-number {
+      color: #d8ff45;
+
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .summary-text {
+      color:
+        rgba(255,255,255,.75);
+
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 16px;
+    }
+
+    .student-card {
+      padding: 20px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(7,39,84,.78);
+    }
+
+    .student-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 16px;
+    }
+
+    .student-name {
+      color: #d8ff45;
+
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .student-code {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+    }
+
+    .badge {
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.12);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+
+      padding: 9px 0;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.07);
+
+      font-size: 13px;
+    }
+
+    .info-label {
+      color:
+        rgba(255,255,255,.50);
+    }
+
+    .info-value {
+      text-align: right;
+
+      color:
+        rgba(255,255,255,.90);
+
+      font-weight: 800;
+    }
+
+    .session-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          1fr
+        );
+
+      gap: 8px;
+
+      margin-top: 16px;
+    }
+
+    .session-box {
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.055);
+    }
+
+    .session-label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 10px;
+    }
+
+    .session-value {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .phone {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+    }
+
+    #message {
+      margin-bottom: 18px;
+
+      color:
+        rgba(255,255,255,.65);
+    }
+
+    .error {
+      color: #ffabab !important;
+    }
+
+    .empty {
+      padding: 35px;
+
+      border-radius: 15px;
+
+      border:
+        1px dashed rgba(255,255,255,.16);
+
+      color:
+        rgba(255,255,255,.55);
+
+      text-align: center;
+    }
+
+    @media(max-width:760px) {
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding:
+          14px 16px;
+      }
+
+      #userEmail {
+        display: none;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee<span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    href="./coach"
+    class="back"
+  >
+    ← Khu vực Coach
+  </a>
+
+
+  <div class="eyebrow">
+    HỌC VIÊN CỦA TÔI
+  </div>
+
+
+  <h1>
+    Học viên đang phụ trách
+  </h1>
+
+
+  <div class="subtitle">
+    Danh sách học viên được phân công cho Coach.
+    Bạn chỉ xem được học viên thuộc phạm vi phụ trách của mình.
+  </div>
+
+
+  <div class="summary">
+
+    <div
+      id="studentCount"
+      class="summary-number"
+    >
+      0
+    </div>
+
+    <div class="summary-text">
+      học viên đang được phân công
+    </div>
+
+  </div>
+
+
+  <div id="message">
+    Đang tải danh sách học viên...
+  </div>
+
+
+  <section
+    id="studentGrid"
+    class="grid"
+  ></section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const studentGrid =
+    document.getElementById(
+      "studentGrid"
+    );
+
+
+  const studentCount =
+    document.getElementById(
+      "studentCount"
+    );
+
+
+  const userEmail =
+    document.getElementById(
+      "userEmail"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    message.textContent =
+      "Không tải được cấu hình Supabase.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN"
+      ).format(
+        new Date(
+          `${value}T00:00:00`
+        )
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  /*
+    =====================================================
+    1. KIỂM TRA ĐĂNG NHẬP
+    =====================================================
+  */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await sb.auth.getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    window.location.replace(
+      "./?v=login"
+    );
+
+    return;
+
+  }
+
+
+  const user =
+    userData.user;
+
+
+  userEmail.textContent =
+    user.email || "";
+
+
+  /*
+    =====================================================
+    2. KIỂM TRA ROLE COACH
+    =====================================================
+  */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+    ||
+    !profile
+    ||
+    String(
+      profile.role || ""
+    )
+      .trim()
+      .toLowerCase()
+      !==
+      "coach"
+  ) {
+
+    window.location.replace(
+      "./"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    =====================================================
+    3. TÌM COACH HIỆN TẠI
+    =====================================================
+  */
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await sb
+      .from(
+        "coaches"
+      )
+      .select(`
+        id,
+        coach_code,
+        full_name
+      `)
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    coachError
+    ||
+    !coach
+  ) {
+
+    console.error(
+      "Coach:",
+      coachError
+    );
+
+    message.textContent =
+      "Không xác định được hồ sơ Coach.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /*
+    =====================================================
+    4. ĐĂNG KÝ ĐÃ GÁN CHO COACH
+    =====================================================
+  */
+
+  const {
+    data: registrationsData,
+    error: registrationsError
+  } =
+    await sb
+      .from(
+        "registrations"
+      )
+      .select(`
+        id,
+        registration_code,
+        student_id,
+        package_name,
+        purchased_sessions,
+        start_date,
+        end_date,
+        status
+      `)
+      .eq(
+        "coach_id",
+        coach.id
+      )
+      .eq(
+        "status",
+        "Đã duyệt"
+      )
+      .order(
+        "id",
+        {
+          ascending:
+            false
+        }
+      );
+
+
+  if (
+    registrationsError
+  ) {
+
+    console.error(
+      "Registrations:",
+      registrationsError
+    );
+
+    message.textContent =
+      "Không tải được đăng ký học.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const registrations =
+    registrationsData || [];
+
+
+  if (
+    registrations.length === 0
+  ) {
+
+    studentCount.textContent =
+      "0";
+
+    message.textContent =
+      "";
+
+    studentGrid.innerHTML =
+      `
+        <div class="empty">
+          Hiện chưa có học viên nào được phân công cho bạn.
+        </div>
+      `;
+
+    return;
+
+  }
+
+
+  /*
+    =====================================================
+    5. LẤY HỒ SƠ HỌC VIÊN
+    =====================================================
+  */
+
+  const studentIds =
+    [
+      ...new Set(
+        registrations
+          .map(
+            row =>
+              Number(
+                row.student_id
+              )
+          )
+          .filter(
+            Boolean
+          )
+      )
+    ];
+
+
+  const {
+    data: studentsData,
+    error: studentsError
+  } =
+    await sb
+      .from(
+        "students"
+      )
+      .select(`
+        id,
+        student_code,
+        full_name,
+        phone,
+        email,
+        preferred_area,
+        preferred_ward,
+        status
+      `)
+      .in(
+        "id",
+        studentIds
+      );
+
+
+  if (
+    studentsError
+  ) {
+
+    console.error(
+      "Students:",
+      studentsError
+    );
+
+    message.textContent =
+      "Không tải được hồ sơ học viên.";
+
+    message.classList.add(
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const students =
+    studentsData || [];
+
+
+  /*
+    =====================================================
+    6. ĐẾM BUỔI ĐÃ HOÀN THÀNH
+    =====================================================
+  */
+
+  const registrationIds =
+    registrations.map(
+      row =>
+        Number(
+          row.id
+        )
+    );
+
+
+  const {
+    data: sessionsData,
+    error: sessionsError
+  } =
+    await sb
+      .from(
+        "class_sessions"
+      )
+      .select(`
+        registration_id,
+        status
+      `)
+      .in(
+        "registration_id",
+        registrationIds
+      );
+
+
+  if (
+    sessionsError
+  ) {
+
+    console.error(
+      "Sessions:",
+      sessionsError
+    );
+
+  }
+
+
+  const completedMap =
+    new Map();
+
+
+  (
+    sessionsData || []
+  )
+    .filter(
+      row =>
+        row.status
+        ===
+        "Đã hoàn thành"
+    )
+    .forEach(
+      row => {
+
+        const id =
+          Number(
+            row.registration_id
+          );
+
+
+        completedMap.set(
+          id,
+          (
+            completedMap.get(
+              id
+            )
+            ||
+            0
+          )
+          +
+          1
+        );
+
+      }
+    );
+
+
+  /*
+    =====================================================
+    7. GHÉP DỮ LIỆU
+    - mỗi học viên chỉ hiện 1 lần
+    - dùng registration mới nhất của học viên
+    =====================================================
+  */
+
+  const registrationByStudent =
+    new Map();
+
+
+  registrations.forEach(
+    row => {
+
+      const studentId =
+        Number(
+          row.student_id
+        );
+
+
+      if (
+        !registrationByStudent.has(
+          studentId
+        )
+      ) {
+
+        registrationByStudent.set(
+          studentId,
+          row
+        );
+
+      }
+
+    }
+  );
+
+
+  const rows =
+    students
+      .map(
+        student => {
+
+          const registration =
+            registrationByStudent.get(
+              Number(
+                student.id
+              )
+            );
+
+
+          if (!registration) {
+            return null;
+          }
+
+
+          const total =
+            Number(
+              registration
+                .purchased_sessions
+              ||
+              0
+            );
+
+
+          const completed =
+            completedMap.get(
+              Number(
+                registration.id
+              )
+            )
+            ||
+            0;
+
+
+          const remaining =
+            Math.max(
+              total
+              -
+              completed,
+              0
+            );
+
+
+          return {
+            student,
+            registration,
+            total,
+            completed,
+            remaining
+          };
+
+        }
+      )
+      .filter(
+        Boolean
+      );
+
+
+  /*
+    =====================================================
+    8. RENDER
+    =====================================================
+  */
+
+  studentCount.textContent =
+    rows.length;
+
+
+  message.textContent =
+    rows.length
+      ?
+      `✓ Đã tải ${rows.length} học viên.`
+      :
+      "";
+
+
+  if (
+    rows.length === 0
+  ) {
+
+    studentGrid.innerHTML =
+      `
+        <div class="empty">
+          Hiện chưa có học viên nào được phân công cho bạn.
+        </div>
+      `;
+
+    return;
+
+  }
+
+
+  studentGrid.innerHTML =
+    rows
+      .map(
+        item => {
+
+          const student =
+            item.student;
+
+
+          const registration =
+            item.registration;
+
+
+          const phone =
+            String(
+              student.phone || ""
+            )
+              .trim();
+
+
+          return `
+            <article class="student-card">
+
+              <div class="student-head">
+
+                <div>
+
+                  <div class="student-name">
+                    ${escapeHtml(
+                      student.full_name
+                      ||
+                      "Học viên"
+                    )}
+                  </div>
+
+                  <div class="student-code">
+                    ${escapeHtml(
+                      student.student_code
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+                <div class="badge">
+                  ${escapeHtml(
+                    registration.status
+                    ||
+                    "Đang học"
+                  )}
+                </div>
+
+              </div>
+
+
+              <div class="info-row">
+
+                <span class="info-label">
+                  SĐT
+                </span>
+
+                <span class="info-value">
+
+                  ${
+                    phone
+                      ?
+                      `
+                        <a
+                          class="phone"
+                          href="tel:${escapeHtml(
+                            phone
+                          )}"
+                        >
+                          ${escapeHtml(
+                            phone
+                          )}
+                        </a>
+                      `
+                      :
+                      "—"
+                  }
+
+                </span>
+
+              </div>
+
+
+              <div class="info-row">
+
+                <span class="info-label">
+                  Gói học
+                </span>
+
+                <span class="info-value">
+                  ${escapeHtml(
+                    registration.package_name
+                    ||
+                    "—"
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="info-row">
+
+                <span class="info-label">
+                  Mã đăng ký
+                </span>
+
+                <span class="info-value">
+                  ${escapeHtml(
+                    registration.registration_code
+                    ||
+                    "—"
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="info-row">
+
+                <span class="info-label">
+                  Bắt đầu
+                </span>
+
+                <span class="info-value">
+                  ${escapeHtml(
+                    formatDate(
+                      registration.start_date
+                    )
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="info-row">
+
+                <span class="info-label">
+                  Kết thúc
+                </span>
+
+                <span class="info-value">
+                  ${escapeHtml(
+                    formatDate(
+                      registration.end_date
+                    )
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="session-grid">
+
+                <div class="session-box">
+
+                  <div class="session-label">
+                    Tổng buổi
+                  </div>
+
+                  <div class="session-value">
+                    ${item.total}
+                  </div>
+
+                </div>
+
+
+                <div class="session-box">
+
+                  <div class="session-label">
+                    Đã học
+                  </div>
+
+                  <div class="session-value">
+                    ${item.completed}
+                  </div>
+
+                </div>
+
+
+                <div class="session-box">
+
+                  <div class="session-label">
+                    Còn lại
+                  </div>
+
+                  <div class="session-value">
+                    ${item.remaining}
+                  </div>
+
+                </div>
+
+              </div>
+
+            </article>
+          `;
+
+        }
+      )
+      .join("");
+
+
+})();
+
+</script>
+
+
+<script src="./notifications.js?v=20260913-coach-students"></script>
+
+
+</body>
+</html>
