@@ -1303,6 +1303,1419 @@
 
 })();
 </script>
+<script>
+(async function () {
 
+  /* =====================================================
+     PICKDEE - ADMIN PAYMENT SUBMISSIONS
+     Không thay đổi luồng thu học phí thủ công hiện tại
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const paymentSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement("style");
+
+  style.textContent = `
+
+    .proof-admin-card {
+      margin-top: 22px;
+      border: 1px solid rgba(216,255,69,.22);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(12,53,105,.90),
+          rgba(5,31,72,.90)
+        );
+    }
+
+    .proof-admin-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .proof-admin-title {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .proof-admin-sub {
+      margin-top: 5px;
+      color: rgba(255,255,255,.58);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .proof-count {
+      min-width: 38px;
+      height: 38px;
+      padding: 0 11px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #d8ff45;
+      color: #102400;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .proof-loading,
+    .proof-empty {
+      padding: 24px 12px;
+      text-align: center;
+      color: rgba(255,255,255,.6);
+    }
+
+    .proof-item {
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 14px;
+      padding: 17px;
+      margin-top: 12px;
+      background: rgba(255,255,255,.045);
+    }
+
+    .proof-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .proof-code {
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .proof-student {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .proof-time {
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0,1fr));
+      gap: 10px 18px;
+      margin-top: 12px;
+    }
+
+    .proof-info-label {
+      color: rgba(255,255,255,.48);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .proof-info-value {
+      font-size: 14px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .proof-amount {
+      color: #d8ff45;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .proof-transfer {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      border: 1px dashed rgba(255,255,255,.18);
+    }
+
+    .proof-actions {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr 1fr;
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .proof-btn {
+      min-height: 42px;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 10px 12px;
+    }
+
+    .proof-btn-view {
+      background: rgba(255,255,255,.11);
+      color: white;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .proof-btn-confirm {
+      background: #d8ff45;
+      color: #132300;
+    }
+
+    .proof-btn-reject {
+      background: rgba(255,103,103,.14);
+      color: #ffaaaa;
+      border: 1px solid rgba(255,103,103,.28);
+    }
+
+    .proof-btn:disabled {
+      opacity: .45;
+      cursor: wait;
+    }
+
+    .proof-admin-message {
+      display: none;
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .proof-admin-message.show {
+      display: block;
+    }
+
+    .proof-admin-message.success {
+      color: #eaffb2;
+      background: rgba(216,255,69,.10);
+      border: 1px solid rgba(216,255,69,.25);
+    }
+
+    .proof-admin-message.error {
+      color: #ffc0c0;
+      background: rgba(255,110,110,.10);
+      border: 1px solid rgba(255,110,110,.28);
+    }
+
+    @media (max-width: 700px) {
+
+      .proof-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .proof-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .proof-item-top {
+        flex-direction: column;
+      }
+
+      .proof-time {
+        text-align: left;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     TẠO KHU VỰC BILL
+  ====================================================== */
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+  section.className =
+    "card proof-admin-card";
+
+  section.innerHTML = `
+
+    <div class="proof-admin-head">
+
+      <div>
+
+        <div class="proof-admin-title">
+          🧾 Bill chờ xác nhận
+        </div>
+
+        <div class="proof-admin-sub">
+          Học viên đã chuyển khoản và gửi bill.
+          Chỉ khi Admin xác nhận thì hệ thống
+          mới ghi nhận học phí là Đã thu.
+        </div>
+
+      </div>
+
+      <div
+        id="proofPendingCount"
+        class="proof-count"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div
+      id="proofAdminMessage"
+      class="proof-admin-message"
+    ></div>
+
+    <div id="proofAdminList">
+
+      <div class="proof-loading">
+        Đang tải bill chờ xác nhận...
+      </div>
+
+    </div>
+
+  `;
+
+
+  const main =
+    document.querySelector(
+      "main.container"
+    );
+
+  const firstCard =
+    main?.querySelector(
+      "section.card"
+    );
+
+
+  if (
+    main &&
+    firstCard
+  ) {
+
+    main.insertBefore(
+      section,
+      firstCard
+    );
+
+  }
+  else if (main) {
+
+    main.appendChild(
+      section
+    );
+
+  }
+
+
+  const listEl =
+    document.getElementById(
+      "proofAdminList"
+    );
+
+  const countEl =
+    document.getElementById(
+      "proofPendingCount"
+    );
+
+  const proofMessage =
+    document.getElementById(
+      "proofAdminMessage"
+    );
+
+
+  let pendingRows =
+    [];
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function dateTimeVN(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const date =
+      new Date(value);
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return String(value);
+
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    ).format(
+      date
+    );
+
+  }
+
+
+  function showProofMessage(
+    text,
+    type = "success"
+  ) {
+
+    proofMessage.textContent =
+      text || "";
+
+    proofMessage.className =
+      `proof-admin-message show ${type}`;
+
+  }
+
+
+  function hideProofMessage() {
+
+    proofMessage.textContent =
+      "";
+
+    proofMessage.className =
+      "proof-admin-message";
+
+  }
+
+
+  /* =====================================================
+     KIỂM TRA ADMIN
+  ====================================================== */
+
+  async function ensureAdmin() {
+
+    const {
+      data,
+      error
+    } =
+      await paymentSb.auth.getSession();
+
+
+    if (
+      error
+      ||
+      !data?.session
+    ) {
+
+      return false;
+
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await paymentSb
+        .from(
+          "profiles"
+        )
+        .select(
+          "role"
+        )
+        .eq(
+          "id",
+          data.session.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      profileError
+      ||
+      profile?.role !==
+        "admin"
+    ) {
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD BILL CHỜ XÁC NHẬN
+  ====================================================== */
+
+  async function loadPendingProofs() {
+
+    hideProofMessage();
+
+
+    listEl.innerHTML =
+      `
+        <div class="proof-loading">
+          Đang tải bill chờ xác nhận...
+        </div>
+      `;
+
+
+    const {
+      data: submissions,
+      error: submissionError
+    } =
+      await paymentSb
+        .from(
+          "payment_submissions"
+        )
+        .select(`
+          id,
+          submission_code,
+          registration_id,
+          student_id,
+          amount,
+          proof_path,
+          transfer_content,
+          status,
+          policy_version,
+          policy_accepted_at,
+          submitted_at
+        `)
+        .eq(
+          "status",
+          "Chờ xác nhận"
+        )
+        .order(
+          "submitted_at",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (submissionError) {
+
+      console.error(
+        submissionError
+      );
+
+      countEl.textContent =
+        "—";
+
+      listEl.innerHTML =
+        `
+          <div class="proof-empty">
+            Không tải được bill chờ xác nhận.
+          </div>
+        `;
+
+      showProofMessage(
+        submissionError.message
+        ||
+        "Không tải được dữ liệu bill.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const rawRows =
+      Array.isArray(
+        submissions
+      )
+        ? submissions
+        : [];
+
+
+    if (
+      rawRows.length === 0
+    ) {
+
+      pendingRows = [];
+
+      countEl.textContent =
+        "0";
+
+      listEl.innerHTML =
+        `
+          <div class="proof-empty">
+            ✅ Hiện không có bill nào
+            đang chờ xác nhận.
+          </div>
+        `;
+
+      return;
+
+    }
+
+
+    const registrationIds =
+      [
+        ...new Set(
+          rawRows.map(
+            row =>
+              Number(
+                row.registration_id
+              )
+          )
+        )
+      ];
+
+
+    const studentIds =
+      [
+        ...new Set(
+          rawRows.map(
+            row =>
+              Number(
+                row.student_id
+              )
+          )
+        )
+      ];
+
+
+    /*
+      Lấy đăng ký REAL.
+      TEST tuyệt đối không xuất hiện ở đây.
+    */
+
+    const {
+      data: registrations,
+      error: registrationError
+    } =
+      await paymentSb
+        .from(
+          "registrations"
+        )
+        .select(`
+          id,
+          registration_code,
+          package_name,
+          student_id,
+          tuition_fee,
+          is_test
+        `)
+        .in(
+          "id",
+          registrationIds
+        )
+        .eq(
+          "is_test",
+          false
+        );
+
+
+    if (registrationError) {
+
+      console.error(
+        registrationError
+      );
+
+      throw registrationError;
+
+    }
+
+
+    const {
+      data: students,
+      error: studentError
+    } =
+      await paymentSb
+        .from(
+          "students"
+        )
+        .select(`
+          id,
+          student_code,
+          full_name,
+          email
+        `)
+        .in(
+          "id",
+          studentIds
+        );
+
+
+    if (studentError) {
+
+      console.error(
+        studentError
+      );
+
+      throw studentError;
+
+    }
+
+
+    const registrationMap =
+      new Map(
+        (registrations || []).map(
+          row => [
+            Number(row.id),
+            row
+          ]
+        )
+      );
+
+
+    const studentMap =
+      new Map(
+        (students || []).map(
+          row => [
+            Number(row.id),
+            row
+          ]
+        )
+      );
+
+
+    /*
+      Chỉ giữ submission có đăng ký REAL.
+    */
+
+    pendingRows =
+      rawRows
+        .filter(
+          row =>
+            registrationMap.has(
+              Number(
+                row.registration_id
+              )
+            )
+        )
+        .map(
+          row => ({
+            ...row,
+
+            registration:
+              registrationMap.get(
+                Number(
+                  row.registration_id
+                )
+              ),
+
+            student:
+              studentMap.get(
+                Number(
+                  row.student_id
+                )
+              )
+          })
+        );
+
+
+    countEl.textContent =
+      String(
+        pendingRows.length
+      );
+
+
+    if (
+      pendingRows.length === 0
+    ) {
+
+      listEl.innerHTML =
+        `
+          <div class="proof-empty">
+            ✅ Không có bill REAL nào
+            đang chờ xác nhận.
+          </div>
+        `;
+
+      return;
+
+    }
+
+
+    /*
+      Tạo link tạm cho bill trong bucket PRIVATE.
+      Link tự hết hạn sau 60 phút.
+    */
+
+    await Promise.all(
+
+      pendingRows.map(
+        async row => {
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await paymentSb.storage
+                .from(
+                  "payment-proofs"
+                )
+                .createSignedUrl(
+                  row.proof_path,
+                  3600
+                );
+
+
+            row.proof_url =
+              error
+                ? null
+                : data?.signedUrl
+                  || null;
+
+          }
+          catch (error) {
+
+            console.warn(
+              "Signed URL error:",
+              error
+            );
+
+            row.proof_url =
+              null;
+
+          }
+
+        }
+      )
+
+    );
+
+
+    renderPendingProofs();
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function renderPendingProofs() {
+
+    listEl.innerHTML =
+      pendingRows
+        .map(
+          row => {
+
+            const student =
+              row.student
+              || {};
+
+            const registration =
+              row.registration
+              || {};
+
+
+            const proofButton =
+              row.proof_url
+
+                ? `
+                    <button
+                      type="button"
+                      class="proof-btn proof-btn-view"
+                      data-proof-view="${row.id}"
+                    >
+                      👁 XEM BILL
+                    </button>
+                  `
+
+                : `
+                    <button
+                      type="button"
+                      class="proof-btn proof-btn-view"
+                      disabled
+                    >
+                      KHÔNG MỞ ĐƯỢC BILL
+                    </button>
+                  `;
+
+
+            return `
+
+              <div
+                class="proof-item"
+                data-proof-item="${row.id}"
+              >
+
+                <div class="proof-item-top">
+
+                  <div>
+
+                    <div class="proof-code">
+                      ${escapeHtml(
+                        row.submission_code
+                        || "—"
+                      )}
+                    </div>
+
+                    <div class="proof-student">
+                      ${escapeHtml(
+                        student.full_name
+                        || "Học viên"
+                      )}
+                    </div>
+
+                  </div>
+
+                  <div class="proof-time">
+                    Gửi lúc<br>
+                    ${escapeHtml(
+                      dateTimeVN(
+                        row.submitted_at
+                      )
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="proof-grid">
+
+                  <div>
+
+                    <div class="proof-info-label">
+                      Mã học viên
+                    </div>
+
+                    <div class="proof-info-value">
+                      ${escapeHtml(
+                        student.student_code
+                        || "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="proof-info-label">
+                      Đăng ký
+                    </div>
+
+                    <div class="proof-info-value">
+                      ${escapeHtml(
+                        registration.registration_code
+                        || "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="proof-info-label">
+                      Gói học
+                    </div>
+
+                    <div class="proof-info-value">
+                      ${escapeHtml(
+                        registration.package_name
+                        || "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="proof-info-label">
+                      Số tiền học viên khai đã chuyển
+                    </div>
+
+                    <div class="proof-amount">
+                      ${money(
+                        row.amount
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <div class="proof-transfer">
+
+                  <div class="proof-info-label">
+                    Nội dung chuyển khoản
+                  </div>
+
+                  <div class="proof-info-value">
+                    ${escapeHtml(
+                      row.transfer_content
+                      || "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="proof-actions">
+
+                  ${proofButton}
+
+                  <button
+                    type="button"
+                    class="proof-btn proof-btn-confirm"
+                    data-proof-confirm="${row.id}"
+                  >
+                    ✓ XÁC NHẬN
+                  </button>
+
+                  <button
+                    type="button"
+                    class="proof-btn proof-btn-reject"
+                    data-proof-reject="${row.id}"
+                  >
+                    ✕ TỪ CHỐI
+                  </button>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  listEl.addEventListener(
+    "click",
+    async function (event) {
+
+      const viewButton =
+        event.target.closest(
+          "[data-proof-view]"
+        );
+
+
+      if (viewButton) {
+
+        const id =
+          Number(
+            viewButton.dataset
+              .proofView
+          );
+
+
+        const row =
+          pendingRows.find(
+            item =>
+              Number(item.id)
+              === id
+          );
+
+
+        if (
+          row?.proof_url
+        ) {
+
+          window.open(
+            row.proof_url,
+            "_blank",
+            "noopener"
+          );
+
+        }
+
+
+        return;
+
+      }
+
+
+      const confirmButton =
+        event.target.closest(
+          "[data-proof-confirm]"
+        );
+
+
+      if (confirmButton) {
+
+        const id =
+          Number(
+            confirmButton.dataset
+              .proofConfirm
+          );
+
+
+        const row =
+          pendingRows.find(
+            item =>
+              Number(item.id)
+              === id
+          );
+
+
+        if (!row) {
+          return;
+        }
+
+
+        const ok =
+          window.confirm(
+            "Xác nhận đã nhận đúng "
+            +
+            money(row.amount)
+            +
+            " từ học viên "
+            +
+            (
+              row.student
+                ?.full_name
+              ||
+              ""
+            )
+            +
+            "?\n\n"
+            +
+            "Sau khi xác nhận, hệ thống sẽ tạo phiếu thu Đã thu."
+          );
+
+
+        if (!ok) {
+          return;
+        }
+
+
+        await reviewProof(
+          id,
+          "confirm",
+          null,
+          confirmButton
+        );
+
+
+        return;
+
+      }
+
+
+      const rejectButton =
+        event.target.closest(
+          "[data-proof-reject]"
+        );
+
+
+      if (rejectButton) {
+
+        const id =
+          Number(
+            rejectButton.dataset
+              .proofReject
+          );
+
+
+        const reason =
+          window.prompt(
+            "Nhập lý do từ chối bill:"
+          );
+
+
+        if (
+          reason === null
+        ) {
+          return;
+        }
+
+
+        if (
+          !reason.trim()
+        ) {
+
+          showProofMessage(
+            "Vui lòng nhập lý do từ chối.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        await reviewProof(
+          id,
+          "reject",
+          reason.trim(),
+          rejectButton
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     XÁC NHẬN / TỪ CHỐI
+  ====================================================== */
+
+  async function reviewProof(
+    submissionId,
+    action,
+    note,
+    button
+  ) {
+
+    hideProofMessage();
+
+
+    const oldText =
+      button.textContent;
+
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      action === "confirm"
+        ? "ĐANG XÁC NHẬN..."
+        : "ĐANG TỪ CHỐI...";
+
+
+    try {
+
+      const {
+        error
+      } =
+        await paymentSb.rpc(
+          "admin_review_payment_submission",
+          {
+            p_submission_id:
+              Number(
+                submissionId
+              ),
+
+            p_action:
+              action,
+
+            p_admin_note:
+              note
+              || null
+          }
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      if (
+        action ===
+        "confirm"
+      ) {
+
+        showProofMessage(
+          "✓ Đã xác nhận thanh toán. Phiếu thu Đã thu đã được tạo.",
+          "success"
+        );
+
+      }
+      else {
+
+        showProofMessage(
+          "✓ Đã từ chối bill. Học viên có thể gửi lại bill mới.",
+          "success"
+        );
+
+      }
+
+
+      await loadPendingProofs();
+
+
+      /*
+        Nếu Admin đang mở đúng đăng ký
+        vừa được xác nhận ở form bên dưới,
+        refresh lại số đã thu / còn phải thu.
+      */
+
+      const registrationSelect =
+        document.getElementById(
+          "registrationSelect"
+        );
+
+
+      if (
+        registrationSelect
+        &&
+        registrationSelect.value
+      ) {
+
+        registrationSelect.dispatchEvent(
+          new Event(
+            "change"
+          )
+        );
+
+      }
+
+    }
+    catch (error) {
+
+      console.error(
+        error
+      );
+
+
+      showProofMessage(
+        error?.message
+        ||
+        "Không xử lý được bill.",
+        "error"
+      );
+
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        oldText;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  try {
+
+    const isAdmin =
+      await ensureAdmin();
+
+
+    if (!isAdmin) {
+
+      section.style.display =
+        "none";
+
+      return;
+
+    }
+
+
+    await loadPendingProofs();
+
+  }
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    countEl.textContent =
+      "—";
+
+
+    listEl.innerHTML =
+      `
+        <div class="proof-empty">
+          Không tải được dữ liệu bill.
+        </div>
+      `;
+
+
+    showProofMessage(
+      error?.message
+      ||
+      "Không tải được bill chờ xác nhận.",
+      "error"
+    );
+
+  }
+
+})();
+</script>
 </body>
 </html>
