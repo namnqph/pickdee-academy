@@ -1738,7 +1738,309 @@
 
 </script>
 
+<!-- ======================================================
+     PICKDEE ACADEMY
+     HIỆN / ẨN MẬT KHẨU ĐĂNG NHẬP
+======================================================= -->
 
+<style>
+
+  .pickdee-password-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .pickdee-password-wrap #loginPassword {
+    width: 100%;
+    padding-right: 52px !important;
+  }
+
+  .pickdee-password-toggle {
+    position: absolute;
+
+    top: 50%;
+    right: 8px;
+
+    width: 40px;
+    height: 40px;
+
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+    color: rgba(255,255,255,.65);
+
+    cursor: pointer;
+
+    padding: 0;
+  }
+
+  .pickdee-password-toggle:hover {
+    color: #d8ff45;
+    background: rgba(216,255,69,.07);
+  }
+
+  .pickdee-password-toggle:focus-visible {
+    outline: 2px solid #d8ff45;
+    outline-offset: 1px;
+  }
+
+  .pickdee-password-toggle svg {
+    width: 21px;
+    height: 21px;
+    pointer-events: none;
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+  const passwordInput =
+    document.getElementById(
+      "loginPassword"
+    );
+
+
+  if (
+    !passwordInput
+    ||
+    document.getElementById(
+      "toggleLoginPassword"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /* ===============================================
+     TẠO WRAPPER
+  ================================================ */
+
+  const wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.className =
+    "pickdee-password-wrap";
+
+
+  passwordInput
+    .parentNode
+    .insertBefore(
+      wrapper,
+      passwordInput
+    );
+
+
+  wrapper.appendChild(
+    passwordInput
+  );
+
+
+  /* ===============================================
+     NÚT CON MẮT
+  ================================================ */
+
+  const toggle =
+    document.createElement(
+      "button"
+    );
+
+
+  toggle.id =
+    "toggleLoginPassword";
+
+
+  toggle.type =
+    "button";
+
+
+  toggle.className =
+    "pickdee-password-toggle";
+
+
+  toggle.setAttribute(
+    "aria-label",
+    "Hiện mật khẩu"
+  );
+
+
+  toggle.setAttribute(
+    "title",
+    "Hiện mật khẩu"
+  );
+
+
+  wrapper.appendChild(
+    toggle
+  );
+
+
+  /* ===============================================
+     ICON
+  ================================================ */
+
+  function renderIcon(
+    passwordVisible
+  ) {
+
+    if (
+      passwordVisible
+    ) {
+
+      /* MẮT GẠCH = đang hiện mật khẩu */
+
+      toggle.innerHTML = `
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 3l18 18"></path>
+
+          <path
+            d="M10.6 10.6a2 2 0 0 0 2.8 2.8"
+          ></path>
+
+          <path
+            d="M9.9 4.24A9.7 9.7 0 0 1 12 4c5.5 0 9 5 9 5a17 17 0 0 1-2.1 2.8"
+          ></path>
+
+          <path
+            d="M6.6 6.6C4.2 8.2 3 10 3 10s3.5 5 9 5a9.7 9.7 0 0 0 3.1-.5"
+          ></path>
+        </svg>
+      `;
+
+    }
+    else {
+
+      /* MẮT = đang ẩn mật khẩu */
+
+      toggle.innerHTML = `
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path
+            d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
+          ></path>
+
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+          ></circle>
+        </svg>
+      `;
+
+    }
+
+  }
+
+
+  renderIcon(
+    false
+  );
+
+
+  /* ===============================================
+     CLICK
+  ================================================ */
+
+  toggle.addEventListener(
+    "click",
+    function () {
+
+      const isHidden =
+        passwordInput.type
+        ===
+        "password";
+
+
+      passwordInput.type =
+        isHidden
+          ?
+          "text"
+          :
+          "password";
+
+
+      renderIcon(
+        isHidden
+      );
+
+
+      toggle.setAttribute(
+        "aria-label",
+        isHidden
+          ?
+          "Ẩn mật khẩu"
+          :
+          "Hiện mật khẩu"
+      );
+
+
+      toggle.setAttribute(
+        "title",
+        isHidden
+          ?
+          "Ẩn mật khẩu"
+          :
+          "Hiện mật khẩu"
+      );
+
+
+      /*
+        Giữ con trỏ trong ô mật khẩu
+        để nhập tiếp thuận tiện.
+      */
+
+      passwordInput.focus();
+
+
+      const length =
+        passwordInput.value.length;
+
+
+      try {
+
+        passwordInput.setSelectionRange(
+          length,
+          length
+        );
+
+      }
+      catch (_) {}
+
+    }
+  );
+
+})();
+
+</script>
 </body>
 
 </html>
