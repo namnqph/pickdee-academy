@@ -1142,91 +1142,75 @@
 
 
 <script>
-
 (function () {
-
 
   const cfg =
     window.PICKDEE_CONFIG || {};
-
 
   const loading =
     document.getElementById(
       "loading"
     );
 
-
   const content =
     document.getElementById(
       "content"
     );
-
 
   const studentName =
     document.getElementById(
       "studentName"
     );
 
-
   const currentCoachName =
     document.getElementById(
       "currentCoachName"
     );
-
 
   const studentArea =
     document.getElementById(
       "studentArea"
     );
 
-
   const packageName =
     document.getElementById(
       "packageName"
     );
-
 
   const coachList =
     document.getElementById(
       "coachList"
     );
 
-
   const emptyCoach =
     document.getElementById(
       "emptyCoach"
     );
-
 
   const reason =
     document.getElementById(
       "reason"
     );
 
-
   const reasonNote =
     document.getElementById(
       "reasonNote"
     );
-
 
   const submitBtn =
     document.getElementById(
       "submitBtn"
     );
 
-
   const message =
     document.getElementById(
       "message"
     );
 
-
   const pendingBox =
     document.getElementById(
       "pendingBox"
     );
-
 
   const requestArea =
     document.getElementById(
@@ -1237,23 +1221,105 @@
   let student =
     null;
 
-
   let registration =
     null;
-
 
   let currentCoach =
     null;
 
-
   let suggestedCoaches =
     [];
-
 
   let selectedCoachId =
     null;
 
+  let paymentReady =
+    false;
 
+
+  /* =====================================================
+     PAYMENT GATE STYLE
+  ====================================================== */
+
+  const paymentStyle =
+    document.createElement(
+      "style"
+    );
+
+  paymentStyle.textContent = `
+
+    .payment-lock {
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,190,70,.35);
+      background: rgba(255,190,70,.07);
+    }
+
+    .payment-lock-title {
+      color: #ffd884;
+      font-size: 19px;
+      font-weight: 950;
+      margin-bottom: 9px;
+    }
+
+    .payment-lock-text {
+      color: rgba(255,255,255,.72);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .payment-lock-rule {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.18);
+      color: #ffffff;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .payment-lock-rule strong {
+      color: #cfff2e;
+    }
+
+    .payment-btn {
+      display: flex;
+      width: 100%;
+      min-height: 50px;
+      margin-top: 16px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 11px;
+      background: #cfff2e;
+      color: #071221;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    .payment-waiting {
+      margin-top: 16px;
+      padding: 13px;
+      border-radius: 11px;
+      background: rgba(255,190,70,.10);
+      border: 1px solid rgba(255,190,70,.25);
+      color: #ffd884;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+  `;
+
+  document.head.appendChild(
+    paymentStyle
+  );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
 
   function showMessage(
     text,
@@ -1265,12 +1331,10 @@
       +
       type;
 
-
     message.textContent =
       text;
 
   }
-
 
 
   function escapeHtml(
@@ -1304,7 +1368,6 @@
   }
 
 
-
   if (
     !window.supabase
     ||
@@ -1328,9 +1391,191 @@
     );
 
 
+  /* =====================================================
+     CHECK PAYMENT READY
+  ====================================================== */
+
+  async function checkPaymentReady(
+    registrationId
+  ) {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "student_registration_payment_ready",
+        {
+          p_registration_id:
+            Number(
+              registrationId
+            )
+        }
+      );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được trạng thái học phí: "
+        +
+        error.message
+      );
+
+    }
+
+
+    return (
+      data === true
+    );
+
+  }
+
+
+  /* =====================================================
+     CHECK PENDING BILL
+  ====================================================== */
+
+  async function hasPendingPaymentSubmission(
+    registrationId
+  ) {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "payment_submissions"
+        )
+        .select(
+          "id"
+        )
+        .eq(
+          "registration_id",
+          Number(
+            registrationId
+          )
+        )
+        .eq(
+          "status",
+          "Chờ xác nhận"
+        )
+        .limit(1);
+
+
+    if (error) {
+
+      console.warn(
+        "Payment submission:",
+        error
+      );
+
+      return false;
+
+    }
+
+
+    return (
+      Array.isArray(data)
+      &&
+      data.length > 0
+    );
+
+  }
+
+
+  /* =====================================================
+     SHOW PAYMENT LOCK
+  ====================================================== */
+
+  async function showPaymentLock() {
+
+    const waiting =
+      await hasPendingPaymentSubmission(
+        registration.id
+      );
+
+
+    pendingBox.style.display =
+      "block";
+
+
+    requestArea.style.display =
+      "none";
+
+
+    pendingBox.innerHTML = `
+
+      <div class="payment-lock">
+
+        <div class="payment-lock-title">
+          🔒 CHƯA ĐỦ ĐIỀU KIỆN ĐỔI COACH
+        </div>
+
+        <div class="payment-lock-text">
+
+          Gói học
+          <strong>
+            ${escapeHtml(
+              registration.package_name
+              ||
+              registration.registration_code
+              ||
+              "hiện tại"
+            )}
+          </strong>
+          chưa được PickDee xác nhận
+          thanh toán đủ 100% học phí.
+
+        </div>
+
+        <div class="payment-lock-rule">
+
+          <strong>Quy định PickDee:</strong><br>
+
+          Chỉ khi học phí đã được
+          thanh toán đủ và được ghi nhận
+          <strong>Đã thu</strong>,
+          học viên mới được chọn/đổi Coach,
+          đặt lịch và tham gia buổi học.
+
+        </div>
+
+        ${
+          waiting
+
+            ? `
+              <div class="payment-waiting">
+                ⏳ BILL ĐÃ GỬI<br>
+                ĐANG CHỜ PICKDEE XÁC NHẬN
+              </div>
+            `
+
+            : `
+              <a
+                class="payment-btn"
+                href="./student-payment-checkout?id=${Number(
+                  registration.id
+                )}"
+              >
+                💳 THANH TOÁN HỌC PHÍ
+              </a>
+            `
+        }
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     RENDER COACH
+  ====================================================== */
 
   function renderCoaches() {
-
 
     coachList.innerHTML =
       "";
@@ -1355,7 +1600,6 @@
     suggestedCoaches.forEach(
       function (coach) {
 
-
         const card =
           document.createElement(
             "div"
@@ -1372,22 +1616,35 @@
 
         card.innerHTML =
           `
+
             <div class="coach-top">
 
               <div>
 
                 <div class="coach-name">
-                  ${escapeHtml(coach.full_name || "Coach PickDee")}
+                  ${escapeHtml(
+                    coach.full_name
+                    ||
+                    "Coach PickDee"
+                  )}
                 </div>
 
                 <div class="coach-code">
-                  ${escapeHtml(coach.coach_code || "")}
+                  ${escapeHtml(
+                    coach.coach_code
+                    ||
+                    ""
+                  )}
                 </div>
 
               </div>
 
               <div class="score">
-                ${Number(coach.score || 0)}%
+                ${Number(
+                  coach.score
+                  ||
+                  0
+                )}%
               </div>
 
             </div>
@@ -1396,25 +1653,36 @@
             <div class="coach-area">
 
               📍
-              ${escapeHtml(coach.preferred_area || "Chưa cập nhật")}
+              ${escapeHtml(
+                coach.preferred_area
+                ||
+                "Chưa cập nhật"
+              )}
 
               ${
                 coach.preferred_ward
-                ?
-                " • "
-                +
-                escapeHtml(
-                  coach.preferred_ward
-                )
-                :
-                ""
+
+                  ? " • "
+                    +
+                    escapeHtml(
+                      coach.preferred_ward
+                    )
+
+                  : ""
               }
 
             </div>
 
 
             <div class="coach-reason">
-              ✓ ${escapeHtml(coach.reason || "Coach phù hợp")}
+
+              ✓
+              ${escapeHtml(
+                coach.reason
+                ||
+                "Coach phù hợp"
+              )}
+
             </div>
 
 
@@ -1424,6 +1692,7 @@
             >
               CHỌN COACH NÀY
             </button>
+
           `;
 
 
@@ -1434,6 +1703,21 @@
           .addEventListener(
             "click",
             function () {
+
+              /*
+                FRONTEND GUARD
+              */
+
+              if (!paymentReady) {
+
+                showMessage(
+                  "Bạn cần thanh toán đủ học phí và chờ PickDee xác nhận trước khi đổi Coach.",
+                  "error"
+                );
+
+                return;
+
+              }
 
 
               selectedCoachId =
@@ -1483,7 +1767,6 @@
                 .textContent =
                   "✓ ĐÃ CHỌN";
 
-
             }
           );
 
@@ -1492,22 +1775,21 @@
           card
         );
 
-
       }
     );
-
 
   }
 
 
+  /* =====================================================
+     LOAD PAGE
+  ====================================================== */
 
   async function loadPage() {
 
-
     try {
 
-
-         const {
+      const {
         data: { session },
         error: sessionError
       } =
@@ -1528,6 +1810,10 @@
 
       }
 
+
+      /* ==========================
+         CURRENT STUDENT
+      ========================== */
 
       const {
         data: studentId,
@@ -1564,7 +1850,9 @@
           )
           .eq(
             "id",
-            Number(studentId)
+            Number(
+              studentId
+            )
           )
           .maybeSingle();
 
@@ -1586,23 +1874,10 @@
         studentData;
 
 
-      if (
-        studentError
-        ||
-        !studentData
-      ) {
-
-        throw new Error(
-          "Không tìm thấy hồ sơ Học viên."
-        );
-
-      }
-
-
-      student =
-        studentData;
-
-
+      /* ==========================
+         CURRENT APPROVED PACKAGE
+         CÓ COACH
+      ========================== */
 
       const {
         data: registrationData,
@@ -1613,11 +1888,25 @@
             "registrations"
           )
           .select(
-            "id, registration_code, student_id, package_name, coach_id, status, created_at"
+            `
+              id,
+              registration_code,
+              student_id,
+              package_name,
+              coach_id,
+              tuition_fee,
+              status,
+              is_test,
+              created_at
+            `
           )
           .eq(
             "student_id",
             student.id
+          )
+          .eq(
+            "status",
+            "Đã duyệt"
           )
           .not(
             "coach_id",
@@ -1644,7 +1933,7 @@
       ) {
 
         throw new Error(
-          "Học viên chưa có đăng ký được gán Coach."
+          "Học viên chưa có gói học Đã duyệt được gán Coach."
         );
 
       }
@@ -1654,6 +1943,9 @@
         registrationData;
 
 
+      /* ==========================
+         CURRENT COACH
+      ========================== */
 
       const {
         data: coachData,
@@ -1684,6 +1976,9 @@
         coachData;
 
 
+      /* ==========================
+         RENDER BASIC INFO
+      ========================== */
 
       studentName.textContent =
         student.full_name
@@ -1704,8 +1999,12 @@
           student.preferred_area,
           student.preferred_ward
         ]
-          .filter(Boolean)
-          .join(" • ")
+          .filter(
+            Boolean
+          )
+          .join(
+            " • "
+          )
         ||
         "Chưa cập nhật";
 
@@ -1716,6 +2015,47 @@
         "Gói học PickDee";
 
 
+      /* =================================================
+         PAYMENT GATE
+
+         QUAN TRỌNG:
+         KHÔNG LOAD AI COACH
+         NẾU CHƯA THANH TOÁN ĐỦ
+      ================================================= */
+
+      paymentReady =
+        await checkPaymentReady(
+          registration.id
+        );
+
+
+      if (!paymentReady) {
+
+        await showPaymentLock();
+
+
+        loading.style.display =
+          "none";
+
+
+        content.style.display =
+          "block";
+
+
+        return;
+
+      }
+
+
+      /*
+        ĐẾN ĐÂY mới được xem là:
+        THANH TOÁN ĐỦ + ĐÃ THU
+      */
+
+
+      /* ==========================
+         PENDING COACH REQUEST
+      ========================== */
 
       const {
         data: pendingData,
@@ -1726,11 +2066,21 @@
             "coach_change_requests"
           )
           .select(
-            "id, requested_coach_id, reason, status, created_at"
+            `
+              id,
+              requested_coach_id,
+              reason,
+              status,
+              created_at
+            `
           )
           .eq(
             "student_id",
             student.id
+          )
+          .eq(
+            "registration_id",
+            registration.id
           )
           .eq(
             "status",
@@ -1758,13 +2108,13 @@
 
       if (pendingData) {
 
-
         pendingBox.style.display =
           "block";
 
 
         pendingBox.innerHTML =
           `
+
             <div class="pending">
 
               <strong>
@@ -1777,16 +2127,20 @@
               Bạn chưa cần gửi thêm yêu cầu mới.
 
             </div>
+
           `;
 
 
         requestArea.style.display =
           "none";
 
-
       }
       else {
 
+        /* ==========================
+           CHỈ SAU KHI ĐÃ ĐỦ TIỀN
+           MỚI GỌI AI COACH
+        ========================== */
 
         const {
           data: suggestions,
@@ -1795,11 +2149,13 @@
           await sb.rpc(
             "suggest_coaches_for_student",
             {
+
               p_student_id:
                 student.id,
 
               p_limit:
                 3
+
             }
           );
 
@@ -1817,7 +2173,6 @@
 
         renderCoaches();
 
-
       }
 
 
@@ -1828,10 +2183,8 @@
       content.style.display =
         "block";
 
-
     }
     catch (error) {
-
 
       console.error(
         "CHANGE COACH LOAD ERROR:",
@@ -1844,18 +2197,18 @@
         ||
         "Không tải được chức năng đổi Coach.";
 
-
     }
-
 
   }
 
 
+  /* =====================================================
+     SUBMIT COACH CHANGE REQUEST
+  ====================================================== */
 
   submitBtn.addEventListener(
     "click",
     async function () {
-
 
       if (
         !student
@@ -1873,9 +2226,49 @@
       }
 
 
+      /*
+        RE-CHECK PAYMENT NGAY TRƯỚC INSERT.
+
+        Không tin trạng thái frontend cũ.
+      */
+
+      try {
+
+        paymentReady =
+          await checkPaymentReady(
+            registration.id
+          );
+
+      }
+      catch (error) {
+
+        showMessage(
+          error.message,
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (!paymentReady) {
+
+        showMessage(
+          "Bạn chưa thanh toán đủ học phí. Chỉ khi PickDee xác nhận Đã thu đủ 100% mới được đổi Coach.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
       const reasonValue =
         String(
-          reason.value || ""
+          reason.value
+          ||
+          ""
         )
           .trim();
 
@@ -1920,6 +2313,10 @@
 
       try {
 
+        /*
+          BACKEND RLS/PAYMENT GATE
+          vẫn là lớp bảo vệ cuối cùng.
+        */
 
         const {
           error
@@ -1930,6 +2327,7 @@
             )
             .insert(
               {
+
                 student_id:
                   student.id,
 
@@ -1947,12 +2345,15 @@
 
                 reason_note:
                   String(
-                    reasonNote.value || ""
+                    reasonNote.value
+                    ||
+                    ""
                   )
                     .trim(),
 
                 status:
                   "pending"
+
               }
             );
 
@@ -1995,10 +2396,8 @@
             }
           );
 
-
       }
       catch (error) {
-
 
         console.error(
           "CHANGE COACH REQUEST ERROR:",
@@ -2021,20 +2420,15 @@
         submitBtn.textContent =
           "GỬI YÊU CẦU ĐỔI COACH";
 
-
       }
-
 
     }
   );
 
 
-
   loadPage();
 
-
 })();
-
 </script>
 
 
