@@ -1,15 +1,20 @@
-<!-- =====================================================
+})();
+
+</script>
+  src="./notifications.js?v=20260913-coach-applications"
+></script>
+ <!-- =========================================================
      PICKDEE ACADEMY
-     ADMIN TASKS - COACH OPERATIONAL BACKLOG V2
-     FINAL CLEAN VERSION
-====================================================== -->
+     ADMIN TASKS - COACH OPERATIONAL BACKLOG
+========================================================== -->
 
 <script>
 
-(function () {
+(async function () {
 
   const cfg =
     window.PICKDEE_CONFIG || {};
+
 
   if (
     !window.supabase
@@ -18,13 +23,17 @@
     ||
     !cfg.SUPABASE_PUBLISHABLE_KEY
   ) {
+
     console.error(
-      "PickDee Admin Tasks V2: thiếu cấu hình Supabase."
+      "PickDee Coach Backlog Tasks: thiếu cấu hình Supabase."
     );
+
     return;
+
   }
 
-  const extraSb =
+
+  const backlogSb =
     window.supabase.createClient(
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY
@@ -32,60 +41,34 @@
 
 
   /* =====================================================
-     HELPERS
+     ESCAPE
   ====================================================== */
 
-  function esc(value) {
+  function escapeHtml(value) {
 
     return String(
       value ?? ""
     )
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-
-  }
-
-
-  function formatSimpleDate(value) {
-
-    if (!value) {
-      return "—";
-    }
-
-    const parts =
-      String(value)
-        .split("-");
-
-    if (parts.length !== 3) {
-      return String(value);
-    }
-
-    return (
-      parts[2]
-      +
-      "/"
-      +
-      parts[1]
-      +
-      "/"
-      +
-      parts[0]
-    );
-
-  }
-
-
-  function formatSimpleTime(value) {
-
-    if (!value) {
-      return "—";
-    }
-
-    return String(value)
-      .slice(0, 5);
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
 
   }
 
@@ -94,86 +77,151 @@
      TẠO SECTION
   ====================================================== */
 
-  function createSection(
-    id,
-    title,
-    countId,
-    bodyId,
-    countClass
-  ) {
-
-    if (
-      document.getElementById(id)
-    ) {
-      return;
-    }
+  function ensureCoachBacklogSections() {
 
     const main =
-      document.querySelector("main");
+      document.querySelector(
+        "main"
+      );
+
 
     if (!main) {
       return;
     }
 
-    const section =
-      document.createElement("section");
 
-    section.id =
-      id;
-
-    section.className =
-      "section";
-
-    section.innerHTML = `
-
-      <div class="section-head">
-
-        <div class="section-title">
-          ${title}
-        </div>
-
-        <div
-          id="${countId}"
-          class="count ${countClass}"
-        >
-          0
-        </div>
-
-      </div>
-
-      <div
-        id="${bodyId}"
-        class="section-body"
-      >
-
-        <div class="empty">
-          Đang kiểm tra...
-        </div>
-
-      </div>
-
-    `;
-
-    const otherSection =
-      document.getElementById(
-        "otherSection"
-      );
+    /* ===================================================
+       BUỔI COACH CHƯA ĐIỂM DANH
+    ==================================================== */
 
     if (
-      otherSection
-      &&
-      otherSection.parentElement
-      ===
-      main
+      !document.getElementById(
+        "coachOverdueAttendanceSection"
+      )
     ) {
 
-      main.insertBefore(
-        section,
-        otherSection
+      const section =
+        document.createElement(
+          "section"
+        );
+
+
+      section.id =
+        "coachOverdueAttendanceSection";
+
+
+      section.className =
+        "section";
+
+
+      section.innerHTML = `
+
+        <div class="section-head">
+
+          <div class="section-title">
+
+            📋 Buổi Coach chưa điểm danh
+
+          </div>
+
+
+          <div
+            id="coachOverdueAttendanceCount"
+            class="count red"
+          >
+
+            0
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="coachOverdueAttendanceBody"
+          class="section-body"
+        >
+
+          <div class="empty">
+
+            Đang kiểm tra...
+
+          </div>
+
+        </div>
+
+      `;
+
+
+      main.appendChild(
+        section
       );
 
     }
-    else {
+
+
+    /* ===================================================
+       CHẤM TRÌNH CUỐI KHÓA
+    ==================================================== */
+
+    if (
+      !document.getElementById(
+        "coachFinalAssessmentSection"
+      )
+    ) {
+
+      const section =
+        document.createElement(
+          "section"
+        );
+
+
+      section.id =
+        "coachFinalAssessmentSection";
+
+
+      section.className =
+        "section";
+
+
+      section.innerHTML = `
+
+        <div class="section-head">
+
+          <div class="section-title">
+
+            🎯 Chấm trình cuối khóa
+
+          </div>
+
+
+          <div
+            id="coachFinalAssessmentCount"
+            class="count yellow"
+          >
+
+            0
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="coachFinalAssessmentBody"
+          class="section-body"
+        >
+
+          <div class="empty">
+
+            Đang kiểm tra...
+
+          </div>
+
+        </div>
+
+      `;
+
 
       main.appendChild(
         section
@@ -184,224 +232,32 @@
   }
 
 
-  function ensureSections() {
-
-    createSection(
-      "coachOverdueAttendanceSection",
-      "📋 Buổi Coach chưa điểm danh",
-      "coachOverdueAttendanceCount",
-      "coachOverdueAttendanceBody",
-      "red"
-    );
-
-    createSection(
-      "coachFinalAssessmentSection",
-      "🎯 Chấm trình cuối khóa",
-      "coachFinalAssessmentCount",
-      "coachFinalAssessmentBody",
-      "yellow"
-    );
-
-  }
-
-
   /* =====================================================
-     RENDER TỪNG BUỔI CHƯA ĐIỂM DANH
+     RENDER COACH ROW
   ====================================================== */
 
-  function renderOverdueSessions(
-    sessions
+  function renderCoachRows(
+    rows,
+    field,
+    emptyText,
+    priority
   ) {
 
-    if (
-      !Array.isArray(sessions)
-      ||
-      sessions.length === 0
-    ) {
-
-      return `
-
-        <div class="empty">
-
-          ✅ Không có buổi Coach quá giờ
-          chưa điểm danh.
-
-        </div>
-
-      `;
-
-    }
-
-
-    return sessions
-      .map(
-        function (row) {
-
-          const sessionId =
-            Number(
-              row.session_id
-              ||
-              0
-            );
-
-          const overdueMinutes =
-            Number(
-              row.overdue_minutes
-              ||
-              0
-            );
-
-
-          return `
-
-            <div class="task">
-
-
-              <div
-                class="priority-bar high"
-              ></div>
-
-
-              <div>
-
-
-                <div class="task-title">
-
-                  ${esc(
-                    row.session_code
-                    ||
-                    "BUỔI HỌC"
-                  )}
-
-                  ·
-
-                  ${esc(
-                    row.student_name
-                    ||
-                    "Học viên"
-                  )}
-
-                </div>
-
-
-                <div class="task-meta">
-
-                  Coach:
-                  <strong>
-                    ${esc(
-                      row.coach_name
-                      ||
-                      "—"
-                    )}
-                  </strong>
-
-                  ${
-                    row.coach_code
-                      ?
-                      " • "
-                      +
-                      esc(
-                        row.coach_code
-                      )
-                      :
-                      ""
-                  }
-
-                  <br>
-
-                  🗓️
-                  ${esc(
-                    formatSimpleDate(
-                      row.session_date
-                    )
-                  )}
-
-                  •
-
-                  ⏰
-                  ${esc(
-                    formatSimpleTime(
-                      row.start_time
-                    )
-                  )}
-
-                  <br>
-
-                  ${
-                    overdueMinutes > 0
-                      ?
-                      "Đã quá giờ "
-                      +
-                      overdueMinutes
-                      +
-                      " phút và vẫn chưa được điểm danh."
-                      :
-                      "Buổi học đã quá giờ nhưng chưa được điểm danh."
-                  }
-
-                </div>
-
-
-                <div
-                  class="task-priority red"
-                >
-                  Cần xử lý
-                </div>
-
-
-              </div>
-
-
-              <a
-                class="task-action"
-                href="./session-detail?id=${sessionId}"
-              >
-                XỬ LÝ BUỔI →
-              </a>
-
-
-            </div>
-
-          `;
-
-        }
-      )
-      .join("");
-
-  }
-
-
-  /* =====================================================
-     RENDER CHẤM TRÌNH CUỐI KHÓA
-  ====================================================== */
-
-  function renderFinalAssessments(
-    rows
-  ) {
 
     const activeRows =
-      (
-        Array.isArray(rows)
-          ?
-          rows
-          :
-          []
-      )
-        .filter(
-          function (row) {
+      rows.filter(
+        function (row) {
 
-            return (
-              Number(
-                row.pending_final_assessments
-                ||
-                0
-              )
-              >
-              0
-            );
+          return (
+            Number(
+              row[field] || 0
+            )
+            >
+            0
+          );
 
-          }
-        );
+        }
+      );
 
 
     if (
@@ -412,8 +268,9 @@
 
         <div class="empty">
 
-          ✅ Không có học viên cần Coach
-          chấm trình cuối khóa.
+          ✅ ${escapeHtml(
+            emptyText
+          )}
 
         </div>
 
@@ -426,11 +283,10 @@
       .map(
         function (row) {
 
+
           const count =
             Number(
-              row.pending_final_assessments
-              ||
-              0
+              row[field] || 0
             );
 
 
@@ -440,7 +296,9 @@
 
 
               <div
-                class="priority-bar medium"
+                class="priority-bar ${escapeHtml(
+                  priority
+                )}"
               ></div>
 
 
@@ -449,7 +307,7 @@
 
                 <div class="task-title">
 
-                  ${esc(
+                  ${escapeHtml(
                     row.coach_name
                     ||
                     "Coach"
@@ -460,7 +318,7 @@
 
                 <div class="task-meta">
 
-                  ${esc(
+                  ${escapeHtml(
                     row.coach_code
                     ||
                     "—"
@@ -471,7 +329,7 @@
                       ?
                       " • "
                       +
-                      esc(
+                      escapeHtml(
                         row.coach_email
                       )
                       :
@@ -480,20 +338,44 @@
 
                   <br>
 
-                  Có
-                  <strong>
-                    ${count}
-                  </strong>
-                  học viên cần chấm trình
-                  cuối khóa.
+                  ${
+                    field
+                    ===
+                    "overdue_attendance"
+                      ?
+                      `Có ${count} buổi đã quá giờ nhưng chưa được điểm danh.`
+                      :
+                      `Có ${count} học viên cần chấm trình cuối khóa.`
+                  }
 
                 </div>
 
 
                 <div
-                  class="task-priority yellow"
+                  class="
+                    task-priority
+                    ${
+                      priority
+                      ===
+                      "high"
+                        ?
+                        "red"
+                        :
+                        "yellow"
+                    }
+                  "
                 >
-                  Cần theo dõi
+
+                  ${
+                    priority
+                    ===
+                    "high"
+                      ?
+                      "Cần xử lý"
+                      :
+                      "Cần theo dõi"
+                  }
+
                 </div>
 
 
@@ -504,7 +386,9 @@
                 class="task-action"
                 href="./admin-coach-backlog"
               >
-                XỬ LÝ →
+
+                XỬ LÝ
+
               </a>
 
 
@@ -514,165 +398,191 @@
 
         }
       )
-      .join("");
+      .join(
+        ""
+      );
 
   }
 
 
   /* =====================================================
-     LOAD DỮ LIỆU
+     ĐẾM YÊU CẦU ĐỔI COACH
   ====================================================== */
 
-  async function loadExtraTasks() {
+  async function getCoachChangeCount() {
 
-    ensureSections();
+    try {
+
+
+      const {
+        count,
+        error
+      } =
+        await backlogSb
+          .from(
+            "coach_change_requests"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "status",
+            "pending"
+          );
+
+
+      if (error) {
+        return 0;
+      }
+
+
+      return Number(
+        count || 0
+      );
+
+
+    }
+    catch (_) {
+
+      return 0;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ĐẾM HỒ SƠ COACH
+  ====================================================== */
+
+  async function getCoachApplicationCount() {
+
+    try {
+
+
+      const {
+        data,
+        error
+      } =
+        await backlogSb.rpc(
+          "admin_get_pending_coach_application_count"
+        );
+
+
+      if (error) {
+        return 0;
+      }
+
+
+      return Number(
+        data || 0
+      );
+
+
+    }
+    catch (_) {
+
+      return 0;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD TOÀN BỘ
+  ====================================================== */
+
+  async function loadCoachBacklogTasks() {
+
+
+    ensureCoachBacklogSections();
 
 
     try {
 
 
-      const [
-        baseResult,
-        backlogResult,
-        overdueResult,
-        changeResult,
-        applicationResult
-      ] =
-        await Promise.all([
+      /* =================================================
+         1. VIỆC ADMIN CŨ
+      ================================================== */
 
-          extraSb.rpc(
-            "admin_get_pending_tasks"
-          ),
-
-          extraSb.rpc(
-            "admin_get_coach_operational_backlog"
-          ),
-
-          extraSb.rpc(
-            "admin_get_overdue_coach_sessions"
-          ),
-
-          extraSb
-            .from(
-              "coach_change_requests"
-            )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            ),
-
-          extraSb
-            .from(
-              "coach_applications"
-            )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            )
-
-        ]);
-
-
-      if (
-        baseResult.error
-      ) {
-        throw baseResult.error;
-      }
-
-
-      if (
-        backlogResult.error
-      ) {
-        throw backlogResult.error;
-      }
-
-
-      if (
-        overdueResult.error
-      ) {
-        throw overdueResult.error;
-      }
-
-
-      if (
-        changeResult.error
-      ) {
-
-        console.warn(
-          "Không đếm được yêu cầu đổi Coach:",
-          changeResult.error
+      const {
+        data: oldTaskData,
+        error: oldTaskError
+      } =
+        await backlogSb.rpc(
+          "admin_get_pending_tasks"
         );
 
+
+      if (oldTaskError) {
+        throw oldTaskError;
       }
 
 
-      if (
-        applicationResult.error
-      ) {
-
-        console.warn(
-          "Không đếm được hồ sơ Coach:",
-          applicationResult.error
-        );
-
-      }
-
-
-      const baseRows =
+      const oldTasks =
         Array.isArray(
-          baseResult.data
+          oldTaskData
         )
           ?
-          baseResult.data
+          oldTaskData
           :
           [];
+
+
+      /* =================================================
+         2. VIỆC TỒN COACH
+      ================================================== */
+
+      const {
+        data: backlogData,
+        error: backlogError
+      } =
+        await backlogSb.rpc(
+          "admin_get_coach_operational_backlog"
+        );
+
+
+      if (backlogError) {
+        throw backlogError;
+      }
 
 
       const coachRows =
         Array.isArray(
-          backlogResult.data
+          backlogData
         )
           ?
-          backlogResult.data
+          backlogData
           :
           [];
 
-
-      const overdueSessions =
-        Array.isArray(
-          overdueResult.data
-        )
-          ?
-          overdueResult.data
-          :
-          [];
-
-
-      /* =================================================
-         BUỔI CHƯA ĐIỂM DANH
-      ================================================== */
 
       const attendanceTotal =
-        overdueSessions.length;
+        coachRows.reduce(
+          function (
+            sum,
+            row
+          ) {
 
+            return (
+              sum
+              +
+              Number(
+                row.overdue_attendance
+                ||
+                0
+              )
+            );
 
-      /* =================================================
-         CHẤM TRÌNH CUỐI KHÓA
-      ================================================== */
+          },
+          0
+        );
+
 
       const finalTotal =
         coachRows.reduce(
@@ -698,47 +608,39 @@
 
       /*
         KHÔNG cộng:
-        pending_session_requests
+        row.pending_session_requests
 
         vì Yêu cầu lịch đã thuộc
         admin_get_pending_tasks().
       */
 
 
-      const coachChangeTotal =
-        changeResult.error
-          ?
-          0
-          :
-          Number(
-            changeResult.count
-            ||
-            0
-          );
+      /* =================================================
+         3. YÊU CẦU ĐỔI COACH + HỒ SƠ COACH
+      ================================================== */
 
-
-      const coachApplicationTotal =
-        applicationResult.error
-          ?
-          0
-          :
-          Number(
-            applicationResult.count
-            ||
-            0
-          );
+      const [
+        coachChangeCount,
+        coachApplicationCount
+      ] =
+        await Promise.all(
+          [
+            getCoachChangeCount(),
+            getCoachApplicationCount()
+          ]
+        );
 
 
       /* =================================================
-         TỔNG CHÍNH THỨC
+         4. TỔNG CHÍNH THỨC
       ================================================== */
 
       const total =
-        baseRows.length
+        oldTasks.length
         +
-        coachChangeTotal
+        coachChangeCount
         +
-        coachApplicationTotal
+        coachApplicationCount
         +
         attendanceTotal
         +
@@ -746,26 +648,38 @@
 
 
       /* =================================================
-         RENDER BUỔI COACH
+         5. RENDER 2 SECTION MỚI
       ================================================== */
 
-      const attendanceCount =
+      const attendanceCountElement =
         document.getElementById(
           "coachOverdueAttendanceCount"
         );
 
 
-      const attendanceBody =
+      const attendanceBodyElement =
         document.getElementById(
           "coachOverdueAttendanceBody"
         );
 
 
+      const finalCountElement =
+        document.getElementById(
+          "coachFinalAssessmentCount"
+        );
+
+
+      const finalBodyElement =
+        document.getElementById(
+          "coachFinalAssessmentBody"
+        );
+
+
       if (
-        attendanceCount
+        attendanceCountElement
       ) {
 
-        attendanceCount.textContent =
+        attendanceCountElement.textContent =
           String(
             attendanceTotal
           );
@@ -774,38 +688,25 @@
 
 
       if (
-        attendanceBody
+        attendanceBodyElement
       ) {
 
-        attendanceBody.innerHTML =
-          renderOverdueSessions(
-            overdueSessions
+        attendanceBodyElement.innerHTML =
+          renderCoachRows(
+            coachRows,
+            "overdue_attendance",
+            "Không có Coach còn buổi quá giờ chưa điểm danh.",
+            "high"
           );
 
       }
 
 
-      /* =================================================
-         RENDER CHẤM TRÌNH
-      ================================================== */
-
-      const finalCount =
-        document.getElementById(
-          "coachFinalAssessmentCount"
-        );
-
-
-      const finalBody =
-        document.getElementById(
-          "coachFinalAssessmentBody"
-        );
-
-
       if (
-        finalCount
+        finalCountElement
       ) {
 
-        finalCount.textContent =
+        finalCountElement.textContent =
           String(
             finalTotal
           );
@@ -814,19 +715,22 @@
 
 
       if (
-        finalBody
+        finalBodyElement
       ) {
 
-        finalBody.innerHTML =
-          renderFinalAssessments(
-            coachRows
+        finalBodyElement.innerHTML =
+          renderCoachRows(
+            coachRows,
+            "pending_final_assessments",
+            "Không có học viên cần Coach chấm trình cuối khóa.",
+            "medium"
           );
 
       }
 
 
       /* =================================================
-         ĐỒNG BỘ TỔNG VIỆC
+         6. ĐỒNG BỘ TỔNG VIỆC
       ================================================== */
 
       const totalTasks =
@@ -848,7 +752,7 @@
 
 
       /* =================================================
-         DÒNG CẬP NHẬT
+         7. DÒNG CẬP NHẬT
       ================================================== */
 
       const message =
@@ -861,31 +765,28 @@
         message
       ) {
 
-        const now =
-          new Date()
-            .toLocaleTimeString(
-              "vi-VN",
-              {
-                hour:
-                  "2-digit",
-                minute:
-                  "2-digit"
-              }
-            );
-
 
         message.style.color =
           "#b9ff18";
 
 
         message.textContent =
-          `✓ Đã cập nhật ${total} việc lúc ${now}`;
+          `✓ Đã cập nhật ${total} việc lúc ${
+            new Date()
+              .toLocaleTimeString(
+                "vi-VN",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              )
+          }`;
 
       }
 
 
       /* =================================================
-         BANNER
+         8. ALL CLEAR
       ================================================== */
 
       const allClear =
@@ -898,14 +799,14 @@
         allClear
       ) {
 
-        allClear.classList.add(
-          "show"
-        );
-
 
         if (
           total === 0
         ) {
+
+          allClear.classList.add(
+            "show"
+          );
 
           allClear.textContent =
             "✅ Hiện không có việc nào cần Admin xử lý.";
@@ -924,6 +825,16 @@
 
         }
         else {
+
+          /*
+            Giữ banner hiện ra nhưng đổi thành cảnh báo
+            để Admin nhìn thấy ngay.
+          */
+
+          allClear.classList.add(
+            "show"
+          );
+
 
           allClear.textContent =
             `⚠️ Hiện có ${total} việc cần Admin theo dõi.`;
@@ -946,18 +857,18 @@
 
 
       console.log(
-        "PICKDEE ADMIN TASKS V2:",
+        "ADMIN TASKS FINAL:",
         {
-          baseTasks:
-            baseRows.length,
+          oldTasks:
+            oldTasks.length,
 
           coachChanges:
-            coachChangeTotal,
+            coachChangeCount,
 
           coachApplications:
-            coachApplicationTotal,
+            coachApplicationCount,
 
-          overdueCoachSessions:
+          overdueAttendance:
             attendanceTotal,
 
           finalAssessments:
@@ -974,8 +885,9 @@
       error
     ) {
 
+
       console.error(
-        "PICKDEE ADMIN TASKS V2 ERROR:",
+        "Coach backlog Admin Tasks:",
         error
       );
 
@@ -985,38 +897,26 @@
 
 
   /* =====================================================
-     CHẠY SAU SCRIPT GỐC
+     NÚT CẬP NHẬT
   ====================================================== */
 
-  setTimeout(
-    loadExtraTasks,
-    500
-  );
-
-
-  setTimeout(
-    loadExtraTasks,
-    1800
-  );
-
-
-  const refreshButton =
+  const refreshBtn =
     document.getElementById(
       "refreshBtn"
     );
 
 
   if (
-    refreshButton
+    refreshBtn
   ) {
 
-    refreshButton.addEventListener(
+    refreshBtn.addEventListener(
       "click",
       function () {
 
         setTimeout(
-          loadExtraTasks,
-          700
+          loadCoachBacklogTasks,
+          300
         );
 
       }
@@ -1025,29 +925,39 @@
   }
 
 
+  /* =====================================================
+     CHẠY
+  ====================================================== */
+
+  await loadCoachBacklogTasks();
+
+
+  /*
+    Chạy lại sau khi các block cũ hoàn tất,
+    tránh script cũ ghi đè Tổng việc.
+  */
+
+  setTimeout(
+    loadCoachBacklogTasks,
+    1000
+  );
+
+
+  setTimeout(
+    loadCoachBacklogTasks,
+    2500
+  );
+
+
   setInterval(
-    function () {
-
-      setTimeout(
-        loadExtraTasks,
-        700
-      );
-
-    },
+    loadCoachBacklogTasks,
     60000
   );
 
 
   window.addEventListener(
     "focus",
-    function () {
-
-      setTimeout(
-        loadExtraTasks,
-        300
-      );
-
-    }
+    loadCoachBacklogTasks
   );
 
 
@@ -1056,15 +966,4 @@
 </script>
 
 
-<!-- =====================================================
-     CHUÔNG PICKDEE
-====================================================== -->
-
-<script
-  src="./notifications.js?v=20260914-admin-tasks"
-></script>
-
-
 </body>
-
-</html>
