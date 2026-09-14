@@ -3008,7 +3008,1048 @@ updated_at
 
 </script>
 
+<script>
+/* =========================================================
+   PICKDEE ACADEMY
+   CHẤM TRÌNH CUỐI KHÓA
+   - Chỉ chạy khi URL có: mode=course-final
+   - Cơ bản / Nâng cao
+   - Chỉ khi đã học đủ toàn bộ khóa
+   - Không ảnh hưởng chế độ chấm trình bình thường
+========================================================= */
 
+(async function () {
+
+  /* =====================================================
+     CHỈ CHẠY Ở MODE CUỐI KHÓA
+  ====================================================== */
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const isCourseFinalMode =
+    params.get("mode")
+    ===
+    "course-final";
+
+
+  if (
+    !isCourseFinalMode
+  ) {
+
+    return;
+
+  }
+
+
+  const registrationId =
+    Number(
+      params.get(
+        "registration_id"
+      )
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  if (
+    !Number.isFinite(
+      registrationId
+    )
+    ||
+    registrationId <= 0
+  ) {
+
+    if (message) {
+
+      message.textContent =
+        "Thiếu mã đăng ký học.";
+
+      message.className =
+        "error";
+
+    }
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    if (message) {
+
+      message.textContent =
+        "Không kết nối được hệ thống PickDee Academy.";
+
+      message.className =
+        "error";
+
+    }
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+    return;
+
+  }
+
+
+  const finalSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     USER
+  ====================================================== */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await finalSb.auth.getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    window.location.replace(
+      "./?v=login"
+    );
+
+    return;
+
+  }
+
+
+  const user =
+    userData.user;
+
+
+  /* =====================================================
+     ROLE
+  ====================================================== */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await finalSb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+    ||
+    String(
+      profile?.role || ""
+    )
+      .trim()
+      .toLowerCase()
+      !==
+      "coach"
+  ) {
+
+    window.location.replace(
+      "./"
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     COACH
+  ====================================================== */
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await finalSb
+      .from(
+        "coaches"
+      )
+      .select(`
+        id,
+        coach_code,
+        full_name
+      `)
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    coachError
+    ||
+    !coach
+  ) {
+
+    if (message) {
+
+      message.textContent =
+        "Không xác định được hồ sơ Coach.";
+
+      message.className =
+        "error";
+
+    }
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     REGISTRATION
+  ====================================================== */
+
+  const {
+    data: registration,
+    error: registrationError
+  } =
+    await finalSb
+      .from(
+        "registrations"
+      )
+      .select(`
+        id,
+        student_id,
+        coach_id,
+        package_name,
+        purchased_sessions
+      `)
+      .eq(
+        "id",
+        registrationId
+      )
+      .eq(
+        "coach_id",
+        coach.id
+      )
+      .maybeSingle();
+
+
+  if (
+    registrationError
+    ||
+    !registration
+  ) {
+
+    if (message) {
+
+      message.textContent =
+        "Bạn không có quyền chấm trình cuối khóa cho học viên này.";
+
+      message.className =
+        "error";
+
+    }
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     KIỂM TRA CÓ THỰC SỰ ĐẾN HẠN CUỐI KHÓA
+  ====================================================== */
+
+  const {
+    data: dueRows,
+    error: dueError
+  } =
+    await finalSb.rpc(
+      "coach_get_students_needing_final_assessment"
+    );
+
+
+  if (
+    dueError
+  ) {
+
+    console.error(
+      "PickDee Academy final assessment RPC:",
+      dueError
+    );
+
+
+    if (message) {
+
+      message.textContent =
+        "Không kiểm tra được trạng thái cuối khóa.";
+
+      message.className =
+        "error";
+
+    }
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+    return;
+
+  }
+
+
+  const dueRow =
+    (
+      Array.isArray(
+        dueRows
+      )
+        ?
+        dueRows
+        :
+        []
+    )
+      .find(
+        row =>
+          Number(
+            row.registration_id
+          )
+          ===
+          Number(
+            registration.id
+          )
+      );
+
+
+  /*
+    Nếu không nằm trong RPC:
+    - chưa đủ buổi
+    - hoặc đã chấm cuối khóa
+    - hoặc không thuộc Cơ bản / Nâng cao
+  */
+
+  if (
+    !dueRow
+  ) {
+
+    const eyebrow =
+      document.querySelector(
+        ".eyebrow"
+      );
+
+
+    const sub =
+      document.querySelector(
+        ".sub"
+      );
+
+
+    if (eyebrow) {
+
+      eyebrow.textContent =
+        "CHẤM TRÌNH CUỐI KHÓA PICKDEE ACADEMY";
+
+    }
+
+
+    if (sub) {
+
+      sub.textContent =
+        "Khóa học chưa đến hạn chấm trình cuối khóa hoặc đã được chấm rồi.";
+
+    }
+
+
+    if (message) {
+
+      message.textContent =
+        "Khóa học chưa đến hạn chấm trình cuối khóa hoặc đã được chấm rồi.";
+
+      message.className =
+        "error";
+
+    }
+
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+      saveBtn.textContent =
+        "CHƯA ĐẾN HẠN CHẤM TRÌNH";
+
+    }
+
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     THÔNG TIN CUỐI KHÓA
+  ====================================================== */
+
+  const completedSessions =
+    Number(
+      dueRow.completed_sessions
+      ||
+      0
+    );
+
+
+  const totalSessions =
+    Number(
+      dueRow.purchased_sessions
+      ||
+      0
+    );
+
+
+  const packageName =
+    String(
+      dueRow.package_name
+      ||
+      registration.package_name
+      ||
+      ""
+    )
+      .trim();
+
+
+  /* =====================================================
+     ĐỔI GIAO DIỆN SANG MODE CUỐI KHÓA
+  ====================================================== */
+
+  const eyebrow =
+    document.querySelector(
+      ".eyebrow"
+    );
+
+
+  if (
+    eyebrow
+  ) {
+
+    eyebrow.textContent =
+      "CHẤM TRÌNH CUỐI KHÓA PICKDEE ACADEMY";
+
+  }
+
+
+  const sub =
+    document.querySelector(
+      ".sub"
+    );
+
+
+  if (
+    sub
+  ) {
+
+    sub.textContent =
+      `Học viên đã hoàn thành ${completedSessions}/${totalSessions} buổi của khóa ${packageName}. Coach thực hiện đánh giá trình độ cuối khóa.`;
+
+  }
+
+
+  const formHead =
+    document.querySelector(
+      "#mainContent > .card:first-child .card-head"
+    );
+
+
+  if (
+    formHead
+  ) {
+
+    formHead.textContent =
+      "🏁 Chấm trình cuối khóa";
+
+  }
+
+
+  if (
+    saveBtn
+  ) {
+
+    saveBtn.textContent =
+      "LƯU CHẤM TRÌNH CUỐI KHÓA";
+
+  }
+
+
+  /* =====================================================
+     HELPER
+  ====================================================== */
+
+  function getSelectedValues(
+    groupName
+  ) {
+
+    return Array.from(
+      document.querySelectorAll(
+        `.dropdown[data-group="${groupName}"] input:checked`
+      )
+    )
+      .map(
+        input =>
+          input.value
+      );
+
+  }
+
+
+  /* =====================================================
+     SAVE CUỐI KHÓA
+     CAPTURE = CHẶN SAVE CŨ CHỈ TRONG MODE CUỐI KHÓA
+  ====================================================== */
+
+  saveBtn.addEventListener(
+    "click",
+    async function (
+      event
+    ) {
+
+      /*
+        Chặn listener SAVE cũ.
+        Chỉ script cuối khóa này được quyền lưu.
+      */
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      message.textContent =
+        "";
+
+      message.className =
+        "";
+
+
+      /* -----------------------------------------------
+         6 TIÊU CHÍ
+      ------------------------------------------------ */
+
+      const serveReturnScore =
+        Number(
+          document
+            .getElementById(
+              "serveReturnScore"
+            )
+            .value
+        );
+
+
+      const groundstrokeScore =
+        Number(
+          document
+            .getElementById(
+              "groundstrokeScore"
+            )
+            .value
+        );
+
+
+      const dinkKitchenScore =
+        Number(
+          document
+            .getElementById(
+              "dinkKitchenScore"
+            )
+            .value
+        );
+
+
+      const transitionResetScore =
+        Number(
+          document
+            .getElementById(
+              "transitionResetScore"
+            )
+            .value
+        );
+
+
+      const movementControlScore =
+        Number(
+          document
+            .getElementById(
+              "movementControlScore"
+            )
+            .value
+        );
+
+
+      const strategyDecisionScore =
+        Number(
+          document
+            .getElementById(
+              "strategyDecisionScore"
+            )
+            .value
+        );
+
+
+      const skillValues =
+        [
+          serveReturnScore,
+          groundstrokeScore,
+          dinkKitchenScore,
+          transitionResetScore,
+          movementControlScore,
+          strategyDecisionScore
+        ];
+
+
+      const validSkills =
+        skillValues.every(
+          value =>
+            Number.isFinite(
+              value
+            )
+            &&
+            value >= 1
+            &&
+            value <= 5
+        );
+
+
+      if (
+        !validSkills
+      ) {
+
+        message.textContent =
+          "Hãy chấm đủ cả 6 tiêu chí Trình PickDee Academy.";
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------
+         NỘI DUNG ĐÁNH GIÁ
+      ------------------------------------------------ */
+
+      const strengths =
+        getSelectedValues(
+          "strengths"
+        );
+
+
+      const improvements =
+        getSelectedValues(
+          "improvements"
+        );
+
+
+      const focus =
+        getSelectedValues(
+          "focus"
+        );
+
+
+      const overallRating =
+        document
+          .getElementById(
+            "overallRating"
+          )
+          .value;
+
+
+      const extraNote =
+        document
+          .getElementById(
+            "extraNote"
+          )
+          .value
+          .trim();
+
+
+      if (
+        !overallRating
+      ) {
+
+        message.textContent =
+          "Hãy chọn Đánh giá tổng thể của Coach.";
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------
+         KIỂM TRA LẠI NGAY TRƯỚC KHI LƯU
+         CHỐNG LƯU TRÙNG
+      ------------------------------------------------ */
+
+      saveBtn.disabled =
+        true;
+
+      saveBtn.textContent =
+        "ĐANG KIỂM TRA...";
+
+
+      const {
+        data: recheckRows,
+        error: recheckError
+      } =
+        await finalSb.rpc(
+          "coach_get_students_needing_final_assessment"
+        );
+
+
+      if (
+        recheckError
+      ) {
+
+        console.error(
+          "Recheck final assessment:",
+          recheckError
+        );
+
+
+        saveBtn.disabled =
+          false;
+
+        saveBtn.textContent =
+          "LƯU CHẤM TRÌNH CUỐI KHÓA";
+
+
+        message.textContent =
+          "Không kiểm tra được trạng thái cuối khóa. Vui lòng thử lại.";
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const stillDue =
+        (
+          Array.isArray(
+            recheckRows
+          )
+            ?
+            recheckRows
+            :
+            []
+        )
+          .some(
+            row =>
+              Number(
+                row.registration_id
+              )
+              ===
+              Number(
+                registration.id
+              )
+          );
+
+
+      if (
+        !stillDue
+      ) {
+
+        saveBtn.disabled =
+          true;
+
+        saveBtn.textContent =
+          "✓ ĐÃ CHẤM TRÌNH CUỐI KHÓA";
+
+
+        message.textContent =
+          "Khóa học đã được chấm trình cuối khóa trước đó.";
+
+        message.classList.add(
+          "success"
+        );
+
+        return;
+
+      }
+
+
+      saveBtn.textContent =
+        "ĐANG LƯU...";
+
+
+      /* -----------------------------------------------
+         GHI CHÚ
+      ------------------------------------------------ */
+
+      const coachNote =
+        [
+          `Đánh giá tổng thể: ${overallRating}`,
+
+          extraNote
+            ?
+            `Ghi chú thêm: ${extraNote}`
+            :
+            ""
+        ]
+          .filter(
+            Boolean
+          )
+          .join(
+            "\n"
+          );
+
+
+      /* -----------------------------------------------
+         INSERT
+      ------------------------------------------------ */
+
+      const {
+        error: insertError
+      } =
+        await finalSb
+          .from(
+            "coach_student_notes"
+          )
+          .insert({
+
+            registration_id:
+              registration.id,
+
+            student_id:
+              registration.student_id,
+
+            coach_id:
+              coach.id,
+
+
+            strengths:
+              strengths.length
+                ?
+                strengths.join(
+                  " • "
+                )
+                :
+                null,
+
+
+            improvements:
+              improvements.length
+                ?
+                improvements.join(
+                  " • "
+                )
+                :
+                null,
+
+
+            focus_next:
+              focus.length
+                ?
+                focus.join(
+                  " • "
+                )
+                :
+                null,
+
+
+            coach_note:
+              coachNote,
+
+
+            serve_return_score:
+              serveReturnScore,
+
+            groundstroke_score:
+              groundstrokeScore,
+
+            dink_kitchen_score:
+              dinkKitchenScore,
+
+            transition_reset_score:
+              transitionResetScore,
+
+            movement_control_score:
+              movementControlScore,
+
+            strategy_decision_score:
+              strategyDecisionScore,
+
+
+            /*
+              ĐÂY LÀ PHẦN QUAN TRỌNG
+              PHÂN BIỆT ĐÁNH GIÁ CUỐI KHÓA
+            */
+
+            is_course_final:
+              true,
+
+            course_final_session_count:
+              completedSessions
+
+          });
+
+
+      if (
+        insertError
+      ) {
+
+        console.error(
+          "Save PickDee Academy final assessment:",
+          insertError
+        );
+
+
+        saveBtn.disabled =
+          false;
+
+        saveBtn.textContent =
+          "LƯU CHẤM TRÌNH CUỐI KHÓA";
+
+
+        message.textContent =
+          `Không lưu được chấm trình cuối khóa: ${insertError.message}`;
+
+        message.classList.add(
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      /* =================================================
+         THÀNH CÔNG
+      ================================================== */
+
+      saveBtn.disabled =
+        true;
+
+
+      saveBtn.textContent =
+        "✓ ĐÃ CHẤM TRÌNH CUỐI KHÓA";
+
+
+      message.textContent =
+        `✓ Đã chấm trình cuối khóa ${packageName} của PickDee Academy.`;
+
+
+      message.classList.add(
+        "success"
+      );
+
+
+      /*
+        Sau khi lưu:
+        quay về danh sách học viên.
+        Card sẽ tự đổi thành
+        ✓ ĐÃ CHẤM TRÌNH CUỐI KHÓA
+      */
+
+      setTimeout(
+        function () {
+
+          window.location.replace(
+            `./coach-students?v=${Date.now()}`
+          );
+
+        },
+        1200
+      );
+
+    },
+
+    /*
+      true = capture phase.
+      Nhờ vậy listener này chạy trước SAVE cũ.
+    */
+
+    true
+  );
+
+
+})();
+
+</script>
 <script src="./notifications.js?v=20260914-pickdee-academy-skill-v1"></script>
 
 </body>
