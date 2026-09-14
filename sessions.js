@@ -884,11 +884,9 @@ async function loadSessions() {
   body.innerHTML =
     `
       <tr>
-
         <td colspan="8">
           Đang tải lịch học...
         </td>
-
       </tr>
     `;
 
@@ -938,6 +936,8 @@ async function loadSessions() {
 
           student_id,
 
+          is_test,
+
 
           students (
 
@@ -967,7 +967,6 @@ async function loadSessions() {
 
   if (error) {
 
-
     console.error(
       error
     );
@@ -996,9 +995,48 @@ async function loadSessions() {
   }
 
 
+  /*
+    ==========================================
+    CHỈ GIỮ DỮ LIỆU REAL
+    ==========================================
+  */
+
+  const realSessions =
+    (
+      Array.isArray(data)
+        ? data
+        : []
+    )
+      .filter(
+        item => {
+
+          const registration =
+            item.registrations || {};
+
+
+          /*
+            Registration được đánh dấu TEST
+            → không hiển thị trên trang vận hành.
+          */
+
+          if (
+            registration.is_test === true
+          ) {
+
+            return false;
+
+          }
+
+
+          return true;
+
+        }
+      );
+
+
   allSessions =
     sortSessions(
-      data || []
+      realSessions
     );
 
 
