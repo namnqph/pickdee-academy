@@ -4485,6 +4485,750 @@
 })();
 
 </script>
+  <script>
+(async function () {
+
+  /* =====================================================
+     PICKDEE STUDENT HOME
+     FULL PAYMENT GATE
+
+     REAL:
+     Chỉ thanh toán đủ 100% + Đã thu
+     mới được vào luồng Coach / Đặt lịch.
+
+     TEST:
+     Dùng kết quả từ backend
+     student_registration_payment_ready().
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const bookCard =
+    document.querySelector(
+      'a[href="./student-book-session"]'
+    );
+
+
+  const coachCard =
+    document.querySelector(
+      'a[href="./change-coach"]'
+    );
+
+
+  if (
+    !bookCard
+    ||
+    !coachCard
+  ) {
+
+    console.warn(
+      "Payment Gate: không tìm thấy menu học viên."
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+
+    .pd-payment-locked {
+      border-color: rgba(255,190,70,.35) !important;
+      background:
+        linear-gradient(
+          145deg,
+          rgba(75,48,8,.28),
+          rgba(6,39,88,.74)
+        ) !important;
+    }
+
+    .pd-payment-locked:hover {
+      transform: none !important;
+      border-color: rgba(255,190,70,.45) !important;
+    }
+
+    .pd-payment-locked .menu-title {
+      color: #ffd884 !important;
+    }
+
+    .pd-payment-status {
+      margin-top: 13px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      background: rgba(255,190,70,.09);
+      border: 1px solid rgba(255,190,70,.18);
+      color: #ffd884;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .pd-payment-ready .pd-payment-status {
+      background: rgba(216,255,69,.07);
+      border-color: rgba(216,255,69,.18);
+      color: #d8ff45;
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function setCardStatus(
+    card,
+    {
+      ready = false,
+      text = "",
+      href = "#"
+    }
+  ) {
+
+    card.classList.remove(
+      "pd-payment-locked",
+      "pd-payment-ready"
+    );
+
+
+    const oldStatus =
+      card.querySelector(
+        ".pd-payment-status"
+      );
+
+
+    if (oldStatus) {
+
+      oldStatus.remove();
+
+    }
+
+
+    const status =
+      document.createElement(
+        "div"
+      );
+
+
+    status.className =
+      "pd-payment-status";
+
+
+    status.textContent =
+      text;
+
+
+    card.appendChild(
+      status
+    );
+
+
+    if (ready) {
+
+      card.classList.add(
+        "pd-payment-ready"
+      );
+
+
+      card.href =
+        href;
+
+
+      card.onclick =
+        null;
+
+    }
+    else {
+
+      card.classList.add(
+        "pd-payment-locked"
+      );
+
+
+      card.href =
+        href;
+
+
+      card.onclick =
+        null;
+
+    }
+
+  }
+
+
+  /*
+    Khóa tạm ngay khi trang vừa mở,
+    tránh học viên bấm trước khi kiểm tra xong.
+  */
+
+  setCardStatus(
+    bookCard,
+    {
+      ready: false,
+      text:
+        "⏳ Đang kiểm tra điều kiện học phí...",
+      href: "#"
+    }
+  );
+
+
+  setCardStatus(
+    coachCard,
+    {
+      ready: false,
+      text:
+        "⏳ Đang kiểm tra điều kiện học phí...",
+      href: "#"
+    }
+  );
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    setCardStatus(
+      bookCard,
+      {
+        ready: false,
+        text:
+          "⚠️ Chưa kiểm tra được học phí.",
+        href: "./student-payments"
+      }
+    );
+
+
+    setCardStatus(
+      coachCard,
+      {
+        ready: false,
+        text:
+          "⚠️ Chưa kiểm tra được học phí.",
+        href: "./student-payments"
+      }
+    );
+
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  try {
+
+    /* ===================================================
+       SESSION
+    ==================================================== */
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError
+      ||
+      !sessionData?.session
+    ) {
+
+      return;
+
+    }
+
+
+    /* ===================================================
+       CURRENT STUDENT
+    ==================================================== */
+
+    const {
+      data: studentId,
+      error: studentError
+    } =
+      await sb.rpc(
+        "current_student_id"
+      );
+
+
+    if (
+      studentError
+      ||
+      !studentId
+    ) {
+
+      throw new Error(
+        "Không xác định được hồ sơ Học viên."
+      );
+
+    }
+
+
+    /* ===================================================
+       APPROVED REGISTRATIONS
+    ==================================================== */
+
+    const {
+      data: registrationRows,
+      error: registrationError
+    } =
+      await sb
+        .from(
+          "registrations"
+        )
+        .select(`
+          id,
+          registration_code,
+          package_name,
+          coach_id,
+          status,
+          is_test,
+          created_at
+        `)
+        .eq(
+          "student_id",
+          Number(studentId)
+        )
+        .eq(
+          "status",
+          "Đã duyệt"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (registrationError) {
+
+      throw registrationError;
+
+    }
+
+
+    const registrations =
+      registrationRows || [];
+
+
+    /* ===================================================
+       CHƯA CÓ GÓI ĐÃ DUYỆT
+    ==================================================== */
+
+    if (
+      registrations.length === 0
+    ) {
+
+      setCardStatus(
+        bookCard,
+        {
+          ready: false,
+          text:
+            "🔒 Chưa có gói học Đã duyệt.",
+          href:
+            "./student-registrations"
+        }
+      );
+
+
+      setCardStatus(
+        coachCard,
+        {
+          ready: false,
+          text:
+            "🔒 Chưa có gói học Đã duyệt.",
+          href:
+            "./student-registrations"
+        }
+      );
+
+
+      return;
+
+    }
+
+
+    /* ===================================================
+       CHECK PAYMENT TỪ BACKEND
+
+       Không tự tính ở frontend.
+       Backend là nguồn quyết định cuối cùng.
+    ==================================================== */
+
+    const checked =
+      await Promise.all(
+
+        registrations.map(
+          async function (
+            registration
+          ) {
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "student_registration_payment_ready",
+                {
+                  p_registration_id:
+                    Number(
+                      registration.id
+                    )
+                }
+              );
+
+
+            if (error) {
+
+              throw error;
+
+            }
+
+
+            return {
+              ...registration,
+              payment_ready:
+                data === true
+            };
+
+          }
+        )
+
+      );
+
+
+    /* ===================================================
+       BILL ĐANG CHỜ XÁC NHẬN
+    ==================================================== */
+
+    const ids =
+      checked.map(
+        item =>
+          Number(item.id)
+      );
+
+
+    let pendingIds =
+      new Set();
+
+
+    if (
+      ids.length > 0
+    ) {
+
+      const {
+        data: pendingRows,
+        error: pendingError
+      } =
+        await sb
+          .from(
+            "payment_submissions"
+          )
+          .select(
+            "registration_id"
+          )
+          .in(
+            "registration_id",
+            ids
+          )
+          .eq(
+            "status",
+            "Chờ xác nhận"
+          );
+
+
+      if (!pendingError) {
+
+        pendingIds =
+          new Set(
+            (pendingRows || [])
+              .map(
+                row =>
+                  Number(
+                    row.registration_id
+                  )
+              )
+          );
+
+      }
+
+    }
+
+
+    /* ===================================================
+       ĐẶT BUỔI HỌC
+
+       Phải:
+       - payment_ready = true
+       - đã có Coach
+    ==================================================== */
+
+    const bookable =
+      checked.find(
+        item =>
+          item.payment_ready === true
+          &&
+          item.coach_id
+      );
+
+
+    if (bookable) {
+
+      setCardStatus(
+        bookCard,
+        {
+          ready: true,
+          text:
+            "✓ ĐÃ ĐỦ HỌC PHÍ · ĐƯỢC PHÉP ĐẶT LỊCH",
+          href:
+            "./student-book-session"
+        }
+      );
+
+    }
+    else {
+
+      const unpaidForBooking =
+        checked.find(
+          item =>
+            item.payment_ready !== true
+        );
+
+
+      const paidWithoutCoach =
+        checked.find(
+          item =>
+            item.payment_ready === true
+            &&
+            !item.coach_id
+        );
+
+
+      if (unpaidForBooking) {
+
+        const waiting =
+          pendingIds.has(
+            Number(
+              unpaidForBooking.id
+            )
+          );
+
+
+        setCardStatus(
+          bookCard,
+          {
+            ready: false,
+
+            text:
+              waiting
+
+                ? "⏳ BILL ĐÃ GỬI · CHỜ PICKDEE XÁC NHẬN"
+
+                : "🔒 PHẢI THANH TOÁN ĐỦ 100% MỚI ĐƯỢC HỌC",
+
+            href:
+              waiting
+
+                ? `./student-payment-checkout?id=${Number(
+                    unpaidForBooking.id
+                  )}`
+
+                : `./student-payment-checkout?id=${Number(
+                    unpaidForBooking.id
+                  )}`
+          }
+        );
+
+      }
+      else if (
+        paidWithoutCoach
+      ) {
+
+        setCardStatus(
+          bookCard,
+          {
+            ready: false,
+            text:
+              "✓ ĐÃ ĐỦ HỌC PHÍ · ĐANG CHỜ PHÂN COACH",
+            href:
+              "./student"
+          }
+        );
+
+      }
+      else {
+
+        setCardStatus(
+          bookCard,
+          {
+            ready: false,
+            text:
+              "🔒 CHƯA ĐỦ ĐIỀU KIỆN ĐẶT LỊCH",
+            href:
+              "./student-payments"
+          }
+        );
+
+      }
+
+    }
+
+
+    /* ===================================================
+       AI ĐỔI COACH
+
+       Chỉ xét gói Đã duyệt có Coach.
+       Chính gói đó phải payment_ready.
+    ==================================================== */
+
+    const coachRegistration =
+      checked.find(
+        item =>
+          item.coach_id
+      );
+
+
+    if (
+      coachRegistration
+      &&
+      coachRegistration.payment_ready
+        === true
+    ) {
+
+      setCardStatus(
+        coachCard,
+        {
+          ready: true,
+          text:
+            "✓ ĐÃ ĐỦ HỌC PHÍ · ĐƯỢC PHÉP ĐỔI COACH",
+          href:
+            "./change-coach"
+        }
+      );
+
+    }
+    else if (
+      coachRegistration
+    ) {
+
+      const waiting =
+        pendingIds.has(
+          Number(
+            coachRegistration.id
+          )
+        );
+
+
+      setCardStatus(
+        coachCard,
+        {
+          ready: false,
+
+          text:
+            waiting
+
+              ? "⏳ BILL ĐÃ GỬI · CHỜ PICKDEE XÁC NHẬN"
+
+              : "🔒 THANH TOÁN ĐỦ 100% TRƯỚC KHI ĐỔI COACH",
+
+          href:
+            `./student-payment-checkout?id=${Number(
+              coachRegistration.id
+            )}`
+        }
+      );
+
+    }
+    else {
+
+      setCardStatus(
+        coachCard,
+        {
+          ready: false,
+          text:
+            "🔒 CHƯA CÓ COACH ĐANG PHỤ TRÁCH",
+          href:
+            "./student"
+        }
+      );
+
+    }
+
+  }
+  catch (error) {
+
+    console.error(
+      "STUDENT HOME PAYMENT GATE:",
+      error
+    );
+
+
+    /*
+      Nếu không kiểm tra được:
+      mặc định KHÓA, không mặc định cho học.
+    */
+
+    setCardStatus(
+      bookCard,
+      {
+        ready: false,
+        text:
+          "⚠️ Chưa xác minh được học phí · TẠM KHÓA ĐẶT LỊCH",
+        href:
+          "./student-payments"
+      }
+    );
+
+
+    setCardStatus(
+      coachCard,
+      {
+        ready: false,
+        text:
+          "⚠️ Chưa xác minh được học phí · TẠM KHÓA ĐỔI COACH",
+        href:
+          "./student-payments"
+      }
+    );
+
+  }
+
+})();
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
