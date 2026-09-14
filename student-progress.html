@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    Tiến trình của tôi | PickDee Academy
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 82% 8%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 70px;
+
+      padding:
+        16px 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(3,20,45,.78);
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    #userEmail {
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .container {
+      width:
+        min(
+          1100px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        30px 0 60px;
+    }
+
+    .back {
+      display: inline-block;
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .eyebrow {
+      margin-top: 24px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin:
+        8px 0 6px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          52px
+        );
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.55;
+    }
+
+    .summary-card {
+      margin-bottom: 20px;
+
+      padding: 20px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(216,255,69,.26);
+
+      background:
+        rgba(216,255,69,.055);
+    }
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: .05em;
+    }
+
+    .current-level {
+      margin-top: 6px;
+
+      color: #d8ff45;
+
+      font-size:
+        clamp(
+          27px,
+          5vw,
+          38px
+        );
+
+      font-weight: 900;
+    }
+
+    .current-score {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 14px;
+    }
+
+    .reference-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 10px;
+
+      margin-top: 16px;
+    }
+
+    .reference-box {
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(0,0,0,.13);
+    }
+
+    .reference-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 9px;
+    }
+
+    .reference-value {
+      margin-top: 5px;
+
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .progress-area {
+      margin-top: 18px;
+
+      padding-top: 15px;
+
+      border-top:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .progress-title {
+      color:
+        rgba(255,255,255,.50);
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .progress-line {
+      margin-top: 8px;
+
+      color: #d8ff45;
+
+      font-size: 18px;
+      font-weight: 900;
+
+      line-height: 1.5;
+    }
+
+    .history-title {
+      margin:
+        28px 0 14px;
+
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .note-card {
+      position: relative;
+
+      padding: 20px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.11);
+
+      background:
+        rgba(7,39,84,.78);
+    }
+
+    .note-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+
+      gap: 15px;
+    }
+
+    .note-date {
+      color:
+        rgba(255,255,255,.56);
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .note-level {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .coach-name {
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.10);
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      text-align: right;
+    }
+
+    .score-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          4,
+          minmax(0,1fr)
+        );
+
+      gap: 8px;
+
+      margin-top: 16px;
+    }
+
+    .score-box {
+      padding: 11px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(255,255,255,.045);
+    }
+
+    .score-label {
+      color:
+        rgba(255,255,255,.43);
+
+      font-size: 8px;
+
+      line-height: 1.35;
+    }
+
+    .score-value {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .skill-section {
+      margin-top: 15px;
+
+      padding-top: 15px;
+
+      border-top:
+        1px solid rgba(255,255,255,.07);
+    }
+
+    .skill-section-title {
+      margin-bottom: 9px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 900;
+
+      letter-spacing: .04em;
+    }
+
+    .skill-components {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 7px;
+    }
+
+    .component {
+      padding: 9px 10px;
+
+      border-radius: 8px;
+
+      background:
+        rgba(0,0,0,.12);
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size: 11px;
+    }
+
+    .component strong {
+      float: right;
+
+      color: #d8ff45;
+    }
+
+    .feedback-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(0,1fr)
+        );
+
+      gap: 10px;
+
+      margin-top: 15px;
+    }
+
+    .feedback-box {
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+    .feedback-label {
+      margin-bottom: 6px;
+
+      color:
+        rgba(255,255,255,.43);
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .feedback-value {
+      color:
+        rgba(255,255,255,.88);
+
+      font-size: 12px;
+      line-height: 1.5;
+
+      white-space: pre-wrap;
+    }
+
+    .coach-note {
+      margin-top: 12px;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(216,255,69,.045);
+
+      color:
+        rgba(255,255,255,.78);
+
+      font-size: 12px;
+      line-height: 1.55;
+
+      white-space: pre-wrap;
+    }
+
+    .disclaimer {
+      margin-top: 10px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .empty {
+      padding: 40px 20px;
+
+      border-radius: 15px;
+
+      border:
+        1px dashed rgba(255,255,255,.16);
+
+      color:
+        rgba(255,255,255,.55);
+
+      text-align: center;
+    }
+
+    .error {
+      color: #ffabab;
+    }
+
+    @media(max-width:760px) {
+
+      .topbar {
+        padding:
+          14px 16px;
+      }
+
+      #userEmail {
+        display: none;
+      }
+
+      .score-grid {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
+      }
+
+      .feedback-grid,
+      .skill-components,
+      .reference-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .note-top {
+        flex-direction: column;
+      }
+
+      .coach-name {
+        text-align: left;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee<span>Academy</span>
+  </div>
+
+  <div id="userEmail"></div>
+
+</header>
+
+
+<main class="container">
+
+  <a
+    href="./student"
+    class="back"
+  >
+    ← Khu vực Học viên
+  </a>
+
+
+  <div class="eyebrow">
+    TIẾN TRÌNH PICKDEE ACADEMY
+  </div>
+
+
+  <h1>
+    Tiến trình của tôi
+  </h1>
+
+
+  <div class="subtitle">
+    Theo dõi sự tiến bộ qua từng lần Coach đánh giá.
+    Các đánh giá cũ vẫn được giữ lại khi bạn đổi Coach.
+  </div>
+
+
+  <section
+    id="summary"
+    class="summary-card"
+    style="display:none;"
+  >
+
+    <div class="summary-label">
+      TRÌNH ĐỘ HIỆN TẠI
+    </div>
+
+    <div
+      id="currentLevel"
+      class="current-level"
+    >
+      —
+    </div>
+
+    <div
+      id="currentScore"
+      class="current-score"
+    >
+      —
+    </div>
+
+
+    <div class="reference-grid">
+
+      <div class="reference-box">
+
+        <div class="reference-label">
+          SPORTCONNECT THAM CHIẾU
+        </div>
+
+        <div
+          id="currentSportConnect"
+          class="reference-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="reference-box">
+
+        <div class="reference-label">
+          DUPR THAM CHIẾU
+        </div>
+
+        <div
+          id="currentDupr"
+          class="reference-value"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="progress-area">
+
+      <div class="progress-title">
+        HÀNH TRÌNH TRÌNH ĐỘ
+      </div>
+
+      <div
+        id="progressLine"
+        class="progress-line"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="disclaimer">
+      SportConnect và DUPR là mức tham chiếu từ đánh giá kỹ thuật
+      PickDee Academy, không phải rating chính thức từ hai nền tảng.
+    </div>
+
+  </section>
+
+
+  <div class="history-title">
+    📚 Lịch sử đánh giá
+  </div>
+
+
+  <div
+    id="timeline"
+    class="timeline"
+  >
+
+    <div class="empty">
+      Đang tải tiến trình...
+    </div>
+
+  </div>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const timeline =
+    document.getElementById(
+      "timeline"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    timeline.innerHTML =
+      `
+        <div class="empty error">
+          Không tải được cấu hình PickDee Academy.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function cleanLevel(value) {
+
+    const text =
+      String(
+        value || ""
+      );
+
+
+    const match =
+      text.match(
+        /([0-9]+(?:\.[0-9]+)?)/g
+      );
+
+
+    if (
+      !match
+      ||
+      match.length === 0
+    ) {
+
+      return text || "—";
+    }
+
+
+    return match[
+      match.length - 1
+    ];
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await sb.auth.getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    window.location.replace(
+      "./?v=login"
+    );
+
+    return;
+  }
+
+
+  const user =
+    userData.user;
+
+
+  document
+    .getElementById(
+      "userEmail"
+    )
+    .textContent =
+      user.email || "";
+
+
+  /* =====================================================
+     PROFILE
+  ====================================================== */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  const role =
+    String(
+      profile?.role || ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    profileError
+    ||
+    ![
+      "student",
+      "hocvien",
+      "học viên"
+    ].includes(role)
+  ) {
+
+    window.location.replace(
+      "./"
+    );
+
+    return;
+  }
+
+
+  /* =====================================================
+     LOAD PROGRESS
+  ====================================================== */
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "student_get_my_skill_progress"
+    );
+
+
+  if (error) {
+
+    console.error(
+      "student_get_my_skill_progress:",
+      error
+    );
+
+
+    timeline.innerHTML =
+      `
+        <div class="empty error">
+          Không tải được lịch sử tiến trình.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  const rows =
+    Array.isArray(data)
+      ?
+      data
+      :
+      [];
+
+
+  if (
+    rows.length === 0
+  ) {
+
+    timeline.innerHTML =
+      `
+        <div class="empty">
+          Bạn chưa có đánh giá trình PickDee Academy.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  /* =====================================================
+     SUMMARY
+  ====================================================== */
+
+  const latest =
+    rows[0];
+
+
+  document
+    .getElementById(
+      "summary"
+    )
+    .style.display =
+      "block";
+
+
+  document
+    .getElementById(
+      "currentLevel"
+    )
+    .textContent =
+      latest.skill_level
+      ||
+      "Chưa chấm";
+
+
+  document
+    .getElementById(
+      "currentScore"
+    )
+    .textContent =
+      latest.skill_score !== null
+      &&
+      latest.skill_score !== undefined
+      ?
+      `Điểm kỹ thuật PickDee Academy: ${latest.skill_score} / 100`
+      :
+      "Chưa có điểm kỹ thuật";
+
+
+  document
+    .getElementById(
+      "currentSportConnect"
+    )
+    .textContent =
+      latest.sportconnect_reference
+      ||
+      "Chưa có";
+
+
+  document
+    .getElementById(
+      "currentDupr"
+    )
+    .textContent =
+      latest.dupr_reference
+      ||
+      "Chưa có";
+
+
+  /* =====================================================
+     HÀNH TRÌNH
+  ====================================================== */
+
+  const levels =
+    rows
+      .slice()
+      .reverse()
+      .map(
+        row =>
+          cleanLevel(
+            row.skill_level
+          )
+      )
+      .filter(Boolean);
+
+
+  const progressLevels =
+    [];
+
+
+  levels.forEach(
+    level => {
+
+      if (
+        progressLevels.length === 0
+        ||
+        progressLevels[
+          progressLevels.length - 1
+        ]
+        !==
+        level
+      ) {
+
+        progressLevels.push(
+          level
+        );
+
+      }
+
+    }
+  );
+
+
+  document
+    .getElementById(
+      "progressLine"
+    )
+    .textContent =
+      progressLevels.join(
+        "  →  "
+      );
+
+
+  /* =====================================================
+     HISTORY
+  ====================================================== */
+
+  timeline.innerHTML =
+    rows
+      .map(
+        row => {
+
+
+          const components =
+            [
+              [
+                "Serve & Return",
+                row.serve_return_score
+              ],
+              [
+                "Forehand / Backhand",
+                row.groundstroke_score
+              ],
+              [
+                "Dink / Kitchen",
+                row.dink_kitchen_score
+              ],
+              [
+                "Drop / Reset",
+                row.transition_reset_score
+              ],
+              [
+                "Di chuyển",
+                row.movement_control_score
+              ],
+              [
+                "Chiến thuật",
+                row.strategy_decision_score
+              ]
+            ];
+
+
+          return `
+
+            <article class="note-card">
+
+
+              <div class="note-top">
+
+                <div>
+
+                  <div class="note-date">
+                    ${escapeHtml(
+                      formatDate(
+                        row.created_at
+                      )
+                    )}
+                  </div>
+
+                  <div class="note-level">
+                    ${escapeHtml(
+                      row.skill_level
+                      ||
+                      "Chưa chấm trình"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="coach-name">
+                  Coach:
+                  ${escapeHtml(
+                    row.coach_name
+                    ||
+                    "PickDee Academy"
+                  )}
+                </div>
+
+              </div>
+
+
+              <div class="score-grid">
+
+
+                <div class="score-box">
+
+                  <div class="score-label">
+                    ĐIỂM KỸ THUẬT
+                  </div>
+
+                  <div class="score-value">
+                    ${
+                      row.skill_score
+                      !== null
+                      &&
+                      row.skill_score
+                      !== undefined
+                      ?
+                      `${escapeHtml(
+                        row.skill_score
+                      )} / 100`
+                      :
+                      "—"
+                    }
+                  </div>
+
+                </div>
+
+
+                <div class="score-box">
+
+                  <div class="score-label">
+                    TRÌNH PICKDEE ACADEMY
+                  </div>
+
+                  <div class="score-value">
+                    ${escapeHtml(
+                      cleanLevel(
+                        row.skill_level
+                      )
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="score-box">
+
+                  <div class="score-label">
+                    SPORTCONNECT THAM CHIẾU
+                  </div>
+
+                  <div class="score-value">
+                    ${escapeHtml(
+                      row.sportconnect_reference
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="score-box">
+
+                  <div class="score-label">
+                    DUPR THAM CHIẾU
+                  </div>
+
+                  <div class="score-value">
+                    ${escapeHtml(
+                      row.dupr_reference
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+              </div>
+
+
+              <div class="skill-section">
+
+                <div class="skill-section-title">
+                  6 TIÊU CHÍ KỸ THUẬT
+                </div>
+
+
+                <div class="skill-components">
+
+                  ${components
+                    .map(
+                      item => `
+
+                        <div class="component">
+
+                          ${escapeHtml(
+                            item[0]
+                          )}
+
+                          <strong>
+                            ${escapeHtml(
+                              item[1]
+                              ??
+                              "—"
+                            )}
+                          </strong>
+
+                        </div>
+
+                      `
+                    )
+                    .join("")
+                  }
+
+                </div>
+
+              </div>
+
+
+              <div class="feedback-grid">
+
+
+                <div class="feedback-box">
+
+                  <div class="feedback-label">
+                    ĐIỂM MẠNH
+                  </div>
+
+                  <div class="feedback-value">
+                    ${escapeHtml(
+                      row.strengths
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="feedback-box">
+
+                  <div class="feedback-label">
+                    CẦN CẢI THIỆN
+                  </div>
+
+                  <div class="feedback-value">
+                    ${escapeHtml(
+                      row.improvements
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="feedback-box">
+
+                  <div class="feedback-label">
+                    NỘI DUNG TẬP TIẾP
+                  </div>
+
+                  <div class="feedback-value">
+                    ${escapeHtml(
+                      row.focus_next
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+              </div>
+
+
+              ${
+                row.coach_note
+                ?
+                `
+                  <div class="coach-note">
+                    ${escapeHtml(
+                      row.coach_note
+                    )}
+                  </div>
+                `
+                :
+                ""
+              }
+
+
+            </article>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+})();
+
+</script>
+
+
+<script src="./notifications.js?v=20260914-student-progress"></script>
+
+
+</body>
+</html>
