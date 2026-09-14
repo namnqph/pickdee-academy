@@ -2948,6 +2948,955 @@
 ====================================================== -->
 
 <script
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     ADMIN TASKS - COACH OPERATIONAL BACKLOG
+     BỔ SUNG:
+     1. BUỔI COACH CHƯA ĐIỂM DANH
+     2. CHẤM TRÌNH CUỐI KHÓA
+========================================================== -->
+
+<style>
+
+  #pickdeeCoachBacklogTasks {
+    margin-top: 18px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .pickdee-coach-task-section {
+    border:
+      1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    overflow: hidden;
+    background:
+      rgba(7,31,60,.76);
+  }
+
+  .pickdee-coach-task-head {
+    min-height: 62px;
+    padding:
+      0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom:
+      1px solid rgba(255,255,255,.10);
+  }
+
+  .pickdee-coach-task-title {
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  .pickdee-coach-task-badge {
+    min-width: 32px;
+    min-height: 32px;
+    padding:
+      0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background:
+      rgba(255,255,255,.07);
+    color: #d8ff45;
+    font-weight: 1000;
+  }
+
+  .pickdee-coach-task-body {
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .pickdee-coach-task-empty {
+    padding: 18px;
+    color:
+      rgba(255,255,255,.54);
+    text-align: center;
+  }
+
+  .pickdee-coach-task-row {
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    border:
+      1px solid rgba(255,255,255,.09);
+    border-radius: 12px;
+    background:
+      rgba(255,255,255,.025);
+  }
+
+  .pickdee-coach-task-name {
+    font-weight: 900;
+  }
+
+  .pickdee-coach-task-meta {
+    margin-top: 5px;
+    color:
+      rgba(255,255,255,.50);
+    font-size: 11px;
+  }
+
+  .pickdee-coach-task-count {
+    color: #ff9a9a;
+    font-size: 22px;
+    font-weight: 1000;
+  }
+
+  .pickdee-coach-task-link {
+    min-height: 36px;
+    padding:
+      0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border:
+      1px solid rgba(216,255,69,.32);
+    border-radius: 8px;
+    color: #d8ff45;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  @media(max-width:650px) {
+
+    .pickdee-coach-task-row {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     KHÔNG TẠO TRÙNG
+  ====================================================== */
+
+  if (
+    document.getElementById(
+      "pickdeeCoachBacklogTasks"
+    )
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.error(
+      "PickDee Admin Tasks: thiếu cấu hình Supabase."
+    );
+
+    return;
+
+  }
+
+
+  const coachTaskSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     CHÈN 2 NHÓM MỚI CUỐI TRANG
+  ====================================================== */
+
+  const root =
+    document.createElement(
+      "div"
+    );
+
+
+  root.id =
+    "pickdeeCoachBacklogTasks";
+
+
+  root.innerHTML = `
+
+    <section class="pickdee-coach-task-section">
+
+      <div class="pickdee-coach-task-head">
+
+        <div class="pickdee-coach-task-title">
+          📋 Buổi Coach chưa điểm danh
+        </div>
+
+        <div
+          id="pickdeeOverdueAttendanceBadge"
+          class="pickdee-coach-task-badge"
+        >
+          —
+        </div>
+
+      </div>
+
+      <div
+        id="pickdeeOverdueAttendanceList"
+        class="pickdee-coach-task-body"
+      >
+        <div class="pickdee-coach-task-empty">
+          Đang kiểm tra...
+        </div>
+      </div>
+
+    </section>
+
+
+    <section class="pickdee-coach-task-section">
+
+      <div class="pickdee-coach-task-head">
+
+        <div class="pickdee-coach-task-title">
+          🎯 Chấm trình cuối khóa
+        </div>
+
+        <div
+          id="pickdeeFinalAssessmentBadge"
+          class="pickdee-coach-task-badge"
+        >
+          —
+        </div>
+
+      </div>
+
+      <div
+        id="pickdeeFinalAssessmentList"
+        class="pickdee-coach-task-body"
+      >
+        <div class="pickdee-coach-task-empty">
+          Đang kiểm tra...
+        </div>
+      </div>
+
+    </section>
+
+  `;
+
+
+  const main =
+    document.querySelector(
+      "main"
+    );
+
+
+  if (main) {
+
+    main.appendChild(
+      root
+    );
+
+  }
+  else {
+
+    document.body.appendChild(
+      root
+    );
+
+  }
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function normalizedText(
+    value
+  ) {
+
+    return String(
+      value || ""
+    )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim()
+      .toLowerCase();
+
+  }
+
+
+  /* =====================================================
+     TÌM CARD "TỔNG VIỆC" HIỆN TẠI
+     VÀ ĐỔI SỐ 0 -> SỐ THẬT
+  ====================================================== */
+
+  function updateExistingTotalMetric(
+    total
+  ) {
+
+    const candidates =
+      [
+        ...document.querySelectorAll(
+          "div,span,p"
+        )
+      ];
+
+
+    const label =
+      candidates.find(
+        element =>
+          element.children.length === 0
+          &&
+          normalizedText(
+            element.textContent
+          )
+          ===
+          "tổng việc"
+      );
+
+
+    if (!label) {
+      return;
+    }
+
+
+    let box =
+      label.parentElement;
+
+
+    for (
+      let level = 0;
+      level < 5 && box;
+      level += 1,
+      box = box.parentElement
+    ) {
+
+
+      const numericElements =
+        [
+          ...box.querySelectorAll(
+            "div,span,strong,b"
+          )
+        ]
+          .filter(
+            element =>
+              element !== label
+              &&
+              element.children.length === 0
+              &&
+              /^\d+$/.test(
+                element.textContent.trim()
+              )
+          );
+
+
+      if (
+        numericElements.length
+      ) {
+
+        numericElements[0].textContent =
+          String(
+            total
+          );
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  /* =====================================================
+     DÒNG "ĐÃ CẬP NHẬT X VIỆC"
+  ====================================================== */
+
+  function updateStatusText(
+    total
+  ) {
+
+    const leaves =
+      [
+        ...document.querySelectorAll(
+          "div,p,span"
+        )
+      ]
+        .filter(
+          element =>
+            element.children.length === 0
+        );
+
+
+    for (
+      const element
+      of leaves
+    ) {
+
+
+      const text =
+        element.textContent
+        ||
+        "";
+
+
+      if (
+        /đã cập nhật\s+\d+\s+việc/i.test(
+          text
+        )
+      ) {
+
+        element.textContent =
+          text.replace(
+            /đã cập nhật\s+\d+\s+việc/i,
+            `Đã cập nhật ${total} việc`
+          );
+
+        break;
+
+      }
+
+    }
+
+
+    /*
+      Banner xanh "không có việc"
+    */
+
+    const emptyBanner =
+      leaves.find(
+        element =>
+          normalizedText(
+            element.textContent
+          )
+            .includes(
+              "hiện không có việc nào cần admin xử lý"
+            )
+      );
+
+
+    if (
+      emptyBanner
+      &&
+      total > 0
+    ) {
+
+      emptyBanner.textContent =
+        `⚠ Hiện có ${total} việc cần Admin theo dõi.`;
+
+
+      const parent =
+        emptyBanner.parentElement;
+
+
+      if (parent) {
+
+        parent.style.borderColor =
+          "rgba(255,142,142,.38)";
+
+        parent.style.background =
+          "rgba(255,100,100,.08)";
+
+      }
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER COACH
+  ====================================================== */
+
+  function renderRows(
+    rows,
+    field,
+    emptyText
+  ) {
+
+    const filtered =
+      rows.filter(
+        row =>
+          Number(
+            row[field]
+            ||
+            0
+          )
+          >
+          0
+      );
+
+
+    if (
+      filtered.length === 0
+    ) {
+
+      return `
+
+        <div class="pickdee-coach-task-empty">
+          ✅ ${escapeHtml(emptyText)}
+        </div>
+
+      `;
+
+    }
+
+
+    return filtered
+      .map(
+        row => {
+
+          const count =
+            Number(
+              row[field]
+              ||
+              0
+            );
+
+
+          return `
+
+            <div class="pickdee-coach-task-row">
+
+
+              <div>
+
+                <div class="pickdee-coach-task-name">
+
+                  ${
+                    escapeHtml(
+                      row.coach_name
+                      ||
+                      "Coach"
+                    )
+                  }
+
+                </div>
+
+
+                <div class="pickdee-coach-task-meta">
+
+                  ${
+                    escapeHtml(
+                      row.coach_code
+                      ||
+                      "—"
+                    )
+                  }
+
+                  ${
+                    row.coach_email
+                      ?
+                      " • "
+                      +
+                      escapeHtml(
+                        row.coach_email
+                      )
+                      :
+                      ""
+                  }
+
+                </div>
+
+              </div>
+
+
+              <div
+                style="
+                  display:flex;
+                  align-items:center;
+                  gap:12px;
+                "
+              >
+
+                <div class="pickdee-coach-task-count">
+                  ${count}
+                </div>
+
+
+                <a
+                  class="pickdee-coach-task-link"
+                  href="./admin-coach-backlog"
+                >
+                  XỬ LÝ →
+                </a>
+
+              </div>
+
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join(
+        ""
+      );
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadCoachOperationalTasks() {
+
+
+    const {
+      data,
+      error
+    } =
+      await coachTaskSb.rpc(
+        "admin_get_coach_operational_backlog"
+      );
+
+
+    if (error) {
+
+      console.error(
+        "Admin Tasks - Coach backlog:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    const rows =
+      Array.isArray(
+        data
+      )
+        ?
+        data
+        :
+        [];
+
+
+    /* ===================================================
+       CHỈ CỘNG 2 NHÓM NÀY
+
+       KHÔNG cộng pending_session_requests
+       vì luồng Yêu cầu lịch đã có ở Admin Tasks cũ.
+    ==================================================== */
+
+    const attendanceTotal =
+      rows.reduce(
+        (
+          sum,
+          row
+        ) =>
+          sum
+          +
+          Number(
+            row.overdue_attendance
+            ||
+            0
+          ),
+        0
+      );
+
+
+    const finalTotal =
+      rows.reduce(
+        (
+          sum,
+          row
+        ) =>
+          sum
+          +
+          Number(
+            row.pending_final_assessments
+            ||
+            0
+          ),
+        0
+      );
+
+
+    /* ===================================================
+       LẤY TỔNG CŨ CỦA ADMIN TASKS
+
+       Nếu hiện tại = 0 thì với dữ liệu đang test:
+       0 + 1 + 0 = 1
+    ==================================================== */
+
+    let oldAdminTotal =
+      0;
+
+
+    const totalLabels =
+      [
+        ...document.querySelectorAll(
+          "div,span,p"
+        )
+      ];
+
+
+    const totalLabel =
+      totalLabels.find(
+        element =>
+          element.children.length === 0
+          &&
+          normalizedText(
+            element.textContent
+          )
+          ===
+          "tổng việc"
+      );
+
+
+    if (
+      totalLabel
+    ) {
+
+      let box =
+        totalLabel.parentElement;
+
+
+      for (
+        let level = 0;
+        level < 5 && box;
+        level += 1,
+        box = box.parentElement
+      ) {
+
+
+        const numberElement =
+          [
+            ...box.querySelectorAll(
+              "div,span,strong,b"
+            )
+          ]
+            .find(
+              element =>
+                element !== totalLabel
+                &&
+                element.children.length === 0
+                &&
+                /^\d+$/.test(
+                  element.textContent.trim()
+                )
+            );
+
+
+        if (
+          numberElement
+        ) {
+
+          oldAdminTotal =
+            Number(
+              numberElement.textContent
+              ||
+              0
+            );
+
+          break;
+
+        }
+
+      }
+
+    }
+
+
+    /*
+      Chống cộng lặp khi hàm chạy lại.
+
+      Sau lần đầu ta lưu tổng Admin gốc.
+    */
+
+    if (
+      window.PICKDEE_ADMIN_BASE_TASK_TOTAL
+      ===
+      undefined
+    ) {
+
+      window.PICKDEE_ADMIN_BASE_TASK_TOTAL =
+        oldAdminTotal;
+
+    }
+
+
+    const baseTotal =
+      Number(
+        window.PICKDEE_ADMIN_BASE_TASK_TOTAL
+        ||
+        0
+      );
+
+
+    const total =
+      baseTotal
+      +
+      attendanceTotal
+      +
+      finalTotal;
+
+
+    /* ===================================================
+       BADGE
+    ==================================================== */
+
+    document
+      .getElementById(
+        "pickdeeOverdueAttendanceBadge"
+      )
+      .textContent =
+        String(
+          attendanceTotal
+        );
+
+
+    document
+      .getElementById(
+        "pickdeeFinalAssessmentBadge"
+      )
+      .textContent =
+        String(
+          finalTotal
+        );
+
+
+    /* ===================================================
+       DANH SÁCH
+    ==================================================== */
+
+    document
+      .getElementById(
+        "pickdeeOverdueAttendanceList"
+      )
+      .innerHTML =
+        renderRows(
+          rows,
+          "overdue_attendance",
+          "Không có Coach còn buổi quá giờ chưa điểm danh."
+        );
+
+
+    document
+      .getElementById(
+        "pickdeeFinalAssessmentList"
+      )
+      .innerHTML =
+        renderRows(
+          rows,
+          "pending_final_assessments",
+          "Không có học viên cần Coach chấm trình cuối khóa."
+        );
+
+
+    /* ===================================================
+       ĐỒNG BỘ TỔNG VIỆC TRÊN TRANG
+    ==================================================== */
+
+    updateExistingTotalMetric(
+      total
+    );
+
+
+    updateStatusText(
+      total
+    );
+
+
+    console.log(
+      "Admin Tasks synced:",
+      {
+        baseAdminTasks:
+          baseTotal,
+
+        coachOverdueAttendance:
+          attendanceTotal,
+
+        coachFinalAssessment:
+          finalTotal,
+
+        total:
+          total
+      }
+    );
+
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCoachOperationalTasks();
+
+
+  setInterval(
+    loadCoachOperationalTasks,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCoachOperationalTasks
+  );
+
+
+})();
+
+</script>
   src="./notifications.js?v=20260913-coach-applications"
 ></script>
 
