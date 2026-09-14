@@ -379,6 +379,949 @@
 </main>
 
 
+<script>
+(async function () {
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+  window.sb = sb;
+
+  window.PICKDEE_NOTIFICATION_ROLE =
+    "student";
+
+
+  /* =====================================================
+     STYLE NÚT THANH TOÁN
+  ====================================================== */
+
+  const style =
+    document.createElement("style");
+
+  style.textContent = `
+
+    .payment-action {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+
+    .pay-now-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 20px;
+      border-radius: 12px;
+      background: #d8ff45;
+      color: #06162f;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(216,255,69,.16);
+    }
+
+    .pay-now-btn:hover {
+      filter: brightness(1.04);
+    }
+
+    .payment-waiting {
+      display: inline-block;
+      padding: 11px 15px;
+      border-radius: 12px;
+      background: rgba(255,207,112,.12);
+      border: 1px solid rgba(255,207,112,.28);
+      color: #ffcf70;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .payment-complete {
+      display: inline-block;
+      padding: 11px 15px;
+      border-radius: 12px;
+      background: rgba(216,255,69,.10);
+      border: 1px solid rgba(216,255,69,.25);
+      color: #d8ff45;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 700px) {
+
+      .pay-now-btn,
+      .payment-waiting,
+      .payment-complete {
+        width: 100%;
+        text-align: center;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    const parts =
+      String(value)
+        .split("-");
+
+    if (parts.length !== 3) {
+      return value;
+    }
+
+    return (
+      parts[2]
+      +
+      "/"
+      +
+      parts[1]
+      +
+      "/"
+      +
+      parts[0]
+    );
+
+  }
+
+
+  function setMessage(message) {
+
+    document.getElementById(
+      "message"
+    ).textContent =
+      message || "";
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  const {
+    data: sessionData,
+    error: sessionError
+  } =
+    await sb.auth.getSession();
+
+
+  if (
+    sessionError
+    ||
+    !sessionData?.session
+  ) {
+
+    window.location.href =
+      "./login";
+
+    return;
+
+  }
+
+
+  const user =
+    sessionData.session.user;
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    user.email || "";
+
+
+  document.getElementById(
+    "logoutBtn"
+  ).addEventListener(
+    "click",
+    async function () {
+
+      await sb.auth.signOut();
+
+      window.location.href =
+        "./login";
+
+    }
+  );
+
+
+  /* =====================================================
+     TÌM HỌC VIÊN HIỆN TẠI
+  ====================================================== */
+
+  let student = null;
+
+
+  const {
+    data: studentByAuth,
+    error: studentAuthError
+  } =
+    await sb
+      .from("students")
+      .select(
+        "id,student_code,full_name,email,auth_user_id"
+      )
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (!studentAuthError) {
+
+    student =
+      studentByAuth || null;
+
+  }
+
+
+  /*
+    Hồ sơ cũ có thể chưa có auth_user_id.
+    Khi đó dùng email làm phương án dự phòng.
+  */
+
+  if (
+    !student
+    &&
+    user.email
+  ) {
+
+    const {
+      data: studentByEmail,
+      error: studentEmailError
+    } =
+      await sb
+        .from("students")
+        .select(
+          "id,student_code,full_name,email,auth_user_id"
+        )
+        .ilike(
+          "email",
+          user.email
+        )
+        .maybeSingle();
+
+
+    if (!studentEmailError) {
+
+      student =
+        studentByEmail || null;
+
+    }
+
+  }
+
+
+  if (!student) {
+
+    setMessage(
+      "Không tìm thấy hồ sơ học viên của tài khoản này."
+    );
+
+    document.getElementById(
+      "registrationList"
+    ).innerHTML =
+      `<div class="empty">
+        Chưa có dữ liệu học viên.
+      </div>`;
+
+    document.getElementById(
+      "paymentBody"
+    ).innerHTML =
+      `<tr>
+        <td colspan="6">
+          Chưa có dữ liệu.
+        </td>
+      </tr>`;
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     LOAD ĐĂNG KÝ THẬT
+     is_test = false là điều kiện duy nhất phân biệt REAL/TEST
+  ====================================================== */
+
+  const {
+    data: registrations,
+    error: registrationError
+  } =
+    await sb
+      .from("registrations")
+      .select(`
+        id,
+        registration_code,
+        package_name,
+        tuition_fee,
+        status,
+        created_at
+      `)
+      .eq(
+        "student_id",
+        student.id
+      )
+      .eq(
+        "is_test",
+        false
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (registrationError) {
+
+    console.error(
+      registrationError
+    );
+
+    setMessage(
+      "Không tải được học phí theo gói."
+    );
+
+    return;
+
+  }
+
+
+  const realRegistrations =
+    Array.isArray(registrations)
+      ? registrations
+      : [];
+
+
+  const registrationIds =
+    realRegistrations.map(
+      row => Number(row.id)
+    );
+
+
+  /* =====================================================
+     LOAD LỊCH SỬ ĐÃ THU
+  ====================================================== */
+
+  let payments = [];
+
+
+  if (
+    registrationIds.length > 0
+  ) {
+
+    const {
+      data: paymentData,
+      error: paymentError
+    } =
+      await sb
+        .from("tuition_payments")
+        .select(`
+          id,
+          payment_code,
+          registration_id,
+          amount,
+          payment_date,
+          payment_method,
+          status,
+          created_at
+        `)
+        .in(
+          "registration_id",
+          registrationIds
+        )
+        .order(
+          "payment_date",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (paymentError) {
+
+      console.error(
+        paymentError
+      );
+
+      setMessage(
+        "Không tải được lịch sử thanh toán."
+      );
+
+    }
+    else {
+
+      payments =
+        Array.isArray(paymentData)
+          ? paymentData
+          : [];
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD BILL ĐANG CHỜ ADMIN
+  ====================================================== */
+
+  let pendingRegistrationIds =
+    new Set();
+
+
+  if (
+    registrationIds.length > 0
+  ) {
+
+    const {
+      data: pendingData,
+      error: pendingError
+    } =
+      await sb
+        .from(
+          "payment_submissions"
+        )
+        .select(
+          "registration_id,status"
+        )
+        .in(
+          "registration_id",
+          registrationIds
+        )
+        .eq(
+          "status",
+          "Chờ xác nhận"
+        );
+
+
+    if (pendingError) {
+
+      console.warn(
+        "Không tải được bill chờ xác nhận:",
+        pendingError
+      );
+
+    }
+    else {
+
+      pendingRegistrationIds =
+        new Set(
+          (pendingData || []).map(
+            row =>
+              Number(
+                row.registration_id
+              )
+          )
+        );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     TỔNG ĐÃ THU THEO ĐĂNG KÝ
+  ====================================================== */
+
+  const paidByRegistration =
+    new Map();
+
+
+  for (const payment of payments) {
+
+    if (
+      payment.status !==
+      "Đã thu"
+    ) {
+      continue;
+    }
+
+
+    const registrationId =
+      Number(
+        payment.registration_id
+      );
+
+
+    const oldValue =
+      Number(
+        paidByRegistration.get(
+          registrationId
+        )
+        ||
+        0
+      );
+
+
+    paidByRegistration.set(
+      registrationId,
+      oldValue
+      +
+      Number(
+        payment.amount
+        ||
+        0
+      )
+    );
+
+  }
+
+
+  /* =====================================================
+     SUMMARY
+  ====================================================== */
+
+  let totalTuition =
+    0;
+
+  let totalPaid =
+    0;
+
+
+  for (
+    const registration
+    of realRegistrations
+  ) {
+
+    const tuition =
+      Number(
+        registration.tuition_fee
+        ||
+        0
+      );
+
+
+    const paid =
+      Number(
+        paidByRegistration.get(
+          Number(
+            registration.id
+          )
+        )
+        ||
+        0
+      );
+
+
+    totalTuition +=
+      tuition;
+
+    totalPaid +=
+      paid;
+
+  }
+
+
+  const totalDebt =
+    Math.max(
+      totalTuition
+      -
+      totalPaid,
+      0
+    );
+
+
+  document.getElementById(
+    "totalTuition"
+  ).textContent =
+    money(
+      totalTuition
+    );
+
+
+  document.getElementById(
+    "totalPaid"
+  ).textContent =
+    money(
+      totalPaid
+    );
+
+
+  document.getElementById(
+    "totalDebt"
+  ).textContent =
+    money(
+      totalDebt
+    );
+
+
+  /* =====================================================
+     RENDER GÓI HỌC
+  ====================================================== */
+
+  const registrationList =
+    document.getElementById(
+      "registrationList"
+    );
+
+
+  if (
+    realRegistrations.length === 0
+  ) {
+
+    registrationList.innerHTML =
+      `<div class="empty">
+        Bạn chưa có đăng ký học nào.
+      </div>`;
+
+  }
+  else {
+
+    registrationList.innerHTML =
+      realRegistrations
+        .map(
+          registration => {
+
+            const id =
+              Number(
+                registration.id
+              );
+
+
+            const tuition =
+              Number(
+                registration.tuition_fee
+                ||
+                0
+              );
+
+
+            const paid =
+              Number(
+                paidByRegistration.get(
+                  id
+                )
+                ||
+                0
+              );
+
+
+            const debt =
+              Math.max(
+                tuition - paid,
+                0
+              );
+
+
+            const hasPending =
+              pendingRegistrationIds
+                .has(id);
+
+
+            let actionHtml =
+              "";
+
+
+            if (debt <= 0) {
+
+              actionHtml =
+                `
+                <div class="payment-action">
+
+                  <div class="payment-complete">
+                    ✓ ĐÃ THANH TOÁN
+                  </div>
+
+                </div>
+                `;
+
+            }
+            else if (hasPending) {
+
+              actionHtml =
+                `
+                <div class="payment-action">
+
+                  <div class="payment-waiting">
+                    ⏳ ĐÃ GỬI BILL · CHỜ PICKDEE XÁC NHẬN
+                  </div>
+
+                </div>
+                `;
+
+            }
+            else {
+
+              actionHtml =
+                `
+                <div class="payment-action">
+
+                  <a
+                    class="pay-now-btn"
+                    href="./student-payment-checkout?id=${id}"
+                  >
+                    💳 THANH TOÁN HỌC PHÍ
+                  </a>
+
+                </div>
+                `;
+
+            }
+
+
+            return `
+              <div class="registration-card">
+
+                <div class="registration-head">
+
+                  <div>
+
+                    <div class="registration-code">
+                      ${escapeHtml(
+                        registration.registration_code
+                        || ""
+                      )}
+                    </div>
+
+                    <div class="package-name">
+                      ${escapeHtml(
+                        registration.package_name
+                        || "Gói học"
+                      )}
+                    </div>
+
+                  </div>
+
+                  <span class="badge">
+                    ${escapeHtml(
+                      registration.status
+                      || ""
+                    )}
+                  </span>
+
+                </div>
+
+
+                <div class="money-grid">
+
+                  <div>
+                    <div class="label">
+                      Học phí
+                    </div>
+
+                    <div class="value">
+                      ${money(
+                        tuition
+                      )}
+                    </div>
+                  </div>
+
+
+                  <div>
+                    <div class="label">
+                      Đã đóng
+                    </div>
+
+                    <div class="value paid">
+                      ${money(
+                        paid
+                      )}
+                    </div>
+                  </div>
+
+
+                  <div>
+                    <div class="label">
+                      Còn lại
+                    </div>
+
+                    <div class="value debt">
+                      ${money(
+                        debt
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                ${actionHtml}
+
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     RENDER LỊCH SỬ THANH TOÁN
+  ====================================================== */
+
+  const paymentBody =
+    document.getElementById(
+      "paymentBody"
+    );
+
+
+  if (
+    payments.length === 0
+  ) {
+
+    paymentBody.innerHTML =
+      `
+      <tr>
+        <td
+          colspan="6"
+          class="empty"
+        >
+          Chưa có lịch sử thanh toán.
+        </td>
+      </tr>
+      `;
+
+  }
+  else {
+
+    const registrationMap =
+      new Map(
+        realRegistrations.map(
+          registration => [
+            Number(
+              registration.id
+            ),
+            registration
+          ]
+        )
+      );
+
+
+    paymentBody.innerHTML =
+      payments
+        .map(
+          payment => {
+
+            const registration =
+              registrationMap.get(
+                Number(
+                  payment.registration_id
+                )
+              );
+
+
+            return `
+              <tr>
+
+                <td>
+                  ${escapeHtml(
+                    payment.payment_code
+                    || ""
+                  )}
+                </td>
+
+                <td>
+                  ${escapeHtml(
+                    formatDate(
+                      payment.payment_date
+                    )
+                  )}
+                </td>
+
+                <td>
+                  ${escapeHtml(
+                    registration
+                      ?.package_name
+                    ||
+                    registration
+                      ?.registration_code
+                    ||
+                    "—"
+                  )}
+                </td>
+
+                <td>
+                  <strong>
+                    ${money(
+                      payment.amount
+                    )}
+                  </strong>
+                </td>
+
+                <td>
+                  ${escapeHtml(
+                    payment.payment_method
+                    || "—"
+                  )}
+                </td>
+
+                <td>
+                  <span class="badge">
+                    ${escapeHtml(
+                      payment.status
+                      || "—"
+                    )}
+                  </span>
+                </td>
+
+              </tr>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  setMessage("");
+
+})();
+</script>
+
 <script src="./notifications.js?v=20260911-3"></script>
 
 </body>
