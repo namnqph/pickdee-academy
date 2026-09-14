@@ -5438,6 +5438,713 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 })();
 
 </script>
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     COACH TASK SUMMARY V2
+     YÊU CẦU LỊCH + BUỔI CẦN ĐIỂM DANH + CHẤM TRÌNH CUỐI KHÓA
+========================================================== -->
+
+<style id="coach-task-summary-v2-style">
+
+  #coachTaskSummary
+  .coach-task-summary-items {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0,1fr)
+      ) !important;
+  }
+
+  @media(max-width:900px) {
+
+    #coachTaskSummary
+    .coach-task-summary-items {
+      grid-template-columns:
+        1fr !important;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const taskSb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb
+    ||
+    (
+      window.supabase
+      &&
+      cfg.SUPABASE_URL
+      &&
+      cfg.SUPABASE_PUBLISHABLE_KEY
+
+        ?
+
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        )
+
+        :
+
+        null
+    );
+
+
+  if (!taskSb) {
+
+    console.warn(
+      "PickDee Academy: chưa có Supabase client."
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     DASHBOARD
+  ====================================================== */
+
+  const dashboardGrid =
+    document.querySelector(
+      ".dashboard-grid"
+    );
+
+
+  if (!dashboardGrid) {
+
+    console.warn(
+      "PickDee Academy: không tìm thấy dashboard-grid."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Gỡ khối tổng cũ khỏi giao diện.
+    Timer cũ nếu còn chạy chỉ cập nhật node cũ đã tách khỏi DOM,
+    không ảnh hưởng giao diện V2.
+  */
+
+  const oldSummary =
+    document.getElementById(
+      "coachTaskSummary"
+    );
+
+
+  if (oldSummary) {
+
+    oldSummary.remove();
+
+  }
+
+
+  /* =====================================================
+     TẠO KHỐI TỔNG MỚI
+  ====================================================== */
+
+  const summary =
+    document.createElement(
+      "section"
+    );
+
+
+  summary.id =
+    "coachTaskSummary";
+
+
+  summary.innerHTML = `
+
+    <div class="coach-task-summary-top">
+
+      <div>
+
+        <div class="coach-task-summary-label">
+          ⚠ VIỆC CẦN XỬ LÝ
+        </div>
+
+        <div
+          id="coachTaskSummaryTitleV2"
+          class="coach-task-summary-title"
+        >
+          Đang kiểm tra...
+        </div>
+
+      </div>
+
+
+      <div
+        id="coachTaskTotalV2"
+        class="coach-task-summary-number"
+      >
+        —
+      </div>
+
+    </div>
+
+
+    <div class="coach-task-summary-items">
+
+
+      <!-- YÊU CẦU LỊCH -->
+
+      <a
+        class="coach-task-item"
+        href="./coach-session-requests"
+      >
+
+        <div class="coach-task-item-name">
+          ⏳ YÊU CẦU LỊCH HỌC
+        </div>
+
+        <div
+          id="coachTaskRequestCountV2"
+          class="coach-task-item-count"
+        >
+          —
+        </div>
+
+        <div class="coach-task-item-action">
+          XỬ LÝ YÊU CẦU →
+        </div>
+
+      </a>
+
+
+      <!-- BUỔI CẦN ĐIỂM DANH -->
+
+      <a
+        class="coach-task-item"
+        href="./coach-sessions"
+      >
+
+        <div class="coach-task-item-name">
+          📋 BUỔI CẦN ĐIỂM DANH
+        </div>
+
+        <div
+          id="coachTaskAttendanceCountV2"
+          class="coach-task-item-count"
+        >
+          —
+        </div>
+
+        <div class="coach-task-item-action">
+          MỞ LỊCH DẠY →
+        </div>
+
+      </a>
+
+
+      <!-- CHẤM TRÌNH -->
+
+      <a
+        class="coach-task-item"
+        href="./coach-students"
+      >
+
+        <div class="coach-task-item-name">
+          🎯 CHẤM TRÌNH CUỐI KHÓA
+        </div>
+
+        <div
+          id="coachTaskFinalCountV2"
+          class="coach-task-item-count"
+        >
+          —
+        </div>
+
+        <div class="coach-task-item-action">
+          XEM HỌC VIÊN →
+        </div>
+
+      </a>
+
+
+    </div>
+
+
+    <div
+      id="coachTaskSummaryStatusV2"
+      class="coach-task-summary-ok"
+    >
+      Đang cập nhật dữ liệu...
+    </div>
+
+  `;
+
+
+  dashboardGrid
+    .parentNode
+    .insertBefore(
+      summary,
+      dashboardGrid
+    );
+
+
+  /* =====================================================
+     ELEMENTS
+  ====================================================== */
+
+  const totalEl =
+    document.getElementById(
+      "coachTaskTotalV2"
+    );
+
+
+  const requestEl =
+    document.getElementById(
+      "coachTaskRequestCountV2"
+    );
+
+
+  const attendanceEl =
+    document.getElementById(
+      "coachTaskAttendanceCountV2"
+    );
+
+
+  const finalEl =
+    document.getElementById(
+      "coachTaskFinalCountV2"
+    );
+
+
+  const titleEl =
+    document.getElementById(
+      "coachTaskSummaryTitleV2"
+    );
+
+
+  const statusEl =
+    document.getElementById(
+      "coachTaskSummaryStatusV2"
+    );
+
+
+  /* =====================================================
+     THỜI GIAN KẾT THÚC BUỔI
+  ====================================================== */
+
+  function sessionEnd(
+    item
+  ) {
+
+    if (!item?.session_date) {
+
+      return null;
+
+    }
+
+
+    const start =
+      new Date(
+        `${item.session_date}T${
+          item.start_time
+          ||
+          "00:00:00"
+        }`
+      );
+
+
+    if (
+      Number.isNaN(
+        start.getTime()
+      )
+    ) {
+
+      return null;
+
+    }
+
+
+    return new Date(
+      start.getTime()
+      +
+      Number(
+        item.duration_minutes
+        ||
+        60
+      )
+      *
+      60000
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadCoachTaskSummaryV2() {
+
+    try {
+
+
+      /* -----------------------------------------------
+         COACH ID
+      ------------------------------------------------ */
+
+      const {
+        data: coachId,
+        error: coachIdError
+      } =
+        await taskSb.rpc(
+          "current_coach_id"
+        );
+
+
+      if (
+        coachIdError
+        ||
+        !coachId
+      ) {
+
+        throw (
+          coachIdError
+          ||
+          new Error(
+            "Không xác định được Coach."
+          )
+        );
+
+      }
+
+
+      /* -----------------------------------------------
+         TẢI 3 NHÓM VIỆC
+      ------------------------------------------------ */
+
+      const [
+        requestResult,
+        finalResult,
+        sessionResult
+      ] =
+        await Promise.all([
+
+
+          /* 1. YÊU CẦU LỊCH */
+
+          taskSb
+            .from(
+              "session_requests"
+            )
+            .select(
+              "id"
+            )
+            .eq(
+              "coach_id",
+              Number(
+                coachId
+              )
+            )
+            .eq(
+              "status",
+              "Chờ Coach"
+            ),
+
+
+          /* 2. CHẤM TRÌNH CUỐI KHÓA */
+
+          taskSb.rpc(
+            "coach_get_students_needing_final_assessment"
+          ),
+
+
+          /* 3. BUỔI CHỜ HỌC */
+
+          taskSb
+            .from(
+              "class_sessions"
+            )
+            .select(`
+              id,
+              session_code,
+              session_date,
+              start_time,
+              duration_minutes,
+              status
+            `)
+            .eq(
+              "coach_id",
+              Number(
+                coachId
+              )
+            )
+            .eq(
+              "status",
+              "Chờ học"
+            )
+
+        ]);
+
+
+      /* =================================================
+         YÊU CẦU LỊCH
+      ================================================== */
+
+      if (
+        requestResult.error
+      ) {
+
+        console.error(
+          "Coach task - session requests:",
+          requestResult.error
+        );
+
+      }
+
+
+      const requestCount =
+        requestResult.error
+          ?
+          0
+          :
+          (
+            requestResult.data
+            ||
+            []
+          ).length;
+
+
+      /* =================================================
+         CHẤM TRÌNH
+      ================================================== */
+
+      if (
+        finalResult.error
+      ) {
+
+        console.error(
+          "Coach task - final assessment:",
+          finalResult.error
+        );
+
+      }
+
+
+      const finalCount =
+        finalResult.error
+          ?
+          0
+          :
+          (
+            Array.isArray(
+              finalResult.data
+            )
+              ?
+              finalResult.data.length
+              :
+              0
+          );
+
+
+      /* =================================================
+         BUỔI CẦN ĐIỂM DANH
+      ================================================== */
+
+      if (
+        sessionResult.error
+      ) {
+
+        console.error(
+          "Coach task - attendance:",
+          sessionResult.error
+        );
+
+      }
+
+
+      const now =
+        new Date();
+
+
+      const overdueSessions =
+        sessionResult.error
+          ?
+          []
+          :
+          (
+            sessionResult.data
+            ||
+            []
+          )
+            .filter(
+              item => {
+
+                const end =
+                  sessionEnd(
+                    item
+                  );
+
+
+                return (
+                  end
+                  &&
+                  end.getTime()
+                  <
+                  now.getTime()
+                );
+
+              }
+            );
+
+
+      const attendanceCount =
+        overdueSessions.length;
+
+
+      /* =================================================
+         TỔNG
+      ================================================== */
+
+      const total =
+        requestCount
+        +
+        attendanceCount
+        +
+        finalCount;
+
+
+      requestEl.textContent =
+        String(
+          requestCount
+        );
+
+
+      attendanceEl.textContent =
+        String(
+          attendanceCount
+        );
+
+
+      finalEl.textContent =
+        String(
+          finalCount
+        );
+
+
+      totalEl.textContent =
+        String(
+          total
+        );
+
+
+      summary.classList.toggle(
+        "has-task",
+        total > 0
+      );
+
+
+      /* =================================================
+         HIỂN THỊ
+      ================================================== */
+
+      if (
+        total > 0
+      ) {
+
+        titleEl.textContent =
+          `${total} việc đang chờ`;
+
+
+        statusEl.textContent =
+          `Có ${requestCount} yêu cầu lịch học, ${attendanceCount} buổi cần điểm danh và ${finalCount} học viên cần chấm trình cuối khóa.`;
+
+      }
+      else {
+
+        titleEl.textContent =
+          "Không có việc tồn";
+
+
+        statusEl.textContent =
+          "✓ Hiện tại Coach không có việc nào cần xử lý.";
+
+      }
+
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        "PickDee Academy Coach Task Summary V2:",
+        error
+      );
+
+
+      totalEl.textContent =
+        "!";
+
+
+      requestEl.textContent =
+        "—";
+
+
+      attendanceEl.textContent =
+        "—";
+
+
+      finalEl.textContent =
+        "—";
+
+
+      titleEl.textContent =
+        "Không tải được";
+
+
+      statusEl.textContent =
+        "Không cập nhật được danh sách việc cần xử lý.";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCoachTaskSummaryV2();
+
+
+  setInterval(
+    loadCoachTaskSummaryV2,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCoachTaskSummaryV2
+  );
+
+
+})();
+
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
