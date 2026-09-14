@@ -561,7 +561,233 @@
       </div>
 
     </section>
+    <!-- =====================================================
+         PICKDEE ACADEMY
+         TRÌNH ĐỘ HỌC VIÊN - ADMIN
+    ====================================================== -->
 
+    <section
+      id="adminSkillCard"
+      class="card"
+      style="
+        display:none;
+        grid-column:1 / -1;
+        margin-top:16px;
+      "
+    >
+
+      <h2>
+        🎯 Trình độ PickDee Academy
+      </h2>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(4,minmax(0,1fr));
+          gap:10px;
+        "
+      >
+
+
+        <div
+          style="
+            padding:14px;
+            border-radius:11px;
+            background:rgba(216,255,69,.07);
+            border:1px solid rgba(216,255,69,.14);
+          "
+        >
+
+          <div class="label">
+            ĐIỂM KỸ THUẬT
+          </div>
+
+          <div
+            id="adminSkillScore"
+            style="
+              margin-top:6px;
+              color:#d8ff45;
+              font-size:22px;
+              font-weight:900;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div
+          style="
+            padding:14px;
+            border-radius:11px;
+            background:rgba(216,255,69,.07);
+            border:1px solid rgba(216,255,69,.14);
+          "
+        >
+
+          <div class="label">
+            TRÌNH PICKDEE ACADEMY
+          </div>
+
+          <div
+            id="adminSkillLevel"
+            style="
+              margin-top:6px;
+              color:#d8ff45;
+              font-size:20px;
+              font-weight:900;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div
+          style="
+            padding:14px;
+            border-radius:11px;
+            background:rgba(255,255,255,.045);
+          "
+        >
+
+          <div class="label">
+            SPORTCONNECT THAM CHIẾU
+          </div>
+
+          <div
+            id="adminSportconnectReference"
+            style="
+              margin-top:6px;
+              font-size:18px;
+              font-weight:900;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div
+          style="
+            padding:14px;
+            border-radius:11px;
+            background:rgba(255,255,255,.045);
+          "
+        >
+
+          <div class="label">
+            DUPR THAM CHIẾU
+          </div>
+
+          <div
+            id="adminDuprReference"
+            style="
+              margin-top:6px;
+              font-size:18px;
+              font-weight:900;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:14px;
+          padding-top:14px;
+          border-top:1px solid rgba(255,255,255,.08);
+        "
+      >
+
+        <div>
+
+          <div class="label">
+            Coach đánh giá gần nhất
+          </div>
+
+          <div
+            id="adminSkillCoach"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="label">
+            Cập nhật gần nhất
+          </div>
+
+          <div
+            id="adminSkillDate"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="adminSkillEmpty"
+        style="
+          display:none;
+          margin-top:14px;
+          color:rgba(255,255,255,.58);
+          font-size:13px;
+        "
+      >
+        Học viên chưa có đánh giá trình PickDee Academy.
+      </div>
+
+
+      <a
+        id="adminSkillHistoryLink"
+        href="#"
+        style="
+          display:none;
+          margin-top:16px;
+          color:#d8ff45;
+          text-decoration:none;
+          font-size:12px;
+          font-weight:900;
+        "
+      >
+        XEM LỊCH SỬ TIẾN TRÌNH →
+      </a>
+
+
+      <div
+        style="
+          margin-top:12px;
+          color:rgba(255,255,255,.38);
+          font-size:10px;
+          line-height:1.5;
+        "
+      >
+        SportConnect và DUPR là mức tham chiếu từ đánh giá kỹ thuật
+        PickDee Academy, không phải rating chính thức từ hai nền tảng.
+      </div>
+
+    </section>
   </div>
 
 
@@ -1524,7 +1750,231 @@ async function loadRegistrations() {
     `).join("");
 }
 
+/* =========================================================
+   PICKDEE ACADEMY
+   ADMIN - TRÌNH ĐỘ HỌC VIÊN
+========================================================= */
 
+async function loadStudentSkillAdmin() {
+
+  const card =
+    document.getElementById(
+      "adminSkillCard"
+    );
+
+
+  const scoreEl =
+    document.getElementById(
+      "adminSkillScore"
+    );
+
+
+  const levelEl =
+    document.getElementById(
+      "adminSkillLevel"
+    );
+
+
+  const sportconnectEl =
+    document.getElementById(
+      "adminSportconnectReference"
+    );
+
+
+  const duprEl =
+    document.getElementById(
+      "adminDuprReference"
+    );
+
+
+  const coachEl =
+    document.getElementById(
+      "adminSkillCoach"
+    );
+
+
+  const dateEl =
+    document.getElementById(
+      "adminSkillDate"
+    );
+
+
+  const emptyEl =
+    document.getElementById(
+      "adminSkillEmpty"
+    );
+
+
+  const historyLink =
+    document.getElementById(
+      "adminSkillHistoryLink"
+    );
+
+
+  if (!card) {
+    return;
+  }
+
+
+  card.style.display =
+    "block";
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "admin_get_student_skill_progress",
+      {
+        p_student_id:
+          Number(studentId)
+      }
+    );
+
+
+  if (error) {
+
+    console.error(
+      "PickDee Academy Admin Skill:",
+      error
+    );
+
+
+    scoreEl.textContent =
+      "Lỗi tải dữ liệu";
+
+
+    levelEl.textContent =
+      "—";
+
+
+    sportconnectEl.textContent =
+      "—";
+
+
+    duprEl.textContent =
+      "—";
+
+
+    coachEl.textContent =
+      "—";
+
+
+    dateEl.textContent =
+      "—";
+
+
+    return;
+  }
+
+
+  const rows =
+    Array.isArray(data)
+      ?
+      data
+      :
+      [];
+
+
+  if (
+    rows.length === 0
+  ) {
+
+    scoreEl.textContent =
+      "—";
+
+
+    levelEl.textContent =
+      "Chưa chấm";
+
+
+    sportconnectEl.textContent =
+      "Chưa có";
+
+
+    duprEl.textContent =
+      "Chưa có";
+
+
+    coachEl.textContent =
+      "—";
+
+
+    dateEl.textContent =
+      "—";
+
+
+    emptyEl.style.display =
+      "block";
+
+
+    historyLink.style.display =
+      "none";
+
+
+    return;
+  }
+
+
+  const latest =
+    rows[0];
+
+
+  emptyEl.style.display =
+    "none";
+
+
+  scoreEl.textContent =
+    latest.skill_score !== null
+    &&
+    latest.skill_score !== undefined
+      ?
+      `${latest.skill_score} / 100`
+      :
+      "—";
+
+
+  levelEl.textContent =
+    latest.skill_level
+    ||
+    "Chưa chấm";
+
+
+  sportconnectEl.textContent =
+    latest.sportconnect_reference
+    ||
+    "Chưa có";
+
+
+  duprEl.textContent =
+    latest.dupr_reference
+    ||
+    "Chưa có";
+
+
+  coachEl.textContent =
+    latest.coach_name
+    ||
+    "—";
+
+
+  dateEl.textContent =
+    dateVN(
+      latest.created_at
+    );
+
+
+  historyLink.href =
+    `./admin-student-progress.html?student_id=${encodeURIComponent(
+      studentId
+    )}`;
+
+
+  historyLink.style.display =
+    "inline-block";
+
+}
 /* =========================
    START
 ========================= */
@@ -1542,7 +1992,9 @@ async function init() {
 
   await loadStudent();
 
-  await loadRegistrations();
+await loadStudentSkillAdmin();
+
+await loadRegistrations();
 }
 
 
