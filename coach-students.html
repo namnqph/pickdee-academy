@@ -1602,7 +1602,767 @@
 
 </script>
 
+<script>
+/* =========================================================
+   PICKDEE ACADEMY
+   NHẮC CHẤM TRÌNH CUỐI KHÓA
+   - Cơ bản
+   - Nâng cao
+   - Không áp dụng Theo yêu cầu
+========================================================= */
 
+(async function () {
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent =
+    `
+      .final-assessment-panel {
+        margin-top: 14px;
+        padding: 13px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.11);
+        background: rgba(0,0,0,.10);
+      }
+
+      .final-assessment-panel.not-due {
+        border-color: rgba(255,255,255,.10);
+      }
+
+      .final-assessment-panel.due {
+        border-color: rgba(255,190,60,.48);
+        background: rgba(255,170,40,.07);
+      }
+
+      .final-assessment-panel.done {
+        border-color: rgba(216,255,69,.30);
+        background: rgba(216,255,69,.055);
+      }
+
+      .final-assessment-title {
+        color: rgba(255,255,255,.85);
+        font-size: 11px;
+        font-weight: 900;
+        line-height: 1.45;
+      }
+
+      .final-assessment-panel.due
+      .final-assessment-title {
+        color: #ffd66b;
+      }
+
+      .final-assessment-panel.done
+      .final-assessment-title {
+        color: #d8ff45;
+      }
+
+      .final-assessment-text {
+        margin-top: 5px;
+        color: rgba(255,255,255,.52);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .final-assessment-btn {
+        margin-top: 10px;
+        min-height: 36px;
+        padding: 0 12px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 8px;
+
+        background: #d8ff45;
+        color: #071426;
+
+        text-decoration: none;
+
+        font-size: 11px;
+        font-weight: 1000;
+      }
+    `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.error(
+      "PickDee Academy: thiếu cấu hình Supabase."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Client riêng cho module nhắc cuối khóa.
+    Không thay đổi logic chính của coach-students.
+  */
+
+  const finalSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ĐỢI CARD HỌC VIÊN RENDER XONG
+  ====================================================== */
+
+  async function waitForStudentCards() {
+
+    for (
+      let i = 0;
+      i < 80;
+      i++
+    ) {
+
+      const cards =
+        document.querySelectorAll(
+          ".student-card"
+        );
+
+
+      if (
+        cards.length > 0
+      ) {
+
+        return [
+          ...cards
+        ];
+
+      }
+
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            100
+          )
+      );
+
+    }
+
+
+    return [];
+
+  }
+
+
+  const cards =
+    await waitForStudentCards();
+
+
+  if (
+    cards.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     LẤY REGISTRATION ID TỪ CARD
+  ====================================================== */
+
+  function getRegistrationId(
+    card
+  ) {
+
+    const link =
+      card.querySelector(
+        'a[href*="coach-student-detail?registration_id="]'
+      );
+
+
+    if (!link) {
+
+      return null;
+
+    }
+
+
+    try {
+
+      const url =
+        new URL(
+          link.getAttribute(
+            "href"
+          ),
+          window.location.href
+        );
+
+
+      const id =
+        Number(
+          url.searchParams.get(
+            "registration_id"
+          )
+        );
+
+
+      return Number.isFinite(id)
+        ?
+        id
+        :
+        null;
+
+    }
+    catch (_) {
+
+      return null;
+
+    }
+
+  }
+
+
+  const registrationIds =
+    [
+      ...new Set(
+        cards
+          .map(
+            card =>
+              getRegistrationId(
+                card
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  if (
+    registrationIds.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     LẤY CÁC BẢN CHẤM TRÌNH CUỐI KHÓA ĐÃ CÓ
+  ====================================================== */
+
+  const {
+    data: finalNotesData,
+    error: finalNotesError
+  } =
+    await finalSb
+      .from(
+        "coach_student_notes"
+      )
+      .select(`
+        registration_id,
+        is_course_final,
+        course_final_session_count,
+        created_at
+      `)
+      .in(
+        "registration_id",
+        registrationIds
+      )
+      .eq(
+        "is_course_final",
+        true
+      );
+
+
+  if (
+    finalNotesError
+  ) {
+
+    console.error(
+      "PickDee Academy - final assessment:",
+      finalNotesError
+    );
+
+    return;
+
+  }
+
+
+  const finalAssessmentIds =
+    new Set(
+      (
+        finalNotesData || []
+      )
+        .map(
+          row =>
+            Number(
+              row.registration_id
+            )
+        )
+        .filter(Boolean)
+    );
+
+
+  /* =====================================================
+     RPC DANH SÁCH ĐẾN HẠN
+  ====================================================== */
+
+  const {
+    data: dueData,
+    error: dueError
+  } =
+    await finalSb.rpc(
+      "coach_get_students_needing_final_assessment"
+    );
+
+
+  if (
+    dueError
+  ) {
+
+    console.warn(
+      "PickDee Academy - RPC chấm cuối khóa:",
+      dueError
+    );
+
+  }
+
+
+  const dueIds =
+    new Set(
+      (
+        Array.isArray(dueData)
+          ?
+          dueData
+          :
+          []
+      )
+        .map(
+          row =>
+            Number(
+              row.registration_id
+            )
+        )
+        .filter(Boolean)
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function getPackageName(
+    card
+  ) {
+
+    const rows =
+      [
+        ...card.querySelectorAll(
+          ".info-row"
+        )
+      ];
+
+
+    const packageRow =
+      rows.find(
+        row => {
+
+          const label =
+            row.querySelector(
+              ".info-label"
+            );
+
+
+          return String(
+            label?.textContent || ""
+          )
+            .trim()
+            .toLowerCase()
+            ===
+            "gói học";
+
+        }
+      );
+
+
+    return String(
+      packageRow
+        ?.querySelector(
+          ".info-value"
+        )
+        ?.textContent
+      ||
+      ""
+    )
+      .trim();
+
+  }
+
+
+  function getSessionNumber(
+    card,
+    wantedLabel
+  ) {
+
+    const boxes =
+      [
+        ...card.querySelectorAll(
+          ".session-box"
+        )
+      ];
+
+
+    const box =
+      boxes.find(
+        item => {
+
+          const label =
+            String(
+              item
+                .querySelector(
+                  ".session-label"
+                )
+                ?.textContent
+              ||
+              ""
+            )
+              .trim()
+              .toLowerCase();
+
+
+          return label
+            ===
+            wantedLabel
+              .trim()
+              .toLowerCase();
+
+        }
+      );
+
+
+    if (!box) {
+
+      return 0;
+
+    }
+
+
+    const value =
+      Number(
+        String(
+          box
+            .querySelector(
+              ".session-value"
+            )
+            ?.textContent
+          ||
+          "0"
+        )
+          .trim()
+      );
+
+
+    return Number.isFinite(value)
+      ?
+      value
+      :
+      0;
+
+  }
+
+
+  function normalizeText(
+    value
+  ) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  }
+
+
+  /* =====================================================
+     RENDER TỪNG CARD
+  ====================================================== */
+
+  cards.forEach(
+    card => {
+
+      const registrationId =
+        getRegistrationId(
+          card
+        );
+
+
+      if (!registrationId) {
+
+        return;
+
+      }
+
+
+      const packageName =
+        getPackageName(
+          card
+        );
+
+
+      const normalizedPackage =
+        normalizeText(
+          packageName
+        );
+
+
+      /*
+        Theo yêu cầu:
+        hiện tại KHÔNG tự nhắc chấm trình.
+      */
+
+      const isCustomPackage =
+        normalizedPackage.includes(
+          "theo yêu cầu"
+        );
+
+
+      const isBasic =
+        normalizedPackage.includes(
+          "cơ bản"
+        );
+
+
+      const isAdvanced =
+        normalizedPackage.includes(
+          "nâng cao"
+        );
+
+
+      if (
+        isCustomPackage
+        ||
+        (
+          !isBasic
+          &&
+          !isAdvanced
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const total =
+        getSessionNumber(
+          card,
+          "Tổng buổi"
+        );
+
+
+      const completed =
+        getSessionNumber(
+          card,
+          "Đã học"
+        );
+
+
+      /*
+        Dữ liệu gói cũ có thể total = 0.
+        Không sinh cảnh báo cho dữ liệu chưa đủ.
+      */
+
+      if (
+        total <= 0
+      ) {
+
+        return;
+
+      }
+
+
+      const finalDone =
+        finalAssessmentIds.has(
+          registrationId
+        );
+
+
+      /*
+        RPC là nguồn chính.
+
+        Nếu RPC lỗi thì fallback:
+        đủ số buổi + chưa chấm cuối khóa
+        = đến hạn.
+      */
+
+      const finalDue =
+        dueError
+          ?
+          (
+            completed >= total
+            &&
+            !finalDone
+          )
+          :
+          dueIds.has(
+            registrationId
+          );
+
+
+      const courseCompleted =
+        completed >= total;
+
+
+      let panelClass =
+        "not-due";
+
+
+      let title =
+        "Chưa đến hạn chấm trình";
+
+
+      let description =
+        `Học viên đã hoàn thành ${completed}/${total} buổi. Chấm trình khi kết thúc toàn bộ khóa.`;
+
+
+      let buttonHtml =
+        "";
+
+
+      if (
+        finalDone
+      ) {
+
+        panelClass =
+          "done";
+
+
+        title =
+          "✓ ĐÃ CHẤM TRÌNH CUỐI KHÓA";
+
+
+        description =
+          `Khóa học đã hoàn thành ${completed}/${total} buổi và đã có đánh giá cuối khóa.`;
+
+      }
+      else if (
+        finalDue
+        ||
+        (
+          courseCompleted
+          &&
+          !finalDone
+        )
+      ) {
+
+        panelClass =
+          "due";
+
+
+        title =
+          "⚠ CẦN CHẤM TRÌNH CUỐI KHÓA";
+
+
+        description =
+          `Học viên đã hoàn thành ${completed}/${total} buổi của khóa ${packageName}.`;
+
+
+        buttonHtml =
+          `
+            <a
+              class="final-assessment-btn"
+              href="./coach-student-notes?registration_id=${encodeURIComponent(
+                registrationId
+              )}&mode=course-final"
+            >
+              CHẤM TRÌNH CUỐI KHÓA →
+            </a>
+          `;
+
+      }
+
+
+      const panel =
+        document.createElement(
+          "div"
+        );
+
+
+      panel.className =
+        `final-assessment-panel ${panelClass}`;
+
+
+      panel.innerHTML =
+        `
+          <div class="final-assessment-title">
+            ${title}
+          </div>
+
+          <div class="final-assessment-text">
+            ${description}
+          </div>
+
+          ${buttonHtml}
+        `;
+
+
+      /*
+        Đặt ngay sau 3 ô:
+        Tổng buổi / Đã học / Còn lại
+      */
+
+      const sessionGrid =
+        card.querySelector(
+          ".session-grid"
+        );
+
+
+      if (
+        sessionGrid
+      ) {
+
+        sessionGrid.insertAdjacentElement(
+          "afterend",
+          panel
+        );
+
+      }
+
+    }
+  );
+
+
+})();
+
+</script>
 <script src="./notifications.js?v=20260914-coach-students-skill"></script>
 
 
