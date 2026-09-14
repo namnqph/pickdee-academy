@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <title>Chi tiết buổi học | PickDee Academy</title>
+  <title>
+    Chi tiết buổi học | PickDee Academy
+  </title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
   <script src="./config.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -17,18 +27,40 @@
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
       color: white;
+
       background:
-        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
-        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
     }
 
     .topbar {
       padding: 18px 24px;
+
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,.12);
+      align-items: center;
+
+      gap: 16px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.12);
     }
 
     .brand {
@@ -40,51 +72,94 @@
       color: #d8ff45;
     }
 
+    #userEmail {
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
     .container {
-      width: min(900px, calc(100% - 28px));
+      width:
+        min(
+          900px,
+          calc(100% - 28px)
+        );
+
       margin: auto;
-      padding: 32px 0 60px;
+
+      padding:
+        32px 0 60px;
     }
 
     .back {
       color: #d8ff45;
+
       text-decoration: none;
+
       font-weight: 800;
     }
 
     .eyebrow {
       margin-top: 26px;
+
       color: #d8ff45;
+
       font-size: 13px;
+
       font-weight: 900;
+
       letter-spacing: 1px;
     }
 
     h1 {
-      margin: 8px 0 6px;
-      font-size: clamp(36px, 6vw, 54px);
+      margin:
+        8px 0 6px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
     }
 
     .sub {
-      color: rgba(255,255,255,.65);
+      color:
+        rgba(255,255,255,.65);
+
       margin-bottom: 24px;
+
+      line-height: 1.5;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+
+      grid-template-columns:
+        1fr 1fr;
+
       gap: 16px;
     }
 
     .card {
       padding: 20px;
+
       border-radius: 16px;
-      background: rgba(6,39,88,.74);
-      border: 1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
     }
 
     .card h2 {
-      margin: 0 0 18px;
+      margin:
+        0 0 18px;
+
       font-size: 20px;
     }
 
@@ -93,158 +168,336 @@
     }
 
     .label {
-      color: rgba(255,255,255,.5);
+      color:
+        rgba(255,255,255,.5);
+
       font-size: 12px;
+
       margin-bottom: 4px;
     }
 
     .value {
       font-weight: 800;
+
       line-height: 1.45;
     }
 
     .badge {
       display: inline-block;
-      padding: 6px 10px;
+
+      padding:
+        6px 10px;
+
       border-radius: 999px;
+
       color: #d8ff45;
-      background: rgba(216,255,69,.12);
+
+      background:
+        rgba(216,255,69,.12);
+
       font-size: 12px;
+
       font-weight: 900;
+    }
+
+    .badge.finished {
+      color: #9dffcf;
+
+      background:
+        rgba(50,220,140,.12);
+    }
+
+    .badge.absent {
+      color: #ffb3b3;
+
+      background:
+        rgba(255,100,100,.12);
     }
 
     .actions {
       margin-top: 18px;
+
       display: grid;
-      grid-template-columns: 1fr 1fr;
+
+      grid-template-columns:
+        1fr 1fr;
+
       gap: 12px;
     }
 
     button {
       min-height: 52px;
+
       border: 0;
+
       border-radius: 11px;
+
       font-weight: 900;
+
       cursor: pointer;
+
       font-size: 14px;
     }
 
     .complete {
       background: #d8ff45;
+
       color: #172600;
     }
 
     .absent {
       background: #ffb3b3;
+
       color: #401010;
     }
 
     button:disabled {
       opacity: .45;
-      cursor: not-allowed;
+
+      cursor:
+        not-allowed;
     }
 
     #message {
       margin-top: 15px;
+
+      font-weight: 800;
+
+      line-height: 1.5;
+    }
+
+    #message.info {
+      color: #ffd884;
+    }
+
+    #message.success {
+      color: #d8ff45;
+    }
+
+    #message.error {
       color: #ffb0b0;
-      font-weight: 700;
     }
 
     @media (max-width: 700px) {
+
       .grid,
       .actions {
-        grid-template-columns: 1fr;
+        grid-template-columns:
+          1fr;
       }
+
+      .topbar {
+        padding:
+          16px 14px;
+      }
+
     }
+
   </style>
 </head>
 
+
 <body>
 
+
 <header class="topbar">
+
   <div class="brand">
-    PickDee <span>Academy</span>
+    PickDee
+    <span>
+      Academy
+    </span>
   </div>
 
-  <div id="userEmail"></div>
+  <div id="userEmail">
+  </div>
+
 </header>
+
 
 <main class="container">
 
-  <a class="back" href="./coach-sessions.html">
+
+  <a
+    class="back"
+    href="./coach-sessions.html"
+  >
     ← Lịch dạy của tôi
   </a>
+
 
   <div class="eyebrow">
     CHI TIẾT BUỔI HỌC
   </div>
 
+
   <h1 id="sessionCode">
     Đang tải...
   </h1>
 
-  <div class="sub" id="coachLine"></div>
+
+  <div
+    class="sub"
+    id="coachLine"
+  >
+    Đang kiểm tra buổi học...
+  </div>
+
 
   <section class="grid">
 
+
     <div class="card">
 
-      <h2>🏓 Buổi học</h2>
+      <h2>
+        🏓 Buổi học
+      </h2>
+
 
       <div class="item">
-        <div class="label">Học viên</div>
-        <div class="value" id="studentName">—</div>
-      </div>
 
-      <div class="item">
-        <div class="label">Buổi số</div>
-        <div class="value" id="sessionNo">—</div>
-      </div>
-
-      <div class="item">
-        <div class="label">Trạng thái</div>
-        <div class="value">
-          <span class="badge" id="status">—</span>
+        <div class="label">
+          Học viên
         </div>
+
+        <div
+          class="value"
+          id="studentName"
+        >
+          —
+        </div>
+
       </div>
+
+
+      <div class="item">
+
+        <div class="label">
+          Buổi số
+        </div>
+
+        <div
+          class="value"
+          id="sessionNo"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="item">
+
+        <div class="label">
+          Trạng thái
+        </div>
+
+        <div class="value">
+
+          <span
+            class="badge"
+            id="status"
+          >
+            —
+          </span>
+
+        </div>
+
+      </div>
+
 
     </div>
 
 
     <div class="card">
 
-      <h2>📅 Lịch & sân</h2>
+      <h2>
+        📅 Lịch & sân
+      </h2>
+
 
       <div class="item">
-        <div class="label">Ngày học</div>
-        <div class="value" id="sessionDate">—</div>
+
+        <div class="label">
+          Ngày học
+        </div>
+
+        <div
+          class="value"
+          id="sessionDate"
+        >
+          —
+        </div>
+
       </div>
 
-      <div class="item">
-        <div class="label">Giờ bắt đầu</div>
-        <div class="value" id="startTime">—</div>
-      </div>
 
       <div class="item">
-        <div class="label">Thời lượng</div>
-        <div class="value" id="duration">—</div>
+
+        <div class="label">
+          Giờ bắt đầu
+        </div>
+
+        <div
+          class="value"
+          id="startTime"
+        >
+          —
+        </div>
+
       </div>
 
+
       <div class="item">
-        <div class="label">Sân</div>
-        <div class="value" id="courtName">—</div>
+
+        <div class="label">
+          Thời lượng
+        </div>
+
+        <div
+          class="value"
+          id="duration"
+        >
+          —
+        </div>
+
       </div>
+
+
+      <div class="item">
+
+        <div class="label">
+          Sân
+        </div>
+
+        <div
+          class="value"
+          id="courtName"
+        >
+          —
+        </div>
+
+      </div>
+
 
     </div>
+
 
   </section>
 
 
-  <section class="card" style="margin-top:16px">
+  <section
+    class="card"
+    style="margin-top:16px"
+  >
 
-    <h2>📝 Ghi chú</h2>
+    <h2>
+      📝 Ghi chú
+    </h2>
 
-    <div id="note">—</div>
+    <div id="note">
+      —
+    </div>
 
   </section>
 
@@ -260,6 +513,7 @@
       ✓ HOÀN THÀNH BUỔI
     </button>
 
+
     <button
       id="absentBtn"
       class="absent"
@@ -271,13 +525,1194 @@
 
   </div>
 
-  <div id="message">
+
+  <div
+    id="message"
+    class="info"
+  >
     Đang kiểm tra quyền thao tác...
   </div>
 
+
 </main>
 
+
+<script>
+
+window.PICKDEE_NOTIFICATION_ROLE =
+  "coach";
+
+</script>
+
+
 <script src="./notifications.js?v=20260911-3"></script>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     PICKDEE ACADEMY
+     COACH SESSION DETAIL
+
+     QUY TẮC:
+
+     - Phải đăng nhập.
+     - Phải là đúng Coach của buổi học.
+     - Buổi phải tồn tại.
+     - Registration REAL chỉ được thao tác
+       khi đã thanh toán đủ 100%.
+     - Chỉ trạng thái "Chờ học"
+       mới được Hoàn thành / Vắng.
+     - Backend coach_mark_session()
+       là nơi thực hiện thao tác chính thức.
+  ====================================================== */
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const completeBtn =
+    document.getElementById(
+      "completeBtn"
+    );
+
+
+  const absentBtn =
+    document.getElementById(
+      "absentBtn"
+    );
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const sessionId =
+    Number(
+      params.get("id")
+      ||
+      params.get("session_id")
+    );
+
+
+  let sb =
+    null;
+
+
+  let currentCoachId =
+    null;
+
+
+  let currentSession =
+    null;
+
+
+  let paymentReady =
+    false;
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+
+  function el(id) {
+
+    return document.getElementById(
+      id
+    );
+
+  }
+
+
+  function one(value) {
+
+    if (
+      Array.isArray(value)
+    ) {
+
+      return (
+        value[0]
+        ||
+        null
+      );
+
+    }
+
+
+    return (
+      value
+      ||
+      null
+    );
+
+  }
+
+
+  function show(
+    id,
+    value
+  ) {
+
+    const node =
+      el(id);
+
+
+    if (!node) {
+
+      return;
+
+    }
+
+
+    node.textContent =
+      (
+        value === null
+        ||
+        value === undefined
+        ||
+        value === ""
+      )
+
+        ? "—"
+
+        : value;
+
+  }
+
+
+  function setMessage(
+    text,
+    type = "info"
+  ) {
+
+    const node =
+      el("message");
+
+
+    node.textContent =
+      text || "";
+
+
+    node.className =
+      type;
+
+  }
+
+
+  function formatDate(
+    value
+  ) {
+
+    if (!value) {
+
+      return "—";
+
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN"
+    ).format(
+      new Date(
+        `${value}T00:00:00`
+      )
+    );
+
+  }
+
+
+  function formatTime(
+    value
+  ) {
+
+    if (!value) {
+
+      return "—";
+
+    }
+
+
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
+
+  }
+
+
+  function updateBadge(
+    status
+  ) {
+
+    const badge =
+      el("status");
+
+
+    badge.classList.remove(
+      "finished",
+      "absent"
+    );
+
+
+    if (
+      status ===
+      "Đã hoàn thành"
+    ) {
+
+      badge.classList.add(
+        "finished"
+      );
+
+    }
+
+
+    if (
+      status ===
+      "Vắng"
+    ) {
+
+      badge.classList.add(
+        "absent"
+      );
+
+    }
+
+  }
+
+
+  function lockButtons() {
+
+    completeBtn.disabled =
+      true;
+
+
+    absentBtn.disabled =
+      true;
+
+  }
+
+
+  function updateButtons() {
+
+    lockButtons();
+
+
+    if (
+      !currentSession
+    ) {
+
+      return;
+
+    }
+
+
+    const status =
+      String(
+        currentSession.status
+        ||
+        ""
+      ).trim();
+
+
+    /*
+      Chỉ buổi Chờ học mới được xử lý.
+    */
+
+    if (
+      status !==
+      "Chờ học"
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+      REAL chưa đủ tiền:
+      tuyệt đối không mở nút.
+    */
+
+    if (
+      paymentReady !==
+      true
+    ) {
+
+      return;
+
+    }
+
+
+    completeBtn.disabled =
+      false;
+
+
+    absentBtn.disabled =
+      false;
+
+  }
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+
+  function initSupabase() {
+
+    if (
+      !window.supabase
+    ) {
+
+      throw new Error(
+        "Không tải được thư viện Supabase."
+      );
+
+    }
+
+
+    if (
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      throw new Error(
+        "Không đọc được config.js."
+      );
+
+    }
+
+
+    sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+  }
+
+
+  /* =====================================================
+     LOGIN + COACH
+  ====================================================== */
+
+
+  async function checkCoach() {
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await sb.auth
+        .getSession();
+
+
+    if (sessionError) {
+
+      throw sessionError;
+
+    }
+
+
+    if (
+      !sessionData?.session
+    ) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+
+    }
+
+
+    show(
+      "userEmail",
+      sessionData.session
+        .user
+        .email
+        ||
+        ""
+    );
+
+
+    const {
+      data: coachId,
+      error: coachError
+    } =
+      await sb.rpc(
+        "current_coach_id"
+      );
+
+
+    if (coachError) {
+
+      throw new Error(
+        "Không xác định được Coach: "
+        +
+        coachError.message
+      );
+
+    }
+
+
+    if (!coachId) {
+
+      throw new Error(
+        "Tài khoản này chưa liên kết với hồ sơ Coach."
+      );
+
+    }
+
+
+    currentCoachId =
+      Number(
+        coachId
+      );
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD SESSION
+  ====================================================== */
+
+
+  async function loadSession() {
+
+    if (
+      !Number.isFinite(
+        sessionId
+      )
+      ||
+      sessionId <= 0
+    ) {
+
+      throw new Error(
+        "Không tìm thấy ID buổi học."
+      );
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "class_sessions"
+        )
+        .select(`
+          id,
+          session_code,
+          registration_id,
+          coach_id,
+          session_no,
+          session_date,
+          start_time,
+          duration_minutes,
+          court_id,
+          court_name,
+          status,
+          note,
+
+          registrations (
+            id,
+            registration_code,
+            student_id,
+            package_name,
+            tuition_fee,
+            is_test,
+
+            students (
+              id,
+              student_code,
+              full_name
+            )
+          ),
+
+          coaches (
+            id,
+            coach_code,
+            full_name
+          )
+        `)
+
+        .eq(
+          "id",
+          sessionId
+        )
+
+        .eq(
+          "coach_id",
+          currentCoachId
+        )
+
+        .maybeSingle();
+
+
+    if (error) {
+
+      throw new Error(
+        "Không tải được buổi học: "
+        +
+        error.message
+      );
+
+    }
+
+
+    if (!data) {
+
+      throw new Error(
+        "Không tìm thấy buổi học hoặc bạn không phải Coach phụ trách buổi này."
+      );
+
+    }
+
+
+    currentSession =
+      data;
+
+
+    const registration =
+      one(
+        data.registrations
+      );
+
+
+    const student =
+      one(
+        registration
+          ?.students
+      );
+
+
+    const coach =
+      one(
+        data.coaches
+      );
+
+
+    /* ===================================================
+       PAYMENT GATE
+
+       Backend là nguồn quyết định.
+       Không tự tính tiền ở frontend.
+    ==================================================== */
+
+
+    if (
+      !registration?.id
+    ) {
+
+      throw new Error(
+        "Buổi học chưa liên kết với đăng ký học."
+      );
+
+    }
+
+
+    const {
+      data: paidReady,
+      error: paidError
+    } =
+      await sb.rpc(
+        "registration_payment_fully_paid",
+        {
+          p_registration_id:
+            Number(
+              registration.id
+            )
+        }
+      );
+
+
+    if (paidError) {
+
+      console.error(
+        "PAYMENT GATE:",
+        paidError
+      );
+
+
+      throw new Error(
+        "Không xác minh được trạng thái học phí. "
+        +
+        paidError.message
+      );
+
+    }
+
+
+    paymentReady =
+      paidReady === true;
+
+
+    /* ===================================================
+       RENDER
+    ==================================================== */
+
+
+    show(
+      "sessionCode",
+      data.session_code
+      ||
+      `Buổi ${data.id}`
+    );
+
+
+    const registrationText =
+      registration
+        ?.registration_code
+
+        ? `Đăng ký: ${registration.registration_code}`
+
+        : "Đăng ký: —";
+
+
+    const coachText =
+      coach?.full_name
+      ||
+      coach?.coach_code
+      ||
+      "Coach";
+
+
+    show(
+      "coachLine",
+      `${registrationText} · Coach: ${coachText}`
+    );
+
+
+    show(
+      "studentName",
+      student?.full_name
+      ||
+      student?.student_code
+      ||
+      "—"
+    );
+
+
+    show(
+      "sessionNo",
+      data.session_no
+        ? `Buổi ${data.session_no}`
+        : "—"
+    );
+
+
+    show(
+      "status",
+      data.status
+    );
+
+
+    updateBadge(
+      data.status
+    );
+
+
+    show(
+      "sessionDate",
+      formatDate(
+        data.session_date
+      )
+    );
+
+
+    show(
+      "startTime",
+      formatTime(
+        data.start_time
+      )
+    );
+
+
+    show(
+      "duration",
+      data.duration_minutes
+        ? `${data.duration_minutes} phút`
+        : "—"
+    );
+
+
+    show(
+      "courtName",
+      data.court_name
+      ||
+      "—"
+    );
+
+
+    show(
+      "note",
+      data.note
+      ||
+      "Không có ghi chú."
+    );
+
+
+    /* ===================================================
+       TRẠNG THÁI QUYỀN
+    ==================================================== */
+
+
+    const status =
+      String(
+        data.status
+        ||
+        ""
+      ).trim();
+
+
+    if (
+      paymentReady !==
+      true
+    ) {
+
+      setMessage(
+        "🔒 Gói học chưa được xác nhận thanh toán đủ 100%. Coach không được phép điểm danh hoặc hoàn thành buổi học.",
+        "error"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    if (
+      status ===
+      "Đã hoàn thành"
+    ) {
+
+      setMessage(
+        "✓ Buổi học này đã được hoàn thành.",
+        "success"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    if (
+      status ===
+      "Vắng"
+    ) {
+
+      setMessage(
+        "✓ Buổi học này đã được ghi nhận Vắng.",
+        "info"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    if (
+      status !==
+      "Chờ học"
+    ) {
+
+      setMessage(
+        `Buổi học hiện có trạng thái "${status}". Không thể điểm danh ở trạng thái này.`,
+        "info"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    setMessage(
+      "✓ Đã xác minh: đúng Coach phụ trách và gói học đã đủ 100% học phí. Buổi học đủ điều kiện thao tác.",
+      "success"
+    );
+
+
+    updateButtons();
+
+  }
+
+
+  /* =====================================================
+     MARK SESSION
+  ====================================================== */
+
+
+  async function markSession(
+    action
+  ) {
+
+    if (
+      !currentSession
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      paymentReady !==
+      true
+    ) {
+
+      setMessage(
+        "Gói học chưa đủ điều kiện thanh toán.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      String(
+        currentSession.status
+        ||
+        ""
+      ).trim()
+      !==
+      "Chờ học"
+    ) {
+
+      setMessage(
+        "Buổi học này đã được xử lý hoặc không còn ở trạng thái Chờ học.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const isCompleted =
+      action ===
+      "completed";
+
+
+    const ok =
+      window.confirm(
+
+        isCompleted
+
+          ? "Xác nhận học viên đã hoàn thành buổi học này?"
+
+          : "Xác nhận học viên VẮNG buổi học này?"
+
+      );
+
+
+    if (!ok) {
+
+      return;
+
+    }
+
+
+    lockButtons();
+
+
+    setMessage(
+      "Đang xử lý...",
+      "info"
+    );
+
+
+    /*
+      Kiểm tra học phí LẦN CUỐI
+      ngay trước khi thao tác.
+    */
+
+
+    const {
+      data: freshPaid,
+      error: freshPaidError
+    } =
+      await sb.rpc(
+        "registration_payment_fully_paid",
+        {
+          p_registration_id:
+            Number(
+              currentSession
+                .registration_id
+            )
+        }
+      );
+
+
+    if (
+      freshPaidError
+      ||
+      freshPaid !== true
+    ) {
+
+      console.error(
+        "PAYMENT RECHECK:",
+        freshPaidError
+      );
+
+
+      paymentReady =
+        false;
+
+
+      setMessage(
+        "Không thể thao tác: gói học hiện không còn được xác nhận đủ 100% học phí.",
+        "error"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    /*
+      RPC DÀNH RIÊNG CHO COACH.
+
+      completed:
+      - cập nhật Đã hoàn thành
+      - điểm danh Có mặt
+      - tạo Công Coach
+
+      absent:
+      - cập nhật Vắng
+      - điểm danh Vắng
+    */
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "coach_mark_session",
+        {
+
+          p_session_id:
+            Number(
+              currentSession.id
+            ),
+
+          p_action:
+            action
+
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        "COACH MARK SESSION:",
+        error
+      );
+
+
+      setMessage(
+        "Không xử lý được buổi học: "
+        +
+        (
+          error.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+
+      updateButtons();
+
+      return;
+
+    }
+
+
+    const newStatus =
+      data?.status
+      ||
+      (
+        isCompleted
+          ? "Đã hoàn thành"
+          : "Vắng"
+      );
+
+
+    currentSession.status =
+      newStatus;
+
+
+    show(
+      "status",
+      newStatus
+    );
+
+
+    updateBadge(
+      newStatus
+    );
+
+
+    if (
+      isCompleted
+    ) {
+
+      setMessage(
+        "✓ Đã hoàn thành buổi học · ghi Có mặt · tạo Công Coach thành công.",
+        "success"
+      );
+
+    }
+    else {
+
+      setMessage(
+        "✓ Đã ghi nhận học viên Vắng.",
+        "success"
+      );
+
+    }
+
+
+    updateButtons();
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+
+  completeBtn.addEventListener(
+    "click",
+    function () {
+
+      markSession(
+        "completed"
+      );
+
+    }
+  );
+
+
+  absentBtn.addEventListener(
+    "click",
+    function () {
+
+      markSession(
+        "absent"
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     INIT
+  ====================================================== */
+
+
+  async function init() {
+
+    lockButtons();
+
+
+    try {
+
+      initSupabase();
+
+
+      const ok =
+        await checkCoach();
+
+
+      if (!ok) {
+
+        return;
+
+      }
+
+
+      await loadSession();
+
+    }
+    catch (error) {
+
+      console.error(
+        "COACH SESSION DETAIL:",
+        error
+      );
+
+
+      show(
+        "sessionCode",
+        "Không tải được buổi học"
+      );
+
+
+      show(
+        "coachLine",
+        "—"
+      );
+
+
+      setMessage(
+        error?.message
+        ||
+        "Có lỗi khi tải buổi học.",
+        "error"
+      );
+
+
+      lockButtons();
+
+    }
+
+  }
+
+
+  await init();
+
+
+})();
+
+</script>
+
 
 </body>
 </html>
