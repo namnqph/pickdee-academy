@@ -422,9 +422,22 @@
 
 </main>
 
-
 <script>
 (async function () {
+
+  /* =====================================================
+     PICKDEE ACADEMY
+     STUDENT BOOK SESSION
+
+     QUY TẮC CỨNG:
+     - Chỉ registration REAL: is_test = false
+     - Registration phải Đã duyệt
+     - Phải thanh toán đủ 100% và PickDee đã xác nhận
+     - Phải có Coach phụ trách
+     - TEST không bao giờ xuất hiện trong dropdown REAL
+     - Submit sẽ kiểm tra lại Payment Gate ngay trước khi gửi
+  ====================================================== */
+
 
   /* =====================================================
      DOM
@@ -475,13 +488,17 @@
 
   let sb = null;
 
-  let currentStudentId = null;
+  let currentStudentId =
+    null;
 
-  let currentStudent = null;
+  let currentStudent =
+    null;
 
-  let registrations = [];
+  let registrations =
+    [];
 
-  let bookableRegistrations = [];
+  let bookableRegistrations =
+    [];
 
   let pendingPaymentIds =
     new Set();
@@ -578,7 +595,7 @@
 
 
   /* =====================================================
-     PAYMENT GATE UI
+     ACCESS GATE UI
   ====================================================== */
 
   const gateStyle =
@@ -586,11 +603,15 @@
       "style"
     );
 
+
   gateStyle.textContent = `
 
     #paymentGate {
       display: none;
-      border-color: rgba(255,207,112,.32);
+
+      border-color:
+        rgba(255,207,112,.32);
+
       background:
         linear-gradient(
           145deg,
@@ -647,13 +668,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
+
       width: 100%;
       min-height: 48px;
+
       margin-top: 13px;
       padding: 10px 14px;
+
       border-radius: 11px;
+
       background: #d8ff45;
       color: #142300;
+
       text-decoration: none;
       font-size: 14px;
       font-weight: 900;
@@ -663,19 +689,54 @@
       display: flex;
       align-items: center;
       justify-content: center;
+
       min-height: 48px;
+
       margin-top: 13px;
       padding: 10px 14px;
+
       border-radius: 11px;
-      background: rgba(255,207,112,.10);
-      border: 1px solid rgba(255,207,112,.25);
+
+      background:
+        rgba(255,207,112,.10);
+
+      border:
+        1px solid rgba(255,207,112,.25);
+
       color: #ffcf70;
+
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .coach-waiting {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 48px;
+
+      margin-top: 13px;
+      padding: 10px 14px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(216,255,69,.08);
+
+      border:
+        1px solid rgba(216,255,69,.22);
+
+      color: #d8ff45;
+
       text-align: center;
       font-size: 13px;
       font-weight: 900;
     }
 
   `;
+
 
   document.head.appendChild(
     gateStyle
@@ -686,6 +747,7 @@
     document.createElement(
       "section"
     );
+
 
   paymentGate.id =
     "paymentGate";
@@ -700,12 +762,15 @@
   );
 
 
-  function renderPaymentGate(
-    blockedRows
+  function renderAccessGate(
+    unpaidRows = [],
+    paidWithoutCoachRows = []
   ) {
 
     if (
-      !blockedRows.length
+      unpaidRows.length === 0
+      &&
+      paidWithoutCoachRows.length === 0
     ) {
 
       paymentGate.classList.remove(
@@ -720,19 +785,29 @@
     }
 
 
-    paymentGate.innerHTML = `
+    let html = "";
 
-      <div class="payment-gate-title">
-        🔒 Hoàn tất học phí
-      </div>
 
-      <div class="payment-gate-desc">
-        Gói học bên dưới chưa được mở quyền đặt lịch.
-        Bạn cần hoàn tất học phí và chờ PickDee
-        xác nhận thanh toán trước khi đặt buổi học.
-      </div>
+    if (
+      unpaidRows.length > 0
+    ) {
 
-      ${blockedRows
+      html += `
+
+        <div class="payment-gate-title">
+          🔒 Hoàn tất học phí
+        </div>
+
+        <div class="payment-gate-desc">
+          Những gói dưới đây chưa được mở quyền đặt lịch.
+          Học viên chỉ được học sau khi thanh toán đủ 100%
+          và PickDee đã xác nhận khoản thu.
+        </div>
+
+      `;
+
+
+      html += unpaidRows
         .map(
           row => {
 
@@ -797,10 +872,69 @@
 
           }
         )
-        .join("")
-      }
+        .join("");
 
-    `;
+    }
+
+
+    if (
+      paidWithoutCoachRows.length > 0
+    ) {
+
+      html += `
+
+        <div
+          class="payment-gate-title"
+          style="margin-top:${unpaidRows.length ? "22px" : "0"}"
+        >
+          👨‍🏫 Đang chờ phân Coach
+        </div>
+
+        <div class="payment-gate-desc">
+          Gói học đã thanh toán đủ nhưng chưa có Coach phụ trách.
+          Bạn chưa thể gửi yêu cầu lịch học cho đến khi Coach được phân công.
+        </div>
+
+      `;
+
+
+      html += paidWithoutCoachRows
+        .map(
+          row => `
+
+            <div class="payment-package">
+
+              <div class="payment-package-code">
+                ${escapeHtml(
+                  row.registration_code
+                  ||
+                  "Đăng ký"
+                )}
+              </div>
+
+              <div class="payment-package-name">
+                ${escapeHtml(
+                  row.package_name
+                  ||
+                  "Gói học"
+                )}
+              </div>
+
+              <div class="coach-waiting">
+                ✓ ĐÃ ĐỦ HỌC PHÍ · ĐANG CHỜ PHÂN COACH
+              </div>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+    }
+
+
+    paymentGate.innerHTML =
+      html;
 
 
     paymentGate.classList.add(
@@ -853,6 +987,7 @@
 
     window.sb =
       sb;
+
 
     window.PICKDEE_NOTIFICATION_ROLE =
       "student";
@@ -960,9 +1095,33 @@
 
   /* =====================================================
      PENDING SESSION REQUEST
+
+     CHỈ xét request của registration REAL hiện tại.
+     TEST cũ không được chặn luồng REAL.
   ====================================================== */
 
   async function checkPendingRequest() {
+
+    const realRegistrationIds =
+      registrations
+        .map(
+          row =>
+            Number(row.id)
+        )
+        .filter(
+          id =>
+            Number.isFinite(id)
+        );
+
+
+    if (
+      realRegistrationIds.length === 0
+    ) {
+
+      return false;
+
+    }
+
 
     const {
       data,
@@ -973,11 +1132,15 @@
           "session_requests"
         )
         .select(
-          "id"
+          "id,registration_id"
         )
         .eq(
           "student_id",
           currentStudentId
+        )
+        .in(
+          "registration_id",
+          realRegistrationIds
         )
         .eq(
           "status",
@@ -1026,6 +1189,14 @@
     if (
       registrations.length === 0
     ) {
+
+      bookableRegistrations =
+        [];
+
+      renderAccessGate(
+        [],
+        []
+      );
 
       return;
 
@@ -1084,6 +1255,10 @@
     }
 
 
+    /*
+      Payment Gate do backend quyết định.
+    */
+
     const checkedRows =
       await Promise.all(
 
@@ -1116,6 +1291,7 @@
 
             return {
               ...row,
+
               payment_ready:
                 data === true
             };
@@ -1130,24 +1306,45 @@
       checkedRows;
 
 
+    /*
+      CHỈ được đặt lịch khi:
+      - REAL
+      - payment_ready
+      - đã có Coach
+    */
+
     bookableRegistrations =
       registrations.filter(
         row =>
-          row.payment_ready ===
-          true
+          row.is_test === false
+          &&
+          row.payment_ready === true
+          &&
+          Boolean(
+            row.coach_id
+          )
       );
 
 
-    const blockedRows =
+    const unpaidRows =
       registrations.filter(
         row =>
-          row.payment_ready !==
-          true
+          row.payment_ready !== true
       );
 
 
-    renderPaymentGate(
-      blockedRows
+    const paidWithoutCoachRows =
+      registrations.filter(
+        row =>
+          row.payment_ready === true
+          &&
+          !row.coach_id
+      );
+
+
+    renderAccessGate(
+      unpaidRows,
+      paidWithoutCoachRows
     );
 
   }
@@ -1155,12 +1352,18 @@
 
   /* =====================================================
      LOAD REGISTRATIONS
+
+     SỬA QUAN TRỌNG:
+     .eq("is_test", false)
+
+     TEST KHÔNG BAO GIỜ ĐƯỢC LOAD VÀO DROPDOWN.
   ====================================================== */
 
   async function loadRegistrations() {
 
     registrationSelect.disabled =
       true;
+
 
     registrationSelect.innerHTML =
       `
@@ -1198,6 +1401,10 @@
           "status",
           "Đã duyệt"
         )
+        .eq(
+          "is_test",
+          false
+        )
         .order(
           "start_date",
           {
@@ -1222,7 +1429,7 @@
     ) {
 
       packageName.textContent =
-        "Chưa có gói học";
+        "Chưa có gói học REAL";
 
       nextSessionNo.textContent =
         "—";
@@ -1230,20 +1437,28 @@
       coachName.textContent =
         "—";
 
+
       registrationSelect.innerHTML =
         `
           <option value="">
-            Chưa có gói học đã duyệt
+            Chưa có gói học REAL đã duyệt
           </option>
         `;
+
 
       registrationSelect.disabled =
         true;
 
+
       bookableRegistrations =
         [];
 
-      renderPaymentGate([]);
+
+      renderAccessGate(
+        [],
+        []
+      );
+
 
       return;
 
@@ -1266,13 +1481,14 @@
     ) {
 
       packageName.textContent =
-        "Chờ xác nhận học phí";
+        "Chưa đủ điều kiện đặt lịch";
 
       nextSessionNo.textContent =
         "—";
 
       coachName.textContent =
         "—";
+
 
       registrationSelect.innerHTML =
         `
@@ -1281,11 +1497,13 @@
           </option>
         `;
 
+
       registrationSelect.disabled =
         true;
 
       bookingCard.style.display =
         "none";
+
 
       return;
 
@@ -1296,6 +1514,12 @@
       "";
 
 
+    /*
+      Dropdown chỉ chứa REAL
+      + đủ học phí
+      + có Coach.
+    */
+
     bookableRegistrations.forEach(
       item => {
 
@@ -1304,8 +1528,10 @@
             "option"
           );
 
+
         option.value =
           item.id;
+
 
         option.textContent =
           `${
@@ -1317,6 +1543,7 @@
             ||
             "Gói học"
           }`;
+
 
         registrationSelect.appendChild(
           option
@@ -1331,7 +1558,9 @@
 
 
     registrationSelect.value =
-      bookableRegistrations[0].id;
+      String(
+        bookableRegistrations[0].id
+      );
 
 
     await applyRegistration();
@@ -1509,7 +1738,10 @@
       }
       catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
+
 
         showMessage(
           error.message
@@ -1577,6 +1809,7 @@
             "option"
           );
 
+
         option.value =
           item.tinh_thanh;
 
@@ -1585,6 +1818,7 @@
 
         option.dataset.code =
           item.ma_khu_vuc;
+
 
         requestedArea.appendChild(
           option
@@ -1607,13 +1841,13 @@
         Array.from(
           requestedArea.options
         )
-        .some(
-          option =>
-            option.value
-            ===
-            currentStudent
-              .preferred_area
-        );
+          .some(
+            option =>
+              option.value
+              ===
+              currentStudent
+                .preferred_area
+          );
 
 
       if (exists) {
@@ -1718,11 +1952,13 @@
             "option"
           );
 
+
         option.value =
           item.ten_xa_phuong;
 
         option.textContent =
           item.ten_xa_phuong;
+
 
         requestedWard.appendChild(
           option
@@ -1742,12 +1978,12 @@
         Array.from(
           requestedWard.options
         )
-        .some(
-          option =>
-            option.value
-            ===
-            selectedWard
-        );
+          .some(
+            option =>
+              option.value
+              ===
+              selectedWard
+          );
 
 
       if (exists) {
@@ -1798,7 +2034,10 @@
       }
       catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
+
 
         showMessage(
           error.message
@@ -1857,17 +2096,92 @@
         );
 
 
+      /*
+        Không tin dữ liệu ngoài danh sách REAL
+        mà trang đã xác minh.
+      */
+
       if (
         !registration
         ||
-        registration.payment_ready
-          !== true
+        registration.is_test !== false
       ) {
 
         showMessage(
-          "Gói học chưa được xác nhận thanh toán.",
+          "Gói học không hợp lệ để đặt lịch.",
           "error"
         );
+
+        return;
+
+      }
+
+
+      if (
+        !registration.coach_id
+      ) {
+
+        showMessage(
+          "Gói học chưa có Coach phụ trách.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      /* ===================================================
+         RE-CHECK PAYMENT BACKEND
+         NGAY TRƯỚC KHI GỬI YÊU CẦU
+      ==================================================== */
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "ĐANG KIỂM TRA HỌC PHÍ...";
+
+
+      const {
+        data: freshPaymentReady,
+        error: freshPaymentError
+      } =
+        await sb.rpc(
+          "student_registration_payment_ready",
+          {
+            p_registration_id:
+              registrationId
+          }
+        );
+
+
+      if (
+        freshPaymentError
+        ||
+        freshPaymentReady !== true
+      ) {
+
+        console.error(
+          "PAYMENT RECHECK:",
+          freshPaymentError
+        );
+
+
+        showMessage(
+          "Gói học chưa được xác nhận thanh toán đủ 100%.",
+          "error"
+        );
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "GỬI YÊU CẦU CHO COACH";
+
 
         return;
 
@@ -1885,6 +2199,15 @@
           "error"
         );
 
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "GỬI YÊU CẦU CHO COACH";
+
+
         return;
 
       }
@@ -1900,6 +2223,15 @@
           "Hãy chọn Tỉnh/Thành và Phường/Xã.",
           "error"
         );
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "GỬI YÊU CẦU CHO COACH";
+
 
         return;
 
@@ -1923,13 +2255,18 @@
           "error"
         );
 
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "GỬI YÊU CẦU CHO COACH";
+
+
         return;
 
       }
-
-
-      submitBtn.disabled =
-        true;
 
 
       submitBtn.textContent =
@@ -1976,7 +2313,9 @@
 
       if (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
         showMessage(
@@ -2051,6 +2390,15 @@
       }
 
 
+      /*
+        Load registration REAL trước.
+        Đây cũng là nguồn ID để kiểm tra
+        pending request REAL.
+      */
+
+      await loadRegistrations();
+
+
       const pending =
         await checkPendingRequest();
 
@@ -2062,12 +2410,9 @@
       }
 
 
-      await loadRegistrations();
-
-
       /*
-        Không có gói nào đủ điều kiện đặt lịch:
-        dừng ở Payment Gate.
+        Không có REAL nào:
+        đủ học phí + có Coach.
       */
 
       if (
@@ -2090,7 +2435,15 @@
         ) {
 
           showMessage(
-            "Bạn chưa có gói học đã duyệt.",
+            "Bạn chưa có gói học REAL đã duyệt.",
+            "error"
+          );
+
+        }
+        else {
+
+          showMessage(
+            "Gói học chưa đủ điều kiện đặt lịch.",
             "error"
           );
 
@@ -2114,7 +2467,7 @@
 
 
       showMessage(
-        "✓ Gói học đã đủ điều kiện đặt lịch.",
+        "✓ Gói học REAL đã đủ điều kiện đặt lịch.",
         "success"
       );
 
