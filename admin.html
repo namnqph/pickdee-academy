@@ -3373,168 +3373,221 @@ window.addEventListener(
 
   async function loadAdminTaskCount() {
 
-    const adminTaskCount =
-      document.getElementById(
-        "adminTaskCount"
+  const adminTaskCount =
+    document.getElementById(
+      "adminTaskCount"
+    );
+
+
+  if (!adminTaskCount) {
+    return;
+  }
+
+
+  try {
+
+
+    /* =====================================================
+       1. VIỆC ADMIN ĐANG QUẢN LÝ SẴN
+    ====================================================== */
+
+    const {
+      data: adminTaskData,
+      error: adminTaskError
+    } =
+      await sb.rpc(
+        "admin_get_pending_tasks"
       );
 
-    if (!adminTaskCount) {
-      return;
+
+    if (adminTaskError) {
+
+      throw adminTaskError;
+
     }
 
-    try {
 
-      const [
-        oldTasksResult,
-        coachChangeResult,
-        coachApplicationResult
-      ] =
-        await Promise.all([
-
-          /* =============================================
-             1. CÁC VIỆC CŨ
-          ============================================== */
-
-          sb.rpc(
-            "admin_get_pending_tasks"
-          ),
+    const adminRows =
+      Array.isArray(
+        adminTaskData
+      )
+        ?
+        adminTaskData
+        :
+        [];
 
 
-          /* =============================================
-             2. YÊU CẦU ĐỔI COACH ĐANG CHỜ
-          ============================================== */
+    const adminTaskTotal =
+      adminRows.length;
 
-          sb
-            .from(
-              "coach_change_requests"
+
+    /* =====================================================
+       2. VIỆC TỒN VẬN HÀNH CỦA COACH
+    ====================================================== */
+
+    const {
+      data: coachBacklogData,
+      error: coachBacklogError
+    } =
+      await sb.rpc(
+        "admin_get_coach_operational_backlog"
+      );
+
+
+    if (coachBacklogError) {
+
+      throw coachBacklogError;
+
+    }
+
+
+    const coachRows =
+      Array.isArray(
+        coachBacklogData
+      )
+        ?
+        coachBacklogData
+        :
+        [];
+
+
+    /*
+      QUAN TRỌNG:
+
+      KHÔNG cộng pending_session_requests ở đây.
+
+      Vì yêu cầu lịch học / ngoại lệ lịch
+      đã thuộc luồng admin_get_pending_tasks()
+      và hệ thống YÊU CẦU LỊCH HỌC hiện có.
+
+      Nếu cộng lại pending_session_requests
+      sẽ có nguy cơ đếm trùng.
+
+      Chỉ bổ sung 2 loại việc mới:
+      - Buổi quá giờ chưa điểm danh
+      - Chấm trình cuối khóa
+    */
+
+
+    const overdueAttendanceTotal =
+      coachRows.reduce(
+        function (
+          sum,
+          row
+        ) {
+
+          return (
+            sum
+            +
+            Number(
+              row.overdue_attendance
+              ||
+              0
             )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
+          );
+
+        },
+        0
+      );
+
+
+    const finalAssessmentTotal =
+      coachRows.reduce(
+        function (
+          sum,
+          row
+        ) {
+
+          return (
+            sum
+            +
+            Number(
+              row.pending_final_assessments
+              ||
+              0
             )
-            .eq(
-              "status",
-              "pending"
-            ),
+          );
+
+        },
+        0
+      );
 
 
-          /* =============================================
-             3. HỒ SƠ COACH ĐANG CHỜ DUYỆT
-          ============================================== */
+    /* =====================================================
+       3. TỔNG VIỆC TOÀN HỆ THỐNG
+    ====================================================== */
 
-          sb
-            .from(
-              "coach_applications"
-            )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            )
-
-        ]);
+    const total =
+      adminTaskTotal
+      +
+      overdueAttendanceTotal
+      +
+      finalAssessmentTotal;
 
 
-      if (oldTasksResult.error) {
-        throw oldTasksResult.error;
-      }
+    adminTaskCount.textContent =
+      String(
+        total
+      );
 
 
-      if (coachChangeResult.error) {
-        throw coachChangeResult.error;
-      }
-
-
-      if (coachApplicationResult.error) {
-        throw coachApplicationResult.error;
-      }
-
-
-      const oldRows =
-        Array.isArray(
-          oldTasksResult.data
-        )
-          ?
-          oldTasksResult.data
-          :
-          [];
-
-
-      const coachChangePending =
-        Number(
-          coachChangeResult.count || 0
-        );
-
-
-      const coachApplicationPending =
-        Number(
-          coachApplicationResult.count || 0
-        );
-
-
-      const total =
-        oldRows.length
-        +
-        coachChangePending
-        +
-        coachApplicationPending;
-
-
-      adminTaskCount.textContent =
-        String(total);
-
+    if (
+      total === 0
+    ) {
 
       adminTaskCount.style.background =
-        total > 0
-          ?
-          "#ff8e8e"
-          :
-          "#b9ff18";
-
-
-      console.log(
-        "ADMIN TASK COUNT:",
-        {
-          oldTasks:
-            oldRows.length,
-
-          coachChanges:
-            coachChangePending,
-
-          coachApplications:
-            coachApplicationPending,
-
-          total:
-            total
-        }
-      );
+        "#b9ff18";
 
     }
-    catch (error) {
-
-      console.error(
-        "Lỗi đếm việc cần xử lý:",
-        error
-      );
-
-      adminTaskCount.textContent =
-        "!";
+    else {
 
       adminTaskCount.style.background =
         "#ff8e8e";
 
     }
 
+
+    console.log(
+      "Admin task summary:",
+      {
+        adminTasks:
+          adminTaskTotal,
+
+        overdueAttendance:
+          overdueAttendanceTotal,
+
+        finalAssessment:
+          finalAssessmentTotal,
+
+        total:
+          total
+      }
+    );
+
+
   }
+  catch (
+    error
+  ) {
+
+
+    console.error(
+      "Lỗi đếm việc cần xử lý:",
+      error
+    );
+
+
+    adminTaskCount.textContent =
+      "!";
+
+
+    adminTaskCount.style.background =
+      "#ff8e8e";
+
+
+  }
+
+}
 
 
 
