@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+
+  <title>Thanh toán học phí | PickDee Academy</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #071523;
+      --card: #0d2038;
+      --card2: #102942;
+      --border: #284764;
+      --text: #ffffff;
+      --muted: #a9bbcc;
+      --green: #b7ff00;
+      --yellow: #ffd54a;
+      --red: #ff7272;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at top,
+          #12365a 0,
+          #071523 44%,
+          #04101b 100%
+        );
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+    }
+
+    .page {
+      width: min(720px, 100%);
+      margin: 0 auto;
+      padding:
+        max(18px, env(safe-area-inset-top))
+        14px
+        max(40px, env(safe-area-inset-bottom));
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #dce8f3;
+      text-decoration: none;
+      font-size: 14px;
+      margin: 4px 0 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 8px 0 20px;
+    }
+
+    .card {
+      background: rgba(13, 32, 56, 0.96);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      margin: 0 0 14px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      flex: 0 0 42%;
+    }
+
+    .value {
+      text-align: right;
+      font-size: 14px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .amount-box {
+      background: rgba(183,255,0,.08);
+      border: 1px solid rgba(183,255,0,.34);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      margin: 8px 0 0;
+    }
+
+    .amount-label {
+      color: #d1deea;
+      font-size: 13px;
+    }
+
+    .amount {
+      margin-top: 5px;
+      color: var(--green);
+      font-size: 31px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .qr-wrap {
+      text-align: center;
+      margin: 4px auto 16px;
+    }
+
+    .qr {
+      width: min(290px, 88%);
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      background: white;
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .transfer-box {
+      background: #08192b;
+      border: 1px dashed #54718e;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .transfer-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .transfer-content {
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .copy-btn {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid #496987;
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: white;
+      background: #173754;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 19px;
+      color: #d8e2eb;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .upload {
+      display: block;
+      width: 100%;
+      border: 1px dashed #577792;
+      background: #08192b;
+      border-radius: 14px;
+      padding: 15px;
+      color: #eaf2f8;
+      margin-top: 12px;
+    }
+
+    .file-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .policy-box {
+      max-height: 230px;
+      overflow-y: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: #08192b;
+      border: 1px solid #294963;
+      color: #d6e2ec;
+      white-space: pre-line;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .agree {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+
+    .agree input {
+      width: 20px;
+      height: 20px;
+      margin: 1px 0 0;
+      flex: 0 0 auto;
+      accent-color: var(--green);
+    }
+
+    .agree span {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .submit-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 15px 16px;
+      margin-top: 17px;
+      background: var(--green);
+      color: #07131f;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+    }
+
+    .status {
+      display: none;
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.info {
+      color: #e9f4ff;
+      border: 1px solid #3b6f9f;
+      background: #102d48;
+    }
+
+    .status.success {
+      color: #eaffe1;
+      border: 1px solid rgba(183,255,0,.45);
+      background: rgba(183,255,0,.09);
+    }
+
+    .status.error {
+      color: #ffdada;
+      border: 1px solid rgba(255,114,114,.5);
+      background: rgba(255,114,114,.09);
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 50px 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+
+      .card {
+        padding: 15px;
+        border-radius: 16px;
+      }
+
+      .amount {
+        font-size: 27px;
+      }
+
+      .row {
+        gap: 12px;
+      }
+
+      .label {
+        font-size: 12px;
+      }
+
+      .value {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="page">
+
+    <a
+      class="back"
+      href="./student-payments"
+    >
+      ← Quay lại học phí
+    </a>
+
+    <h1>Thanh toán học phí</h1>
+
+    <div class="subtitle">
+      Chuyển khoản theo đúng nội dung bên dưới,
+      sau đó gửi bill để PickDee xác nhận.
+    </div>
+
+    <div
+      id="statusBox"
+      class="status"
+    ></div>
+
+    <div
+      id="loading"
+      class="loading"
+    >
+      Đang tải thông tin thanh toán...
+    </div>
+
+    <div
+      id="checkout"
+      class="hidden"
+    >
+
+      <!-- THÔNG TIN GÓI HỌC -->
+
+      <section class="card">
+
+        <h2 class="card-title">
+          Gói học cần thanh toán
+        </h2>
+
+        <div class="row">
+          <div class="label">
+            Học viên
+          </div>
+
+          <div
+            id="studentName"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Mã học viên
+          </div>
+
+          <div
+            id="studentCode"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Mã đăng ký
+          </div>
+
+          <div
+            id="registrationCode"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Học phí
+          </div>
+
+          <div
+            id="tuitionFee"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Đã thanh toán
+          </div>
+
+          <div
+            id="paidAmount"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="amount-box">
+
+          <div class="amount-label">
+            SỐ TIỀN CẦN THANH TOÁN
+          </div>
+
+          <div
+            id="amountDue"
+            class="amount"
+          >
+            —
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- QR -->
+
+      <section
+        id="paymentSection"
+        class="card"
+      >
+
+        <h2 class="card-title">
+          Quét QR để chuyển khoản
+        </h2>
+
+        <div class="qr-wrap">
+
+          <img
+            id="qrImage"
+            class="qr"
+            alt="QR thanh toán PickDee Academy"
+          />
+
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Ngân hàng
+          </div>
+
+          <div
+            id="bankName"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Số tài khoản
+          </div>
+
+          <div
+            id="accountNumber"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">
+            Chủ tài khoản
+          </div>
+
+          <div
+            id="accountName"
+            class="value"
+          >
+            —
+          </div>
+        </div>
+
+        <div class="transfer-box">
+
+          <div class="transfer-label">
+            NỘI DUNG CHUYỂN KHOẢN
+          </div>
+
+          <div
+            id="transferContent"
+            class="transfer-content"
+          >
+            —
+          </div>
+
+          <button
+            id="copyButton"
+            class="copy-btn"
+            type="button"
+          >
+            Sao chép nội dung chuyển khoản
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- BILL -->
+
+      <section
+        id="proofSection"
+        class="card"
+      >
+
+        <h2 class="card-title">
+          Gửi bill thanh toán
+        </h2>
+
+        <ol class="steps">
+          <li>Chuyển khoản đúng số tiền.</li>
+          <li>Giữ lại ảnh giao dịch thành công.</li>
+          <li>Tải bill lên bên dưới.</li>
+          <li>Đồng ý chính sách và gửi xác nhận.</li>
+        </ol>
+
+        <input
+          id="proofFile"
+          class="upload"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+        />
+
+        <div class="file-note">
+          Chấp nhận JPG, PNG, WEBP hoặc PDF.
+          Dung lượng tối đa 10MB.
+        </div>
+
+      </section>
+
+
+      <!-- POLICY -->
+
+      <section
+        id="policySection"
+        class="card"
+      >
+
+        <h2 class="card-title">
+          Chính sách thanh toán
+        </h2>
+
+        <div
+          id="policyText"
+          class="policy-box"
+        ></div>
+
+        <label class="agree">
+
+          <input
+            id="policyAgree"
+            type="checkbox"
+          />
+
+          <span>
+            Tôi đã đọc, hiểu và đồng ý với
+            chính sách thanh toán của PickDee Academy,
+            bao gồm quy định không hoàn tiền và
+            điều kiện chuyển nhượng trong trường hợp
+            bất khả kháng.
+          </span>
+
+        </label>
+
+        <button
+          id="submitButton"
+          class="submit-btn"
+          type="button"
+        >
+          GỬI XÁC NHẬN THANH TOÁN
+        </button>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <script>
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    const sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    window.sb = sb;
+
+    window.PICKDEE_NOTIFICATION_ROLE =
+      "student";
+
+
+    let checkoutData = null;
+
+
+    function money(value) {
+
+      return (
+        Number(value || 0)
+          .toLocaleString("vi-VN")
+        +
+        "đ"
+      );
+
+    }
+
+
+    function showStatus(
+      message,
+      type = "info"
+    ) {
+
+      const box =
+        document.getElementById(
+          "statusBox"
+        );
+
+      box.textContent =
+        message;
+
+      box.className =
+        `status show ${type}`;
+
+    }
+
+
+    function hideStatus() {
+
+      const box =
+        document.getElementById(
+          "statusBox"
+        );
+
+      box.className =
+        "status";
+
+    }
+
+
+    function getRegistrationId() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const raw =
+        params.get(
+          "registration_id"
+        )
+        ||
+        params.get(
+          "id"
+        );
+
+      const id =
+        Number(raw);
+
+      return Number.isFinite(id)
+        && id > 0
+        ? id
+        : null;
+
+    }
+
+
+    async function checkAuth() {
+
+      const {
+        data,
+        error
+      } =
+        await sb.auth.getSession();
+
+
+      if (
+        error
+        ||
+        !data?.session
+      ) {
+
+        window.location.href =
+          "./login";
+
+        return false;
+
+      }
+
+
+      return true;
+
+    }
+
+
+    async function loadCheckout() {
+
+      hideStatus();
+
+
+      const authenticated =
+        await checkAuth();
+
+
+      if (!authenticated) {
+        return;
+      }
+
+
+      const registrationId =
+        getRegistrationId();
+
+
+      if (!registrationId) {
+
+        document
+          .getElementById(
+            "loading"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        showStatus(
+          "Chưa xác định được đăng ký học cần thanh toán.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "student_get_payment_checkout",
+          {
+            p_registration_id:
+              registrationId
+          }
+        );
+
+
+      if (error) {
+
+        console.error(
+          error
+        );
+
+
+        document
+          .getElementById(
+            "loading"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        showStatus(
+          error.message
+          ||
+          "Không tải được thông tin thanh toán.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const row =
+        Array.isArray(data)
+          ? data[0]
+          : data;
+
+
+      if (!row) {
+
+        document
+          .getElementById(
+            "loading"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        showStatus(
+          "Không tìm thấy thông tin thanh toán.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      checkoutData =
+        row;
+
+
+      renderCheckout(
+        row
+      );
+
+    }
+
+
+    function renderCheckout(
+      row
+    ) {
+
+      document
+        .getElementById(
+          "loading"
+        )
+        .classList
+        .add(
+          "hidden"
+        );
+
+
+      document
+        .getElementById(
+          "checkout"
+        )
+        .classList
+        .remove(
+          "hidden"
+        );
+
+
+      document.getElementById(
+        "studentName"
+      ).textContent =
+        row.student_name
+        || "—";
+
+
+      document.getElementById(
+        "studentCode"
+      ).textContent =
+        row.student_code
+        || "—";
+
+
+      document.getElementById(
+        "registrationCode"
+      ).textContent =
+        row.registration_code
+        || "—";
+
+
+      document.getElementById(
+        "tuitionFee"
+      ).textContent =
+        money(
+          row.tuition_fee
+        );
+
+
+      document.getElementById(
+        "paidAmount"
+      ).textContent =
+        money(
+          row.paid_amount
+        );
+
+
+      document.getElementById(
+        "amountDue"
+      ).textContent =
+        money(
+          row.amount_due
+        );
+
+
+      document.getElementById(
+        "bankName"
+      ).textContent =
+        row.bank_name
+        || "—";
+
+
+      document.getElementById(
+        "accountNumber"
+      ).textContent =
+        row.account_number
+        || "—";
+
+
+      document.getElementById(
+        "accountName"
+      ).textContent =
+        row.account_name
+        || "—";
+
+
+      document.getElementById(
+        "transferContent"
+      ).textContent =
+        row.transfer_content
+        || "—";
+
+
+      document.getElementById(
+        "policyText"
+      ).textContent =
+        row.policy_text
+        || "";
+
+
+      const qrUrl =
+        sb.storage
+          .from(
+            "payment-assets"
+          )
+          .getPublicUrl(
+            row.qr_image_path
+            || "pickdee-payment-qr.png"
+          );
+
+
+      document.getElementById(
+        "qrImage"
+      ).src =
+        qrUrl?.data?.publicUrl
+        || "";
+
+
+      const due =
+        Number(
+          row.amount_due
+          || 0
+        );
+
+
+      if (due <= 0) {
+
+        document
+          .getElementById(
+            "paymentSection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        document
+          .getElementById(
+            "proofSection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        document
+          .getElementById(
+            "policySection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        showStatus(
+          "Gói học này đã thanh toán đủ.",
+          "success"
+        );
+
+        return;
+
+      }
+
+
+      if (
+        row.has_pending_submission
+      ) {
+
+        document
+          .getElementById(
+            "proofSection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        document
+          .getElementById(
+            "policySection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        showStatus(
+          "Bạn đã gửi bill. PickDee đang kiểm tra và xác nhận thanh toán.",
+          "info"
+        );
+
+      }
+
+    }
+
+
+    document
+      .getElementById(
+        "copyButton"
+      )
+      .addEventListener(
+        "click",
+        async () => {
+
+          const value =
+            checkoutData
+              ?.transfer_content
+            || "";
+
+
+          if (!value) {
+            return;
+          }
+
+
+          try {
+
+            await navigator
+              .clipboard
+              .writeText(
+                value
+              );
+
+
+            showStatus(
+              "Đã sao chép nội dung chuyển khoản.",
+              "success"
+            );
+
+          }
+          catch (error) {
+
+            console.error(
+              error
+            );
+
+
+            showStatus(
+              "Không sao chép được. Bạn hãy giữ vào nội dung để copy thủ công.",
+              "error"
+            );
+
+          }
+
+        }
+      );
+
+
+    document
+      .getElementById(
+        "submitButton"
+      )
+      .addEventListener(
+        "click",
+        submitPayment
+      );
+
+
+    async function submitPayment() {
+
+      hideStatus();
+
+
+      if (!checkoutData) {
+
+        showStatus(
+          "Chưa tải được thông tin thanh toán.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const fileInput =
+        document.getElementById(
+          "proofFile"
+        );
+
+
+      const file =
+        fileInput.files?.[0];
+
+
+      const accepted =
+        document.getElementById(
+          "policyAgree"
+        ).checked;
+
+
+      if (!file) {
+
+        showStatus(
+          "Bạn cần tải bill thanh toán lên trước.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (!accepted) {
+
+        showStatus(
+          "Bạn cần đọc và đồng ý chính sách thanh toán.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (
+        file.size >
+        10 * 1024 * 1024
+      ) {
+
+        showStatus(
+          "Bill vượt quá dung lượng 10MB.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const submitButton =
+        document.getElementById(
+          "submitButton"
+        );
+
+
+      submitButton.disabled =
+        true;
+
+
+      submitButton.textContent =
+        "ĐANG GỬI BILL...";
+
+
+      let uploadedPath =
+        null;
+
+
+      try {
+
+        const {
+          data: authData,
+          error: authError
+        } =
+          await sb.auth.getUser();
+
+
+        if (
+          authError
+          ||
+          !authData?.user
+        ) {
+
+          throw new Error(
+            "Phiên đăng nhập đã hết hạn."
+          );
+
+        }
+
+
+        const userId =
+          authData.user.id;
+
+
+        const extension =
+          (
+            file.name
+              .split(".")
+              .pop()
+            ||
+            "jpg"
+          )
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9]/g,
+            ""
+          );
+
+
+        const safeExtension =
+          extension
+          || "jpg";
+
+
+        const fileName =
+          [
+            "payment",
+            checkoutData.registration_id,
+            Date.now()
+          ].join(
+            "-"
+          )
+          +
+          "."
+          +
+          safeExtension;
+
+
+        uploadedPath =
+          `${userId}/${fileName}`;
+
+
+        const {
+          error: uploadError
+        } =
+          await sb.storage
+            .from(
+              "payment-proofs"
+            )
+            .upload(
+              uploadedPath,
+              file,
+              {
+                cacheControl:
+                  "3600",
+
+                upsert:
+                  false
+              }
+            );
+
+
+        if (uploadError) {
+
+          throw uploadError;
+
+        }
+
+
+        const {
+          error: submitError
+        } =
+          await sb.rpc(
+            "student_submit_payment_proof",
+            {
+              p_registration_id:
+                Number(
+                  checkoutData
+                    .registration_id
+                ),
+
+              p_proof_path:
+                uploadedPath,
+
+              p_policy_accepted:
+                true
+            }
+          );
+
+
+        if (submitError) {
+
+          throw submitError;
+
+        }
+
+
+        showStatus(
+          "Gửi bill thành công. PickDee sẽ kiểm tra và xác nhận thanh toán sớm.",
+          "success"
+        );
+
+
+        document
+          .getElementById(
+            "proofSection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        document
+          .getElementById(
+            "policySection"
+          )
+          .classList
+          .add(
+            "hidden"
+          );
+
+      }
+      catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        /*
+          Nếu upload file thành công nhưng RPC lỗi,
+          xóa file vừa upload để không tạo file rác.
+        */
+
+        if (uploadedPath) {
+
+          try {
+
+            await sb.storage
+              .from(
+                "payment-proofs"
+              )
+              .remove(
+                [
+                  uploadedPath
+                ]
+              );
+
+          }
+          catch (_) {}
+
+        }
+
+
+        showStatus(
+          error?.message
+          ||
+          "Không gửi được bill thanh toán.",
+          "error"
+        );
+
+      }
+      finally {
+
+        submitButton.disabled =
+          false;
+
+
+        submitButton.textContent =
+          "GỬI XÁC NHẬN THANH TOÁN";
+
+      }
+
+    }
+
+
+    loadCheckout();
+
+  </script>
+
+
+  <script src="./notifications.js"></script>
+
+</body>
+</html>
