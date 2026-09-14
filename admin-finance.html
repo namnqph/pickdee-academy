@@ -1449,61 +1449,342 @@
 
   async function loadExpenses() {
 
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "admin_get_operating_expenses",
+      {
+        p_month:
+          monthFilter.value
+      }
+    );
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  const sourceRows =
+    Array.isArray(data)
+      ? data
+      : [];
+
+
+  /*
+    ==========================================================
+    BƯỚC 1
+    LẤY TOÀN BỘ MÃ BUỔI BHxxx TỪ NỘI DUNG CHI PHÍ
+    ==========================================================
+  */
+
+  const sessionCodes =
+    [
+      ...new Set(
+        sourceRows
+          .map(
+            row => {
+
+              const text =
+                String(
+                  row.description || ""
+                );
+
+              const match =
+                text.match(
+                  /\bBH\d+\b/i
+                );
+
+              return match
+                ? match[0].toUpperCase()
+                : null;
+
+            }
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  /*
+    ==========================================================
+    BƯỚC 2
+    XÁC ĐỊNH NHỮNG BUỔI THUỘC ĐĂNG KÝ TEST
+    ==========================================================
+  */
+
+  const testSessionCodes =
+    new Set();
+
+
+  if (
+    sessionCodes.length > 0
+  ) {
 
     const {
-      data,
-      error
+      data: sessions,
+      error: sessionsError
     } =
-      await sb.rpc(
-        "admin_get_operating_expenses",
-        {
+      await sb
+        .from(
+          "class_sessions"
+        )
+        .select(
+          `
+            session_code,
+            registration_id
+          `
+        )
+        .in(
+          "session_code",
+          sessionCodes
+        );
 
-          p_month:
-            monthFilter.value
 
-        }
-      );
-
-
-    if (error) {
-
-      throw error;
-
+    if (sessionsError) {
+      throw sessionsError;
     }
 
 
-    const rows =
-      data || [];
+    const safeSessions =
+      Array.isArray(sessions)
+        ? sessions
+        : [];
+
+
+    const registrationIds =
+      [
+        ...new Set(
+          safeSessions
+            .map(
+              row =>
+                row.registration_id
+            )
+            .filter(
+              value =>
+                value !== null
+                &&
+                value !== undefined
+            )
+        )
+      ];
+
+
+    const testRegistrationIds =
+      new Set();
 
 
     if (
-      rows.length === 0
+      registrationIds.length > 0
     ) {
 
-      expenseBody.innerHTML =
-        `
-          <tr>
+      const {
+        data: registrations,
+        error: registrationsError
+      } =
+        await sb
+          .from(
+            "registrations"
+          )
+          .select(
+            `
+              id,
+              is_test
+            `
+          )
+          .in(
+            "id",
+            registrationIds
+          );
 
-            <td
-              colspan="6"
-              class="empty"
-            >
 
-              Chưa có chi phí vận hành trong tháng này.
-
-            </td>
-
-          </tr>
-        `;
+      if (registrationsError) {
+        throw registrationsError;
+      }
 
 
-      return;
+      (
+        Array.isArray(registrations)
+          ? registrations
+          : []
+      )
+        .forEach(
+          row => {
+
+            if (
+              row.is_test === true
+            ) {
+
+              testRegistrationIds.add(
+                String(row.id)
+              );
+
+            }
+
+          }
+        );
 
     }
 
 
+    safeSessions.forEach(
+      row => {
+
+        if (
+          row.session_code
+          &&
+          testRegistrationIds.has(
+            String(
+              row.registration_id
+            )
+          )
+        ) {
+
+          testSessionCodes.add(
+            String(
+              row.session_code
+            ).toUpperCase()
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /*
+    ==========================================================
+    BƯỚC 3
+    CHỈ GIỮ CHI PHÍ REAL
+    ==========================================================
+  */
+
+  const rows =
+    sourceRows.filter(
+      row => {
+
+        const description =
+          String(
+            row.description || ""
+          );
+
+
+        const searchableText =
+          [
+            row.expense_code,
+            row.expense_type,
+            description
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+
+        /*
+          Chi phí có chữ TEST trực tiếp
+          → loại khỏi bảng Admin.
+        */
+
+        if (
+          /\bTEST\b/i.test(
+            searchableText
+          )
+        ) {
+
+          return false;
+
+        }
+
+
+        /*
+          Tìm mã buổi BHxxx.
+        */
+
+        const match =
+          description.match(
+            /\bBH\d+\b/i
+          );
+
+
+        /*
+          Chi phí thủ công không gắn buổi học:
+          giữ lại vì đây có thể là Marketing,
+          bóng tập, dụng cụ, chi phí khác...
+        */
+
+        if (!match) {
+
+          return true;
+
+        }
+
+
+        const sessionCode =
+          match[0]
+            .toUpperCase();
+
+
+        /*
+          Nếu buổi học thuộc registration TEST:
+          loại chi phí khỏi danh sách.
+        */
+
+        if (
+          testSessionCodes.has(
+            sessionCode
+          )
+        ) {
+
+          return false;
+
+        }
+
+
+        return true;
+
+      }
+    );
+
+
+  /*
+    ==========================================================
+    BƯỚC 4
+    HIỂN THỊ DANH SÁCH
+    ==========================================================
+  */
+
+  if (
+    rows.length === 0
+  ) {
+
     expenseBody.innerHTML =
-      rows.map(
+      `
+        <tr>
+
+          <td
+            colspan="6"
+            class="empty"
+          >
+
+            Chưa có chi phí vận hành trong tháng này.
+
+          </td>
+
+        </tr>
+      `;
+
+
+    return;
+
+  }
+
+
+  expenseBody.innerHTML =
+    rows
+      .map(
         row => `
 
           <tr>
@@ -1538,7 +1819,8 @@
             <td>
 
               ${escapeHTML(
-                row.description ||
+                row.description
+                ||
                 "—"
               )}
 
@@ -1560,6 +1842,8 @@
 
                 ${escapeHTML(
                   row.status
+                  ||
+                  "Đã ghi nhận"
                 )}
 
               </span>
@@ -1572,7 +1856,7 @@
       )
       .join("");
 
-  }
+}
 
 
   /* ===============================
