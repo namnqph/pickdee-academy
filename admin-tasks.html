@@ -3897,8 +3897,967 @@
 })();
 
 </script>
-  src="./notifications.js?v=20260913-coach-applications"
-></script>
+ <!-- =========================================================
+     PICKDEE ACADEMY
+     ADMIN TASKS - COACH OPERATIONAL BACKLOG
+========================================================== -->
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.error(
+      "PickDee Coach Backlog Tasks: thiếu cấu hình Supabase."
+    );
+
+    return;
+
+  }
+
+
+  const backlogSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ESCAPE
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  /* =====================================================
+     TẠO SECTION
+  ====================================================== */
+
+  function ensureCoachBacklogSections() {
+
+    const main =
+      document.querySelector(
+        "main"
+      );
+
+
+    if (!main) {
+      return;
+    }
+
+
+    /* ===================================================
+       BUỔI COACH CHƯA ĐIỂM DANH
+    ==================================================== */
+
+    if (
+      !document.getElementById(
+        "coachOverdueAttendanceSection"
+      )
+    ) {
+
+      const section =
+        document.createElement(
+          "section"
+        );
+
+
+      section.id =
+        "coachOverdueAttendanceSection";
+
+
+      section.className =
+        "section";
+
+
+      section.innerHTML = `
+
+        <div class="section-head">
+
+          <div class="section-title">
+
+            📋 Buổi Coach chưa điểm danh
+
+          </div>
+
+
+          <div
+            id="coachOverdueAttendanceCount"
+            class="count red"
+          >
+
+            0
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="coachOverdueAttendanceBody"
+          class="section-body"
+        >
+
+          <div class="empty">
+
+            Đang kiểm tra...
+
+          </div>
+
+        </div>
+
+      `;
+
+
+      main.appendChild(
+        section
+      );
+
+    }
+
+
+    /* ===================================================
+       CHẤM TRÌNH CUỐI KHÓA
+    ==================================================== */
+
+    if (
+      !document.getElementById(
+        "coachFinalAssessmentSection"
+      )
+    ) {
+
+      const section =
+        document.createElement(
+          "section"
+        );
+
+
+      section.id =
+        "coachFinalAssessmentSection";
+
+
+      section.className =
+        "section";
+
+
+      section.innerHTML = `
+
+        <div class="section-head">
+
+          <div class="section-title">
+
+            🎯 Chấm trình cuối khóa
+
+          </div>
+
+
+          <div
+            id="coachFinalAssessmentCount"
+            class="count yellow"
+          >
+
+            0
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="coachFinalAssessmentBody"
+          class="section-body"
+        >
+
+          <div class="empty">
+
+            Đang kiểm tra...
+
+          </div>
+
+        </div>
+
+      `;
+
+
+      main.appendChild(
+        section
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER COACH ROW
+  ====================================================== */
+
+  function renderCoachRows(
+    rows,
+    field,
+    emptyText,
+    priority
+  ) {
+
+
+    const activeRows =
+      rows.filter(
+        function (row) {
+
+          return (
+            Number(
+              row[field] || 0
+            )
+            >
+            0
+          );
+
+        }
+      );
+
+
+    if (
+      activeRows.length === 0
+    ) {
+
+      return `
+
+        <div class="empty">
+
+          ✅ ${escapeHtml(
+            emptyText
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+
+    return activeRows
+      .map(
+        function (row) {
+
+
+          const count =
+            Number(
+              row[field] || 0
+            );
+
+
+          return `
+
+            <div class="task">
+
+
+              <div
+                class="priority-bar ${escapeHtml(
+                  priority
+                )}"
+              ></div>
+
+
+              <div>
+
+
+                <div class="task-title">
+
+                  ${escapeHtml(
+                    row.coach_name
+                    ||
+                    "Coach"
+                  )}
+
+                </div>
+
+
+                <div class="task-meta">
+
+                  ${escapeHtml(
+                    row.coach_code
+                    ||
+                    "—"
+                  )}
+
+                  ${
+                    row.coach_email
+                      ?
+                      " • "
+                      +
+                      escapeHtml(
+                        row.coach_email
+                      )
+                      :
+                      ""
+                  }
+
+                  <br>
+
+                  ${
+                    field
+                    ===
+                    "overdue_attendance"
+                      ?
+                      `Có ${count} buổi đã quá giờ nhưng chưa được điểm danh.`
+                      :
+                      `Có ${count} học viên cần chấm trình cuối khóa.`
+                  }
+
+                </div>
+
+
+                <div
+                  class="
+                    task-priority
+                    ${
+                      priority
+                      ===
+                      "high"
+                        ?
+                        "red"
+                        :
+                        "yellow"
+                    }
+                  "
+                >
+
+                  ${
+                    priority
+                    ===
+                    "high"
+                      ?
+                      "Cần xử lý"
+                      :
+                      "Cần theo dõi"
+                  }
+
+                </div>
+
+
+              </div>
+
+
+              <a
+                class="task-action"
+                href="./admin-coach-backlog"
+              >
+
+                XỬ LÝ
+
+              </a>
+
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join(
+        ""
+      );
+
+  }
+
+
+  /* =====================================================
+     ĐẾM YÊU CẦU ĐỔI COACH
+  ====================================================== */
+
+  async function getCoachChangeCount() {
+
+    try {
+
+
+      const {
+        count,
+        error
+      } =
+        await backlogSb
+          .from(
+            "coach_change_requests"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "status",
+            "pending"
+          );
+
+
+      if (error) {
+        return 0;
+      }
+
+
+      return Number(
+        count || 0
+      );
+
+
+    }
+    catch (_) {
+
+      return 0;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ĐẾM HỒ SƠ COACH
+  ====================================================== */
+
+  async function getCoachApplicationCount() {
+
+    try {
+
+
+      const {
+        data,
+        error
+      } =
+        await backlogSb.rpc(
+          "admin_get_pending_coach_application_count"
+        );
+
+
+      if (error) {
+        return 0;
+      }
+
+
+      return Number(
+        data || 0
+      );
+
+
+    }
+    catch (_) {
+
+      return 0;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD TOÀN BỘ
+  ====================================================== */
+
+  async function loadCoachBacklogTasks() {
+
+
+    ensureCoachBacklogSections();
+
+
+    try {
+
+
+      /* =================================================
+         1. VIỆC ADMIN CŨ
+      ================================================== */
+
+      const {
+        data: oldTaskData,
+        error: oldTaskError
+      } =
+        await backlogSb.rpc(
+          "admin_get_pending_tasks"
+        );
+
+
+      if (oldTaskError) {
+        throw oldTaskError;
+      }
+
+
+      const oldTasks =
+        Array.isArray(
+          oldTaskData
+        )
+          ?
+          oldTaskData
+          :
+          [];
+
+
+      /* =================================================
+         2. VIỆC TỒN COACH
+      ================================================== */
+
+      const {
+        data: backlogData,
+        error: backlogError
+      } =
+        await backlogSb.rpc(
+          "admin_get_coach_operational_backlog"
+        );
+
+
+      if (backlogError) {
+        throw backlogError;
+      }
+
+
+      const coachRows =
+        Array.isArray(
+          backlogData
+        )
+          ?
+          backlogData
+          :
+          [];
+
+
+      const attendanceTotal =
+        coachRows.reduce(
+          function (
+            sum,
+            row
+          ) {
+
+            return (
+              sum
+              +
+              Number(
+                row.overdue_attendance
+                ||
+                0
+              )
+            );
+
+          },
+          0
+        );
+
+
+      const finalTotal =
+        coachRows.reduce(
+          function (
+            sum,
+            row
+          ) {
+
+            return (
+              sum
+              +
+              Number(
+                row.pending_final_assessments
+                ||
+                0
+              )
+            );
+
+          },
+          0
+        );
+
+
+      /*
+        KHÔNG cộng:
+        row.pending_session_requests
+
+        vì Yêu cầu lịch đã thuộc
+        admin_get_pending_tasks().
+      */
+
+
+      /* =================================================
+         3. YÊU CẦU ĐỔI COACH + HỒ SƠ COACH
+      ================================================== */
+
+      const [
+        coachChangeCount,
+        coachApplicationCount
+      ] =
+        await Promise.all(
+          [
+            getCoachChangeCount(),
+            getCoachApplicationCount()
+          ]
+        );
+
+
+      /* =================================================
+         4. TỔNG CHÍNH THỨC
+      ================================================== */
+
+      const total =
+        oldTasks.length
+        +
+        coachChangeCount
+        +
+        coachApplicationCount
+        +
+        attendanceTotal
+        +
+        finalTotal;
+
+
+      /* =================================================
+         5. RENDER 2 SECTION MỚI
+      ================================================== */
+
+      const attendanceCountElement =
+        document.getElementById(
+          "coachOverdueAttendanceCount"
+        );
+
+
+      const attendanceBodyElement =
+        document.getElementById(
+          "coachOverdueAttendanceBody"
+        );
+
+
+      const finalCountElement =
+        document.getElementById(
+          "coachFinalAssessmentCount"
+        );
+
+
+      const finalBodyElement =
+        document.getElementById(
+          "coachFinalAssessmentBody"
+        );
+
+
+      if (
+        attendanceCountElement
+      ) {
+
+        attendanceCountElement.textContent =
+          String(
+            attendanceTotal
+          );
+
+      }
+
+
+      if (
+        attendanceBodyElement
+      ) {
+
+        attendanceBodyElement.innerHTML =
+          renderCoachRows(
+            coachRows,
+            "overdue_attendance",
+            "Không có Coach còn buổi quá giờ chưa điểm danh.",
+            "high"
+          );
+
+      }
+
+
+      if (
+        finalCountElement
+      ) {
+
+        finalCountElement.textContent =
+          String(
+            finalTotal
+          );
+
+      }
+
+
+      if (
+        finalBodyElement
+      ) {
+
+        finalBodyElement.innerHTML =
+          renderCoachRows(
+            coachRows,
+            "pending_final_assessments",
+            "Không có học viên cần Coach chấm trình cuối khóa.",
+            "medium"
+          );
+
+      }
+
+
+      /* =================================================
+         6. ĐỒNG BỘ TỔNG VIỆC
+      ================================================== */
+
+      const totalTasks =
+        document.getElementById(
+          "totalTasks"
+        );
+
+
+      if (
+        totalTasks
+      ) {
+
+        totalTasks.textContent =
+          String(
+            total
+          );
+
+      }
+
+
+      /* =================================================
+         7. DÒNG CẬP NHẬT
+      ================================================== */
+
+      const message =
+        document.getElementById(
+          "message"
+        );
+
+
+      if (
+        message
+      ) {
+
+
+        message.style.color =
+          "#b9ff18";
+
+
+        message.textContent =
+          `✓ Đã cập nhật ${total} việc lúc ${
+            new Date()
+              .toLocaleTimeString(
+                "vi-VN",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              )
+          }`;
+
+      }
+
+
+      /* =================================================
+         8. ALL CLEAR
+      ================================================== */
+
+      const allClear =
+        document.getElementById(
+          "allClear"
+        );
+
+
+      if (
+        allClear
+      ) {
+
+
+        if (
+          total === 0
+        ) {
+
+          allClear.classList.add(
+            "show"
+          );
+
+          allClear.textContent =
+            "✅ Hiện không có việc nào cần Admin xử lý.";
+
+
+          allClear.style.color =
+            "";
+
+
+          allClear.style.borderColor =
+            "";
+
+
+          allClear.style.background =
+            "";
+
+        }
+        else {
+
+          /*
+            Giữ banner hiện ra nhưng đổi thành cảnh báo
+            để Admin nhìn thấy ngay.
+          */
+
+          allClear.classList.add(
+            "show"
+          );
+
+
+          allClear.textContent =
+            `⚠️ Hiện có ${total} việc cần Admin theo dõi.`;
+
+
+          allClear.style.color =
+            "#ffd27d";
+
+
+          allClear.style.borderColor =
+            "rgba(255,142,142,.32)";
+
+
+          allClear.style.background =
+            "rgba(255,100,100,.07)";
+
+        }
+
+      }
+
+
+      console.log(
+        "ADMIN TASKS FINAL:",
+        {
+          oldTasks:
+            oldTasks.length,
+
+          coachChanges:
+            coachChangeCount,
+
+          coachApplications:
+            coachApplicationCount,
+
+          overdueAttendance:
+            attendanceTotal,
+
+          finalAssessments:
+            finalTotal,
+
+          total:
+            total
+        }
+      );
+
+
+    }
+    catch (
+      error
+    ) {
+
+
+      console.error(
+        "Coach backlog Admin Tasks:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     NÚT CẬP NHẬT
+  ====================================================== */
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+
+  if (
+    refreshBtn
+  ) {
+
+    refreshBtn.addEventListener(
+      "click",
+      function () {
+
+        setTimeout(
+          loadCoachBacklogTasks,
+          300
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     CHẠY
+  ====================================================== */
+
+  await loadCoachBacklogTasks();
+
+
+  /*
+    Chạy lại sau khi các block cũ hoàn tất,
+    tránh script cũ ghi đè Tổng việc.
+  */
+
+  setTimeout(
+    loadCoachBacklogTasks,
+    1000
+  );
+
+
+  setTimeout(
+    loadCoachBacklogTasks,
+    2500
+  );
+
+
+  setInterval(
+    loadCoachBacklogTasks,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCoachBacklogTasks
+  );
+
+
+})();
+
+</script>
 
 
 </body>
