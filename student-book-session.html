@@ -424,14 +424,20 @@
 
 
 <script>
-
 (async function () {
+
+  /* =====================================================
+     DOM
+  ====================================================== */
 
   const message =
     document.getElementById("message");
 
   const form =
     document.getElementById("requestForm");
+
+  const bookingCard =
+    form.closest("section.card");
 
   const submitBtn =
     document.getElementById("submitBtn");
@@ -475,6 +481,15 @@
 
   let registrations = [];
 
+  let bookableRegistrations = [];
+
+  let pendingPaymentIds =
+    new Set();
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
 
   function showMessage(
     text,
@@ -486,6 +501,32 @@
 
     message.className =
       type;
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
 
   }
 
@@ -502,13 +543,19 @@
       +
       String(
         now.getMonth() + 1
-      ).padStart(2,"0")
+      ).padStart(
+        2,
+        "0"
+      )
       +
       "-"
       +
       String(
         now.getDate()
-      ).padStart(2,"0")
+      ).padStart(
+        2,
+        "0"
+      )
     );
 
   }
@@ -531,7 +578,240 @@
 
 
   /* =====================================================
-     KHỞI TẠO SUPABASE
+     PAYMENT GATE UI
+  ====================================================== */
+
+  const gateStyle =
+    document.createElement(
+      "style"
+    );
+
+  gateStyle.textContent = `
+
+    #paymentGate {
+      display: none;
+      border-color: rgba(255,207,112,.32);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(82,55,12,.30),
+          rgba(6,39,88,.82)
+        );
+    }
+
+    #paymentGate.show {
+      display: block;
+    }
+
+    .payment-gate-title {
+      margin: 0 0 8px;
+      color: #ffcf70;
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .payment-gate-desc {
+      margin-bottom: 17px;
+      color: rgba(255,255,255,.68);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .payment-package {
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 13px;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .payment-package-code {
+      color: #d8ff45;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .payment-package-name {
+      margin-top: 4px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .payment-package-amount {
+      margin-top: 7px;
+      color: rgba(255,255,255,.67);
+      font-size: 13px;
+    }
+
+    .payment-pay-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 13px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      background: #d8ff45;
+      color: #142300;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .payment-pending {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      margin-top: 13px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      background: rgba(255,207,112,.10);
+      border: 1px solid rgba(255,207,112,.25);
+      color: #ffcf70;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+  `;
+
+  document.head.appendChild(
+    gateStyle
+  );
+
+
+  const paymentGate =
+    document.createElement(
+      "section"
+    );
+
+  paymentGate.id =
+    "paymentGate";
+
+  paymentGate.className =
+    "card";
+
+
+  bookingCard.parentNode.insertBefore(
+    paymentGate,
+    bookingCard
+  );
+
+
+  function renderPaymentGate(
+    blockedRows
+  ) {
+
+    if (
+      !blockedRows.length
+    ) {
+
+      paymentGate.classList.remove(
+        "show"
+      );
+
+      paymentGate.innerHTML =
+        "";
+
+      return;
+
+    }
+
+
+    paymentGate.innerHTML = `
+
+      <div class="payment-gate-title">
+        🔒 Hoàn tất học phí
+      </div>
+
+      <div class="payment-gate-desc">
+        Gói học bên dưới chưa được mở quyền đặt lịch.
+        Bạn cần hoàn tất học phí và chờ PickDee
+        xác nhận thanh toán trước khi đặt buổi học.
+      </div>
+
+      ${blockedRows
+        .map(
+          row => {
+
+            const waiting =
+              pendingPaymentIds.has(
+                Number(row.id)
+              );
+
+
+            return `
+
+              <div class="payment-package">
+
+                <div class="payment-package-code">
+                  ${escapeHtml(
+                    row.registration_code
+                    ||
+                    "Đăng ký"
+                  )}
+                </div>
+
+                <div class="payment-package-name">
+                  ${escapeHtml(
+                    row.package_name
+                    ||
+                    "Gói học"
+                  )}
+                </div>
+
+                <div class="payment-package-amount">
+                  Học phí:
+                  <strong>
+                    ${money(
+                      row.tuition_fee
+                    )}
+                  </strong>
+                </div>
+
+                ${
+                  waiting
+
+                    ? `
+                      <div class="payment-pending">
+                        ⏳ ĐÃ GỬI BILL ·
+                        CHỜ PICKDEE XÁC NHẬN
+                      </div>
+                    `
+
+                    : `
+                      <a
+                        class="payment-pay-btn"
+                        href="./student-payment-checkout?id=${Number(row.id)}"
+                      >
+                        💳 THANH TOÁN HỌC PHÍ
+                      </a>
+                    `
+                }
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("")
+      }
+
+    `;
+
+
+    paymentGate.classList.add(
+      "show"
+    );
+
+  }
+
+
+  /* =====================================================
+     SUPABASE
   ====================================================== */
 
   function initSupabase() {
@@ -570,11 +850,18 @@
         cfg.SUPABASE_PUBLISHABLE_KEY
       );
 
+
+    window.sb =
+      sb;
+
+    window.PICKDEE_NOTIFICATION_ROLE =
+      "student";
+
   }
 
 
   /* =====================================================
-     XÁC ĐỊNH HỌC VIÊN
+     CURRENT STUDENT
   ====================================================== */
 
   async function loadCurrentStudent() {
@@ -672,7 +959,7 @@
 
 
   /* =====================================================
-     KIỂM TRA YÊU CẦU ĐANG CHỜ
+     PENDING SESSION REQUEST
   ====================================================== */
 
   async function checkPendingRequest() {
@@ -682,8 +969,12 @@
       error
     } =
       await sb
-        .from("session_requests")
-        .select("id")
+        .from(
+          "session_requests"
+        )
+        .select(
+          "id"
+        )
         .eq(
           "student_id",
           currentStudentId
@@ -703,7 +994,8 @@
 
 
     if (
-      data &&
+      data
+      &&
       data.length > 0
     ) {
 
@@ -722,10 +1014,153 @@
 
 
   /* =====================================================
-     LOAD GÓI HỌC
+     PAYMENT STATE
+  ====================================================== */
+
+  async function loadPaymentState() {
+
+    pendingPaymentIds =
+      new Set();
+
+
+    if (
+      registrations.length === 0
+    ) {
+
+      return;
+
+    }
+
+
+    const registrationIds =
+      registrations.map(
+        row =>
+          Number(row.id)
+      );
+
+
+    const {
+      data: pendingRows,
+      error: pendingError
+    } =
+      await sb
+        .from(
+          "payment_submissions"
+        )
+        .select(
+          "registration_id,status"
+        )
+        .in(
+          "registration_id",
+          registrationIds
+        )
+        .eq(
+          "status",
+          "Chờ xác nhận"
+        );
+
+
+    if (pendingError) {
+
+      console.warn(
+        "Không tải được bill chờ xác nhận:",
+        pendingError
+      );
+
+    }
+    else {
+
+      pendingPaymentIds =
+        new Set(
+          (pendingRows || [])
+            .map(
+              row =>
+                Number(
+                  row.registration_id
+                )
+            )
+        );
+
+    }
+
+
+    const checkedRows =
+      await Promise.all(
+
+        registrations.map(
+          async row => {
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "student_registration_payment_ready",
+                {
+                  p_registration_id:
+                    Number(row.id)
+                }
+              );
+
+
+            if (error) {
+
+              throw new Error(
+                "Không kiểm tra được trạng thái học phí: "
+                +
+                error.message
+              );
+
+            }
+
+
+            return {
+              ...row,
+              payment_ready:
+                data === true
+            };
+
+          }
+        )
+
+      );
+
+
+    registrations =
+      checkedRows;
+
+
+    bookableRegistrations =
+      registrations.filter(
+        row =>
+          row.payment_ready ===
+          true
+      );
+
+
+    const blockedRows =
+      registrations.filter(
+        row =>
+          row.payment_ready !==
+          true
+      );
+
+
+    renderPaymentGate(
+      blockedRows
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD REGISTRATIONS
   ====================================================== */
 
   async function loadRegistrations() {
+
+    registrationSelect.disabled =
+      true;
 
     registrationSelect.innerHTML =
       `
@@ -740,16 +1175,20 @@
       error
     } =
       await sb
-        .from("registrations")
+        .from(
+          "registrations"
+        )
         .select(`
           id,
           registration_code,
           coach_id,
           package_name,
           purchased_sessions,
+          tuition_fee,
           start_date,
           end_date,
-          status
+          status,
+          is_test
         `)
         .eq(
           "student_id",
@@ -762,7 +1201,7 @@
         .order(
           "start_date",
           {
-            ascending:false
+            ascending: false
           }
         );
 
@@ -778,14 +1217,6 @@
       data || [];
 
 
-    registrationSelect.innerHTML =
-      `
-        <option value="">
-          Chọn gói học
-        </option>
-      `;
-
-
     if (
       registrations.length === 0
     ) {
@@ -799,15 +1230,73 @@
       coachName.textContent =
         "—";
 
+      registrationSelect.innerHTML =
+        `
+          <option value="">
+            Chưa có gói học đã duyệt
+          </option>
+        `;
+
       registrationSelect.disabled =
         true;
+
+      bookableRegistrations =
+        [];
+
+      renderPaymentGate([]);
 
       return;
 
     }
 
 
-    registrations.forEach(
+    await loadPaymentState();
+
+
+    registrationSelect.innerHTML =
+      `
+        <option value="">
+          Chọn gói học
+        </option>
+      `;
+
+
+    if (
+      bookableRegistrations.length === 0
+    ) {
+
+      packageName.textContent =
+        "Chờ xác nhận học phí";
+
+      nextSessionNo.textContent =
+        "—";
+
+      coachName.textContent =
+        "—";
+
+      registrationSelect.innerHTML =
+        `
+          <option value="">
+            Chưa có gói đủ điều kiện đặt lịch
+          </option>
+        `;
+
+      registrationSelect.disabled =
+        true;
+
+      bookingCard.style.display =
+        "none";
+
+      return;
+
+    }
+
+
+    bookingCard.style.display =
+      "";
+
+
+    bookableRegistrations.forEach(
       item => {
 
         const option =
@@ -819,7 +1308,15 @@
           item.id;
 
         option.textContent =
-          `${item.registration_code || "Đăng ký"} · ${item.package_name || "Gói học"}`;
+          `${
+            item.registration_code
+            ||
+            "Đăng ký"
+          } · ${
+            item.package_name
+            ||
+            "Gói học"
+          }`;
 
         registrationSelect.appendChild(
           option
@@ -834,7 +1331,7 @@
 
 
     registrationSelect.value =
-      registrations[0].id;
+      bookableRegistrations[0].id;
 
 
     await applyRegistration();
@@ -843,7 +1340,7 @@
 
 
   /* =====================================================
-     LOAD COACH
+     COACH
   ====================================================== */
 
   async function loadCoach(
@@ -865,7 +1362,9 @@
       error
     } =
       await sb
-        .from("coaches")
+        .from(
+          "coaches"
+        )
         .select(`
           id,
           coach_code,
@@ -896,7 +1395,7 @@
 
 
   /* =====================================================
-     BUỔI TIẾP THEO
+     NEXT SESSION NUMBER
   ====================================================== */
 
   async function loadNextSessionNo(
@@ -908,8 +1407,12 @@
       error
     } =
       await sb
-        .from("class_sessions")
-        .select("session_no")
+        .from(
+          "class_sessions"
+        )
+        .select(
+          "session_no"
+        )
         .eq(
           "registration_id",
           Number(registrationId)
@@ -917,7 +1420,7 @@
         .order(
           "session_no",
           {
-            ascending:false
+            ascending: false
           }
         )
         .limit(1);
@@ -944,10 +1447,14 @@
   }
 
 
+  /* =====================================================
+     APPLY REGISTRATION
+  ====================================================== */
+
   async function applyRegistration() {
 
     const registration =
-      registrations.find(
+      bookableRegistrations.find(
         item =>
           Number(item.id)
           ===
@@ -1018,7 +1525,7 @@
 
 
   /* =====================================================
-     LOAD TỈNH THÀNH
+     LOAD AREAS
   ====================================================== */
 
   async function loadAreas() {
@@ -1028,7 +1535,9 @@
       error
     } =
       await sb
-        .from("dm_khu_vuc")
+        .from(
+          "dm_khu_vuc"
+        )
         .select(`
           ma_khu_vuc,
           tinh_thanh
@@ -1040,7 +1549,7 @@
         .order(
           "tinh_thanh",
           {
-            ascending:true
+            ascending: true
           }
         );
 
@@ -1090,7 +1599,8 @@
 
 
     if (
-      currentStudent?.preferred_area
+      currentStudent
+        ?.preferred_area
     ) {
 
       const exists =
@@ -1101,14 +1611,16 @@
           option =>
             option.value
             ===
-            currentStudent.preferred_area
+            currentStudent
+              .preferred_area
         );
 
 
       if (exists) {
 
         requestedArea.value =
-          currentStudent.preferred_area;
+          currentStudent
+            .preferred_area;
 
 
         const areaCode =
@@ -1119,7 +1631,8 @@
 
           await loadWards(
             areaCode,
-            currentStudent.preferred_ward
+            currentStudent
+              .preferred_ward
             ||
             ""
           );
@@ -1134,7 +1647,7 @@
 
 
   /* =====================================================
-     LOAD PHƯỜNG XÃ
+     LOAD WARDS
   ====================================================== */
 
   async function loadWards(
@@ -1159,7 +1672,9 @@
       error
     } =
       await sb
-        .from("dm_xa_phuong")
+        .from(
+          "dm_xa_phuong"
+        )
         .select(`
           ma_xa_phuong,
           ten_xa_phuong
@@ -1175,7 +1690,7 @@
         .order(
           "ten_xa_phuong",
           {
-            ascending:true
+            ascending: true
           }
         );
 
@@ -1299,7 +1814,7 @@
 
 
   /* =====================================================
-     GỬI YÊU CẦU
+     SUBMIT SESSION REQUEST
   ====================================================== */
 
   form.addEventListener(
@@ -1325,6 +1840,32 @@
 
         showMessage(
           "Hãy chọn gói học.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const registration =
+        bookableRegistrations.find(
+          row =>
+            Number(row.id)
+            ===
+            registrationId
+        );
+
+
+      if (
+        !registration
+        ||
+        registration.payment_ready
+          !== true
+      ) {
+
+        showMessage(
+          "Gói học chưa được xác nhận thanh toán.",
           "error"
         );
 
@@ -1401,6 +1942,7 @@
         await sb.rpc(
           "student_create_session_request",
           {
+
             p_registration_id:
               registrationId,
 
@@ -1427,6 +1969,7 @@
               note.value.trim()
               ||
               null
+
           }
         );
 
@@ -1522,6 +2065,43 @@
       await loadRegistrations();
 
 
+      /*
+        Không có gói nào đủ điều kiện đặt lịch:
+        dừng ở Payment Gate.
+      */
+
+      if (
+        bookableRegistrations.length
+        ===
+        0
+      ) {
+
+        submitBtn.disabled =
+          true;
+
+
+        submitBtn.textContent =
+          "CHƯA THỂ ĐẶT LỊCH";
+
+
+        if (
+          registrations.length ===
+          0
+        ) {
+
+          showMessage(
+            "Bạn chưa có gói học đã duyệt.",
+            "error"
+          );
+
+        }
+
+
+        return;
+
+      }
+
+
       await loadAreas();
 
 
@@ -1534,7 +2114,7 @@
 
 
       showMessage(
-        "✓ Sẵn sàng tạo yêu cầu Buổi học.",
+        "✓ Gói học đã đủ điều kiện đặt lịch.",
         "success"
       );
 
@@ -1596,7 +2176,6 @@
   await init();
 
 })();
-
 </script>
 
 </body>
