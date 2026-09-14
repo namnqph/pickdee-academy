@@ -4033,6 +4033,582 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 })();
 
 </script>
+  <script>
+/* =========================================================
+   PICKDEE ACADEMY
+   DASHBOARD COACH - CHẤM TRÌNH CUỐI KHÓA
+   - Cơ bản / Nâng cao
+   - Theo yêu cầu: không tính
+   - Tự cập nhật mỗi 60 giây
+========================================================= */
+
+(async function () {
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.warn(
+      "PickDee Academy final assessment dashboard: thiếu Supabase."
+    );
+
+    return;
+
+  }
+
+
+  const finalSb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.PICKDEE_NOTIFICATION_SB
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+    #finalAssessmentDashboardCard {
+      position: relative;
+    }
+
+    #finalAssessmentDashboardCard.has-task {
+      border-color: rgba(255,196,107,.55);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(72,43,8,.42),
+          rgba(6,39,88,.92)
+        );
+    }
+
+    #finalAssessmentDashboardCard.done {
+      border-color: rgba(216,255,69,.28);
+    }
+
+    .final-assessment-dashboard-count {
+      position: absolute;
+
+      top: 16px;
+      right: 16px;
+
+      min-width: 34px;
+      height: 34px;
+
+      padding: 0 9px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background: rgba(255,255,255,.10);
+
+      color: rgba(255,255,255,.65);
+
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    #finalAssessmentDashboardCard.has-task
+    .final-assessment-dashboard-count {
+      background: #ffc46b;
+      color: #3b2400;
+    }
+
+    #finalAssessmentDashboardCard.done
+    .final-assessment-dashboard-count {
+      background: rgba(216,255,69,.12);
+      color: #d8ff45;
+    }
+
+    .final-assessment-warning {
+      margin-top: 16px;
+
+      padding: 12px 13px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,196,107,.25);
+
+      background:
+        rgba(255,196,107,.06);
+
+      color: #ffd38a;
+
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .final-assessment-ok {
+      margin-top: 16px;
+
+      padding: 12px 13px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(216,255,69,.18);
+
+      background:
+        rgba(216,255,69,.04);
+
+      color:
+        rgba(255,255,255,.62);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     TẠO CARD TRÊN DASHBOARD
+  ====================================================== */
+
+  const dashboardGrid =
+    document.querySelector(
+      ".dashboard-grid"
+    );
+
+
+  if (
+    !dashboardGrid
+  ) {
+
+    console.warn(
+      "Không tìm thấy dashboard-grid."
+    );
+
+    return;
+
+  }
+
+
+  let card =
+    document.getElementById(
+      "finalAssessmentDashboardCard"
+    );
+
+
+  if (
+    !card
+  ) {
+
+    card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.id =
+      "finalAssessmentDashboardCard";
+
+
+    card.className =
+      "dashboard-card";
+
+
+    card.innerHTML = `
+      <div
+        id="finalAssessmentDashboardCount"
+        class="final-assessment-dashboard-count"
+      >
+        —
+      </div>
+
+      <div class="dashboard-title">
+        🎯 Chấm trình cuối khóa
+      </div>
+
+      <div
+        id="finalAssessmentDashboardTitle"
+        class="dashboard-main"
+      >
+        Đang tải...
+      </div>
+
+      <div
+        id="finalAssessmentDashboardSub"
+        class="dashboard-sub"
+      >
+        Đang kiểm tra học viên đã kết thúc khóa.
+      </div>
+
+      <div
+        id="finalAssessmentDashboardStatus"
+      ></div>
+
+      <a
+        href="./coach-students"
+        class="dashboard-link"
+      >
+        XEM HỌC VIÊN →
+      </a>
+    `;
+
+
+    dashboardGrid.appendChild(
+      card
+    );
+
+  }
+
+
+  const countEl =
+    document.getElementById(
+      "finalAssessmentDashboardCount"
+    );
+
+
+  const titleEl =
+    document.getElementById(
+      "finalAssessmentDashboardTitle"
+    );
+
+
+  const subEl =
+    document.getElementById(
+      "finalAssessmentDashboardSub"
+    );
+
+
+  const statusEl =
+    document.getElementById(
+      "finalAssessmentDashboardStatus"
+    );
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadFinalAssessmentDashboard() {
+
+    try {
+
+      const {
+        data: userData,
+        error: userError
+      } =
+        await finalSb.auth.getUser();
+
+
+      if (
+        userError
+        ||
+        !userData?.user
+      ) {
+
+        return;
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await finalSb.rpc(
+          "coach_get_students_needing_final_assessment"
+        );
+
+
+      if (
+        error
+      ) {
+
+        console.error(
+          "PickDee Academy final assessment dashboard:",
+          error
+        );
+
+
+        countEl.textContent =
+          "!";
+
+
+        titleEl.textContent =
+          "Không tải được";
+
+
+        subEl.textContent =
+          "Không kiểm tra được học viên cần chấm trình.";
+
+
+        statusEl.innerHTML =
+          "";
+
+
+        return;
+
+      }
+
+
+      const rows =
+        Array.isArray(
+          data
+        )
+          ?
+          data
+          :
+          [];
+
+
+      const count =
+        rows.length;
+
+
+      countEl.textContent =
+        String(
+          count
+        );
+
+
+      card.classList.remove(
+        "has-task",
+        "done"
+      );
+
+
+      /* =================================================
+         CÓ VIỆC CẦN XỬ LÝ
+      ================================================== */
+
+      if (
+        count > 0
+      ) {
+
+        card.classList.add(
+          "has-task"
+        );
+
+
+        titleEl.textContent =
+          `${count} học viên cần chấm`;
+
+
+        subEl.textContent =
+          count === 1
+            ?
+            "Có 1 học viên đã hoàn thành khóa Cơ bản/Nâng cao và đang chờ đánh giá cuối khóa."
+            :
+            `Có ${count} học viên đã hoàn thành khóa Cơ bản/Nâng cao và đang chờ đánh giá cuối khóa.`;
+
+
+        const preview =
+          rows
+            .slice(
+              0,
+              3
+            )
+            .map(
+              row => {
+
+                const name =
+                  row.student_name
+                  ||
+                  row.student_code
+                  ||
+                  "Học viên";
+
+
+                const completed =
+                  Number(
+                    row.completed_sessions
+                    ||
+                    0
+                  );
+
+
+                const total =
+                  Number(
+                    row.purchased_sessions
+                    ||
+                    0
+                  );
+
+
+                const packageName =
+                  row.package_name
+                  ||
+                  "Khóa học";
+
+
+                return `
+                  <div>
+                    ⚠ ${escapeHtmlFinal(
+                      name
+                    )}
+                    ·
+                    ${escapeHtmlFinal(
+                      packageName
+                    )}
+                    ·
+                    ${completed}/${total} buổi
+                  </div>
+                `;
+
+              }
+            )
+            .join("");
+
+
+        statusEl.innerHTML =
+          `
+            <div class="final-assessment-warning">
+
+              <strong>
+                ⚠ CẦN XỬ LÝ
+              </strong>
+
+              <div style="margin-top:7px">
+                ${preview}
+              </div>
+
+            </div>
+          `;
+
+
+        return;
+
+      }
+
+
+      /* =================================================
+         KHÔNG CÓ VIỆC
+      ================================================== */
+
+      card.classList.add(
+        "done"
+      );
+
+
+      titleEl.textContent =
+        "0 học viên đang chờ";
+
+
+      subEl.textContent =
+        "Hiện không có học viên Cơ bản/Nâng cao đến hạn chấm trình cuối khóa.";
+
+
+      statusEl.innerHTML =
+        `
+          <div class="final-assessment-ok">
+            ✓ Không có chấm trình cuối khóa cần xử lý.
+          </div>
+        `;
+
+    }
+    catch (error) {
+
+      console.error(
+        "PickDee Academy final assessment dashboard:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ESCAPE
+  ====================================================== */
+
+  function escapeHtmlFinal(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        500
+      )
+  );
+
+
+  await loadFinalAssessmentDashboard();
+
+
+  setInterval(
+    loadFinalAssessmentDashboard,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadFinalAssessmentDashboard
+  );
+
+
+})();
+
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
