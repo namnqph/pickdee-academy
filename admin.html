@@ -5410,7 +5410,456 @@ window.addEventListener(
 
 </script>
 
+<!-- =========================================================
+     PICKDEE ACADEMY
+     ADMIN - ĐỐI SOÁT SÂN DASHBOARD CARD
+========================================================== -->
 
+<style>
+
+  #courtReconciliationCard.has-alert .card {
+
+    border-color:
+      rgba(255,142,142,.48) !important;
+
+    box-shadow:
+      0 0 0 1px
+      rgba(255,142,142,.05);
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+  /* =====================================
+     KHÔNG TẠO TRÙNG CARD
+  ====================================== */
+
+  if (
+    document.getElementById(
+      "courtReconciliationCard"
+    )
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const courtReconSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================
+     TÌM CARD SÂN HIỆN TẠI
+  ====================================== */
+
+  const courtCard =
+    document.querySelector(
+      'a[href="./admin-courts"]'
+    );
+
+
+  if (!courtCard) {
+
+    console.warn(
+      "PickDee: không tìm thấy card Sân & khu vực."
+    );
+
+    return;
+  }
+
+
+  /* =====================================
+     TẠO CARD ĐỐI SOÁT SÂN
+  ====================================== */
+
+  const cardLink =
+    document.createElement(
+      "a"
+    );
+
+
+  cardLink.id =
+    "courtReconciliationCard";
+
+
+  cardLink.href =
+    "./admin-court-reconciliation";
+
+
+  cardLink.className =
+    "card-link";
+
+
+  cardLink.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        🧾 Đối soát sân
+      </h2>
+
+      <p>
+        Đối soát tiền thuê sân theo kỳ,
+        theo dõi chênh lệch và xác nhận
+        thanh toán cho từng sân.
+      </p>
+
+
+      <div
+        id="courtReconMonth"
+        class="month-label"
+      >
+        Tháng hiện tại
+      </div>
+
+
+      <div class="card-stats">
+
+
+        <div class="card-stat">
+
+          <span class="card-stat-label">
+            🟠 Chưa đối soát
+          </span>
+
+          <span
+            id="courtReconPending"
+            class="card-stat-value value-orange"
+          >
+            ...
+          </span>
+
+        </div>
+
+
+        <div class="card-stat">
+
+          <span class="card-stat-label">
+            💸 Còn phải trả sân
+          </span>
+
+          <span
+            id="courtReconUnpaid"
+            class="card-stat-value value-red"
+          >
+            ...
+          </span>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  /*
+    Đặt ngay sau Sân & khu vực
+  */
+
+  courtCard.insertAdjacentElement(
+    "afterend",
+    cardLink
+  );
+
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function currentPeriod() {
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+
+    return (
+      year
+      +
+      "-"
+      +
+      month
+    );
+
+  }
+
+
+  function monthLabel(
+    period
+  ) {
+
+    const parts =
+      String(period || "")
+        .split("-");
+
+
+    if (
+      parts.length !== 2
+    ) {
+      return "Tháng hiện tại";
+    }
+
+
+    return (
+      "Tháng "
+      +
+      parts[1]
+      +
+      "/"
+      +
+      parts[0]
+    );
+
+  }
+
+
+  /* =====================================
+     LOAD SUMMARY
+  ====================================== */
+
+  async function loadCourtReconSummary() {
+
+    const pendingEl =
+      document.getElementById(
+        "courtReconPending"
+      );
+
+
+    const unpaidEl =
+      document.getElementById(
+        "courtReconUnpaid"
+      );
+
+
+    const monthEl =
+      document.getElementById(
+        "courtReconMonth"
+      );
+
+
+    if (
+      !pendingEl ||
+      !unpaidEl ||
+      !monthEl
+    ) {
+      return;
+    }
+
+
+    const period =
+      currentPeriod();
+
+
+    monthEl.textContent =
+      monthLabel(
+        period
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await courtReconSb.rpc(
+        "admin_get_court_reconciliation_summary",
+        {
+          p_period:
+            period
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        "COURT RECON SUMMARY:",
+        error
+      );
+
+
+      pendingEl.textContent =
+        "!";
+
+
+      unpaidEl.textContent =
+        "—";
+
+
+      return;
+    }
+
+
+    const summary =
+      data || {};
+
+
+    const pending =
+      Number(
+        summary.pending_count || 0
+      );
+
+
+    const unpaid =
+      Number(
+        summary.unpaid_amount || 0
+      );
+
+
+    pendingEl.textContent =
+      String(
+        pending
+      );
+
+
+    unpaidEl.textContent =
+      money(
+        unpaid
+      );
+
+
+    /* =================================
+       CẢNH BÁO
+    ================================== */
+
+    if (
+      pending > 0 ||
+      unpaid > 0
+    ) {
+
+      cardLink.classList.add(
+        "has-alert"
+      );
+
+
+      if (
+        pending > 0
+      ) {
+
+        pendingEl.classList.remove(
+          "value-green"
+        );
+
+
+        pendingEl.classList.add(
+          "value-orange"
+        );
+
+      }
+
+
+      if (
+        unpaid > 0
+      ) {
+
+        unpaidEl.classList.remove(
+          "value-green"
+        );
+
+
+        unpaidEl.classList.add(
+          "value-red"
+        );
+
+      }
+
+    }
+    else {
+
+      cardLink.classList.remove(
+        "has-alert"
+      );
+
+
+      pendingEl.classList.remove(
+        "value-orange"
+      );
+
+
+      pendingEl.classList.add(
+        "value-green"
+      );
+
+
+      unpaidEl.classList.remove(
+        "value-red"
+      );
+
+
+      unpaidEl.classList.add(
+        "value-green"
+      );
+
+    }
+
+  }
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  await loadCourtReconSummary();
+
+
+  /*
+    Refresh mỗi 60 giây
+  */
+
+  setInterval(
+    loadCourtReconSummary,
+    60000
+  );
+
+
+  /*
+    Quay lại tab thì cập nhật ngay
+  */
+
+  window.addEventListener(
+    "focus",
+    loadCourtReconSummary
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
