@@ -1,0 +1,2936 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Đối soát sân | PickDee Academy
+  </title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+
+    .topbar {
+
+      padding: 18px 24px;
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+    }
+
+
+    .brand {
+
+      font-size: 19px;
+
+      font-weight: 900;
+    }
+
+
+    .brand span {
+
+      color: #d8ff45;
+    }
+
+
+    .top-actions {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+    }
+
+
+    #userEmail {
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 14px;
+    }
+
+
+    .logout {
+
+      padding:
+        9px 12px;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      font-weight: 800;
+
+      cursor: pointer;
+    }
+
+
+    .container {
+
+      width:
+        min(
+          1380px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        32px 0 70px;
+    }
+
+
+    .back {
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+    }
+
+
+    .eyebrow {
+
+      margin-top: 25px;
+
+      color: #d8ff45;
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+
+    h1 {
+
+      margin:
+        8px 0 5px;
+
+      font-size:
+        clamp(
+          36px,
+          6vw,
+          54px
+        );
+    }
+
+
+    .sub {
+
+      color:
+        rgba(255,255,255,.62);
+
+      margin-bottom:
+        24px;
+
+      line-height: 1.5;
+    }
+
+
+    .summary {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap: 13px;
+
+      margin-bottom: 20px;
+    }
+
+
+    .summary-card {
+
+      padding: 17px;
+
+      border-radius: 14px;
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+    }
+
+
+    .summary-label {
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 12px;
+
+      margin-bottom: 7px;
+    }
+
+
+    .summary-value {
+
+      color: #d8ff45;
+
+      font-size: 23px;
+
+      font-weight: 900;
+    }
+
+
+    .summary-value.red {
+
+      color: #ff8f8f;
+    }
+
+
+    .card {
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 16px;
+
+      padding: 20px;
+
+      margin-bottom: 20px;
+    }
+
+
+    .section-title {
+
+      font-size: 20px;
+
+      font-weight: 900;
+
+      margin-bottom: 16px;
+    }
+
+
+    .filters {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr 1fr;
+
+      gap: 12px;
+
+      margin-bottom: 14px;
+    }
+
+
+    input,
+    select,
+    textarea {
+
+      width: 100%;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        #09285a;
+
+      color: white;
+
+      outline: none;
+
+      font-size: 14px;
+    }
+
+
+    select {
+
+      color-scheme: dark;
+    }
+
+
+    select option {
+
+      background:
+        #08111d;
+
+      color: white;
+    }
+
+
+    label {
+
+      display: block;
+
+      margin-bottom: 6px;
+
+      font-size: 12px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      font-weight: 800;
+    }
+
+
+    .build-box {
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr auto;
+
+      gap: 12px;
+
+      align-items: end;
+    }
+
+
+    .primary-btn {
+
+      min-height: 43px;
+
+      padding:
+        10px 16px;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      background: #d8ff45;
+
+      color: #172600;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+      white-space: nowrap;
+    }
+
+
+    .primary-btn:disabled {
+
+      opacity: .45;
+
+      cursor: not-allowed;
+    }
+
+
+    #message {
+
+      min-height: 22px;
+
+      margin:
+        5px 0 16px;
+
+      font-weight: 800;
+
+      color: #d8ff45;
+    }
+
+
+    .table-wrap {
+
+      overflow-x: auto;
+    }
+
+
+    table {
+
+      width: 100%;
+
+      min-width: 1250px;
+
+      border-collapse: collapse;
+    }
+
+
+    th,
+    td {
+
+      padding:
+        13px 10px;
+
+      text-align: left;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      font-size: 13px;
+
+      vertical-align: middle;
+    }
+
+
+    th {
+
+      color: #d8ff45;
+
+      white-space: nowrap;
+    }
+
+
+    tbody tr:hover {
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+
+    .money {
+
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .positive {
+
+      color: #ffb15c;
+    }
+
+
+    .negative {
+
+      color: #87ddff;
+    }
+
+
+    .zero {
+
+      color:
+        rgba(255,255,255,.7);
+    }
+
+
+    .badge {
+
+      display: inline-block;
+
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+
+      font-weight: 900;
+
+      white-space: nowrap;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+    }
+
+
+    .badge.pending {
+
+      color: #ffd36b;
+
+      background:
+        rgba(255,190,70,.14);
+    }
+
+
+    .badge.reconciled {
+
+      color: #9ed5ff;
+
+      background:
+        rgba(90,180,255,.14);
+    }
+
+
+    .badge.paid {
+
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.12);
+    }
+
+
+    .actions {
+
+      display: flex;
+
+      gap: 6px;
+
+      flex-wrap: wrap;
+    }
+
+
+    .action-btn {
+
+      padding:
+        7px 9px;
+
+      border-radius: 8px;
+
+      border:
+        1px solid rgba(255,255,255,.16);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      font-size: 11px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+      white-space: nowrap;
+    }
+
+
+    .action-btn.green {
+
+      background: #d8ff45;
+
+      color: #172600;
+
+      border-color: #d8ff45;
+    }
+
+
+    .action-btn.pay {
+
+      background: white;
+
+      color: #062456;
+    }
+
+
+    .empty {
+
+      text-align: center;
+
+      padding: 30px;
+
+      color:
+        rgba(255,255,255,.5);
+    }
+
+
+    /* =====================================
+       MODAL
+    ====================================== */
+
+    .modal {
+
+      position: fixed;
+
+      inset: 0;
+
+      background:
+        rgba(0,0,0,.72);
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 18px;
+
+      z-index: 9999;
+    }
+
+
+    .modal.show {
+
+      display: flex;
+    }
+
+
+    .modal-card {
+
+      width:
+        min(
+          1100px,
+          100%
+        );
+
+      max-height:
+        90vh;
+
+      overflow-y: auto;
+
+      background:
+        #062456;
+
+      border:
+        1px solid rgba(255,255,255,.16);
+
+      border-radius: 16px;
+
+      padding: 20px;
+    }
+
+
+    .modal-head {
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      gap: 12px;
+
+      align-items: center;
+
+      margin-bottom: 18px;
+    }
+
+
+    .modal-title {
+
+      font-size: 22px;
+
+      font-weight: 900;
+    }
+
+
+    .close-btn {
+
+      border: 0;
+
+      border-radius: 8px;
+
+      padding:
+        8px 11px;
+
+      cursor: pointer;
+
+      font-weight: 900;
+    }
+
+
+    .detail-summary {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,1fr);
+
+      gap: 10px;
+
+      margin-bottom: 16px;
+    }
+
+
+    .detail-stat {
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.06);
+    }
+
+
+    .detail-stat small {
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+
+    .detail-stat strong {
+
+      display: block;
+
+      margin-top: 5px;
+
+      color: #d8ff45;
+    }
+
+
+    @media(max-width:800px) {
+
+      .summary {
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .filters,
+      .build-box,
+      .detail-summary {
+
+        grid-template-columns:
+          1fr;
+      }
+
+      #userEmail {
+
+        display: none;
+      }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>Academy</span>
+
+  </div>
+
+
+  <div class="top-actions">
+
+    <div id="userEmail"></div>
+
+    <button
+      id="logoutBtn"
+      class="logout"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <a
+    href="./admin"
+    class="back"
+  >
+    ← Khu vực Admin
+  </a>
+
+
+  <div class="eyebrow">
+    QUẢN LÝ CHI PHÍ SÂN
+  </div>
+
+
+  <h1>
+    Đối soát sân
+  </h1>
+
+
+  <div class="sub">
+    Theo dõi tiền thuê sân theo từng sân và từng kỳ.
+    Đối soát số hệ thống với số thực tế trước khi xác nhận thanh toán.
+  </div>
+
+
+  <!-- =====================================
+       SUMMARY
+  ====================================== -->
+
+  <section class="summary">
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Kỳ đối soát
+      </div>
+
+      <div
+        id="totalPeriods"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Chưa đối soát
+      </div>
+
+      <div
+        id="pendingCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Tổng tiền hệ thống
+      </div>
+
+      <div
+        id="expectedAmount"
+        class="summary-value"
+      >
+        0đ
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        Còn phải thanh toán
+      </div>
+
+      <div
+        id="unpaidAmount"
+        class="summary-value red"
+      >
+        0đ
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <div id="message"></div>
+
+
+  <!-- =====================================
+       TẠO SNAPSHOT
+  ====================================== -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+      ➕ Tạo kỳ đối soát
+    </div>
+
+
+    <div class="build-box">
+
+
+      <div>
+
+        <label for="buildPeriod">
+          Kỳ đối soát
+        </label>
+
+        <input
+          id="buildPeriod"
+          type="month"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label for="buildCourt">
+          Sân
+        </label>
+
+        <select id="buildCourt">
+
+          <option value="">
+            Đang tải sân...
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <button
+        id="buildBtn"
+        class="primary-btn"
+        type="button"
+      >
+        TẠO ĐỐI SOÁT
+      </button>
+
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================
+       FILTER
+  ====================================== -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+      🔎 Lọc đối soát
+    </div>
+
+
+    <div class="filters">
+
+
+      <div>
+
+        <label for="periodFilter">
+          Kỳ
+        </label>
+
+        <input
+          id="periodFilter"
+          type="month"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label for="courtFilter">
+          Sân
+        </label>
+
+        <select id="courtFilter">
+
+          <option value="">
+            Tất cả sân
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <label for="statusFilter">
+          Trạng thái
+        </label>
+
+        <select id="statusFilter">
+
+          <option value="">
+            Tất cả trạng thái
+          </option>
+
+          <option value="Chưa đối soát">
+            Chưa đối soát
+          </option>
+
+          <option value="Đã đối soát">
+            Đã đối soát
+          </option>
+
+          <option value="Đã thanh toán">
+            Đã thanh toán
+          </option>
+
+        </select>
+
+      </div>
+
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================
+       LIST
+  ====================================== -->
+
+  <section class="card">
+
+
+    <div class="section-title">
+      🏟️ Danh sách đối soát
+    </div>
+
+
+    <div class="table-wrap">
+
+
+      <table>
+
+
+        <thead>
+
+          <tr>
+
+            <th>Khu vực</th>
+
+            <th>Sân</th>
+
+            <th>Kỳ</th>
+
+            <th>Số buổi</th>
+
+            <th>Hệ thống</th>
+
+            <th>Thực tế</th>
+
+            <th>Chênh lệch</th>
+
+            <th>Trạng thái</th>
+
+            <th>Thao tác</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="reconciliationBody">
+
+          <tr>
+
+            <td colspan="9">
+              Đang tải dữ liệu...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+
+      </table>
+
+
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<!-- =====================================
+     DETAIL MODAL
+====================================== -->
+
+<div
+  id="detailModal"
+  class="modal"
+>
+
+  <div class="modal-card">
+
+
+    <div class="modal-head">
+
+      <div
+        id="detailTitle"
+        class="modal-title"
+      >
+        Chi tiết đối soát
+      </div>
+
+      <button
+        id="closeModalBtn"
+        class="close-btn"
+        type="button"
+      >
+        ĐÓNG
+      </button>
+
+    </div>
+
+
+    <div
+      id="detailSummary"
+      class="detail-summary"
+    ></div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Mã BH</th>
+
+            <th>Ngày học</th>
+
+            <th>Giờ</th>
+
+            <th>Nội dung</th>
+
+            <th>Số tiền</th>
+
+            <th>Nguồn</th>
+
+            <th>Trạng thái</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="detailBody"></tbody>
+
+      </table>
+
+    </div>
+
+
+  </div>
+
+</div>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================
+     CONFIG
+  ====================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let courts = [];
+
+  let reconciliations = [];
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const buildPeriod =
+    document.getElementById(
+      "buildPeriod"
+    );
+
+
+  const buildCourt =
+    document.getElementById(
+      "buildCourt"
+    );
+
+
+  const buildBtn =
+    document.getElementById(
+      "buildBtn"
+    );
+
+
+  const periodFilter =
+    document.getElementById(
+      "periodFilter"
+    );
+
+
+  const courtFilter =
+    document.getElementById(
+      "courtFilter"
+    );
+
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+
+  const body =
+    document.getElementById(
+      "reconciliationBody"
+    );
+
+
+  const detailModal =
+    document.getElementById(
+      "detailModal"
+    );
+
+
+  const detailTitle =
+    document.getElementById(
+      "detailTitle"
+    );
+
+
+  const detailSummary =
+    document.getElementById(
+      "detailSummary"
+    );
+
+
+  const detailBody =
+    document.getElementById(
+      "detailBody"
+    );
+
+
+  const closeModalBtn =
+    document.getElementById(
+      "closeModalBtn"
+    );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function dateVN(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const parts =
+      String(value)
+        .split("-");
+
+
+    if (
+      parts.length === 3
+    ) {
+
+      return (
+        parts[2]
+        +
+        "/"
+        +
+        parts[1]
+        +
+        "/"
+        +
+        parts[0]
+      );
+
+    }
+
+
+    return value;
+
+  }
+
+
+  function timeVN(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    return String(value)
+      .slice(
+        0,
+        5
+      );
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function showMessage(
+    text,
+    error = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.style.color =
+      error
+        ? "#ffaaaa"
+        : "#d8ff45";
+
+  }
+
+
+  function currentMonth() {
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+
+    return (
+      year
+      +
+      "-"
+      +
+      month
+    );
+
+  }
+
+
+  function statusClass(status) {
+
+    if (
+      status ===
+      "Chưa đối soát"
+    ) {
+      return "pending";
+    }
+
+
+    if (
+      status ===
+      "Đã đối soát"
+    ) {
+      return "reconciled";
+    }
+
+
+    if (
+      status ===
+      "Đã thanh toán"
+    ) {
+      return "paid";
+    }
+
+
+    return "";
+  }
+
+
+  function varianceClass(value) {
+
+    const amount =
+      Number(value || 0);
+
+
+    if (amount > 0) {
+      return "positive";
+    }
+
+
+    if (amount < 0) {
+      return "negative";
+    }
+
+
+    return "zero";
+  }
+
+
+  /* =====================================
+     AUTH ADMIN
+  ====================================== */
+
+  const {
+    data: { session }
+  } =
+    await sb.auth.getSession();
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "userEmail"
+  ).textContent =
+    session.user.email || "";
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError
+    ||
+    !profile
+    ||
+    profile.role !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================
+     COURTS
+  ====================================== */
+
+  async function loadCourts() {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_courts"
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    courts =
+      data || [];
+
+
+    buildCourt.innerHTML =
+      `
+        <option value="">
+          Chọn sân
+        </option>
+      `;
+
+
+    courtFilter.innerHTML =
+      `
+        <option value="">
+          Tất cả sân
+        </option>
+      `;
+
+
+    courts.forEach(
+      court => {
+
+
+        const text =
+          (
+            court.area
+              ?
+              court.area
+              +
+              " · "
+              :
+              ""
+          )
+          +
+          (
+            court.name
+            ||
+            court.court_code
+            ||
+            "Sân"
+          );
+
+
+        const option1 =
+          document.createElement(
+            "option"
+          );
+
+
+        option1.value =
+          court.id;
+
+
+        option1.textContent =
+          text;
+
+
+        buildCourt.appendChild(
+          option1
+        );
+
+
+        const option2 =
+          option1.cloneNode(
+            true
+          );
+
+
+        courtFilter.appendChild(
+          option2
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================
+     SUMMARY
+  ====================================== */
+
+  async function loadSummary() {
+
+
+    const period =
+      periodFilter.value
+      ||
+      null;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_court_reconciliation_summary",
+        {
+          p_period:
+            period
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const row =
+      data || {};
+
+
+    document.getElementById(
+      "totalPeriods"
+    ).textContent =
+      Number(
+        row.total_periods || 0
+      );
+
+
+    document.getElementById(
+      "pendingCount"
+    ).textContent =
+      Number(
+        row.pending_count || 0
+      );
+
+
+    document.getElementById(
+      "expectedAmount"
+    ).textContent =
+      money(
+        row.expected_amount
+      );
+
+
+    document.getElementById(
+      "unpaidAmount"
+    ).textContent =
+      money(
+        row.unpaid_amount
+      );
+
+  }
+
+
+  /* =====================================
+     LOAD LIST
+  ====================================== */
+
+  async function loadReconciliations() {
+
+
+    body.innerHTML =
+      `
+        <tr>
+          <td colspan="9">
+            Đang tải đối soát sân...
+          </td>
+        </tr>
+      `;
+
+
+    const period =
+      periodFilter.value
+      ||
+      null;
+
+
+    const courtId =
+      courtFilter.value
+        ?
+        Number(
+          courtFilter.value
+        )
+        :
+        null;
+
+
+    const status =
+      statusFilter.value
+      ||
+      null;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "admin_get_court_reconciliations",
+        {
+          p_period:
+            period,
+
+          p_court_id:
+            courtId,
+
+          p_status:
+            status
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    reconciliations =
+      data || [];
+
+
+    renderRows();
+
+  }
+
+
+  /* =====================================
+     RENDER
+  ====================================== */
+
+  function renderRows() {
+
+
+    if (
+      reconciliations.length === 0
+    ) {
+
+      body.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="9"
+              class="empty"
+            >
+
+              Chưa có kỳ đối soát phù hợp.
+
+            </td>
+
+          </tr>
+        `;
+
+      return;
+
+    }
+
+
+    body.innerHTML =
+      reconciliations
+        .map(
+          row => {
+
+
+            const actual =
+              row.actual_amount === null
+              ||
+              row.actual_amount ===
+              undefined
+                ?
+                "—"
+                :
+                money(
+                  row.actual_amount
+                );
+
+
+            const variance =
+              row.variance_amount === null
+              ||
+              row.variance_amount ===
+              undefined
+                ?
+                "—"
+                :
+                money(
+                  row.variance_amount
+                );
+
+
+            let actionHTML = `
+
+              <button
+                type="button"
+                class="action-btn detail-btn"
+                data-id="${row.reconciliation_id}"
+              >
+                CHI TIẾT
+              </button>
+
+            `;
+
+
+            if (
+              row.status ===
+              "Chưa đối soát"
+            ) {
+
+              actionHTML += `
+
+                <button
+                  type="button"
+                  class="action-btn green reconcile-btn"
+                  data-id="${row.reconciliation_id}"
+                >
+                  ĐỐI SOÁT
+                </button>
+
+              `;
+
+            }
+
+
+            if (
+              row.status ===
+              "Đã đối soát"
+            ) {
+
+              actionHTML += `
+
+                <button
+                  type="button"
+                  class="action-btn pay pay-btn"
+                  data-id="${row.reconciliation_id}"
+                >
+                  ĐÃ THANH TOÁN
+                </button>
+
+              `;
+
+            }
+
+
+            if (
+              row.status ===
+              "Đã thanh toán"
+            ) {
+
+              actionHTML += `
+
+                <span
+                  style="
+                    color:#d8ff45;
+                    font-weight:900;
+                    font-size:11px
+                  "
+                >
+                  ✓ HOÀN TẤT
+                </span>
+
+              `;
+
+            }
+
+
+            return `
+
+              <tr>
+
+                <td>
+                  ${escapeHTML(
+                    row.area || "—"
+                  )}
+                </td>
+
+
+                <td>
+
+                  <strong>
+                    ${escapeHTML(
+                      row.court_name ||
+                      row.court_code ||
+                      "—"
+                    )}
+                  </strong>
+
+                </td>
+
+
+                <td>
+                  ${escapeHTML(
+                    row.period
+                  )}
+                </td>
+
+
+                <td>
+                  ${Number(
+                    row.session_count || 0
+                  )}
+                </td>
+
+
+                <td class="money">
+                  ${money(
+                    row.expected_amount
+                  )}
+                </td>
+
+
+                <td class="money">
+                  ${actual}
+                </td>
+
+
+                <td
+                  class="
+                    money
+                    ${
+                      varianceClass(
+                        row.variance_amount
+                      )
+                    }
+                  "
+                >
+                  ${variance}
+                </td>
+
+
+                <td>
+
+                  <span
+                    class="
+                      badge
+                      ${
+                        statusClass(
+                          row.status
+                        )
+                      }
+                    "
+                  >
+                    ${escapeHTML(
+                      row.status
+                    )}
+                  </span>
+
+                </td>
+
+
+                <td>
+
+                  <div class="actions">
+                    ${actionHTML}
+                  </div>
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================
+     REFRESH
+  ====================================== */
+
+  async function refresh() {
+
+
+    await Promise.all([
+      loadSummary(),
+      loadReconciliations()
+    ]);
+
+  }
+
+
+  /* =====================================
+     BUILD SNAPSHOT
+  ====================================== */
+
+  buildBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      const period =
+        buildPeriod.value;
+
+
+      const courtId =
+        Number(
+          buildCourt.value
+        );
+
+
+      if (!period) {
+
+        showMessage(
+          "Hãy chọn kỳ đối soát.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !courtId
+      ) {
+
+        showMessage(
+          "Hãy chọn sân.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      const court =
+        courts.find(
+          item =>
+            Number(item.id) ===
+            courtId
+        );
+
+
+      const courtName =
+        court?.name ||
+        "sân này";
+
+
+      const ok =
+        window.confirm(
+
+          `Tạo / làm mới đối soát ${courtName} kỳ ${period}?\n\nChỉ kỳ đang ở trạng thái "Chưa đối soát" mới được làm mới.`
+
+        );
+
+
+      if (!ok) {
+        return;
+      }
+
+
+      buildBtn.disabled =
+        true;
+
+
+      buildBtn.textContent =
+        "ĐANG TẠO...";
+
+
+      showMessage(
+        "Đang tổng hợp chi phí sân..."
+      );
+
+
+      try {
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "admin_build_court_reconciliation",
+            {
+
+              p_court_id:
+                courtId,
+
+              p_period:
+                period
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        showMessage(
+
+          `✓ Đã tạo đối soát ${courtName}: ${Number(data?.session_count || 0)} buổi · ${money(data?.expected_amount)}.`
+
+        );
+
+
+        periodFilter.value =
+          period;
+
+
+        courtFilter.value =
+          String(
+            courtId
+          );
+
+
+        await refresh();
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          error
+        );
+
+
+        showMessage(
+
+          "Không tạo được đối soát: "
+          +
+          (
+            error.message ||
+            error
+          ),
+
+          true
+
+        );
+
+
+      }
+      finally {
+
+
+        buildBtn.disabled =
+          false;
+
+
+        buildBtn.textContent =
+          "TẠO ĐỐI SOÁT";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================
+     TABLE ACTIONS
+  ====================================== */
+
+  body.addEventListener(
+    "click",
+    async function (event) {
+
+
+      /* ---------------------------------
+         DETAIL
+      ---------------------------------- */
+
+      const detailBtn =
+        event.target.closest(
+          ".detail-btn[data-id]"
+        );
+
+
+      if (detailBtn) {
+
+        await openDetail(
+          Number(
+            detailBtn.dataset.id
+          )
+        );
+
+        return;
+
+      }
+
+
+      /* ---------------------------------
+         RECONCILE
+      ---------------------------------- */
+
+      const reconcileBtn =
+        event.target.closest(
+          ".reconcile-btn[data-id]"
+        );
+
+
+      if (reconcileBtn) {
+
+        const id =
+          Number(
+            reconcileBtn.dataset.id
+          );
+
+
+        const row =
+          reconciliations.find(
+            item =>
+              Number(
+                item.reconciliation_id
+              )
+              ===
+              id
+          );
+
+
+        if (!row) {
+          return;
+        }
+
+
+        const actualText =
+          window.prompt(
+
+            `Số tiền sân thực tế cần trả?\n\nHệ thống đang tính: ${money(row.expected_amount)}`,
+
+            String(
+              Number(
+                row.expected_amount || 0
+              )
+            )
+
+          );
+
+
+        if (
+          actualText === null
+        ) {
+          return;
+        }
+
+
+        const actual =
+          Number(
+            actualText
+              .replaceAll(".", "")
+              .replaceAll(",", "")
+              .trim()
+          );
+
+
+        if (
+          !Number.isFinite(actual)
+          ||
+          actual < 0
+        ) {
+
+          alert(
+            "Số tiền thực tế không hợp lệ."
+          );
+
+          return;
+
+        }
+
+
+        const variance =
+          actual
+          -
+          Number(
+            row.expected_amount || 0
+          );
+
+
+        let reason = null;
+
+
+        if (
+          variance !== 0
+        ) {
+
+          reason =
+            window.prompt(
+
+              `Có chênh lệch ${money(variance)}.\nBắt buộc nhập lý do chênh lệch:`
+
+            );
+
+
+          if (
+            !reason
+            ||
+            !reason.trim()
+          ) {
+
+            alert(
+              "Có chênh lệch nên bắt buộc phải nhập lý do."
+            );
+
+            return;
+
+          }
+
+        }
+
+
+        const note =
+          window.prompt(
+            "Ghi chú đối soát (có thể để trống):"
+          );
+
+
+        const confirmed =
+          window.confirm(
+
+            `Xác nhận đối soát?\n\nSân: ${row.court_name}\nKỳ: ${row.period}\nHệ thống: ${money(row.expected_amount)}\nThực tế: ${money(actual)}\nChênh lệch: ${money(variance)}`
+
+          );
+
+
+        if (!confirmed) {
+          return;
+        }
+
+
+        showMessage(
+          "Đang xác nhận đối soát..."
+        );
+
+
+        try {
+
+
+          const {
+            error
+          } =
+            await sb.rpc(
+              "admin_reconcile_court",
+              {
+
+                p_reconciliation_id:
+                  id,
+
+                p_actual_amount:
+                  actual,
+
+                p_variance_reason:
+                  reason,
+
+                p_note:
+                  note
+
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          showMessage(
+            "✓ Đã đối soát tiền sân."
+          );
+
+
+          await refresh();
+
+
+        }
+        catch (error) {
+
+
+          console.error(
+            error
+          );
+
+
+          showMessage(
+
+            "Không đối soát được: "
+            +
+            (
+              error.message ||
+              error
+            ),
+
+            true
+
+          );
+
+        }
+
+
+        return;
+
+      }
+
+
+      /* ---------------------------------
+         PAY
+      ---------------------------------- */
+
+      const payBtn =
+        event.target.closest(
+          ".pay-btn[data-id]"
+        );
+
+
+      if (payBtn) {
+
+
+        const id =
+          Number(
+            payBtn.dataset.id
+          );
+
+
+        const row =
+          reconciliations.find(
+            item =>
+              Number(
+                item.reconciliation_id
+              )
+              ===
+              id
+          );
+
+
+        if (!row) {
+          return;
+        }
+
+
+        const reference =
+          window.prompt(
+
+            "Mã giao dịch / nội dung chuyển khoản / chứng từ thanh toán:"
+
+          );
+
+
+        const note =
+          window.prompt(
+            "Ghi chú thanh toán (có thể để trống):"
+          );
+
+
+        const ok =
+          window.confirm(
+
+            `Xác nhận ĐÃ THANH TOÁN tiền sân?\n\n${row.court_name}\nKỳ ${row.period}\nSố tiền: ${money(row.actual_amount)}`
+
+          );
+
+
+        if (!ok) {
+          return;
+        }
+
+
+        showMessage(
+          "Đang xác nhận thanh toán..."
+        );
+
+
+        try {
+
+
+          const {
+            error
+          } =
+            await sb.rpc(
+              "admin_pay_court_reconciliation",
+              {
+
+                p_reconciliation_id:
+                  id,
+
+                p_payment_reference:
+                  reference,
+
+                p_note:
+                  note
+
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          showMessage(
+            "✓ Đã xác nhận thanh toán tiền sân."
+          );
+
+
+          await refresh();
+
+
+        }
+        catch (error) {
+
+
+          console.error(
+            error
+          );
+
+
+          showMessage(
+
+            "Không xác nhận được thanh toán: "
+            +
+            (
+              error.message ||
+              error
+            ),
+
+            true
+
+          );
+
+        }
+
+
+      }
+
+    }
+  );
+
+
+  /* =====================================
+     DETAIL
+  ====================================== */
+
+  async function openDetail(id) {
+
+
+    const row =
+      reconciliations.find(
+        item =>
+          Number(
+            item.reconciliation_id
+          )
+          ===
+          Number(id)
+      );
+
+
+    if (!row) {
+      return;
+    }
+
+
+    detailTitle.textContent =
+      `${row.court_name} · ${row.period}`;
+
+
+    detailSummary.innerHTML =
+      `
+
+        <div class="detail-stat">
+
+          <small>Số buổi</small>
+
+          <strong>
+            ${Number(row.session_count || 0)}
+          </strong>
+
+        </div>
+
+
+        <div class="detail-stat">
+
+          <small>Hệ thống</small>
+
+          <strong>
+            ${money(row.expected_amount)}
+          </strong>
+
+        </div>
+
+
+        <div class="detail-stat">
+
+          <small>Thực tế</small>
+
+          <strong>
+            ${
+              row.actual_amount === null
+                ?
+                "—"
+                :
+                money(row.actual_amount)
+            }
+          </strong>
+
+        </div>
+
+
+        <div class="detail-stat">
+
+          <small>Trạng thái</small>
+
+          <strong>
+            ${escapeHTML(row.status)}
+          </strong>
+
+        </div>
+
+      `;
+
+
+    detailBody.innerHTML =
+      `
+        <tr>
+          <td colspan="7">
+            Đang tải chi tiết...
+          </td>
+        </tr>
+      `;
+
+
+    detailModal.classList.add(
+      "show"
+    );
+
+
+    try {
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "admin_get_court_reconciliation_detail",
+          {
+            p_reconciliation_id:
+              Number(id)
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const items =
+        data || [];
+
+
+      if (
+        items.length === 0
+      ) {
+
+        detailBody.innerHTML =
+          `
+            <tr>
+
+              <td
+                colspan="7"
+                class="empty"
+              >
+                Không có chi phí trong kỳ này.
+              </td>
+
+            </tr>
+          `;
+
+        return;
+
+      }
+
+
+      detailBody.innerHTML =
+        items
+          .map(
+            item => `
+
+              <tr>
+
+                <td>
+                  <strong>
+                    ${escapeHTML(
+                      item.session_code ||
+                      "—"
+                    )}
+                  </strong>
+                </td>
+
+
+                <td>
+                  ${dateVN(
+                    item.session_date ||
+                    item.expense_date
+                  )}
+                </td>
+
+
+                <td>
+                  ${timeVN(
+                    item.start_time
+                  )}
+                </td>
+
+
+                <td>
+                  ${escapeHTML(
+                    item.description ||
+                    "—"
+                  )}
+                </td>
+
+
+                <td class="money">
+                  ${money(
+                    item.amount
+                  )}
+                </td>
+
+
+                <td>
+                  ${escapeHTML(
+                    item.source_type ||
+                    "—"
+                  )}
+                </td>
+
+
+                <td>
+                  ${escapeHTML(
+                    item.expense_status ||
+                    "—"
+                  )}
+                </td>
+
+              </tr>
+
+            `
+          )
+          .join("");
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        error
+      );
+
+
+      detailBody.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="7"
+              class="empty"
+            >
+              Không tải được chi tiết:
+              ${escapeHTML(
+                error.message ||
+                error
+              )}
+            </td>
+
+          </tr>
+        `;
+
+    }
+
+  }
+
+
+  closeModalBtn.addEventListener(
+    "click",
+    function () {
+
+      detailModal.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+
+  detailModal.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target ===
+        detailModal
+      ) {
+
+        detailModal.classList.remove(
+          "show"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =====================================
+     FILTER
+  ====================================== */
+
+  periodFilter.addEventListener(
+    "change",
+    refresh
+  );
+
+
+  courtFilter.addEventListener(
+    "change",
+    loadReconciliations
+  );
+
+
+  statusFilter.addEventListener(
+    "change",
+    loadReconciliations
+  );
+
+
+  /* =====================================
+     LOGOUT
+  ====================================== */
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+
+      await sb.auth.signOut();
+
+
+      location.replace(
+        "./login.html"
+      );
+
+    }
+  );
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  try {
+
+
+    const month =
+      currentMonth();
+
+
+    buildPeriod.value =
+      month;
+
+
+    periodFilter.value =
+      month;
+
+
+    await loadCourts();
+
+
+    await refresh();
+
+
+  }
+  catch (error) {
+
+
+    console.error(
+      error
+    );
+
+
+    showMessage(
+
+      "Không tải được Đối soát sân: "
+      +
+      (
+        error.message ||
+        error
+      ),
+
+      true
+
+    );
+
+  }
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
