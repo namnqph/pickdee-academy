@@ -1889,7 +1889,433 @@
 
 </script>
 
+<script>
+(function () {
 
+  const coachFilter =
+    document.getElementById(
+      "coachFilter"
+    );
+
+  const periodFilter =
+    document.getElementById(
+      "periodFilter"
+    );
+
+  const filters =
+    document.querySelector(
+      ".filters"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !coachFilter ||
+    !periodFilter ||
+    !filters
+  ) {
+    return;
+  }
+
+
+  /* =====================================
+     TẠO KHU VỰC CHỐT CÔNG HÀNG LOẠT
+  ===================================== */
+
+  const bulkBox =
+    document.createElement(
+      "div"
+    );
+
+
+  bulkBox.style.marginBottom =
+    "18px";
+
+
+  bulkBox.style.padding =
+    "16px";
+
+
+  bulkBox.style.borderRadius =
+    "12px";
+
+
+  bulkBox.style.border =
+    "1px solid rgba(216,255,69,.22)";
+
+
+  bulkBox.style.background =
+    "rgba(216,255,69,.05)";
+
+
+  const bulkBtn =
+    document.createElement(
+      "button"
+    );
+
+
+  bulkBtn.id =
+    "bulkCloseWorkBtn";
+
+
+  bulkBtn.type =
+    "button";
+
+
+  bulkBtn.textContent =
+    "✅ CHỐT TOÀN BỘ CÔNG TRONG KỲ";
+
+
+  bulkBtn.style.width =
+    "100%";
+
+
+  bulkBtn.style.minHeight =
+    "50px";
+
+
+  bulkBtn.style.border =
+    "0";
+
+
+  bulkBtn.style.borderRadius =
+    "10px";
+
+
+  bulkBtn.style.fontSize =
+    "14px";
+
+
+  bulkBtn.style.fontWeight =
+    "900";
+
+
+  bulkBtn.style.background =
+    "#d8ff45";
+
+
+  bulkBtn.style.color =
+    "#172600";
+
+
+  bulkBtn.style.cursor =
+    "pointer";
+
+
+  const hint =
+    document.createElement(
+      "div"
+    );
+
+
+  hint.style.marginTop =
+    "9px";
+
+
+  hint.style.fontSize =
+    "12px";
+
+
+  hint.style.color =
+    "rgba(255,255,255,.62)";
+
+
+  hint.style.lineHeight =
+    "1.5";
+
+
+  bulkBox.appendChild(
+    bulkBtn
+  );
+
+
+  bulkBox.appendChild(
+    hint
+  );
+
+
+  filters.insertAdjacentElement(
+    "afterend",
+    bulkBox
+  );
+
+
+  /* =====================================
+     TRẠNG THÁI NÚT
+  ===================================== */
+
+  function updateBulkButton() {
+
+    const coachId =
+      coachFilter.value;
+
+
+    const payPeriod =
+      periodFilter.value;
+
+
+    const ready =
+      Boolean(
+        coachId &&
+        payPeriod
+      );
+
+
+    bulkBtn.disabled =
+      !ready;
+
+
+    bulkBtn.style.opacity =
+      ready
+        ? "1"
+        : ".45";
+
+
+    bulkBtn.style.cursor =
+      ready
+        ? "pointer"
+        : "not-allowed";
+
+
+    if (!coachId) {
+
+      hint.textContent =
+        "Chọn Coach và kỳ lương để chốt toàn bộ các dòng Chưa chốt.";
+
+      return;
+    }
+
+
+    if (!payPeriod) {
+
+      hint.textContent =
+        "Đã chọn Coach. Hãy chọn thêm kỳ lương.";
+
+      return;
+    }
+
+
+    const coachName =
+      coachFilter.options[
+        coachFilter.selectedIndex
+      ]?.textContent
+      ||
+      "Coach";
+
+
+    hint.textContent =
+      `Sẵn sàng chốt toàn bộ công Chưa chốt của ${coachName} trong kỳ ${payPeriod}.`;
+
+  }
+
+
+  coachFilter.addEventListener(
+    "change",
+    updateBulkButton
+  );
+
+
+  periodFilter.addEventListener(
+    "change",
+    updateBulkButton
+  );
+
+
+  updateBulkButton();
+
+
+  /* =====================================
+     CHỐT TOÀN BỘ CÔNG
+  ===================================== */
+
+  bulkBtn.addEventListener(
+    "click",
+    async function () {
+
+      const coachId =
+        Number(
+          coachFilter.value
+        );
+
+
+      const payPeriod =
+        periodFilter.value;
+
+
+      if (
+        !coachId ||
+        !payPeriod
+      ) {
+        return;
+      }
+
+
+      const coachName =
+        coachFilter.options[
+          coachFilter.selectedIndex
+        ]?.textContent
+        ||
+        "Coach";
+
+
+      const accepted =
+        window.confirm(
+          `Xác nhận CHỐT TOÀN BỘ công Chưa chốt của ${coachName} trong kỳ ${payPeriod}?\n\nChỉ các dòng đang ở trạng thái "Chưa chốt" mới được xử lý.`
+        );
+
+
+      if (!accepted) {
+        return;
+      }
+
+
+      bulkBtn.disabled =
+        true;
+
+
+      bulkBtn.textContent =
+        "ĐANG CHỐT CÔNG...";
+
+
+      if (messageEl) {
+
+        messageEl.textContent =
+          "Đang chốt toàn bộ công trong kỳ...";
+
+
+        messageEl.style.color =
+          "#d8ff45";
+
+      }
+
+
+      try {
+
+        const cfg =
+          window.PICKDEE_CONFIG
+          ||
+          {};
+
+
+        const bulkSb =
+          window.supabase
+            .createClient(
+              cfg.SUPABASE_URL,
+              cfg.SUPABASE_PUBLISHABLE_KEY
+            );
+
+
+        const {
+          data,
+          error
+        } =
+          await bulkSb.rpc(
+            "admin_bulk_close_coach_work",
+            {
+              p_coach_id:
+                coachId,
+
+              p_pay_period:
+                payPeriod
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const count =
+          Number(
+            data?.closed_count || 0
+          );
+
+
+        if (count > 0) {
+
+          if (messageEl) {
+
+            messageEl.textContent =
+              `✓ Đã chốt ${count} dòng công của ${coachName} trong kỳ ${payPeriod}.`;
+
+          }
+
+
+          bulkBtn.textContent =
+            `✓ ĐÃ CHỐT ${count} DÒNG`;
+
+        }
+        else {
+
+          if (messageEl) {
+
+            messageEl.textContent =
+              `Không có dòng công Chưa chốt nào của ${coachName} trong kỳ ${payPeriod}.`;
+
+          }
+
+
+          bulkBtn.textContent =
+            "KHÔNG CÓ CÔNG CẦN CHỐT";
+
+        }
+
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          900
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "BULK CLOSE COACH WORK:",
+          error
+        );
+
+
+        if (messageEl) {
+
+          messageEl.textContent =
+            "Không chốt được công: "
+            +
+            (
+              error?.message
+              ||
+              error
+            );
+
+
+          messageEl.style.color =
+            "#ffaaaa";
+
+        }
+
+
+        bulkBtn.disabled =
+          false;
+
+
+        bulkBtn.textContent =
+          "✅ CHỐT TOÀN BỘ CÔNG TRONG KỲ";
+
+      }
+
+    }
+  );
+
+})();
+</script>
 </body>
 
 </html>
