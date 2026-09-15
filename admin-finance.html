@@ -3238,6 +3238,1301 @@
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE - THANH TOÁN CHI PHÍ VẬN HÀNH
+========================================================== -->
+
+<style>
+
+  .pd-pay-badge {
+    display:inline-block;
+    padding:6px 9px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .pd-pay-unpaid {
+    background:rgba(255,180,70,.14);
+    color:#ffc45f;
+    border:1px solid rgba(255,180,70,.30);
+  }
+
+  .pd-pay-paid {
+    background:rgba(216,255,69,.12);
+    color:#d8ff45;
+    border:1px solid rgba(216,255,69,.25);
+  }
+
+  .pd-pay-court {
+    background:rgba(120,180,255,.12);
+    color:#a9d0ff;
+    border:1px solid rgba(120,180,255,.25);
+  }
+
+  .pd-pay-btn {
+    border:0;
+    border-radius:8px;
+    padding:8px 10px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:900;
+    background:#d8ff45;
+    color:#10203b;
+    white-space:nowrap;
+  }
+
+  .pd-pay-btn:hover {
+    filter:brightness(.95);
+  }
+
+  .pd-court-link {
+    display:inline-block;
+    text-decoration:none;
+    border-radius:8px;
+    padding:7px 9px;
+    font-size:10px;
+    font-weight:900;
+    color:#d8ff45;
+    border:1px solid rgba(216,255,69,.28);
+    white-space:nowrap;
+  }
+
+
+  /* POPUP */
+
+  #pdExpensePayModal {
+    position:fixed;
+    inset:0;
+    z-index:1000000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.78);
+  }
+
+  #pdExpensePayModal.open {
+    display:flex;
+  }
+
+  .pd-pay-modal-box {
+    width:min(540px,100%);
+    max-height:90vh;
+    overflow:auto;
+    border-radius:18px;
+    padding:20px;
+    background:#0e376f;
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 25px 80px rgba(0,0,0,.45);
+  }
+
+  .pd-pay-modal-top {
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+  }
+
+  .pd-pay-modal-title {
+    font-size:22px;
+    font-weight:900;
+    color:#fff;
+  }
+
+  .pd-pay-modal-sub {
+    margin-top:4px;
+    color:#d8ff45;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .pd-pay-close {
+    border:1px solid rgba(255,255,255,.20);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    border-radius:8px;
+    padding:8px 11px;
+    cursor:pointer;
+    font-weight:800;
+  }
+
+  .pd-pay-info {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:16px;
+  }
+
+  .pd-pay-info-item {
+    background:rgba(255,255,255,.06);
+    border-radius:10px;
+    padding:11px;
+  }
+
+  .pd-pay-info-label {
+    color:#9db1cf;
+    font-size:11px;
+    margin-bottom:5px;
+  }
+
+  .pd-pay-info-value {
+    color:#fff;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .pd-pay-modal-field {
+    margin-top:13px;
+  }
+
+  .pd-pay-modal-field label {
+    display:block;
+    margin-bottom:6px;
+    color:#cbd7e8;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .pd-pay-modal-field input,
+  .pd-pay-modal-field textarea {
+    box-sizing:border-box;
+    width:100%;
+    border:1px solid rgba(255,255,255,.20);
+    border-radius:9px;
+    background:#173f76;
+    color:#fff;
+    padding:11px 12px;
+    outline:none;
+    font:inherit;
+  }
+
+  .pd-pay-modal-field textarea {
+    min-height:90px;
+    resize:vertical;
+  }
+
+  #pdConfirmExpensePay {
+    width:100%;
+    margin-top:18px;
+    border:0;
+    border-radius:10px;
+    padding:13px;
+    background:#d8ff45;
+    color:#10203b;
+    cursor:pointer;
+    font-weight:900;
+  }
+
+  #pdExpensePayMessage {
+    min-height:20px;
+    margin-top:11px;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  @media (max-width:650px) {
+
+    .pd-pay-info {
+      grid-template-columns:1fr;
+    }
+
+  }
+
+</style>
+
+
+<div id="pdExpensePayModal">
+
+  <div class="pd-pay-modal-box">
+
+    <div class="pd-pay-modal-top">
+
+      <div>
+
+        <div class="pd-pay-modal-sub">
+          THANH TOÁN CHI PHÍ
+        </div>
+
+        <div class="pd-pay-modal-title">
+          Xác nhận tiền đã chi
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        id="pdCloseExpensePay"
+        class="pd-pay-close"
+      >
+        ĐÓNG
+      </button>
+
+    </div>
+
+
+    <div class="pd-pay-info">
+
+      <div class="pd-pay-info-item">
+
+        <div class="pd-pay-info-label">
+          Mã chi phí
+        </div>
+
+        <div
+          id="pdPayCode"
+          class="pd-pay-info-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="pd-pay-info-item">
+
+        <div class="pd-pay-info-label">
+          Số tiền
+        </div>
+
+        <div
+          id="pdPayAmount"
+          class="pd-pay-info-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="pd-pay-info-item">
+
+        <div class="pd-pay-info-label">
+          Người nhận / Nhà cung cấp
+        </div>
+
+        <div
+          id="pdPayPayee"
+          class="pd-pay-info-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="pd-pay-info-item">
+
+        <div class="pd-pay-info-label">
+          Loại chi phí
+        </div>
+
+        <div
+          id="pdPayType"
+          class="pd-pay-info-value"
+        >
+          —
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="pd-pay-modal-field">
+
+      <label>
+        Mã giao dịch / Chứng từ *
+      </label>
+
+      <input
+        id="pdPaymentReference"
+        type="text"
+        maxlength="200"
+        autocomplete="off"
+        placeholder="Ví dụ: MB15092026ABC123"
+      >
+
+    </div>
+
+
+    <div class="pd-pay-modal-field">
+
+      <label>
+        Ghi chú thanh toán
+      </label>
+
+      <textarea
+        id="pdPaymentNote"
+        maxlength="1000"
+        placeholder="Ví dụ: Chuyển khoản tiền mua bóng tháng 09/2026"
+      ></textarea>
+
+    </div>
+
+
+    <button
+      type="button"
+      id="pdConfirmExpensePay"
+    >
+      💸 XÁC NHẬN ĐÃ THANH TOÁN
+    </button>
+
+
+    <div id="pdExpensePayMessage"></div>
+
+  </div>
+
+</div>
+
+
+<script>
+(function () {
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  const expenseBody =
+    document.getElementById(
+      "expenseBody"
+    );
+
+  const monthFilter =
+    document.getElementById(
+      "monthFilter"
+    );
+
+
+  if (
+    !expenseBody ||
+    !monthFilter
+  ) {
+
+    console.error(
+      "PickDee: Không tìm thấy bảng chi phí."
+    );
+
+    return;
+
+  }
+
+
+  /* Xóa dòng nhắc Thuê sân cũ bị trùng */
+
+  const oldCourtNotice =
+    document.getElementById(
+      "manualExpenseCourtNotice"
+    );
+
+  if (oldCourtNotice) {
+
+    oldCourtNotice.remove();
+
+  }
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const pdPaySb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let paymentMap =
+    new Map();
+
+
+  let selectedExpense =
+    null;
+
+
+  let syncing =
+    false;
+
+
+  /* =====================================================
+     MODAL ELEMENTS
+  ====================================================== */
+
+  const modal =
+    document.getElementById(
+      "pdExpensePayModal"
+    );
+
+  const closeBtn =
+    document.getElementById(
+      "pdCloseExpensePay"
+    );
+
+  const confirmBtn =
+    document.getElementById(
+      "pdConfirmExpensePay"
+    );
+
+  const referenceInput =
+    document.getElementById(
+      "pdPaymentReference"
+    );
+
+  const noteInput =
+    document.getElementById(
+      "pdPaymentNote"
+    );
+
+  const payMessage =
+    document.getElementById(
+      "pdExpensePayMessage"
+    );
+
+
+  /* =====================================================
+     TABLE HEADER
+  ====================================================== */
+
+  function ensureHeaders() {
+
+    const table =
+      expenseBody.closest(
+        "table"
+      );
+
+
+    if (!table) return;
+
+
+    const headerRow =
+      table.querySelector(
+        "thead tr"
+      );
+
+
+    if (!headerRow) return;
+
+
+    const headers =
+      Array.from(
+        headerRow.querySelectorAll(
+          "th"
+        )
+      );
+
+
+    if (
+      headers.some(
+        th =>
+          th.textContent
+            .trim()
+          ===
+          "Người nhận"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    [
+      "Người nhận",
+      "Thanh toán",
+      "Thao tác"
+    ]
+      .forEach(
+        text => {
+
+          const th =
+            document.createElement(
+              "th"
+            );
+
+          th.textContent =
+            text;
+
+          headerRow.appendChild(
+            th
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     PAYMENT STATE
+  ====================================================== */
+
+  async function loadPaymentState() {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await pdPaySb.rpc(
+          "admin_get_operating_expense_payment_state",
+          {
+            p_month:
+              monthFilter.value
+          }
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      paymentMap =
+        new Map();
+
+
+      (
+        Array.isArray(data)
+          ?
+          data
+          :
+          []
+      )
+        .forEach(
+          row => {
+
+            paymentMap.set(
+              String(
+                row.expense_code || ""
+              ).trim(),
+              row
+            );
+
+          }
+        );
+
+
+      syncRows();
+
+    }
+    catch (error) {
+
+      console.error(
+        "PAYMENT STATE:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER EXTRA COLUMNS
+  ====================================================== */
+
+  function syncRows() {
+
+    if (syncing) {
+      return;
+    }
+
+    syncing =
+      true;
+
+
+    try {
+
+      ensureHeaders();
+
+
+      const rows =
+        Array.from(
+          expenseBody.querySelectorAll(
+            "tr"
+          )
+        );
+
+
+      rows.forEach(
+        tr => {
+
+          let cells =
+            Array.from(
+              tr.children
+            );
+
+
+          /*
+            Dòng loading / empty
+          */
+
+          if (
+            cells.length === 1
+          ) {
+
+            cells[0].colSpan =
+              9;
+
+            return;
+
+          }
+
+
+          if (
+            cells.length < 6
+          ) {
+
+            return;
+
+          }
+
+
+          const code =
+            cells[0]
+              .textContent
+              .trim();
+
+
+          if (!code) {
+            return;
+          }
+
+
+          const type =
+            cells[2]
+              .textContent
+              .trim();
+
+
+          const amount =
+            cells[4]
+              .textContent
+              .trim();
+
+
+          /*
+            Tạo thêm 3 cột nếu chưa có
+          */
+
+          while (
+            tr.children.length < 9
+          ) {
+
+            tr.appendChild(
+              document.createElement(
+                "td"
+              )
+            );
+
+          }
+
+
+          cells =
+            Array.from(
+              tr.children
+            );
+
+
+          const payeeCell =
+            cells[6];
+
+          const paymentCell =
+            cells[7];
+
+          const actionCell =
+            cells[8];
+
+
+          const state =
+            paymentMap.get(
+              code
+            )
+            ||
+            {};
+
+
+          const isCourt =
+            type
+              .toLowerCase()
+            ===
+            "thuê sân";
+
+
+          /* ===============================
+             NGƯỜI NHẬN
+          ================================ */
+
+          payeeCell.textContent =
+            state.payee_name
+            ||
+            (
+              isCourt
+                ?
+                "Theo hồ sơ sân"
+                :
+                "—"
+            );
+
+
+          /* ===============================
+             TIỀN SÂN
+          ================================ */
+
+          if (isCourt) {
+
+            paymentCell.innerHTML = `
+              <span
+                class="
+                  pd-pay-badge
+                  pd-pay-court
+                "
+              >
+                🏟️ Qua Đối soát sân
+              </span>
+            `;
+
+
+            actionCell.innerHTML = `
+              <a
+                class="pd-court-link"
+                href="./admin-court-reconciliation"
+              >
+                MỞ ĐỐI SOÁT
+              </a>
+            `;
+
+
+            return;
+
+          }
+
+
+          /* ===============================
+             ĐÃ THANH TOÁN
+          ================================ */
+
+          if (
+            state.is_paid === true
+            ||
+            state.paid_at
+          ) {
+
+            let referenceHTML =
+              "";
+
+
+            if (
+              state.payment_reference
+            ) {
+
+              referenceHTML = `
+                <div
+                  style="
+                    margin-top:5px;
+                    font-size:10px;
+                    color:#9fb2cf;
+                    max-width:170px;
+                    overflow-wrap:anywhere;
+                  "
+                >
+                  ${escapeHTMLPD(
+                    state.payment_reference
+                  )}
+                </div>
+              `;
+
+            }
+
+
+            paymentCell.innerHTML = `
+
+              <span
+                class="
+                  pd-pay-badge
+                  pd-pay-paid
+                "
+              >
+                ✅ Đã thanh toán
+              </span>
+
+              ${referenceHTML}
+
+            `;
+
+
+            actionCell.innerHTML = `
+              <span
+                style="
+                  color:#d8ff45;
+                  font-size:11px;
+                  font-weight:800;
+                "
+              >
+                ✓ HOÀN TẤT
+              </span>
+            `;
+
+
+            return;
+
+          }
+
+
+          /* ===============================
+             CHƯA THANH TOÁN
+          ================================ */
+
+          paymentCell.innerHTML = `
+            <span
+              class="
+                pd-pay-badge
+                pd-pay-unpaid
+              "
+            >
+              🟠 Chưa thanh toán
+            </span>
+          `;
+
+
+          actionCell.innerHTML = `
+
+            <button
+              type="button"
+              class="
+                pd-pay-btn
+                pd-pay-expense-btn
+              "
+              data-expense-code="${escapeAttrPD(
+                code
+              )}"
+              data-expense-type="${escapeAttrPD(
+                type
+              )}"
+              data-expense-amount="${escapeAttrPD(
+                amount
+              )}"
+            >
+              💸 THANH TOÁN
+            </button>
+
+          `;
+
+        }
+      );
+
+    }
+    finally {
+
+      syncing =
+        false;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ESCAPE
+  ====================================================== */
+
+  function escapeHTMLPD(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function escapeAttrPD(value) {
+
+    return escapeHTMLPD(
+      value
+    );
+
+  }
+
+
+  /* =====================================================
+     OPEN MODAL
+  ====================================================== */
+
+  expenseBody.addEventListener(
+    "click",
+    function (event) {
+
+      const button =
+        event.target.closest(
+          ".pd-pay-expense-btn"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      const code =
+        button.dataset
+          .expenseCode;
+
+
+      const state =
+        paymentMap.get(
+          code
+        )
+        ||
+        {};
+
+
+      selectedExpense = {
+
+        code:
+          code,
+
+        type:
+          button.dataset
+            .expenseType
+          ||
+          "",
+
+        amount:
+          button.dataset
+            .expenseAmount
+          ||
+          "—",
+
+        payee:
+          state.payee_name
+          ||
+          "—"
+
+      };
+
+
+      document.getElementById(
+        "pdPayCode"
+      ).textContent =
+        selectedExpense.code;
+
+
+      document.getElementById(
+        "pdPayAmount"
+      ).textContent =
+        selectedExpense.amount;
+
+
+      document.getElementById(
+        "pdPayPayee"
+      ).textContent =
+        selectedExpense.payee;
+
+
+      document.getElementById(
+        "pdPayType"
+      ).textContent =
+        selectedExpense.type;
+
+
+      referenceInput.value =
+        "";
+
+
+      noteInput.value =
+        "";
+
+
+      payMessage.textContent =
+        "";
+
+
+      modal.classList.add(
+        "open"
+      );
+
+
+      setTimeout(
+        () =>
+          referenceInput.focus(),
+        100
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     CLOSE MODAL
+  ====================================================== */
+
+  function closeModal() {
+
+    modal.classList.remove(
+      "open"
+    );
+
+    selectedExpense =
+      null;
+
+  }
+
+
+  closeBtn.addEventListener(
+    "click",
+    closeModal
+  );
+
+
+  modal.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target === modal
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     CONFIRM PAYMENT
+  ====================================================== */
+
+  confirmBtn.addEventListener(
+    "click",
+    async function () {
+
+      if (!selectedExpense) {
+        return;
+      }
+
+
+      const reference =
+        referenceInput.value
+          .trim();
+
+
+      const note =
+        noteInput.value
+          .trim();
+
+
+      if (!reference) {
+
+        payMessage.style.color =
+          "#ffaaaa";
+
+        payMessage.textContent =
+          "Vui lòng nhập mã giao dịch / chứng từ.";
+
+        referenceInput.focus();
+
+        return;
+
+      }
+
+
+      confirmBtn.disabled =
+        true;
+
+
+      confirmBtn.textContent =
+        "ĐANG XÁC NHẬN...";
+
+
+      payMessage.style.color =
+        "#d8ff45";
+
+
+      payMessage.textContent =
+        "Đang ghi nhận thanh toán...";
+
+
+      try {
+
+        const {
+          error
+        } =
+          await pdPaySb.rpc(
+            "admin_mark_operating_expense_paid",
+            {
+
+              p_expense_code:
+                selectedExpense.code,
+
+              p_payment_reference:
+                reference,
+
+              p_payment_note:
+                note || null
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        payMessage.style.color =
+          "#d8ff45";
+
+
+        payMessage.textContent =
+          "✓ Đã xác nhận thanh toán.";
+
+
+        await loadPaymentState();
+
+
+        setTimeout(
+          closeModal,
+          650
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "MARK EXPENSE PAID:",
+          error
+        );
+
+
+        payMessage.style.color =
+          "#ffaaaa";
+
+
+        payMessage.textContent =
+          error.message
+          ||
+          String(error);
+
+      }
+      finally {
+
+        confirmBtn.disabled =
+          false;
+
+
+        confirmBtn.textContent =
+          "💸 XÁC NHẬN ĐÃ THANH TOÁN";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     THEO DÕI CODE CŨ RENDER LẠI BẢNG
+  ====================================================== */
+
+  let syncTimer =
+    null;
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        clearTimeout(
+          syncTimer
+        );
+
+
+        syncTimer =
+          setTimeout(
+            syncRows,
+            80
+          );
+
+      }
+    );
+
+
+  observer.observe(
+    expenseBody,
+    {
+      childList:true,
+      subtree:true
+    }
+  );
+
+
+  /* =====================================================
+     ĐỔI THÁNG
+  ====================================================== */
+
+  monthFilter.addEventListener(
+    "change",
+    function () {
+
+      setTimeout(
+        loadPaymentState,
+        300
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  setTimeout(
+    loadPaymentState,
+    700
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadPaymentState
+  );
+
+})();
+</script>
 </body>
 
 </html>
