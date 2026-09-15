@@ -9,17 +9,24 @@ const sb =
 
 
 const body =
-  document.getElementById("workBody");
+  document.getElementById(
+    "workBody"
+  );
 
 const emptyEl =
-  document.getElementById("empty");
+  document.getElementById(
+    "empty"
+  );
 
 const messageEl =
-  document.getElementById("message");
+  document.getElementById(
+    "message"
+  );
 
 const searchInput =
-  document.getElementById("search");
-
+  document.getElementById(
+    "search"
+  );
 
 const logoutBtn =
   document.getElementById(
@@ -66,7 +73,10 @@ let works = [];
    HELPERS
 ===================================== */
 
-function show(id, value) {
+function show(
+  id,
+  value
+) {
 
   const el =
     document.getElementById(id);
@@ -95,7 +105,9 @@ function moneyVN(value) {
 
 function dateVN(value) {
 
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
 
   return new Intl.DateTimeFormat(
     "vi-VN"
@@ -109,7 +121,9 @@ function dateVN(value) {
 
 function one(value) {
 
-  if (Array.isArray(value)) {
+  if (
+    Array.isArray(value)
+  ) {
     return value[0] || null;
   }
 
@@ -119,12 +133,174 @@ function one(value) {
 
 function escapeHTML(value) {
 
-  return String(value ?? "")
+  return String(
+    value ?? ""
+  )
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+/* =====================================
+   SẮP XẾP CÔNG COACH
+===================================== */
+
+function normalizeStatus(value) {
+
+  return String(
+    value || ""
+  )
+    .trim()
+    .toLocaleLowerCase("vi-VN");
+}
+
+
+function workPriority(row) {
+
+  const status =
+    normalizeStatus(
+      row.status
+    );
+
+
+  if (
+    status === "chưa chốt"
+  ) {
+    return 0;
+  }
+
+
+  if (
+    status === "đã chốt"
+  ) {
+    return 1;
+  }
+
+
+  if (
+    status === "đã thanh toán"
+  ) {
+    return 2;
+  }
+
+
+  return 3;
+}
+
+
+function sortCoachWorks(rows) {
+
+  return [...rows].sort(
+    (a, b) => {
+
+      const priorityA =
+        workPriority(a);
+
+      const priorityB =
+        workPriority(b);
+
+
+      /*
+        1. Chưa chốt
+        2. Đã chốt
+        3. Đã thanh toán
+      */
+
+      if (
+        priorityA !== priorityB
+      ) {
+        return priorityA - priorityB;
+      }
+
+
+      /*
+        Trong cùng trạng thái:
+        ngày dạy mới nhất trước
+      */
+
+      const dateA =
+        new Date(
+          `${a.work_date || "1970-01-01"}T00:00:00`
+        ).getTime();
+
+
+      const dateB =
+        new Date(
+          `${b.work_date || "1970-01-01"}T00:00:00`
+        ).getTime();
+
+
+      if (
+        dateA !== dateB
+      ) {
+        return dateB - dateA;
+      }
+
+
+      /*
+        Nếu cùng ngày:
+        ID mới hơn trước
+      */
+
+      return (
+        Number(b.id || 0) -
+        Number(a.id || 0)
+      );
+    }
+  );
+}
+
+
+/* =====================================
+   STYLE TRẠNG THÁI
+===================================== */
+
+function statusStyle(status) {
+
+  const value =
+    normalizeStatus(status);
+
+
+  if (
+    value === "chưa chốt"
+  ) {
+
+    return `
+      background:rgba(255,190,70,.14);
+      color:#ffd36b;
+      border:1px solid rgba(255,190,70,.22);
+    `;
+  }
+
+
+  if (
+    value === "đã chốt"
+  ) {
+
+    return `
+      background:rgba(90,180,255,.14);
+      color:#9ed5ff;
+      border:1px solid rgba(90,180,255,.22);
+    `;
+  }
+
+
+  if (
+    value === "đã thanh toán"
+  ) {
+
+    return `
+      background:rgba(216,255,69,.12);
+      color:#d8ff45;
+      border:1px solid rgba(216,255,69,.20);
+    `;
+  }
+
+
+  return "";
 }
 
 
@@ -196,7 +372,9 @@ async function checkCoach() {
    COACH HIỆN TẠI
 ===================================== */
 
-async function loadCoach(email) {
+async function loadCoach(
+  email
+) {
 
   const {
     data,
@@ -231,7 +409,9 @@ async function loadCoach(email) {
   }
 
 
-  currentCoach = data;
+  currentCoach =
+    data;
+
 
   return true;
 }
@@ -270,10 +450,6 @@ async function loadWorks() {
       .eq(
         "coach_id",
         currentCoach.id
-      )
-      .order(
-        "work_date",
-        { ascending: false }
       );
 
 
@@ -297,10 +473,13 @@ async function loadWorks() {
 
 
   works =
-    data || [];
+    sortCoachWorks(
+      data || []
+    );
 
 
   renderSummary();
+
 
   renderWorks(
     works
@@ -322,7 +501,9 @@ function renderSummary() {
     works.reduce(
       (sum, row) =>
         sum +
-        Number(row.total_amount || 0),
+        Number(
+          row.total_amount || 0
+        ),
       0
     );
 
@@ -331,12 +512,18 @@ function renderSummary() {
     works
       .filter(
         row =>
-          row.status !== "Đã thanh toán"
+          normalizeStatus(
+            row.status
+          )
+          !==
+          "đã thanh toán"
       )
       .reduce(
         (sum, row) =>
           sum +
-          Number(row.total_amount || 0),
+          Number(
+            row.total_amount || 0
+          ),
         0
       );
 
@@ -346,10 +533,12 @@ function renderSummary() {
     totalSessions
   );
 
+
   show(
     "totalAmount",
     moneyVN(totalAmount)
   );
+
 
   show(
     "unpaidAmount",
@@ -362,7 +551,9 @@ function renderSummary() {
    RENDER TABLE
 ===================================== */
 
-function renderWorks(rows) {
+function renderWorks(
+  rows
+) {
 
   if (
     !rows ||
@@ -383,76 +574,122 @@ function renderWorks(rows) {
 
 
   body.innerHTML =
-    rows.map(row => {
+    rows
+      .map(
+        row => {
 
-      const session =
-        one(
-          row.class_sessions
-        );
+          const session =
+            one(
+              row.class_sessions
+            );
 
 
-      return `
-        <tr>
+          const sessionCode =
+            session?.session_code ||
+            row.session_id ||
+            "—";
 
-          <td>
-            <strong>
-              ${escapeHTML(
-                session?.session_code ||
+
+          const canOpen =
+            Number.isFinite(
+              Number(
                 row.session_id
-              )}
-            </strong>
-          </td>
+              )
+            )
+            &&
+            Number(
+              row.session_id
+            ) > 0;
 
-          <td>
-            ${dateVN(
-              row.work_date
-            )}
-          </td>
 
-          <td>
-            ${escapeHTML(
-              row.pay_period ||
-              "—"
-            )}
-          </td>
+          return `
+            <tr
+              ${
+                canOpen
+                  ? `
+                    style="cursor:pointer"
+                    onclick="window.location.href='./coach-session-detail.html?id=${Number(row.session_id)}'"
+                    title="Mở chi tiết buổi học ${escapeHTML(sessionCode)}"
+                  `
+                  : ""
+              }
+            >
 
-          <td class="money">
-            ${moneyVN(
-              row.base_amount
-            )}
-          </td>
+              <td>
+                <strong>
+                  ${escapeHTML(
+                    sessionCode
+                  )}
+                </strong>
+              </td>
 
-          <td>
-            ${moneyVN(
-              row.bonus
-            )}
-          </td>
 
-          <td>
-            ${moneyVN(
-              row.deduction
-            )}
-          </td>
+              <td>
+                ${dateVN(
+                  row.work_date
+                )}
+              </td>
 
-          <td class="money">
-            ${moneyVN(
-              row.total_amount
-            )}
-          </td>
 
-          <td>
-            <span class="badge">
-              ${escapeHTML(
-                row.status ||
-                "—"
-              )}
-            </span>
-          </td>
+              <td>
+                ${escapeHTML(
+                  row.pay_period ||
+                  "—"
+                )}
+              </td>
 
-        </tr>
-      `;
 
-    }).join("");
+              <td class="money">
+                ${moneyVN(
+                  row.base_amount
+                )}
+              </td>
+
+
+              <td>
+                ${moneyVN(
+                  row.bonus
+                )}
+              </td>
+
+
+              <td>
+                ${moneyVN(
+                  row.deduction
+                )}
+              </td>
+
+
+              <td class="money">
+                ${moneyVN(
+                  row.total_amount
+                )}
+              </td>
+
+
+              <td>
+
+                <span
+                  class="badge"
+                  style="${statusStyle(
+                    row.status
+                  )}"
+                >
+
+                  ${escapeHTML(
+                    row.status ||
+                    "—"
+                  )}
+
+                </span>
+
+              </td>
+
+            </tr>
+          `;
+        }
+      )
+      .join("");
 }
 
 
@@ -481,30 +718,35 @@ searchInput.addEventListener(
 
 
     const filtered =
-      works.filter(row => {
+      works.filter(
+        row => {
 
-        const session =
-          one(
-            row.class_sessions
+          const session =
+            one(
+              row.class_sessions
+            );
+
+
+          const text = [
+            session?.session_code,
+            row.session_id,
+            row.work_date,
+            row.pay_period,
+            row.base_amount,
+            row.bonus,
+            row.deduction,
+            row.total_amount,
+            row.status
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+          return text.includes(
+            keyword
           );
-
-
-        const text = [
-          session?.session_code,
-          row.work_date,
-          row.pay_period,
-          row.base_amount,
-          row.total_amount,
-          row.status
-        ]
-          .join(" ")
-          .toLowerCase();
-
-
-        return text.includes(
-          keyword
-        );
-      });
+        }
+      );
 
 
     renderWorks(
@@ -526,7 +768,9 @@ async function init() {
       await checkCoach();
 
 
-    if (!login) return;
+    if (!login) {
+      return;
+    }
 
 
     const coachOK =
@@ -535,19 +779,26 @@ async function init() {
       );
 
 
-    if (!coachOK) return;
+    if (!coachOK) {
+      return;
+    }
 
 
     await loadWorks();
 
-
-  } catch (error) {
+  }
+  catch (error) {
 
     console.error(error);
 
     messageEl.textContent =
-      "Có lỗi khi tải Công Coach: " +
-      (error.message || error);
+      "Có lỗi khi tải Công Coach: "
+      +
+      (
+        error.message ||
+        error
+      );
+
   }
 }
 
