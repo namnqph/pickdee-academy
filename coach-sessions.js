@@ -263,7 +263,36 @@ function getSessionPriority(session) {
   return 3;
 }
 
+function isOverdueSession(session) {
 
+  const today =
+    todayISO();
+
+  const date =
+    session.session_date || "";
+
+  const status =
+    normalizeStatus(
+      session.status
+    );
+
+  const isCompleted =
+    status === "đã hoàn thành";
+
+  const isAbsent =
+    status === "vắng";
+
+  const isCancelled =
+    status === "hủy" ||
+    status === "đã hủy";
+
+  return (
+    date < today &&
+    !isCompleted &&
+    !isAbsent &&
+    !isCancelled
+  );
+}
 function sortCoachSessions(rows) {
 
   return [...rows].sort(
@@ -610,16 +639,32 @@ function renderSessions(
 
 
           const isToday =
-            session.session_date ===
-            today;
+  session.session_date ===
+  today;
+
+const isOverdue =
+  isOverdueSession(
+    session
+  );
 
 
           return `
-            <tr
-              style="cursor:pointer"
-              onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
-              title="Mở chi tiết buổi học"
-            >
+           <tr
+  style="
+    cursor:pointer;
+    ${
+      isOverdue
+        ? "background:rgba(255,80,80,.10);"
+        : ""
+    }
+  "
+  onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
+  title="${
+    isOverdue
+      ? "⚠ Buổi học đã quá hạn nhưng chưa được xử lý"
+      : "Mở chi tiết buổi học"
+  }"
+>
 
               <td>
                 <strong>
@@ -673,14 +718,31 @@ function renderSessions(
                 )}
               </td>
 
-              <td>
-                <span class="badge">
-                  ${escapeHTML(
-                    session.status ||
-                    "—"
-                  )}
-                </span>
-              </td>
+             <td>
+  <span
+    class="badge"
+    style="${
+      isOverdue
+        ? `
+          background:rgba(255,80,80,.16);
+          color:#ff9b9b;
+          border:1px solid rgba(255,80,80,.35);
+        `
+        : ""
+    }"
+  >
+    ${
+      isOverdue
+        ? "⚠ QUÁ HẠN · "
+        : ""
+    }
+
+    ${escapeHTML(
+      session.status ||
+      "—"
+    )}
+  </span>
+</td>
 
             </tr>
           `;
