@@ -5860,6 +5860,646 @@ window.addEventListener(
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     DASHBOARD - KIỂM SOÁT TIỀN SÂN
+========================================================== -->
+
+<style>
+
+  #courtReconciliationCard .court-money-grid {
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(3,1fr);
+
+    gap: 10px;
+
+    margin-top: 14px;
+
+  }
+
+
+  #courtReconciliationCard .court-money-stat {
+
+    padding: 11px;
+
+    border-radius: 10px;
+
+    background:
+      rgba(255,255,255,.055);
+
+    border:
+      1px solid rgba(255,255,255,.08);
+
+  }
+
+
+  #courtReconciliationCard .court-money-label {
+
+    color:
+      rgba(255,255,255,.58);
+
+    font-size: 11px;
+
+    margin-bottom: 5px;
+
+  }
+
+
+  #courtReconciliationCard .court-money-value {
+
+    color: #d8ff45;
+
+    font-size: 18px;
+
+    font-weight: 900;
+
+  }
+
+
+  #courtReconciliationCard.has-warning .card {
+
+    border-color:
+      rgba(255,180,70,.55) !important;
+
+  }
+
+
+  #courtReconciliationCard.has-danger .card {
+
+    border-color:
+      rgba(255,100,100,.60) !important;
+
+    box-shadow:
+      0 0 0 1px
+      rgba(255,80,80,.07);
+
+  }
+
+
+  #courtReconciliationCard .court-alert-text {
+
+    display: none;
+
+    margin-top: 12px;
+
+    padding: 9px 10px;
+
+    border-radius: 8px;
+
+    background:
+      rgba(255,100,100,.10);
+
+    color: #ffb0b0;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    line-height: 1.45;
+
+  }
+
+
+  #courtReconciliationCard.has-danger
+  .court-alert-text {
+
+    display: block;
+
+  }
+
+
+  @media(max-width:800px) {
+
+    #courtReconciliationCard
+    .court-money-grid {
+
+      grid-template-columns:
+        1fr;
+
+    }
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfgCourtDash =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbCourtDash =
+    window.supabase.createClient(
+      cfgCourtDash.SUPABASE_URL,
+      cfgCourtDash.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     TÌM / TẠO CARD
+  ====================================================== */
+
+  let cardLink =
+    document.getElementById(
+      "courtReconciliationCard"
+    );
+
+
+  if (!cardLink) {
+
+
+    const courtCard =
+      document.querySelector(
+        'a[href="./admin-courts"], a[href="./admin-courts.html"]'
+      );
+
+
+    if (!courtCard) {
+
+      console.warn(
+        "PickDee: không tìm thấy card Sân & khu vực."
+      );
+
+      return;
+
+    }
+
+
+    cardLink =
+      document.createElement(
+        "a"
+      );
+
+
+    cardLink.id =
+      "courtReconciliationCard";
+
+
+    cardLink.href =
+      "./admin-court-reconciliation";
+
+
+    cardLink.className =
+      "card-link";
+
+
+    courtCard.insertAdjacentElement(
+      "afterend",
+      cardLink
+    );
+
+  }
+
+
+  /*
+    Nếu trước đây đã có card Đối soát sân,
+    khối này sẽ dùng lại chính card đó,
+    không tạo thêm card thứ hai.
+  */
+
+  cardLink.href =
+    "./admin-court-reconciliation";
+
+
+  cardLink.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        🧾 Đối soát sân
+      </h2>
+
+
+      <p>
+        Kiểm soát chi phí thuê sân,
+        đối soát theo kỳ và theo dõi
+        các khoản chưa thanh toán.
+      </p>
+
+
+      <div class="court-money-grid">
+
+
+        <div class="court-money-stat">
+
+          <div class="court-money-label">
+            🟠 Chưa đối soát
+          </div>
+
+          <div
+            id="courtDashPending"
+            class="court-money-value"
+          >
+            ...
+          </div>
+
+        </div>
+
+
+        <div class="court-money-stat">
+
+          <div class="court-money-label">
+            💸 Còn phải trả
+          </div>
+
+          <div
+            id="courtDashUnpaid"
+            class="court-money-value"
+          >
+            ...
+          </div>
+
+        </div>
+
+
+        <div class="court-money-stat">
+
+          <div class="court-money-label">
+            ⚠️ Ngoài kỳ đối soát
+          </div>
+
+          <div
+            id="courtDashOutside"
+            class="court-money-value"
+          >
+            ...
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <div
+        id="courtDashAlert"
+        class="court-alert-text"
+      >
+      </div>
+
+
+      <div
+        style="
+          margin-top:13px;
+          color:#d8ff45;
+          font-size:11px;
+          font-weight:900;
+        "
+      >
+        MỞ ĐỐI SOÁT SÂN →
+      </div>
+
+    </div>
+
+  `;
+
+
+  const pendingEl =
+    document.getElementById(
+      "courtDashPending"
+    );
+
+
+  const unpaidEl =
+    document.getElementById(
+      "courtDashUnpaid"
+    );
+
+
+  const outsideEl =
+    document.getElementById(
+      "courtDashOutside"
+    );
+
+
+  const alertEl =
+    document.getElementById(
+      "courtDashAlert"
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD DASHBOARD
+  ====================================================== */
+
+  async function loadCourtDashboard() {
+
+
+    try {
+
+
+      const [
+        summaryResult,
+        outsideResult
+      ] =
+        await Promise.all([
+
+
+          sbCourtDash.rpc(
+            "admin_get_court_reconciliation_summary",
+            {
+              p_period:
+                null
+            }
+          ),
+
+
+          sbCourtDash.rpc(
+            "admin_get_unreconciled_court_expenses"
+          )
+
+
+        ]);
+
+
+      if (
+        summaryResult.error
+      ) {
+
+        throw summaryResult.error;
+
+      }
+
+
+      if (
+        outsideResult.error
+      ) {
+
+        throw outsideResult.error;
+
+      }
+
+
+      const summary =
+        summaryResult.data
+        ||
+        {};
+
+
+      const outsideRows =
+        Array.isArray(
+          outsideResult.data
+        )
+          ?
+          outsideResult.data
+          :
+          [];
+
+
+      /* =================================
+         CÁC SỐ CHÍNH
+      ================================== */
+
+      const pendingCount =
+        Number(
+          summary.pending_count || 0
+        );
+
+
+      const unpaidAmount =
+        Number(
+          summary.unpaid_amount || 0
+        );
+
+
+      const outsideAmount =
+        outsideRows.reduce(
+
+          (sum,row) =>
+            sum
+            +
+            Number(
+              row.total_amount || 0
+            ),
+
+          0
+
+        );
+
+
+      const outsideSessions =
+        outsideRows.reduce(
+
+          (sum,row) =>
+            sum
+            +
+            Number(
+              row.session_count || 0
+            ),
+
+          0
+
+        );
+
+
+      pendingEl.textContent =
+        String(
+          pendingCount
+        );
+
+
+      unpaidEl.textContent =
+        money(
+          unpaidAmount
+        );
+
+
+      outsideEl.textContent =
+        outsideAmount > 0
+
+          ?
+          money(
+            outsideAmount
+          )
+
+          :
+          "0đ";
+
+
+      /* =================================
+         MÀU TRẠNG THÁI
+      ================================== */
+
+      cardLink.classList.remove(
+        "has-warning",
+        "has-danger"
+      );
+
+
+      pendingEl.style.color =
+        "#d8ff45";
+
+
+      unpaidEl.style.color =
+        "#d8ff45";
+
+
+      outsideEl.style.color =
+        "#d8ff45";
+
+
+      alertEl.textContent =
+        "";
+
+
+      /*
+        NGUY HIỂM NHẤT:
+        có tiền sân phát sinh
+        nhưng chưa vào kỳ đối soát.
+      */
+
+      if (
+        outsideAmount > 0
+        ||
+        outsideSessions > 0
+      ) {
+
+
+        cardLink.classList.add(
+          "has-danger"
+        );
+
+
+        outsideEl.style.color =
+          "#ff8f8f";
+
+
+        alertEl.textContent =
+          `⚠️ Có ${outsideSessions} buổi · ${money(outsideAmount)} tiền sân chưa được đưa vào kỳ đối soát.`;
+
+      }
+
+
+      /*
+        Không có tiền ngoài kỳ,
+        nhưng vẫn còn việc cần xử lý.
+      */
+
+      else if (
+        pendingCount > 0
+        ||
+        unpaidAmount > 0
+      ) {
+
+
+        cardLink.classList.add(
+          "has-warning"
+        );
+
+
+        if (
+          pendingCount > 0
+        ) {
+
+          pendingEl.style.color =
+            "#ffc76b";
+
+        }
+
+
+        if (
+          unpaidAmount > 0
+        ) {
+
+          unpaidEl.style.color =
+            "#ff9c9c";
+
+        }
+
+      }
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "COURT DASHBOARD:",
+        error
+      );
+
+
+      pendingEl.textContent =
+        "!";
+
+
+      unpaidEl.textContent =
+        "—";
+
+
+      outsideEl.textContent =
+        "—";
+
+
+      cardLink.classList.add(
+        "has-danger"
+      );
+
+
+      alertEl.textContent =
+        "Không tải được trạng thái đối soát sân.";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCourtDashboard();
+
+
+  /*
+    Tự cập nhật mỗi 60 giây.
+  */
+
+  setInterval(
+    loadCourtDashboard,
+    60000
+  );
+
+
+  /*
+    Khi Admin quay lại tab,
+    cập nhật ngay.
+  */
+
+  window.addEventListener(
+    "focus",
+    loadCourtDashboard
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
