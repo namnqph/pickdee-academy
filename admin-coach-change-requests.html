@@ -915,50 +915,33 @@
 
 (function () {
 
-
   const cfg =
     window.PICKDEE_CONFIG || {};
 
-
   const list =
-    document.getElementById(
-      "list"
-    );
-
+    document.getElementById("list");
 
   const pendingCount =
-    document.getElementById(
-      "pendingCount"
-    );
-
+    document.getElementById("pendingCount");
 
   const approvedCount =
-    document.getElementById(
-      "approvedCount"
-    );
-
+    document.getElementById("approvedCount");
 
   const rejectedCount =
-    document.getElementById(
-      "rejectedCount"
-    );
-
+    document.getElementById("rejectedCount");
 
   const statusFilter =
-    document.getElementById(
-      "statusFilter"
-    );
-
+    document.getElementById("statusFilter");
 
   const refreshBtn =
-    document.getElementById(
-      "refreshBtn"
-    );
+    document.getElementById("refreshBtn");
+
+  let rows = [];
 
 
-  let rows =
-    [];
-
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
 
   if (
     !window.supabase
@@ -983,73 +966,58 @@
     );
 
 
+  /* =====================================================
+     HELPERS
+  ====================================================== */
 
-  function escapeHtml(
-    value
-  ) {
+  function escapeHtml(value) {
 
-    return String(
-      value ?? ""
-    )
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
   }
 
 
-
-  function statusText(
-    value
-  ) {
+  function statusText(value) {
 
     if (value === "pending") {
       return "Chờ duyệt";
     }
 
-
     if (value === "approved") {
       return "Đã duyệt";
     }
 
-
     if (value === "rejected") {
       return "Từ chối";
     }
-
 
     return value || "—";
 
   }
 
 
-
-  function formatDate(
-    value
-  ) {
+  function formatDate(value) {
 
     if (!value) {
       return "—";
     }
-
 
     try {
 
       return new Intl.DateTimeFormat(
         "vi-VN",
         {
-          dateStyle:
-            "short",
-
-          timeStyle:
-            "short"
+          dateStyle: "short",
+          timeStyle: "short"
         }
-      )
-        .format(
-          new Date(value)
-        );
+      ).format(
+        new Date(value)
+      );
 
     }
     catch {
@@ -1061,9 +1029,52 @@
   }
 
 
+  function formatSessionDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }
+      ).format(
+        new Date(`${value}T00:00:00`)
+      );
+
+    }
+    catch {
+
+      return value;
+
+    }
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+    return String(value)
+      .slice(0, 5);
+
+  }
+
+
+  /* =====================================================
+     SUMMARY
+  ====================================================== */
 
   function updateSummary() {
-
 
     pendingCount.textContent =
       rows.filter(
@@ -1088,9 +1099,480 @@
   }
 
 
+  /* =====================================================
+     KIỂM TRA CÁC LỊCH ĐANG CHẶN ĐỔI COACH
+
+     Fail closed:
+     Nếu không kiểm tra được lịch,
+     giao diện cũng không mở nút DUYỆT.
+  ====================================================== */
+
+  async function attachBlockingWork(items) {
+
+    const pendingRegistrationIds =
+      [
+        ...new Set(
+          items
+
+            .filter(
+              item =>
+                item.status === "pending"
+                &&
+                item.registration_id
+            )
+
+            .map(
+              item =>
+                Number(item.registration_id)
+            )
+
+            .filter(
+              id =>
+                Number.isFinite(id)
+                &&
+                id > 0
+            )
+        )
+      ];
+
+
+    items.forEach(
+      item => {
+
+        item.blocking_sessions = [];
+        item.blocking_requests = [];
+        item.blocker_check_error = false;
+
+      }
+    );
+
+
+    if (!pendingRegistrationIds.length) {
+      return;
+    }
+
+
+    /* ===================================================
+       BUỔI HỌC CHỜ HỌC
+    ==================================================== */
+
+    const {
+      data: openSessions,
+      error: sessionError
+    } =
+      await sb
+        .from("class_sessions")
+        .select(`
+          id,
+          session_code,
+          registration_id,
+          session_no,
+          session_date,
+          start_time,
+          duration_minutes,
+          court_name,
+          coach_id,
+          status
+        `)
+        .in(
+          "registration_id",
+          pendingRegistrationIds
+        )
+        .eq(
+          "status",
+          "Chờ học"
+        )
+        .order(
+          "session_date",
+          {
+            ascending: true
+          }
+        )
+        .order(
+          "start_time",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (sessionError) {
+
+      console.error(
+        "COACH CHANGE SESSION GATE:",
+        sessionError
+      );
+
+      items.forEach(
+        item => {
+
+          if (
+            item.status === "pending"
+            &&
+            item.registration_id
+          ) {
+
+            item.blocker_check_error =
+              true;
+
+          }
+
+        }
+      );
+
+    }
+    else {
+
+      (openSessions || [])
+        .forEach(
+          session => {
+
+            const item =
+              items.find(
+                row =>
+                  Number(row.registration_id)
+                  ===
+                  Number(session.registration_id)
+              );
+
+
+            if (item) {
+
+              item.blocking_sessions.push(
+                session
+              );
+
+            }
+
+          }
+        );
+
+    }
+
+
+    /* ===================================================
+       YÊU CẦU LỊCH CHỜ COACH
+    ==================================================== */
+
+    const {
+      data: openRequests,
+      error: requestError
+    } =
+      await sb
+        .from("session_requests")
+        .select(`
+          id,
+          request_code,
+          registration_id,
+          status,
+          created_at
+        `)
+        .in(
+          "registration_id",
+          pendingRegistrationIds
+        )
+        .eq(
+          "status",
+          "Chờ Coach"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (requestError) {
+
+      console.error(
+        "COACH CHANGE REQUEST GATE:",
+        requestError
+      );
+
+      items.forEach(
+        item => {
+
+          if (
+            item.status === "pending"
+            &&
+            item.registration_id
+          ) {
+
+            item.blocker_check_error =
+              true;
+
+          }
+
+        }
+      );
+
+    }
+    else {
+
+      (openRequests || [])
+        .forEach(
+          request => {
+
+            const item =
+              items.find(
+                row =>
+                  Number(row.registration_id)
+                  ===
+                  Number(request.registration_id)
+              );
+
+
+            if (item) {
+
+              item.blocking_requests.push(
+                request
+              );
+
+            }
+
+          }
+        );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     WARNING BLOCK
+  ====================================================== */
+
+  function blockerHtml(item) {
+
+    if (
+      item.status !== "pending"
+    ) {
+
+      return "";
+
+    }
+
+
+    if (
+      item.blocker_check_error
+    ) {
+
+      return `
+        <div
+          style="
+            margin-top:14px;
+            padding:14px;
+            border-radius:12px;
+            border:1px solid rgba(255,100,100,.38);
+            background:rgba(255,70,70,.10);
+            color:#ffb5b5;
+            line-height:1.55;
+            font-weight:800;
+          "
+        >
+          ⚠️ KHÔNG XÁC MINH ĐƯỢC LỊCH CHƯA XỬ LÝ
+          <div
+            style="
+              margin-top:5px;
+              color:rgba(255,255,255,.72);
+              font-size:13px;
+              font-weight:600;
+            "
+          >
+            Hệ thống tạm khóa DUYỆT ĐỔI COACH để đảm bảo an toàn.
+            Hãy bấm CẬP NHẬT hoặc kiểm tra lại dữ liệu lịch học.
+          </div>
+        </div>
+      `;
+
+    }
+
+
+    const sessions =
+      item.blocking_sessions || [];
+
+    const requests =
+      item.blocking_requests || [];
+
+
+    if (
+      !sessions.length
+      &&
+      !requests.length
+    ) {
+
+      return `
+        <div
+          style="
+            margin-top:14px;
+            padding:13px;
+            border-radius:12px;
+            border:1px solid rgba(216,255,69,.25);
+            background:rgba(216,255,69,.06);
+            color:#d8ff45;
+            font-size:13px;
+            font-weight:800;
+          "
+        >
+          ✓ Không còn lịch Chờ học hoặc yêu cầu Chờ Coach.
+          Yêu cầu này đủ điều kiện để Admin xem xét đổi Coach.
+        </div>
+      `;
+
+    }
+
+
+    const sessionLines =
+      sessions
+        .map(
+          session => {
+
+            return `
+              <div
+                style="
+                  margin-top:8px;
+                  padding:10px 12px;
+                  border-radius:9px;
+                  background:rgba(0,0,0,.14);
+                  color:white;
+                "
+              >
+                <strong>
+                  ${escapeHtml(
+                    session.session_code
+                    ||
+                    `Buổi ${session.id}`
+                  )}
+                </strong>
+
+                · ${escapeHtml(
+                  formatSessionDate(
+                    session.session_date
+                  )
+                )}
+
+                · ${escapeHtml(
+                  formatTime(
+                    session.start_time
+                  )
+                )}
+
+                ${
+                  session.court_name
+                  ?
+                  ` · ${escapeHtml(
+                    session.court_name
+                  )}`
+                  :
+                  ""
+                }
+
+                <div
+                  style="
+                    margin-top:4px;
+                    color:#ffd37a;
+                    font-size:12px;
+                  "
+                >
+                  Trạng thái: Chờ học
+                </div>
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    const requestLines =
+      requests
+        .map(
+          request => {
+
+            return `
+              <div
+                style="
+                  margin-top:8px;
+                  padding:10px 12px;
+                  border-radius:9px;
+                  background:rgba(0,0,0,.14);
+                  color:white;
+                "
+              >
+                <strong>
+                  ${escapeHtml(
+                    request.request_code
+                    ||
+                    `YC${request.id}`
+                  )}
+                </strong>
+
+                <div
+                  style="
+                    margin-top:4px;
+                    color:#ffd37a;
+                    font-size:12px;
+                  "
+                >
+                  Yêu cầu lịch đang Chờ Coach xử lý
+                </div>
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    return `
+      <div
+        style="
+          margin-top:14px;
+          padding:14px;
+          border-radius:12px;
+          border:1px solid rgba(255,183,60,.46);
+          background:rgba(255,170,40,.09);
+          color:#ffd37a;
+          line-height:1.5;
+        "
+      >
+
+        <div
+          style="
+            font-weight:900;
+            font-size:14px;
+          "
+        >
+          ⚠️ ĐANG CÓ LỊCH CHƯA XỬ LÝ
+        </div>
+
+        <div
+          style="
+            margin-top:5px;
+            color:rgba(255,255,255,.72);
+            font-size:13px;
+          "
+        >
+          Admin chưa thể đổi Coach.
+          Hãy xử lý toàn bộ lịch bên dưới trước.
+        </div>
+
+        ${sessionLines}
+
+        ${requestLines}
+
+      </div>
+    `;
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
 
   function render() {
-
 
     const filter =
       statusFilter.value;
@@ -1113,14 +1595,12 @@
 
     if (!filtered.length) {
 
-
       list.innerHTML =
         `
           <div class="empty">
             Không có yêu cầu phù hợp.
           </div>
         `;
-
 
       return;
 
@@ -1129,7 +1609,6 @@
 
     filtered.forEach(
       function (item) {
-
 
         const student =
           item.student
@@ -1149,6 +1628,38 @@
           {};
 
 
+        const hasBlockingSession =
+          (
+            item.blocking_sessions
+            ||
+            []
+          ).length > 0;
+
+
+        const hasBlockingRequest =
+          (
+            item.blocking_requests
+            ||
+            []
+          ).length > 0;
+
+
+        const hasBlocker =
+          item.blocker_check_error
+          ||
+          hasBlockingSession
+          ||
+          hasBlockingRequest;
+
+
+        const canApprove =
+          item.status === "pending"
+          &&
+          item.requested_coach_id
+          &&
+          !hasBlocker;
+
+
         const card =
           document.createElement(
             "article"
@@ -1159,12 +1670,6 @@
           `card ${item.status || ""}`;
 
 
-        const canApprove =
-          item.status === "pending"
-          &&
-          item.requested_coach_id;
-
-
         card.innerHTML =
           `
 
@@ -1173,6 +1678,7 @@
               <div>
 
                 <div class="student">
+
                   ${escapeHtml(
                     student.full_name
                     ||
@@ -1180,7 +1686,9 @@
                     ||
                     "Học viên"
                   )}
+
                 </div>
+
 
                 <div class="code">
 
@@ -1209,7 +1717,11 @@
               </div>
 
 
-              <div class="status ${escapeHtml(item.status)}">
+              <div
+                class="status ${escapeHtml(
+                  item.status
+                )}"
+              >
 
                 ${escapeHtml(
                   statusText(
@@ -1232,11 +1744,13 @@
                 </div>
 
                 <div class="coach-name">
+
                   ${escapeHtml(
                     oldCoach.full_name
                     ||
                     "Chưa xác định"
                   )}
+
                 </div>
 
                 <div class="coach-meta">
@@ -1319,8 +1833,15 @@
 
             <div class="detail">
 
-              <strong>Lý do:</strong>
-              ${escapeHtml(item.reason || "—")}
+              <strong>
+                Lý do:
+              </strong>
+
+              ${escapeHtml(
+                item.reason
+                ||
+                "—"
+              )}
 
               ${
                 item.reason_note
@@ -1336,7 +1857,10 @@
 
               <br><br>
 
-              <strong>Gửi lúc:</strong>
+              <strong>
+                Gửi lúc:
+              </strong>
+
               ${escapeHtml(
                 formatDate(
                   item.created_at
@@ -1358,6 +1882,9 @@
             </div>
 
 
+            ${blockerHtml(item)}
+
+
             ${
               item.status === "pending"
               ?
@@ -1376,7 +1903,13 @@
                     type="button"
                     ${canApprove ? "" : "disabled"}
                   >
-                    ✓ DUYỆT ĐỔI COACH
+                    ${
+                      hasBlocker
+                      ?
+                      "⚠ XỬ LÝ LỊCH TRƯỚC"
+                      :
+                      "✓ DUYỆT ĐỔI COACH"
+                    }
                   </button>
 
 
@@ -1388,6 +1921,7 @@
                   </button>
 
                 </div>
+
 
                 ${
                   !item.requested_coach_id
@@ -1410,7 +1944,6 @@
           `;
 
 
-
         const note =
           card.querySelector(
             ".admin-note"
@@ -1429,21 +1962,30 @@
           );
 
 
+        /* =================================================
+           APPROVE
+        ================================================== */
 
-        if (approve) {
-
+        if (
+          approve
+          &&
+          canApprove
+        ) {
 
           approve.addEventListener(
             "click",
             async function () {
 
-
               const ok =
                 window.confirm(
                   `Xác nhận đổi Coach của ${
-                    student.full_name || "Học viên"
+                    student.full_name
+                    ||
+                    "Học viên"
                   } sang ${
-                    newCoach.full_name || "Coach mới"
+                    newCoach.full_name
+                    ||
+                    "Coach mới"
                   }?`
                 );
 
@@ -1457,8 +1999,12 @@
                 true;
 
 
-              reject.disabled =
-                true;
+              if (reject) {
+
+                reject.disabled =
+                  true;
+
+              }
 
 
               approve.textContent =
@@ -1471,22 +2017,25 @@
                 await sb.rpc(
                   "approve_coach_change_request",
                   {
+
                     p_request_id:
                       Number(item.id),
 
                     p_admin_note:
                       String(
-                        note?.value || ""
+                        note?.value
+                        ||
+                        ""
                       )
                         .trim()
-                        ||
-                        null
+                      ||
+                      null
+
                   }
                 );
 
 
               if (error) {
-
 
                 alert(
                   "Không duyệt được: "
@@ -1495,17 +2044,7 @@
                 );
 
 
-                approve.disabled =
-                  false;
-
-
-                reject.disabled =
-                  false;
-
-
-                approve.textContent =
-                  "✓ DUYỆT ĐỔI COACH";
-
+                await loadRequests();
 
                 return;
 
@@ -1514,21 +2053,21 @@
 
               await loadRequests();
 
-
             }
           );
 
         }
 
 
+        /* =================================================
+           REJECT
+        ================================================== */
 
         if (reject) {
-
 
           reject.addEventListener(
             "click",
             async function () {
-
 
               const ok =
                 window.confirm(
@@ -1541,8 +2080,12 @@
               }
 
 
-              approve.disabled =
-                true;
+              if (approve) {
+
+                approve.disabled =
+                  true;
+
+              }
 
 
               reject.disabled =
@@ -1559,22 +2102,25 @@
                 await sb.rpc(
                   "reject_coach_change_request",
                   {
+
                     p_request_id:
                       Number(item.id),
 
                     p_admin_note:
                       String(
-                        note?.value || ""
+                        note?.value
+                        ||
+                        ""
                       )
                         .trim()
-                        ||
-                        null
+                      ||
+                      null
+
                   }
                 );
 
 
               if (error) {
-
 
                 alert(
                   "Không từ chối được: "
@@ -1583,17 +2129,7 @@
                 );
 
 
-                approve.disabled =
-                  false;
-
-
-                reject.disabled =
-                  false;
-
-
-                reject.textContent =
-                  "✕ TỪ CHỐI";
-
+                await loadRequests();
 
                 return;
 
@@ -1601,7 +2137,6 @@
 
 
               await loadRequests();
-
 
             }
           );
@@ -1613,142 +2148,200 @@
           card
         );
 
-
       }
     );
 
   }
 
 
+  /* =====================================================
+     LOAD REQUESTS
+  ====================================================== */
 
   async function loadRequests() {
+
+    refreshBtn.disabled =
+      true;
 
 
     list.innerHTML =
       '<div class="loading">Đang tải yêu cầu...</div>';
 
 
-    const {
-      data: { session },
-      error: sessionError
-    } =
-      await sb.auth
-        .getSession();
+    try {
+
+      const {
+        data: { session },
+        error: sessionError
+      } =
+        await sb.auth
+          .getSession();
 
 
-    if (
-      sessionError
-      ||
-      !session
-    ) {
+      if (
+        sessionError
+        ||
+        !session
+      ) {
 
-      window.location.href =
-        "./?v=login";
+        window.location.href =
+          "./?v=login";
 
-      return;
+        return;
 
-    }
-
-
-
-    const {
-      data: isAdmin,
-      error: adminError
-    } =
-      await sb.rpc(
-        "is_pickdee_admin"
-      );
+      }
 
 
-    if (
-      adminError
-      ||
-      !isAdmin
-    ) {
-
-      list.innerHTML =
-        `
-          <div class="error">
-            Bạn không có quyền Admin.
-          </div>
-        `;
-
-      return;
-
-    }
-
-
-
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from(
-          "coach_change_requests"
-        )
-        .select(
-          `
-
-            id,
-            student_id,
-            registration_id,
-            current_coach_id,
-            requested_coach_id,
-            reason,
-            reason_note,
-            status,
-            admin_note,
-            created_at,
-            decided_at,
-
-            student:
-              students!coach_change_requests_student_id_fkey (
-                id,
-                student_code,
-                full_name
-              ),
-
-            registration:
-              registrations!coach_change_requests_registration_id_fkey (
-                id,
-                registration_code,
-                package_name
-              ),
-
-            current_coach:
-              coaches!coach_change_requests_current_coach_id_fkey (
-                id,
-                coach_code,
-                full_name
-              ),
-
-            requested_coach:
-              coaches!coach_change_requests_requested_coach_id_fkey (
-                id,
-                coach_code,
-                full_name,
-                preferred_area,
-                preferred_ward,
-                status
-              )
-
-          `
-        )
-        .order(
-          "created_at",
-          {
-            ascending:
-              false
-          }
+      const {
+        data: isAdmin,
+        error: adminError
+      } =
+        await sb.rpc(
+          "is_pickdee_admin"
         );
 
 
-    if (error) {
+      if (
+        adminError
+        ||
+        !isAdmin
+      ) {
 
+        list.innerHTML =
+          `
+            <div class="error">
+              Bạn không có quyền Admin.
+            </div>
+          `;
+
+        return;
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "coach_change_requests"
+          )
+          .select(
+            `
+
+              id,
+              student_id,
+              registration_id,
+              current_coach_id,
+              requested_coach_id,
+              reason,
+              reason_note,
+              status,
+              admin_note,
+              created_at,
+              decided_at,
+
+              student:
+                students!coach_change_requests_student_id_fkey (
+                  id,
+                  student_code,
+                  full_name
+                ),
+
+              registration:
+                registrations!coach_change_requests_registration_id_fkey (
+                  id,
+                  registration_code,
+                  package_name,
+                  is_test
+                ),
+
+              current_coach:
+                coaches!coach_change_requests_current_coach_id_fkey (
+                  id,
+                  coach_code,
+                  full_name
+                ),
+
+              requested_coach:
+                coaches!coach_change_requests_requested_coach_id_fkey (
+                  id,
+                  coach_code,
+                  full_name,
+                  preferred_area,
+                  preferred_ward,
+                  status
+                )
+
+            `
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false
+            }
+          );
+
+
+      if (error) {
+
+        console.error(
+          "COACH CHANGE ADMIN:",
+          error
+        );
+
+
+        list.innerHTML =
+          `
+            <div class="error">
+              ${escapeHtml(
+                error.message
+                ||
+                "Không tải được yêu cầu đổi Coach."
+              )}
+            </div>
+          `;
+
+        return;
+
+      }
+
+
+      /*
+        Business/Admin view:
+        chỉ giữ registration REAL.
+      */
+
+      rows =
+        (data || [])
+          .filter(
+            item =>
+              item.registration
+              &&
+              item.registration.is_test === false
+          );
+
+
+      /*
+        Gắn dữ liệu lịch đang chặn
+        trước khi render nút DUYỆT.
+      */
+
+      await attachBlockingWork(
+        rows
+      );
+
+
+      updateSummary();
+
+      render();
+
+    }
+    catch (error) {
 
       console.error(
-        "COACH CHANGE ADMIN:",
+        "ADMIN COACH CHANGE:",
         error
       );
 
@@ -1757,32 +2350,27 @@
         `
           <div class="error">
             ${escapeHtml(
-              error.message
+              error?.message
               ||
-              "Không tải được yêu cầu đổi Coach."
+              "Không tải được dữ liệu."
             )}
           </div>
         `;
 
+    }
+    finally {
 
-      return;
+      refreshBtn.disabled =
+        false;
 
     }
-
-
-    rows =
-      data || [];
-
-
-    updateSummary();
-
-
-    render();
-
 
   }
 
 
+  /* =====================================================
+     EVENTS
+  ====================================================== */
 
   statusFilter.addEventListener(
     "change",
@@ -1795,6 +2383,10 @@
     loadRequests
   );
 
+
+  /* =====================================================
+     START
+  ====================================================== */
 
   loadRequests();
 
