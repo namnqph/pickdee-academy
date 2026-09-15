@@ -944,8 +944,124 @@
     }
 
 
-    allRows =
-      data || [];
+   allRows =
+  [...(data || [])].sort(
+    (a, b) => {
+
+      function priority(status) {
+
+        const value =
+          String(status || "")
+            .trim()
+            .toLocaleLowerCase("vi-VN");
+
+
+        if (
+          value === "chưa chốt"
+        ) {
+          return 0;
+        }
+
+
+        if (
+          value === "đã chốt"
+        ) {
+          return 1;
+        }
+
+
+        if (
+          value === "đã thanh toán"
+        ) {
+          return 2;
+        }
+
+
+        return 3;
+      }
+
+
+      const priorityA =
+        priority(a.status);
+
+      const priorityB =
+        priority(b.status);
+
+
+      /*
+        1. Chưa chốt
+        2. Đã chốt
+        3. Đã thanh toán
+      */
+
+      if (
+        priorityA !== priorityB
+      ) {
+        return priorityA - priorityB;
+      }
+
+
+      /*
+        Cùng trạng thái:
+        kỳ lương mới hơn đứng trước
+      */
+
+      const periodA =
+        String(
+          a.pay_period || ""
+        );
+
+      const periodB =
+        String(
+          b.pay_period || ""
+        );
+
+
+      if (
+        periodA !== periodB
+      ) {
+        return periodB.localeCompare(
+          periodA
+        );
+      }
+
+
+      /*
+        Cùng kỳ:
+        ngày dạy mới nhất trước
+      */
+
+      const dateA =
+        String(
+          a.work_date || ""
+        );
+
+      const dateB =
+        String(
+          b.work_date || ""
+        );
+
+
+      if (
+        dateA !== dateB
+      ) {
+        return dateB.localeCompare(
+          dateA
+        );
+      }
+
+
+      /*
+        Cuối cùng:
+        dòng công mới hơn trước
+      */
+
+      return (
+        Number(b.work_id || 0) -
+        Number(a.work_id || 0)
+      );
+    }
+  );
 
 
     buildFilters();
