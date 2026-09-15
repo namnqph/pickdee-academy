@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
@@ -239,6 +240,13 @@
       font-size: 14px;
     }
 
+    button:disabled {
+      opacity: .45;
+
+      cursor:
+        not-allowed;
+    }
+
     .complete {
       background: #d8ff45;
 
@@ -251,11 +259,77 @@
       color: #401010;
     }
 
-    button:disabled {
-      opacity: .45;
+    .cover {
+      grid-column:
+        1 / -1;
+
+      background: #173e73;
+
+      color: #d8ff45;
+
+      border:
+        1px solid
+        rgba(216,255,69,.35);
+    }
+
+    #coachNoteInput {
+      width: 100%;
+
+      min-height: 120px;
+
+      padding: 14px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: white;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      resize: vertical;
+
+      outline: none;
+    }
+
+    #coachNoteInput:disabled,
+    #coachNoteInput[readonly] {
+      opacity: .72;
 
       cursor:
         not-allowed;
+    }
+
+    #noteCount {
+      margin-top: 7px;
+
+      font-size: 11px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      text-align: right;
+    }
+
+    #saveNoteBtn {
+      margin-top: 12px;
+
+      width: 100%;
+
+      min-height: 48px;
+
+      background: #d8ff45;
+
+      color: #172600;
     }
 
     #message {
@@ -495,9 +569,24 @@
       📝 Ghi chú
     </h2>
 
-    <div id="note">
-      —
+    <textarea
+      id="coachNoteInput"
+      maxlength="2000"
+      placeholder="Nhập ghi chú cho buổi học..."
+      disabled
+    ></textarea>
+
+    <div id="noteCount">
+      0/2000 ký tự
     </div>
+
+    <button
+      id="saveNoteBtn"
+      type="button"
+      disabled
+    >
+      💾 LƯU GHI CHÚ
+    </button>
 
   </section>
 
@@ -523,6 +612,16 @@
       ✕ VẮNG
     </button>
 
+
+    <button
+      id="coverBtn"
+      class="cover"
+      type="button"
+      disabled
+    >
+      📣 GỌI COACH HỖ TRỢ
+    </button>
+
   </div>
 
 
@@ -546,305 +645,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
 <script src="./notifications.js?v=20260911-3"></script>
-<script>
-(function () {
 
-  const cfg =
-    window.PICKDEE_CONFIG || {};
 
-  const actions =
-    document.querySelector(".actions");
-
-  const statusEl =
-    document.getElementById("status");
-
-  const messageEl =
-    document.getElementById("message");
-
-
-  if (
-    !actions ||
-    !statusEl ||
-    !window.supabase ||
-    !cfg.SUPABASE_URL ||
-    !cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
-    return;
-  }
-
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-
-  const sessionId =
-    Number(
-      params.get("id") ||
-      params.get("session_id")
-    );
-
-
-  if (
-    !Number.isFinite(sessionId) ||
-    sessionId <= 0
-  ) {
-    return;
-  }
-
-
-  const supportSb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
-
-
-  let coverBtn =
-    document.getElementById("coverBtn");
-
-
-  if (!coverBtn) {
-
-    coverBtn =
-      document.createElement("button");
-
-    coverBtn.id =
-      "coverBtn";
-
-    coverBtn.type =
-      "button";
-
-    coverBtn.textContent =
-      "📣 GỌI COACH HỖ TRỢ";
-
-    coverBtn.style.gridColumn =
-      "1 / -1";
-
-    coverBtn.style.background =
-      "#173e73";
-
-    coverBtn.style.color =
-      "#d8ff45";
-
-    coverBtn.style.border =
-      "1px solid rgba(216,255,69,.35)";
-
-    coverBtn.style.minHeight =
-      "52px";
-
-    coverBtn.style.borderRadius =
-      "11px";
-
-    coverBtn.style.fontWeight =
-      "900";
-
-    coverBtn.style.cursor =
-      "pointer";
-
-    actions.appendChild(
-      coverBtn
-    );
-  }
-
-
-  function setMessage(
-    text,
-    type = "info"
-  ) {
-
-    if (!messageEl) {
-      return;
-    }
-
-    messageEl.textContent =
-      text;
-
-    messageEl.className =
-      type;
-  }
-
-
-  function updateCoverButton() {
-
-    const status =
-      String(
-        statusEl.textContent || ""
-      ).trim();
-
-
-    if (status === "Chờ học") {
-
-      coverBtn.disabled =
-        false;
-
-      coverBtn.textContent =
-        "📣 GỌI COACH HỖ TRỢ";
-
-      return;
-    }
-
-
-    coverBtn.disabled =
-      true;
-  }
-
-
-  coverBtn.onclick =
-    async function () {
-
-      const status =
-        String(
-          statusEl.textContent || ""
-        ).trim();
-
-
-      if (status !== "Chờ học") {
-
-        setMessage(
-          "Chỉ buổi đang ở trạng thái Chờ học mới được gọi Coach hỗ trợ.",
-          "error"
-        );
-
-        return;
-      }
-
-
-      const ok =
-        window.confirm(
-          "Coach chính bận. Gửi yêu cầu cho các Coach phù hợp trong khu vực nhận dạy buổi này?"
-        );
-
-
-      if (!ok) {
-        return;
-      }
-
-
-      coverBtn.disabled =
-        true;
-
-      coverBtn.textContent =
-        "⏳ ĐANG GỌI COACH...";
-
-
-      setMessage(
-        "Đang gửi yêu cầu Coach hỗ trợ...",
-        "info"
-      );
-
-
-      try {
-
-        const {
-          data,
-          error
-        } =
-          await supportSb.rpc(
-            "request_coach_cover",
-            {
-              p_session_id:
-                sessionId,
-
-              p_reason:
-                "Coach chính bận"
-            }
-          );
-
-
-        if (error) {
-          throw error;
-        }
-
-
-        coverBtn.disabled =
-          true;
-
-        coverBtn.textContent =
-          "✓ ĐÃ GỌI COACH HỖ TRỢ";
-
-
-        setMessage(
-          "✓ Đã gửi yêu cầu Coach hỗ trợ thành công. Mã yêu cầu: " +
-          data,
-          "success"
-        );
-
-      }
-      catch (error) {
-
-        console.error(
-          "REQUEST COACH COVER:",
-          error
-        );
-
-
-        coverBtn.disabled =
-          false;
-
-        coverBtn.textContent =
-          "📣 GỌI COACH HỖ TRỢ";
-
-
-        setMessage(
-          "Không gửi được yêu cầu Coach hỗ trợ: " +
-          (
-            error?.message ||
-            error
-          ),
-          "error"
-        );
-      }
-
-    };
-
-
-  const observer =
-    new MutationObserver(
-      function () {
-
-        updateCoverButton();
-
-      }
-    );
-
-
-  observer.observe(
-    statusEl,
-    {
-      childList: true,
-      characterData: true,
-      subtree: true
-    }
-  );
-
-
-  updateCoverButton();
-
-})();
-</script>
 <script>
 
 (async function () {
-
-
-  /* =====================================================
-     PICKDEE ACADEMY
-     COACH SESSION DETAIL
-
-     QUY TẮC:
-
-     - Phải đăng nhập.
-     - Phải là đúng Coach của buổi học.
-     - Buổi phải tồn tại.
-     - Registration REAL chỉ được thao tác
-       khi đã thanh toán đủ 100%.
-     - Chỉ trạng thái "Chờ học"
-       mới được Hoàn thành / Vắng.
-     - Backend coach_mark_session()
-       là nơi thực hiện thao tác chính thức.
-  ====================================================== */
 
 
   const cfg =
@@ -860,6 +665,30 @@ window.PICKDEE_NOTIFICATION_ROLE =
   const absentBtn =
     document.getElementById(
       "absentBtn"
+    );
+
+
+  const coverBtn =
+    document.getElementById(
+      "coverBtn"
+    );
+
+
+  const noteInput =
+    document.getElementById(
+      "coachNoteInput"
+    );
+
+
+  const noteCount =
+    document.getElementById(
+      "noteCount"
+    );
+
+
+  const saveNoteBtn =
+    document.getElementById(
+      "saveNoteBtn"
     );
 
 
@@ -893,9 +722,8 @@ window.PICKDEE_NOTIFICATION_ROLE =
     false;
 
 
-  /* =====================================================
-     HELPERS
-  ====================================================== */
+  let coverRequestSent =
+    false;
 
 
   function el(id) {
@@ -921,7 +749,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
     }
 
-
     return (
       value
       ||
@@ -941,9 +768,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
     if (!node) {
-
       return;
-
     }
 
 
@@ -972,6 +797,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
       el("message");
 
 
+    if (!node) {
+      return;
+    }
+
+
     node.textContent =
       text || "";
 
@@ -987,9 +817,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
   ) {
 
     if (!value) {
-
       return "—";
-
     }
 
 
@@ -1009,9 +837,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
   ) {
 
     if (!value) {
-
       return "—";
-
     }
 
 
@@ -1025,12 +851,57 @@ window.PICKDEE_NOTIFICATION_ROLE =
   }
 
 
+  function formatDateTimeVN(
+    date
+  ) {
+
+    if (!date) {
+      return "";
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        timeZone:
+          "Asia/Ho_Chi_Minh",
+
+        day:
+          "2-digit",
+
+        month:
+          "2-digit",
+
+        year:
+          "numeric",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+
+        hour12:
+          false
+      }
+    ).format(
+      date
+    );
+
+  }
+
+
   function updateBadge(
     status
   ) {
 
     const badge =
       el("status");
+
+
+    if (!badge) {
+      return;
+    }
 
 
     badge.classList.remove(
@@ -1065,7 +936,15 @@ window.PICKDEE_NOTIFICATION_ROLE =
   }
 
 
-   function lockButtons() {
+  function updateNoteCount() {
+
+    noteCount.textContent =
+      `${noteInput.value.length}/2000 ký tự`;
+
+  }
+
+
+  function lockAllButtons() {
 
     completeBtn.disabled =
       true;
@@ -1073,19 +952,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
     absentBtn.disabled =
       true;
 
+    coverBtn.disabled =
+      true;
+
   }
 
-
-  /* =====================================================
-     THỜI ĐIỂM KẾT THÚC BUỔI HỌC
-
-     Ví dụ:
-     16/09/2026 10:00
-     + 60 phút
-     = 16/09/2026 11:00
-
-     Sau 11:00 Coach mới được thao tác.
-  ====================================================== */
 
   function getSessionEndAt() {
 
@@ -1143,63 +1014,23 @@ window.PICKDEE_NOTIFICATION_ROLE =
   }
 
 
-  function formatDateTimeVN(
-    date
-  ) {
+  function updateControls() {
 
-    if (!date) {
-
-      return "";
-
-    }
+    lockAllButtons();
 
 
-    return new Intl.DateTimeFormat(
-      "vi-VN",
-      {
-        timeZone:
-          "Asia/Ho_Chi_Minh",
+    noteInput.disabled =
+      true;
 
-        day:
-          "2-digit",
+    noteInput.readOnly =
+      true;
 
-        month:
-          "2-digit",
-
-        year:
-          "numeric",
-
-        hour:
-          "2-digit",
-
-        minute:
-          "2-digit",
-
-        hour12:
-          false
-      }
-    ).format(
-      date
-    );
-
-  }
+    saveNoteBtn.disabled =
+      true;
 
 
-  function updateButtons() {
-
-    /*
-      MẶC ĐỊNH LUÔN KHÓA.
-    */
-
-    lockButtons();
-
-
-    if (
-      !currentSession
-    ) {
-
+    if (!currentSession) {
       return;
-
     }
 
 
@@ -1211,9 +1042,35 @@ window.PICKDEE_NOTIFICATION_ROLE =
       ).trim();
 
 
-    /* ===================================================
-       ĐÃ XỬ LÝ
-    ==================================================== */
+    if (
+      currentSession.substitute_coach_id
+    ) {
+
+      coverBtn.disabled =
+        true;
+
+      coverBtn.textContent =
+        "✓ ĐÃ CÓ COACH HỖ TRỢ";
+
+    }
+    else if (
+      coverRequestSent
+    ) {
+
+      coverBtn.disabled =
+        true;
+
+      coverBtn.textContent =
+        "✓ ĐÃ GỌI COACH HỖ TRỢ";
+
+    }
+    else {
+
+      coverBtn.textContent =
+        "📣 GỌI COACH HỖ TRỢ";
+
+    }
+
 
     if (
       status ===
@@ -1245,17 +1102,13 @@ window.PICKDEE_NOTIFICATION_ROLE =
     }
 
 
-    /* ===================================================
-       KHÔNG PHẢI CHỜ HỌC
-    ==================================================== */
-
     if (
       status !==
       "Chờ học"
     ) {
 
       setMessage(
-        `Buổi học hiện có trạng thái "${status}". Không thể điểm danh ở trạng thái này.`,
+        `Buổi học hiện có trạng thái "${status}". Không thể thao tác ở trạng thái này.`,
         "info"
       );
 
@@ -1264,9 +1117,29 @@ window.PICKDEE_NOTIFICATION_ROLE =
     }
 
 
-    /* ===================================================
-       PAYMENT GATE
-    ==================================================== */
+    noteInput.disabled =
+      false;
+
+    noteInput.readOnly =
+      false;
+
+    saveNoteBtn.disabled =
+      false;
+
+
+    if (
+      paymentReady === true
+      &&
+      !currentSession.substitute_coach_id
+      &&
+      !coverRequestSent
+    ) {
+
+      coverBtn.disabled =
+        false;
+
+    }
+
 
     if (
       paymentReady !==
@@ -1274,7 +1147,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
     ) {
 
       setMessage(
-        "🔒 Gói học chưa được xác nhận thanh toán đủ 100%. Coach không được phép điểm danh hoặc hoàn thành buổi học.",
+        "🔒 Gói học chưa được xác nhận thanh toán đủ 100%. Coach không được phép thao tác buổi học.",
         "error"
       );
 
@@ -1283,10 +1156,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
     }
 
 
-    /* ===================================================
-       TIME GATE
-    ==================================================== */
-
     const endAt =
       getSessionEndAt();
 
@@ -1294,7 +1163,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
     if (!endAt) {
 
       setMessage(
-        "⚠️ Không xác định được thời điểm kết thúc buổi học. Tạm khóa thao tác.",
+        "⚠️ Không xác định được thời điểm kết thúc buổi học. Tạm khóa điểm danh.",
         "error"
       );
 
@@ -1323,10 +1192,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
     }
 
 
-    /* ===================================================
-       ĐỦ TOÀN BỘ ĐIỀU KIỆN
-    ==================================================== */
-
     completeBtn.disabled =
       false;
 
@@ -1341,11 +1206,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
     );
 
   }
-
-
-  /* =====================================================
-     SUPABASE
-  ====================================================== */
 
 
   function initSupabase() {
@@ -1383,11 +1243,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
   }
 
 
-  /* =====================================================
-     LOGIN + COACH
-  ====================================================== */
-
-
   async function checkCoach() {
 
     const {
@@ -1399,9 +1254,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
     if (sessionError) {
-
       throw sessionError;
-
     }
 
 
@@ -1423,8 +1276,8 @@ window.PICKDEE_NOTIFICATION_ROLE =
       sessionData.session
         .user
         .email
-        ||
-        ""
+      ||
+      ""
     );
 
 
@@ -1468,11 +1321,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
   }
 
 
-  /* =====================================================
-     LOAD SESSION
-  ====================================================== */
-
-
   async function loadSession() {
 
     if (
@@ -1503,6 +1351,9 @@ window.PICKDEE_NOTIFICATION_ROLE =
           session_code,
           registration_id,
           coach_id,
+          substitute_coach_id,
+          substitute_reason,
+          substitute_assigned_at,
           session_no,
           session_date,
           start_time,
@@ -1527,11 +1378,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
             )
           ),
 
-         coaches!class_sessions_coach_id_fkey (
-  id,
-  coach_code,
-  full_name
-)
+          coaches!class_sessions_coach_id_fkey (
+            id,
+            coach_code,
+            full_name
+          )
         `)
 
         .eq(
@@ -1590,14 +1441,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
       );
 
 
-    /* ===================================================
-       PAYMENT GATE
-
-       Backend là nguồn quyết định.
-       Không tự tính tiền ở frontend.
-    ==================================================== */
-
-
     if (
       !registration?.id
     ) {
@@ -1626,12 +1469,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
     if (paidError) {
 
-      console.error(
-        "PAYMENT GATE:",
-        paidError
-      );
-
-
       throw new Error(
         "Không xác minh được trạng thái học phí. "
         +
@@ -1643,11 +1480,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
     paymentReady =
       paidReady === true;
-
-
-    /* ===================================================
-       RENDER
-    ==================================================== */
 
 
     show(
@@ -1742,79 +1574,184 @@ window.PICKDEE_NOTIFICATION_ROLE =
     );
 
 
-    show(
-      "note",
+    noteInput.value =
       data.note
       ||
-      "Không có ghi chú."
+      "";
+
+
+    updateNoteCount();
+
+
+    updateControls();
+
+  }
+
+
+  async function saveNote() {
+
+    if (
+      !currentSession
+    ) {
+      return;
+    }
+
+
+    if (
+      String(
+        currentSession.status || ""
+      ).trim()
+      !==
+      "Chờ học"
+    ) {
+
+      setMessage(
+        "Buổi học đã được xử lý. Ghi chú đã khóa.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const note =
+      noteInput.value.trim();
+
+
+    if (
+      note.length > 2000
+    ) {
+
+      setMessage(
+        "Ghi chú tối đa 2000 ký tự.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    saveNoteBtn.disabled =
+      true;
+
+
+    saveNoteBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    setMessage(
+      "Đang lưu ghi chú...",
+      "info"
     );
 
 
-    /* ===================================================
-       TRẠNG THÁI QUYỀN
-    ==================================================== */
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "coach_update_session_note",
+          {
+            p_session_id:
+              Number(
+                currentSession.id
+              ),
+
+            p_note:
+              note
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      currentSession.note =
+        data?.note
+        ??
+        note;
+
+
+      noteInput.value =
+        currentSession.note || "";
+
+
+      updateNoteCount();
+
+
+      saveNoteBtn.textContent =
+        "✓ ĐÃ LƯU";
+
+
+      setMessage(
+        "✓ Đã lưu ghi chú buổi học.",
+        "success"
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "SAVE COACH NOTE:",
+        error
+      );
+
+
+      saveNoteBtn.textContent =
+        "💾 LƯU GHI CHÚ";
+
+
+      setMessage(
+        "Không lưu được ghi chú: "
+        +
+        (
+          error?.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+    }
+    finally {
+
+      if (
+        String(
+          currentSession?.status || ""
+        ).trim()
+        ===
+        "Chờ học"
+      ) {
+
+        saveNoteBtn.disabled =
+          false;
+
+      }
+
+    }
+
+  }
+
+
+  async function requestCoachCover() {
+
+    if (
+      !currentSession
+    ) {
+      return;
+    }
 
 
     const status =
       String(
-        data.status
-        ||
-        ""
+        currentSession.status || ""
       ).trim();
-
-
-    if (
-      paymentReady !==
-      true
-    ) {
-
-      setMessage(
-        "🔒 Gói học chưa được xác nhận thanh toán đủ 100%. Coach không được phép điểm danh hoặc hoàn thành buổi học.",
-        "error"
-      );
-
-
-      updateButtons();
-
-      return;
-
-    }
-
-
-    if (
-      status ===
-      "Đã hoàn thành"
-    ) {
-
-      setMessage(
-        "✓ Buổi học này đã được hoàn thành.",
-        "success"
-      );
-
-
-      updateButtons();
-
-      return;
-
-    }
-
-
-    if (
-      status ===
-      "Vắng"
-    ) {
-
-      setMessage(
-        "✓ Buổi học này đã được ghi nhận Vắng.",
-        "info"
-      );
-
-
-      updateButtons();
-
-      return;
-
-    }
 
 
     if (
@@ -1823,32 +1760,158 @@ window.PICKDEE_NOTIFICATION_ROLE =
     ) {
 
       setMessage(
-        `Buổi học hiện có trạng thái "${status}". Không thể điểm danh ở trạng thái này.`,
-        "info"
+        "Chỉ buổi đang ở trạng thái Chờ học mới được gọi Coach hỗ trợ.",
+        "error"
       );
-
-
-      updateButtons();
 
       return;
 
     }
 
 
+    if (
+      currentSession.substitute_coach_id
+    ) {
+
+      setMessage(
+        "Buổi học này đã có Coach hỗ trợ.",
+        "info"
+      );
+
+      return;
+
+    }
+
+
+    const reason =
+      window.prompt(
+        "Nhập lý do cần Coach hỗ trợ:",
+        "Coach chính bận"
+      );
+
+
+    if (
+      reason === null
+    ) {
+      return;
+    }
+
+
+    const finalReason =
+      String(
+        reason
+      ).trim();
+
+
+    if (!finalReason) {
+
+      setMessage(
+        "Vui lòng nhập lý do cần Coach hỗ trợ.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const ok =
+      window.confirm(
+        "Gửi yêu cầu cho các Coach phù hợp trong khu vực nhận dạy buổi này?"
+      );
+
+
+    if (!ok) {
+      return;
+    }
+
+
+    coverBtn.disabled =
+      true;
+
+
+    coverBtn.textContent =
+      "⏳ ĐANG GỌI COACH...";
+
+
     setMessage(
-      "✓ Đã xác minh: đúng Coach phụ trách và gói học đã đủ 100% học phí. Buổi học đủ điều kiện thao tác.",
-      "success"
+      "Đang gửi yêu cầu tới các Coach phù hợp trong khu vực...",
+      "info"
     );
 
 
-    updateButtons();
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "request_coach_cover",
+          {
+            p_session_id:
+              Number(
+                currentSession.id
+              ),
+
+            p_reason:
+              finalReason
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      coverRequestSent =
+        true;
+
+
+      coverBtn.disabled =
+        true;
+
+
+      coverBtn.textContent =
+        "✓ ĐÃ GỌI COACH HỖ TRỢ";
+
+
+      setMessage(
+        `✓ Đã gửi yêu cầu Coach hỗ trợ thành công. Mã yêu cầu: ${data}.`,
+        "success"
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "REQUEST COACH COVER:",
+        error
+      );
+
+
+      coverRequestSent =
+        false;
+
+
+      updateControls();
+
+
+      setMessage(
+        "Không gửi được yêu cầu Coach hỗ trợ: "
+        +
+        (
+          error?.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+    }
 
   }
-
-
-  /* =====================================================
-     MARK SESSION
-  ====================================================== */
 
 
   async function markSession(
@@ -1858,9 +1921,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
     if (
       !currentSession
     ) {
-
       return;
-
     }
 
 
@@ -1881,9 +1942,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
     if (
       String(
-        currentSession.status
-        ||
-        ""
+        currentSession.status || ""
       ).trim()
       !==
       "Chờ học"
@@ -1917,25 +1976,17 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
     if (!ok) {
-
       return;
-
     }
 
 
-    lockButtons();
+    lockAllButtons();
 
 
     setMessage(
       "Đang xử lý...",
       "info"
     );
-
-
-    /*
-      Kiểm tra học phí LẦN CUỐI
-      ngay trước khi thao tác.
-    */
 
 
     const {
@@ -1960,14 +2011,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
       freshPaid !== true
     ) {
 
-      console.error(
-        "PAYMENT RECHECK:",
-        freshPaidError
-      );
-
-
       paymentReady =
         false;
+
+
+      updateControls();
 
 
       setMessage(
@@ -1975,26 +2023,9 @@ window.PICKDEE_NOTIFICATION_ROLE =
         "error"
       );
 
-
-      updateButtons();
-
       return;
 
     }
-
-
-    /*
-      RPC DÀNH RIÊNG CHO COACH.
-
-      completed:
-      - cập nhật Đã hoàn thành
-      - điểm danh Có mặt
-      - tạo Công Coach
-
-      absent:
-      - cập nhật Vắng
-      - điểm danh Vắng
-    */
 
 
     const {
@@ -2004,7 +2035,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
       await sb.rpc(
         "coach_mark_session",
         {
-
           p_session_id:
             Number(
               currentSession.id
@@ -2012,7 +2042,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
           p_action:
             action
-
         }
       );
 
@@ -2025,6 +2054,9 @@ window.PICKDEE_NOTIFICATION_ROLE =
       );
 
 
+      updateControls();
+
+
       setMessage(
         "Không xử lý được buổi học: "
         +
@@ -2035,9 +2067,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
         ),
         "error"
       );
-
-
-      updateButtons();
 
       return;
 
@@ -2069,34 +2098,9 @@ window.PICKDEE_NOTIFICATION_ROLE =
     );
 
 
-    if (
-      isCompleted
-    ) {
-
-      setMessage(
-        "✓ Đã hoàn thành buổi học · ghi Có mặt · tạo Công Coach thành công.",
-        "success"
-      );
-
-    }
-    else {
-
-      setMessage(
-        "✓ Đã ghi nhận học viên Vắng.",
-        "success"
-      );
-
-    }
-
-
-    updateButtons();
+    updateControls();
 
   }
-
-
-  /* =====================================================
-     EVENTS
-  ====================================================== */
 
 
   completeBtn.addEventListener(
@@ -2123,14 +2127,39 @@ window.PICKDEE_NOTIFICATION_ROLE =
   );
 
 
-  /* =====================================================
-     INIT
-  ====================================================== */
+  coverBtn.addEventListener(
+    "click",
+    function () {
+
+      requestCoachCover();
+
+    }
+  );
+
+
+  saveNoteBtn.addEventListener(
+    "click",
+    function () {
+
+      saveNote();
+
+    }
+  );
+
+
+  noteInput.addEventListener(
+    "input",
+    function () {
+
+      updateNoteCount();
+
+    }
+  );
 
 
   async function init() {
 
-    lockButtons();
+    lockAllButtons();
 
 
     try {
@@ -2143,9 +2172,7 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
       if (!ok) {
-
         return;
-
       }
 
 
@@ -2180,7 +2207,15 @@ window.PICKDEE_NOTIFICATION_ROLE =
       );
 
 
-      lockButtons();
+      lockAllButtons();
+
+
+      noteInput.disabled =
+        true;
+
+
+      saveNoteBtn.disabled =
+        true;
 
     }
 
@@ -2194,711 +2229,6 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 </script>
 
-<script>
-(function () {
 
-  const noteEl =
-    document.getElementById("note");
-
-  if (!noteEl) {
-    return;
-  }
-
-
-  let editorCreated =
-    false;
-
-
-  const observer =
-    new MutationObserver(
-      function () {
-
-        createNoteEditor();
-
-      }
-    );
-
-
-  observer.observe(
-    noteEl,
-    {
-      childList: true,
-      characterData: true,
-      subtree: true
-    }
-  );
-
-
-  function createNoteEditor() {
-
-    if (editorCreated) {
-      return;
-    }
-
-
-    const currentText =
-      String(
-        noteEl.textContent || ""
-      ).trim();
-
-
-    /*
-      Chờ dữ liệu buổi học tải xong.
-    */
-
-    if (
-      !currentText ||
-      currentText === "—"
-    ) {
-      return;
-    }
-
-
-    editorCreated =
-      true;
-
-
-    observer.disconnect();
-
-
-    const initialNote =
-      currentText ===
-      "Không có ghi chú."
-
-        ? ""
-
-        : currentText;
-
-
-    const wrapper =
-      document.createElement(
-        "div"
-      );
-
-
-    const textarea =
-      document.createElement(
-        "textarea"
-      );
-
-
-    textarea.id =
-      "coachNoteInput";
-
-
-    textarea.value =
-      initialNote;
-
-
-    textarea.placeholder =
-      "Nhập ghi chú cho buổi học...";
-
-
-    textarea.maxLength =
-      2000;
-
-
-    textarea.style.width =
-      "100%";
-
-    textarea.style.minHeight =
-      "120px";
-
-    textarea.style.padding =
-      "14px";
-
-    textarea.style.borderRadius =
-      "10px";
-
-    textarea.style.border =
-      "1px solid rgba(255,255,255,.18)";
-
-    textarea.style.background =
-      "rgba(255,255,255,.06)";
-
-    textarea.style.color =
-      "white";
-
-    textarea.style.fontFamily =
-      "inherit";
-
-    textarea.style.fontSize =
-      "14px";
-
-    textarea.style.lineHeight =
-      "1.5";
-
-    textarea.style.resize =
-      "vertical";
-
-    textarea.style.outline =
-      "none";
-
-
-    const count =
-      document.createElement(
-        "div"
-      );
-
-
-    count.style.marginTop =
-      "7px";
-
-    count.style.fontSize =
-      "11px";
-
-    count.style.color =
-      "rgba(255,255,255,.5)";
-
-    count.style.textAlign =
-      "right";
-
-
-    function updateCount() {
-
-      count.textContent =
-        `${textarea.value.length}/2000 ký tự`;
-
-    }
-
-
-    updateCount();
-
-
-    textarea.addEventListener(
-      "input",
-      updateCount
-    );
-
-
-    const saveBtn =
-      document.createElement(
-        "button"
-      );
-
-
-    saveBtn.type =
-      "button";
-
-
-    saveBtn.textContent =
-      "💾 LƯU GHI CHÚ";
-
-
-    saveBtn.style.marginTop =
-      "12px";
-
-    saveBtn.style.width =
-      "100%";
-
-    saveBtn.style.minHeight =
-      "48px";
-
-    saveBtn.style.border =
-      "0";
-
-    saveBtn.style.borderRadius =
-      "10px";
-
-    saveBtn.style.background =
-      "#d8ff45";
-
-    saveBtn.style.color =
-      "#172600";
-
-    saveBtn.style.fontWeight =
-      "900";
-
-    saveBtn.style.cursor =
-      "pointer";
-
-
-    wrapper.appendChild(
-      textarea
-    );
-
-    wrapper.appendChild(
-      count
-    );
-
-    wrapper.appendChild(
-      saveBtn
-    );
-
-
-    noteEl.replaceWith(
-      wrapper
-    );
-
-
-    saveBtn.addEventListener(
-      "click",
-      async function () {
-
-        const messageEl =
-          document.getElementById(
-            "message"
-          );
-
-
-        const note =
-          textarea.value.trim();
-
-
-        if (
-          note.length > 2000
-        ) {
-
-          messageEl.textContent =
-            "Ghi chú tối đa 2000 ký tự.";
-
-          messageEl.className =
-            "error";
-
-          return;
-        }
-
-
-        const params =
-          new URLSearchParams(
-            window.location.search
-          );
-
-
-        const sessionId =
-          Number(
-            params.get("id")
-            ||
-            params.get(
-              "session_id"
-            )
-          );
-
-
-        if (
-          !Number.isFinite(
-            sessionId
-          )
-          ||
-          sessionId <= 0
-        ) {
-
-          messageEl.textContent =
-            "Không xác định được buổi học.";
-
-          messageEl.className =
-            "error";
-
-          return;
-        }
-
-
-        const cfg =
-          window.PICKDEE_CONFIG
-          ||
-          {};
-
-
-        if (
-          !window.supabase
-          ||
-          !cfg.SUPABASE_URL
-          ||
-          !cfg.SUPABASE_PUBLISHABLE_KEY
-        ) {
-
-          messageEl.textContent =
-            "Không kết nối được Supabase.";
-
-          messageEl.className =
-            "error";
-
-          return;
-        }
-
-
-        saveBtn.disabled =
-          true;
-
-
-        saveBtn.textContent =
-          "ĐANG LƯU...";
-
-
-        messageEl.textContent =
-          "Đang lưu ghi chú...";
-
-        messageEl.className =
-          "info";
-
-
-        try {
-
-          const noteSb =
-            window.supabase
-              .createClient(
-                cfg.SUPABASE_URL,
-                cfg.SUPABASE_PUBLISHABLE_KEY
-              );
-
-
-          const {
-            data,
-            error
-          } =
-            await noteSb.rpc(
-              "coach_update_session_note",
-              {
-                p_session_id:
-                  sessionId,
-
-                p_note:
-                  note
-              }
-            );
-
-
-          if (error) {
-            throw error;
-          }
-
-
-          textarea.value =
-            data?.note
-            ||
-            "";
-
-
-          updateCount();
-
-
-          messageEl.textContent =
-            "✓ Đã lưu ghi chú buổi học.";
-
-          messageEl.className =
-            "success";
-
-
-          saveBtn.textContent =
-            "✓ ĐÃ LƯU";
-
-        }
-        catch (error) {
-
-          console.error(
-            "SAVE COACH NOTE:",
-            error
-          );
-
-
-          messageEl.textContent =
-            "Không lưu được ghi chú: "
-            +
-            (
-              error?.message
-              ||
-              error
-            );
-
-
-          messageEl.className =
-            "error";
-
-
-          saveBtn.textContent =
-            "💾 LƯU GHI CHÚ";
-
-        }
-        finally {
-
-          saveBtn.disabled =
-            false;
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /*
-    Trường hợp dữ liệu đã tải
-    trước khi observer hoạt động.
-  */
-
-  createNoteEditor();
-
-})();
-</script>
-  <script>
-(function () {
-
-  function applyNoteLock() {
-
-    const statusEl =
-      document.getElementById("status");
-
-    const textarea =
-      document.getElementById(
-        "coachNoteInput"
-      );
-
-    if (
-      !statusEl ||
-      !textarea
-    ) {
-      return;
-    }
-
-
-    const status =
-      String(
-        statusEl.textContent || ""
-      ).trim();
-
-
-    const wrapper =
-      textarea.parentElement;
-
-
-    const saveBtn =
-      wrapper
-        ? wrapper.querySelector("button")
-        : null;
-
-
-    let lockMessage =
-      document.getElementById(
-        "noteLockMessage"
-      );
-
-
-    /*
-      =====================================
-      BUỔI CÒN CHỜ HỌC
-      → ĐƯỢC SỬA GHI CHÚ
-      =====================================
-    */
-
-    if (
-      status === "Chờ học"
-    ) {
-
-      textarea.readOnly =
-        false;
-
-
-      textarea.style.opacity =
-        "1";
-
-
-      textarea.style.cursor =
-        "text";
-
-
-      if (
-        saveBtn &&
-        saveBtn.textContent !==
-        "ĐANG LƯU..."
-      ) {
-
-        saveBtn.disabled =
-          false;
-
-
-        if (
-          saveBtn.textContent.includes(
-            "KHÓA"
-          )
-        ) {
-
-          saveBtn.textContent =
-            "💾 LƯU GHI CHÚ";
-
-        }
-
-      }
-
-
-      if (lockMessage) {
-
-        lockMessage.remove();
-
-      }
-
-
-      return;
-    }
-
-
-    /*
-      =====================================
-      BUỔI ĐÃ XỬ LÝ
-      → CHỈ ĐƯỢC XEM
-      =====================================
-    */
-
-    textarea.readOnly =
-      true;
-
-
-    textarea.style.opacity =
-      ".72";
-
-
-    textarea.style.cursor =
-      "not-allowed";
-
-
-    if (saveBtn) {
-
-      saveBtn.disabled =
-        true;
-
-
-      saveBtn.textContent =
-        "🔒 GHI CHÚ ĐÃ KHÓA";
-
-
-      saveBtn.style.opacity =
-        ".55";
-
-
-      saveBtn.style.cursor =
-        "not-allowed";
-
-    }
-
-
-    /*
-      Thông báo chỉ tạo 1 lần
-    */
-
-    if (
-      !lockMessage &&
-      wrapper
-    ) {
-
-      lockMessage =
-        document.createElement(
-          "div"
-        );
-
-
-      lockMessage.id =
-        "noteLockMessage";
-
-
-      lockMessage.style.marginTop =
-        "10px";
-
-
-      lockMessage.style.padding =
-        "10px 12px";
-
-
-      lockMessage.style.borderRadius =
-        "9px";
-
-
-      lockMessage.style.background =
-        "rgba(255,255,255,.06)";
-
-
-      lockMessage.style.color =
-        "rgba(255,255,255,.65)";
-
-
-      lockMessage.style.fontSize =
-        "12px";
-
-
-      lockMessage.style.lineHeight =
-        "1.5";
-
-
-      lockMessage.textContent =
-        "🔒 Buổi học đã được xử lý. Ghi chú được giữ làm lịch sử và không thể chỉnh sửa.";
-
-
-      wrapper.appendChild(
-        lockMessage
-      );
-
-    }
-
-  }
-
-
-  /*
-    =====================================
-    CHỜ Ô GHI CHÚ ĐƯỢC TẠO
-    =====================================
-  */
-
-  const waitForEditor =
-    setInterval(
-      function () {
-
-        const textarea =
-          document.getElementById(
-            "coachNoteInput"
-          );
-
-
-        const statusEl =
-          document.getElementById(
-            "status"
-          );
-
-
-        if (
-          !textarea ||
-          !statusEl
-        ) {
-          return;
-        }
-
-
-        clearInterval(
-          waitForEditor
-        );
-
-
-        applyNoteLock();
-
-
-        /*
-          Theo dõi khi Coach bấm
-          HOÀN THÀNH hoặc VẮNG.
-          Status đổi → khóa ngay.
-        */
-
-        const observer =
-          new MutationObserver(
-            function () {
-
-              applyNoteLock();
-
-            }
-          );
-
-
-        observer.observe(
-          statusEl,
-          {
-            childList: true,
-            characterData: true,
-            subtree: true
-          }
-        );
-
-      },
-      200
-    );
-
-})();
-</script>
 </body>
 </html>
