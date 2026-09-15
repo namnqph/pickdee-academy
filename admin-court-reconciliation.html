@@ -3804,6 +3804,698 @@
 
 })();
 </script>
+  <script>
+(function () {
+
+  /* =====================================================
+     PICKDEE - FIX THANH TOÁN TIỀN SÂN
+  ====================================================== */
+
+  const cfgPay =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbPay =
+    window.supabase.createClient(
+      cfgPay.SUPABASE_URL,
+      cfgPay.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     TẠO POPUP THANH TOÁN
+  ====================================================== */
+
+  const payOverlay =
+    document.createElement(
+      "div"
+    );
+
+
+  payOverlay.id =
+    "pickdeeCourtPayModal";
+
+
+  payOverlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:1000000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.80);
+  `;
+
+
+  payOverlay.innerHTML = `
+
+    <div
+      style="
+        width:min(560px,100%);
+        background:#062456;
+        border:1px solid rgba(255,255,255,.18);
+        border-radius:18px;
+        padding:22px;
+        box-shadow:0 24px 80px rgba(0,0,0,.50);
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          margin-bottom:18px;
+        "
+      >
+
+        <div>
+
+          <div
+            style="
+              color:#d8ff45;
+              font-size:12px;
+              font-weight:900;
+              margin-bottom:5px;
+            "
+          >
+            THANH TOÁN TIỀN SÂN
+          </div>
+
+          <div
+            id="courtPayTitle"
+            style="
+              font-size:22px;
+              font-weight:900;
+              color:white;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <button
+          id="courtPayClose"
+          type="button"
+          style="
+            border:1px solid rgba(255,255,255,.16);
+            background:rgba(255,255,255,.08);
+            color:white;
+            border-radius:9px;
+            padding:8px 11px;
+            font-weight:900;
+            cursor:pointer;
+          "
+        >
+          ĐÓNG
+        </button>
+
+      </div>
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:12px;
+          background:rgba(255,255,255,.06);
+          margin-bottom:16px;
+        "
+      >
+
+        <div
+          style="
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+          "
+        >
+          Số tiền đã đối soát
+        </div>
+
+        <div
+          id="courtPayAmount"
+          style="
+            margin-top:5px;
+            color:#d8ff45;
+            font-size:27px;
+            font-weight:900;
+          "
+        >
+          0đ
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:14px">
+
+        <label
+          style="
+            display:block;
+            color:rgba(255,255,255,.68);
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:6px;
+          "
+        >
+          Mã giao dịch / chứng từ thanh toán *
+        </label>
+
+        <input
+          id="courtPayReference"
+          type="text"
+          placeholder="Ví dụ: CK SAN 09-2026 / mã giao dịch ngân hàng"
+          style="
+            width:100%;
+            padding:13px;
+            border-radius:10px;
+            border:1px solid rgba(255,255,255,.18);
+            background:#09285a;
+            color:white;
+            font-size:14px;
+            outline:none;
+          "
+        >
+
+      </div>
+
+
+      <div style="margin-bottom:16px">
+
+        <label
+          style="
+            display:block;
+            color:rgba(255,255,255,.68);
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:6px;
+          "
+        >
+          Ghi chú
+        </label>
+
+        <textarea
+          id="courtPayNote"
+          rows="3"
+          placeholder="Ví dụ: Đã thanh toán sân tháng 09/2026"
+          style="
+            width:100%;
+            resize:vertical;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid rgba(255,255,255,.18);
+            background:#09285a;
+            color:white;
+            outline:none;
+          "
+        ></textarea>
+
+      </div>
+
+
+      <div
+        id="courtPayMessage"
+        style="
+          min-height:20px;
+          margin-bottom:12px;
+          color:#d8ff45;
+          font-weight:800;
+          font-size:13px;
+        "
+      ></div>
+
+
+      <button
+        id="courtPaySave"
+        type="button"
+        style="
+          width:100%;
+          min-height:50px;
+          border:0;
+          border-radius:10px;
+          background:#d8ff45;
+          color:#172600;
+          font-size:14px;
+          font-weight:900;
+          cursor:pointer;
+        "
+      >
+        💸 XÁC NHẬN ĐÃ THANH TOÁN
+      </button>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    payOverlay
+  );
+
+
+  const payTitle =
+    document.getElementById(
+      "courtPayTitle"
+    );
+
+  const payAmount =
+    document.getElementById(
+      "courtPayAmount"
+    );
+
+  const payReference =
+    document.getElementById(
+      "courtPayReference"
+    );
+
+  const payNote =
+    document.getElementById(
+      "courtPayNote"
+    );
+
+  const payMessage =
+    document.getElementById(
+      "courtPayMessage"
+    );
+
+  const paySave =
+    document.getElementById(
+      "courtPaySave"
+    );
+
+  const payClose =
+    document.getElementById(
+      "courtPayClose"
+    );
+
+
+  let currentPayRow =
+    null;
+
+
+  function moneyPay(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function closePayModal() {
+
+    payOverlay.style.display =
+      "none";
+
+    currentPayRow =
+      null;
+
+  }
+
+
+  payClose.addEventListener(
+    "click",
+    closePayModal
+  );
+
+
+  payOverlay.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target ===
+        payOverlay
+      ) {
+
+        closePayModal();
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     CHẶN HANDLER THANH TOÁN CŨ
+     VÀ MỞ POPUP MỚI
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+    async function (event) {
+
+      const btn =
+        event.target.closest(
+          ".pay-btn[data-id]"
+        );
+
+
+      if (!btn) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      event.stopImmediatePropagation();
+
+
+      const id =
+        Number(
+          btn.dataset.id
+        );
+
+
+      if (!id) {
+        return;
+      }
+
+
+      btn.disabled =
+        true;
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sbPay.rpc(
+            "admin_get_court_reconciliations",
+            {
+
+              p_period:
+                null,
+
+              p_court_id:
+                null,
+
+              p_status:
+                null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const row =
+          (data || [])
+            .find(
+              item =>
+                Number(
+                  item.reconciliation_id
+                )
+                ===
+                id
+            );
+
+
+        if (!row) {
+
+          throw new Error(
+            "Không tìm thấy kỳ đối soát."
+          );
+
+        }
+
+
+        if (
+          row.status !==
+          "Đã đối soát"
+        ) {
+
+          throw new Error(
+            `Kỳ này đang ở trạng thái "${row.status}". Chỉ kỳ Đã đối soát mới được thanh toán.`
+          );
+
+        }
+
+
+        currentPayRow =
+          row;
+
+
+        payTitle.textContent =
+          `${row.court_name} · ${row.period}`;
+
+
+        payAmount.textContent =
+          moneyPay(
+            row.actual_amount
+          );
+
+
+        payReference.value =
+          "";
+
+
+        payNote.value =
+          `Đã thanh toán sân tháng ${
+            String(
+              row.period || ""
+            )
+              .split("-")
+              .reverse()
+              .join("/")
+          }`;
+
+
+        payMessage.textContent =
+          "";
+
+
+        paySave.disabled =
+          false;
+
+
+        paySave.textContent =
+          "💸 XÁC NHẬN ĐÃ THANH TOÁN";
+
+
+        payOverlay.style.display =
+          "flex";
+
+
+        setTimeout(
+          function () {
+
+            payReference.focus();
+
+          },
+          100
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "OPEN COURT PAYMENT:",
+          error
+        );
+
+
+        alert(
+          "Không mở được thanh toán: "
+          +
+          (
+            error?.message ||
+            error
+          )
+        );
+
+      }
+      finally {
+
+        btn.disabled =
+          false;
+
+      }
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     XÁC NHẬN THANH TOÁN
+  ====================================================== */
+
+  paySave.addEventListener(
+    "click",
+    async function () {
+
+      if (!currentPayRow) {
+        return;
+      }
+
+
+      const reference =
+        payReference.value
+          .trim();
+
+
+      if (!reference) {
+
+        payMessage.style.color =
+          "#ffaaaa";
+
+
+        payMessage.textContent =
+          "Bắt buộc nhập mã giao dịch hoặc chứng từ thanh toán.";
+
+
+        payReference.focus();
+
+        return;
+
+      }
+
+
+      const amount =
+        Number(
+          currentPayRow.actual_amount || 0
+        );
+
+
+      const confirmed =
+        window.confirm(
+
+          `Xác nhận PickDee ĐÃ THANH TOÁN tiền sân?\n\n`
+          +
+          `Sân: ${currentPayRow.court_name}\n`
+          +
+          `Kỳ: ${currentPayRow.period}\n`
+          +
+          `Số tiền: ${moneyPay(amount)}\n`
+          +
+          `Chứng từ: ${reference}`
+
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      paySave.disabled =
+        true;
+
+
+      paySave.textContent =
+        "ĐANG XÁC NHẬN...";
+
+
+      payMessage.style.color =
+        "#d8ff45";
+
+
+      payMessage.textContent =
+        "Đang ghi nhận thanh toán...";
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sbPay.rpc(
+            "admin_pay_court_reconciliation",
+            {
+
+              p_reconciliation_id:
+                Number(
+                  currentPayRow
+                    .reconciliation_id
+                ),
+
+              p_payment_reference:
+                reference,
+
+              p_note:
+                payNote.value
+                  .trim()
+                ||
+                null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        payMessage.textContent =
+          "✓ Đã xác nhận thanh toán tiền sân.";
+
+
+        paySave.textContent =
+          "✓ ĐÃ THANH TOÁN";
+
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          700
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "COURT PAYMENT:",
+          error
+        );
+
+
+        payMessage.style.color =
+          "#ffaaaa";
+
+
+        payMessage.textContent =
+          "Không xác nhận được thanh toán: "
+          +
+          (
+            error?.message ||
+            error
+          );
+
+
+        paySave.disabled =
+          false;
+
+
+        paySave.textContent =
+          "💸 XÁC NHẬN ĐÃ THANH TOÁN";
+
+      }
+
+    }
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
