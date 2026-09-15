@@ -2395,7 +2395,447 @@
 
 </script>
 
+<script>
+/* ============================================================
+   PICKDEE ADMIN
+   HỦY BUỔI ĐANG CHẶN YÊU CẦU ĐỔI COACH
+   ============================================================ */
 
+(function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !(
+      cfg.SUPABASE_PUBLISHABLE_KEY
+      ||
+      cfg.SUPABASE_ANON_KEY
+    )
+  ) {
+    console.error(
+      "Không khởi tạo được Supabase cho chức năng hủy buổi."
+    );
+    return;
+  }
+
+  const cancelSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+        ||
+      cfg.SUPABASE_ANON_KEY
+    );
+
+
+  document.addEventListener(
+    "click",
+    async function (event) {
+
+      const button =
+        event.target.closest("button");
+
+      if (!button) {
+        return;
+      }
+
+
+      const buttonText =
+        String(
+          button.textContent || ""
+        )
+          .trim()
+          .toUpperCase();
+
+
+      /*
+        Chỉ bắt nút đang có trên màn hình:
+
+        ⚠ XỬ LÝ LỊCH TRƯỚC
+      */
+
+      if (
+        !buttonText.includes(
+          "XỬ LÝ LỊCH TRƯỚC"
+        )
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      const card =
+        button.closest(
+          "article, .card"
+        );
+
+
+      if (!card) {
+
+        alert(
+          "Không xác định được yêu cầu đổi Coach."
+        );
+
+        return;
+      }
+
+
+      const cardText =
+        String(
+          card.innerText || ""
+        );
+
+
+      /* =====================================================
+         LẤY MÃ ĐĂNG KÝ
+      ====================================================== */
+
+      const registrationMatch =
+        cardText.match(
+          /\bDK[A-Z0-9]+\b/i
+        );
+
+
+      if (!registrationMatch) {
+
+        alert(
+          "Không xác định được mã đăng ký học."
+        );
+
+        return;
+      }
+
+
+      const registrationCode =
+        registrationMatch[0]
+          .toUpperCase();
+
+
+      /* =====================================================
+         LẤY MÃ BUỔI ĐANG CHẶN
+      ====================================================== */
+
+      const sessionMatch =
+        cardText.match(
+          /\bBH\d+\b/i
+        );
+
+
+      if (!sessionMatch) {
+
+        alert(
+          "Không tìm thấy buổi học đang chặn đổi Coach."
+        );
+
+        return;
+      }
+
+
+      const sessionCode =
+        sessionMatch[0]
+          .toUpperCase();
+
+
+      button.disabled =
+        true;
+
+      const oldButtonText =
+        button.textContent;
+
+      button.textContent =
+        "ĐANG KIỂM TRA...";
+
+
+      try {
+
+        /* ===================================================
+           TÌM REGISTRATION
+        ==================================================== */
+
+        const {
+          data: registration,
+          error: registrationError
+        } =
+          await cancelSb
+            .from("registrations")
+            .select(`
+              id,
+              registration_code,
+              is_test
+            `)
+            .eq(
+              "registration_code",
+              registrationCode
+            )
+            .maybeSingle();
+
+
+        if (registrationError) {
+          throw registrationError;
+        }
+
+
+        if (!registration) {
+
+          throw new Error(
+            "Không tìm thấy đăng ký "
+            +
+            registrationCode
+            +
+            "."
+          );
+
+        }
+
+
+        if (
+          registration.is_test === true
+        ) {
+
+          throw new Error(
+            "Không được dùng chức năng vận hành REAL để hủy dữ liệu TEST."
+          );
+
+        }
+
+
+        /* ===================================================
+           TÌM BUỔI CHỜ HỌC
+        ==================================================== */
+
+        const {
+          data: session,
+          error: sessionError
+        } =
+          await cancelSb
+            .from("class_sessions")
+            .select(`
+              id,
+              session_code,
+              session_date,
+              start_time,
+              status
+            `)
+            .eq(
+              "registration_id",
+              Number(
+                registration.id
+              )
+            )
+            .eq(
+              "session_code",
+              sessionCode
+            )
+            .eq(
+              "status",
+              "Chờ học"
+            )
+            .maybeSingle();
+
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+
+        if (!session) {
+
+          throw new Error(
+            sessionCode
+            +
+            " không còn là buổi Chờ học cần xử lý."
+          );
+
+        }
+
+
+        /* ===================================================
+           NHẬP LÝ DO
+        ==================================================== */
+
+        const reason =
+          window.prompt(
+            "Nhập lý do hủy "
+            +
+            sessionCode
+            +
+            " trước khi đổi Coach:"
+          );
+
+
+        if (
+          reason === null
+        ) {
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            oldButtonText;
+
+          return;
+        }
+
+
+        const cleanReason =
+          String(reason)
+            .trim();
+
+
+        if (!cleanReason) {
+
+          alert(
+            "Bạn phải nhập lý do hủy buổi học."
+          );
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            oldButtonText;
+
+          return;
+        }
+
+
+        const confirmed =
+          window.confirm(
+            "Xác nhận hủy "
+            +
+            sessionCode
+            +
+            "?\n\n"
+            +
+            "Lý do: "
+            +
+            cleanReason
+            +
+            "\n\n"
+            +
+            "Sau khi hủy, buổi này sẽ không còn chặn việc đổi Coach."
+          );
+
+
+        if (!confirmed) {
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            oldButtonText;
+
+          return;
+        }
+
+
+        /* ===================================================
+           GỌI BACKEND HARD GATE
+        ==================================================== */
+
+        button.textContent =
+          "ĐANG HỦY BUỔI...";
+
+
+        const {
+          data,
+          error
+        } =
+          await cancelSb.rpc(
+            "admin_cancel_class_session",
+            {
+              p_session_id:
+                Number(
+                  session.id
+                ),
+
+              p_reason:
+                cleanReason
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        if (
+          data
+          &&
+          data.success === false
+        ) {
+
+          throw new Error(
+            data.message
+              ||
+            "Không hủy được buổi học."
+          );
+
+        }
+
+
+        alert(
+          "✅ ĐÃ HỦY "
+          +
+          sessionCode
+          +
+          ".\n\n"
+          +
+          "Hệ thống sẽ cập nhật lại yêu cầu đổi Coach."
+        );
+
+
+        /*
+          Reload để logic hiện tại kiểm tra blocker lại.
+
+          Nếu không còn buổi chưa xử lý,
+          nút DUYỆT ĐỔI COACH sẽ tự được mở.
+        */
+
+        window.location.reload();
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "Lỗi hủy buổi trước khi đổi Coach:",
+          error
+        );
+
+
+        alert(
+          "Không hủy được buổi học:\n"
+          +
+          (
+            error?.message
+            ||
+            error
+          )
+        );
+
+
+        button.disabled =
+          false;
+
+        button.textContent =
+          oldButtonText;
+
+      }
+
+    },
+    true
+  );
+
+})();
+</script>
 </body>
 
 </html>
