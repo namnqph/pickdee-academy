@@ -2316,6 +2316,411 @@
 
 })();
 </script>
+  <script>
+(function () {
+
+  const coachFilter =
+    document.getElementById(
+      "coachFilter"
+    );
+
+  const periodFilter =
+    document.getElementById(
+      "periodFilter"
+    );
+
+  const closeBtn =
+    document.getElementById(
+      "bulkCloseWorkBtn"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !coachFilter ||
+    !periodFilter ||
+    !closeBtn
+  ) {
+    return;
+  }
+
+
+  const bulkBox =
+    closeBtn.parentElement;
+
+
+  if (!bulkBox) {
+    return;
+  }
+
+
+  /* =====================================
+     NÚT THANH TOÁN TOÀN BỘ
+  ===================================== */
+
+  const payBtn =
+    document.createElement(
+      "button"
+    );
+
+
+  payBtn.id =
+    "bulkPayWorkBtn";
+
+
+  payBtn.type =
+    "button";
+
+
+  payBtn.textContent =
+    "💸 THANH TOÁN TOÀN BỘ CÔNG ĐÃ CHỐT";
+
+
+  payBtn.style.width =
+    "100%";
+
+
+  payBtn.style.minHeight =
+    "50px";
+
+
+  payBtn.style.marginTop =
+    "10px";
+
+
+  payBtn.style.border =
+    "1px solid rgba(255,255,255,.18)";
+
+
+  payBtn.style.borderRadius =
+    "10px";
+
+
+  payBtn.style.background =
+    "white";
+
+
+  payBtn.style.color =
+    "#062456";
+
+
+  payBtn.style.fontSize =
+    "14px";
+
+
+  payBtn.style.fontWeight =
+    "900";
+
+
+  payBtn.style.cursor =
+    "pointer";
+
+
+  const payHint =
+    document.createElement(
+      "div"
+    );
+
+
+  payHint.style.marginTop =
+    "8px";
+
+
+  payHint.style.fontSize =
+    "12px";
+
+
+  payHint.style.color =
+    "rgba(255,255,255,.62)";
+
+
+  payHint.style.lineHeight =
+    "1.5";
+
+
+  bulkBox.appendChild(
+    payBtn
+  );
+
+
+  bulkBox.appendChild(
+    payHint
+  );
+
+
+  /* =====================================
+     TRẠNG THÁI NÚT
+  ===================================== */
+
+  function updatePayButton() {
+
+    const coachId =
+      coachFilter.value;
+
+
+    const payPeriod =
+      periodFilter.value;
+
+
+    const ready =
+      Boolean(
+        coachId &&
+        payPeriod
+      );
+
+
+    payBtn.disabled =
+      !ready;
+
+
+    payBtn.style.opacity =
+      ready
+        ? "1"
+        : ".45";
+
+
+    payBtn.style.cursor =
+      ready
+        ? "pointer"
+        : "not-allowed";
+
+
+    if (!coachId) {
+
+      payHint.textContent =
+        "Chọn Coach và kỳ lương để xác nhận thanh toán toàn bộ công đã chốt.";
+
+      return;
+    }
+
+
+    if (!payPeriod) {
+
+      payHint.textContent =
+        "Đã chọn Coach. Hãy chọn thêm kỳ lương.";
+
+      return;
+    }
+
+
+    const coachName =
+      coachFilter.options[
+        coachFilter.selectedIndex
+      ]?.textContent
+      ||
+      "Coach";
+
+
+    payHint.textContent =
+      `Sẵn sàng xác nhận thanh toán toàn bộ công Đã chốt của ${coachName} trong kỳ ${payPeriod}.`;
+
+  }
+
+
+  coachFilter.addEventListener(
+    "change",
+    updatePayButton
+  );
+
+
+  periodFilter.addEventListener(
+    "change",
+    updatePayButton
+  );
+
+
+  updatePayButton();
+
+
+  /* =====================================
+     THANH TOÁN TOÀN BỘ
+  ===================================== */
+
+  payBtn.addEventListener(
+    "click",
+    async function () {
+
+      const coachId =
+        Number(
+          coachFilter.value
+        );
+
+
+      const payPeriod =
+        periodFilter.value;
+
+
+      if (
+        !coachId ||
+        !payPeriod
+      ) {
+        return;
+      }
+
+
+      const coachName =
+        coachFilter.options[
+          coachFilter.selectedIndex
+        ]?.textContent
+        ||
+        "Coach";
+
+
+      const accepted =
+        window.confirm(
+          `Xác nhận PickDee ĐÃ THANH TOÁN toàn bộ công đã chốt của ${coachName} trong kỳ ${payPeriod}?\n\nChỉ các dòng đang ở trạng thái "Đã chốt" mới được chuyển sang "Đã thanh toán".`
+        );
+
+
+      if (!accepted) {
+        return;
+      }
+
+
+      payBtn.disabled =
+        true;
+
+
+      payBtn.textContent =
+        "ĐANG XÁC NHẬN THANH TOÁN...";
+
+
+      if (messageEl) {
+
+        messageEl.textContent =
+          "Đang xác nhận thanh toán toàn bộ Công Coach...";
+
+
+        messageEl.style.color =
+          "#d8ff45";
+
+      }
+
+
+      try {
+
+        const cfg =
+          window.PICKDEE_CONFIG || {};
+
+
+        const paySb =
+          window.supabase
+            .createClient(
+              cfg.SUPABASE_URL,
+              cfg.SUPABASE_PUBLISHABLE_KEY
+            );
+
+
+        const {
+          data,
+          error
+        } =
+          await paySb.rpc(
+            "admin_bulk_pay_coach_work",
+            {
+              p_coach_id:
+                coachId,
+
+              p_pay_period:
+                payPeriod
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const count =
+          Number(
+            data?.paid_count || 0
+          );
+
+
+        if (count > 0) {
+
+          if (messageEl) {
+
+            messageEl.textContent =
+              `✓ Đã xác nhận thanh toán ${count} dòng công của ${coachName} trong kỳ ${payPeriod}.`;
+
+          }
+
+
+          payBtn.textContent =
+            `✓ ĐÃ THANH TOÁN ${count} DÒNG`;
+
+        }
+        else {
+
+          if (messageEl) {
+
+            messageEl.textContent =
+              `Không có dòng công Đã chốt nào của ${coachName} trong kỳ ${payPeriod}.`;
+
+          }
+
+
+          payBtn.textContent =
+            "KHÔNG CÓ CÔNG CẦN THANH TOÁN";
+
+        }
+
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          900
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "BULK PAY COACH WORK:",
+          error
+        );
+
+
+        if (messageEl) {
+
+          messageEl.textContent =
+            "Không xác nhận được thanh toán: "
+            +
+            (
+              error?.message ||
+              error
+            );
+
+
+          messageEl.style.color =
+            "#ffaaaa";
+
+        }
+
+
+        payBtn.disabled =
+          false;
+
+
+        payBtn.textContent =
+          "💸 THANH TOÁN TOÀN BỘ CÔNG ĐÃ CHỐT";
+
+      }
+
+    }
+  );
+
+})();
+</script>
 </body>
 
 </html>
