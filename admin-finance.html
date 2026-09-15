@@ -5493,6 +5493,283 @@
 
 })();
 </script>
+  <script>
+/* =========================================================
+   PICKDEE - FIX FINAL XÁC NHẬN THANH TOÁN
+   Lấy trực tiếp dữ liệu từ popup
+========================================================= */
+
+(function () {
+
+  if (window.__PD_CONFIRM_PAYMENT_FINAL__) {
+    return;
+  }
+
+  window.__PD_CONFIRM_PAYMENT_FINAL__ = true;
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbPaymentFinal =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  document.addEventListener(
+
+    "click",
+
+    async function (event) {
+
+
+      const button =
+        event.target.closest(
+          "#pdConfirmExpensePay"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      /*
+        Chặn các handler cũ chạy tiếp
+        sau khi handler FINAL này bắt đầu xử lý.
+      */
+      event.stopImmediatePropagation();
+
+
+      const codeEl =
+        document.getElementById(
+          "pdPayCode"
+        );
+
+
+      const referenceInput =
+        document.getElementById(
+          "pdPaymentReference"
+        );
+
+
+      const noteInput =
+        document.getElementById(
+          "pdPaymentNote"
+        );
+
+
+      const messageEl =
+        document.getElementById(
+          "pdExpensePayMessage"
+        );
+
+
+      const expenseCode =
+        String(
+          codeEl
+            ?
+            codeEl.textContent
+            :
+            ""
+        ).trim();
+
+
+      const reference =
+        String(
+          referenceInput
+            ?
+            referenceInput.value
+            :
+            ""
+        ).trim();
+
+
+      const note =
+        String(
+          noteInput
+            ?
+            noteInput.value
+            :
+            ""
+        ).trim();
+
+
+      /* ==========================================
+         VALIDATE MÃ CHI PHÍ
+      ========================================== */
+
+      if (
+        !expenseCode
+        ||
+        expenseCode === "—"
+      ) {
+
+        if (messageEl) {
+
+          messageEl.style.color =
+            "#ffaaaa";
+
+          messageEl.textContent =
+            "Không đọc được mã chi phí.";
+
+        }
+
+        return;
+
+      }
+
+
+      /* ==========================================
+         BẮT BUỘC MÃ CHỨNG TỪ
+      ========================================== */
+
+      if (!reference) {
+
+        if (messageEl) {
+
+          messageEl.style.color =
+            "#ffaaaa";
+
+          messageEl.textContent =
+            "Vui lòng nhập mã giao dịch / chứng từ.";
+
+        }
+
+
+        if (referenceInput) {
+
+          referenceInput.focus();
+
+        }
+
+        return;
+
+      }
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "ĐANG XÁC NHẬN...";
+
+
+      if (messageEl) {
+
+        messageEl.style.color =
+          "#d8ff45";
+
+        messageEl.textContent =
+          "Đang ghi nhận thanh toán...";
+
+      }
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sbPaymentFinal.rpc(
+            "admin_mark_operating_expense_paid",
+            {
+
+              p_expense_code:
+                expenseCode,
+
+              p_payment_reference:
+                reference,
+
+              p_payment_note:
+                note || null
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        if (messageEl) {
+
+          messageEl.style.color =
+            "#d8ff45";
+
+          messageEl.textContent =
+            "✓ Đã thanh toán thành công.";
+
+        }
+
+
+        button.textContent =
+          "✓ ĐÃ THANH TOÁN";
+
+
+        /*
+          Reload để bảng lấy lại
+          trạng thái thanh toán mới nhất.
+        */
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          700
+        );
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "PICKDEE PAYMENT FINAL:",
+          error
+        );
+
+
+        if (messageEl) {
+
+          messageEl.style.color =
+            "#ffaaaa";
+
+          messageEl.textContent =
+            error.message
+            ||
+            String(error);
+
+        }
+
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          "💸 XÁC NHẬN ĐÃ THANH TOÁN";
+
+      }
+
+    },
+
+    true
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
