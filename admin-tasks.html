@@ -2284,7 +2284,975 @@
 <script
   src="./notifications.js?v=20260914-admin-tasks-final"
 ></script>
+<!-- =========================================================
+     PICKDEE ACADEMY
+     ADMIN TASKS - TIỀN SÂN CẦN XỬ LÝ
+========================================================== -->
 
+<style>
+
+  #courtTaskSection {
+    margin-top: 22px;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,180,70,.32);
+    background: rgba(9,36,76,.72);
+  }
+
+  #courtTaskSection.has-court-task {
+    border-color: rgba(255,150,70,.55);
+  }
+
+  #courtTaskSection .court-task-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+
+  #courtTaskSection .court-task-subtitle {
+    color: rgba(255,255,255,.58);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  #courtTaskList {
+    display: grid;
+    gap: 10px;
+  }
+
+  .court-task-row {
+    display: grid;
+    grid-template-columns:
+      minmax(190px,1.3fr)
+      minmax(95px,.7fr)
+      minmax(110px,.8fr)
+      minmax(110px,.8fr)
+      auto;
+
+    gap: 12px;
+    align-items: center;
+
+    padding: 14px;
+
+    border-radius: 11px;
+
+    background:
+      rgba(255,255,255,.055);
+
+    border:
+      1px solid rgba(255,255,255,.09);
+  }
+
+  .court-task-name {
+    color: #fff;
+    font-weight: 900;
+  }
+
+  .court-task-small {
+    margin-top: 4px;
+    color: rgba(255,255,255,.52);
+    font-size: 11px;
+  }
+
+  .court-task-label {
+    color: rgba(255,255,255,.50);
+    font-size: 11px;
+  }
+
+  .court-task-value {
+    margin-top: 4px;
+    color: #d8ff45;
+    font-weight: 900;
+  }
+
+  .court-task-status {
+    color: #ffc46b;
+    font-weight: 900;
+  }
+
+  .court-task-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+    padding: 8px 12px;
+
+    border-radius: 8px;
+
+    background: #d8ff45;
+    color: #152600;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  #courtTaskEmpty {
+    padding: 13px;
+    border-radius: 10px;
+    background: rgba(216,255,69,.07);
+    color: #d8ff45;
+    font-weight: 900;
+  }
+
+  @media(max-width:850px) {
+
+    .court-task-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .court-task-open {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+  /* =====================================================
+     CHỐNG CHẠY TRÙNG
+  ====================================================== */
+
+  if (
+    document.getElementById(
+      "courtTaskSection"
+    )
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbCourtTask =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function periodVN(value) {
+
+    const p =
+      String(value || "")
+        .split("-");
+
+
+    if (p.length !== 2) {
+      return value || "—";
+    }
+
+
+    return (
+      p[1]
+      +
+      "/"
+      +
+      p[0]
+    );
+
+  }
+
+
+  /*
+    Tìm element chỉ chứa đúng text.
+    Không phụ thuộc class cũ của trang.
+  */
+
+  function findExactText(text) {
+
+    return Array.from(
+      document.querySelectorAll(
+        "body *"
+      )
+    ).find(
+      el =>
+        el.children.length === 0
+        &&
+        el.textContent
+          .trim()
+        ===
+        text
+    )
+    ||
+    null;
+
+  }
+
+
+  /*
+    Tìm con số nằm cùng card với label,
+    ví dụ:
+    Tổng việc
+    0
+  */
+
+  function findNumberNearLabel(
+    labelText
+  ) {
+
+    const label =
+      findExactText(
+        labelText
+      );
+
+
+    if (!label) {
+      return null;
+    }
+
+
+    let box =
+      label.parentElement;
+
+
+    for (
+      let level = 0;
+      level < 5 && box;
+      level++,
+      box = box.parentElement
+    ) {
+
+
+      const numbers =
+        Array.from(
+          box.querySelectorAll(
+            "*"
+          )
+        )
+        .filter(
+          el =>
+            el.children.length === 0
+            &&
+            /^\d+$/.test(
+              el.textContent.trim()
+            )
+        );
+
+
+      if (
+        numbers.length
+      ) {
+
+        return numbers[0];
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  /* =====================================================
+     TÌM Ô "KHÔNG CÓ VIỆC"
+  ====================================================== */
+
+  const emptyText =
+    "Hiện không có việc nào cần Admin xử lý.";
+
+
+  let emptyBox =
+    Array.from(
+      document.querySelectorAll(
+        "body *"
+      )
+    ).find(
+      el =>
+        el.children.length === 0
+        &&
+        el.textContent
+          .includes(
+            emptyText
+          )
+    )
+    ||
+    null;
+
+
+  /*
+    Nếu text nằm trong span con,
+    đi lên box cha có cùng nội dung.
+  */
+
+  if (emptyBox) {
+
+    while (
+      emptyBox.parentElement
+      &&
+      emptyBox.parentElement
+        .textContent
+        .trim()
+      ===
+      emptyBox.textContent
+        .trim()
+    ) {
+
+      emptyBox =
+        emptyBox.parentElement;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     TẠO KHU TIỀN SÂN
+  ====================================================== */
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "courtTaskSection";
+
+
+  section.innerHTML = `
+
+    <div class="court-task-title">
+      🏟️ Tiền sân cần xử lý
+    </div>
+
+    <div class="court-task-subtitle">
+      Các kỳ tiền sân chưa đối soát,
+      chưa thanh toán hoặc khoản thuê sân
+      chưa được đưa vào kỳ đối soát.
+    </div>
+
+    <div id="courtTaskList">
+      Đang kiểm tra tiền sân...
+    </div>
+
+  `;
+
+
+  if (emptyBox) {
+
+    emptyBox.insertAdjacentElement(
+      "beforebegin",
+      section
+    );
+
+  }
+  else {
+
+    const main =
+      document.querySelector(
+        "main"
+      )
+      ||
+      document.body;
+
+
+    main.appendChild(
+      section
+    );
+
+  }
+
+
+  const listEl =
+    document.getElementById(
+      "courtTaskList"
+    );
+
+
+  /* =====================================================
+     LOAD VIỆC SÂN
+  ====================================================== */
+
+  async function loadCourtTasks() {
+
+
+    try {
+
+
+      const [
+        reconResult,
+        outsideResult
+      ] =
+        await Promise.all([
+
+
+          sbCourtTask.rpc(
+            "admin_get_court_reconciliations",
+            {
+
+              p_period:
+                null,
+
+              p_court_id:
+                null,
+
+              p_status:
+                null
+
+            }
+          ),
+
+
+          sbCourtTask.rpc(
+            "admin_get_unreconciled_court_expenses"
+          )
+
+
+        ]);
+
+
+      if (
+        reconResult.error
+      ) {
+
+        throw reconResult.error;
+
+      }
+
+
+      if (
+        outsideResult.error
+      ) {
+
+        throw outsideResult.error;
+
+      }
+
+
+      const reconciliations =
+        Array.isArray(
+          reconResult.data
+        )
+          ?
+          reconResult.data
+          :
+          [];
+
+
+      const outside =
+        Array.isArray(
+          outsideResult.data
+        )
+          ?
+          outsideResult.data
+          :
+          [];
+
+
+      const tasks =
+        [];
+
+
+      /* =================================
+         KỲ ĐÃ TẠO NHƯNG CHƯA XONG
+      ================================== */
+
+      reconciliations
+        .filter(
+          row =>
+            row.status ===
+            "Chưa đối soát"
+
+            ||
+
+            row.status ===
+            "Đã đối soát"
+        )
+        .forEach(
+          row => {
+
+
+            tasks.push({
+
+              kind:
+                "reconciliation",
+
+              courtName:
+                row.court_name
+                ||
+                "Sân chưa xác định",
+
+              area:
+                row.area
+                ||
+                "",
+
+              period:
+                row.period,
+
+              batchNo:
+                Number(
+                  row.batch_no || 1
+                ),
+
+              type:
+                row.reconciliation_type
+                ||
+                "Định kỳ",
+
+              status:
+                row.status,
+
+              amount:
+                row.status ===
+                "Đã đối soát"
+
+                  ?
+                  Number(
+                    row.actual_amount
+                    ??
+                    row.expected_amount
+                    ??
+                    0
+                  )
+
+                  :
+                  Number(
+                    row.expected_amount
+                    ||
+                    0
+                  )
+
+            });
+
+          }
+        );
+
+
+      /* =================================
+         CHI PHÍ SÂN CHƯA VÀO KỲ NÀO
+      ================================== */
+
+      outside.forEach(
+        row => {
+
+
+          tasks.push({
+
+            kind:
+              "outside",
+
+            courtName:
+              row.court_name
+              ||
+              "Sân chưa xác định",
+
+            area:
+              row.area
+              ||
+              "",
+
+            period:
+              row.period,
+
+            batchNo:
+              null,
+
+            type:
+              "Ngoài kỳ",
+
+            status:
+              "Chưa tạo đối soát",
+
+            amount:
+              Number(
+                row.total_amount
+                ||
+                0
+              )
+
+          });
+
+        }
+      );
+
+
+      const courtCount =
+        tasks.length;
+
+
+      /* =================================================
+         CẬP NHẬT "TỔNG VIỆC"
+      ================================================== */
+
+      const totalEl =
+        findNumberNearLabel(
+          "Tổng việc"
+        );
+
+
+      let originalTotal =
+        0;
+
+
+      if (totalEl) {
+
+        /*
+          admin-tasks cũ đang cho ra số việc
+          ngoài module sân.
+        */
+
+        originalTotal =
+          Number(
+            totalEl.dataset
+              .pickdeeBaseTotal
+            ??
+            totalEl.textContent
+              .trim()
+            ??
+            0
+          )
+          ||
+          0;
+
+
+        /*
+          Lưu số gốc đúng một lần.
+        */
+
+        if (
+          !totalEl.dataset
+            .pickdeeBaseTotal
+        ) {
+
+          totalEl.dataset
+            .pickdeeBaseTotal =
+            String(
+              originalTotal
+            );
+
+        }
+
+
+        totalEl.textContent =
+          String(
+            originalTotal
+            +
+            courtCount
+          );
+
+      }
+
+
+      const grandTotal =
+        originalTotal
+        +
+        courtCount;
+
+
+      /* =================================================
+         CẬP NHẬT DÒNG
+         "Đã cập nhật 0 việc lúc..."
+      ================================================== */
+
+      const updateTextEl =
+        Array.from(
+          document.querySelectorAll(
+            "body *"
+          )
+        ).find(
+          el =>
+            el.children.length === 0
+            &&
+            el.textContent.includes(
+              "Đã cập nhật"
+            )
+            &&
+            el.textContent.includes(
+              "việc lúc"
+            )
+        );
+
+
+      if (updateTextEl) {
+
+        const now =
+          new Date();
+
+
+        const time =
+          String(
+            now.getHours()
+          ).padStart(
+            2,
+            "0"
+          )
+          +
+          ":"
+          +
+          String(
+            now.getMinutes()
+          ).padStart(
+            2,
+            "0"
+          );
+
+
+        updateTextEl.textContent =
+          `✓ Đã cập nhật ${grandTotal} việc lúc ${time}`;
+
+      }
+
+
+      /* =================================================
+         ẨN BOX "KHÔNG CÓ VIỆC"
+         NẾU CÓ VIỆC SÂN
+      ================================================== */
+
+      if (
+        emptyBox
+        &&
+        courtCount > 0
+      ) {
+
+        emptyBox.style.display =
+          "none";
+
+      }
+
+
+      /* =================================================
+         RENDER
+      ================================================== */
+
+      if (
+        courtCount === 0
+      ) {
+
+
+        section.classList.remove(
+          "has-court-task"
+        );
+
+
+        listEl.innerHTML = `
+
+          <div id="courtTaskEmpty">
+
+            ✓ Không có việc tiền sân
+            nào cần Admin xử lý.
+
+          </div>
+
+        `;
+
+
+        return;
+
+      }
+
+
+      section.classList.add(
+        "has-court-task"
+      );
+
+
+      listEl.innerHTML =
+        tasks
+          .map(
+            task => {
+
+
+              const batchText =
+                task.batchNo
+
+                  ?
+                  `Lần ${task.batchNo} · ${task.type}`
+
+                  :
+                  task.type;
+
+
+              return `
+
+                <div class="court-task-row">
+
+
+                  <div>
+
+                    <div class="court-task-name">
+
+                      ${escapeHTML(
+                        task.courtName
+                      )}
+
+                    </div>
+
+                    <div class="court-task-small">
+
+                      ${escapeHTML(
+                        task.area
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="court-task-label">
+                      Kỳ
+                    </div>
+
+                    <div class="court-task-value">
+
+                      ${escapeHTML(
+                        periodVN(
+                          task.period
+                        )
+                      )}
+
+                    </div>
+
+                    <div class="court-task-small">
+
+                      ${escapeHTML(
+                        batchText
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="court-task-label">
+                      Số tiền
+                    </div>
+
+                    <div class="court-task-value">
+
+                      ${money(
+                        task.amount
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="court-task-label">
+                      Trạng thái
+                    </div>
+
+                    <div class="court-task-status">
+
+                      ${escapeHTML(
+                        task.status
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <a
+                    class="court-task-open"
+                    href="./admin-court-reconciliation"
+                  >
+                    XỬ LÝ →
+                  </a>
+
+
+                </div>
+
+              `;
+
+            }
+          )
+          .join("");
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "ADMIN TASKS COURT:",
+        error
+      );
+
+
+      listEl.innerHTML = `
+
+        <div
+          style="
+            color:#ffaaaa;
+            font-weight:800;
+          "
+        >
+          Không tải được việc tiền sân:
+          ${escapeHTML(
+            error?.message ||
+            error
+          )}
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCourtTasks();
+
+
+})();
+</script>
 </body>
 
 </html>
