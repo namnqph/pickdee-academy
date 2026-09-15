@@ -2930,7 +2930,880 @@
 
 </script>
 
+<script>
+(function () {
 
+  /* =====================================================
+     PICKDEE - FIX NÚT ĐỐI SOÁT
+     Không dùng window.prompt()
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbFix =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     TẠO POPUP ĐỐI SOÁT
+  ====================================================== */
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+
+  overlay.id =
+    "pickdeeReconcileModal";
+
+
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.78);
+  `;
+
+
+  overlay.innerHTML = `
+
+    <div
+      style="
+        width:min(560px,100%);
+        background:#062456;
+        border:1px solid rgba(255,255,255,.18);
+        border-radius:18px;
+        padding:22px;
+        box-shadow:0 24px 80px rgba(0,0,0,.45);
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          margin-bottom:18px;
+        "
+      >
+
+        <div>
+
+          <div
+            style="
+              color:#d8ff45;
+              font-size:12px;
+              font-weight:900;
+              margin-bottom:5px;
+            "
+          >
+            ĐỐI SOÁT TIỀN SÂN
+          </div>
+
+          <div
+            id="fixReconTitle"
+            style="
+              font-size:22px;
+              font-weight:900;
+              color:white;
+            "
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <button
+          id="fixReconClose"
+          type="button"
+          style="
+            border:1px solid rgba(255,255,255,.16);
+            background:rgba(255,255,255,.08);
+            color:white;
+            border-radius:9px;
+            padding:8px 11px;
+            font-weight:900;
+            cursor:pointer;
+          "
+        >
+          ĐÓNG
+        </button>
+
+      </div>
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:12px;
+          background:rgba(255,255,255,.06);
+          margin-bottom:16px;
+        "
+      >
+
+        <div
+          style="
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+          "
+        >
+          Hệ thống tính
+        </div>
+
+        <div
+          id="fixExpected"
+          style="
+            margin-top:5px;
+            color:#d8ff45;
+            font-size:25px;
+            font-weight:900;
+          "
+        >
+          0đ
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:14px">
+
+        <label
+          style="
+            display:block;
+            color:rgba(255,255,255,.68);
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:6px;
+          "
+        >
+          Số tiền thực tế cần trả
+        </label>
+
+        <input
+          id="fixActualAmount"
+          type="number"
+          min="0"
+          step="1000"
+          style="
+            width:100%;
+            padding:13px;
+            border-radius:10px;
+            border:1px solid rgba(255,255,255,.18);
+            background:#09285a;
+            color:white;
+            font-size:16px;
+            font-weight:900;
+            outline:none;
+          "
+        >
+
+      </div>
+
+
+      <div
+        id="fixVarianceBox"
+        style="
+          padding:12px;
+          border-radius:10px;
+          background:rgba(255,255,255,.05);
+          margin-bottom:14px;
+        "
+      >
+
+        <span
+          style="
+            color:rgba(255,255,255,.60);
+            font-size:12px;
+          "
+        >
+          Chênh lệch:
+        </span>
+
+        <strong
+          id="fixVariance"
+          style="
+            margin-left:6px;
+            color:white;
+          "
+        >
+          0đ
+        </strong>
+
+      </div>
+
+
+      <div
+        id="fixReasonWrap"
+        style="
+          display:none;
+          margin-bottom:14px;
+        "
+      >
+
+        <label
+          style="
+            display:block;
+            color:#ffcf70;
+            font-size:12px;
+            font-weight:900;
+            margin-bottom:6px;
+          "
+        >
+          Lý do chênh lệch *
+        </label>
+
+        <textarea
+          id="fixVarianceReason"
+          rows="3"
+          placeholder="Bắt buộc nhập khi số thực tế khác hệ thống..."
+          style="
+            width:100%;
+            resize:vertical;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid rgba(255,190,70,.30);
+            background:#09285a;
+            color:white;
+            outline:none;
+          "
+        ></textarea>
+
+      </div>
+
+
+      <div style="margin-bottom:16px">
+
+        <label
+          style="
+            display:block;
+            color:rgba(255,255,255,.68);
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:6px;
+          "
+        >
+          Ghi chú
+        </label>
+
+        <textarea
+          id="fixReconNote"
+          rows="3"
+          placeholder="Ví dụ: Đối soát sân tháng 09/2026"
+          style="
+            width:100%;
+            resize:vertical;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid rgba(255,255,255,.18);
+            background:#09285a;
+            color:white;
+            outline:none;
+          "
+        ></textarea>
+
+      </div>
+
+
+      <div
+        id="fixReconMessage"
+        style="
+          min-height:20px;
+          margin-bottom:12px;
+          color:#d8ff45;
+          font-weight:800;
+          font-size:13px;
+        "
+      ></div>
+
+
+      <button
+        id="fixReconSave"
+        type="button"
+        style="
+          width:100%;
+          min-height:50px;
+          border:0;
+          border-radius:10px;
+          background:#d8ff45;
+          color:#172600;
+          font-size:14px;
+          font-weight:900;
+          cursor:pointer;
+        "
+      >
+        ✓ XÁC NHẬN ĐỐI SOÁT
+      </button>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    overlay
+  );
+
+
+  const titleEl =
+    document.getElementById(
+      "fixReconTitle"
+    );
+
+  const expectedEl =
+    document.getElementById(
+      "fixExpected"
+    );
+
+  const actualEl =
+    document.getElementById(
+      "fixActualAmount"
+    );
+
+  const varianceEl =
+    document.getElementById(
+      "fixVariance"
+    );
+
+  const reasonWrap =
+    document.getElementById(
+      "fixReasonWrap"
+    );
+
+  const reasonEl =
+    document.getElementById(
+      "fixVarianceReason"
+    );
+
+  const noteEl =
+    document.getElementById(
+      "fixReconNote"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "fixReconMessage"
+    );
+
+  const saveBtn =
+    document.getElementById(
+      "fixReconSave"
+    );
+
+  const closeBtn =
+    document.getElementById(
+      "fixReconClose"
+    );
+
+
+  let currentRow =
+    null;
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function closeModal() {
+
+    overlay.style.display =
+      "none";
+
+    currentRow =
+      null;
+
+  }
+
+
+  function updateVariance() {
+
+    if (!currentRow) {
+      return;
+    }
+
+
+    const actual =
+      Number(
+        actualEl.value || 0
+      );
+
+
+    const expected =
+      Number(
+        currentRow.expected_amount || 0
+      );
+
+
+    const variance =
+      actual - expected;
+
+
+    varianceEl.textContent =
+      money(variance);
+
+
+    if (variance > 0) {
+
+      varianceEl.style.color =
+        "#ffb15c";
+
+    }
+    else if (variance < 0) {
+
+      varianceEl.style.color =
+        "#87ddff";
+
+    }
+    else {
+
+      varianceEl.style.color =
+        "#d8ff45";
+
+    }
+
+
+    reasonWrap.style.display =
+      variance !== 0
+        ? "block"
+        : "none";
+
+  }
+
+
+  actualEl.addEventListener(
+    "input",
+    updateVariance
+  );
+
+
+  closeBtn.addEventListener(
+    "click",
+    closeModal
+  );
+
+
+  overlay.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target === overlay
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     CHẶN HANDLER ĐỐI SOÁT CŨ
+     VÀ DÙNG POPUP MỚI
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+    async function (event) {
+
+      const btn =
+        event.target.closest(
+          ".reconcile-btn[data-id]"
+        );
+
+
+      if (!btn) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      event.stopImmediatePropagation();
+
+
+      const id =
+        Number(
+          btn.dataset.id
+        );
+
+
+      if (!id) {
+        return;
+      }
+
+
+      btn.disabled =
+        true;
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sbFix.rpc(
+            "admin_get_court_reconciliations",
+            {
+
+              p_period:
+                null,
+
+              p_court_id:
+                null,
+
+              p_status:
+                null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const row =
+          (data || [])
+            .find(
+              item =>
+                Number(
+                  item.reconciliation_id
+                )
+                ===
+                id
+            );
+
+
+        if (!row) {
+
+          throw new Error(
+            "Không tìm thấy kỳ đối soát."
+          );
+
+        }
+
+
+        currentRow =
+          row;
+
+
+        titleEl.textContent =
+          `${row.court_name} · ${row.period}`;
+
+
+        expectedEl.textContent =
+          money(
+            row.expected_amount
+          );
+
+
+        actualEl.value =
+          Number(
+            row.expected_amount || 0
+          );
+
+
+        reasonEl.value =
+          "";
+
+
+        noteEl.value =
+          `Đối soát sân tháng ${
+            String(
+              row.period || ""
+            )
+            .split("-")
+            .reverse()
+            .join("/")
+          }`;
+
+
+        messageEl.textContent =
+          "";
+
+
+        saveBtn.disabled =
+          false;
+
+
+        saveBtn.textContent =
+          "✓ XÁC NHẬN ĐỐI SOÁT";
+
+
+        updateVariance();
+
+
+        overlay.style.display =
+          "flex";
+
+
+        setTimeout(
+          function () {
+
+            actualEl.focus();
+
+            actualEl.select();
+
+          },
+          100
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "OPEN RECONCILIATION:",
+          error
+        );
+
+
+        alert(
+          "Không mở được đối soát: "
+          +
+          (
+            error?.message ||
+            error
+          )
+        );
+
+      }
+      finally {
+
+        btn.disabled =
+          false;
+
+      }
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     XÁC NHẬN ĐỐI SOÁT
+  ====================================================== */
+
+  saveBtn.addEventListener(
+    "click",
+    async function () {
+
+      if (!currentRow) {
+        return;
+      }
+
+
+      const actual =
+        Number(
+          actualEl.value
+        );
+
+
+      if (
+        !Number.isFinite(actual)
+        ||
+        actual < 0
+      ) {
+
+        messageEl.style.color =
+          "#ffaaaa";
+
+        messageEl.textContent =
+          "Số tiền thực tế không hợp lệ.";
+
+        return;
+
+      }
+
+
+      const expected =
+        Number(
+          currentRow.expected_amount || 0
+        );
+
+
+      const variance =
+        actual - expected;
+
+
+      const reason =
+        reasonEl.value.trim();
+
+
+      if (
+        variance !== 0
+        &&
+        !reason
+      ) {
+
+        messageEl.style.color =
+          "#ffaaaa";
+
+        messageEl.textContent =
+          "Có chênh lệch nên bắt buộc nhập lý do.";
+
+        return;
+
+      }
+
+
+      const confirmed =
+        window.confirm(
+
+          `Xác nhận đối soát?\n\n`
+          +
+          `Sân: ${currentRow.court_name}\n`
+          +
+          `Kỳ: ${currentRow.period}\n`
+          +
+          `Hệ thống: ${money(expected)}\n`
+          +
+          `Thực tế: ${money(actual)}\n`
+          +
+          `Chênh lệch: ${money(variance)}`
+
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+
+      saveBtn.textContent =
+        "ĐANG ĐỐI SOÁT...";
+
+
+      messageEl.style.color =
+        "#d8ff45";
+
+
+      messageEl.textContent =
+        "Đang lưu đối soát...";
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sbFix.rpc(
+            "admin_reconcile_court",
+            {
+
+              p_reconciliation_id:
+                Number(
+                  currentRow
+                    .reconciliation_id
+                ),
+
+              p_actual_amount:
+                actual,
+
+              p_variance_reason:
+                variance !== 0
+                  ?
+                  reason
+                  :
+                  null,
+
+              p_note:
+                noteEl.value.trim()
+                ||
+                null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        messageEl.textContent =
+          "✓ Đã đối soát thành công.";
+
+
+        saveBtn.textContent =
+          "✓ ĐÃ ĐỐI SOÁT";
+
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          700
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "SAVE RECONCILIATION:",
+          error
+        );
+
+
+        messageEl.style.color =
+          "#ffaaaa";
+
+
+        messageEl.textContent =
+          "Không đối soát được: "
+          +
+          (
+            error?.message ||
+            error
+          );
+
+
+        saveBtn.disabled =
+          false;
+
+
+        saveBtn.textContent =
+          "✓ XÁC NHẬN ĐỐI SOÁT";
+
+      }
+
+    }
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
