@@ -6500,6 +6500,350 @@ window.addEventListener(
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     GỘP VIỆC ĐỐI SOÁT SÂN VÀO VIỆC CẦN XỬ LÝ
+========================================================== -->
+
+<script>
+(async function () {
+
+  const cfgCourtTasks =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbCourtTasks =
+    window.supabase.createClient(
+      cfgCourtTasks.SUPABASE_URL,
+      cfgCourtTasks.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /*
+    Card đầu Dashboard hiện dùng ID này.
+  */
+
+  const taskCountEl =
+    document.getElementById(
+      "adminTaskCount"
+    );
+
+
+  if (!taskCountEl) {
+
+    console.warn(
+      "PickDee: không tìm thấy adminTaskCount."
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     TRẠNG THÁI
+  ====================================================== */
+
+  let baseTaskCount =
+    Number(
+      taskCountEl.textContent.trim()
+    )
+    || 0;
+
+
+  let courtTaskCount =
+    0;
+
+
+  let lastRenderedTotal =
+    null;
+
+
+  let rendering =
+    false;
+
+
+  /* =====================================================
+     HIỂN THỊ TỔNG
+  ====================================================== */
+
+  function renderTotal() {
+
+    const total =
+      Math.max(
+        0,
+        baseTaskCount
+      )
+      +
+      Math.max(
+        0,
+        courtTaskCount
+      );
+
+
+    lastRenderedTotal =
+      total;
+
+
+    rendering =
+      true;
+
+
+    taskCountEl.textContent =
+      String(
+        total
+      );
+
+
+    taskCountEl.title =
+      `Việc khác: ${baseTaskCount} · Việc sân: ${courtTaskCount}`;
+
+
+    setTimeout(
+      function () {
+
+        rendering =
+          false;
+
+      },
+      0
+    );
+
+  }
+
+
+  /* =====================================================
+     ĐẾM VIỆC SÂN
+
+     1 kỳ Chưa đối soát = 1 việc
+     1 kỳ Đã đối soát nhưng chưa trả = 1 việc
+
+     Khoản tiền chưa nằm trong kỳ nào:
+     mỗi nhóm Sân + Kỳ = 1 việc.
+
+     Không cộng tiền và trạng thái thành 2 việc.
+  ====================================================== */
+
+  async function loadCourtTaskCount() {
+
+
+    try {
+
+
+      const [
+        reconciliationResult,
+        outsideResult
+      ] =
+        await Promise.all([
+
+
+          sbCourtTasks.rpc(
+            "admin_get_court_reconciliations",
+            {
+
+              p_period:
+                null,
+
+              p_court_id:
+                null,
+
+              p_status:
+                null
+
+            }
+          ),
+
+
+          sbCourtTasks.rpc(
+            "admin_get_unreconciled_court_expenses"
+          )
+
+
+        ]);
+
+
+      if (
+        reconciliationResult.error
+      ) {
+
+        throw reconciliationResult.error;
+
+      }
+
+
+      if (
+        outsideResult.error
+      ) {
+
+        throw outsideResult.error;
+
+      }
+
+
+      const reconciliations =
+        Array.isArray(
+          reconciliationResult.data
+        )
+          ?
+          reconciliationResult.data
+          :
+          [];
+
+
+      const outsideRows =
+        Array.isArray(
+          outsideResult.data
+        )
+          ?
+          outsideResult.data
+          :
+          [];
+
+
+      /*
+        Kỳ nào chưa hoàn tất thanh toán
+        thì tính đúng 1 việc tồn.
+      */
+
+      const reconciliationTasks =
+        reconciliations.filter(
+          row =>
+            row.status ===
+            "Chưa đối soát"
+            ||
+            row.status ===
+            "Đã đối soát"
+        ).length;
+
+
+      /*
+        Mỗi nhóm chi phí ngoài kỳ
+        là 1 việc Admin phải xử lý.
+      */
+
+      const outsideTasks =
+        outsideRows.length;
+
+
+      courtTaskCount =
+        reconciliationTasks
+        +
+        outsideTasks;
+
+
+      renderTotal();
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "ADMIN COURT TASK COUNT:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     GIỮ ĐỒNG BỘ VỚI LOGIC VIỆC TỒN CŨ
+
+     admin.js vẫn có thể cập nhật số việc khác.
+     Khi nó thay adminTaskCount, ta lấy số mới đó
+     làm base rồi cộng lại việc sân.
+  ====================================================== */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+
+        if (rendering) {
+          return;
+        }
+
+
+        const displayed =
+          Number(
+            taskCountEl.textContent.trim()
+          );
+
+
+        if (
+          !Number.isFinite(
+            displayed
+          )
+        ) {
+          return;
+        }
+
+
+        /*
+          Nếu giá trị do script cũ vừa cập nhật,
+          coi đó là số việc ngoài module sân.
+        */
+
+        if (
+          displayed !==
+          lastRenderedTotal
+        ) {
+
+          baseTaskCount =
+            displayed;
+
+
+          renderTotal();
+
+        }
+
+      }
+    );
+
+
+  observer.observe(
+    taskCountEl,
+    {
+
+      childList: true,
+      characterData: true,
+      subtree: true
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCourtTaskCount();
+
+
+  /*
+    Đồng bộ 60 giây/lần.
+  */
+
+  setInterval(
+    loadCourtTaskCount,
+    60000
+  );
+
+
+  /*
+    Quay lại tab thì cập nhật ngay.
+  */
+
+  window.addEventListener(
+    "focus",
+    loadCourtTaskCount
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
