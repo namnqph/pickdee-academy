@@ -5408,6 +5408,359 @@
 
 })();
 </script>
+  <style>
+
+  .recon-batch-label {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: #d8ff45;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    white-space: nowrap;
+
+  }
+
+  .recon-batch-label.supplemental {
+
+    color: #ffca73;
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+  /* =====================================================
+     PICKDEE
+     HIỂN THỊ LẦN ĐỐI SOÁT + LOẠI ĐỐI SOÁT
+  ====================================================== */
+
+  const cfgBatch =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbBatch =
+    window.supabase.createClient(
+      cfgBatch.SUPABASE_URL,
+      cfgBatch.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const tableBody =
+    document.getElementById(
+      "reconciliationBody"
+    );
+
+
+  const periodFilter =
+    document.getElementById(
+      "periodFilter"
+    );
+
+
+  const courtFilter =
+    document.getElementById(
+      "courtFilter"
+    );
+
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+
+  if (!tableBody) {
+    return;
+  }
+
+
+  let updating =
+    false;
+
+
+  async function applyBatchLabels() {
+
+    if (updating) {
+      return;
+    }
+
+
+    updating =
+      true;
+
+
+    try {
+
+      const period =
+        periodFilter?.value
+        ||
+        null;
+
+
+      const courtId =
+        courtFilter?.value
+          ?
+          Number(
+            courtFilter.value
+          )
+          :
+          null;
+
+
+      const status =
+        statusFilter?.value
+        ||
+        null;
+
+
+      const {
+        data,
+        error
+      } =
+        await sbBatch.rpc(
+          "admin_get_court_reconciliations",
+          {
+
+            p_period:
+              period,
+
+            p_court_id:
+              courtId,
+
+            p_status:
+              status
+
+          }
+        );
+
+
+      if (error) {
+
+        console.error(
+          "RECON BATCH LABEL:",
+          error
+        );
+
+        return;
+
+      }
+
+
+      const rows =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      const domRows =
+        Array.from(
+          tableBody.querySelectorAll(
+            "tr"
+          )
+        )
+        .filter(
+          tr =>
+            tr.querySelectorAll(
+              "td"
+            ).length >= 9
+        );
+
+
+      domRows.forEach(
+        (tr, index) => {
+
+
+          const row =
+            rows[index];
+
+
+          if (!row) {
+            return;
+          }
+
+
+          const cells =
+            tr.querySelectorAll(
+              "td"
+            );
+
+
+          /*
+            Cột thứ 3 hiện tại là Kỳ.
+          */
+
+          const periodCell =
+            cells[2];
+
+
+          if (!periodCell) {
+            return;
+          }
+
+
+          let label =
+            periodCell.querySelector(
+              ".recon-batch-label"
+            );
+
+
+          if (!label) {
+
+            label =
+              document.createElement(
+                "span"
+              );
+
+
+            label.className =
+              "recon-batch-label";
+
+
+            periodCell.appendChild(
+              label
+            );
+
+          }
+
+
+          const batchNo =
+            Number(
+              row.batch_no || 1
+            );
+
+
+          const type =
+            row.reconciliation_type
+            ||
+            "Định kỳ";
+
+
+          label.textContent =
+            `Lần ${batchNo} · ${type}`;
+
+
+          label.classList.toggle(
+
+            "supplemental",
+
+            type ===
+            "Bổ sung"
+
+          );
+
+        }
+      );
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "APPLY RECON BATCH LABEL:",
+        error
+      );
+
+    }
+    finally {
+
+      updating =
+        false;
+
+    }
+
+  }
+
+
+  /*
+    Khi bảng được render lại
+    sau lọc / đối soát / tải dữ liệu
+    thì tự gắn nhãn lại.
+  */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        setTimeout(
+          applyBatchLabels,
+          50
+        );
+
+      }
+    );
+
+
+  observer.observe(
+    tableBody,
+    {
+      childList: true
+    }
+  );
+
+
+  /*
+    Chạy lần đầu.
+  */
+
+  await applyBatchLabels();
+
+
+  /*
+    Khi đổi bộ lọc.
+  */
+
+  periodFilter?.addEventListener(
+    "change",
+    function () {
+
+      setTimeout(
+        applyBatchLabels,
+        200
+      );
+
+    }
+  );
+
+
+  courtFilter?.addEventListener(
+    "change",
+    function () {
+
+      setTimeout(
+        applyBatchLabels,
+        200
+      );
+
+    }
+  );
+
+
+  statusFilter?.addEventListener(
+    "change",
+    function () {
+
+      setTimeout(
+        applyBatchLabels,
+        200
+      );
+
+    }
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
