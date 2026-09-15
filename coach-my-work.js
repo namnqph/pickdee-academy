@@ -804,3 +804,271 @@ async function init() {
 
 
 init();
+/* =====================================
+   BỘ LỌC TRẠNG THÁI CÔNG
+===================================== */
+
+let activeWorkFilter =
+  "all";
+
+
+(function createWorkFilters() {
+
+  const toolbar =
+    document.querySelector(
+      ".toolbar"
+    );
+
+
+  if (!toolbar) {
+    return;
+  }
+
+
+  const filterBar =
+    document.createElement(
+      "div"
+    );
+
+
+  filterBar.style.display =
+    "flex";
+
+  filterBar.style.gap =
+    "8px";
+
+  filterBar.style.flexWrap =
+    "wrap";
+
+  filterBar.style.marginTop =
+    "10px";
+
+
+  const filters = [
+    {
+      key: "all",
+      label: "TẤT CẢ"
+    },
+    {
+      key: "chưa chốt",
+      label: "CHƯA CHỐT"
+    },
+    {
+      key: "đã chốt",
+      label: "ĐÃ CHỐT"
+    },
+    {
+      key: "đã thanh toán",
+      label: "ĐÃ THANH TOÁN"
+    }
+  ];
+
+
+  filters.forEach(
+    item => {
+
+      const btn =
+        document.createElement(
+          "button"
+        );
+
+
+      btn.type =
+        "button";
+
+
+      btn.dataset.filter =
+        item.key;
+
+
+      btn.textContent =
+        item.label;
+
+
+      btn.style.minHeight =
+        "38px";
+
+      btn.style.padding =
+        "8px 12px";
+
+      btn.style.borderRadius =
+        "9px";
+
+      btn.style.border =
+        "1px solid rgba(255,255,255,.15)";
+
+      btn.style.fontSize =
+        "11px";
+
+      btn.style.fontWeight =
+        "900";
+
+      btn.style.cursor =
+        "pointer";
+
+
+      btn.addEventListener(
+        "click",
+        function () {
+
+          activeWorkFilter =
+            item.key;
+
+
+          updateFilterButtons();
+
+
+          applyWorkFilters();
+
+        }
+      );
+
+
+      filterBar.appendChild(
+        btn
+      );
+
+    }
+  );
+
+
+  toolbar.appendChild(
+    filterBar
+  );
+
+
+  function updateFilterButtons() {
+
+    filterBar
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          const active =
+            btn.dataset.filter ===
+            activeWorkFilter;
+
+
+          btn.style.background =
+            active
+              ? "#d8ff45"
+              : "rgba(255,255,255,.06)";
+
+
+          btn.style.color =
+            active
+              ? "#172600"
+              : "white";
+
+
+          btn.style.borderColor =
+            active
+              ? "#d8ff45"
+              : "rgba(255,255,255,.15)";
+
+        }
+      );
+
+  }
+
+
+  updateFilterButtons();
+
+})();
+
+
+function applyWorkFilters() {
+
+  const keyword =
+    searchInput.value
+      .trim()
+      .toLowerCase();
+
+
+  const filtered =
+    works.filter(
+      row => {
+
+        /*
+          LỌC TRẠNG THÁI
+        */
+
+        const statusOK =
+          activeWorkFilter ===
+          "all"
+
+          ||
+
+          normalizeStatus(
+            row.status
+          )
+          ===
+          activeWorkFilter;
+
+
+        if (!statusOK) {
+          return false;
+        }
+
+
+        /*
+          LỌC TỪ KHÓA
+        */
+
+        if (!keyword) {
+          return true;
+        }
+
+
+        const session =
+          one(
+            row.class_sessions
+          );
+
+
+        const text = [
+          session?.session_code,
+          row.session_id,
+          row.work_date,
+          row.pay_period,
+          row.base_amount,
+          row.bonus,
+          row.deduction,
+          row.total_amount,
+          row.status
+        ]
+          .join(" ")
+          .toLowerCase();
+
+
+        return text.includes(
+          keyword
+        );
+
+      }
+    );
+
+
+  renderWorks(
+    filtered
+  );
+
+}
+
+
+/*
+  Search cũ vẫn giữ nguyên.
+  Listener này chạy sau cùng
+  để đồng bộ thêm bộ lọc trạng thái.
+*/
+
+searchInput.addEventListener(
+  "input",
+  function () {
+
+    applyWorkFilters();
+
+  }
+);
