@@ -1918,6 +1918,442 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 </script>
 
+<script>
+(function () {
 
+  const noteEl =
+    document.getElementById("note");
+
+  if (!noteEl) {
+    return;
+  }
+
+
+  let editorCreated =
+    false;
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        createNoteEditor();
+
+      }
+    );
+
+
+  observer.observe(
+    noteEl,
+    {
+      childList: true,
+      characterData: true,
+      subtree: true
+    }
+  );
+
+
+  function createNoteEditor() {
+
+    if (editorCreated) {
+      return;
+    }
+
+
+    const currentText =
+      String(
+        noteEl.textContent || ""
+      ).trim();
+
+
+    /*
+      Chờ dữ liệu buổi học tải xong.
+    */
+
+    if (
+      !currentText ||
+      currentText === "—"
+    ) {
+      return;
+    }
+
+
+    editorCreated =
+      true;
+
+
+    observer.disconnect();
+
+
+    const initialNote =
+      currentText ===
+      "Không có ghi chú."
+
+        ? ""
+
+        : currentText;
+
+
+    const wrapper =
+      document.createElement(
+        "div"
+      );
+
+
+    const textarea =
+      document.createElement(
+        "textarea"
+      );
+
+
+    textarea.id =
+      "coachNoteInput";
+
+
+    textarea.value =
+      initialNote;
+
+
+    textarea.placeholder =
+      "Nhập ghi chú cho buổi học...";
+
+
+    textarea.maxLength =
+      2000;
+
+
+    textarea.style.width =
+      "100%";
+
+    textarea.style.minHeight =
+      "120px";
+
+    textarea.style.padding =
+      "14px";
+
+    textarea.style.borderRadius =
+      "10px";
+
+    textarea.style.border =
+      "1px solid rgba(255,255,255,.18)";
+
+    textarea.style.background =
+      "rgba(255,255,255,.06)";
+
+    textarea.style.color =
+      "white";
+
+    textarea.style.fontFamily =
+      "inherit";
+
+    textarea.style.fontSize =
+      "14px";
+
+    textarea.style.lineHeight =
+      "1.5";
+
+    textarea.style.resize =
+      "vertical";
+
+    textarea.style.outline =
+      "none";
+
+
+    const count =
+      document.createElement(
+        "div"
+      );
+
+
+    count.style.marginTop =
+      "7px";
+
+    count.style.fontSize =
+      "11px";
+
+    count.style.color =
+      "rgba(255,255,255,.5)";
+
+    count.style.textAlign =
+      "right";
+
+
+    function updateCount() {
+
+      count.textContent =
+        `${textarea.value.length}/2000 ký tự`;
+
+    }
+
+
+    updateCount();
+
+
+    textarea.addEventListener(
+      "input",
+      updateCount
+    );
+
+
+    const saveBtn =
+      document.createElement(
+        "button"
+      );
+
+
+    saveBtn.type =
+      "button";
+
+
+    saveBtn.textContent =
+      "💾 LƯU GHI CHÚ";
+
+
+    saveBtn.style.marginTop =
+      "12px";
+
+    saveBtn.style.width =
+      "100%";
+
+    saveBtn.style.minHeight =
+      "48px";
+
+    saveBtn.style.border =
+      "0";
+
+    saveBtn.style.borderRadius =
+      "10px";
+
+    saveBtn.style.background =
+      "#d8ff45";
+
+    saveBtn.style.color =
+      "#172600";
+
+    saveBtn.style.fontWeight =
+      "900";
+
+    saveBtn.style.cursor =
+      "pointer";
+
+
+    wrapper.appendChild(
+      textarea
+    );
+
+    wrapper.appendChild(
+      count
+    );
+
+    wrapper.appendChild(
+      saveBtn
+    );
+
+
+    noteEl.replaceWith(
+      wrapper
+    );
+
+
+    saveBtn.addEventListener(
+      "click",
+      async function () {
+
+        const messageEl =
+          document.getElementById(
+            "message"
+          );
+
+
+        const note =
+          textarea.value.trim();
+
+
+        if (
+          note.length > 2000
+        ) {
+
+          messageEl.textContent =
+            "Ghi chú tối đa 2000 ký tự.";
+
+          messageEl.className =
+            "error";
+
+          return;
+        }
+
+
+        const params =
+          new URLSearchParams(
+            window.location.search
+          );
+
+
+        const sessionId =
+          Number(
+            params.get("id")
+            ||
+            params.get(
+              "session_id"
+            )
+          );
+
+
+        if (
+          !Number.isFinite(
+            sessionId
+          )
+          ||
+          sessionId <= 0
+        ) {
+
+          messageEl.textContent =
+            "Không xác định được buổi học.";
+
+          messageEl.className =
+            "error";
+
+          return;
+        }
+
+
+        const cfg =
+          window.PICKDEE_CONFIG
+          ||
+          {};
+
+
+        if (
+          !window.supabase
+          ||
+          !cfg.SUPABASE_URL
+          ||
+          !cfg.SUPABASE_PUBLISHABLE_KEY
+        ) {
+
+          messageEl.textContent =
+            "Không kết nối được Supabase.";
+
+          messageEl.className =
+            "error";
+
+          return;
+        }
+
+
+        saveBtn.disabled =
+          true;
+
+
+        saveBtn.textContent =
+          "ĐANG LƯU...";
+
+
+        messageEl.textContent =
+          "Đang lưu ghi chú...";
+
+        messageEl.className =
+          "info";
+
+
+        try {
+
+          const noteSb =
+            window.supabase
+              .createClient(
+                cfg.SUPABASE_URL,
+                cfg.SUPABASE_PUBLISHABLE_KEY
+              );
+
+
+          const {
+            data,
+            error
+          } =
+            await noteSb.rpc(
+              "coach_update_session_note",
+              {
+                p_session_id:
+                  sessionId,
+
+                p_note:
+                  note
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          textarea.value =
+            data?.note
+            ||
+            "";
+
+
+          updateCount();
+
+
+          messageEl.textContent =
+            "✓ Đã lưu ghi chú buổi học.";
+
+          messageEl.className =
+            "success";
+
+
+          saveBtn.textContent =
+            "✓ ĐÃ LƯU";
+
+        }
+        catch (error) {
+
+          console.error(
+            "SAVE COACH NOTE:",
+            error
+          );
+
+
+          messageEl.textContent =
+            "Không lưu được ghi chú: "
+            +
+            (
+              error?.message
+              ||
+              error
+            );
+
+
+          messageEl.className =
+            "error";
+
+
+          saveBtn.textContent =
+            "💾 LƯU GHI CHÚ";
+
+        }
+        finally {
+
+          saveBtn.disabled =
+            false;
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /*
+    Trường hợp dữ liệu đã tải
+    trước khi observer hoạt động.
+  */
+
+  createNoteEditor();
+
+})();
+</script>
 </body>
 </html>
