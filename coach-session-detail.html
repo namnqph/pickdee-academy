@@ -2355,5 +2355,274 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 })();
 </script>
+  <script>
+(function () {
+
+  function applyNoteLock() {
+
+    const statusEl =
+      document.getElementById("status");
+
+    const textarea =
+      document.getElementById(
+        "coachNoteInput"
+      );
+
+    if (
+      !statusEl ||
+      !textarea
+    ) {
+      return;
+    }
+
+
+    const status =
+      String(
+        statusEl.textContent || ""
+      ).trim();
+
+
+    const wrapper =
+      textarea.parentElement;
+
+
+    const saveBtn =
+      wrapper
+        ? wrapper.querySelector("button")
+        : null;
+
+
+    let lockMessage =
+      document.getElementById(
+        "noteLockMessage"
+      );
+
+
+    /*
+      =====================================
+      BUỔI CÒN CHỜ HỌC
+      → ĐƯỢC SỬA GHI CHÚ
+      =====================================
+    */
+
+    if (
+      status === "Chờ học"
+    ) {
+
+      textarea.readOnly =
+        false;
+
+
+      textarea.style.opacity =
+        "1";
+
+
+      textarea.style.cursor =
+        "text";
+
+
+      if (
+        saveBtn &&
+        saveBtn.textContent !==
+        "ĐANG LƯU..."
+      ) {
+
+        saveBtn.disabled =
+          false;
+
+
+        if (
+          saveBtn.textContent.includes(
+            "KHÓA"
+          )
+        ) {
+
+          saveBtn.textContent =
+            "💾 LƯU GHI CHÚ";
+
+        }
+
+      }
+
+
+      if (lockMessage) {
+
+        lockMessage.remove();
+
+      }
+
+
+      return;
+    }
+
+
+    /*
+      =====================================
+      BUỔI ĐÃ XỬ LÝ
+      → CHỈ ĐƯỢC XEM
+      =====================================
+    */
+
+    textarea.readOnly =
+      true;
+
+
+    textarea.style.opacity =
+      ".72";
+
+
+    textarea.style.cursor =
+      "not-allowed";
+
+
+    if (saveBtn) {
+
+      saveBtn.disabled =
+        true;
+
+
+      saveBtn.textContent =
+        "🔒 GHI CHÚ ĐÃ KHÓA";
+
+
+      saveBtn.style.opacity =
+        ".55";
+
+
+      saveBtn.style.cursor =
+        "not-allowed";
+
+    }
+
+
+    /*
+      Thông báo chỉ tạo 1 lần
+    */
+
+    if (
+      !lockMessage &&
+      wrapper
+    ) {
+
+      lockMessage =
+        document.createElement(
+          "div"
+        );
+
+
+      lockMessage.id =
+        "noteLockMessage";
+
+
+      lockMessage.style.marginTop =
+        "10px";
+
+
+      lockMessage.style.padding =
+        "10px 12px";
+
+
+      lockMessage.style.borderRadius =
+        "9px";
+
+
+      lockMessage.style.background =
+        "rgba(255,255,255,.06)";
+
+
+      lockMessage.style.color =
+        "rgba(255,255,255,.65)";
+
+
+      lockMessage.style.fontSize =
+        "12px";
+
+
+      lockMessage.style.lineHeight =
+        "1.5";
+
+
+      lockMessage.textContent =
+        "🔒 Buổi học đã được xử lý. Ghi chú được giữ làm lịch sử và không thể chỉnh sửa.";
+
+
+      wrapper.appendChild(
+        lockMessage
+      );
+
+    }
+
+  }
+
+
+  /*
+    =====================================
+    CHỜ Ô GHI CHÚ ĐƯỢC TẠO
+    =====================================
+  */
+
+  const waitForEditor =
+    setInterval(
+      function () {
+
+        const textarea =
+          document.getElementById(
+            "coachNoteInput"
+          );
+
+
+        const statusEl =
+          document.getElementById(
+            "status"
+          );
+
+
+        if (
+          !textarea ||
+          !statusEl
+        ) {
+          return;
+        }
+
+
+        clearInterval(
+          waitForEditor
+        );
+
+
+        applyNoteLock();
+
+
+        /*
+          Theo dõi khi Coach bấm
+          HOÀN THÀNH hoặc VẮNG.
+          Status đổi → khóa ngay.
+        */
+
+        const observer =
+          new MutationObserver(
+            function () {
+
+              applyNoteLock();
+
+            }
+          );
+
+
+        observer.observe(
+          statusEl,
+          {
+            childList: true,
+            characterData: true,
+            subtree: true
+          }
+        );
+
+      },
+      200
+    );
+
+})();
+</script>
 </body>
 </html>
