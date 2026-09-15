@@ -3713,6 +3713,366 @@
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE
+     KHÔI PHỤC GIAO DIỆN CARD ĐỐI SOÁT SÂN
+     GIỮ NGUYÊN LOGIC CẢNH BÁO
+========================================================== -->
+
+<script>
+(async function () {
+
+  const cardLink =
+    document.getElementById(
+      "courtReconciliationCard"
+    );
+
+  if (!cardLink) {
+    return;
+  }
+
+
+  /* =====================================
+     TRẢ CARD VỀ DẠNG CŨ
+  ====================================== */
+
+  cardLink.classList.remove(
+    "has-warning",
+    "has-danger"
+  );
+
+
+  cardLink.href =
+    "./admin-court-reconciliation";
+
+
+  cardLink.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        🧾 Đối soát sân
+      </h2>
+
+      <p>
+        Đối soát tiền thuê sân theo kỳ,
+        theo dõi chênh lệch và xác nhận
+        thanh toán cho từng sân.
+      </p>
+
+
+      <div
+        style="
+          margin-top:14px;
+          padding-top:12px;
+          border-top:1px solid rgba(255,255,255,.10);
+        "
+      >
+
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:7px;
+            font-size:13px;
+          "
+        >
+
+          <span>
+            🟠 Chưa đối soát
+          </span>
+
+          <strong
+            id="courtOldPending"
+            style="color:#d8ff45;"
+          >
+            ...
+          </strong>
+
+        </div>
+
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:7px;
+            font-size:13px;
+          "
+        >
+
+          <span>
+            💸 Còn phải trả sân
+          </span>
+
+          <strong
+            id="courtOldUnpaid"
+            style="color:#d8ff45;"
+          >
+            ...
+          </strong>
+
+        </div>
+
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            font-size:13px;
+          "
+        >
+
+          <span>
+            ⚠️ Ngoài kỳ đối soát
+          </span>
+
+          <strong
+            id="courtOldOutside"
+            style="color:#d8ff45;"
+          >
+            ...
+          </strong>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  /* =====================================
+     SUPABASE
+  ====================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  /* =====================================
+     LOAD SỐ LIỆU
+  ====================================== */
+
+  async function loadCourtOldStyle() {
+
+    const pendingEl =
+      document.getElementById(
+        "courtOldPending"
+      );
+
+    const unpaidEl =
+      document.getElementById(
+        "courtOldUnpaid"
+      );
+
+    const outsideEl =
+      document.getElementById(
+        "courtOldOutside"
+      );
+
+
+    if (
+      !pendingEl ||
+      !unpaidEl ||
+      !outsideEl
+    ) {
+      return;
+    }
+
+
+    try {
+
+      const [
+        summaryResult,
+        outsideResult
+      ] =
+        await Promise.all([
+
+          sb.rpc(
+            "admin_get_court_reconciliation_summary",
+            {
+              p_period: null
+            }
+          ),
+
+          sb.rpc(
+            "admin_get_unreconciled_court_expenses"
+          )
+
+        ]);
+
+
+      if (summaryResult.error) {
+        throw summaryResult.error;
+      }
+
+
+      if (outsideResult.error) {
+        throw outsideResult.error;
+      }
+
+
+      const summary =
+        summaryResult.data || {};
+
+
+      const outsideRows =
+        Array.isArray(
+          outsideResult.data
+        )
+          ?
+          outsideResult.data
+          :
+          [];
+
+
+      const pending =
+        Number(
+          summary.pending_count || 0
+        );
+
+
+      const unpaid =
+        Number(
+          summary.unpaid_amount || 0
+        );
+
+
+      const outside =
+        outsideRows.reduce(
+          (sum,row) =>
+            sum +
+            Number(
+              row.total_amount || 0
+            ),
+          0
+        );
+
+
+      pendingEl.textContent =
+        String(pending);
+
+
+      unpaidEl.textContent =
+        money(unpaid);
+
+
+      outsideEl.textContent =
+        money(outside);
+
+
+      /* =================================
+         CHỈ ĐỔI MÀU CON SỐ
+         KHÔNG ĐỔI BỐ CỤC CARD
+      ================================== */
+
+      pendingEl.style.color =
+        pending > 0
+          ?
+          "#ffc56b"
+          :
+          "#d8ff45";
+
+
+      unpaidEl.style.color =
+        unpaid > 0
+          ?
+          "#ff8f8f"
+          :
+          "#d8ff45";
+
+
+      outsideEl.style.color =
+        outside > 0
+          ?
+          "#ff6f6f"
+          :
+          "#d8ff45";
+
+
+      /*
+        Không cho script cũ
+        đổi viền/giao diện card nữa.
+      */
+
+      cardLink.classList.remove(
+        "has-warning",
+        "has-danger"
+      );
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "COURT OLD CARD:",
+        error
+      );
+
+
+      pendingEl.textContent =
+        "!";
+
+
+      unpaidEl.textContent =
+        "—";
+
+
+      outsideEl.textContent =
+        "—";
+
+    }
+
+  }
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  await loadCourtOldStyle();
+
+
+  setInterval(
+    loadCourtOldStyle,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCourtOldStyle
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
