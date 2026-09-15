@@ -2228,7 +2228,249 @@ window.PICKDEE_NOTIFICATION_ROLE =
 })();
 
 </script>
+<script>
+(function () {
 
+  function installCoachCoverFix() {
+
+    const btn =
+      document.getElementById("coverBtn");
+
+    const messageEl =
+      document.getElementById("message");
+
+    const statusEl =
+      document.getElementById("status");
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    if (
+      !btn ||
+      !window.supabase ||
+      !cfg.SUPABASE_URL ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+
+    /*
+      XÓA HỘP TEST ALERT CŨ
+    */
+    btn.onclick =
+      null;
+
+    btn.removeAttribute(
+      "onclick"
+    );
+
+
+    /*
+      BẢO ĐẢM NÚT BẤM ĐƯỢC
+    */
+    btn.disabled =
+      false;
+
+    btn.removeAttribute(
+      "disabled"
+    );
+
+    btn.textContent =
+      "📣 GỌI COACH HỖ TRỢ";
+
+    btn.style.pointerEvents =
+      "auto";
+
+    btn.style.opacity =
+      "1";
+
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const sessionId =
+      Number(
+        params.get("id") ||
+        params.get("session_id")
+      );
+
+
+    const coverSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    function showMessage(
+      text,
+      type = "info"
+    ) {
+
+      if (!messageEl) {
+        return;
+      }
+
+      messageEl.textContent =
+        text;
+
+      messageEl.className =
+        type;
+    }
+
+
+    /*
+      DÙNG CAPTURE + STOPIMMEDIATEPROPAGATION
+      ĐỂ BỎ QUA TOÀN BỘ CLICK CŨ.
+    */
+    btn.addEventListener(
+      "click",
+      async function (event) {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        event.stopImmediatePropagation();
+
+
+        const status =
+          String(
+            statusEl?.textContent || ""
+          ).trim();
+
+
+        if (
+          status !== "Chờ học"
+        ) {
+
+          showMessage(
+            "Chỉ buổi đang ở trạng thái Chờ học mới được gọi Coach hỗ trợ.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        if (
+          !Number.isFinite(sessionId) ||
+          sessionId <= 0
+        ) {
+
+          showMessage(
+            "Không xác định được buổi học.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        btn.disabled =
+          true;
+
+        btn.textContent =
+          "⏳ ĐANG GỌI COACH...";
+
+
+        showMessage(
+          "Đang gửi yêu cầu Coach hỗ trợ...",
+          "info"
+        );
+
+
+        try {
+
+          const {
+            data,
+            error
+          } =
+            await coverSb.rpc(
+              "request_coach_cover",
+              {
+                p_session_id:
+                  sessionId,
+
+                p_reason:
+                  "Coach chính bận"
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          btn.disabled =
+            true;
+
+          btn.textContent =
+            "✓ ĐÃ GỌI COACH HỖ TRỢ";
+
+
+          showMessage(
+            "✓ Đã gửi yêu cầu Coach hỗ trợ thành công. Mã yêu cầu: " +
+            data,
+            "success"
+          );
+
+        }
+        catch (error) {
+
+          console.error(
+            "REQUEST COACH COVER:",
+            error
+          );
+
+
+          btn.disabled =
+            false;
+
+          btn.textContent =
+            "📣 GỌI COACH HỖ TRỢ";
+
+
+          showMessage(
+            "Không gửi được yêu cầu Coach hỗ trợ: " +
+            (
+              error?.message ||
+              error
+            ),
+            "error"
+          );
+        }
+
+      },
+      true
+    );
+
+  }
+
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      installCoachCoverFix
+    );
+
+  }
+  else {
+
+    installCoachCoverFix();
+
+  }
+
+})();
+</script>
 
 </body>
 </html>
