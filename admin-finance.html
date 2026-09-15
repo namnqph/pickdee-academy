@@ -2123,7 +2123,456 @@
 
 </script>
 
+<!-- =========================================================
+     PICKDEE - PHÂN RÃ CHI PHÍ TÀI CHÍNH
+========================================================== -->
 
+<style>
+  @media (min-width:851px) {
+    .summary {
+      grid-template-columns: repeat(3,1fr) !important;
+    }
+  }
+</style>
+
+<script>
+(function () {
+
+  /* Chống chạy trùng */
+  if (
+    document.getElementById(
+      "courtCostValue"
+    )
+  ) {
+    return;
+  }
+
+
+  const monthFilter =
+    document.getElementById(
+      "monthFilter"
+    );
+
+  const revenueValue =
+    document.getElementById(
+      "revenueValue"
+    );
+
+  const coachCostValue =
+    document.getElementById(
+      "coachCostValue"
+    );
+
+  const operatingCostValue =
+    document.getElementById(
+      "operatingCostValue"
+    );
+
+  const profitValue =
+    document.getElementById(
+      "profitValue"
+    );
+
+
+  if (
+    !monthFilter ||
+    !revenueValue ||
+    !coachCostValue ||
+    !operatingCostValue ||
+    !profitValue
+  ) {
+
+    console.error(
+      "Không tìm thấy các ô tài chính."
+    );
+
+    return;
+  }
+
+
+  const summary =
+    revenueValue.closest(
+      ".summary"
+    );
+
+  const coachCard =
+    coachCostValue.closest(
+      ".summary-card"
+    );
+
+  const operatingCard =
+    operatingCostValue.closest(
+      ".summary-card"
+    );
+
+
+  if (
+    !summary ||
+    !coachCard ||
+    !operatingCard
+  ) {
+
+    console.error(
+      "Không tìm thấy khu Summary tài chính."
+    );
+
+    return;
+  }
+
+
+  /* =====================================
+     TẠO Ô TIỀN SÂN
+  ====================================== */
+
+  const courtCard =
+    document.createElement(
+      "div"
+    );
+
+  courtCard.className =
+    "summary-card";
+
+  courtCard.innerHTML = `
+
+    <div class="summary-label">
+      Tiền sân
+    </div>
+
+    <div
+      id="courtCostValue"
+      class="summary-value"
+    >
+      ...
+    </div>
+
+  `;
+
+
+  /* =====================================
+     TẠO Ô CHI PHÍ KHÁC
+  ====================================== */
+
+  const otherCard =
+    document.createElement(
+      "div"
+    );
+
+  otherCard.className =
+    "summary-card";
+
+  otherCard.innerHTML = `
+
+    <div class="summary-label">
+      Chi phí vận hành khác
+    </div>
+
+    <div
+      id="otherOperatingCostValue"
+      class="summary-value"
+    >
+      ...
+    </div>
+
+  `;
+
+
+  coachCard.insertAdjacentElement(
+    "afterend",
+    courtCard
+  );
+
+  courtCard.insertAdjacentElement(
+    "afterend",
+    otherCard
+  );
+
+
+  /* =====================================
+     ĐỔI Ô CŨ THÀNH TỔNG CHI PHÍ
+  ====================================== */
+
+  const operatingLabel =
+    operatingCard.querySelector(
+      ".summary-label"
+    );
+
+  if (operatingLabel) {
+
+    operatingLabel.textContent =
+      "Tổng chi phí";
+
+  }
+
+
+  const courtCostValue =
+    document.getElementById(
+      "courtCostValue"
+    );
+
+  const otherCostValue =
+    document.getElementById(
+      "otherOperatingCostValue"
+    );
+
+
+  /* =====================================
+     SUPABASE
+  ====================================== */
+
+  const cfgBreakdown =
+    window.PICKDEE_CONFIG || {};
+
+  const sbBreakdown =
+    window.supabase.createClient(
+      cfgBreakdown.SUPABASE_URL,
+      cfgBreakdown.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  let expectedTotalText =
+    null;
+
+  let loading =
+    false;
+
+
+  /* =====================================
+     LOAD PHÂN RÃ CHI PHÍ
+  ====================================== */
+
+  async function loadCostBreakdown() {
+
+    if (loading) {
+      return;
+    }
+
+    loading = true;
+
+
+    try {
+
+      const month =
+        monthFilter.value;
+
+
+      if (!month) {
+        return;
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sbBreakdown.rpc(
+          "admin_get_finance_cost_breakdown",
+          {
+            p_month:
+              month
+          }
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      const row =
+        Array.isArray(data)
+          ?
+          (
+            data[0] || {}
+          )
+          :
+          (
+            data || {}
+          );
+
+
+      const coach =
+        Number(
+          row.coach_cost || 0
+        );
+
+      const court =
+        Number(
+          row.court_cost || 0
+        );
+
+      const other =
+        Number(
+          row.other_operating_cost || 0
+        );
+
+      const total =
+        Number(
+          row.total_cost
+          ??
+          (
+            coach
+            +
+            court
+            +
+            other
+          )
+        );
+
+
+      /*
+        Đồng bộ cả Coach để các ô
+        đều lấy cùng một nguồn phân rã.
+      */
+
+      coachCostValue.textContent =
+        money(
+          coach
+        );
+
+      courtCostValue.textContent =
+        money(
+          court
+        );
+
+      otherCostValue.textContent =
+        money(
+          other
+        );
+
+
+      expectedTotalText =
+        money(
+          total
+        );
+
+      operatingCostValue.textContent =
+        expectedTotalText;
+
+
+      /*
+        Không sửa Doanh thu và Lợi nhuận.
+        Hai số này vẫn do RPC tài chính cũ
+        đang chạy đúng quản lý.
+      */
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "FINANCE COST BREAKDOWN:",
+        error
+      );
+
+      courtCostValue.textContent =
+        "—";
+
+      otherCostValue.textContent =
+        "—";
+
+    }
+    finally {
+
+      loading = false;
+
+    }
+
+  }
+
+
+  /* =====================================
+     CHỐNG CODE CŨ GHI ĐÈ
+     "TỔNG CHI PHÍ"
+  ====================================== */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        if (
+          expectedTotalText
+          &&
+          operatingCostValue
+            .textContent
+            .trim()
+          !==
+          expectedTotalText
+        ) {
+
+          setTimeout(
+            loadCostBreakdown,
+            100
+          );
+
+        }
+
+      }
+    );
+
+
+  observer.observe(
+    operatingCostValue,
+    {
+      childList: true,
+      characterData: true,
+      subtree: true
+    }
+  );
+
+
+  /* =====================================
+     ĐỔI THÁNG
+  ====================================== */
+
+  monthFilter.addEventListener(
+    "change",
+    function () {
+
+      expectedTotalText =
+        null;
+
+      setTimeout(
+        loadCostBreakdown,
+        300
+      );
+
+    }
+  );
+
+
+  /* =====================================
+     START
+  ====================================== */
+
+  setTimeout(
+    loadCostBreakdown,
+    500
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCostBreakdown
+  );
+
+})();
+</script>
 </body>
 
 </html>
