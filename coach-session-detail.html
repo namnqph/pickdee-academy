@@ -546,7 +546,475 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
 
 <script src="./notifications.js?v=20260911-3"></script>
+<script>
+(function () {
 
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const actions =
+    document.querySelector(".actions");
+
+  const statusEl =
+    document.getElementById("status");
+
+  const messageEl =
+    document.getElementById("message");
+
+
+  if (
+    !actions ||
+    !statusEl ||
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  if (
+    document.getElementById("coverBtn")
+  ) {
+    return;
+  }
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const sessionId =
+    Number(
+      params.get("id") ||
+      params.get("session_id")
+    );
+
+
+  if (
+    !Number.isFinite(sessionId) ||
+    sessionId <= 0
+  ) {
+    return;
+  }
+
+
+  const supportSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let processing =
+    false;
+
+
+  const coverBtn =
+    document.createElement("button");
+
+
+  coverBtn.id =
+    "coverBtn";
+
+  coverBtn.type =
+    "button";
+
+  coverBtn.disabled =
+    true;
+
+  coverBtn.textContent =
+    "📣 GỌI COACH HỖ TRỢ";
+
+  coverBtn.style.gridColumn =
+    "1 / -1";
+
+  coverBtn.style.background =
+    "#173e73";
+
+  coverBtn.style.color =
+    "#d8ff45";
+
+  coverBtn.style.border =
+    "1px solid rgba(216,255,69,.35)";
+
+  coverBtn.style.minHeight =
+    "52px";
+
+  coverBtn.style.borderRadius =
+    "11px";
+
+  coverBtn.style.fontWeight =
+    "900";
+
+  coverBtn.style.cursor =
+    "pointer";
+
+
+  actions.appendChild(
+    coverBtn
+  );
+
+
+  function setMessage(
+    text,
+    type = "info"
+  ) {
+
+    if (!messageEl) {
+      return;
+    }
+
+    messageEl.textContent =
+      text;
+
+    messageEl.className =
+      type;
+  }
+
+
+  function getStatusFromPage() {
+
+    return String(
+      statusEl.textContent || ""
+    ).trim();
+  }
+
+
+  function setDefaultButton() {
+
+    coverBtn.textContent =
+      "📣 GỌI COACH HỖ TRỢ";
+  }
+
+
+  function setAssignedButton() {
+
+    coverBtn.disabled =
+      true;
+
+    coverBtn.textContent =
+      "✓ ĐÃ CÓ COACH HỖ TRỢ";
+  }
+
+
+  function setRequestedButton() {
+
+    coverBtn.disabled =
+      true;
+
+    coverBtn.textContent =
+      "✓ ĐÃ GỌI COACH HỖ TRỢ";
+  }
+
+
+  async function refreshCoverState() {
+
+    if (processing) {
+      return;
+    }
+
+
+    const pageStatus =
+      getStatusFromPage();
+
+
+    if (
+      pageStatus === "Đã hoàn thành" ||
+      pageStatus === "Vắng"
+    ) {
+
+      coverBtn.disabled =
+        true;
+
+      setDefaultButton();
+
+      return;
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await supportSb
+        .from("class_sessions")
+        .select(`
+          id,
+          status,
+          substitute_coach_id
+        `)
+        .eq(
+          "id",
+          sessionId
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+      console.error(
+        "LOAD COACH COVER STATE:",
+        error
+      );
+
+
+      if (
+        pageStatus === "Chờ học"
+      ) {
+
+        coverBtn.disabled =
+          false;
+
+        setDefaultButton();
+
+      } else {
+
+        coverBtn.disabled =
+          true;
+
+        setDefaultButton();
+      }
+
+      return;
+    }
+
+
+    if (!data) {
+
+      coverBtn.disabled =
+        true;
+
+      setDefaultButton();
+
+      return;
+    }
+
+
+    if (
+      data.substitute_coach_id
+    ) {
+
+      setAssignedButton();
+
+      return;
+    }
+
+
+    const status =
+      String(
+        data.status || ""
+      ).trim();
+
+
+    if (
+      status !== "Chờ học"
+    ) {
+
+      coverBtn.disabled =
+        true;
+
+      setDefaultButton();
+
+      return;
+    }
+
+
+    coverBtn.disabled =
+      false;
+
+    setDefaultButton();
+  }
+
+
+  coverBtn.addEventListener(
+    "click",
+    async function () {
+
+      if (processing) {
+        return;
+      }
+
+
+      const currentStatus =
+        getStatusFromPage();
+
+
+      if (
+        currentStatus !== "Chờ học"
+      ) {
+
+        setMessage(
+          "Chỉ buổi đang ở trạng thái Chờ học mới được gọi Coach hỗ trợ.",
+          "error"
+        );
+
+        await refreshCoverState();
+
+        return;
+      }
+
+
+      const reason =
+        window.prompt(
+          "Nhập lý do cần Coach hỗ trợ:",
+          "Coach chính bận"
+        );
+
+
+      if (reason === null) {
+        return;
+      }
+
+
+      const finalReason =
+        String(
+          reason
+        ).trim();
+
+
+      if (!finalReason) {
+
+        setMessage(
+          "Vui lòng nhập lý do cần Coach hỗ trợ.",
+          "error"
+        );
+
+        return;
+      }
+
+
+      const ok =
+        window.confirm(
+          "Xác nhận gửi yêu cầu tới các Coach phù hợp trong khu vực?"
+        );
+
+
+      if (!ok) {
+        return;
+      }
+
+
+      processing =
+        true;
+
+
+      coverBtn.disabled =
+        true;
+
+      coverBtn.textContent =
+        "⏳ ĐANG GỌI COACH...";
+
+
+      setMessage(
+        "Đang gửi yêu cầu Coach hỗ trợ...",
+        "info"
+      );
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supportSb.rpc(
+            "request_coach_cover",
+            {
+              p_session_id:
+                sessionId,
+
+              p_reason:
+                finalReason
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        setRequestedButton();
+
+
+        setMessage(
+          `✓ Đã gửi yêu cầu Coach hỗ trợ. Mã yêu cầu: ${data}.`,
+          "success"
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "REQUEST COACH COVER:",
+          error
+        );
+
+
+        setMessage(
+          "Không gửi được yêu cầu Coach hỗ trợ: " +
+          (
+            error?.message ||
+            error
+          ),
+          "error"
+        );
+
+
+        processing =
+          false;
+
+
+        await refreshCoverState();
+
+        return;
+      }
+
+
+      processing =
+        false;
+
+    }
+  );
+
+
+  const statusObserver =
+    new MutationObserver(
+      function () {
+
+        refreshCoverState();
+
+      }
+    );
+
+
+  statusObserver.observe(
+    statusEl,
+    {
+      childList: true,
+      characterData: true,
+      subtree: true
+    }
+  );
+
+
+  window.addEventListener(
+    "pageshow",
+    function () {
+
+      refreshCoverState();
+
+    }
+  );
+
+
+  refreshCoverState();
+
+})();
+</script>
 
 <script>
 
