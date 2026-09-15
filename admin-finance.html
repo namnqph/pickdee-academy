@@ -4956,6 +4956,543 @@
 
 })();
 </script>
+  <style>
+
+/* =========================================================
+   PICKDEE - FIX VÙNG BẤM THANH TOÁN
+========================================================= */
+
+.pd-pay-expense-btn,
+.pd-pay-btn {
+
+  position: relative !important;
+
+  z-index: 100 !important;
+
+  pointer-events: auto !important;
+
+  cursor: pointer !important;
+
+  min-width: 120px !important;
+
+  min-height: 42px !important;
+
+  padding: 10px 14px !important;
+
+  touch-action: manipulation !important;
+
+  user-select: none !important;
+
+  -webkit-user-select: none !important;
+
+}
+
+
+/* Popup luôn nằm trên cùng */
+
+#pdExpensePayModal {
+
+  z-index: 2147483647 !important;
+
+  pointer-events: auto !important;
+
+}
+
+#pdExpensePayModal.open {
+
+  display: flex !important;
+
+}
+
+</style>
+
+
+<script>
+(function () {
+
+  /* =====================================================
+     PICKDEE
+     FIX DỨT ĐIỂM NÚT THANH TOÁN
+  ====================================================== */
+
+  if (
+    window.__PICKDEE_PAYMENT_POINTER_FINAL__
+  ) {
+    return;
+  }
+
+
+  window.__PICKDEE_PAYMENT_POINTER_FINAL__ =
+    true;
+
+
+  let openedByPointer =
+    false;
+
+
+  /* =====================================================
+     OPEN POPUP
+  ====================================================== */
+
+  function openPaymentModal(button) {
+
+
+    if (!button) {
+      return;
+    }
+
+
+    const modal =
+      document.getElementById(
+        "pdExpensePayModal"
+      );
+
+
+    if (!modal) {
+
+      console.error(
+        "Không tìm thấy pdExpensePayModal"
+      );
+
+      return;
+
+    }
+
+
+    const row =
+      button.closest(
+        "tr"
+      );
+
+
+    const cells =
+      row
+        ?
+        Array.from(
+          row.children
+        )
+        :
+        [];
+
+
+    const code =
+      String(
+        button.dataset.expenseCode
+        ||
+        (
+          cells[0]
+            ?
+            cells[0].textContent
+            :
+            ""
+        )
+      ).trim();
+
+
+    const type =
+      String(
+        button.dataset.expenseType
+        ||
+        (
+          cells[2]
+            ?
+            cells[2].textContent
+            :
+            ""
+        )
+      ).trim();
+
+
+    const amount =
+      String(
+        button.dataset.expenseAmount
+        ||
+        (
+          cells[4]
+            ?
+            cells[4].textContent
+            :
+            "—"
+        )
+      ).trim();
+
+
+    const payee =
+      String(
+        cells[6]
+          ?
+          cells[6].textContent
+          :
+          "—"
+      ).trim();
+
+
+    /*
+      Ghi dữ liệu lại vào chính button
+      để các handler cũ vẫn dùng được.
+    */
+
+    button.dataset.expenseCode =
+      code;
+
+    button.dataset.expenseType =
+      type;
+
+    button.dataset.expenseAmount =
+      amount;
+
+
+    const codeEl =
+      document.getElementById(
+        "pdPayCode"
+      );
+
+    const amountEl =
+      document.getElementById(
+        "pdPayAmount"
+      );
+
+    const payeeEl =
+      document.getElementById(
+        "pdPayPayee"
+      );
+
+    const typeEl =
+      document.getElementById(
+        "pdPayType"
+      );
+
+
+    if (codeEl) {
+      codeEl.textContent =
+        code || "—";
+    }
+
+
+    if (amountEl) {
+      amountEl.textContent =
+        amount || "—";
+    }
+
+
+    if (payeeEl) {
+      payeeEl.textContent =
+        payee || "—";
+    }
+
+
+    if (typeEl) {
+      typeEl.textContent =
+        type || "—";
+    }
+
+
+    const reference =
+      document.getElementById(
+        "pdPaymentReference"
+      );
+
+
+    const note =
+      document.getElementById(
+        "pdPaymentNote"
+      );
+
+
+    const message =
+      document.getElementById(
+        "pdExpensePayMessage"
+      );
+
+
+    if (reference) {
+
+      reference.value =
+        "";
+
+    }
+
+
+    if (note) {
+
+      note.value =
+        "";
+
+    }
+
+
+    if (message) {
+
+      message.textContent =
+        "";
+
+    }
+
+
+    /*
+      Ép popup hiện.
+    */
+
+    modal.classList.add(
+      "open"
+    );
+
+
+    modal.style.setProperty(
+      "display",
+      "flex",
+      "important"
+    );
+
+
+    modal.style.setProperty(
+      "visibility",
+      "visible",
+      "important"
+    );
+
+
+    modal.style.setProperty(
+      "opacity",
+      "1",
+      "important"
+    );
+
+
+    modal.style.setProperty(
+      "pointer-events",
+      "auto",
+      "important"
+    );
+
+
+    modal.style.setProperty(
+      "z-index",
+      "2147483647",
+      "important"
+    );
+
+
+    document.body.style.overflow =
+      "hidden";
+
+
+    setTimeout(
+      function () {
+
+        if (reference) {
+
+          reference.focus();
+
+        }
+
+      },
+      120
+    );
+
+  }
+
+
+  /* =====================================================
+     POINTER DOWN
+     Vừa ấn chuột/chạm màn hình là mở
+  ====================================================== */
+
+  document.addEventListener(
+
+    "pointerdown",
+
+    function (event) {
+
+
+      const target =
+        event.target;
+
+
+      if (
+        !target
+        ||
+        !target.closest
+      ) {
+        return;
+      }
+
+
+      const button =
+        target.closest(
+          ".pd-pay-expense-btn"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      openedByPointer =
+        true;
+
+
+      openPaymentModal(
+        button
+      );
+
+
+      setTimeout(
+        function () {
+
+          openedByPointer =
+            false;
+
+        },
+        500
+      );
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     CLICK DỰ PHÒNG
+     Cho trackpad / keyboard / trình duyệt khác
+  ====================================================== */
+
+  document.addEventListener(
+
+    "click",
+
+    function (event) {
+
+
+      const target =
+        event.target;
+
+
+      if (
+        !target
+        ||
+        !target.closest
+      ) {
+        return;
+      }
+
+
+      const button =
+        target.closest(
+          ".pd-pay-expense-btn"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      /*
+        Nếu pointerdown vừa mở rồi
+        thì không mở lần 2.
+      */
+
+      if (
+        openedByPointer
+      ) {
+        return;
+      }
+
+
+      openPaymentModal(
+        button
+      );
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     FIX ĐÓNG POPUP
+  ====================================================== */
+
+  document.addEventListener(
+
+    "click",
+
+    function (event) {
+
+
+      const target =
+        event.target;
+
+
+      if (
+        !target
+        ||
+        !target.closest
+      ) {
+        return;
+      }
+
+
+      const close =
+        target.closest(
+          "#pdCloseExpensePay"
+        );
+
+
+      if (!close) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      const modal =
+        document.getElementById(
+          "pdExpensePayModal"
+        );
+
+
+      if (modal) {
+
+        modal.classList.remove(
+          "open"
+        );
+
+
+        modal.style.setProperty(
+          "display",
+          "none",
+          "important"
+        );
+
+      }
+
+
+      document.body.style.overflow =
+        "";
+
+    },
+
+    true
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
