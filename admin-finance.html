@@ -4533,6 +4533,429 @@
 
 })();
 </script>
+  <script>
+/* =========================================================
+   PICKDEE - FIX NÚT THANH TOÁN CHI PHÍ
+========================================================= */
+
+(function () {
+
+  if (window.__PD_EXPENSE_PAYMENT_CLICK_FIX__) {
+    return;
+  }
+
+  window.__PD_EXPENSE_PAYMENT_CLICK_FIX__ = true;
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sbFix =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let selected =
+    null;
+
+
+  function getEl(id) {
+    return document.getElementById(id);
+  }
+
+
+  /* =====================================================
+     BẮT CLICK NÚT THANH TOÁN
+     Dùng CAPTURE để không phụ thuộc nút bị render lại
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+
+    function (event) {
+
+      const button =
+        event.target.closest(
+          ".pd-pay-expense-btn"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      const modal =
+        getEl("pdExpensePayModal");
+
+
+      if (!modal) {
+
+        alert(
+          "Không tìm thấy popup thanh toán. Hãy tải lại trang."
+        );
+
+        return;
+      }
+
+
+      const row =
+        button.closest("tr");
+
+
+      const cells =
+        row
+        ?
+        Array.from(row.children)
+        :
+        [];
+
+
+      selected = {
+
+        code:
+          String(
+            button.dataset.expenseCode || ""
+          ).trim(),
+
+        type:
+          String(
+            button.dataset.expenseType || ""
+          ).trim(),
+
+        amount:
+          String(
+            button.dataset.expenseAmount || "—"
+          ).trim(),
+
+        payee:
+          cells[6]
+          ?
+          cells[6].textContent.trim()
+          :
+          "—"
+
+      };
+
+
+      getEl("pdPayCode").textContent =
+        selected.code || "—";
+
+      getEl("pdPayAmount").textContent =
+        selected.amount || "—";
+
+      getEl("pdPayPayee").textContent =
+        selected.payee || "—";
+
+      getEl("pdPayType").textContent =
+        selected.type || "—";
+
+
+      const reference =
+        getEl("pdPaymentReference");
+
+      const note =
+        getEl("pdPaymentNote");
+
+      const message =
+        getEl("pdExpensePayMessage");
+
+
+      if (reference) {
+        reference.value = "";
+      }
+
+      if (note) {
+        note.value = "";
+      }
+
+      if (message) {
+        message.textContent = "";
+      }
+
+
+      modal.classList.add(
+        "open"
+      );
+
+
+      modal.style.display =
+        "flex";
+
+
+      setTimeout(
+        function () {
+
+          if (reference) {
+            reference.focus();
+          }
+
+        },
+        100
+      );
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     FIX NÚT ĐÓNG
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+
+    function (event) {
+
+      const closeButton =
+        event.target.closest(
+          "#pdCloseExpensePay"
+        );
+
+
+      if (!closeButton) {
+        return;
+      }
+
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      const modal =
+        getEl("pdExpensePayModal");
+
+
+      if (modal) {
+
+        modal.classList.remove(
+          "open"
+        );
+
+        modal.style.display =
+          "none";
+
+      }
+
+
+      selected = null;
+
+    },
+
+    true
+  );
+
+
+  /* =====================================================
+     XÁC NHẬN THANH TOÁN
+  ====================================================== */
+
+  document.addEventListener(
+    "click",
+
+    async function (event) {
+
+      const confirmButton =
+        event.target.closest(
+          "#pdConfirmExpensePay"
+        );
+
+
+      if (!confirmButton) {
+        return;
+      }
+
+
+      /*
+        Chặn handler cũ.
+        Khối FIX này tự xử lý toàn bộ.
+      */
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      const referenceInput =
+        getEl("pdPaymentReference");
+
+      const noteInput =
+        getEl("pdPaymentNote");
+
+      const message =
+        getEl("pdExpensePayMessage");
+
+
+      if (!selected) {
+
+        if (message) {
+
+          message.style.color =
+            "#ffaaaa";
+
+          message.textContent =
+            "Không xác định được khoản chi.";
+
+        }
+
+        return;
+
+      }
+
+
+      const reference =
+        referenceInput
+        ?
+        referenceInput.value.trim()
+        :
+        "";
+
+
+      const note =
+        noteInput
+        ?
+        noteInput.value.trim()
+        :
+        "";
+
+
+      if (!reference) {
+
+        if (message) {
+
+          message.style.color =
+            "#ffaaaa";
+
+          message.textContent =
+            "Vui lòng nhập mã giao dịch / chứng từ.";
+
+        }
+
+
+        if (referenceInput) {
+          referenceInput.focus();
+        }
+
+        return;
+
+      }
+
+
+      confirmButton.disabled =
+        true;
+
+      confirmButton.textContent =
+        "ĐANG XÁC NHẬN...";
+
+
+      if (message) {
+
+        message.style.color =
+          "#d8ff45";
+
+        message.textContent =
+          "Đang ghi nhận thanh toán...";
+
+      }
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sbFix.rpc(
+            "admin_mark_operating_expense_paid",
+            {
+
+              p_expense_code:
+                selected.code,
+
+              p_payment_reference:
+                reference,
+
+              p_payment_note:
+                note || null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        if (message) {
+
+          message.style.color =
+            "#d8ff45";
+
+          message.textContent =
+            "✓ Đã xác nhận thanh toán.";
+
+        }
+
+
+        /*
+          Reload để lấy trạng thái mới sạch hoàn toàn.
+        */
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          650
+        );
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "PICKDEE PAYMENT FIX:",
+          error
+        );
+
+
+        if (message) {
+
+          message.style.color =
+            "#ffaaaa";
+
+          message.textContent =
+            error.message
+            ||
+            String(error);
+
+        }
+
+
+        confirmButton.disabled =
+          false;
+
+        confirmButton.textContent =
+          "💸 XÁC NHẬN ĐÃ THANH TOÁN";
+
+      }
+
+    },
+
+    true
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
