@@ -28,7 +28,6 @@ const searchInput =
     "search"
   );
 
-
 const logoutBtn =
   document.getElementById(
     "logoutBtn"
@@ -41,10 +40,8 @@ logoutBtn.addEventListener(
 
     logoutBtn.disabled = true;
 
-
     const { error } =
       await sb.auth.signOut();
-
 
     if (error) {
 
@@ -57,7 +54,6 @@ logoutBtn.addEventListener(
 
       return;
     }
-
 
     window.location.replace(
       "/login.html"
@@ -154,6 +150,202 @@ function escapeHTML(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+/* =====================================
+   SẮP XẾP LỊCH COACH
+===================================== */
+
+function normalizeStatus(value) {
+
+  return String(
+    value || ""
+  )
+    .trim()
+    .toLocaleLowerCase("vi-VN");
+}
+
+
+function getSessionTime(session) {
+
+  const date =
+    session.session_date ||
+    "1970-01-01";
+
+  const time =
+    session.start_time ||
+    "00:00:00";
+
+  const timestamp =
+    new Date(
+      `${date}T${time}`
+    ).getTime();
+
+  return Number.isNaN(timestamp)
+    ? 0
+    : timestamp;
+}
+
+
+function getSessionPriority(session) {
+
+  const today =
+    todayISO();
+
+  const date =
+    session.session_date || "";
+
+  const status =
+    normalizeStatus(
+      session.status
+    );
+
+
+  const isCompleted =
+    status === "đã hoàn thành";
+
+  const isAbsent =
+    status === "vắng";
+
+  const isCancelled =
+    status === "hủy" ||
+    status === "đã hủy";
+
+  const isWaiting =
+    status === "chờ học";
+
+
+  /*
+    ƯU TIÊN:
+
+    0 = Quá hạn nhưng chưa xử lý
+    1 = Hôm nay chưa hoàn thành
+    2 = Sắp tới - Chờ học
+    3 = Vắng / Hủy / trạng thái khác
+    4 = Đã hoàn thành
+  */
+
+
+  if (
+    date < today &&
+    !isCompleted &&
+    !isAbsent &&
+    !isCancelled
+  ) {
+    return 0;
+  }
+
+
+  if (
+    date === today &&
+    !isCompleted &&
+    !isAbsent &&
+    !isCancelled
+  ) {
+    return 1;
+  }
+
+
+  if (
+    date > today &&
+    isWaiting
+  ) {
+    return 2;
+  }
+
+
+  if (isCompleted) {
+    return 4;
+  }
+
+
+  return 3;
+}
+
+
+function sortCoachSessions(rows) {
+
+  return [...rows].sort(
+    (a, b) => {
+
+      const priorityA =
+        getSessionPriority(a);
+
+      const priorityB =
+        getSessionPriority(b);
+
+
+      if (
+        priorityA !== priorityB
+      ) {
+        return priorityA - priorityB;
+      }
+
+
+      const timeA =
+        getSessionTime(a);
+
+      const timeB =
+        getSessionTime(b);
+
+
+      /*
+        QUÁ HẠN:
+        buổi quá hạn lâu nhất đứng trước
+      */
+
+      if (
+        priorityA === 0
+      ) {
+        return timeA - timeB;
+      }
+
+
+      /*
+        HÔM NAY:
+        giờ sớm đứng trước
+      */
+
+      if (
+        priorityA === 1
+      ) {
+        return timeA - timeB;
+      }
+
+
+      /*
+        SẮP TỚI:
+        buổi gần nhất đứng trước
+      */
+
+      if (
+        priorityA === 2
+      ) {
+        return timeA - timeB;
+      }
+
+
+      /*
+        TRẠNG THÁI KHÁC:
+        ngày mới nhất đứng trước
+      */
+
+      if (
+        priorityA === 3
+      ) {
+        return timeB - timeA;
+      }
+
+
+      /*
+        ĐÃ HOÀN THÀNH:
+        buổi mới nhất đứng trước
+      */
+
+      return timeB - timeA;
+    }
+  );
 }
 
 
@@ -329,14 +521,6 @@ async function loadSessions() {
       .eq(
         "coach_id",
         currentCoach.id
-      )
-      .order(
-        "session_date",
-        { ascending: true }
-      )
-      .order(
-        "start_time",
-        { ascending: true }
       );
 
 
@@ -362,7 +546,9 @@ async function loadSessions() {
 
 
   sessions =
-    data || [];
+    sortCoachSessions(
+      data || []
+    );
 
 
   renderSessions(
@@ -429,18 +615,19 @@ function renderSessions(
 
 
           return `
-  <tr
-    style="cursor:pointer"
-    onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
-    title="Mở chi tiết buổi học"
-  >
-    <td>
-      <strong>
-        ${escapeHTML(
-          session.session_code
-        )}
-      </strong>
-    </td>
+            <tr
+              style="cursor:pointer"
+              onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
+              title="Mở chi tiết buổi học"
+            >
+
+              <td>
+                <strong>
+                  ${escapeHTML(
+                    session.session_code
+                  )}
+                </strong>
+              </td>
 
               <td>
                 ${escapeHTML(
@@ -462,6 +649,7 @@ function renderSessions(
                 ${dateVN(
                   session.session_date
                 )}
+
                 ${
                   isToday
                     ? " · Hôm nay"
@@ -493,6 +681,7 @@ function renderSessions(
                   )}
                 </span>
               </td>
+
             </tr>
           `;
         }
