@@ -4496,6 +4496,918 @@
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     CẢNH BÁO CHI PHÍ SÂN CHƯA ĐỐI SOÁT
+========================================================== -->
+
+<style>
+
+  #unreconciledCourtExpenseSection {
+    border:
+      1px solid rgba(255,190,70,.38);
+  }
+
+  #unreconciledCourtExpenseSection.has-unreconciled {
+    border-color:
+      rgba(255,120,120,.55);
+
+    box-shadow:
+      0 0 0 1px
+      rgba(255,100,100,.05);
+  }
+
+  .court-unreconciled-item {
+
+    padding: 15px;
+
+    margin-top: 10px;
+
+    border-radius: 12px;
+
+    background:
+      rgba(255,255,255,.055);
+
+    border:
+      1px solid rgba(255,255,255,.10);
+
+    display: grid;
+
+    grid-template-columns:
+      minmax(220px,1.5fr)
+      repeat(3,minmax(100px,.7fr))
+      auto;
+
+    gap: 12px;
+
+    align-items: center;
+  }
+
+  .court-unreconciled-name {
+
+    font-weight: 900;
+
+    color: white;
+  }
+
+  .court-unreconciled-area {
+
+    margin-top: 4px;
+
+    color:
+      rgba(255,255,255,.55);
+
+    font-size: 12px;
+  }
+
+  .court-unreconciled-label {
+
+    color:
+      rgba(255,255,255,.52);
+
+    font-size: 11px;
+  }
+
+  .court-unreconciled-value {
+
+    margin-top: 4px;
+
+    font-weight: 900;
+
+    color: #d8ff45;
+  }
+
+  .court-supplemental-btn {
+
+    min-height: 40px;
+
+    padding:
+      9px 12px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background: #d8ff45;
+
+    color: #172600;
+
+    font-size: 11px;
+
+    font-weight: 900;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+  }
+
+  .court-supplemental-btn:disabled {
+
+    opacity: .45;
+
+    cursor: not-allowed;
+  }
+
+  #unreconciledCourtMessage {
+
+    margin-top: 12px;
+
+    min-height: 20px;
+
+    color: #d8ff45;
+
+    font-size: 13px;
+
+    font-weight: 800;
+  }
+
+
+  @media(max-width:900px) {
+
+    .court-unreconciled-item {
+
+      grid-template-columns:
+        1fr 1fr;
+
+    }
+
+    .court-unreconciled-item
+    .court-supplemental-btn {
+
+      grid-column:
+        1 / -1;
+
+      width: 100%;
+    }
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+
+  /* =====================================================
+     KHÔNG TẠO TRÙNG
+  ====================================================== */
+
+  if (
+    document.getElementById(
+      "unreconciledCourtExpenseSection"
+    )
+  ) {
+    return;
+  }
+
+
+  const cfgUnreconciled =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbUnreconciled =
+    window.supabase.createClient(
+      cfgUnreconciled.SUPABASE_URL,
+      cfgUnreconciled.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const main =
+    document.querySelector(
+      "main.container"
+    );
+
+
+  if (!main) {
+
+    console.warn(
+      "PickDee: không tìm thấy container Đối soát sân."
+    );
+
+    return;
+  }
+
+
+  /*
+    Đặt cảnh báo ngay phía trên
+    phần TẠO KỲ ĐỐI SOÁT.
+  */
+
+  const firstCard =
+    main.querySelector(
+      "section.card"
+    );
+
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "unreconciledCourtExpenseSection";
+
+
+  section.className =
+    "card";
+
+
+  section.innerHTML = `
+
+    <div class="section-title">
+      ⚠️ Chi phí sân chưa được đối soát
+    </div>
+
+    <div
+      style="
+        color:rgba(255,255,255,.62);
+        line-height:1.5;
+        margin-bottom:10px;
+        font-size:13px;
+      "
+    >
+      Hệ thống tự kiểm tra các khoản thuê sân
+      đã phát sinh nhưng chưa nằm trong bất kỳ
+      kỳ đối soát nào.
+    </div>
+
+    <div id="unreconciledCourtBody">
+
+      Đang kiểm tra chi phí sân...
+
+    </div>
+
+    <div id="unreconciledCourtMessage"></div>
+
+  `;
+
+
+  if (firstCard) {
+
+    firstCard.insertAdjacentElement(
+      "beforebegin",
+      section
+    );
+
+  }
+  else {
+
+    main.appendChild(
+      section
+    );
+
+  }
+
+
+  const body =
+    document.getElementById(
+      "unreconciledCourtBody"
+    );
+
+
+  const message =
+    document.getElementById(
+      "unreconciledCourtMessage"
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function periodVN(value) {
+
+    const parts =
+      String(value || "")
+        .split("-");
+
+
+    if (
+      parts.length !== 2
+    ) {
+
+      return value || "—";
+
+    }
+
+
+    return (
+      parts[1]
+      +
+      "/"
+      +
+      parts[0]
+    );
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  /* =====================================================
+     LOAD CHI PHÍ CHƯA ĐỐI SOÁT
+  ====================================================== */
+
+  async function loadUnreconciledCourtExpenses() {
+
+
+    message.textContent =
+      "";
+
+
+    const {
+      data,
+      error
+    } =
+      await sbUnreconciled.rpc(
+        "admin_get_unreconciled_court_expenses"
+      );
+
+
+    if (error) {
+
+      console.error(
+        "UNRECONCILED COURT EXPENSES:",
+        error
+      );
+
+
+      body.innerHTML = `
+
+        <div
+          style="
+            color:#ffaaaa;
+            font-weight:800;
+          "
+        >
+          Không tải được cảnh báo tiền sân:
+          ${escapeHTML(
+            error.message ||
+            error
+          )}
+        </div>
+
+      `;
+
+      return;
+    }
+
+
+    const rows =
+      Array.isArray(data)
+        ?
+        data
+        :
+        [];
+
+
+    /* ===================================================
+       KHÔNG CÓ VIỆC TỒN
+    ==================================================== */
+
+    if (
+      rows.length === 0
+    ) {
+
+      section.classList.remove(
+        "has-unreconciled"
+      );
+
+
+      body.innerHTML = `
+
+        <div
+          style="
+            padding:14px;
+            border-radius:10px;
+            background:rgba(216,255,69,.07);
+            color:#d8ff45;
+            font-weight:900;
+          "
+        >
+          ✓ Không có chi phí sân nào bị bỏ ngoài đối soát.
+        </div>
+
+      `;
+
+      return;
+    }
+
+
+    section.classList.add(
+      "has-unreconciled"
+    );
+
+
+    /* ===================================================
+       KIỂM TRA TỪNG SÂN/THÁNG ĐÃ CÓ
+       KỲ CHÍNH HAY CHƯA
+    ==================================================== */
+
+    const preparedRows =
+      await Promise.all(
+
+        rows.map(
+          async row => {
+
+
+            const {
+              data: existing,
+              error: existingError
+            } =
+              await sbUnreconciled.rpc(
+                "admin_get_court_reconciliations",
+                {
+
+                  p_period:
+                    row.period,
+
+                  p_court_id:
+                    Number(
+                      row.court_id
+                    ),
+
+                  p_status:
+                    null
+
+                }
+              );
+
+
+            if (existingError) {
+
+              console.error(
+                "CHECK EXISTING COURT RECON:",
+                existingError
+              );
+
+            }
+
+
+            return {
+
+              ...row,
+
+              hasExistingReconciliation:
+                Array.isArray(existing)
+                &&
+                existing.length > 0
+
+            };
+
+          }
+        )
+
+      );
+
+
+    /* ===================================================
+       RENDER
+    ==================================================== */
+
+    body.innerHTML =
+      preparedRows
+        .map(
+          row => {
+
+
+            const mode =
+              row.hasExistingReconciliation
+                ?
+                "supplemental"
+                :
+                "main";
+
+
+            const buttonText =
+              mode ===
+              "supplemental"
+                ?
+                "TẠO ĐỐI SOÁT BỔ SUNG"
+                :
+                "TẠO ĐỐI SOÁT";
+
+
+            return `
+
+              <div class="court-unreconciled-item">
+
+
+                <div>
+
+                  <div class="court-unreconciled-name">
+
+                    ${escapeHTML(
+                      row.court_name ||
+                      "Sân chưa xác định"
+                    )}
+
+                  </div>
+
+                  <div class="court-unreconciled-area">
+
+                    ${escapeHTML(
+                      row.area ||
+                      "Chưa có khu vực"
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div>
+
+                  <div class="court-unreconciled-label">
+                    Kỳ
+                  </div>
+
+                  <div class="court-unreconciled-value">
+
+                    ${escapeHTML(
+                      periodVN(
+                        row.period
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div>
+
+                  <div class="court-unreconciled-label">
+                    Số buổi
+                  </div>
+
+                  <div class="court-unreconciled-value">
+
+                    ${Number(
+                      row.session_count ||
+                      0
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <div>
+
+                  <div class="court-unreconciled-label">
+                    Chưa đối soát
+                  </div>
+
+                  <div class="court-unreconciled-value">
+
+                    ${money(
+                      row.total_amount
+                    )}
+
+                  </div>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  class="court-supplemental-btn"
+                  data-court-id="${Number(
+                    row.court_id
+                  )}"
+                  data-period="${escapeHTML(
+                    row.period
+                  )}"
+                  data-mode="${mode}"
+                  data-court-name="${escapeHTML(
+                    row.court_name ||
+                    ""
+                  )}"
+                >
+
+                  ${buttonText}
+
+                </button>
+
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     CLICK TẠO KỲ / BỔ SUNG
+  ====================================================== */
+
+  body.addEventListener(
+    "click",
+    async function (event) {
+
+
+      const btn =
+        event.target.closest(
+          ".court-supplemental-btn"
+        );
+
+
+      if (!btn) {
+        return;
+      }
+
+
+      const courtId =
+        Number(
+          btn.dataset.courtId
+        );
+
+
+      const period =
+        btn.dataset.period;
+
+
+      const mode =
+        btn.dataset.mode;
+
+
+      const courtName =
+        btn.dataset.courtName
+        ||
+        "sân này";
+
+
+      if (
+        !courtId
+        ||
+        !period
+      ) {
+
+        return;
+
+      }
+
+
+      const supplemental =
+        mode ===
+        "supplemental";
+
+
+      const actionName =
+        supplemental
+          ?
+          "ĐỐI SOÁT BỔ SUNG"
+          :
+          "ĐỐI SOÁT";
+
+
+      const confirmed =
+        window.confirm(
+
+          `Tạo ${actionName}?\n\n`
+          +
+          `Sân: ${courtName}\n`
+          +
+          `Kỳ: ${period}\n\n`
+          +
+          (
+            supplemental
+              ?
+              "Kỳ cũ sẽ giữ nguyên, hệ thống chỉ gom các chi phí phát sinh thêm."
+              :
+              "Hệ thống sẽ tạo kỳ đối soát chính."
+          )
+
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      btn.disabled =
+        true;
+
+
+      btn.textContent =
+        "ĐANG TẠO...";
+
+
+      message.style.color =
+        "#d8ff45";
+
+
+      message.textContent =
+        supplemental
+          ?
+          "Đang tạo đối soát bổ sung..."
+          :
+          "Đang tạo kỳ đối soát...";
+
+
+      try {
+
+
+        const rpcName =
+          supplemental
+            ?
+            "admin_build_court_reconciliation_supplemental"
+            :
+            "admin_build_court_reconciliation";
+
+
+        const {
+          data,
+          error
+        } =
+          await sbUnreconciled.rpc(
+            rpcName,
+            {
+
+              p_court_id:
+                courtId,
+
+              p_period:
+                period
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const batchNo =
+          Number(
+            data?.batch_no ||
+            1
+          );
+
+
+        const type =
+          data?.reconciliation_type
+          ||
+          (
+            supplemental
+              ?
+              "Bổ sung"
+              :
+              "Định kỳ"
+          );
+
+
+        message.style.color =
+          "#d8ff45";
+
+
+        message.textContent =
+          `✓ Đã tạo ${type} - Lần ${batchNo}: `
+          +
+          `${Number(
+            data?.session_count ||
+            0
+          )} buổi · `
+          +
+          `${money(
+            data?.expected_amount
+          )}.`;
+
+
+        /*
+          Reload để:
+          - cảnh báo biến mất
+          - kỳ mới xuất hiện trong danh sách
+          - summary cập nhật
+        */
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          800
+        );
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "BUILD COURT RECON:",
+          error
+        );
+
+
+        message.style.color =
+          "#ffaaaa";
+
+
+        message.textContent =
+          "Không tạo được đối soát: "
+          +
+          (
+            error?.message ||
+            error
+          );
+
+
+        btn.disabled =
+          false;
+
+
+        btn.textContent =
+          supplemental
+            ?
+            "TẠO ĐỐI SOÁT BỔ SUNG"
+            :
+            "TẠO ĐỐI SOÁT";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadUnreconciledCourtExpenses();
+
+
+  /*
+    Quay lại tab → kiểm tra lại ngay.
+  */
+
+  window.addEventListener(
+    "focus",
+    loadUnreconciledCourtExpenses
+  );
+
+
+  /*
+    Tự kiểm tra mỗi 60 giây.
+  */
+
+  setInterval(
+    loadUnreconciledCourtExpenses,
+    60000
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
