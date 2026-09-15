@@ -2723,6 +2723,521 @@
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE - CHI PHÍ VẬN HÀNH V2
+     - Thêm Người nhận / Nhà cung cấp
+     - Khóa nhập tay Thuê sân
+     - Dùng admin_add_operating_expense_v2
+========================================================== -->
+
+<script>
+(function () {
+
+  if (
+    document.getElementById(
+      "expensePayee"
+    )
+  ) {
+    return;
+  }
+
+
+  const form =
+    document.getElementById(
+      "expenseForm"
+    );
+
+  const expenseDate =
+    document.getElementById(
+      "expenseDate"
+    );
+
+  const expenseType =
+    document.getElementById(
+      "expenseType"
+    );
+
+  const expenseAmount =
+    document.getElementById(
+      "expenseAmount"
+    );
+
+  const expenseDescription =
+    document.getElementById(
+      "expenseDescription"
+    );
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+  const monthFilter =
+    document.getElementById(
+      "monthFilter"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !form ||
+    !expenseDate ||
+    !expenseType ||
+    !expenseAmount ||
+    !expenseDescription ||
+    !submitBtn
+  ) {
+
+    console.error(
+      "PickDee: Không tìm thấy form chi phí."
+    );
+
+    return;
+  }
+
+
+  /* ==========================================
+     1. KHÓA THUÊ SÂN KHỎI FORM NHẬP TAY
+  ========================================== */
+
+  Array.from(
+    expenseType.options
+  ).forEach(
+    option => {
+
+      if (
+        String(
+          option.value || ""
+        )
+          .trim()
+          .toLowerCase()
+        ===
+        "thuê sân"
+      ) {
+
+        option.remove();
+
+      }
+
+    }
+  );
+
+
+  /* ==========================================
+     2. THÊM NGƯỜI NHẬN / NHÀ CUNG CẤP
+  ========================================== */
+
+  const amountField =
+    expenseAmount.closest(
+      ".field"
+    );
+
+  const formGrid =
+    amountField
+      ?
+      amountField.parentElement
+      :
+      null;
+
+
+  if (!formGrid) {
+
+    console.error(
+      "PickDee: Không tìm thấy form-grid."
+    );
+
+    return;
+  }
+
+
+  const payeeField =
+    document.createElement(
+      "div"
+    );
+
+  payeeField.className =
+    "field";
+
+  payeeField.innerHTML = `
+
+    <label>
+      Người nhận / Nhà cung cấp
+    </label>
+
+    <input
+      id="expensePayee"
+      type="text"
+      maxlength="150"
+      autocomplete="off"
+      placeholder="Ví dụ: Shop bóng ABC"
+      required
+    >
+
+  `;
+
+
+  amountField.insertAdjacentElement(
+    "afterend",
+    payeeField
+  );
+
+
+  const expensePayee =
+    document.getElementById(
+      "expensePayee"
+    );
+
+
+  /* ==========================================
+     3. THÊM GHI CHÚ QUẢN LÝ
+  ========================================== */
+
+  const typeField =
+    expenseType.closest(
+      ".field"
+    );
+
+
+  if (
+    typeField &&
+    !document.getElementById(
+      "expenseCourtNoticeV2"
+    )
+  ) {
+
+    const notice =
+      document.createElement(
+        "div"
+      );
+
+    notice.id =
+      "expenseCourtNoticeV2";
+
+    notice.style.marginTop =
+      "7px";
+
+    notice.style.fontSize =
+      "11px";
+
+    notice.style.fontWeight =
+      "700";
+
+    notice.style.lineHeight =
+      "1.45";
+
+    notice.style.color =
+      "#d8ff45";
+
+    notice.textContent =
+      "🏟️ Tiền sân được hệ thống tự sinh từ buổi học và quản lý tại Đối soát sân.";
+
+    typeField.appendChild(
+      notice
+    );
+
+  }
+
+
+  expenseDescription.placeholder =
+    "Ví dụ: Mua 20 quả bóng tập cho Coach khu vực Bắc Ninh";
+
+
+  /* ==========================================
+     4. SUPABASE
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const financeV2Sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* ==========================================
+     5. HIỂN THỊ THÔNG BÁO
+  ========================================== */
+
+  function showV2Message(
+    text,
+    isError = false
+  ) {
+
+    if (!messageEl) {
+      return;
+    }
+
+
+    messageEl.textContent =
+      text;
+
+
+    messageEl.style.color =
+      isError
+        ?
+        "#ff8e8e"
+        :
+        "#d8ff45";
+
+
+    messageEl.style.fontWeight =
+      "700";
+
+    messageEl.style.margin =
+      "12px 0";
+
+  }
+
+
+  /* ==========================================
+     6. CHẶN SUBMIT CŨ
+     DÙNG CAPTURE = TRUE
+  ========================================== */
+
+  form.addEventListener(
+    "submit",
+
+    async function (event) {
+
+      /*
+        Chặn listener cũ gọi RPC 4 tham số.
+      */
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+
+      const amount =
+        Number(
+          expenseAmount.value
+        );
+
+
+      const payee =
+        expensePayee.value
+          .trim();
+
+
+      const type =
+        expenseType.value
+          .trim();
+
+
+      /* ======================================
+         VALIDATE
+      ======================================= */
+
+      if (!type) {
+
+        showV2Message(
+          "Vui lòng chọn loại chi phí.",
+          true
+        );
+
+        expenseType.focus();
+
+        return;
+
+      }
+
+
+      if (
+        type.toLowerCase()
+        ===
+        "thuê sân"
+      ) {
+
+        showV2Message(
+          "Tiền thuê sân không được nhập tay.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !amount ||
+        amount <= 0
+      ) {
+
+        showV2Message(
+          "Vui lòng nhập số tiền hợp lệ.",
+          true
+        );
+
+        expenseAmount.focus();
+
+        return;
+
+      }
+
+
+      if (!payee) {
+
+        showV2Message(
+          "Vui lòng nhập Người nhận / Nhà cung cấp.",
+          true
+        );
+
+        expensePayee.focus();
+
+        return;
+
+      }
+
+
+      /* ======================================
+         GỌI RPC V2
+      ======================================= */
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "ĐANG GHI NHẬN...";
+
+
+      showV2Message(
+        "Đang ghi nhận chi phí..."
+      );
+
+
+      try {
+
+        const {
+          error
+        } =
+          await financeV2Sb.rpc(
+            "admin_add_operating_expense_v2",
+            {
+
+              p_expense_date:
+                expenseDate.value,
+
+              p_expense_type:
+                type,
+
+              p_amount:
+                amount,
+
+              p_description:
+                expenseDescription.value
+                  .trim()
+                ||
+                null,
+
+              p_payee_name:
+                payee
+
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        const expenseMonth =
+          expenseDate.value
+            .slice(
+              0,
+              7
+            );
+
+
+        /* ======================================
+           RESET FORM
+        ======================================= */
+
+        expenseAmount.value =
+          "";
+
+        expensePayee.value =
+          "";
+
+        expenseDescription.value =
+          "";
+
+        expenseType.value =
+          "";
+
+
+        showV2Message(
+          "✓ Đã ghi nhận chi phí. Khoản này chưa được coi là đã thanh toán."
+        );
+
+
+        /*
+          Dùng listener reloadAll đã có sẵn
+          trên monthFilter của trang cũ.
+        */
+
+        if (monthFilter) {
+
+          monthFilter.value =
+            expenseMonth;
+
+          monthFilter.dispatchEvent(
+            new Event(
+              "change"
+            )
+          );
+
+        }
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "PICKDEE EXPENSE V2:",
+          error
+        );
+
+
+        showV2Message(
+          "Không ghi nhận được: "
+          +
+          (
+            error.message
+            ||
+            error
+          ),
+          true
+        );
+
+      }
+      finally {
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "+ GHI NHẬN CHI PHÍ";
+
+      }
+
+    },
+
+    true
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
