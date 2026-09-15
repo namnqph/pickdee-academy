@@ -1367,7 +1367,7 @@
       [];
 
 
-    const {
+       const {
       data: courtRows,
       error: courtError
     } =
@@ -1378,6 +1378,7 @@
           name,
           area,
           ward,
+          cost_type,
           price_per_session,
           status,
           verified,
@@ -1391,13 +1392,8 @@
           "verified",
           true
         )
-        .eq(
-          "price_verified",
-          true
-        )
-        .gt(
-          "price_per_session",
-          0
+        .or(
+          "and(cost_type.eq.Có phí,price_verified.eq.true,price_per_session.gt.0),and(cost_type.eq.Miễn phí,price_per_session.eq.0)"
         )
         .order(
           "name",
@@ -1405,7 +1401,6 @@
             ascending:true
           }
         );
-
 
     if (courtError) {
 
