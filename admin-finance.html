@@ -2573,6 +2573,156 @@
 
 })();
 </script>
+  <script>
+(function () {
+
+  /* =========================================
+     PICKDEE
+     KHÓA NHẬP TAY CHI PHÍ THUÊ SÂN
+     Tiền sân chỉ được sinh tự động từ buổi học
+  ========================================= */
+
+  function findExpenseTypeSelect() {
+
+    const selects =
+      Array.from(
+        document.querySelectorAll("select")
+      );
+
+    return selects.find(select => {
+
+      const text =
+        Array.from(select.options)
+          .map(o => o.textContent.trim())
+          .join(" ");
+
+      return (
+        text.includes("Thuê sân")
+        ||
+        text.includes("Mua bóng")
+        ||
+        text.includes("Dụng cụ")
+      );
+
+    }) || null;
+
+  }
+
+
+  function lockCourtExpense() {
+
+    const select =
+      findExpenseTypeSelect();
+
+    if (!select) {
+      console.warn(
+        "PickDee: chưa tìm thấy ô Loại chi phí."
+      );
+      return;
+    }
+
+
+    /* Xóa Thuê sân khỏi danh sách nhập tay */
+
+    Array.from(
+      select.options
+    ).forEach(option => {
+
+      const text =
+        option.textContent
+          .trim()
+          .toLowerCase();
+
+      const value =
+        String(option.value || "")
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        text.includes("thuê sân")
+        ||
+        value.includes("thuê sân")
+        ||
+        value.includes("thue san")
+      ) {
+
+        option.remove();
+
+      }
+
+    });
+
+
+    /* Nếu trình duyệt đang giữ lựa chọn cũ */
+
+    if (
+      String(select.value)
+        .toLowerCase()
+        .includes("thuê sân")
+    ) {
+
+      select.value = "";
+
+    }
+
+
+    /* Thêm ghi chú ngay dưới Loại chi phí */
+
+    if (
+      !document.getElementById(
+        "manualExpenseCourtNotice"
+      )
+    ) {
+
+      const note =
+        document.createElement("div");
+
+      note.id =
+        "manualExpenseCourtNotice";
+
+      note.style.marginTop =
+        "7px";
+
+      note.style.fontSize =
+        "11px";
+
+      note.style.lineHeight =
+        "1.45";
+
+      note.style.color =
+        "#d8ff45";
+
+      note.style.fontWeight =
+        "700";
+
+      note.innerHTML =
+        "🏟️ Tiền thuê sân được hệ thống tự sinh từ buổi học, không nhập tay tại đây.";
+
+      select.insertAdjacentElement(
+        "afterend",
+        note
+      );
+
+    }
+
+  }
+
+
+  /* Chạy sau khi trang render */
+
+  setTimeout(
+    lockCourtExpense,
+    300
+  );
+
+  setTimeout(
+    lockCourtExpense,
+    1000
+  );
+
+})();
+</script>
 </body>
 
 </html>
