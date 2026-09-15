@@ -6844,6 +6844,409 @@ window.addEventListener(
 
 })();
 </script>
+  <script>
+(async function () {
+
+  /* =====================================================
+     PICKDEE - CARD ĐỐI SOÁT SÂN BẢN CHỐT
+     Thay hẳn card cũ để vô hiệu hóa script giao diện cũ
+  ====================================================== */
+
+  const oldCard =
+    document.getElementById("courtReconciliationCard");
+
+  if (!oldCard) return;
+
+
+  /* Tạo card hoàn toàn mới.
+     Các interval cũ vẫn giữ tham chiếu tới oldCard đã bị tháo,
+     nên không thể làm thay đổi card mới này nữa.
+  */
+
+  const newCard =
+    document.createElement("a");
+
+  newCard.id =
+    "courtReconciliationCard";
+
+  newCard.href =
+    "./admin-court-reconciliation";
+
+  newCard.className =
+    "card-link";
+
+
+  newCard.innerHTML = `
+    <div class="card">
+
+      <h2>
+        🧾 Đối soát sân
+      </h2>
+
+      <p>
+        Đối soát tiền thuê sân theo kỳ,
+        theo dõi chênh lệch và xác nhận
+        thanh toán cho từng sân.
+      </p>
+
+      <div
+        id="courtFinalMonth"
+        class="month-label"
+      >
+        Tháng hiện tại
+      </div>
+
+      <div class="card-stats">
+
+        <div class="card-stat">
+
+          <span class="card-stat-label">
+            🟠 Chưa đối soát
+          </span>
+
+          <span
+            id="courtFinalPending"
+            class="card-stat-value value-orange"
+          >
+            ...
+          </span>
+
+        </div>
+
+
+        <div class="card-stat">
+
+          <span class="card-stat-label">
+            💸 Còn phải trả sân
+          </span>
+
+          <span
+            id="courtFinalUnpaid"
+            class="card-stat-value value-red"
+          >
+            ...
+          </span>
+
+        </div>
+
+
+        <div class="card-stat">
+
+          <span class="card-stat-label">
+            ⚠️ Ngoài kỳ đối soát
+          </span>
+
+          <span
+            id="courtFinalOutside"
+            class="card-stat-value value-green"
+          >
+            ...
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+
+  oldCard.replaceWith(newCard);
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sbFinalCourt =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function money(value) {
+
+    return (
+      Number(value || 0)
+        .toLocaleString("vi-VN")
+      +
+      "đ"
+    );
+
+  }
+
+
+  function currentPeriod() {
+
+    const now =
+      new Date();
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(2, "0")
+    );
+
+  }
+
+
+  function periodLabel(period) {
+
+    const parts =
+      String(period || "")
+        .split("-");
+
+    if (parts.length !== 2) {
+      return "Tháng hiện tại";
+    }
+
+    return (
+      "Tháng "
+      +
+      parts[1]
+      +
+      "/"
+      +
+      parts[0]
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadFinalCourtCard() {
+
+    const pendingEl =
+      document.getElementById(
+        "courtFinalPending"
+      );
+
+    const unpaidEl =
+      document.getElementById(
+        "courtFinalUnpaid"
+      );
+
+    const outsideEl =
+      document.getElementById(
+        "courtFinalOutside"
+      );
+
+    const monthEl =
+      document.getElementById(
+        "courtFinalMonth"
+      );
+
+
+    if (
+      !pendingEl ||
+      !unpaidEl ||
+      !outsideEl ||
+      !monthEl
+    ) {
+      return;
+    }
+
+
+    try {
+
+      const period =
+        currentPeriod();
+
+      monthEl.textContent =
+        periodLabel(period);
+
+
+      const [
+        summaryResult,
+        outsideResult
+      ] =
+        await Promise.all([
+
+          sbFinalCourt.rpc(
+            "admin_get_court_reconciliation_summary",
+            {
+              p_period: period
+            }
+          ),
+
+          sbFinalCourt.rpc(
+            "admin_get_unreconciled_court_expenses"
+          )
+
+        ]);
+
+
+      if (summaryResult.error) {
+        throw summaryResult.error;
+      }
+
+      if (outsideResult.error) {
+        throw outsideResult.error;
+      }
+
+
+      const summary =
+        summaryResult.data || {};
+
+
+      const outsideRows =
+        Array.isArray(
+          outsideResult.data
+        )
+          ?
+          outsideResult.data
+          :
+          [];
+
+
+      const pending =
+        Number(
+          summary.pending_count || 0
+        );
+
+
+      const unpaid =
+        Number(
+          summary.unpaid_amount || 0
+        );
+
+
+      const outside =
+        outsideRows.reduce(
+          (total, row) =>
+            total
+            +
+            Number(
+              row.total_amount || 0
+            ),
+          0
+        );
+
+
+      pendingEl.textContent =
+        String(pending);
+
+      unpaidEl.textContent =
+        money(unpaid);
+
+      outsideEl.textContent =
+        money(outside);
+
+
+      /* Màu số */
+
+      pendingEl.className =
+        "card-stat-value "
+        +
+        (
+          pending > 0
+            ?
+            "value-orange"
+            :
+            "value-green"
+        );
+
+
+      unpaidEl.className =
+        "card-stat-value "
+        +
+        (
+          unpaid > 0
+            ?
+            "value-red"
+            :
+            "value-green"
+        );
+
+
+      outsideEl.className =
+        "card-stat-value "
+        +
+        (
+          outside > 0
+            ?
+            "value-red"
+            :
+            "value-green"
+        );
+
+
+      /* Chỉ cảnh báo bằng viền card.
+         Không thay đổi bố cục.
+      */
+
+      const card =
+        newCard.querySelector(".card");
+
+
+      if (
+        outside > 0
+      ) {
+
+        card.style.borderColor =
+          "rgba(255,100,100,.70)";
+
+      }
+      else if (
+        pending > 0 ||
+        unpaid > 0
+      ) {
+
+        card.style.borderColor =
+          "rgba(255,190,90,.55)";
+
+      }
+      else {
+
+        card.style.borderColor =
+          "";
+
+      }
+
+    }
+    catch (error) {
+
+      console.error(
+        "FINAL COURT CARD:",
+        error
+      );
+
+      pendingEl.textContent = "!";
+      unpaidEl.textContent = "—";
+      outsideEl.textContent = "—";
+
+    }
+
+  }
+
+
+  await loadFinalCourtCard();
+
+
+  setInterval(
+    loadFinalCourtCard,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadFinalCourtCard
+  );
+
+})();
+</script>
 </body>
 
 </html>
