@@ -305,6 +305,7 @@ function sortCoachSessions(rows) {
         getSessionPriority(b);
 
 
+      // 1. Ưu tiên theo nhóm trạng thái
       if (
         priorityA !== priorityB
       ) {
@@ -319,60 +320,102 @@ function sortCoachSessions(rows) {
         getSessionTime(b);
 
 
-      /*
-        QUÁ HẠN:
-        buổi quá hạn lâu nhất đứng trước
-      */
-
+      // 2. QUÁ HẠN:
+      // buổi cũ nhất cần xử lý trước
       if (
         priorityA === 0
       ) {
-        return timeA - timeB;
+
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+
+        return (
+          Number(a.session_no || 0) -
+          Number(b.session_no || 0)
+        );
       }
 
 
-      /*
-        HÔM NAY:
-        giờ sớm đứng trước
-      */
-
+      // 3. HÔM NAY:
+      // giờ sớm trước
       if (
         priorityA === 1
       ) {
-        return timeA - timeB;
+
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+
+        return (
+          Number(a.session_no || 0) -
+          Number(b.session_no || 0)
+        );
       }
 
 
-      /*
-        SẮP TỚI:
-        buổi gần nhất đứng trước
-      */
-
+      // 4. SẮP TỚI:
+      // buổi gần nhất trước
       if (
         priorityA === 2
       ) {
-        return timeA - timeB;
+
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+
+        return (
+          Number(a.session_no || 0) -
+          Number(b.session_no || 0)
+        );
       }
 
 
-      /*
-        TRẠNG THÁI KHÁC:
-        ngày mới nhất đứng trước
-      */
-
+      // 5. VẮNG / HỦY / TRẠNG THÁI KHÁC:
+      // mới nhất trước
       if (
         priorityA === 3
       ) {
+
+        if (timeA !== timeB) {
+          return timeB - timeA;
+        }
+
+        return (
+          Number(b.id || 0) -
+          Number(a.id || 0)
+        );
+      }
+
+
+      // 6. ĐÃ HOÀN THÀNH:
+      // ngày giờ mới nhất trước
+      if (timeA !== timeB) {
         return timeB - timeA;
       }
 
 
-      /*
-        ĐÃ HOÀN THÀNH:
-        buổi mới nhất đứng trước
-      */
+      // Nếu cùng ngày + cùng giờ:
+      // buổi số lớn hơn đứng trước
+      const sessionNoA =
+        Number(a.session_no || 0);
 
-      return timeB - timeA;
+      const sessionNoB =
+        Number(b.session_no || 0);
+
+
+      if (
+        sessionNoA !== sessionNoB
+      ) {
+        return sessionNoB - sessionNoA;
+      }
+
+
+      // Cuối cùng dùng ID mới hơn trước
+      return (
+        Number(b.id || 0) -
+        Number(a.id || 0)
+      );
     }
   );
 }
