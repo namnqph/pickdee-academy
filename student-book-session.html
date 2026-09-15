@@ -1627,7 +1627,7 @@
      NEXT SESSION NUMBER
   ====================================================== */
 
-  async function loadNextSessionNo(
+    async function loadNextSessionNo(
     registrationId
   ) {
 
@@ -1639,42 +1639,76 @@
         .from(
           "class_sessions"
         )
-        .select(
-          "session_no"
-        )
+        .select(`
+          session_no,
+          status
+        `)
         .eq(
           "registration_id",
           Number(registrationId)
-        )
-        .order(
-          "session_no",
-          {
-            ascending: false
-          }
-        )
-        .limit(1);
+        );
 
 
     if (error) {
-
       throw error;
-
     }
 
 
+    /*
+      Chỉ tính các buổi còn hiệu lực.
+
+      Buổi đã Hủy / Đã hủy
+      KHÔNG được chiếm số thứ tự buổi.
+    */
+
+    const validSessionNumbers =
+      (data || [])
+        .filter(
+          row => {
+
+            const status =
+              String(
+                row.status || ""
+              )
+                .trim()
+                .toLowerCase();
+
+            return (
+              status !== "hủy"
+              &&
+              status !== "đã hủy"
+            );
+
+          }
+        )
+        .map(
+          row =>
+            Number(
+              row.session_no || 0
+            )
+        )
+        .filter(
+          value =>
+            Number.isFinite(value)
+            &&
+            value > 0
+        );
+
+
     const last =
-      Number(
-        data?.[0]?.session_no
-        ||
-        0
-      );
+      validSessionNumbers.length
+        ?
+        Math.max(
+          ...validSessionNumbers
+        )
+        :
+        0;
 
 
     nextSessionNo.textContent =
       `Buổi ${last + 1}`;
 
   }
-
 
   /* =====================================================
      APPLY REGISTRATION
