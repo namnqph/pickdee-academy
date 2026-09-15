@@ -3253,6 +3253,466 @@
 
 })();
 </script>
+  <script>
+(function () {
+
+  /* =====================================================
+     PICKDEE
+     FIX TỔNG VIỆC + BANNER KHÔNG CÓ VIỆC
+  ====================================================== */
+
+
+  const TASK_LABELS = [
+
+    "Buổi quá hạn",
+
+    "Thiếu điểm danh",
+
+    "Công Coach",
+
+    "Thiếu sân",
+
+    "Yêu cầu lịch",
+
+    "Yêu cầu đổi Coach",
+
+    "Hồ sơ Coach",
+
+    "Buổi Coach chưa điểm danh",
+
+    "Chấm trình cuối khóa"
+
+  ];
+
+
+  /* =====================================================
+     TÌM TEXT CHÍNH XÁC
+  ====================================================== */
+
+  function findLeafByText(text) {
+
+    return Array.from(
+      document.querySelectorAll(
+        "body *"
+      )
+    ).find(
+      el =>
+
+        el.children.length === 0
+
+        &&
+
+        el.textContent
+          .trim() === text
+    )
+    ||
+    null;
+
+  }
+
+
+  /* =====================================================
+     TÌM CON SỐ TRONG CARD CỦA LABEL
+  ====================================================== */
+
+  function findNumberNearLabel(
+    labelText
+  ) {
+
+    const label =
+      findLeafByText(
+        labelText
+      );
+
+
+    if (!label) {
+      return null;
+    }
+
+
+    let box =
+      label.parentElement;
+
+
+    for (
+      let level = 0;
+      level < 6 && box;
+      level++,
+      box = box.parentElement
+    ) {
+
+
+      const candidates =
+        Array.from(
+          box.querySelectorAll(
+            "*"
+          )
+        )
+        .filter(
+          el =>
+
+            el.children.length === 0
+
+            &&
+
+            /^\d+$/.test(
+              el.textContent.trim()
+            )
+        );
+
+
+      if (
+        candidates.length > 0
+      ) {
+
+        return candidates[0];
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  /* =====================================================
+     TÌM BANNER XANH
+  ====================================================== */
+
+  function findEmptyBanner() {
+
+    const phrase =
+      "Hiện không có việc nào cần Admin xử lý";
+
+
+    const leaf =
+      Array.from(
+        document.querySelectorAll(
+          "body *"
+        )
+      ).find(
+        el =>
+
+          el.children.length === 0
+
+          &&
+
+          el.textContent.includes(
+            phrase
+          )
+      );
+
+
+    if (!leaf) {
+      return null;
+    }
+
+
+    let box =
+      leaf;
+
+
+    /*
+      Đi lên wrapper ngoài cùng
+      nhưng chỉ khi wrapper vẫn chỉ chứa
+      đúng nội dung banner này.
+    */
+
+    while (
+
+      box.parentElement
+
+      &&
+
+      box.parentElement !==
+      document.body
+
+      &&
+
+      box.parentElement
+        .textContent
+        .trim()
+      ===
+      leaf.textContent
+        .trim()
+
+    ) {
+
+      box =
+        box.parentElement;
+
+    }
+
+
+    return box;
+
+  }
+
+
+  /* =====================================================
+     TÌM DÒNG "ĐÃ CẬP NHẬT X VIỆC"
+  ====================================================== */
+
+  function findUpdateText() {
+
+    return Array.from(
+      document.querySelectorAll(
+        "body *"
+      )
+    ).find(
+      el =>
+
+        el.children.length === 0
+
+        &&
+
+        el.textContent.includes(
+          "Đã cập nhật"
+        )
+
+        &&
+
+        el.textContent.includes(
+          "việc lúc"
+        )
+    )
+    ||
+    null;
+
+  }
+
+
+  /* =====================================================
+     ĐẾM VIỆC CŨ
+  ====================================================== */
+
+  function countNormalTasks() {
+
+    let total =
+      0;
+
+
+    TASK_LABELS.forEach(
+      labelText => {
+
+
+        const numberEl =
+          findNumberNearLabel(
+            labelText
+          );
+
+
+        if (!numberEl) {
+          return;
+        }
+
+
+        total +=
+          Number(
+            numberEl.textContent
+              .trim()
+          )
+          ||
+          0;
+
+      }
+    );
+
+
+    return total;
+
+  }
+
+
+  /* =====================================================
+     SYNC
+  ====================================================== */
+
+  function syncAdminTaskSummary() {
+
+
+    /*
+      Mỗi dòng tiền sân đang hiện
+      được tính đúng 1 việc.
+    */
+
+    const courtTaskCount =
+      document.querySelectorAll(
+        "#courtTaskSection .court-task-row"
+      ).length;
+
+
+    const normalTaskCount =
+      countNormalTasks();
+
+
+    const total =
+      normalTaskCount
+      +
+      courtTaskCount;
+
+
+    /* =================================
+       TỔNG VIỆC
+    ================================== */
+
+    const totalEl =
+      findNumberNearLabel(
+        "Tổng việc"
+      );
+
+
+    if (
+      totalEl
+
+      &&
+
+      totalEl.textContent.trim()
+      !==
+      String(total)
+    ) {
+
+      totalEl.textContent =
+        String(total);
+
+    }
+
+
+    /* =================================
+       DÒNG ĐÃ CẬP NHẬT
+    ================================== */
+
+    const updateEl =
+      findUpdateText();
+
+
+    if (updateEl) {
+
+
+      const now =
+        new Date();
+
+
+      const hh =
+        String(
+          now.getHours()
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      const mm =
+        String(
+          now.getMinutes()
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      const wantedText =
+        `✓ Đã cập nhật ${total} việc lúc ${hh}:${mm}`;
+
+
+      /*
+        Chỉ sửa khi số việc đang sai.
+        Không bắt đồng hồ chạy từng giây.
+      */
+
+      const currentText =
+        updateEl.textContent;
+
+
+      const match =
+        currentText.match(
+          /Đã cập nhật\s+(\d+)\s+việc/
+        );
+
+
+      const currentCount =
+        match
+          ?
+          Number(
+            match[1]
+          )
+          :
+          -1;
+
+
+      if (
+        currentCount !== total
+      ) {
+
+        updateEl.textContent =
+          wantedText;
+
+      }
+
+    }
+
+
+    /* =================================
+       BANNER "KHÔNG CÓ VIỆC"
+    ================================== */
+
+    const emptyBanner =
+      findEmptyBanner();
+
+
+    if (emptyBanner) {
+
+
+      emptyBanner.style.display =
+        total > 0
+          ?
+          "none"
+          :
+          "";
+
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  /*
+    Chờ script cũ + script tiền sân
+    render xong.
+  */
+
+  setTimeout(
+    syncAdminTaskSummary,
+    300
+  );
+
+
+  setTimeout(
+    syncAdminTaskSummary,
+    1000
+  );
+
+
+  /*
+    Nếu bấm CẬP NHẬT,
+    script cũ có thể render lại số 0.
+    Ta đồng bộ lại.
+  */
+
+  setInterval(
+    syncAdminTaskSummary,
+    2000
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
