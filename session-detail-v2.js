@@ -294,11 +294,6 @@ function renderPaymentGate() {
     "";
 
 
-  /*
-    TEST:
-    vẫn được thao tác bình thường.
-  */
-
   if (
     paymentGate.isTest
     &&
@@ -328,11 +323,6 @@ function renderPaymentGate() {
   }
 
 
-  /*
-    REAL đã đủ học phí:
-    không cần hiện cảnh báo.
-  */
-
   if (
     paymentGate.ready
   ) {
@@ -349,11 +339,6 @@ function renderPaymentGate() {
 
   }
 
-
-  /*
-    REAL chưa đủ học phí
-    hoặc không xác minh được.
-  */
 
   box.style.display =
     "";
@@ -419,12 +404,6 @@ function updateButtons() {
   }
 
 
-  /*
-    Chưa tải được buổi
-    hoặc chưa xác minh học phí:
-    mặc định khóa.
-  */
-
   if (
     !currentSession
     ||
@@ -441,11 +420,6 @@ function updateButtons() {
 
   }
 
-
-  /*
-    Payment Gate fail:
-    khóa tuyệt đối.
-  */
 
   if (
     !paymentGate.ready
@@ -707,6 +681,7 @@ async function loadSession() {
         session_code,
         registration_id,
         coach_id,
+        substitute_coach_id,
         session_no,
         session_date,
         start_time,
@@ -726,7 +701,13 @@ async function loadSession() {
           )
         ),
 
-        coaches (
+        primary_coach:coaches!class_sessions_coach_id_fkey (
+          id,
+          coach_code,
+          full_name
+        ),
+
+        substitute_coach:coaches!class_sessions_substitute_coach_id_fkey (
           id,
           coach_code,
           full_name
@@ -783,10 +764,86 @@ async function loadSession() {
     );
 
 
-  const coach =
+  const primaryCoach =
     one(
-      data.coaches
+      data.primary_coach
     );
+
+
+  const substituteCoach =
+    one(
+      data.substitute_coach
+    );
+
+
+  const coachNameNode =
+    el(
+      "coachName"
+    );
+
+
+  if (coachNameNode) {
+
+    const coachItem =
+      coachNameNode.closest(
+        ".item"
+      );
+
+
+    const coachLabel =
+      coachItem?.querySelector(
+        ".label"
+      );
+
+
+    if (coachLabel) {
+
+      coachLabel.textContent =
+        "Coach chính";
+
+    }
+
+
+    if (
+      !el(
+        "substituteCoachName"
+      )
+      &&
+      coachItem
+    ) {
+
+      const substituteItem =
+        document.createElement(
+          "div"
+        );
+
+
+      substituteItem.className =
+        "item";
+
+
+      substituteItem.innerHTML = `
+        <div class="label">
+          Coach hỗ trợ
+        </div>
+
+        <div
+          class="value"
+          id="substituteCoachName"
+        >
+          —
+        </div>
+      `;
+
+
+      coachItem.insertAdjacentElement(
+        "afterend",
+        substituteItem
+      );
+
+    }
+
+  }
 
 
   show(
@@ -818,15 +875,30 @@ async function loadSession() {
   show(
     "coachName",
 
-    coach?.full_name
+    primaryCoach?.full_name
 
-      ? `${coach.full_name}${
-          coach.coach_code
-            ? ` (${coach.coach_code})`
+      ? `${primaryCoach.full_name}${
+          primaryCoach.coach_code
+            ? ` (${primaryCoach.coach_code})`
             : ""
         }`
 
-      : coach?.coach_code
+      : primaryCoach?.coach_code
+  );
+
+
+  show(
+    "substituteCoachName",
+
+    substituteCoach?.full_name
+
+      ? `${substituteCoach.full_name}${
+          substituteCoach.coach_code
+            ? ` (${substituteCoach.coach_code})`
+            : ""
+        }`
+
+      : "Chưa có Coach hỗ trợ"
   );
 
 
@@ -881,11 +953,6 @@ async function loadSession() {
   );
 
 
-  /*
-    Sau khi có Session:
-    mới kiểm tra Payment Gate.
-  */
-
   await checkPaymentGate();
 
 
@@ -909,13 +976,6 @@ async function changeStatus(
 
   }
 
-
-  /*
-    RE-CHECK PAYMENT NGAY TRƯỚC KHI
-    GỌI mark_session_result.
-
-    Không dùng trạng thái cũ trong RAM.
-  */
 
   setMessage(
     "Đang kiểm tra điều kiện học phí..."
@@ -1003,10 +1063,6 @@ async function changeStatus(
       true
     );
 
-
-    /*
-      Re-check sau lỗi.
-    */
 
     await checkPaymentGate();
 
