@@ -4351,5 +4351,182 @@ updateControls();
 
 })();
 </script>
+  <script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+  const homeSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+  const brandCandidates = [
+    document.querySelector(".brand"),
+    document.querySelector(".topbar .brand"),
+    document.querySelector("header .brand")
+  ].filter(Boolean);
+
+  let brand =
+    brandCandidates[0] || null;
+
+  if (!brand) {
+
+    const all =
+      Array.from(
+        document.querySelectorAll(
+          "header div, header span, header a"
+        )
+      );
+
+    brand =
+      all.find(
+        el =>
+          String(
+            el.textContent || ""
+          )
+            .replace(/\s+/g, " ")
+            .trim()
+            .includes(
+              "PickDee Academy"
+            )
+      ) || null;
+  }
+
+  if (!brand) {
+    return;
+  }
+
+  brand.style.cursor =
+    "pointer";
+
+  brand.style.userSelect =
+    "none";
+
+  brand.title =
+    "Về trang chủ";
+
+  brand.addEventListener(
+    "click",
+    async function () {
+
+      try {
+
+        const {
+          data: {
+            session
+          },
+          error:
+            sessionError
+        } =
+          await homeSb.auth.getSession();
+
+        if (
+          sessionError
+          ||
+          !session?.user
+        ) {
+
+          window.location.href =
+            "./index.html";
+
+          return;
+        }
+
+        const {
+          data: profile,
+          error:
+            profileError
+        } =
+          await homeSb
+            .from("profiles")
+            .select("role")
+            .eq(
+              "id",
+              session.user.id
+            )
+            .maybeSingle();
+
+        if (profileError) {
+
+          console.error(
+            "HOME ROLE:",
+            profileError
+          );
+
+          window.location.href =
+            "./index.html";
+
+          return;
+        }
+
+        const role =
+          String(
+            profile?.role || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (role === "admin") {
+
+          window.location.href =
+            "./admin";
+
+          return;
+        }
+
+        if (role === "coach") {
+
+          window.location.href =
+            "./coach";
+
+          return;
+        }
+
+        if (
+          role === "student"
+          ||
+          role === "hocvien"
+          ||
+          role === "học viên"
+        ) {
+
+          window.location.href =
+            "./student";
+
+          return;
+        }
+
+        window.location.href =
+          "./index.html";
+
+      }
+      catch (error) {
+
+        console.error(
+          "HOME NAVIGATION:",
+          error
+        );
+
+        window.location.href =
+          "./index.html";
+      }
+    }
+  );
+
+})();
+</script>
 </body>
 </html>
