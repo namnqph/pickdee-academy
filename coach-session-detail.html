@@ -1617,39 +1617,1453 @@ const packageName =
     registration?.package_name || ""
   ).trim();
 
-
 const sessionNumber =
   Number(
     data.session_no
   );
-
 
 const actionsEl =
   document.querySelector(
     ".actions"
   );
 
-
 const oldCurriculum =
   document.getElementById(
     "pickdeeCurriculum"
   );
 
-
 if (oldCurriculum) {
   oldCurriculum.remove();
 }
 
+const PICKDEE_CURRICULUM = {
+
+  basic: {
+
+    1: {
+      title: "ĐÁNH THUẬN TAY CƠ BẢN",
+
+      text: `Mục tiêu
+Học viên biết cách cầm vợt, tư thế chuẩn bị và đánh thuận tay qua lưới tối thiểu 7/10 bóng.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Xoay vai, khuỷu tay, cổ tay, hông, gối và cổ chân.
+Chạy bước nhỏ.
+Di chuyển ngang.
+Thực hiện động tác đánh thuận tay không bóng.
+
+5–10 phút — Làm quen với sân và luật
+Huấn luyện viên giới thiệu:
+Đường cuối sân.
+Đường biên dọc.
+Ô giao bóng.
+Vùng bếp.
+Quy tắc bóng phải nảy một lần ở mỗi bên sau giao bóng.
+
+10–18 phút — Cầm vợt và tư thế chuẩn bị
+Lực cầm vợt khoảng 3–4/10.
+Hai chân rộng bằng vai.
+Gối hơi chùng.
+Trọng tâm hướng về phía trước.
+Vợt đặt trước cơ thể.
+
+18–33 phút — Bài 1: Đánh thuận tay tại chỗ
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng đầu: đánh trúng bóng.
+20 bóng tiếp theo: đưa bóng qua lưới.
+10–20 bóng cuối: đưa bóng vào sân.
+
+33–45 phút — Bài 2: Đánh bóng vào giữa sân
+Huấn luyện viên cấp 40–50 bóng.
+Học viên đứng ở giữa sân.
+Đánh bóng qua lưới.
+Bóng phải rơi vào khu vực giữa hai đường biên.
+Sau mỗi cú đánh, đưa vợt trở lại phía trước.
+
+45–55 phút — Bài 3: Thử thách tính điểm
+Qua lưới: 1 điểm.
+Vào sân: 2 điểm.
+Vượt qua vạch giữa ô giao bóng: 3 điểm.
+Mục tiêu đạt 25 điểm.
+
+55–60 phút — Kiểm tra cuối buổi
+Huấn luyện viên cấp 10 bóng.
+Đạt yêu cầu: tối thiểu 7 bóng qua lưới và 6 bóng vào sân.
+
+Ba câu nhắc
+“Vợt ở phía trước.”
+“Chạm bóng trước người.”
+“Kết thúc về hướng mục tiêu.”`
+    },
+
+
+    2: {
+      title: "ĐÁNH THUẬN TAY KẾT HỢP DI CHUYỂN",
+
+      text: `Mục tiêu
+Học viên di chuyển đến bóng, đánh thuận tay và trở về vị trí trung tâm; đưa tối thiểu 7/10 bóng vào sân.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Bước ngang dọc đường cuối sân.
+Di chuyển tiến–lùi.
+Thực hiện động tác đánh thuận tay và trở về giữa.
+
+5–10 phút — Ôn đánh thuận tay
+Huấn luyện viên cấp 30–40 bóng tại vị trí cố định.
+Đánh qua lưới.
+Đưa bóng vào sân.
+Kiểm tra điểm tiếp xúc.
+
+10–18 phút — Hướng dẫn di chuyển
+Quan sát hướng bóng.
+Di chuyển đến vị trí đánh.
+Dừng và giữ thăng bằng.
+Đánh bóng.
+Trở về giữa sân.
+
+18–33 phút — Bài 1: Đánh thuận tay hai hướng
+Huấn luyện viên cấp 50–60 bóng.
+Bóng gần giữa.
+Bóng lệch trái.
+Bóng lệch phải.
+Sau đó chuyển sang cấp bóng ngẫu nhiên.
+
+33–45 phút — Bài 2: Kiểm soát độ sâu
+Bóng vào sân: 1 điểm.
+Bóng vượt qua vạch giữa ô giao bóng: 2 điểm.
+Bóng rơi gần đường cuối sân: 3 điểm.
+Mục tiêu đạt 35 điểm.
+
+45–55 phút — Bài 3: Xử lý ngẫu nhiên
+Huấn luyện viên thay đổi hướng và độ sâu.
+Học viên phải di chuyển, dừng, đánh và trở về giữa.
+Không đánh bóng khi cơ thể vẫn đang chạy.
+
+55–60 phút — Kiểm tra cuối buổi
+Huấn luyện viên cấp 10 bóng có di chuyển.
+Đạt yêu cầu: tối thiểu 7 bóng vào sân.
+Có ít nhất 5 lần trở về đúng vị trí.
+
+Ba câu nhắc
+“Di chuyển trước, đánh sau.”
+“Dừng người khi đánh.”
+“Đánh xong về giữa.”`
+    },
+
+
+    3: {
+      title: "ĐÁNH TRÁI TAY",
+
+      text: `Mục tiêu
+Học viên phân biệt bóng thuận tay và trái tay; đưa tối thiểu 6/10 bóng trái tay vào sân.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Xoay vai và thân người.
+Di chuyển ngang.
+Thực hiện động tác thuận tay–trái tay không bóng.
+
+5–10 phút — Ôn đánh thuận tay
+Huấn luyện viên cấp 30 bóng thuận tay có di chuyển.
+
+10–18 phút — Hướng dẫn đánh trái tay
+Xoay vai.
+Giữ mặt vợt ổn định.
+Chạm bóng trước cơ thể.
+Không bẻ cổ tay quá nhiều.
+Đánh xong đưa vợt về tư thế chuẩn bị.
+
+18–33 phút — Bài 1: Đánh trái tay cố định
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng qua lưới.
+20 bóng vào giữa sân.
+10–20 bóng vượt qua vạch giữa ô giao bóng.
+
+33–45 phút — Bài 2: Thuận tay–trái tay luân phiên
+Một bóng thuận tay.
+Một bóng trái tay.
+Sau mỗi 10 bóng, chuyển sang cấp ngẫu nhiên.
+Học viên trở về giữa sau mỗi cú đánh.
+
+45–55 phút — Bài 3: Nhận diện bóng
+Chọn đúng mặt đánh: 1 điểm.
+Đưa bóng vào sân: thêm 1 điểm.
+Bóng có độ sâu tốt: thêm 1 điểm.
+Mục tiêu đạt 50 điểm.
+
+55–60 phút — Kiểm tra cuối buổi
+Huấn luyện viên cấp 10 bóng ngẫu nhiên.
+Chọn đúng mặt đánh tối thiểu 8/10.
+Đưa bóng vào sân tối thiểu 6/10.
+Trái tay vào sân tối thiểu 3/5.
+
+Ba câu nhắc
+“Xoay vai.”
+“Chạm bóng phía trước.”
+“Đánh xong đưa vợt về giữa.”`
+    },
+
+
+    4: {
+      title: "GIAO BÓNG",
+
+      text: `Mục tiêu
+Học viên giao bóng đúng luật và đưa tối thiểu 6/10 bóng vào đúng ô chéo sân.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Khởi động vai, cổ tay và hông.
+Thực hiện động tác giao bóng không bóng.
+Tập chuyển trọng tâm từ chân sau sang chân trước.
+
+5–10 phút — Ôn thuận tay và trái tay
+Huấn luyện viên cấp 15 bóng thuận tay và 15 bóng trái tay.
+
+10–18 phút — Luật giao bóng
+Đứng sau đường cuối sân.
+Không giẫm đường cuối sân khi tiếp xúc bóng.
+Giao bóng chéo sân.
+Bóng phải vượt qua vùng bếp.
+Gọi điểm trước khi giao.
+Giữ cơ thể cân bằng sau khi giao.
+
+18–33 phút — Bài 1: Nhịp thả và tiếp xúc bóng
+Học viên thực hiện 50–60 bóng.
+20 bóng tập điểm tiếp xúc.
+20 bóng giao từ bên phải.
+10–20 bóng giao từ bên trái.
+
+33–45 phút — Bài 2: Giao bóng hai ô
+10 bóng từ bên phải.
+10 bóng từ bên trái.
+Sau đó đổi bên sau mỗi 5 bóng.
+Bóng vượt qua vạch giữa ô được tính là giao bóng sâu.
+
+45–55 phút — Bài 3: Giao bóng tính điểm
+Đúng động tác: 1 điểm.
+Vào đúng ô: thêm 1 điểm.
+Vào nửa sâu của ô: thêm 1 điểm.
+Thực hiện 3 vòng, mỗi vòng 10 bóng.
+
+55–60 phút — Kiểm tra cuối buổi
+Học viên giao 10 bóng, mỗi bên 5 bóng.
+Đúng luật tối thiểu 8/10.
+Vào đúng ô tối thiểu 6/10.
+Có ít nhất 3 bóng đạt độ sâu tốt.
+
+Ba câu nhắc
+“Đứng sau vạch.”
+“Vung vợt từ thấp lên cao.”
+“Kết thúc về hướng mục tiêu.”`
+    },
+
+
+    5: {
+      title: "TRẢ GIAO BÓNG",
+
+      text: `Mục tiêu
+Học viên trả giao bóng vào sân tối thiểu 7/10 và biết di chuyển lên phía trước sau cú trả bóng.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Chạy bước nhỏ tại đường cuối sân.
+Di chuyển ngang.
+Tập nhịp chùng chân chuẩn bị.
+Thực hiện động tác trả bóng rồi tiến lên.
+
+5–10 phút — Ôn giao bóng
+Học viên giao 30 bóng, đổi bên sau mỗi 5 bóng.
+
+10–18 phút — Hướng dẫn trả giao bóng
+Đứng sau đường cuối sân.
+Chờ bóng nảy.
+Động tác đưa vợt ra sau ngắn.
+Đánh bóng sâu vào giữa sân.
+Hoàn thành cú đánh rồi mới tiến lên.
+
+18–33 phút — Bài 1: Trả bóng cố định
+Huấn luyện viên giao hoặc cấp 50–60 bóng.
+20 bóng thuận tay.
+20 bóng trái tay.
+10–20 bóng vào giữa người.
+
+33–45 phút — Bài 2: Trả bóng và tiến lên
+Tiến về phía trước.
+Chùng chân khi huấn luyện viên chuẩn bị đánh.
+Giữ vợt trước người.
+Tiếp tục tiến lên vùng bếp khi an toàn.
+
+45–55 phút — Bài 3: Giao–trả–đánh tiếp
+Huấn luyện viên giao bóng.
+Học viên trả bóng sâu.
+Huấn luyện viên đánh bóng tiếp theo.
+Học viên xử lý cú đánh kế tiếp.
+
+55–60 phút — Kiểm tra cuối buổi
+Trả bóng vào sân tối thiểu 7/10.
+Trả bóng sâu tối thiểu 5/10.
+Di chuyển đúng sau cú trả bóng tối thiểu 7/10.
+
+Ba câu nhắc
+“Đứng sau đường cuối sân.”
+“Đánh sâu.”
+“Trả bóng xong tiến lên.”`
+    },
+
+
+    6: {
+      title: "DUY TRÌ CHUỖI ĐÁNH BÓNG CUỐI SÂN",
+
+      text: `Mục tiêu
+Học viên duy trì chuỗi đánh bóng qua lại tối thiểu 10 lần với tốc độ kiểm soát.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Di chuyển ngang cuối sân.
+Thực hiện động tác thuận tay–trái tay.
+Tập nhịp chùng chân chuẩn bị.
+
+5–10 phút — Ôn giao và trả giao bóng
+15 bóng giao.
+15 bóng trả giao.
+
+10–18 phút — Hướng dẫn kiểm soát bóng
+Chỉ sử dụng khoảng 60% lực.
+Đưa bóng cao an toàn qua lưới.
+Ưu tiên đánh vào giữa sân.
+Đánh xong trở về tư thế sẵn sàng.
+
+18–33 phút — Bài 1: Đánh bóng liên tục
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng thuận tay.
+20 bóng trái tay.
+10–20 bóng ngẫu nhiên.
+
+33–45 phút — Bài 2: Đánh bóng hợp tác
+Mục tiêu 4 lần.
+Sau đó 6 lần.
+Sau đó 8 lần.
+Cuối cùng 10 lần.
+
+45–55 phút — Bài 3: Giao–trả–duy trì bóng
+Giao bóng.
+Trả giao bóng.
+Để bóng nảy phía giao bóng.
+Tiếp tục đánh qua lại.
+
+55–60 phút — Kiểm tra cuối buổi
+Học viên có tối đa 5 lần thử.
+Có một chuỗi 10 lần; hoặc
+Có hai chuỗi từ 7 lần trở lên.
+
+Ba câu nhắc
+“Chỉ dùng 60% lực.”
+“Đưa bóng cao an toàn qua lưới.”
+“Đánh xong về tư thế sẵn sàng.”`
+    },
+
+
+    7: {
+      title: "ĐÁNH BÓNG TRÊN KHÔNG (VOLLEY)",
+
+      text: `Mục tiêu
+Học viên đánh bóng khi bóng chưa chạm đất bằng cả hai mặt vợt; đưa tối thiểu 7/10 bóng vào sân.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Khởi động vai và cổ tay.
+Di chuyển ngang dọc vùng bếp.
+Thực hiện động tác chặn bóng không bóng.
+
+5–10 phút — Ôn chuỗi đánh bóng
+Huấn luyện viên và học viên đánh nhẹ từ giữa sân.
+
+10–18 phút — Hướng dẫn kỹ thuật
+Đứng ngoài đường vùng bếp.
+Đặt vợt trước ngực.
+Không kéo vợt quá xa ra sau.
+Chặn và đẩy bóng bằng động tác ngắn.
+Giữ cơ thể cân bằng.
+
+18–33 phút — Bài 1: Đánh bóng cố định
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng thuận tay.
+20 bóng trái tay.
+10–20 bóng vào giữa người.
+
+33–45 phút — Bài 2: Đánh bóng ngẫu nhiên
+Huấn luyện viên thay đổi hướng bóng trái, giữa, phải.
+Học viên bước ngang, đánh bóng rồi trở lại vị trí giữa.
+
+45–55 phút — Bài 3: Kiểm soát hướng bóng
+Bóng vào sân: 1 điểm.
+Bóng sâu: 2 điểm.
+Bóng đi thấp xuống chân đối phương: 3 điểm.
+Bóng ra ngoài: 0 điểm.
+
+55–60 phút — Kiểm tra cuối buổi
+Tối thiểu 7/10 bóng vào sân.
+Chọn đúng mặt vợt tối thiểu 8/10.
+Không chạm đường vùng bếp khi đánh bóng chưa nảy.
+
+Ba câu nhắc
+“Vợt ở phía trước.”
+“Động tác ngắn.”
+“Giữ chân ngoài vùng bếp.”`
+    },
+
+
+    8: {
+      title: "VÙNG BẾP VÀ ĐÁNH BÓNG MỀM THUẬN TAY",
+
+      text: `Mục tiêu
+Học viên hiểu luật vùng bếp và đưa tối thiểu 7/10 bóng mềm thuận tay vào vùng bếp đối diện.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Giữ tư thế thấp.
+Di chuyển ngang dọc đường vùng bếp.
+Thực hiện động tác nâng bóng thuận tay.
+
+5–10 phút — Ôn đánh bóng trên không
+Huấn luyện viên cấp 30–40 bóng và kiểm tra vị trí chân.
+
+10–18 phút — Luật vùng bếp
+Không đánh bóng khi bóng chưa nảy nếu đang đứng trong vùng bếp.
+Không chạm đường vùng bếp khi đánh bóng chưa nảy.
+Quán tính sau cú đánh cũng không được đưa người vào vùng bếp.
+Được bước vào vùng bếp để đánh bóng đã nảy.
+
+18–33 phút — Bài 1: Đánh bóng mềm thuận tay
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng qua lưới.
+20 bóng rơi trong vùng bếp.
+10–20 bóng vào hai nửa vùng bếp.
+
+33–45 phút — Bài 2: Đánh thẳng và đánh chéo
+10 bóng đánh thẳng.
+10 bóng đánh chéo.
+Sau đó thay đổi hướng theo hiệu lệnh.
+
+45–55 phút — Bài 3: Duy trì bóng mềm
+Mục tiêu 4 lần.
+Sau đó 6 lần.
+Cuối cùng 8 lần.
+
+55–60 phút — Kiểm tra cuối buổi
+Tối thiểu 7/10 bóng rơi trong vùng bếp.
+Có một chuỗi đánh bóng mềm ít nhất 6 lần.
+Không vi phạm đường vùng bếp.
+
+Ba câu nhắc
+“Giữ người thấp.”
+“Nâng bóng, không đập bóng.”
+“Đưa bóng rơi vào vùng bếp.”`
+    },
+
+
+    9: {
+      title: "ĐÁNH BÓNG MỀM TRÁI TAY VÀ LÀM QUEN CÚ HÓA GIẢI",
+
+      text: `Mục tiêu
+Đánh bóng mềm trái tay vào vùng bếp tối thiểu 6/10 bóng.
+Hiểu cú hóa giải là gì.
+Thực hiện cú hóa giải cơ bản từ vị trí cách đường vùng bếp 1–2 bước.
+Duy trì chuỗi bóng mềm tối thiểu 8 lần.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Di chuyển ngang đường vùng bếp.
+Thực hiện động tác thuận tay và trái tay.
+Giữ vợt phía trước cơ thể.
+Tập thả lỏng cổ tay và cánh tay.
+
+5–10 phút — Ôn bóng mềm thuận tay
+Huấn luyện viên cấp 30–40 bóng.
+Đánh thẳng.
+Đánh chéo.
+Đưa bóng rơi vào vùng bếp.
+
+10–18 phút — Kỹ thuật bóng mềm trái tay
+Mặt vợt hơi mở.
+Chạm bóng trước người.
+Nâng bóng bằng vai và cánh tay.
+Hạn chế bẻ cổ tay.
+Đánh xong đưa vợt trở lại giữa cơ thể.
+
+18–30 phút — Bài 1: Bóng mềm trái tay
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng qua lưới.
+20 bóng rơi trong vùng bếp.
+10–20 bóng sang nửa trái hoặc nửa phải vùng bếp.
+
+30–42 phút — Bài 2: Thuận tay–trái tay ngẫu nhiên
+Bóng sang bên nào, học viên sử dụng mặt vợt phù hợp.
+Sau mỗi cú đánh, đưa vợt trở lại giữa.
+Học viên duy trì tư thế thấp.
+
+42–50 phút — Giới thiệu cú hóa giải
+Học viên lùi cách đường vùng bếp khoảng 1–2 bước.
+Thả lỏng lực cầm vợt.
+Đưa vợt ra trước bóng.
+Hấp thụ tốc độ bóng.
+Đưa bóng rơi nhẹ vào vùng bếp đối diện.
+
+50–55 phút — Bài 3: Nhận biết bóng mềm và bóng hóa giải
+Học viên đứng tại đường vùng bếp: đánh bóng mềm.
+Học viên đứng lùi phía sau: thực hiện cú hóa giải.
+Trước khi đánh, học viên phải nói tên kỹ thuật cần dùng.
+
+55–60 phút — Kiểm tra cuối buổi
+5 bóng mềm trái tay: tối thiểu 3 bóng vào vùng bếp.
+5 bóng hóa giải: tối thiểu 3 bóng vào vùng bếp.
+Một chuỗi bóng mềm tối thiểu 8 lần.
+
+Ba câu nhắc
+“Mặt vợt hơi mở.”
+“Mềm tay.”
+“Đưa bóng rơi vào vùng bếp.”`
+    },
+
+
+    10: {
+      title: "CÚ THẢ BÓNG (DROP) VÀ DI CHUYỂN LÊN LƯỚI",
+
+      text: `Mục tiêu
+Hiểu mục đích của cú thả bóng.
+Thả bóng từ cuối sân vào vùng bếp tối thiểu 6/10 lần.
+Biết tiến lên sau một cú thả bóng đạt yêu cầu.
+Không vừa chạy vừa đánh bóng.
+
+Ý nghĩa kỹ thuật
+Cú thả bóng làm bóng rơi vào vùng bếp đối diện.
+Buộc đối phương phải đánh bóng từ thấp lên.
+Tạo thời gian để người đánh tiến lên.
+Chuyển từ trạng thái phòng thủ sang trạng thái cân bằng.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Di chuyển từ cuối sân lên vùng bếp.
+Thực hiện động tác nâng bóng mềm.
+Tập chùng chân và giữ trọng tâm thấp.
+
+5–10 phút — Ôn bóng mềm
+Huấn luyện viên và học viên đánh bóng mềm tại đường vùng bếp.
+Mục tiêu duy trì 6–8 lần liên tục.
+
+10–18 phút — Hướng dẫn cú thả bóng
+Tư thế thấp.
+Mặt vợt hơi mở.
+Điểm tiếp xúc trước người.
+Nâng bóng theo đường cong.
+Bóng rơi vào vùng bếp đối diện.
+
+18–30 phút — Bài 1: Thả bóng từ khu vực chuyển tiếp
+Học viên đứng ở giữa sân.
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng thuận tay.
+20 bóng trái tay.
+10–20 bóng ngẫu nhiên.
+
+30–42 phút — Bài 2: Thả bóng từ cuối sân
+Học viên đứng gần đường cuối sân.
+Để bóng nảy.
+Thực hiện cú thả bóng vào vùng bếp.
+Giữ cơ thể cân bằng sau cú đánh.
+
+42–50 phút — Bài 3: Thả bóng rồi tiến lên
+Bóng cao hoặc quá sâu: học viên ở lại.
+Bóng rơi đúng vùng bếp: học viên tiến lên.
+Nếu bóng tiếp theo vẫn khó, thực hiện thêm một cú thả bóng hoặc hóa giải.
+
+50–55 phút — Giao–trả–cú đánh thứ ba
+Học viên giao bóng.
+Huấn luyện viên trả bóng sâu.
+Học viên thực hiện cú thả bóng ở cú đánh thứ ba.
+Học viên quyết định ở lại hay tiến lên.
+
+55–60 phút — Kiểm tra cuối buổi
+Thả tối thiểu 6/10 bóng vào vùng bếp.
+Có tối thiểu 4/10 bóng đủ thấp để tiến lên.
+Quyết định đúng lúc tiến lên tối thiểu 7/10 tình huống.
+
+Ba câu nhắc
+“Hạ thấp người.”
+“Nâng bóng vào vùng bếp.”
+“Bóng tốt mới tiến lên.”`
+    },
+
+
+    11: {
+      title: "CÚ HÓA GIẢI (RESET) VÀ VƯỢT QUA KHU VỰC CHUYỂN TIẾP",
+
+      text: `Mục tiêu
+Hiểu khi nào cần thực hiện cú hóa giải.
+Hóa giải tối thiểu 6/10 bóng vào vùng bếp.
+Di chuyển từ cuối sân lên đường vùng bếp có kiểm soát.
+Phân biệt được cú thả bóng và cú hóa giải.
+
+Ý nghĩa kỹ thuật
+Cú hóa giải được sử dụng khi học viên đang ở khu vực chuyển tiếp.
+Đối phương đánh bóng nhanh vào người hoặc xuống chân.
+Học viên chưa có vị trí cân bằng để tấn công.
+Học viên cần làm chậm lượt bóng để tiếp tục tiến lên.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động
+Di chuyển cuối sân–giữa sân–vùng bếp.
+Tập chùng chân.
+Chặn bóng không bóng bằng cả hai mặt vợt.
+
+5–10 phút — Ôn cú thả bóng
+Học viên thực hiện 20–30 cú thả bóng từ khu vực chuyển tiếp và cuối sân.
+
+10–18 phút — Hướng dẫn cú hóa giải
+Lực cầm vợt khoảng 2–3/10.
+Vợt ở trước thân.
+Không vung vợt mạnh về phía trước.
+Hấp thụ tốc độ bóng.
+Mặt vợt hơi mở.
+Đưa bóng rơi vào vùng bếp.
+
+18–30 phút — Bài 1: Hóa giải tại chỗ
+Huấn luyện viên cấp 50–60 bóng vào thuận tay, trái tay, giữa người và gần chân.
+
+30–42 phút — Bài 2: Hóa giải dưới áp lực
+Chùng chân trước khi bóng đến.
+Chặn hoặc hấp thụ bóng.
+Đưa bóng thấp vào vùng bếp.
+Không cố gắng đánh mạnh ngược lại.
+
+42–50 phút — Bài 3: Hóa giải rồi tiến lên
+Nếu bóng thấp, tiến lên một bước.
+Nếu bóng cao, giữ vị trí và tiếp tục phòng thủ.
+Lặp lại cho đến khi đến đường vùng bếp.
+
+50–55 phút — Thực chiến từ khu vực chuyển tiếp
+Hóa giải bóng vào vùng bếp.
+Không để bóng bật cao.
+Tiến lên đúng thời điểm.
+
+55–60 phút — Kiểm tra cuối buổi
+Tối thiểu 6/10 bóng hóa giải vào vùng bếp.
+Không quá 3 bóng bật cao tạo cơ hội tấn công.
+Tiến lên đúng thời điểm tối thiểu 7/10 tình huống.
+
+Ba câu nhắc
+“Mềm tay.”
+“Hấp thụ lực.”
+“Bóng thấp mới tiến lên.”`
+    },
+
+
+    12: {
+      title: "KẾT NỐI THẢ BÓNG, HÓA GIẢI VÀ THI ĐẤU 1-1",
+
+      text: `Mục tiêu
+Học viên kết nối được chuỗi:
+Giao bóng – trả giao bóng – thả bóng – tiến lên – hóa giải – đánh bóng mềm – tấn công khi có cơ hội.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động tự chủ
+Học viên tự khởi động và di chuyển qua các khu vực trên sân.
+
+5–12 phút — Ôn kỹ thuật bóng mềm
+10 bóng mềm thuận tay.
+10 bóng mềm trái tay.
+10 cú thả bóng.
+10 cú hóa giải.
+
+12–25 phút — Bài 1: Chuỗi sáu bước
+Học viên giao bóng.
+Huấn luyện viên trả bóng sâu.
+Học viên thực hiện cú thả bóng.
+Học viên tiến lên và chùng chân.
+Huấn luyện viên gây áp lực.
+Học viên thực hiện cú hóa giải.
+Hai bên tiếp tục đánh bóng mềm.
+Chỉ tấn công khi bóng đủ cao.
+
+25–38 phút — Bài 2: Phân biệt tình huống
+“Đánh sâu.”
+“Thả bóng.”
+“Hóa giải.”
+“Đánh bóng mềm.”
+“Tấn công.”
+
+Nguyên tắc quyết định
+Ở cuối sân và muốn tiến lên: thả bóng.
+Ở khu vực chuyển tiếp và chịu áp lực: hóa giải.
+Ở đường vùng bếp với bóng thấp: đánh bóng mềm.
+Ở đường vùng bếp với bóng cao: tấn công.
+Khi mất cân bằng: ưu tiên kiểm soát.
+
+38–52 phút — Bài 3: Đánh đơn nửa sân có điều kiện
+Chơi đến 7 điểm trên nửa sân thẳng hoặc nửa sân chéo.
+1 điểm nếu chọn đúng kỹ thuật.
+1 điểm nếu di chuyển đúng vị trí.
+1 điểm nếu thắng lượt bóng.
+
+52–57 phút — Kiểm tra đầu ra
+Cú thả bóng: tối thiểu 6/10 bóng rơi trong vùng bếp.
+Có tối thiểu 4 bóng tạo được cơ hội tiến lên.
+Cú hóa giải: tối thiểu 6/10 bóng rơi trong vùng bếp.
+Không quá 3 bóng bật cao.
+
+57–60 phút — Kết luận khóa học
+Đánh giá khả năng phân biệt cú thả bóng và cú hóa giải.
+Đánh giá thời điểm tiến lên.
+Đánh giá duy trì bóng tại đường vùng bếp.
+Đánh giá lựa chọn thời điểm tấn công.
+
+Ba câu nhắc
+“Cuối sân dùng cú thả bóng.”
+“Bị ép dùng cú hóa giải.”
+“Bóng thấp kiểm soát, bóng cao tấn công.”
+
+Tiêu chí hoàn thành
+Cú thả bóng vào vùng bếp: tối thiểu 6/10.
+Cú hóa giải vào vùng bếp: tối thiểu 6/10.
+Phân biệt thả bóng và hóa giải: tối thiểu 8/10 tình huống.
+Quyết định tiến lên hoặc ở lại: tối thiểu 7/10 tình huống.
+Chuỗi giao–trả–thả–tiến lên: tối thiểu 4/5 lần đúng.`
+    }
+
+  },  advanced: {
+
+    1: {
+      title: "KIỂM TRA ĐẦU VÀO VÀ KIỂM SOÁT CUỐI SÂN",
+
+      text: `Mục tiêu
+Xác định trình độ thực tế của học viên.
+Đánh thuận tay và trái tay có độ sâu.
+Đổi hướng bóng mà vẫn duy trì sự ổn định.
+Đưa tối thiểu 7/10 bóng vượt qua vạch giữa ô giao bóng.
+
+Nội dung chính
+
+Ôn và kiểm tra
+10 bóng thuận tay.
+10 bóng trái tay.
+10 giao bóng.
+10 trả giao bóng.
+10 cú thả bóng.
+10 cú hóa giải.
+
+Bài 1: Kiểm soát chiều sâu
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng về giữa sân.
+20 bóng về cuối sân.
+10–20 bóng thay đổi độ sâu.
+
+Bài 2: Thay đổi hướng
+Đánh thẳng.
+Đánh chéo.
+Đánh vào giữa.
+Sau đó chuyển sang học viên tự lựa chọn hướng.
+
+Thực chiến
+Đánh đơn nửa sân.
+Học viên chỉ được ghi điểm khi bóng đầu tiên vượt qua vạch giữa ô giao bóng.
+
+Kiểm tra cuối buổi
+Thuận tay sâu tối thiểu 7/10.
+Trái tay sâu tối thiểu 6/10.
+Đổi hướng đúng mục tiêu tối thiểu 6/10.
+
+Ba câu nhắc
+“Tạo khoảng cách với bóng.”
+“Dùng chân và thân người.”
+“Đánh sâu trước khi đổi hướng.”`
+    },
+
+
+    2: {
+      title: "GIAO BÓNG CÓ MỤC TIÊU",
+
+      text: `Mục tiêu
+Giao bóng ổn định với độ sâu tốt.
+Biết giao vào giữa, về phía thuận tay hoặc trái tay của đối phương.
+Bắt đầu lượt bóng với ý đồ rõ ràng.
+
+Nội dung chính
+
+Bài 1: Giao bóng sâu
+Học viên thực hiện 50–60 bóng.
+20 bóng từ bên phải.
+20 bóng từ bên trái.
+10–20 bóng đổi bên sau mỗi lần giao.
+Bóng phải rơi ở nửa sâu của ô giao bóng.
+
+Bài 2: Giao bóng theo hướng
+Giao gần đường giữa sân.
+Giao gần đường biên dọc.
+Giao vào giữa ô.
+
+Bài 3: Giao bóng và chuẩn bị cú tiếp theo
+Học viên giữ vị trí sau đường cuối sân.
+Chờ cú trả bóng nảy.
+Đánh cú thứ ba về hướng an toàn.
+
+Thực chiến
+Mỗi lượt bắt đầu bằng giao bóng.
+Học viên được thêm 1 điểm nếu giao đúng mục tiêu đã gọi.
+
+Kiểm tra cuối buổi
+Giao đúng ô tối thiểu 8/10.
+Giao sâu tối thiểu 6/10.
+Giao đúng hướng đã chọn tối thiểu 6/10.
+
+Ba câu nhắc
+“Thả bóng ổn định.”
+“Giao sâu.”
+“Giao xong chuẩn bị cú thứ ba.”`
+    },
+
+
+    3: {
+      title: "TRẢ GIAO BÓNG CÓ CHIẾN THUẬT",
+
+      text: `Mục tiêu
+Trả giao bóng sâu và kiểm soát.
+Lựa chọn mục tiêu giữa sân hoặc trái tay đối phương.
+Tiến lên vùng bếp sau cú trả bóng.
+
+Nội dung chính
+
+Bài 1: Trả bóng sâu
+Huấn luyện viên giao 50–60 bóng.
+Thuận tay.
+Trái tay.
+Gần giữa người.
+Học viên đưa bóng vượt qua vạch giữa ô giao bóng.
+
+Bài 2: Trả bóng theo mục tiêu
+Trả vào giữa sân.
+Trả về phía trái tay.
+Trả dọc đường biên.
+Học viên phải gọi mục tiêu trước khi đánh.
+
+Bài 3: Trả bóng và xử lý cú tiếp theo
+Trả bóng sâu.
+Tiến lên.
+Chùng chân khi huấn luyện viên đánh bóng.
+Xử lý bóng trên không hoặc bóng mềm.
+
+Thực chiến
+Đánh đơn nửa sân.
+Chỉ được ghi điểm thưởng khi trả bóng sâu và lên đúng vị trí.
+
+Kiểm tra cuối buổi
+Trả vào sân tối thiểu 8/10.
+Trả sâu tối thiểu 6/10.
+Tiến lên đúng cách tối thiểu 8/10.
+
+Ba câu nhắc
+“Chờ bóng nảy.”
+“Trả sâu.”
+“Trả xong tiến lên.”`
+    },
+
+
+    4: {
+      title: "CÚ THẢ BÓNG THỨ BA",
+
+      text: `Mục tiêu
+Thực hiện cú thả bóng thứ ba bằng cả hai mặt vợt.
+Đưa bóng thấp vào vùng bếp.
+Biết đánh giá khi nào có thể tiến lên.
+
+Nội dung chính
+
+Bài 1: Thả bóng từ khu vực chuyển tiếp
+Huấn luyện viên cấp 50–60 bóng.
+20 bóng thuận tay.
+20 bóng trái tay.
+10–20 bóng ngẫu nhiên.
+
+Bài 2: Thả bóng từ cuối sân
+Học viên lùi về cuối sân.
+Đưa bóng theo đường cong vào vùng bếp.
+Giữ cơ thể cân bằng.
+Không vội chạy lên ngay khi vừa đánh.
+
+Bài 3: Giao–trả–thả bóng thứ ba
+Học viên giao bóng.
+Huấn luyện viên trả bóng sâu.
+Học viên thực hiện cú thả bóng.
+Học viên quyết định ở lại hoặc tiến lên.
+
+Thực chiến
+Một cú thả bóng đạt yêu cầu khi bóng rơi trong vùng bếp và buộc đối phương phải đánh bóng từ dưới lên.
+
+Kiểm tra cuối buổi
+Thả bóng vào vùng bếp tối thiểu 7/10.
+Thuận tay đạt tối thiểu 4/5.
+Trái tay đạt tối thiểu 3/5.
+Quyết định tiến lên đúng tối thiểu 7/10.
+
+Ba câu nhắc
+“Hạ thấp người.”
+“Nâng bóng vào vùng bếp.”
+“Bóng thấp mới tiến lên.”`
+    },
+
+
+    5: {
+      title: "ĐÁNH MẠNH CÚ THỨ BA VÀ THẢ BÓNG CÚ THỨ NĂM",
+
+      text: `Mục tiêu
+Phân biệt khi nào nên đánh mạnh và khi nào nên thả bóng.
+Đánh mạnh cú thứ ba có kiểm soát.
+Thực hiện cú thả bóng tiếp theo để tiến lên.
+
+Nội dung chính
+
+Bài 1: Đánh mạnh cú thứ ba
+Huấn luyện viên trả bóng ngắn hoặc ở độ cao thuận lợi.
+Đánh thấp qua lưới.
+Ưu tiên vào giữa hoặc xuống chân đối phương.
+Không cố gắng kết thúc điểm ngay.
+
+Bài 2: Đánh mạnh rồi thả bóng
+Học viên đánh mạnh cú thứ ba.
+Huấn luyện viên chặn bóng.
+Học viên thả bóng cú tiếp theo vào vùng bếp.
+
+Bài 3: Lựa chọn ngẫu nhiên
+Bóng trả ngắn và cao: đánh mạnh.
+Bóng trả sâu hoặc thấp: thả bóng.
+Học viên phải gọi quyết định trước khi đánh.
+
+Thực chiến
+Đánh đơn nửa sân.
+Mỗi quyết định đúng được cộng 1 điểm.
+
+Kiểm tra cuối buổi
+Chọn đúng đánh mạnh hoặc thả bóng tối thiểu 7/10.
+Đánh mạnh vào sân tối thiểu 7/10.
+Cú thả bóng tiếp theo vào vùng bếp tối thiểu 6/10.
+
+Ba câu nhắc
+“Bóng cao thì gây áp lực.”
+“Bóng thấp thì thả.”
+“Đánh mạnh không có nghĩa là đánh hết lực.”`
+    },
+
+
+    6: {
+      title: "HÓA GIẢI TẠI KHU VỰC CHUYỂN TIẾP",
+
+      text: `Mục tiêu
+Hóa giải bóng tấn công từ khu vực chuyển tiếp.
+Đưa bóng rơi vào vùng bếp.
+Tiến lên từng bước thay vì lao thẳng lên lưới.
+
+Nội dung chính
+
+Bài 1: Hóa giải tại chỗ
+Huấn luyện viên cấp 50–60 bóng vào:
+Thuận tay.
+Trái tay.
+Giữa người.
+Gần chân.
+Học viên hấp thụ lực và đưa bóng vào vùng bếp.
+
+Bài 2: Hóa giải dưới áp lực
+Lực cầm vợt nhẹ.
+Vợt phía trước.
+Động tác ngắn.
+Mặt vợt ổn định.
+
+Bài 3: Hóa giải rồi tiến lên
+Hóa giải tốt: tiến lên một bước.
+Bóng bật cao: giữ vị trí và phòng thủ.
+Lặp lại đến khi học viên đến đường vùng bếp.
+
+Thực chiến
+Học viên bắt đầu tại khu vực chuyển tiếp.
+Huấn luyện viên bắt đầu tại đường vùng bếp.
+
+Kiểm tra cuối buổi
+Hóa giải vào vùng bếp tối thiểu 7/10.
+Không quá 2 bóng bật cao.
+Tiến lên đúng thời điểm tối thiểu 7/10.
+
+Ba câu nhắc
+“Mềm tay.”
+“Hấp thụ lực.”
+“Bóng thấp mới tiến lên.”`
+    },
+
+
+    7: {
+      title: "KIỂM SOÁT BÓNG MỀM VÀ DI CHUYỂN ĐỐI PHƯƠNG",
+
+      text: `Mục tiêu
+Duy trì bóng mềm ổn định.
+Thay đổi hướng và độ sâu.
+Di chuyển đối phương sang hai bên.
+Không tấn công bóng quá thấp.
+
+Nội dung chính
+
+Bài 1: Bóng mềm chéo sân
+Thuận tay chéo sân.
+Trái tay chéo sân.
+Duy trì tối thiểu 10 lần.
+
+Bài 2: Thay đổi hướng
+Hai bóng chéo, một bóng thẳng.
+Hai bóng sang trái, một bóng sang phải.
+Một bóng ngắn, một bóng sâu hơn trong vùng bếp.
+
+Bài 3: Di chuyển đối phương
+Đưa huấn luyện viên ra khỏi vị trí cân bằng mà không đánh bóng quá cao.
+
+Thực chiến
+Chỉ được ghi điểm bằng bóng mềm.
+Không được tấn công trong bốn lần chạm bóng đầu tiên.
+
+Kiểm tra cuối buổi
+Duy trì bóng mềm tối thiểu 15 lần.
+Đổi hướng đúng mục tiêu tối thiểu 7/10.
+Không quá 3 bóng cao trong 10 lần thực hiện.
+
+Ba câu nhắc
+“Giữ bóng thấp.”
+“Di chuyển đối thủ.”
+“Kiên nhẫn chờ bóng cao.”`
+    },
+
+
+    8: {
+      title: "TẤN CÔNG TỪ BÓNG MỀM",
+
+      text: `Mục tiêu
+Nhận biết bóng có thể tấn công.
+Tăng tốc bóng có kiểm soát.
+Chuẩn bị xử lý cú phản công của đối phương.
+
+Nội dung chính
+
+Bài 1: Nhận biết độ cao
+Dưới lưới: tiếp tục đánh mềm.
+Ngang lưới: kiểm soát hoặc tấn công có chọn lọc.
+Cao hơn lưới: tăng tốc tấn công.
+
+Bài 2: Tăng tốc vào mục tiêu
+Giữa người.
+Vai thuận tay.
+Vai trái tay.
+Khoảng trống dọc biên.
+
+Bài 3: Tấn công rồi chuẩn bị bóng tiếp theo
+Học viên tăng tốc bóng.
+Huấn luyện viên chặn hoặc phản công.
+Học viên giữ vợt phía trước để xử lý cú tiếp theo.
+
+Thực chiến
+Mỗi lượt bắt đầu bằng ít nhất bốn cú bóng mềm.
+Sau đó học viên tự quyết định thời điểm tấn công.
+
+Kiểm tra cuối buổi
+Nhận biết đúng bóng có thể tấn công tối thiểu 8/10.
+Tấn công vào sân tối thiểu 7/10.
+Chuẩn bị được cú tiếp theo tối thiểu 7/10.
+
+Ba câu nhắc
+“Bóng thấp tiếp tục kiểm soát.”
+“Bóng cao mới tăng tốc.”
+“Tấn công xong giữ vợt phía trước.”`
+    },
+
+
+    9: {
+      title: "CHẶN BÓNG VÀ PHẢN CÔNG NHANH",
+
+      text: `Mục tiêu
+Chặn được bóng nhanh vào cơ thể.
+Phản công khi bóng nằm trong tầm kiểm soát.
+Duy trì vị trí tại đường vùng bếp.
+
+Nội dung chính
+
+Bài 1: Chặn bóng
+Huấn luyện viên đánh 50–60 bóng tốc độ vừa.
+Giữ vợt trước thân.
+Không vung vợt lớn.
+Chặn bóng vào giữa sân hoặc xuống chân đối phương.
+
+Bài 2: Phân biệt chặn và phản công
+Bóng nhanh, học viên mất cân bằng: chặn.
+Bóng trong tầm và học viên cân bằng: phản công.
+Học viên gọi quyết định trước khi đánh.
+
+Bài 3: Chuỗi bóng nhanh
+Hai bên đánh bóng trên không liên tục với tốc độ tăng dần.
+Ưu tiên kiểm soát trước sức mạnh.
+
+Thực chiến
+Huấn luyện viên chủ động tăng tốc bóng.
+Học viên tự lựa chọn chặn, hóa giải hoặc phản công.
+
+Kiểm tra cuối buổi
+Chặn bóng vào sân tối thiểu 7/10.
+Chọn đúng chặn hoặc phản công tối thiểu 8/10.
+Không lùi khỏi đường vùng bếp quá sớm.
+
+Ba câu nhắc
+“Vợt phía trước.”
+“Mất cân bằng thì chặn.”
+“Cân bằng mới phản công.”`
+    },
+
+
+    10: {
+      title: "BÓNG BỔNG, ĐẬP BÓNG VÀ LÙI VỀ PHÒNG THỦ",
+
+      text: `Mục tiêu
+Thực hiện bóng bổng có mục đích.
+Đập bóng trên cao an toàn.
+Biết lùi về phòng thủ mà không chạy lùi mất kiểm soát.
+
+Nội dung chính
+
+Bài 1: Bóng bổng phòng thủ
+Học viên đưa bóng cao qua đầu huấn luyện viên.
+Ưu tiên độ sâu.
+Không sử dụng bóng bổng khi đối phương đã chuẩn bị tốt.
+
+Bài 2: Đập bóng trên cao
+Xoay vai.
+Di chuyển đến phía sau bóng.
+Tiếp xúc bóng phía trước.
+Đánh vào khoảng trống hoặc xuống chân.
+
+Bài 3: Lùi về và thiết lập lại vị trí
+Xoay người và chạy về, không chạy giật lùi.
+Để bóng nảy nếu cần.
+Đưa bóng trở lại sâu hoặc hóa giải.
+
+Thực chiến
+Một người đánh bóng bổng, người còn lại đập bóng.
+Sau đó tiếp tục lượt bóng cho đến khi kết thúc.
+
+Kiểm tra cuối buổi
+Bóng bổng sâu tối thiểu 6/10.
+Đập bóng vào sân tối thiểu 7/10.
+Lùi về an toàn và xử lý đúng tối thiểu 4/5 lần.
+
+Ba câu nhắc
+“Bóng bổng phải sâu.”
+“Di chuyển ra sau bóng.”
+“Xoay người chạy về, không chạy lùi.”`
+    },
+
+
+    11: {
+      title: "XÂY DỰNG MỘT LƯỢT BÓNG",
+
+      text: `Mục tiêu
+Kết nối các kỹ thuật thành một kế hoạch.
+Biết khi nào kiểm soát và khi nào tấn công.
+Giảm lỗi tự đánh hỏng.
+
+Nội dung chính
+
+Bài 1: Kế hoạch bên giao bóng
+Giao bóng sâu.
+Chờ cú trả bóng nảy.
+Đánh mạnh hoặc thả bóng cú thứ ba.
+Hóa giải nếu bị gây áp lực.
+Tiến lên đường vùng bếp.
+Chờ bóng có thể tấn công.
+
+Bài 2: Kế hoạch bên nhận bóng
+Trả giao bóng sâu.
+Tiến lên đường vùng bếp.
+Gây áp lực xuống chân đối phương.
+Chặn hoặc kiểm soát bóng phản công.
+Giữ vị trí gần lưới.
+
+Bài 3: Xử lý theo khu vực
+Cuối sân.
+Khu vực chuyển tiếp.
+Đường vùng bếp.
+Học viên phải chọn kỹ thuật phù hợp.
+
+Thực chiến
+Đánh đơn nửa sân đến 7 điểm.
+Mỗi lượt có ba điểm:
+Đúng kỹ thuật.
+Đúng vị trí.
+Thắng lượt bóng.
+
+Kiểm tra cuối buổi
+Lựa chọn đúng kỹ thuật tối thiểu 8/10.
+Di chuyển đúng vị trí tối thiểu 8/10.
+Không quá 4 lỗi tự đánh hỏng trong một trận đến 7 điểm.
+
+Ba câu nhắc
+“Mỗi cú đánh phải có mục đích.”
+“Kiểm soát trước, tấn công sau.”
+“Đánh xong phải biết vị trí tiếp theo.”`
+    },
+
+
+    12: {
+      title: "THI ĐẤU VÀ ĐÁNH GIÁ ĐẦU RA",
+
+      text: `Mục tiêu
+Đánh giá khả năng kiểm soát, lựa chọn kỹ thuật và thi đấu độc lập của học viên.
+
+Nội dung 60 phút
+
+0–5 phút — Khởi động tự chủ
+Học viên tự thực hiện toàn bộ phần khởi động.
+
+5–20 phút — Kiểm tra kỹ thuật
+10 giao bóng.
+10 trả giao bóng.
+10 cú thả bóng.
+10 cú hóa giải.
+10 bóng mềm đổi hướng.
+10 bóng chặn hoặc phản công.
+10 cú đập bóng trên cao.
+
+20–35 phút — Kiểm tra chuỗi tình huống
+Giao–trả–cú thứ ba.
+Đánh mạnh–bóng thứ năm.
+Thả bóng–tiến lên–hóa giải.
+Bóng mềm–tăng tốc–phản công.
+Bóng bổng–lùi về–thiết lập lại.
+
+35–53 phút — Trận đánh đơn nửa sân
+Chơi hai trận đến 7 điểm.
+Một trận nửa sân thẳng.
+Một trận nửa sân chéo.
+Huấn luyện viên không sửa trong lúc thi đấu.
+
+53–60 phút — Đánh giá và xếp trình độ
+Kỹ năng đã đạt.
+Kỹ năng chưa ổn định.
+Khả năng lựa chọn chiến thuật.
+Số lỗi tự đánh hỏng.
+Trình độ giao lưu phù hợp.
+Lộ trình tiếp theo.
+
+III. TIÊU CHÍ HOÀN THÀNH KHÓA
+
+Giao bóng vào sân: 8/10.
+Giao bóng sâu hoặc đúng hướng: 6/10.
+Trả giao bóng vào sân: 8/10.
+Trả giao bóng sâu: 6/10.
+Cú thả bóng vào vùng bếp: 7/10.
+Cú hóa giải vào vùng bếp: 7/10.
+Lựa chọn đánh mạnh hoặc thả bóng: 7/10.
+Duy trì bóng mềm: 15 lần.
+Nhận biết bóng có thể tấn công: 8/10.
+Chặn hoặc phản công bóng nhanh: 7/10.
+Đập bóng trên cao vào sân: 7/10.
+Lựa chọn kỹ thuật theo khu vực: 8/10.`
+    }
+
+  }
+
+};
+
+
+let courseKey =
+  null;
+
+let courseLabel =
+  "";
+
+
+const normalizedPackageName =
+  packageName.toLocaleLowerCase(
+    "vi-VN"
+  );
+
 
 if (
-  actionsEl
-  &&
-  packageName
-    .toLowerCase()
-    .includes("cơ bản")
-  &&
-  sessionNumber === 2
+  normalizedPackageName.includes(
+    "cơ bản"
+  )
 ) {
+
+  courseKey =
+    "basic";
+
+  courseLabel =
+    "Cơ bản";
+
+}
+else if (
+  normalizedPackageName.includes(
+    "nâng cao"
+  )
+) {
+
+  courseKey =
+    "advanced";
+
+  courseLabel =
+    "Nâng cao";
+
+}
+
+
+const lesson =
+  courseKey
+    ? PICKDEE_CURRICULUM[courseKey]?.[sessionNumber]
+    : null;
+
+
+if (
+  actionsEl &&
+  lesson
+) {
+
+  const escapeCurriculumHtml =
+    function (value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        )
+        .replaceAll(
+          "'",
+          "&#039;"
+        );
+
+    };
+
+
+  const lines =
+    String(
+      lesson.text || ""
+    )
+      .split("\n")
+      .map(
+        line =>
+          line.trim()
+      )
+      .filter(
+        Boolean
+      );
+
+
+  const headingRegex =
+    /^(\d+–\d+\s*phút|Bài\s+\d+\s*:|Thực chiến$|Kiểm tra cuối buổi$|Ba câu nhắc$|Nội dung 60 phút$|Nội dung chính$|Ý nghĩa kỹ thuật$|Nguyên tắc quyết định$|Ôn và kiểm tra$|III\.\s*TIÊU CHÍ HOÀN THÀNH KHÓA$|Tiêu chí hoàn thành$|Cú thả bóng$|Cú hóa giải$)/i;
+
+
+  let lessonHtml =
+    "";
+
+
+  for (
+    const line of lines
+  ) {
+
+    const safeLine =
+      escapeCurriculumHtml(
+        line
+      );
+
+
+    if (
+      line ===
+      "Mục tiêu"
+    ) {
+
+      lessonHtml += `
+        <div
+          style="
+            margin-top:16px;
+            margin-bottom:8px;
+            color:#d8ff45;
+            font-weight:900;
+            font-size:16px;
+          "
+        >
+          🎯 MỤC TIÊU
+        </div>
+      `;
+
+      continue;
+
+    }
+
+
+    if (
+      headingRegex.test(
+        line
+      )
+    ) {
+
+      lessonHtml += `
+        <div
+          style="
+            margin-top:18px;
+            margin-bottom:6px;
+            color:#ffd884;
+            font-weight:900;
+            line-height:1.5;
+          "
+        >
+          ${safeLine}
+        </div>
+      `;
+
+      continue;
+
+    }
+
+
+    lessonHtml += `
+      <div
+        style="
+          margin:4px 0;
+          line-height:1.6;
+        "
+      >
+        • ${safeLine}
+      </div>
+    `;
+
+  }
+
 
   const curriculum =
     document.createElement(
@@ -1674,7 +3088,6 @@ if (
 
 
   curriculum.innerHTML = `
-
     <div
       style="
         color:#d8ff45;
@@ -1687,156 +3100,31 @@ if (
       GIÁO ÁN PICKDEE ACADEMY
     </div>
 
-
     <h2
       style="
         margin:0 0 6px;
       "
     >
-      📘 Cơ bản · Buổi 2
+      📘 ${escapeCurriculumHtml(courseLabel)}
+      · Buổi ${sessionNumber}
     </h2>
-
 
     <div
       style="
         font-size:18px;
         font-weight:900;
-        margin-bottom:18px;
+        margin-bottom:10px;
       "
     >
-      ĐÁNH THUẬN TAY KẾT HỢP DI CHUYỂN
+      ${escapeCurriculumHtml(lesson.title)}
     </div>
-
 
     <div
       style="
-        padding:14px;
-        border-radius:10px;
-        background:rgba(216,255,69,.08);
-        margin-bottom:18px;
-        line-height:1.6;
+        line-height:1.65;
       "
     >
-      <strong style="color:#d8ff45">
-        🎯 MỤC TIÊU
-      </strong>
-
-      <div style="margin-top:6px">
-        Học viên di chuyển đến bóng,
-        đánh thuận tay và trở về vị trí trung tâm;
-        đưa tối thiểu
-        <strong>7/10 bóng vào sân</strong>.
-      </div>
-    </div>
-
-
-    <div style="line-height:1.7">
-
-
-      <p>
-        <strong style="color:#ffd884">
-          0–5 phút · Khởi động
-        </strong><br>
-
-        • Bước ngang dọc đường cuối sân.<br>
-        • Di chuyển tiến – lùi.<br>
-        • Thực hiện động tác đánh thuận tay và trở về giữa.
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          5–10 phút · Ôn đánh thuận tay
-        </strong><br>
-
-        Coach cấp 30–40 bóng tại vị trí cố định.<br>
-        • Đánh qua lưới.<br>
-        • Đưa bóng vào sân.<br>
-        • Kiểm tra điểm tiếp xúc.
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          10–18 phút · Hướng dẫn di chuyển
-        </strong><br>
-
-        1. Quan sát hướng bóng.<br>
-        2. Di chuyển đến vị trí đánh.<br>
-        3. Dừng và giữ thăng bằng.<br>
-        4. Đánh bóng.<br>
-        5. Trở về giữa sân.
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          18–33 phút · Bài 1: Đánh thuận tay hai hướng
-        </strong><br>
-
-        Coach cấp 50–60 bóng.<br>
-        • Bóng gần giữa.<br>
-        • Bóng lệch trái.<br>
-        • Bóng lệch phải.<br>
-        • Sau đó cấp bóng ngẫu nhiên.
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          33–45 phút · Bài 2: Kiểm soát độ sâu
-        </strong><br>
-
-        • Bóng vào sân: 1 điểm.<br>
-        • Vượt vạch giữa ô giao bóng: 2 điểm.<br>
-        • Gần đường cuối sân: 3 điểm.<br>
-        <strong>Mục tiêu: 35 điểm.</strong>
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          45–55 phút · Bài 3: Xử lý ngẫu nhiên
-        </strong><br>
-
-        • Coach thay đổi hướng và độ sâu.<br>
-        • Học viên di chuyển, dừng, đánh và trở về giữa.<br>
-        • Không đánh bóng khi cơ thể vẫn đang chạy.
-      </p>
-
-
-      <p>
-        <strong style="color:#ffd884">
-          55–60 phút · Kiểm tra cuối buổi
-        </strong><br>
-
-        Coach cấp 10 bóng có di chuyển.<br>
-        • Tối thiểu 7 bóng vào sân.<br>
-        • Có ít nhất 5 lần trở về đúng vị trí.
-      </p>
-
-
-      <div
-        style="
-          margin-top:18px;
-          padding:14px;
-          border-radius:10px;
-          background:rgba(255,255,255,.06);
-        "
-      >
-
-        <strong style="color:#d8ff45">
-          🗣 3 CÂU COACH CẦN NHẮC
-        </strong>
-
-        <div style="margin-top:8px">
-          1. “Di chuyển trước, đánh sau.”<br>
-          2. “Dừng người khi đánh.”<br>
-          3. “Đánh xong về giữa.”
-        </div>
-
-      </div>
-
+      ${lessonHtml}
     </div>
   `;
 
