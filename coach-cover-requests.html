@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Buổi cần Coach hỗ trợ | PickDee Academy
+  </title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      padding: 18px 24px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 16px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.12);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    #userEmail {
+      font-size: 13px;
+      font-weight: 700;
+
+      color:
+        rgba(255,255,255,.7);
+    }
+
+    .container {
+      width:
+        min(
+          900px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        30px 0 60px;
+    }
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-weight: 900;
+    }
+
+    .eyebrow {
+      margin-top: 26px;
+
+      color: #d8ff45;
+
+      font-size: 13px;
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          30px,
+          5vw,
+          46px
+        );
+    }
+
+    .sub {
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.66);
+
+      line-height: 1.55;
+    }
+
+    #message {
+      margin-bottom: 16px;
+
+      padding: 13px 15px;
+
+      border-radius: 12px;
+
+      font-weight: 800;
+
+      line-height: 1.5;
+
+      background:
+        rgba(255,255,255,.06);
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+    }
+
+    #message.info {
+      color: #ffd884;
+    }
+
+    #message.success {
+      color: #d8ff45;
+    }
+
+    #message.error {
+      color: #ffb0b0;
+    }
+
+    .list {
+      display: grid;
+
+      gap: 16px;
+    }
+
+    .card {
+      padding: 20px;
+
+      border-radius: 16px;
+
+      background:
+        rgba(6,39,88,.78);
+
+      border:
+        1px solid
+        rgba(255,255,255,.13);
+    }
+
+    .top {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: flex-start;
+
+      gap: 16px;
+
+      margin-bottom: 18px;
+    }
+
+    .code {
+      color: #d8ff45;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .title {
+      margin-top: 5px;
+
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      padding:
+        6px 10px;
+
+      border-radius: 999px;
+
+      color: #ffd884;
+
+      background:
+        rgba(255,216,132,.1);
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        14px 18px;
+    }
+
+    .item {
+      min-width: 0;
+    }
+
+    .label {
+      margin-bottom: 4px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .value {
+      font-weight: 800;
+
+      line-height: 1.45;
+
+      word-break:
+        break-word;
+    }
+
+    .reason {
+      margin-top: 16px;
+
+      padding:
+        12px 14px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(255,255,255,.05);
+
+      border:
+        1px solid
+        rgba(255,255,255,.08);
+    }
+
+    .accept {
+      width: 100%;
+
+      min-height: 52px;
+
+      margin-top: 16px;
+
+      border: 0;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+
+      color: #172600;
+
+      font-weight: 900;
+
+      font-size: 14px;
+
+      cursor: pointer;
+    }
+
+    .accept:disabled {
+      opacity: .5;
+
+      cursor:
+        not-allowed;
+    }
+
+    .empty {
+      padding: 28px;
+
+      text-align: center;
+
+      border-radius: 16px;
+
+      background:
+        rgba(255,255,255,.05);
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+
+      color:
+        rgba(255,255,255,.72);
+
+      line-height: 1.6;
+    }
+
+    @media (max-width: 650px) {
+
+      .grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .topbar {
+        padding:
+          16px 14px;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+    PickDee
+    <span>
+      Academy
+    </span>
+  </div>
+
+  <div id="userEmail">
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <a
+    class="back"
+    href="./coach.html"
+  >
+    ← Trang Coach
+  </a>
+
+
+  <div class="eyebrow">
+    COACH HỖ TRỢ
+  </div>
+
+
+  <h1>
+    Buổi cần Coach hỗ trợ
+  </h1>
+
+
+  <div class="sub">
+    Chỉ hiển thị các buổi phù hợp khu vực của bạn và bạn đang rảnh đúng khung giờ học.
+  </div>
+
+
+  <div
+    id="message"
+    class="info"
+  >
+    Đang tìm các buổi cần Coach hỗ trợ...
+  </div>
+
+
+  <section
+    id="requestList"
+    class="list"
+  >
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const listEl =
+    document.getElementById(
+      "requestList"
+    );
+
+
+  const emailEl =
+    document.getElementById(
+      "userEmail"
+    );
+
+
+  let sb =
+    null;
+
+
+  function setMessage(
+    text,
+    type = "info"
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+    messageEl.className =
+      type;
+
+  }
+
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function formatDate(
+    value
+  ) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN"
+    ).format(
+      new Date(
+        `${value}T00:00:00`
+      )
+    );
+
+  }
+
+
+  function formatTime(
+    value
+  ) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
+
+  }
+
+
+  function renderEmpty() {
+
+    listEl.innerHTML =
+      `
+        <div class="empty">
+          Hiện chưa có buổi nào cần Coach hỗ trợ phù hợp với khu vực và lịch trống của bạn.
+        </div>
+      `;
+
+  }
+
+
+  function renderRequests(
+    rows
+  ) {
+
+    listEl.innerHTML =
+      "";
+
+
+    if (
+      !Array.isArray(rows)
+      ||
+      rows.length === 0
+    ) {
+
+      renderEmpty();
+
+      return;
+
+    }
+
+
+    for (
+      const row of rows
+    ) {
+
+      const card =
+        document.createElement(
+          "article"
+        );
+
+
+      card.className =
+        "card";
+
+
+      card.innerHTML =
+        `
+          <div class="top">
+
+            <div>
+
+              <div class="code">
+                YÊU CẦU #${escapeHtml(row.cover_request_id)}
+              </div>
+
+              <div class="title">
+                Buổi học #${escapeHtml(row.session_id)}
+              </div>
+
+            </div>
+
+            <div class="badge">
+              ĐANG TÌM COACH
+            </div>
+
+          </div>
+
+
+          <div class="grid">
+
+            <div class="item">
+
+              <div class="label">
+                Coach chính
+              </div>
+
+              <div class="value">
+                ${escapeHtml(row.primary_coach_name || "—")}
+              </div>
+
+            </div>
+
+
+            <div class="item">
+
+              <div class="label">
+                Ngày học
+              </div>
+
+              <div class="value">
+                ${escapeHtml(formatDate(row.session_date))}
+              </div>
+
+            </div>
+
+
+            <div class="item">
+
+              <div class="label">
+                Giờ bắt đầu
+              </div>
+
+              <div class="value">
+                ${escapeHtml(formatTime(row.start_time))}
+              </div>
+
+            </div>
+
+
+            <div class="item">
+
+              <div class="label">
+                Thời lượng
+              </div>
+
+              <div class="value">
+                ${escapeHtml(row.duration_minutes || 60)} phút
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="reason">
+
+            <div class="label">
+              Lý do cần hỗ trợ
+            </div>
+
+            <div class="value">
+              ${escapeHtml(row.reason || "Coach chính bận")}
+            </div>
+
+          </div>
+
+
+          <button
+            class="accept"
+            type="button"
+            data-request-id="${escapeHtml(row.cover_request_id)}"
+          >
+            ✓ NHẬN BUỔI HỖ TRỢ
+          </button>
+        `;
+
+
+      listEl.appendChild(
+        card
+      );
+
+    }
+
+
+    const buttons =
+      listEl.querySelectorAll(
+        ".accept"
+      );
+
+
+    for (
+      const button of buttons
+    ) {
+
+      button.addEventListener(
+        "click",
+        async function () {
+
+          const requestId =
+            Number(
+              button.dataset.requestId
+            );
+
+
+          if (
+            !Number.isFinite(requestId)
+            ||
+            requestId <= 0
+          ) {
+
+            setMessage(
+              "Không xác định được yêu cầu Coach hỗ trợ.",
+              "error"
+            );
+
+            return;
+          }
+
+
+          button.disabled =
+            true;
+
+
+          button.textContent =
+            "⏳ ĐANG NHẬN BUỔI...";
+
+
+          setMessage(
+            "Đang kiểm tra lịch và nhận buổi hỗ trợ...",
+            "info"
+          );
+
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "accept_coach_cover",
+                {
+                  p_cover_request_id:
+                    requestId
+                }
+              );
+
+
+            if (error) {
+              throw error;
+            }
+
+
+            button.textContent =
+              "✓ ĐÃ NHẬN BUỔI";
+
+
+            setMessage(
+              `✓ Bạn đã nhận buổi hỗ trợ thành công. Mã buổi học: ${data}.`,
+              "success"
+            );
+
+
+            setTimeout(
+              function () {
+
+                loadRequests();
+
+              },
+              1200
+            );
+
+          }
+          catch (error) {
+
+            console.error(
+              "ACCEPT COACH COVER:",
+              error
+            );
+
+
+            button.disabled =
+              false;
+
+
+            button.textContent =
+              "✓ NHẬN BUỔI HỖ TRỢ";
+
+
+            setMessage(
+              "Không nhận được buổi hỗ trợ: "
+              +
+              (
+                error?.message
+                ||
+                error
+              ),
+              "error"
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+  }
+
+
+  async function checkLogin() {
+
+    const {
+      data,
+      error
+    } =
+      await sb.auth
+        .getSession();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (
+      !data?.session
+    ) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+    }
+
+
+    emailEl.textContent =
+      data.session.user.email
+      ||
+      "";
+
+
+    const {
+      data: coachId,
+      error: coachError
+    } =
+      await sb.rpc(
+        "current_coach_id"
+      );
+
+
+    if (coachError) {
+
+      throw new Error(
+        "Không xác định được Coach: "
+        +
+        coachError.message
+      );
+
+    }
+
+
+    if (!coachId) {
+
+      throw new Error(
+        "Tài khoản này chưa liên kết với hồ sơ Coach."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  async function loadRequests() {
+
+    setMessage(
+      "Đang tìm các buổi cần Coach hỗ trợ...",
+      "info"
+    );
+
+
+    listEl.innerHTML =
+      "";
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "get_available_cover_requests"
+      );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không tải được danh sách Coach hỗ trợ: "
+        +
+        error.message
+      );
+
+    }
+
+
+    renderRequests(
+      data || []
+    );
+
+
+    if (
+      Array.isArray(data)
+      &&
+      data.length > 0
+    ) {
+
+      setMessage(
+        `Có ${data.length} buổi đang cần Coach hỗ trợ phù hợp với bạn.`,
+        "success"
+      );
+
+    }
+    else {
+
+      setMessage(
+        "Hiện chưa có buổi phù hợp để bạn nhận hỗ trợ.",
+        "info"
+      );
+
+    }
+
+  }
+
+
+  async function init() {
+
+    try {
+
+      if (
+        !window.supabase
+      ) {
+
+        throw new Error(
+          "Không tải được thư viện Supabase."
+        );
+
+      }
+
+
+      if (
+        !cfg.SUPABASE_URL
+        ||
+        !cfg.SUPABASE_PUBLISHABLE_KEY
+      ) {
+
+        throw new Error(
+          "Không đọc được config.js."
+        );
+
+      }
+
+
+      sb =
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        );
+
+
+      const ok =
+        await checkLogin();
+
+
+      if (!ok) {
+        return;
+      }
+
+
+      await loadRequests();
+
+    }
+    catch (error) {
+
+      console.error(
+        "COACH COVER REQUESTS:",
+        error
+      );
+
+
+      setMessage(
+        error?.message
+        ||
+        "Có lỗi khi tải danh sách buổi cần Coach hỗ trợ.",
+        "error"
+      );
+
+
+      renderEmpty();
+
+    }
+
+  }
+
+
+  await init();
+
+
+})();
+
+</script>
+
+
+</body>
+</html>
