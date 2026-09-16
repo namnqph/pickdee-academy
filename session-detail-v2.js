@@ -504,9 +504,9 @@ async function checkLogin() {
       email
     );
 
-    location.replace(
-      "./index.html"
-    );
+   location.replace(
+  "./coach"
+);
 
     return false;
 
