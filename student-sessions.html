@@ -2397,8 +2397,12 @@
         .filter(Boolean);
 
 
-    /* =====================================================
+        /* =====================================================
        CLASS SESSIONS
+
+       - Tách rõ Coach chính / Coach hỗ trợ
+       - Nếu có Coach hỗ trợ thì Coach thực tế của buổi
+         sẽ là Coach hỗ trợ
     ====================================================== */
 
     const {
@@ -2415,13 +2419,21 @@
           session_code,
           registration_id,
           coach_id,
+          substitute_coach_id,
           session_no,
           session_date,
           start_time,
           duration_minutes,
           court_name,
           status,
-          coaches (
+
+          primary_coach:coaches!class_sessions_coach_id_fkey (
+            id,
+            coach_code,
+            full_name
+          ),
+
+          substitute_coach:coaches!class_sessions_substitute_coach_id_fkey (
             id,
             coach_code,
             full_name
@@ -2471,15 +2483,37 @@
     }
 
 
+    /*
+      Chuẩn hóa lại trường coaches
+      để toàn bộ code cũ phía dưới vẫn hoạt động.
+
+      Có Coach hỗ trợ:
+      -> dùng Coach hỗ trợ.
+
+      Không có:
+      -> dùng Coach chính.
+    */
+
     currentSessions =
       (sessions || [])
+        .map(
+          item => ({
+            ...item,
+
+            coaches:
+              item.substitute_coach
+              ||
+              item.primary_coach
+              ||
+              null
+          })
+        )
         .sort(
           (a,b) =>
             sessionTimestamp(a)
             -
             sessionTimestamp(b)
         );
-
 
     /* =====================================================
        SUMMARY
