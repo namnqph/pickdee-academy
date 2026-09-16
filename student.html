@@ -5217,6 +5217,294 @@
 
 })();
 </script>
+  <script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const sbCoachDisplay =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function coachText(
+    name,
+    code
+  ) {
+
+    if (!name && !code) {
+
+      return "—";
+
+    }
+
+
+    if (
+      name
+      &&
+      code
+    ) {
+
+      return `${name} (${code})`;
+
+    }
+
+
+    return name || code;
+
+  }
+
+
+  async function loadUpcomingCoachInfo() {
+
+    const detail =
+      document.getElementById(
+        "dashboardNextSessionDetail"
+      );
+
+
+    if (!detail) {
+
+      return;
+
+    }
+
+
+    const {
+      data: {
+        session
+      }
+    } =
+      await sbCoachDisplay.auth.getSession();
+
+
+    if (!session) {
+
+      return;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sbCoachDisplay.rpc(
+        "student_get_my_upcoming_session_coaches"
+      );
+
+
+    if (error) {
+
+      console.error(
+        "STUDENT UPCOMING COACH:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    const rows =
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    const next =
+      rows[0];
+
+
+    let box =
+      document.getElementById(
+        "studentUpcomingCoachInfo"
+      );
+
+
+    if (!box) {
+
+      box =
+        document.createElement(
+          "div"
+        );
+
+
+      box.id =
+        "studentUpcomingCoachInfo";
+
+
+      detail.appendChild(
+        box
+      );
+
+    }
+
+
+    if (!next) {
+
+      box.innerHTML =
+        "";
+
+      return;
+
+    }
+
+
+    const primaryText =
+      coachText(
+        next.primary_coach_name,
+        next.primary_coach_code
+      );
+
+
+    const actualText =
+      coachText(
+        next.actual_coach_name,
+        next.actual_coach_code
+      );
+
+
+    const hasSubstitute =
+      Number(
+        next.substitute_coach_id || 0
+      )
+      > 0;
+
+
+    box.innerHTML = `
+
+      <div class="info-line">
+
+        <span class="info-line-label">
+          Coach chính
+        </span>
+
+        <span class="info-line-value">
+          ${escapeHtml(
+            primaryText
+          )}
+        </span>
+
+      </div>
+
+
+      <div class="info-line">
+
+        <span class="info-line-label">
+          Coach dạy buổi này
+        </span>
+
+        <span
+          class="info-line-value"
+          style="
+            color:
+              ${
+                hasSubstitute
+                  ? "#d8ff45"
+                  : "inherit"
+              };
+          "
+        >
+          ${escapeHtml(
+            actualText
+          )}
+
+          ${
+            hasSubstitute
+              ? " · Coach hỗ trợ"
+              : ""
+          }
+        </span>
+
+      </div>
+
+
+      ${
+        hasSubstitute
+
+          ? `
+            <div
+              style="
+                margin-top:10px;
+                padding:10px 12px;
+                border-radius:10px;
+                background:rgba(216,255,69,.08);
+                border:1px solid rgba(216,255,69,.20);
+                color:#d8ff45;
+                font-size:12px;
+                font-weight:800;
+                line-height:1.45;
+              "
+            >
+              ✓ Buổi học này đã có Coach hỗ trợ thay Coach chính.
+            </div>
+          `
+
+          : ""
+      }
+
+    `;
+
+  }
+
+
+  await loadUpcomingCoachInfo();
+
+
+  setInterval(
+    loadUpcomingCoachInfo,
+    60000
+  );
+
+})();
+</script>
   <script src="./notifications.js?v=20260911-3"></script>
 </body>
 
