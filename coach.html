@@ -6516,6 +6516,1040 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
 })();
 </script>
+  <script>
+(async function () {
+
+  /* =====================================================
+     PICKDEE ACADEMY
+     COACH ACTUAL SESSION PATCH
+
+     Coach thực tế dạy =
+     substitute_coach_id nếu có
+     nếu không = coach_id
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const patchSb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb
+    ||
+    (
+      window.supabase
+      &&
+      cfg.SUPABASE_URL
+      &&
+      cfg.SUPABASE_PUBLISHABLE_KEY
+        ?
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        )
+        :
+        null
+    );
+
+
+  if (!patchSb) {
+
+    console.error(
+      "Actual Coach Patch: không có Supabase client."
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function todayKey() {
+
+    const now =
+      new Date();
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      )
+      +
+      "-"
+      +
+      String(
+        now.getDate()
+      ).padStart(
+        2,
+        "0"
+      )
+    );
+
+  }
+
+
+  function sessionStart(item) {
+
+    if (!item?.session_date) {
+      return null;
+    }
+
+
+    const value =
+      new Date(
+        `${item.session_date}T${
+          item.start_time
+          ||
+          "00:00:00"
+        }`
+      );
+
+
+    return Number.isNaN(
+      value.getTime()
+    )
+      ?
+      null
+      :
+      value;
+
+  }
+
+
+  function sessionEnd(item) {
+
+    const start =
+      sessionStart(
+        item
+      );
+
+
+    if (!start) {
+      return null;
+    }
+
+
+    return new Date(
+      start.getTime()
+      +
+      Number(
+        item.duration_minutes
+        ||
+        60
+      )
+      *
+      60000
+    );
+
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN"
+    ).format(
+      new Date(
+        `${value}T00:00:00`
+      )
+    );
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    return String(
+      value
+    ).slice(
+      0,
+      5
+    );
+
+  }
+
+
+  /* =====================================================
+     TÁCH CÁC NODE CŨ
+
+     Code Dashboard cũ vẫn có thể chạy timer,
+     nhưng chỉ cập nhật node cũ đã tách khỏi DOM.
+  ====================================================== */
+
+  function detachOldControlledNodes() {
+
+    const scheduleTitle =
+      document.getElementById(
+        "scheduleTitle"
+      );
+
+
+    const scheduleCard =
+      scheduleTitle
+        ?.closest(
+          ".dashboard-card"
+        );
+
+
+    if (
+      scheduleCard
+      &&
+      !scheduleCard.dataset
+        .actualCoachPatch
+    ) {
+
+      const clone =
+        scheduleCard.cloneNode(
+          true
+        );
+
+
+      clone.dataset
+        .actualCoachPatch =
+        "true";
+
+
+      scheduleCard.replaceWith(
+        clone
+      );
+
+    }
+
+
+    const nextTitle =
+      document.getElementById(
+        "nextTitle"
+      );
+
+
+    const nextCard =
+      nextTitle
+        ?.closest(
+          ".dashboard-card"
+        );
+
+
+    if (
+      nextCard
+      &&
+      !nextCard.dataset
+        .actualCoachPatch
+    ) {
+
+      const clone =
+        nextCard.cloneNode(
+          true
+        );
+
+
+      clone.dataset
+        .actualCoachPatch =
+        "true";
+
+
+      nextCard.replaceWith(
+        clone
+      );
+
+    }
+
+
+    const taskSummary =
+      document.getElementById(
+        "coachTaskSummary"
+      );
+
+
+    if (
+      taskSummary
+      &&
+      !taskSummary.dataset
+        .actualCoachPatch
+    ) {
+
+      const clone =
+        taskSummary.cloneNode(
+          true
+        );
+
+
+      clone.dataset
+        .actualCoachPatch =
+        "true";
+
+
+      taskSummary.replaceWith(
+        clone
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     CHỜ DASHBOARD V2 TẠO XONG
+  ====================================================== */
+
+  async function waitForDashboard() {
+
+    for (
+      let i = 0;
+      i < 40;
+      i++
+    ) {
+
+      if (
+        document.getElementById(
+          "scheduleTitle"
+        )
+        &&
+        document.getElementById(
+          "nextTitle"
+        )
+        &&
+        document.getElementById(
+          "coachTaskSummary"
+        )
+      ) {
+
+        return true;
+
+      }
+
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            150
+          )
+      );
+
+    }
+
+
+    return false;
+
+  }
+
+
+  const ready =
+    await waitForDashboard();
+
+
+  if (!ready) {
+
+    console.error(
+      "Actual Coach Patch: Dashboard chưa sẵn sàng."
+    );
+
+    return;
+
+  }
+
+
+  detachOldControlledNodes();
+
+
+  /* =====================================================
+     LẤY COACH HIỆN TẠI
+  ====================================================== */
+
+  async function getCurrentCoachId() {
+
+    const {
+      data,
+      error
+    } =
+      await patchSb.rpc(
+        "current_coach_id"
+      );
+
+
+    if (
+      error
+      ||
+      !data
+    ) {
+
+      throw (
+        error
+        ||
+        new Error(
+          "Không xác định được Coach."
+        )
+      );
+
+    }
+
+
+    return Number(
+      data
+    );
+
+  }
+
+
+  /* =====================================================
+     LẤY CÁC BUỔI MÀ COACH THỰC TẾ DẠY
+  ====================================================== */
+
+  async function getActualSessions(
+    coachId
+  ) {
+
+    const {
+      data,
+      error
+    } =
+      await patchSb
+        .from(
+          "class_sessions"
+        )
+        .select(`
+          id,
+          session_code,
+          registration_id,
+          coach_id,
+          substitute_coach_id,
+          session_no,
+          session_date,
+          start_time,
+          duration_minutes,
+          court_name,
+          status,
+          registrations (
+            id,
+            registration_code,
+            students (
+              id,
+              student_code,
+              full_name
+            )
+          )
+        `)
+        .or(
+          `coach_id.eq.${coachId},substitute_coach_id.eq.${coachId}`
+        );
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    return (
+      data
+      ||
+      []
+    )
+      .filter(
+        item => {
+
+          const actualCoachId =
+            Number(
+              item.substitute_coach_id
+              ||
+              item.coach_id
+              ||
+              0
+            );
+
+
+          return (
+            actualCoachId
+            ===
+            Number(
+              coachId
+            )
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     CẬP NHẬT LỊCH DẠY + BUỔI TIẾP THEO
+  ====================================================== */
+
+  function renderSchedule(
+    rows
+  ) {
+
+    const scheduleTitle =
+      document.getElementById(
+        "scheduleTitle"
+      );
+
+    const scheduleSub =
+      document.getElementById(
+        "scheduleSub"
+      );
+
+    const todayCount =
+      document.getElementById(
+        "todayCount"
+      );
+
+    const overdueCount =
+      document.getElementById(
+        "overdueCount"
+      );
+
+    const upcomingCount =
+      document.getElementById(
+        "upcomingCount"
+      );
+
+    const nextTitle =
+      document.getElementById(
+        "nextTitle"
+      );
+
+    const nextCode =
+      document.getElementById(
+        "nextCode"
+      );
+
+    const nextStudent =
+      document.getElementById(
+        "nextStudent"
+      );
+
+    const nextTime =
+      document.getElementById(
+        "nextTime"
+      );
+
+    const nextCourt =
+      document.getElementById(
+        "nextCourt"
+      );
+
+    const nextInfo =
+      document.getElementById(
+        "nextInfo"
+      );
+
+    const nextEmpty =
+      document.getElementById(
+        "nextEmpty"
+      );
+
+
+    const now =
+      new Date();
+
+
+    const today =
+      todayKey();
+
+
+    const todayRows =
+      rows.filter(
+        item =>
+          item.session_date
+          ===
+          today
+      );
+
+
+    const overdueRows =
+      rows.filter(
+        item => {
+
+          if (
+            String(
+              item.status || ""
+            ).trim()
+            !==
+            "Chờ học"
+          ) {
+
+            return false;
+
+          }
+
+
+          const end =
+            sessionEnd(
+              item
+            );
+
+
+          return (
+            end
+            &&
+            end.getTime()
+            <
+            now.getTime()
+          );
+
+        }
+      );
+
+
+    const upcomingRows =
+      rows
+        .filter(
+          item => {
+
+            if (
+              String(
+                item.status || ""
+              ).trim()
+              !==
+              "Chờ học"
+            ) {
+
+              return false;
+
+            }
+
+
+            const end =
+              sessionEnd(
+                item
+              );
+
+
+            return (
+              end
+              &&
+              end.getTime()
+              >=
+              now.getTime()
+            );
+
+          }
+        )
+        .sort(
+          (a,b) =>
+            (
+              sessionStart(a)
+                ?.getTime()
+              ||
+              0
+            )
+            -
+            (
+              sessionStart(b)
+                ?.getTime()
+              ||
+              0
+            )
+        );
+
+
+    todayCount.textContent =
+      String(
+        todayRows.length
+      );
+
+
+    overdueCount.textContent =
+      String(
+        overdueRows.length
+      );
+
+
+    upcomingCount.textContent =
+      String(
+        upcomingRows.length
+      );
+
+
+    scheduleTitle.textContent =
+      todayRows.length > 0
+        ?
+        `${todayRows.length} buổi hôm nay`
+        :
+        "Không có lịch hôm nay";
+
+
+    scheduleSub.textContent =
+      overdueRows.length > 0
+        ?
+        `${overdueRows.length} buổi cần xử lý`
+        :
+        "Không có buổi quá hạn";
+
+
+    const next =
+      upcomingRows[0];
+
+
+    if (next) {
+
+      const student =
+        next.registrations
+          ?.students
+        ||
+        {};
+
+
+      nextTitle.textContent =
+        `Buổi ${
+          next.session_no
+          ||
+          "—"
+        }`;
+
+
+      nextCode.textContent =
+        next.session_code
+        ||
+        "Buổi dạy sắp tới";
+
+
+      nextStudent.textContent =
+        student.full_name
+        ||
+        student.student_code
+        ||
+        "—";
+
+
+      nextTime.textContent =
+        `${formatDate(
+          next.session_date
+        )} · ${formatTime(
+          next.start_time
+        )}`;
+
+
+      nextCourt.textContent =
+        next.court_name
+        ||
+        "Chưa chọn sân";
+
+
+      nextInfo.style.display =
+        "block";
+
+
+      nextEmpty.style.display =
+        "none";
+
+    }
+    else {
+
+      nextTitle.textContent =
+        "Chưa có lịch sắp tới";
+
+
+      nextCode.textContent =
+        "Không có buổi Chờ học trong tương lai.";
+
+
+      nextInfo.style.display =
+        "none";
+
+
+      nextEmpty.style.display =
+        "block";
+
+    }
+
+
+    return {
+      overdueRows,
+      upcomingRows
+    };
+
+  }
+
+
+  /* =====================================================
+     VIỆC CẦN XỬ LÝ
+  ====================================================== */
+
+  async function renderTaskSummary(
+    coachId,
+    overdueRows
+  ) {
+
+    const [
+      requestResult,
+      finalResult
+    ] =
+      await Promise.all([
+
+        patchSb
+          .from(
+            "session_requests"
+          )
+          .select(
+            "id"
+          )
+          .eq(
+            "coach_id",
+            coachId
+          )
+          .eq(
+            "status",
+            "Chờ Coach"
+          ),
+
+        patchSb.rpc(
+          "coach_get_students_needing_final_assessment"
+        )
+
+      ]);
+
+
+    const requestCount =
+      requestResult.error
+        ?
+        0
+        :
+        (
+          requestResult.data
+          ||
+          []
+        ).length;
+
+
+    const finalCount =
+      finalResult.error
+        ?
+        0
+        :
+        (
+          Array.isArray(
+            finalResult.data
+          )
+            ?
+            finalResult.data.length
+            :
+            0
+        );
+
+
+    const attendanceCount =
+      overdueRows.length;
+
+
+    const total =
+      requestCount
+      +
+      attendanceCount
+      +
+      finalCount;
+
+
+    const totalEl =
+      document.getElementById(
+        "coachTaskTotalV2"
+      );
+
+    const requestEl =
+      document.getElementById(
+        "coachTaskRequestCountV2"
+      );
+
+    const attendanceEl =
+      document.getElementById(
+        "coachTaskAttendanceCountV2"
+      );
+
+    const finalEl =
+      document.getElementById(
+        "coachTaskFinalCountV2"
+      );
+
+    const titleEl =
+      document.getElementById(
+        "coachTaskSummaryTitleV2"
+      );
+
+    const statusEl =
+      document.getElementById(
+        "coachTaskSummaryStatusV2"
+      );
+
+    const summary =
+      document.getElementById(
+        "coachTaskSummary"
+      );
+
+
+    if (
+      !totalEl
+      ||
+      !requestEl
+      ||
+      !attendanceEl
+      ||
+      !finalEl
+      ||
+      !titleEl
+      ||
+      !statusEl
+      ||
+      !summary
+    ) {
+
+      return;
+
+    }
+
+
+    requestEl.textContent =
+      String(
+        requestCount
+      );
+
+
+    attendanceEl.textContent =
+      String(
+        attendanceCount
+      );
+
+
+    finalEl.textContent =
+      String(
+        finalCount
+      );
+
+
+    totalEl.textContent =
+      String(
+        total
+      );
+
+
+    summary.classList.toggle(
+      "has-task",
+      total > 0
+    );
+
+
+    if (total > 0) {
+
+      titleEl.textContent =
+        `${total} việc đang chờ`;
+
+
+      statusEl.textContent =
+        `Có ${requestCount} yêu cầu lịch học, ${attendanceCount} buổi cần điểm danh và ${finalCount} học viên cần chấm trình cuối khóa.`;
+
+    }
+    else {
+
+      titleEl.textContent =
+        "Không có việc tồn";
+
+
+      statusEl.textContent =
+        "✓ Hiện tại Coach không có việc nào cần xử lý.";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     REFRESH
+  ====================================================== */
+
+  async function refreshActualCoachDashboard() {
+
+    try {
+
+      const coachId =
+        await getCurrentCoachId();
+
+
+      const rows =
+        await getActualSessions(
+          coachId
+        );
+
+
+      const {
+        overdueRows
+      } =
+        renderSchedule(
+          rows
+        );
+
+
+      await renderTaskSummary(
+        coachId,
+        overdueRows
+      );
+
+
+      console.log(
+        "✓ Actual Coach Dashboard updated:",
+        coachId,
+        rows.length
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "Actual Coach Dashboard:",
+        error
+      );
+
+    }
+
+  }
+
+
+  await refreshActualCoachDashboard();
+
+
+  setInterval(
+    refreshActualCoachDashboard,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        refreshActualCoachDashboard,
+        500
+      );
+
+    }
+  );
+
+})();
+</script>
 </body>
 
 </html>
