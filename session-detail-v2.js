@@ -17,6 +17,9 @@ const sessionId =
     params.get("id")
   );
 
+const ADMIN_EMAIL =
+  "namnqph2@gmail.com";
+
 
 let currentSession =
   null;
@@ -51,7 +54,6 @@ function one(value) {
 
   }
 
-
   return value
     ||
     null;
@@ -67,13 +69,11 @@ function show(
   const node =
     el(id);
 
-
   if (!node) {
 
     return;
 
   }
-
 
   node.textContent =
 
@@ -98,7 +98,6 @@ function formatDate(value) {
 
   }
 
-
   return new Intl.DateTimeFormat(
     "vi-VN"
   ).format(
@@ -120,7 +119,6 @@ function formatTime(value) {
 
   }
 
-
   return String(
     value
   ).slice(
@@ -139,17 +137,14 @@ function setMessage(
   const node =
     el("message");
 
-
   if (!node) {
 
     return;
 
   }
 
-
   node.textContent =
     text;
-
 
   node.style.color =
 
@@ -252,7 +247,6 @@ function createPaymentGateUI() {
       "div"
     );
 
-
   box.id =
     "paymentGateBox";
 
@@ -281,7 +275,6 @@ function renderPaymentGate() {
     el(
       "paymentGateBox"
     );
-
 
   if (!box) {
 
@@ -317,7 +310,6 @@ function renderPaymentGate() {
 
     `;
 
-
     return;
 
   }
@@ -330,10 +322,8 @@ function renderPaymentGate() {
     box.style.display =
       "none";
 
-
     box.innerHTML =
       "";
-
 
     return;
 
@@ -342,7 +332,6 @@ function renderPaymentGate() {
 
   box.style.display =
     "";
-
 
   box.className =
     "show";
@@ -458,7 +447,6 @@ function updateButtons() {
   completeBtn.disabled =
     finished;
 
-
   absentBtn.disabled =
     finished;
 
@@ -466,7 +454,7 @@ function updateButtons() {
 
 
 /* =====================================================
-   AUTH
+   AUTH - ADMIN ONLY
 ====================================================== */
 
 async function checkLogin() {
@@ -474,16 +462,50 @@ async function checkLogin() {
   const {
     data: {
       session
-    }
+    },
+    error
   } =
     await sb.auth
       .getSession();
 
 
-  if (!session) {
+  if (
+    error
+    ||
+    !session
+  ) {
 
     location.replace(
       "./login.html"
+    );
+
+    return false;
+
+  }
+
+
+  const email =
+    String(
+      session.user.email
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    email !==
+    ADMIN_EMAIL.toLowerCase()
+  ) {
+
+    console.warn(
+      "ADMIN PAGE BLOCKED:",
+      email
+    );
+
+    location.replace(
+      "./index.html"
     );
 
     return false;
@@ -1130,7 +1152,6 @@ async function init() {
 
   completeBtn.disabled =
     true;
-
 
   absentBtn.disabled =
     true;
