@@ -6163,6 +6163,359 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
 </script>
   <script src="./notifications.js?v=20260911-3"></script>
+  <script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const notificationSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await notificationSb.auth.getSession();
+
+
+  if (!session) {
+    return;
+  }
+
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await notificationSb
+      .from("coaches")
+      .select("id")
+      .eq(
+        "auth_user_id",
+        session.user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    coachError ||
+    !coach
+  ) {
+    return;
+  }
+
+
+  const {
+    data: notifications,
+    error: notificationError
+  } =
+    await notificationSb
+      .from("coach_notifications")
+      .select(`
+        id,
+        title,
+        message,
+        is_read,
+        created_at,
+        session_id
+      `)
+      .eq(
+        "coach_id",
+        coach.id
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(10);
+
+
+  if (notificationError) {
+
+    console.error(
+      "COACH NOTIFICATIONS:",
+      notificationError
+    );
+
+    return;
+  }
+
+
+  const list =
+    notifications || [];
+
+
+  const unreadCount =
+    list.filter(
+      item =>
+        item.is_read !== true
+    ).length;
+
+
+  const latest =
+    list[0] || null;
+
+
+  /*
+    TÌM KHU VỰC MENU COACH
+  */
+
+  const menuCards =
+    Array.from(
+      document.querySelectorAll(
+        "a.menu-card"
+      )
+    );
+
+
+  if (!menuCards.length) {
+    return;
+  }
+
+
+  /*
+    KHÔNG TẠO TRÙNG
+  */
+
+  if (
+    document.getElementById(
+      "coachNotificationCard"
+    )
+  ) {
+    return;
+  }
+
+
+  const card =
+    document.createElement(
+      "a"
+    );
+
+
+  card.id =
+    "coachNotificationCard";
+
+
+  card.className =
+    "menu-card";
+
+
+  card.href =
+    latest?.session_id
+      ? `./coach-session-detail?id=${latest.session_id}`
+      : "#";
+
+
+  card.innerHTML = `
+
+    <div
+      class="menu-icon"
+      style="
+        position:relative;
+      "
+    >
+      🔔
+
+      ${
+        unreadCount > 0
+
+          ? `
+            <span
+              style="
+                position:absolute;
+                top:-10px;
+                right:-12px;
+                min-width:22px;
+                height:22px;
+                padding:0 6px;
+                border-radius:999px;
+                background:#ff4d5a;
+                color:#fff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:12px;
+                font-weight:900;
+              "
+            >
+              ${unreadCount}
+            </span>
+          `
+
+          : ""
+      }
+
+    </div>
+
+
+    <div class="menu-title">
+      Thông báo
+    </div>
+
+
+    <div class="menu-sub">
+
+      ${
+        latest
+
+          ? `
+            <strong
+              style="
+                color:#d8ff45;
+              "
+            >
+              ${escapeNotificationHtml(
+                latest.title
+              )}
+            </strong>
+
+            <br>
+
+            ${escapeNotificationHtml(
+              latest.message
+            )}
+          `
+
+          : `
+            Hiện chưa có thông báo mới.
+          `
+      }
+
+    </div>
+  `;
+
+
+  /*
+    CHÈN SAU CARD "BUỔI CẦN HỖ TRỢ"
+    NẾU TÌM THẤY.
+  */
+
+  const coverCard =
+    menuCards.find(
+      item =>
+        item
+          .textContent
+          .toLowerCase()
+          .includes(
+            "buổi cần hỗ trợ"
+          )
+    );
+
+
+  if (coverCard) {
+
+    coverCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+  }
+  else {
+
+    menuCards[
+      menuCards.length - 1
+    ].insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+  }
+
+
+  /*
+    KHI BẤM THÔNG BÁO:
+    ĐÁNH DẤU ĐÃ ĐỌC
+  */
+
+  card.addEventListener(
+    "click",
+    async function () {
+
+      const unreadIds =
+        list
+          .filter(
+            item =>
+              item.is_read !== true
+          )
+          .map(
+            item =>
+              item.id
+          );
+
+
+      if (
+        unreadIds.length > 0
+      ) {
+
+        await notificationSb
+          .from(
+            "coach_notifications"
+          )
+          .update({
+            is_read: true,
+            read_at:
+              new Date().toISOString()
+          })
+          .in(
+            "id",
+            unreadIds
+          );
+
+      }
+
+    }
+  );
+
+
+  function escapeNotificationHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+})();
+</script>
 </body>
 
 </html>
