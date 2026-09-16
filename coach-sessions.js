@@ -590,10 +590,9 @@ async function loadSessions() {
           )
         )
       `)
-      .eq(
-        "coach_id",
-        currentCoach.id
-      );
+      .or(
+  `coach_id.eq.${currentCoach.id},substitute_coach_id.eq.${currentCoach.id}`
+);
 
 
   if (error) {
