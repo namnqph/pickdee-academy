@@ -6955,8 +6955,13 @@ async function loadStudents(
   }
 
 
-  detachOldControlledNodes();
+if (!ready) {
+  console.error(
+    "Actual Coach Patch: Dashboard chưa sẵn sàng."
+  );
 
+  return;
+}
 
   /* =====================================================
      LẤY COACH HIỆN TẠI
@@ -7570,22 +7575,27 @@ async function loadStudents(
 
     try {
 
-      const coachId =
-        await getCurrentCoachId();
+    const coachId =
+  await getCurrentCoachId();
 
+const rows =
+  await getActualSessions(
+    coachId
+  );
 
-      const rows =
-        await getActualSessions(
-          coachId
-        );
+/*
+  Chỉ tách Dashboard cũ SAU KHI
+  đã lấy dữ liệu thành công.
+  Nếu query lỗi, Dashboard cũ vẫn còn hoạt động.
+*/
+detachOldControlledNodes();
 
-
-      const {
-        overdueRows
-      } =
-        renderSchedule(
-          rows
-        );
+const {
+  overdueRows
+} =
+  renderSchedule(
+    rows
+  );
 
 
       await renderTaskSummary(
