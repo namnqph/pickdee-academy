@@ -764,40 +764,42 @@
     =====================================================
   */
 
-  const {
-    data: registrationsData,
-    error: registrationsError
-  } =
-    await sb
-      .from(
-        "registrations"
-      )
-      .select(`
-        id,
-        registration_code,
-        student_id,
-        package_name,
-        purchased_sessions,
-        start_date,
-        end_date,
-        status
-      `)
-      .eq(
-        "coach_id",
-        coach.id
-      )
-      .eq(
-        "status",
-        "Đã duyệt"
-      )
-      .order(
-        "id",
-        {
-          ascending:
-            false
-        }
-      );
-
+ const {
+  data: registrationsData,
+  error: registrationsError
+} =
+  await sb
+    .from(
+      "registrations"
+    )
+    .select(`
+      id,
+      registration_code,
+      student_id,
+      package_name,
+      purchased_sessions,
+      start_date,
+      end_date,
+      status,
+      is_test
+    `)
+    .eq(
+      "coach_id",
+      coach.id
+    )
+    .eq(
+      "status",
+      "Đã duyệt"
+    )
+    .or(
+      "is_test.is.null,is_test.eq.false"
+    )
+    .order(
+      "id",
+      {
+        ascending: false
+      }
+    );
 
   if (
     registrationsError
