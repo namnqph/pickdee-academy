@@ -2534,53 +2534,116 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
   async function loadWork() {
 
-    const month =
-      monthKey();
+  const month =
+    monthKey();
 
+  const [
+    year,
+    monthNumber
+  ] =
+    month.split("-");
 
-    const [
-      year,
-      monthNumber
-    ] =
-      month.split("-");
+  workMonth.textContent =
+    `Tháng ${monthNumber}/${year}`;
 
+  const {
+    data: workData,
+    error: workError
+  } =
+    await sb
+      .from("coach_work")
+      .select(`
+        id,
+        coach_id,
+        registration_id,
+        work_date,
+        pay_period,
+        base_amount,
+        bonus,
+        deduction,
+        total_amount,
+        status
+      `)
+      .eq(
+        "coach_id",
+        Number(currentCoach.id)
+      )
+      .eq(
+        "pay_period",
+        month
+      );
 
-    workMonth.textContent =
-      `Tháng ${monthNumber}/${year}`;
+  if (workError) {
 
+    console.error(
+      "Coach work:",
+      workError
+    );
+
+    workTitle.textContent =
+      "Không tải được công";
+
+    workTotal.textContent =
+      "—";
+
+    workUnclosed.textContent =
+      "—";
+
+    workUnpaid.textContent =
+      "—";
+
+    return;
+  }
+
+  const allWorkRows =
+    workData || [];
+
+  const registrationIds =
+    [
+      ...new Set(
+        allWorkRows
+          .map(
+            item =>
+              Number(
+                item.registration_id
+              )
+          )
+          .filter(
+            id =>
+              Number.isFinite(id)
+              &&
+              id > 0
+          )
+      )
+    ];
+
+  let realRegistrationIds =
+    new Set();
+
+  if (
+    registrationIds.length > 0
+  ) {
 
     const {
-      data,
-      error
+      data: registrations,
+      error: registrationError
     } =
       await sb
-        .from("coach_work")
+        .from("registrations")
         .select(`
           id,
-          coach_id,
-          work_date,
-          pay_period,
-          base_amount,
-          bonus,
-          deduction,
-          total_amount,
-          status
+          is_test
         `)
-        .eq(
-          "coach_id",
-          Number(currentCoach.id)
-        )
-        .eq(
-          "pay_period",
-          month
+        .in(
+          "id",
+          registrationIds
         );
 
-
-    if (error) {
+    if (registrationError) {
 
       console.error(
-        "Coach work:",
-        error
+        "Coach work registration filter:",
+        registrationError
       );
 
       workTitle.textContent =
@@ -2598,72 +2661,82 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
       return;
     }
 
-
-    const rows =
-      data || [];
-
-
-    const total =
-      rows.reduce(
-        (sum,item) =>
-          sum
-          +
-          workAmount(item),
-        0
+    realRegistrationIds =
+      new Set(
+        (registrations || [])
+          .filter(
+            item =>
+              item.is_test === false
+          )
+          .map(
+            item =>
+              Number(item.id)
+          )
       );
-
-
-    const unclosed =
-      rows.filter(
-        item =>
-          String(
-            item.status || ""
-          ).trim()
-          ===
-          "Chưa chốt"
-      );
-
-
-    const unpaid =
-      rows.filter(
-        item =>
-          String(
-            item.status || ""
-          ).trim()
-          !==
-          "Đã thanh toán"
-      );
-
-
-    const unpaidAmount =
-      unpaid.reduce(
-        (sum,item) =>
-          sum
-          +
-          workAmount(item),
-        0
-      );
-
-
-    workTitle.textContent =
-      `${rows.length} buổi phát sinh công`;
-
-
-    workTotal.textContent =
-      money(total);
-
-
-    workUnclosed.textContent =
-      unclosed.length;
-
-
-    workUnpaid.textContent =
-      money(
-        unpaidAmount
-      );
-
   }
 
+  const rows =
+    allWorkRows.filter(
+      item =>
+        realRegistrationIds.has(
+          Number(
+            item.registration_id
+          )
+        )
+    );
+
+  const total =
+    rows.reduce(
+      (sum,item) =>
+        sum
+        +
+        workAmount(item),
+      0
+    );
+
+  const unclosed =
+    rows.filter(
+      item =>
+        String(
+          item.status || ""
+        ).trim()
+        ===
+        "Chưa chốt"
+    );
+
+  const unpaid =
+    rows.filter(
+      item =>
+        String(
+          item.status || ""
+        ).trim()
+        !==
+        "Đã thanh toán"
+    );
+
+  const unpaidAmount =
+    unpaid.reduce(
+      (sum,item) =>
+        sum
+        +
+        workAmount(item),
+      0
+    );
+
+  workTitle.textContent =
+    `${rows.length} buổi phát sinh công`;
+
+  workTotal.textContent =
+    money(total);
+
+  workUnclosed.textContent =
+    unclosed.length;
+
+  workUnpaid.textContent =
+    money(
+      unpaidAmount
+    );
+}
 
   /* =====================================================
      HỌC VIÊN ĐANG PHỤ TRÁCH
