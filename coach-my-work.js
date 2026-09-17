@@ -424,8 +424,8 @@ async function loadCoach(
 async function loadWorks() {
 
   const {
-    data,
-    error
+    data: workData,
+    error: workError
   } =
     await sb
       .from("coach_work")
@@ -452,10 +452,11 @@ async function loadWorks() {
         currentCoach.id
       );
 
+  if (workError) {
 
-  if (error) {
-
-    console.error(error);
+    console.error(
+      workError
+    );
 
     body.innerHTML = `
       <tr>
@@ -466,20 +467,113 @@ async function loadWorks() {
     `;
 
     messageEl.textContent =
-      error.message || String(error);
+      workError.message
+      ||
+      String(workError);
 
     return;
   }
 
+  const allWorks =
+    workData || [];
+
+  const registrationIds =
+    [
+      ...new Set(
+        allWorks
+          .map(
+            row =>
+              Number(
+                row.registration_id
+              )
+          )
+          .filter(
+            id =>
+              Number.isFinite(id)
+              &&
+              id > 0
+          )
+      )
+    ];
+
+  let realRegistrationIds =
+    new Set();
+
+  if (
+    registrationIds.length > 0
+  ) {
+
+    const {
+      data: registrations,
+      error: registrationError
+    } =
+      await sb
+        .from("registrations")
+        .select(`
+          id,
+          is_test
+        `)
+        .in(
+          "id",
+          registrationIds
+        )
+        .eq(
+          "is_test",
+          false
+        );
+
+    if (registrationError) {
+
+      console.error(
+        registrationError
+      );
+
+      body.innerHTML = `
+        <tr>
+          <td colspan="8">
+            Không tải được Công Coach.
+          </td>
+        </tr>
+      `;
+
+      messageEl.textContent =
+        registrationError.message
+        ||
+        String(
+          registrationError
+        );
+
+      return;
+    }
+
+    realRegistrationIds =
+      new Set(
+        (registrations || [])
+          .map(
+            item =>
+              Number(
+                item.id
+              )
+          )
+      );
+  }
+
+  const realWorks =
+    allWorks.filter(
+      row =>
+        realRegistrationIds.has(
+          Number(
+            row.registration_id
+          )
+        )
+    );
 
   works =
     sortCoachWorks(
-      data || []
+      realWorks
     );
 
-
   renderSummary();
-
 
   renderWorks(
     works
