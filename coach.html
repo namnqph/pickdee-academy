@@ -6946,82 +6946,84 @@ async function loadStudents(
   ====================================================== */
 
   async function getActualSessions(
-    coachId
-  ) {
+  coachId
+) {
 
-    const {
-      data,
-      error
-    } =
-      await patchSb
-        .from(
-          "class_sessions"
-        )
-        .select(`
+  const {
+    data,
+    error
+  } =
+    await patchSb
+      .from(
+        "class_sessions"
+      )
+      .select(`
+        id,
+        session_code,
+        registration_id,
+        coach_id,
+        substitute_coach_id,
+        session_no,
+        session_date,
+        start_time,
+        duration_minutes,
+        court_name,
+        status,
+        registrations (
           id,
-          session_code,
-          registration_id,
-          coach_id,
-          substitute_coach_id,
-          session_no,
-          session_date,
-          start_time,
-          duration_minutes,
-          court_name,
-          status,
-          registrations (
+          registration_code,
+          is_test,
+          students (
             id,
-            registration_code,
-            students (
-              id,
-              student_code,
-              full_name
-            )
+            student_code,
+            full_name
           )
-        `)
-        .or(
-          `coach_id.eq.${coachId},substitute_coach_id.eq.${coachId}`
-        );
-
-
-    if (error) {
-
-      throw error;
-
-    }
-
-
-    return (
-      data
-      ||
-      []
-    )
-      .filter(
-        item => {
-
-          const actualCoachId =
-            Number(
-              item.substitute_coach_id
-              ||
-              item.coach_id
-              ||
-              0
-            );
-
-
-          return (
-            actualCoachId
-            ===
-            Number(
-              coachId
-            )
-          );
-
-        }
+        )
+      `)
+      .or(
+        `coach_id.eq.${coachId},substitute_coach_id.eq.${coachId}`
       );
 
+  if (error) {
+    throw error;
   }
 
+  return (
+    data
+    ||
+    []
+  )
+    .filter(
+      item => {
+
+        const actualCoachId =
+          Number(
+            item.substitute_coach_id
+            ||
+            item.coach_id
+            ||
+            0
+          );
+
+        const isReal =
+          item.registrations?.is_test
+          ===
+          false;
+
+        return (
+          isReal
+          &&
+          actualCoachId
+          ===
+          Number(
+            coachId
+          )
+        );
+
+      }
+    );
+
+}
 
   /* =====================================================
      CẬP NHẬT LỊCH DẠY + BUỔI TIẾP THEO
