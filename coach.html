@@ -17,8 +17,100 @@
 
   <title>Coach | PickDee Academy</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+
+<script>
+(function () {
+
+  const cfg = window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    console.error("PickDee: thiếu cấu hình Supabase.");
+    return;
+  }
+
+  /*
+    =========================================================
+    PICKDEE - ONE SUPABASE CLIENT
+    Toàn bộ coach.html chỉ dùng DUY NHẤT 1 client Auth.
+    =========================================================
+  */
+
+  const originalCreateClient =
+    window.supabase.createClient.bind(
+      window.supabase
+    );
+
+  const sharedSb =
+    originalCreateClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+  /*
+    Client chính dùng chung cho toàn bộ trang
+  */
+  window.PICKDEE_SUPABASE =
+    sharedSb;
+
+  window.PICKDEE_NOTIFICATION_SB =
+    sharedSb;
+
+  window.supabaseClient =
+    sharedSb;
+
+  window.sb =
+    sharedSb;
+
+  window.PICKDEE_NOTIFICATION_ROLE =
+    "coach";
+
+  /*
+    =========================================================
+    CHẶN VIỆC CÁC ĐOẠN CODE CŨ TẠO THÊM AUTH CLIENT
+    =========================================================
+  */
+
+  window.supabase.createClient =
+    function (
+      url,
+      key,
+      options
+    ) {
+
+      if (
+        url === cfg.SUPABASE_URL
+        &&
+        key === cfg.SUPABASE_PUBLISHABLE_KEY
+      ) {
+
+        return sharedSb;
+
+      }
+
+      /*
+        Chỉ dùng createClient thật
+        nếu sau này có project Supabase khác.
+      */
+      return originalCreateClient(
+        url,
+        key,
+        options
+      );
+
+    };
+
+  console.log(
+    "✓ PickDee Coach: shared Supabase client ready."
+  );
+
+})();
+</script>
 
 
   <style>
