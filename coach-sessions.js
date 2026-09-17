@@ -551,7 +551,111 @@ async function loadCurrentCoach(
    LOAD LỊCH DẠY
 ===================================== */
 
-Filter test sessions from coach schedule
+async function loadSessions() {
+
+  body.innerHTML = `
+    <tr>
+      <td colspan="7">
+        Đang tải lịch dạy...
+      </td>
+    </tr>
+  `;
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("class_sessions")
+      .select(`
+        id,
+        session_code,
+        registration_id,
+        coach_id,
+        substitute_coach_id,
+        session_no,
+        session_date,
+        start_time,
+        duration_minutes,
+        court_name,
+        status,
+        note,
+        registrations (
+          id,
+          student_id,
+          is_test,
+          students (
+            id,
+            student_code,
+            full_name
+          )
+        )
+      `)
+      .or(
+        `coach_id.eq.${currentCoach.id},substitute_coach_id.eq.${currentCoach.id}`
+      );
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="7">
+          Không tải được lịch dạy.
+        </td>
+      </tr>
+    `;
+
+    messageEl.textContent =
+      error.message || String(error);
+
+    return;
+  }
+
+  const cleanRows =
+    (data || []).filter(
+      item => {
+
+        const registration =
+          one(
+            item.registrations
+          );
+
+        const isReal =
+          registration?.is_test !== true;
+
+        const actualCoachId =
+          Number(
+            item.substitute_coach_id
+            ||
+            item.coach_id
+            ||
+            0
+          );
+
+        return (
+          isReal
+          &&
+          actualCoachId ===
+            Number(
+              currentCoach.id
+            )
+        );
+      }
+    );
+
+  sessions =
+    sortCoachSessions(
+      cleanRows
+    );
+
+  renderSessions(
+    sessions
+  );
+}
 
 
 /* =====================================
