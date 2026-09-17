@@ -1901,285 +1901,250 @@ window.addEventListener(
 
   async function loadStudentSummary() {
 
-
-    const studentTotal =
-      document.getElementById(
-        "studentTotal"
-      );
-
-
-    const studentActive =
-      document.getElementById(
-        "studentActive"
-      );
-
-
-    const studentNearEnd =
-      document.getElementById(
-        "studentNearEnd"
-      );
-
-
-    const [
-      studentsResult,
-      registrationsResult,
-      sessionsResult
-    ] =
-      await Promise.all([
-
-
-        sb
-          .from("students")
-          .select("id"),
-
-
-        sb
-          .from("registrations")
-          .select(`
-            id,
-            student_id,
-            purchased_sessions,
-            end_date,
-            status
-          `)
-          .eq(
-            "status",
-            "Đã duyệt"
-          ),
-
-
-        sb
-          .from("class_sessions")
-          .select(`
-            registration_id,
-            status
-          `)
-          .eq(
-            "status",
-            "Đã hoàn thành"
-          )
-
-
-      ]);
-
-
-    if (
-      studentsResult.error
-      ||
-      registrationsResult.error
-      ||
-      sessionsResult.error
-    ) {
-
-
-      console.error(
-        "Lỗi thống kê học viên:",
-        studentsResult.error,
-        registrationsResult.error,
-        sessionsResult.error
-      );
-
-
-      studentTotal.textContent =
-        "—";
-
-
-      studentActive.textContent =
-        "—";
-
-
-      studentNearEnd.textContent =
-        "—";
-
-
-      return;
-
-    }
-
-
-    const students =
-      studentsResult.data || [];
-
-
-    const registrations =
-      registrationsResult.data || [];
-
-
-    const completedSessions =
-      sessionsResult.data || [];
-
-
-    const completedMap =
-      new Map();
-
-
-    completedSessions.forEach(
-      item => {
-
-
-        const id =
-          Number(
-            item.registration_id
-          );
-
-
-        completedMap.set(
-
-          id,
-
-          (
-            completedMap.get(id)
-            ||
-            0
-          )
-          +
-          1
-
-        );
-
-      }
+  const studentTotal =
+    document.getElementById(
+      "studentTotal"
     );
 
+  const studentActive =
+    document.getElementById(
+      "studentActive"
+    );
 
-    const activeStudents =
-      new Set();
+  const studentNearEnd =
+    document.getElementById(
+      "studentNearEnd"
+    );
 
+  const [
+    registrationsResult,
+    sessionsResult
+  ] =
+    await Promise.all([
 
-    const nearEndStudents =
-      new Set();
+      sb
+        .from("registrations")
+        .select(`
+          id,
+          student_id,
+          purchased_sessions,
+          end_date,
+          status,
+          is_test
+        `)
+        .eq(
+          "is_test",
+          false
+        ),
 
+      sb
+        .from("class_sessions")
+        .select(`
+          registration_id,
+          status,
 
-    const today =
-      todayString();
+          registrations!inner (
+            is_test
+          )
+        `)
+        .eq(
+          "status",
+          "Đã hoàn thành"
+        )
+        .eq(
+          "registrations.is_test",
+          false
+        )
 
+    ]);
 
-    const todayDate =
-      new Date(
-        `${today}T00:00:00`
-      );
+  if (
+    registrationsResult.error
+    ||
+    sessionsResult.error
+  ) {
 
+    console.error(
+      "Lỗi thống kê học viên REAL:",
+      registrationsResult.error,
+      sessionsResult.error
+    );
 
-    registrations.forEach(
-      registration => {
+    studentTotal.textContent =
+      "—";
 
+    studentActive.textContent =
+      "—";
 
-        if (
-          !registration.student_id
-        ) {
+    studentNearEnd.textContent =
+      "—";
 
-          return;
+    return;
+  }
 
-        }
+  const registrations =
+    registrationsResult.data || [];
 
+  const completedSessions =
+    sessionsResult.data || [];
 
-        const purchased =
-          Number(
-            registration.purchased_sessions || 0
-          );
+  const completedMap =
+    new Map();
 
+  completedSessions.forEach(
+    item => {
 
-        const completed =
+      const registrationId =
+        Number(
+          item.registration_id
+        );
+
+      completedMap.set(
+        registrationId,
+        (
           completedMap.get(
-            Number(
-              registration.id
-            )
+            registrationId
           )
           ||
-          0;
+          0
+        )
+        +
+        1
+      );
 
+    }
+  );
 
-        const remaining =
-          Math.max(
-            purchased - completed,
-            0
-          );
+  const realStudents =
+    new Set();
 
+  const activeStudents =
+    new Set();
 
-        const notExpired =
-          !registration.end_date
-          ||
-          registration.end_date >= today;
+  const nearEndStudents =
+    new Set();
 
+  const today =
+    todayString();
+
+  const todayDate =
+    new Date(
+      `${today}T00:00:00`
+    );
+
+  registrations.forEach(
+    registration => {
+
+      if (
+        !registration.student_id
+      ) {
+        return;
+      }
+
+      realStudents.add(
+        registration.student_id
+      );
+
+      if (
+        String(
+          registration.status || ""
+        ).trim()
+        !==
+        "Đã duyệt"
+      ) {
+        return;
+      }
+
+      const purchased =
+        Number(
+          registration.purchased_sessions || 0
+        );
+
+      const completed =
+        completedMap.get(
+          Number(
+            registration.id
+          )
+        )
+        ||
+        0;
+
+      const remaining =
+        Math.max(
+          purchased - completed,
+          0
+        );
+
+      const notExpired =
+        !registration.end_date
+        ||
+        registration.end_date >= today;
+
+      if (
+        remaining > 0
+        &&
+        notExpired
+      ) {
+
+        activeStudents.add(
+          registration.student_id
+        );
+
+        let expireSoon =
+          false;
 
         if (
-          remaining > 0
-          &&
-          notExpired
+          registration.end_date
         ) {
 
+          const end =
+            new Date(
+              `${registration.end_date}T00:00:00`
+            );
 
-          activeStudents.add(
+          const daysLeft =
+            Math.floor(
+              (
+                end.getTime()
+                -
+                todayDate.getTime()
+              )
+              /
+              86400000
+            );
+
+          expireSoon =
+            daysLeft >= 0
+            &&
+            daysLeft <= 7;
+        }
+
+        if (
+          remaining <= 2
+          ||
+          expireSoon
+        ) {
+
+          nearEndStudents.add(
             registration.student_id
           );
 
-
-          let expireSoon =
-            false;
-
-
-          if (
-            registration.end_date
-          ) {
-
-
-            const end =
-              new Date(
-                `${registration.end_date}T00:00:00`
-              );
-
-
-            const daysLeft =
-              Math.floor(
-                (
-                  end.getTime()
-                  -
-                  todayDate.getTime()
-                )
-                /
-                86400000
-              );
-
-
-            expireSoon =
-              daysLeft >= 0
-              &&
-              daysLeft <= 7;
-
-          }
-
-
-          if (
-            remaining <= 2
-            ||
-            expireSoon
-          ) {
-
-
-            nearEndStudents.add(
-              registration.student_id
-            );
-
-          }
-
         }
 
       }
-    );
 
+    }
+  );
 
-    studentTotal.textContent =
-      students.length;
+  studentTotal.textContent =
+    realStudents.size;
 
+  studentActive.textContent =
+    activeStudents.size;
 
-    studentActive.textContent =
-      activeStudents.size;
-
-
-    studentNearEnd.textContent =
-      nearEndStudents.size;
-
-  }
-
+  studentNearEnd.textContent =
+    nearEndStudents.size;
+}
 
   /* =====================================================
      COACH
