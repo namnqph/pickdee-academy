@@ -2742,249 +2742,204 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
      HỌC VIÊN ĐANG PHỤ TRÁCH
   ====================================================== */
 
-  async function loadStudents(
-    sessionRows
-  ) {
+async function loadStudents(
+  sessionRows
+) {
 
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from("registrations")
-        .select(`
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from("registrations")
+      .select(`
+        id,
+        student_id,
+        coach_id,
+        purchased_sessions,
+        end_date,
+        status,
+        is_test,
+        students (
           id,
-          student_id,
-          coach_id,
-          purchased_sessions,
-          end_date,
-          status,
-          students (
-            id,
-            student_code,
-            full_name
-          )
-        `)
-        .eq(
-          "coach_id",
-          Number(currentCoach.id)
-        );
-
-
-    const studentMap =
-      new Map();
-
-
-    if (!error) {
-
-      const completedMap =
-        new Map();
-
-
-      (sessionRows || [])
-        .forEach(
-          item => {
-
-            if (
-              String(
-                item.status || ""
-              ).trim()
-              !==
-              "Đã hoàn thành"
-            ) {
-
-              return;
-            }
-
-
-            const registrationId =
-              Number(
-                item.registration_id
-              );
-
-
-            completedMap.set(
-              registrationId,
-              (
-                completedMap.get(
-                  registrationId
-                )
-                ||
-                0
-              )
-              +
-              1
-            );
-
-          }
-        );
-
-
-      const today =
-        todayKey();
-
-
-      (data || [])
-        .forEach(
-          registration => {
-
-            if (
-              String(
-                registration.status || ""
-              ).trim()
-              !==
-              "Đã duyệt"
-            ) {
-
-              return;
-            }
-
-
-            const purchased =
-              Number(
-                registration
-                  .purchased_sessions
-                ||
-                0
-              );
-
-
-            const completed =
-              completedMap.get(
-                Number(
-                  registration.id
-                )
-              )
-              ||
-              0;
-
-
-            const remaining =
-              Math.max(
-                purchased
-                -
-                completed,
-                0
-              );
-
-
-            const active =
-              !registration.end_date
-              ||
-              registration.end_date
-              >=
-              today;
-
-
-            if (
-              remaining <= 0
-              ||
-              !active
-            ) {
-
-              return;
-            }
-
-
-            const student =
-              registration.students;
-
-
-            if (!student?.id) {
-              return;
-            }
-
-
-            studentMap.set(
-              Number(student.id),
-              student
-            );
-
-          }
-        );
-
-    }
-
-
-    /*
-      Fallback từ lịch Coach.
-    */
-
-    if (
-      studentMap.size === 0
-    ) {
-
-      (sessionRows || [])
-        .forEach(
-          item => {
-
-            const student =
-              item.registrations
-                ?.students;
-
-
-            if (!student?.id) {
-              return;
-            }
-
-
-            studentMap.set(
-              Number(student.id),
-              student
-            );
-
-          }
-        );
-
-    }
-
-
-    const students =
-      Array.from(
-        studentMap.values()
+          student_code,
+          full_name
+        )
+      `)
+      .eq(
+        "coach_id",
+        Number(currentCoach.id)
+      )
+      .eq(
+        "is_test",
+        false
       );
 
+  const studentMap =
+    new Map();
+
+  if (error) {
+
+    console.error(
+      "Coach students:",
+      error
+    );
 
     studentCount.textContent =
-      `${students.length} học viên`;
-
-
-    if (
-      students.length === 0
-    ) {
-
-      studentNames.textContent =
-        "Hiện chưa có học viên đang phụ trách.";
-
-      return;
-    }
-
-
-    const names =
-      students
-        .slice(0,3)
-        .map(
-          student =>
-            student.full_name
-            ||
-            student.student_code
-            ||
-            "Học viên"
-        );
-
+      "—";
 
     studentNames.textContent =
-      names.join(" · ")
-      +
-      (
-        students.length > 3
+      "Không tải được học viên.";
+
+    return;
+  }
+
+  const completedMap =
+    new Map();
+
+  (sessionRows || [])
+    .forEach(
+      item => {
+
+        if (
+          String(
+            item.status || ""
+          ).trim()
+          !==
+          "Đã hoàn thành"
+        ) {
+          return;
+        }
+
+        const registrationId =
+          Number(
+            item.registration_id
+          );
+
+        completedMap.set(
+          registrationId,
+          (
+            completedMap.get(
+              registrationId
+            )
+            ||
+            0
+          )
+          +
+          1
+        );
+
+      }
+    );
+
+  const today =
+    todayKey();
+
+  (data || [])
+    .forEach(
+      registration => {
+
+        if (
+          String(
+            registration.status || ""
+          ).trim()
+          !==
+          "Đã duyệt"
+        ) {
+          return;
+        }
+
+        const purchased =
+          Number(
+            registration.purchased_sessions
+            ||
+            0
+          );
+
+        const completed =
+          completedMap.get(
+            Number(
+              registration.id
+            )
+          )
+          ||
+          0;
+
+        const remaining =
+          Math.max(
+            purchased - completed,
+            0
+          );
+
+        const active =
+          !registration.end_date
+          ||
+          registration.end_date >= today;
+
+        if (
+          remaining <= 0
+          ||
+          !active
+        ) {
+          return;
+        }
+
+        const student =
+          registration.students;
+
+        if (!student?.id) {
+          return;
+        }
+
+        studentMap.set(
+          Number(student.id),
+          student
+        );
+
+      }
+    );
+
+  const students =
+    Array.from(
+      studentMap.values()
+    );
+
+  studentCount.textContent =
+    `${students.length} học viên`;
+
+  if (
+    students.length === 0
+  ) {
+
+    studentNames.textContent =
+      "Hiện chưa có học viên đang phụ trách.";
+
+    return;
+  }
+
+  const names =
+    students
+      .slice(0,3)
+      .map(
+        student =>
+          student.full_name
+          ||
+          student.student_code
+          ||
+          "Học viên"
+      );
+
+  studentNames.textContent =
+    names.join(" · ")
+    +
+    (
+      students.length > 3
         ?
         ` · +${students.length - 3} học viên`
         :
         ""
-      );
-
-  }
+    );
+}
 
 
   /* =====================================================
