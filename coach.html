@@ -2077,203 +2077,157 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
   async function loadCoach() {
 
-    const {
-      data: { session },
-      error: sessionError
-    } =
-      await sb.auth
-        .getSession();
+  const {
+    data: { session },
+    error: sessionError
+  } =
+    await sb.auth.getSession();
 
+  if (
+    sessionError
+    ||
+    !session
+  ) {
 
-    if (
+    console.error(
+      "COACH SESSION ERROR:",
       sessionError
-      ||
-      !session
-    ) {
+    );
 
-      window.location.href =
-        "./login.html";
+    window.location.href =
+      "/login";
 
-      return false;
-    }
+    return false;
+  }
 
 
-    currentUser =
-      session.user;
+  currentUser =
+    session.user;
 
 
-    userEmailEl.textContent =
-      currentUser.email || "";
+  userEmailEl.textContent =
+    currentUser.email || "";
 
 
-    const {
-      data: profile,
-      error: profileError
-    } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq(
-          "id",
-          currentUser.id
-        )
-        .single();
+  /*
+    =====================================================
+    LẤY HỒ SƠ COACH QUA 1 RPC DUY NHẤT
+    Không query profiles/coaches trực tiếp ở frontend.
+    =====================================================
+  */
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await sb.rpc(
+      "get_my_coach_profile"
+    );
 
 
-    if (
-      profileError
-      ||
-      !profile
-      ||
-      profile.role !== "coach"
-    ) {
+  if (
+    coachError
+    ||
+    !coach
+  ) {
 
-      window.location.href =
-        "./login.html";
-
-      return false;
-    }
-
-
-    const {
-      data: coachId,
-      error: coachIdError
-    } =
-      await sb.rpc(
-        "current_coach_id"
-      );
-
-
-    if (
-      coachIdError
-      ||
-      !coachId
-    ) {
-
-      messageEl.textContent =
-        "Tài khoản Coach chưa liên kết với hồ sơ Coach.";
-
-      return false;
-    }
-
-
-    const {
-      data: coach,
-      error: coachError
-    } =
-      await sb
-        .from("coaches")
-        .select(`
-          id,
-          coach_code,
-          full_name,
-          phone,
-          email,
-          preferred_area,
-          preferred_ward,
-          status,
-          session_rate
-        `)
-        .eq(
-          "id",
-          Number(coachId)
-        )
-        .single();
-
-
-    if (
+    console.error(
+      "GET MY COACH PROFILE:",
       coachError
-      ||
-      !coach
-    ) {
+    );
 
-      console.error(
-        coachError
-      );
-
-      messageEl.textContent =
-        "Không tải được hồ sơ Coach.";
-
-      return false;
-    }
-
-
-    currentCoach =
-      coach;
-
+    messageEl.textContent =
+      "Không tải được hồ sơ Coach.";
 
     coachNameEl.textContent =
-      coach.full_name
-      ||
-      "Coach";
+      "Không tải được";
+
+    return false;
+  }
 
 
-    coachCodeEl.textContent =
-      `${coach.coach_code || ""}${
-        coach.status
+  currentCoach =
+    coach;
+
+
+  coachNameEl.textContent =
+    coach.full_name
+    ||
+    "Coach";
+
+
+  coachCodeEl.textContent =
+    `${coach.coach_code || ""}${
+      coach.status
         ?
         ` · ${coach.status}`
         :
         ""
-      }`;
+    }`;
 
 
-    phoneEl.textContent =
-      coach.phone
-      ||
-      "—";
+  phoneEl.textContent =
+    coach.phone
+    ||
+    "—";
 
 
-    emailEl.textContent =
-      coach.email
-      ||
-      "—";
+  emailEl.textContent =
+    coach.email
+    ||
+    "—";
 
 
-    areaEl.textContent =
+  areaEl.textContent =
+    coach.preferred_area
+    ||
+    "—";
+
+
+  wardEl.textContent =
+    coach.preferred_ward
+    ||
+    "—";
+
+
+  statusEl.textContent =
+    coach.status
+    ||
+    "—";
+
+
+  sessionRateEl.textContent =
+    formatMoney(
+      coach.session_rate
+    )
+    +
+    "/buổi";
+
+
+  dashboardArea.textContent =
+    [
+      coach.preferred_ward,
       coach.preferred_area
-      ||
-      "—";
-
-
-    wardEl.textContent =
-      coach.preferred_ward
-      ||
-      "—";
-
-
-    statusEl.textContent =
-      coach.status
-      ||
-      "—";
-
-
-    sessionRateEl.textContent =
-      formatMoney(
-        coach.session_rate
-      )
-      +
-      "/buổi";
-
-
-    dashboardArea.textContent =
-      [
-        coach.preferred_ward,
-        coach.preferred_area
-      ]
+    ]
       .filter(Boolean)
       .join(" · ")
-      ||
-      "—";
+    ||
+    "—";
 
 
-    dashboardRate.textContent =
-      formatMoney(
-        coach.session_rate
-      )
-      +
-      "/buổi";
+  dashboardRate.textContent =
+    formatMoney(
+      coach.session_rate
+    )
+    +
+    "/buổi";
 
+
+  /*
+    Avatar lỗi thì KHÔNG được làm chết Dashboard.
+  */
+
+  try {
 
     const {
       data: avatarPath,
@@ -2292,13 +2246,23 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
       await showAvatar(
         avatarPath || null
       );
-
     }
 
-
-    return true;
-
   }
+  catch (avatarLoadError) {
+
+    console.warn(
+      "COACH AVATAR:",
+      avatarLoadError
+    );
+  }
+
+
+  messageEl.textContent =
+    "";
+
+  return true;
+}
 
 
   /* =====================================================
