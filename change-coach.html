@@ -2431,7 +2431,509 @@
 })();
 </script>
 
+<script>
+/* =========================================================
+   PICKDEE
+   STUDENT COACH CHANGE HISTORY
+========================================================= */
 
+(async function () {
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    || window.sb
+    || window.supabaseClient;
+
+  if (!sb) {
+    console.error(
+      "Không tìm thấy Supabase client."
+    );
+    return;
+  }
+
+
+  const escapeHtml = (value) => {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  };
+
+
+  const formatDateTime = (value) => {
+
+    if (!value) return "—";
+
+    const d =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        d.getTime()
+      )
+    ) {
+      return "—";
+    }
+
+    return d.toLocaleString(
+      "vi-VN",
+      {
+        timeZone:
+          "Asia/Ho_Chi_Minh"
+      }
+    );
+
+  };
+
+
+  const statusInfo = (status) => {
+
+    const s =
+      String(
+        status || ""
+      ).toLowerCase();
+
+    if (s === "approved") {
+      return {
+        label: "Đã duyệt",
+        className: "approved"
+      };
+    }
+
+    if (s === "rejected") {
+      return {
+        label: "Từ chối",
+        className: "rejected"
+      };
+    }
+
+    return {
+      label: "Chờ duyệt",
+      className: "pending"
+    };
+
+  };
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+  style.textContent = `
+
+    #coachChangeHistorySection {
+      max-width: 1100px;
+      margin: 24px auto 50px;
+      padding: 0 16px;
+    }
+
+    #coachChangeHistorySection
+    .history-panel {
+      background: rgba(6,39,88,.74);
+      border: 1px solid rgba(216,255,69,.28);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    #coachChangeHistorySection
+    .history-title {
+      margin: 0 0 6px;
+      color: #d8ff45;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    #coachChangeHistorySection
+    .history-sub {
+      color: rgba(255,255,255,.65);
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    #coachChangeHistoryList {
+      display: grid;
+      gap: 14px;
+    }
+
+    .coach-history-card {
+      border-radius: 15px;
+      padding: 17px;
+      background: rgba(4,29,65,.92);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .coach-history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .coach-history-code {
+      color: white;
+      font-weight: 900;
+    }
+
+    .coach-history-status {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .coach-history-status.pending {
+      background: #ffbe55;
+      color: #241500;
+    }
+
+    .coach-history-status.approved {
+      background: #d8ff45;
+      color: #172600;
+    }
+
+    .coach-history-status.rejected {
+      background: #ff7474;
+      color: #330000;
+    }
+
+    .coach-history-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .coach-history-box {
+      background: rgba(255,255,255,.05);
+      border-radius: 12px;
+      padding: 13px;
+    }
+
+    .coach-history-label {
+      color: rgba(255,255,255,.52);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .coach-history-name {
+      color: white;
+      font-weight: 900;
+    }
+
+    .coach-history-arrow {
+      color: #d8ff45;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .coach-history-meta {
+      display: grid;
+      gap: 7px;
+      color: rgba(255,255,255,.76);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .coach-history-admin-note {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255,116,116,.10);
+      border: 1px solid rgba(255,116,116,.26);
+      color: #ffd0d0;
+    }
+
+    .coach-history-empty {
+      color: rgba(255,255,255,.60);
+      padding: 12px 0;
+    }
+
+    @media(max-width:700px) {
+
+      .coach-history-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .coach-history-arrow {
+        transform: rotate(90deg);
+        text-align: center;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+  section.id =
+    "coachChangeHistorySection";
+
+  section.innerHTML = `
+
+    <div class="history-panel">
+
+      <h2 class="history-title">
+        🕘 Lịch sử yêu cầu đổi Coach
+      </h2>
+
+      <div class="history-sub">
+        Theo dõi các yêu cầu đã gửi,
+        trạng thái xử lý và phản hồi của PickDee.
+      </div>
+
+      <div id="coachChangeHistoryList">
+        Đang tải lịch sử...
+      </div>
+
+    </div>
+
+  `;
+
+
+  const main =
+    document.querySelector(
+      "main"
+    );
+
+  if (main) {
+
+    main.appendChild(
+      section
+    );
+
+  }
+  else {
+
+    document.body.appendChild(
+      section
+    );
+
+  }
+
+
+  const listEl =
+    document.getElementById(
+      "coachChangeHistoryList"
+    );
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "student_get_coach_change_history"
+    );
+
+
+  if (error) {
+
+    console.error(
+      "Coach change history:",
+      error
+    );
+
+    listEl.innerHTML = `
+      <div class="coach-history-empty">
+        Không tải được lịch sử yêu cầu đổi Coach.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const rows =
+    Array.isArray(data)
+      ? data
+      : [];
+
+
+  if (!rows.length) {
+
+    listEl.innerHTML = `
+      <div class="coach-history-empty">
+        Bạn chưa có yêu cầu đổi Coach nào.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  listEl.innerHTML =
+    rows.map(
+      (row) => {
+
+        const status =
+          statusInfo(
+            row.status
+          );
+
+        const oldCoach =
+          row.current_coach_name
+          || "Chưa xác định";
+
+        const newCoach =
+          row.requested_coach_name
+          || "Chưa xác định";
+
+        const oldCode =
+          row.current_coach_code
+          || "—";
+
+        const newCode =
+          row.requested_coach_code
+          || "—";
+
+
+        return `
+
+          <div class="coach-history-card">
+
+            <div class="coach-history-top">
+
+              <div class="coach-history-code">
+                ${escapeHtml(
+                  row.registration_code
+                  || "Yêu cầu đổi Coach"
+                )}
+              </div>
+
+              <div
+                class="
+                  coach-history-status
+                  ${status.className}
+                "
+              >
+                ${status.label}
+              </div>
+
+            </div>
+
+
+            <div class="coach-history-flow">
+
+              <div class="coach-history-box">
+
+                <div class="coach-history-label">
+                  COACH HIỆN TẠI
+                </div>
+
+                <div class="coach-history-name">
+                  ${escapeHtml(oldCoach)}
+                </div>
+
+                <div class="coach-history-label">
+                  ${escapeHtml(oldCode)}
+                </div>
+
+              </div>
+
+
+              <div class="coach-history-arrow">
+                →
+              </div>
+
+
+              <div class="coach-history-box">
+
+                <div class="coach-history-label">
+                  COACH ĐỀ XUẤT
+                </div>
+
+                <div class="coach-history-name">
+                  ${escapeHtml(newCoach)}
+                </div>
+
+                <div class="coach-history-label">
+                  ${escapeHtml(newCode)}
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="coach-history-meta">
+
+              <div>
+                <strong>Lý do:</strong>
+                ${escapeHtml(
+                  row.reason
+                  || "Không có"
+                )}
+              </div>
+
+              <div>
+                <strong>Gửi lúc:</strong>
+                ${escapeHtml(
+                  formatDateTime(
+                    row.created_at
+                  )
+                )}
+              </div>
+
+              ${
+                row.decided_at
+                ? `
+                  <div>
+                    <strong>Xử lý lúc:</strong>
+                    ${escapeHtml(
+                      formatDateTime(
+                        row.decided_at
+                      )
+                    )}
+                  </div>
+                `
+                : ""
+              }
+
+            </div>
+
+
+            ${
+              row.admin_note
+                ? `
+                  <div class="coach-history-admin-note">
+                    <strong>Phản hồi Admin:</strong><br>
+                    ${escapeHtml(
+                      row.admin_note
+                    )}
+                  </div>
+                `
+                : ""
+            }
+
+          </div>
+
+        `;
+
+      }
+    ).join("");
+
+})();
+</script>
 </body>
 
 </html>
