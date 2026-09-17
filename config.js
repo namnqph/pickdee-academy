@@ -1,6 +1,19 @@
-window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIpQLSebc9BVOcDdY6RpCP3Lfktr6J-QOdAbxnb-6HqI5vaPxTVSMw/viewform?usp=preview" ,SUPABASE_URL: "https://snxztjsluhdibrklougo.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_DvbmLROzxKtDU_V9ACO4-Q_hUSDjmK0"
+window.PICKDEE_CONFIG = {
+  REGISTER_URL:
+    "https://docs.google.com/forms/d/e/1FAIpQLSebc9BVOcDdY6RpCP3Lfktr6J-QOdAbxnb-6HqI5vaPxTVSMw/viewform?usp=preview",
+
+  SUPABASE_URL:
+    "https://snxztjsluhdibrklougo.supabase.co",
+
+  SUPABASE_PUBLISHABLE_KEY:
+    "sb_publishable_DvbmLROzxKtDU_V9ACO4-Q_hUSDjmK0"
 };
+
+
+/* =========================================================
+   PICKDEE - LOAD HOME NAV
+========================================================= */
+
 (function () {
 
   function loadPickDeeHomeNav() {
@@ -32,6 +45,7 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
     );
   }
 
+
   if (
     document.readyState ===
     "loading"
@@ -53,6 +67,8 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
   }
 
 })();
+
+
 /* =========================================================
    PICKDEE GLOBAL SUPABASE SINGLETON
    TOÀN WEBSITE DÙNG DUY NHẤT 1 AUTH CLIENT
@@ -63,6 +79,7 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
   const cfg =
     window.PICKDEE_CONFIG || {};
 
+
   if (
     !window.supabase
     ||
@@ -70,28 +87,43 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
     ||
     !cfg.SUPABASE_PUBLISHABLE_KEY
   ) {
+
     console.error(
       "PickDee Global: thiếu cấu hình Supabase."
     );
+
     return;
   }
 
 
   /*
-    Nếu đã tạo rồi thì không tạo lần 2.
+    Nếu shared client đã tồn tại
+    thì không tạo thêm.
   */
+
   if (
     window.PICKDEE_SUPABASE
     &&
     window.PICKDEE_SUPABASE.__pickdeeSharedClient
   ) {
+
+    window.PICKDEE_NOTIFICATION_SB =
+      window.PICKDEE_SUPABASE;
+
+    window.supabaseClient =
+      window.PICKDEE_SUPABASE;
+
+    window.sb =
+      window.PICKDEE_SUPABASE;
+
     return;
   }
 
 
   /*
-    Giữ lại hàm createClient gốc.
+    Giữ lại createClient gốc.
   */
+
   const originalCreateClient =
     window.supabase.createClient.bind(
       window.supabase
@@ -99,26 +131,37 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
 
 
   /*
-    DUY NHẤT một Auth client cho toàn website.
+    Chỉ tạo DUY NHẤT 1 client
+    cho project Supabase PickDee.
   */
+
   const sharedClient =
     originalCreateClient(
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY,
       {
         auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storageKey: "pickdee-auth"
+
+          persistSession:
+            true,
+
+          autoRefreshToken:
+            true,
+
+          detectSessionInUrl:
+            true,
+
+          storageKey:
+            "pickdee-auth"
         }
       }
     );
 
 
   /*
-    Đánh dấu client PickDee.
+    Đánh dấu client dùng chung.
   */
+
   Object.defineProperty(
     sharedClient,
     "__pickdeeSharedClient",
@@ -130,8 +173,10 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
 
 
   /*
-    Các tên cũ trong code đều trỏ về cùng 1 client.
+    Toàn bộ tên client cũ
+    đều trỏ về cùng một client.
   */
+
   window.PICKDEE_SUPABASE =
     sharedClient;
 
@@ -141,12 +186,17 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
   window.supabaseClient =
     sharedClient;
 
+  window.sb =
+    sharedClient;
+
 
   /*
-    Quan trọng:
-    Các file cũ vẫn gọi createClient(...)
-    nhưng từ giờ sẽ nhận lại client duy nhất này.
+    Các đoạn code cũ phía dưới
+    vẫn gọi createClient(...)
+    nhưng sẽ nhận lại sharedClient
+    nếu dùng đúng project PickDee.
   */
+
   window.supabase.createClient =
     function (
       url,
@@ -157,16 +207,21 @@ window.PICKDEE_CONFIG = { REGISTER_URL: "https://docs.google.com/forms/d/e/1FAIp
       if (
         url === cfg.SUPABASE_URL
         &&
-        key === cfg.SUPABASE_PUBLISHABLE_KEY
+        key ===
+          cfg.SUPABASE_PUBLISHABLE_KEY
       ) {
+
         return sharedClient;
+
       }
+
 
       return originalCreateClient(
         url,
         key,
         options
       );
+
     };
 
 
