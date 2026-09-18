@@ -1627,20 +1627,123 @@ const actionsEl =
   document.querySelector(
     ".actions"
   );
-const packageName =
+const oldLearningGoal =
+  document.getElementById(
+    "pickdeeLearningGoal"
+  );
+
+if (oldLearningGoal) {
+  oldLearningGoal.remove();
+}
+
+
+const normalizedPackageNameForGoal =
+  packageName.toLocaleLowerCase(
+    "vi-VN"
+  );
+
+
+const learningGoal =
   String(
-    registration?.package_name || ""
+    registration?.learning_goal || ""
   ).trim();
 
-const sessionNumber =
-  Number(
-    data.session_no
+
+if (
+  actionsEl
+  &&
+  normalizedPackageNameForGoal.includes(
+    "theo yêu cầu"
+  )
+) {
+
+  const escapeGoalHtml =
+    function (value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        )
+        .replaceAll(
+          "'",
+          "&#039;"
+        );
+
+    };
+
+
+  const goalCard =
+    document.createElement(
+      "section"
+    );
+
+
+  goalCard.id =
+    "pickdeeLearningGoal";
+
+
+  goalCard.className =
+    "card";
+
+
+  goalCard.style.marginTop =
+    "16px";
+
+
+  goalCard.style.border =
+    "1px solid rgba(216,255,69,.35)";
+
+
+  goalCard.innerHTML = `
+    <div
+      style="
+        color:#d8ff45;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:1px;
+        margin-bottom:8px;
+      "
+    >
+      🎯 MỤC TIÊU HỌC VIÊN
+    </div>
+
+    <div
+      style="
+        font-size:17px;
+        font-weight:800;
+        line-height:1.6;
+      "
+    >
+      ${
+        learningGoal
+          ? escapeGoalHtml(learningGoal)
+          : "Admin chưa cập nhật mục tiêu học."
+      }
+    </div>
+  `;
+
+
+  actionsEl.parentNode.insertBefore(
+    goalCard,
+    actionsEl
   );
 
-const actionsEl =
-  document.querySelector(
-    ".actions"
-  );
+}
 const oldCurriculum =
   document.getElementById(
     "pickdeeCurriculum"
