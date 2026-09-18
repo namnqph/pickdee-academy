@@ -1311,12 +1311,12 @@
 
 
   /* ===============================================
-     TEST FORM
+     GỬI ĐĂNG KÝ THẬT
   ================================================ */
 
   registerForm.addEventListener(
     "submit",
-    function (event) {
+    async function (event) {
 
       event.preventDefault();
 
@@ -1332,15 +1332,342 @@
       }
 
 
+      const submitBtn =
+        registerForm.querySelector(
+          ".button"
+        );
+
+
+      const selectedPackageId =
+        Number(
+          packageSelect.value
+        );
+
+
+      const selectedPackage =
+        allPackages.find(
+          item =>
+            Number(item.id)
+            ===
+            selectedPackageId
+        );
+
+
+      if (!selectedPackage) {
+
+        message.textContent =
+          "Bạn chưa chọn gói học.";
+
+        message.className =
+          "message error";
+
+        return;
+
+      }
+
+
+      const isCustom =
+        String(
+          selectedPackage.package_code
+          ||
+          ""
+        )
+          .trim()
+          .toUpperCase()
+        ===
+        "TYC";
+
+
+      const requestedSessionsValue =
+        isCustom
+          ?
+            Number(
+              requestedSessions.value
+            )
+          :
+            null;
+
+
+      if (
+        isCustom
+        &&
+        (
+          !Number.isInteger(
+            requestedSessionsValue
+          )
+          ||
+          requestedSessionsValue <= 0
+        )
+      ) {
+
+        message.textContent =
+          "Vui lòng nhập số buổi muốn học.";
+
+        message.className =
+          "message error";
+
+        requestedSessions.focus();
+
+        return;
+
+      }
+
+
+      if (
+        isCustom
+        &&
+        !String(
+          learningGoal.value || ""
+        ).trim()
+      ) {
+
+        message.textContent =
+          "Vui lòng nhập mục tiêu học.";
+
+        message.className =
+          "message error";
+
+        learningGoal.focus();
+
+        return;
+
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "ĐANG GỬI ĐĂNG KÝ...";
+
+
       message.textContent =
-        "✓ Form đăng ký native đã sẵn sàng. Bước tiếp theo sẽ nối tạo tài khoản và đăng ký vào Supabase.";
+        "";
 
       message.className =
-        "message ok";
+        "message";
+
+
+      try {
+
+        const payload = {
+
+          full_name:
+            document
+              .getElementById(
+                "fullName"
+              )
+              .value
+              .trim(),
+
+          phone:
+            document
+              .getElementById(
+                "phone"
+              )
+              .value
+              .trim(),
+
+          email:
+            document
+              .getElementById(
+                "email"
+              )
+              .value
+              .trim()
+              .toLowerCase(),
+
+          preferred_area:
+            area.value,
+
+          preferred_ward:
+            ward.value,
+
+          package_id:
+            selectedPackageId,
+
+          coach_id:
+            selectedCoachId,
+
+          referral_code:
+            document
+              .getElementById(
+                "referralCode"
+              )
+              .value
+              .trim(),
+
+          learning_goal:
+            isCustom
+              ?
+                learningGoal.value.trim()
+              :
+                "",
+
+          requested_sessions:
+            isCustom
+              ?
+                requestedSessionsValue
+              :
+                null,
+
+          source:
+            "Web PickDee"
+
+        };
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.functions.invoke(
+            "pickdee-registration",
+            {
+              body:
+                payload
+            }
+          );
+
+
+        if (error) {
+
+          let errorText =
+            error.message
+            ||
+            "Không gửi được đăng ký.";
+
+
+          try {
+
+            if (
+              error.context
+              &&
+              typeof error.context.json
+              ===
+              "function"
+            ) {
+
+              const errorBody =
+                await error.context.json();
+
+
+              if (
+                errorBody?.error
+              ) {
+
+                errorText =
+                  errorBody.error;
+
+              }
+
+            }
+
+          }
+          catch (_) {}
+
+
+          throw new Error(
+            errorText
+          );
+
+        }
+
+
+        if (
+          !data
+          ||
+          data.ok !== true
+        ) {
+
+          throw new Error(
+            data?.error
+            ||
+            "Không tạo được đăng ký học."
+          );
+
+        }
+
+
+        const registrationId =
+          Number(
+            data.registration?.id
+          );
+
+
+        const registrationCode =
+          String(
+            data.registration
+              ?.registration_code
+            ||
+            ""
+          );
+
+
+        sessionStorage.setItem(
+          "pickdee_last_registration_id",
+          String(
+            registrationId
+          )
+        );
+
+
+        sessionStorage.setItem(
+          "pickdee_last_registration_code",
+          registrationCode
+        );
+
+
+        sessionStorage.removeItem(
+          "pickdee_selected_coach_id"
+        );
+
+
+        message.textContent =
+          "✓ Đăng ký học thành công. Mã đăng ký: "
+          +
+          (
+            registrationCode
+            ||
+            registrationId
+          );
+
+
+        message.className =
+          "message ok";
+
+
+        submitBtn.textContent =
+          "ĐÃ ĐĂNG KÝ ✓";
+
+      }
+      catch (error) {
+
+        console.error(
+          "PICKDEE REGISTRATION:",
+          error
+        );
+
+
+        message.textContent =
+          error?.message
+          ||
+          "Không gửi được đăng ký. Vui lòng thử lại.";
+
+        message.className =
+          "message error";
+
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "TIẾP TỤC →";
+
+      }
 
     }
   );
-
 })();
 
 </script>
