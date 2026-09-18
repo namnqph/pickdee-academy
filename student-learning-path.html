@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#041733"
+  >
+
+  <title>Lộ trình học | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      padding: 18px 24px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+    }
+
+    .brand {
+      color: #fff;
+      text-decoration: none;
+
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back-link {
+      color: #d8ff45;
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .container {
+      width:
+        min(
+          920px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        32px 0 60px;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          32px,
+          6vw,
+          50px
+        );
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.6;
+    }
+
+    .hero-card {
+      padding: 22px;
+
+      margin-bottom: 20px;
+
+      border-radius: 18px;
+
+      border:
+        1px solid rgba(216,255,69,.32);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(7,48,98,.97),
+          rgba(18,73,106,.85)
+        );
+    }
+
+    .hero-label {
+      margin-bottom: 6px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+    }
+
+    .hero-title {
+      color: #d8ff45;
+
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .hero-sub {
+      margin-top: 8px;
+
+      color:
+        rgba(255,255,255,.68);
+
+      line-height: 1.5;
+    }
+
+    .progress-wrap {
+      margin-top: 18px;
+    }
+
+    .progress-row {
+      display: flex;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 8px;
+
+      font-size: 13px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+
+      overflow: hidden;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.10);
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+
+      border-radius: 999px;
+
+      background: #d8ff45;
+
+      transition: width .25s ease;
+    }
+
+    .section-title {
+      margin:
+        28px 0 14px;
+
+      font-size: 21px;
+    }
+
+    .lesson-list {
+      display: grid;
+
+      gap: 12px;
+    }
+
+    .lesson {
+      padding: 16px;
+
+      border-radius: 15px;
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.10);
+    }
+
+    .lesson.done {
+      border-color:
+        rgba(216,255,69,.34);
+    }
+
+    .lesson.current {
+      border-color:
+        rgba(255,178,74,.65);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(7,48,98,.98),
+          rgba(71,56,17,.68)
+        );
+    }
+
+    .lesson-head {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: flex-start;
+
+      gap: 14px;
+    }
+
+    .lesson-title {
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    .lesson-status {
+      flex-shrink: 0;
+
+      padding:
+        5px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        rgba(255,255,255,.62);
+    }
+
+    .lesson.done .lesson-status {
+      background:
+        rgba(216,255,69,.15);
+
+      color: #d8ff45;
+    }
+
+    .lesson.current .lesson-status {
+      background:
+        rgba(255,178,74,.15);
+
+      color: #ffcf7e;
+    }
+
+    .lesson-body {
+      margin-top: 9px;
+
+      color:
+        rgba(255,255,255,.64);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+    .need-card {
+      padding: 18px;
+
+      border-radius: 16px;
+
+      background:
+        rgba(6,39,88,.74);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+    }
+
+    .need-title {
+      margin-bottom: 9px;
+
+      color: #d8ff45;
+
+      font-weight: 900;
+    }
+
+    .need-text {
+      color:
+        rgba(255,255,255,.67);
+
+      line-height: 1.6;
+    }
+
+    #message {
+      margin-top: 18px;
+
+      min-height: 20px;
+
+      color:
+        rgba(255,255,255,.60);
+
+      font-size: 13px;
+    }
+
+    @media(max-width:700px) {
+
+      .topbar {
+        padding: 15px;
+      }
+
+      .container {
+        padding-top: 24px;
+      }
+
+      .hero-title {
+        font-size: 21px;
+      }
+
+      .lesson-head {
+        flex-direction: column;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <a
+    class="brand"
+    href="/student"
+  >
+    PickDee <span>Academy</span>
+  </a>
+
+  <a
+    class="back-link"
+    href="/student"
+  >
+    ← QUAY LẠI
+  </a>
+
+</header>
+
+
+<main class="container">
+
+  <div class="eyebrow">
+    LỘ TRÌNH HỌC
+  </div>
+
+  <h1>
+    Lộ trình của tôi
+  </h1>
+
+  <div class="subtitle">
+    Theo dõi chương trình hiện tại, số buổi đã hoàn thành
+    và nội dung từng buổi học tại PickDee Academy.
+  </div>
+
+
+  <section class="hero-card">
+
+    <div class="hero-label">
+      CHƯƠNG TRÌNH HIỆN TẠI
+    </div>
+
+    <div
+      id="programTitle"
+      class="hero-title"
+    >
+      Đang tải...
+    </div>
+
+    <div
+      id="programSub"
+      class="hero-sub"
+    >
+      Đang kiểm tra gói học của bạn.
+    </div>
+
+
+    <div class="progress-wrap">
+
+      <div class="progress-row">
+
+        <span>
+          Tiến độ
+        </span>
+
+        <strong id="progressText">
+          —
+        </strong>
+
+      </div>
+
+
+      <div class="progress-track">
+
+        <div
+          id="progressBar"
+          class="progress-bar"
+        ></div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <h2 class="section-title">
+    Nội dung lộ trình
+  </h2>
+
+
+  <div id="lessonList"></div>
+
+
+  <div id="message"></div>
+
+</main>
+
+
+<script>
+
+(async function () {
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.supabase.createClient(
+      window.PICKDEE_CONFIG.SUPABASE_URL,
+      window.PICKDEE_CONFIG.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const programTitle =
+    document.getElementById(
+      "programTitle"
+    );
+
+  const programSub =
+    document.getElementById(
+      "programSub"
+    );
+
+  const progressText =
+    document.getElementById(
+      "progressText"
+    );
+
+  const progressBar =
+    document.getElementById(
+      "progressBar"
+    );
+
+  const lessonList =
+    document.getElementById(
+      "lessonList"
+    );
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const BASIC_PROGRAM = [
+
+    {
+      title:
+        "Buổi 1 – Làm quen Pickleball & kỹ thuật nền",
+      text:
+        "Làm quen sân, luật cơ bản, cách cầm vợt, tư thế chuẩn và cảm giác bóng."
+    },
+
+    {
+      title:
+        "Buổi 2 – Forehand cơ bản",
+      text:
+        "Tư thế, điểm tiếp xúc bóng và kiểm soát hướng bóng bằng forehand."
+    },
+
+    {
+      title:
+        "Buổi 3 – Backhand cơ bản",
+      text:
+        "Xây dựng kỹ thuật backhand ổn định và kiểm soát bóng tốt hơn."
+    },
+
+    {
+      title:
+        "Buổi 4 – Serve",
+      text:
+        "Kỹ thuật giao bóng đúng luật, ổn định và tạo lợi thế khi bắt đầu điểm."
+    },
+
+    {
+      title:
+        "Buổi 5 – Return",
+      text:
+        "Trả giao bóng sâu, kiểm soát vị trí và chuẩn bị di chuyển lên phía trước."
+    },
+
+    {
+      title:
+        "Buổi 6 – Dink cơ bản",
+      text:
+        "Kiểm soát bóng mềm tại khu vực kitchen và duy trì rally."
+    },
+
+    {
+      title:
+        "Buổi 7 – Volley",
+      text:
+        "Kỹ thuật volley, giữ mặt vợt ổn định và phản xạ gần lưới."
+    },
+
+    {
+      title:
+        "Buổi 8 – Di chuyển & vị trí",
+      text:
+        "Footwork, khoảng cách với bóng và vị trí cơ bản khi đánh đơn hoặc đôi."
+    },
+
+    {
+      title:
+        "Buổi 9 – Third Shot Drop",
+      text:
+        "Làm quen cú drop từ cuối sân để tiếp cận khu vực kitchen an toàn."
+    },
+
+    {
+      title:
+        "Buổi 10 – Reset & kiểm soát bóng",
+      text:
+        "Giảm tốc độ bóng, chuyển từ thế phòng thủ sang trạng thái cân bằng."
+    },
+
+    {
+      title:
+        "Buổi 11 – Phối hợp đánh đôi",
+      text:
+        "Di chuyển cùng đồng đội, giữ khoảng cách và lựa chọn vị trí hợp lý."
+    },
+
+    {
+      title:
+        "Buổi 12 – Tổng hợp & đánh giá",
+      text:
+        "Ôn toàn bộ kỹ thuật nền, thực hành tình huống thi đấu và đánh giá tiến bộ."
+    }
+
+  ];
+
+
+  const ADVANCED_PROGRAM = [
+
+    {
+      title:
+        "Buổi 1 – Đánh giá kỹ thuật & mục tiêu nâng cao",
+      text:
+        "Đánh giá nền tảng hiện tại và xác định các kỹ năng cần cải thiện."
+    },
+
+    {
+      title:
+        "Buổi 2 – Serve & Return nâng cao",
+      text:
+        "Tối ưu độ sâu, hướng bóng và chiến thuật từ hai cú đánh đầu tiên."
+    },
+
+    {
+      title:
+        "Buổi 3 – Third Shot Drop nâng cao",
+      text:
+        "Kiểm soát độ cao, điểm rơi và khả năng lên kitchen sau cú drop."
+    },
+
+    {
+      title:
+        "Buổi 4 – Third Shot Drive",
+      text:
+        "Tạo áp lực bằng drive và nhận biết thời điểm phù hợp giữa drive và drop."
+    },
+
+    {
+      title:
+        "Buổi 5 – Dink chiến thuật",
+      text:
+        "Điều hướng dink, tạo khoảng trống và gây áp lực lên đối thủ."
+    },
+
+    {
+      title:
+        "Buổi 6 – Speed-up & Counter",
+      text:
+        "Nhận biết bóng có thể tăng tốc và phản công khi đối phương speed-up."
+    },
+
+    {
+      title:
+        "Buổi 7 – Reset nâng cao",
+      text:
+        "Xử lý bóng khó tại transition zone và đưa trận đấu trở lại trạng thái cân bằng."
+    },
+
+    {
+      title:
+        "Buổi 8 – Volley & Hand Battle",
+      text:
+        "Tăng tốc phản xạ, kiểm soát volley và xử lý các pha bóng nhanh gần lưới."
+    },
+
+    {
+      title:
+        "Buổi 9 – Transition Zone",
+      text:
+        "Di chuyển từ baseline lên kitchen và xử lý bóng trong vùng chuyển tiếp."
+    },
+
+    {
+      title:
+        "Buổi 10 – Chiến thuật đánh đôi",
+      text:
+        "Phối hợp vị trí, lựa chọn mục tiêu và tổ chức tấn công theo cặp."
+    },
+
+    {
+      title:
+        "Buổi 11 – Xử lý tình huống thi đấu",
+      text:
+        "Thực hành các tình huống thực chiến và lựa chọn phương án theo điểm số."
+    },
+
+    {
+      title:
+        "Buổi 12 – Thi đấu & đánh giá",
+      text:
+        "Thi đấu mô phỏng, đánh giá điểm mạnh, điểm cần cải thiện và hướng phát triển tiếp theo."
+    }
+
+  ];
+
+
+  function normalise(value) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  }
+
+
+  function lessonStatus(
+    index,
+    completed
+  ) {
+
+    const lessonNo =
+      index + 1;
+
+    if (
+      lessonNo <= completed
+    ) {
+
+      return {
+        className:
+          "lesson done",
+
+        label:
+          "✓ ĐÃ HỌC"
+      };
+
+    }
+
+
+    if (
+      lessonNo === completed + 1
+    ) {
+
+      return {
+        className:
+          "lesson current",
+
+        label:
+          "BUỔI TIẾP THEO"
+      };
+
+    }
+
+
+    return {
+      className:
+        "lesson",
+
+      label:
+        "CHƯA HỌC"
+    };
+
+  }
+
+
+  function renderFixedProgram(
+    lessons,
+    completed
+  ) {
+
+    lessonList.className =
+      "lesson-list";
+
+    lessonList.innerHTML =
+      lessons
+        .map(
+          (lesson,index) => {
+
+            const status =
+              lessonStatus(
+                index,
+                completed
+              );
+
+            return `
+              <div class="${status.className}">
+
+                <div class="lesson-head">
+
+                  <div class="lesson-title">
+                    ${lesson.title}
+                  </div>
+
+                  <div class="lesson-status">
+                    ${status.label}
+                  </div>
+
+                </div>
+
+                <div class="lesson-body">
+                  ${lesson.text}
+                </div>
+
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  function renderCustomProgram(
+    purchased,
+    completed
+  ) {
+
+    const remaining =
+      Math.max(
+        purchased - completed,
+        0
+      );
+
+    lessonList.className =
+      "";
+
+    lessonList.innerHTML = `
+      <div class="need-card">
+
+        <div class="need-title">
+          Chương trình theo nhu cầu
+        </div>
+
+        <div class="need-text">
+
+          Với chương trình này, Coach sẽ điều chỉnh nội dung
+          theo mục tiêu thực tế của học viên.
+
+          <br><br>
+
+          Có thể tập trung vào các nội dung như:
+          kỹ thuật forehand / backhand,
+          dink,
+          volley,
+          reset,
+          serve & return,
+          footwork,
+          chiến thuật đánh đôi
+          hoặc sửa các điểm yếu cụ thể.
+
+          <br><br>
+
+          <strong>
+            Đã hoàn thành:
+          </strong>
+          ${completed} buổi
+
+          <br>
+
+          <strong>
+            Còn lại:
+          </strong>
+          ${remaining} buổi
+
+        </div>
+
+      </div>
+    `;
+
+  }
+
+
+  const {
+    data: { session },
+    error: sessionError
+  } =
+    await sb.auth.getSession();
+
+
+  if (
+    sessionError
+    ||
+    !session
+  ) {
+
+    window.location.href =
+      "/login";
+
+    return;
+
+  }
+
+
+  const {
+    data: studentId,
+    error: studentError
+  } =
+    await sb.rpc(
+      "current_student_id"
+    );
+
+
+  if (
+    studentError
+    ||
+    !studentId
+  ) {
+
+    programTitle.textContent =
+      "Không xác định được học viên";
+
+    programSub.textContent =
+      "Vui lòng đăng nhập lại.";
+
+    return;
+
+  }
+
+
+  const {
+    data: registrations,
+    error: registrationError
+  } =
+    await sb
+      .from("registrations")
+      .select(`
+        id,
+        registration_code,
+        package_name,
+        purchased_sessions,
+        start_date,
+        end_date,
+        status
+      `)
+      .eq(
+        "student_id",
+        Number(studentId)
+      );
+
+
+  if (registrationError) {
+
+    console.error(
+      registrationError
+    );
+
+    programTitle.textContent =
+      "Không tải được lộ trình";
+
+    programSub.textContent =
+      "Có lỗi khi tải thông tin gói học.";
+
+    return;
+
+  }
+
+
+  const rows =
+    registrations || [];
+
+
+  if (
+    rows.length === 0
+  ) {
+
+    programTitle.textContent =
+      "Chưa có gói học";
+
+    programSub.textContent =
+      "Bạn chưa có đăng ký học tại PickDee Academy.";
+
+    progressText.textContent =
+      "0 / 0 buổi";
+
+    progressBar.style.width =
+      "0%";
+
+    lessonList.innerHTML =
+      "";
+
+    return;
+
+  }
+
+
+  const approved =
+    rows
+      .filter(
+        item =>
+          normalise(
+            item.status
+          )
+          ===
+          normalise(
+            "Đã duyệt"
+          )
+      )
+      .sort(
+        (a,b) =>
+          String(
+            b.start_date || ""
+          )
+          .localeCompare(
+            String(
+              a.start_date || ""
+            )
+          )
+      );
+
+
+  const registration =
+    approved[0]
+    ||
+    rows[0];
+
+
+  const {
+    data: sessions,
+    error: sessionsError
+  } =
+    await sb
+      .from("class_sessions")
+      .select(`
+        id,
+        registration_id,
+        session_no,
+        status
+      `)
+      .eq(
+        "registration_id",
+        Number(
+          registration.id
+        )
+      );
+
+
+  const sessionRows =
+    sessionsError
+    ?
+    []
+    :
+    (
+      sessions || []
+    );
+
+
+  const completed =
+    sessionRows
+      .filter(
+        item =>
+          normalise(
+            item.status
+          )
+          ===
+          normalise(
+            "Đã hoàn thành"
+          )
+      )
+      .length;
+
+
+  const purchased =
+    Number(
+      registration.purchased_sessions
+      ||
+      0
+    );
+
+
+  const packageName =
+    String(
+      registration.package_name
+      ||
+      ""
+    );
+
+
+  const packageKey =
+    normalise(
+      packageName
+    );
+
+
+  programTitle.textContent =
+    packageName
+    ||
+    "Gói học của bạn";
+
+
+  programSub.textContent =
+    registration.registration_code
+    ?
+    `Mã đăng ký: ${registration.registration_code}`
+    :
+    "PickDee Academy";
+
+
+  progressText.textContent =
+    `${completed} / ${purchased} buổi`;
+
+
+  const progressPercent =
+    purchased > 0
+    ?
+    Math.min(
+      100,
+      Math.round(
+        (
+          completed
+          /
+          purchased
+        )
+        *
+        100
+      )
+    )
+    :
+    0;
+
+
+  progressBar.style.width =
+    `${progressPercent}%`;
+
+
+  if (
+    packageKey.includes(
+      "nâng cao"
+    )
+  ) {
+
+    renderFixedProgram(
+      ADVANCED_PROGRAM,
+      completed
+    );
+
+    message.textContent =
+      "Lộ trình Nâng cao gồm 12 buổi. Coach có thể điều chỉnh một phần nội dung theo tình hình thực tế.";
+
+  }
+  else if (
+    packageKey.includes(
+      "cơ bản"
+    )
+  ) {
+
+    renderFixedProgram(
+      BASIC_PROGRAM,
+      completed
+    );
+
+    message.textContent =
+      "Lộ trình Cơ bản gồm 12 buổi. Coach có thể điều chỉnh một phần nội dung theo tình hình thực tế.";
+
+  }
+  else {
+
+    renderCustomProgram(
+      purchased,
+      completed
+    );
+
+    message.textContent =
+      "Nội dung chương trình Theo nhu cầu sẽ được Coach điều chỉnh theo mục tiêu của học viên.";
+
+  }
+
+})();
+
+</script>
+
+</body>
+
+</html>
