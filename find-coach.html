@@ -654,8 +654,14 @@
     );
 
 
-  let allCoaches =
-    [];
+ let allCoaches =
+  [];
+
+let allAreas =
+  [];
+
+let allWards =
+  [];
 
 
   /* ===============================================
@@ -765,129 +771,122 @@
      AREA
   ================================================ */
 
-  function renderAreas() {
+function renderAreas() {
 
-    const areas =
-      uniqueSorted(
-        allCoaches.map(
-          coach =>
-            coach.preferred_area
+  const areas =
+    uniqueSorted(
+      allAreas.map(
+        item =>
+          item.tinh_thanh
+      )
+    );
+
+
+  areaSelect.innerHTML = `
+
+    <option value="">
+
+      Tất cả Tỉnh / Thành
+
+    </option>
+
+    ${
+      areas
+        .map(
+          area => `
+
+            <option
+              value="${escapeHtml(area)}"
+            >
+
+              ${escapeHtml(area)}
+
+            </option>
+
+          `
         )
-      );
+        .join("")
+    }
 
+  `;
 
-    areaSelect.innerHTML = `
-
-      <option value="">
-
-        Tất cả Tỉnh / Thành
-
-      </option>
-
-      ${
-        areas
-          .map(
-            area => `
-
-              <option
-                value="${escapeHtml(area)}"
-              >
-
-                ${escapeHtml(area)}
-
-              </option>
-
-            `
-          )
-          .join("")
-      }
-
-    `;
-
-  }
-
+}
 
   /* ===============================================
      WARD
   ================================================ */
 
-  function renderWards() {
+function renderWards() {
 
-    const area =
-      normalize(
-        areaSelect.value
-      );
-
-
-    const source =
-      area
-        ?
-          allCoaches.filter(
-            coach =>
-              normalize(
-                coach.preferred_area
-              )
-              ===
-              area
-          )
-        :
-          allCoaches;
+  const selectedArea =
+    normalize(
+      areaSelect.value
+    );
 
 
-    const wards =
-      uniqueSorted(
-        source.map(
-          coach =>
-            coach.preferred_ward
+  const source =
+    selectedArea
+      ?
+        allWards.filter(
+          item =>
+            normalize(
+              item.tinh_thanh
+            )
+            ===
+            selectedArea
         )
-      );
+      :
+        [];
 
 
-    const oldWard =
-      wardSelect.value;
+  const wards =
+    uniqueSorted(
+      source.map(
+        item =>
+          item.ten_xa_phuong
+      )
+    );
 
 
-    wardSelect.innerHTML = `
+  wardSelect.innerHTML = `
 
-      <option value="">
-
-        Tất cả Phường / Xã
-
-      </option>
+    <option value="">
 
       ${
-        wards
-          .map(
-            ward => `
-
-              <option
-                value="${escapeHtml(ward)}"
-              >
-
-                ${escapeHtml(ward)}
-
-              </option>
-
-            `
-          )
-          .join("")
+        selectedArea
+          ?
+            "Tất cả Phường / Xã"
+          :
+            "Chọn Tỉnh / Thành trước"
       }
 
-    `;
+    </option>
 
+    ${
+      wards
+        .map(
+          ward => `
 
-    if (
-      wards.includes(
-        oldWard
-      )
-    ) {
+            <option
+              value="${escapeHtml(ward)}"
+            >
 
-      wardSelect.value =
-        oldWard;
+              ${escapeHtml(ward)}
 
+            </option>
+
+          `
+        )
+        .join("")
     }
 
-  }
+  `;
+
+
+  wardSelect.disabled =
+    !selectedArea;
+
+}
 
 
   /* ===============================================
@@ -1102,68 +1101,147 @@
 
   async function loadCoaches() {
 
-    message.textContent =
-      "";
+  message.textContent =
+    "";
 
 
-    const {
-      data,
-      error
-    } =
-      await sb.rpc(
+  const [
+    areaResult,
+    wardResult,
+    coachResult
+  ] =
+    await Promise.all([
+
+      sb
+        .from(
+          "dm_khu_vuc"
+        )
+        .select(`
+          ma_khu_vuc,
+          tinh_thanh
+        `)
+        .eq(
+          "dang_hoat_dong",
+          true
+        )
+        .order(
+          "tinh_thanh",
+          {
+            ascending: true
+          }
+        ),
+
+      sb
+        .from(
+          "dm_xa_phuong"
+        )
+        .select(`
+          ma_xa_phuong,
+          ma_khu_vuc,
+          tinh_thanh,
+          ten_xa_phuong
+        `)
+        .eq(
+          "dang_hoat_dong",
+          true
+        )
+        .order(
+          "ten_xa_phuong",
+          {
+            ascending: true
+          }
+        ),
+
+      sb.rpc(
         "public_find_coaches",
         {
           p_area: null,
           p_ward: null
         }
-      );
+      )
+
+    ]);
 
 
-    if (error) {
+  if (areaResult.error) {
 
-      console.error(
-        error
-      );
+    console.error(
+      areaResult.error
+    );
 
+    message.textContent =
+      "Không tải được danh mục Tỉnh / Thành.";
 
-      coachList.innerHTML = `
-
-        <div class="empty">
-
-          Không tải được danh sách Coach.
-
-        </div>
-
-      `;
-
-
-      message.textContent =
-        error.message
-        ||
-        "Có lỗi khi tải Coach.";
-
-
-      return;
-
-    }
-
-
-    allCoaches =
-      Array.isArray(data)
-        ?
-          data
-        :
-          [];
-
-
-    renderAreas();
-
-    renderWards();
-
-    renderCoaches();
+    return;
 
   }
 
+
+  if (wardResult.error) {
+
+    console.error(
+      wardResult.error
+    );
+
+    message.textContent =
+      "Không tải được danh mục Phường / Xã.";
+
+    return;
+
+  }
+
+
+  if (coachResult.error) {
+
+    console.error(
+      coachResult.error
+    );
+
+    message.textContent =
+      "Không tải được danh sách Coach.";
+
+    return;
+
+  }
+
+
+  allAreas =
+    Array.isArray(
+      areaResult.data
+    )
+      ?
+        areaResult.data
+      :
+        [];
+
+
+  allWards =
+    Array.isArray(
+      wardResult.data
+    )
+      ?
+        wardResult.data
+      :
+        [];
+
+
+  allCoaches =
+    Array.isArray(
+      coachResult.data
+    )
+      ?
+        coachResult.data
+      :
+        [];
+
+
+  renderAreas();
+
+  renderWards();
+
+  renderCoaches();
+
+}
 
   /* ===============================================
      EVENT
