@@ -703,7 +703,33 @@ const ADVANCED_PROGRAM = [
       .toLowerCase();
 
   }
+function escapeHtml(value) {
 
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
 
   function lessonStatus(
     index,
@@ -802,64 +828,97 @@ const ADVANCED_PROGRAM = [
   }
 
 
-  function renderCustomProgram(
-    purchased,
-    completed
-  ) {
+ function renderCustomProgram(
+  purchased,
+  completed,
+  learningGoal
+) {
 
-    const remaining =
-      Math.max(
-        purchased - completed,
-        0
-      );
+  const remaining =
+    Math.max(
+      purchased - completed,
+      0
+    );
 
-    lessonList.className =
-      "";
+  const goal =
+    String(
+      learningGoal || ""
+    ).trim();
 
-    lessonList.innerHTML = `
-      <div class="need-card">
+  lessonList.className =
+    "";
 
-        <div class="need-title">
-          Chương trình theo nhu cầu
+  lessonList.innerHTML = `
+    <div class="lesson custom-program">
+
+      <h3>
+        Chương trình theo nhu cầu
+      </h3>
+
+      <p>
+        Với chương trình này, Coach sẽ điều chỉnh
+        nội dung theo mục tiêu thực tế của học viên.
+      </p>
+
+      <div
+        style="
+          margin:18px 0;
+          padding:16px;
+          border-radius:14px;
+          background:rgba(216,255,69,.08);
+          border:1px solid rgba(216,255,69,.28);
+        "
+      >
+
+        <div
+          style="
+            color:#d8ff45;
+            font-size:13px;
+            font-weight:900;
+            margin-bottom:8px;
+          "
+        >
+          🎯 MỤC TIÊU HIỆN TẠI
         </div>
 
-        <div class="need-text">
-
-          Với chương trình này, Coach sẽ điều chỉnh nội dung
-          theo mục tiêu thực tế của học viên.
-
-          <br><br>
-
-          Có thể tập trung vào các nội dung như:
-          kỹ thuật forehand / backhand,
-          dink,
-          volley,
-          reset,
-          serve & return,
-          footwork,
-          chiến thuật đánh đôi
-          hoặc sửa các điểm yếu cụ thể.
-
-          <br><br>
-
-          <strong>
-            Đã hoàn thành:
-          </strong>
-          ${completed} buổi
-
-          <br>
-
-          <strong>
-            Còn lại:
-          </strong>
-          ${remaining} buổi
-
+        <div
+          style="
+            font-size:16px;
+            font-weight:700;
+            line-height:1.6;
+          "
+        >
+          ${
+            goal
+              ? escapeHtml(goal)
+              : "Admin chưa cập nhật mục tiêu học."
+          }
         </div>
 
       </div>
-    `;
 
-  }
+      <p>
+        Coach có thể tập trung vào các nội dung
+        như forehand / backhand, dink, volley,
+        reset, serve & return, footwork,
+        chiến thuật đánh đôi hoặc sửa các điểm yếu cụ thể.
+      </p>
+
+      <p>
+        <b>Đã hoàn thành:</b>
+        ${completed} buổi
+        <br>
+
+        <b>Còn lại:</b>
+        ${remaining} buổi
+      </p>
+
+    </div>
+  `;
+
+}
+
+   
 
 
   const {
@@ -1147,10 +1206,11 @@ const ADVANCED_PROGRAM = [
   }
   else {
 
-    renderCustomProgram(
-      purchased,
-      completed
-    );
+  renderCustomProgram(
+  purchased,
+  completed,
+  registration.learning_goal
+);
 
     message.textContent =
       "Nội dung chương trình Theo nhu cầu sẽ được Coach điều chỉnh theo mục tiêu của học viên.";
