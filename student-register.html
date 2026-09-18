@@ -496,35 +496,87 @@
 
       </div>
 
-      <div class="field">
+            <div class="field">
+
         <label for="password">
           MẬT KHẨU *
         </label>
 
-        <input
-          id="password"
-          type="password"
-          minlength="8"
-          autocomplete="new-password"
-          placeholder="Tối thiểu 8 ký tự"
-          required
-        >
+        <div style="position:relative;">
+
+          <input
+            id="password"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Tối thiểu 8 ký tự"
+            required
+            style="padding-right:52px;"
+          >
+
+          <button
+            type="button"
+            id="togglePassword"
+            aria-label="Hiện mật khẩu"
+            style="
+              position:absolute;
+              right:12px;
+              top:50%;
+              transform:translateY(-50%);
+              border:0;
+              background:transparent;
+              cursor:pointer;
+              font-size:20px;
+              padding:4px;
+            "
+          >
+            👁️
+          </button>
+
+        </div>
+
       </div>
 
 
       <div class="field">
+
         <label for="confirmPassword">
           XÁC NHẬN MẬT KHẨU *
         </label>
 
-        <input
-          id="confirmPassword"
-          type="password"
-          minlength="8"
-          autocomplete="new-password"
-          placeholder="Nhập lại mật khẩu"
-          required
-        >
+        <div style="position:relative;">
+
+          <input
+            id="confirmPassword"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Nhập lại mật khẩu"
+            required
+            style="padding-right:52px;"
+          >
+
+          <button
+            type="button"
+            id="toggleConfirmPassword"
+            aria-label="Hiện mật khẩu"
+            style="
+              position:absolute;
+              right:12px;
+              top:50%;
+              transform:translateY(-50%);
+              border:0;
+              background:transparent;
+              cursor:pointer;
+              font-size:20px;
+              padding:4px;
+            "
+          >
+            👁️
+          </button>
+
+        </div>
+
       </div>
       <div class="field">
 
@@ -743,10 +795,75 @@
       "registerForm"
     );
 
-  const message =
+   const password =
     document.getElementById(
-      "message"
+      "password"
     );
+
+  const confirmPassword =
+    document.getElementById(
+      "confirmPassword"
+    );
+
+  const togglePassword =
+    document.getElementById(
+      "togglePassword"
+    );
+
+  const toggleConfirmPassword =
+    document.getElementById(
+      "toggleConfirmPassword"
+    );
+
+
+  function setupPasswordToggle(
+    input,
+    button
+  ) {
+
+    button.addEventListener(
+      "click",
+      function () {
+
+        const isHidden =
+          input.type === "password";
+
+
+        input.type =
+          isHidden
+            ? "text"
+            : "password";
+
+
+        button.textContent =
+          isHidden
+            ? "🙈"
+            : "👁️";
+
+
+        button.setAttribute(
+          "aria-label",
+          isHidden
+            ? "Ẩn mật khẩu"
+            : "Hiện mật khẩu"
+        );
+
+      }
+    );
+
+  }
+
+
+  setupPasswordToggle(
+    password,
+    togglePassword
+  );
+
+
+  setupPasswordToggle(
+    confirmPassword,
+    toggleConfirmPassword
+  );
 
 
   if (
