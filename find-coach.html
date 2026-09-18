@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Tìm Coach gần bạn | PickDee Academy
+  </title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 85% 5%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+
+    .topbar {
+      min-height: 68px;
+
+      padding:
+        14px 22px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.11);
+    }
+
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+
+    .container {
+      width:
+        min(
+          1000px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        38px 0 70px;
+    }
+
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          34px,
+          6vw,
+          54px
+        );
+
+      line-height: 1.02;
+    }
+
+
+    .intro {
+      max-width: 720px;
+
+      margin:
+        0 0 28px;
+
+      color:
+        rgba(255,255,255,.67);
+
+      line-height: 1.65;
+    }
+
+
+    .filter-card {
+      padding: 20px;
+
+      border-radius: 18px;
+
+      background:
+        rgba(6,39,88,.76);
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+    }
+
+
+    .filter-title {
+      margin-bottom: 16px;
+
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+
+    .filters {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 14px;
+    }
+
+
+    .field {
+      display: grid;
+
+      gap: 7px;
+    }
+
+
+    .field label {
+      color:
+        rgba(255,255,255,.65);
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+
+    select {
+      width: 100%;
+
+      min-height: 50px;
+
+      padding:
+        0 13px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.15);
+
+      outline: none;
+
+      background: #081c3b;
+
+      color: white;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+
+    select:focus {
+      border-color:
+        rgba(216,255,69,.75);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.08);
+    }
+
+
+    .summary {
+      margin:
+        22px 0 14px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      color:
+        rgba(255,255,255,.65);
+
+      font-size: 13px;
+    }
+
+
+    .summary strong {
+      color: #d8ff45;
+    }
+
+
+    .coach-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap: 15px;
+    }
+
+
+    .coach-card {
+      position: relative;
+
+      padding: 20px;
+
+      border-radius: 17px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(6,39,88,.74);
+
+      overflow: hidden;
+    }
+
+
+    .coach-card::before {
+      content: "";
+
+      position: absolute;
+
+      width: 120px;
+      height: 120px;
+
+      top: -55px;
+      right: -45px;
+
+      border-radius: 50%;
+
+      background:
+        rgba(216,255,69,.07);
+    }
+
+
+    .coach-icon {
+      width: 52px;
+      height: 52px;
+
+      margin-bottom: 14px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background:
+        rgba(216,255,69,.12);
+
+      border:
+        1px solid
+        rgba(216,255,69,.25);
+
+      font-size: 25px;
+    }
+
+
+    .coach-name {
+      margin-bottom: 5px;
+
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+
+    .coach-code {
+      margin-bottom: 16px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+
+    .coach-info {
+      display: grid;
+
+      gap: 10px;
+    }
+
+
+    .info-row {
+      display: flex;
+
+      justify-content: space-between;
+
+      gap: 15px;
+    }
+
+
+    .info-label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 12px;
+    }
+
+
+    .info-value {
+      text-align: right;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+
+    .status {
+      margin-top: 17px;
+
+      display: inline-flex;
+
+      min-height: 30px;
+
+      padding:
+        0 11px;
+
+      align-items: center;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.11);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+
+    .empty {
+      padding:
+        32px 18px;
+
+      grid-column:
+        1 / -1;
+
+      text-align: center;
+
+      border-radius: 16px;
+
+      border:
+        1px dashed
+        rgba(255,255,255,.2);
+
+      color:
+        rgba(255,255,255,.58);
+
+      line-height: 1.6;
+    }
+
+
+    .message {
+      margin-top: 16px;
+
+      color: #ffb0b0;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+
+    @media(max-width:700px) {
+
+      .filters,
+      .coach-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .topbar {
+        padding:
+          14px;
+      }
+
+      .container {
+        padding-top:
+          28px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>
+      Academy
+    </span>
+
+  </div>
+
+
+  <a
+    class="back"
+    href="./"
+  >
+
+    ← TRANG CHỦ
+
+  </a>
+
+</header>
+
+
+<main class="container">
+
+
+  <div class="eyebrow">
+
+    COACH PICKLEBALL GẦN BẠN
+
+  </div>
+
+
+  <h1>
+
+    TÌM COACH PHÙ HỢP
+
+  </h1>
+
+
+  <p class="intro">
+
+    Chọn khu vực bạn muốn học.
+    PickDee Academy sẽ hiển thị các Coach
+    đang hoạt động tại khu vực phù hợp.
+
+    Bạn có thể tham khảo Coach trước khi
+    quyết định đăng ký học.
+
+  </p>
+
+
+  <section class="filter-card">
+
+
+    <div class="filter-title">
+
+      📍 Bạn muốn học ở đâu?
+
+    </div>
+
+
+    <div class="filters">
+
+
+      <div class="field">
+
+        <label for="areaSelect">
+
+          TỈNH / THÀNH
+
+        </label>
+
+
+        <select id="areaSelect">
+
+          <option value="">
+
+            Tất cả Tỉnh / Thành
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="wardSelect">
+
+          PHƯỜNG / XÃ
+
+        </label>
+
+
+        <select id="wardSelect">
+
+          <option value="">
+
+            Tất cả Phường / Xã
+
+          </option>
+
+        </select>
+
+      </div>
+
+
+    </div>
+
+
+  </section>
+
+
+  <div class="summary">
+
+    <div>
+
+      Kết quả tìm Coach
+
+    </div>
+
+
+    <div>
+
+      <strong id="coachCount">
+        0
+      </strong>
+
+      Coach
+
+    </div>
+
+  </div>
+
+
+  <section
+    id="coachList"
+    class="coach-grid"
+  >
+
+    <div class="empty">
+
+      Đang tải danh sách Coach...
+
+    </div>
+
+  </section>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const areaSelect =
+    document.getElementById(
+      "areaSelect"
+    );
+
+
+  const wardSelect =
+    document.getElementById(
+      "wardSelect"
+    );
+
+
+  const coachList =
+    document.getElementById(
+      "coachList"
+    );
+
+
+  const coachCount =
+    document.getElementById(
+      "coachCount"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  let allCoaches =
+    [];
+
+
+  /* ===============================================
+     SUPABASE
+  ================================================ */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    message.textContent =
+      "Không tải được hệ thống PickDee Academy.";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* ===============================================
+     HELPER
+  ================================================ */
+
+  function normalize(value) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .toLocaleLowerCase(
+        "vi-VN"
+      );
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function uniqueSorted(values) {
+
+    return [
+      ...new Set(
+        values
+          .map(
+            item =>
+              String(
+                item || ""
+              ).trim()
+          )
+          .filter(Boolean)
+      )
+    ]
+      .sort(
+        function (a,b) {
+
+          return a.localeCompare(
+            b,
+            "vi"
+          );
+
+        }
+      );
+
+  }
+
+
+  /* ===============================================
+     AREA
+  ================================================ */
+
+  function renderAreas() {
+
+    const areas =
+      uniqueSorted(
+        allCoaches.map(
+          coach =>
+            coach.preferred_area
+        )
+      );
+
+
+    areaSelect.innerHTML = `
+
+      <option value="">
+
+        Tất cả Tỉnh / Thành
+
+      </option>
+
+      ${
+        areas
+          .map(
+            area => `
+
+              <option
+                value="${escapeHtml(area)}"
+              >
+
+                ${escapeHtml(area)}
+
+              </option>
+
+            `
+          )
+          .join("")
+      }
+
+    `;
+
+  }
+
+
+  /* ===============================================
+     WARD
+  ================================================ */
+
+  function renderWards() {
+
+    const area =
+      normalize(
+        areaSelect.value
+      );
+
+
+    const source =
+      area
+        ?
+          allCoaches.filter(
+            coach =>
+              normalize(
+                coach.preferred_area
+              )
+              ===
+              area
+          )
+        :
+          allCoaches;
+
+
+    const wards =
+      uniqueSorted(
+        source.map(
+          coach =>
+            coach.preferred_ward
+        )
+      );
+
+
+    const oldWard =
+      wardSelect.value;
+
+
+    wardSelect.innerHTML = `
+
+      <option value="">
+
+        Tất cả Phường / Xã
+
+      </option>
+
+      ${
+        wards
+          .map(
+            ward => `
+
+              <option
+                value="${escapeHtml(ward)}"
+              >
+
+                ${escapeHtml(ward)}
+
+              </option>
+
+            `
+          )
+          .join("")
+      }
+
+    `;
+
+
+    if (
+      wards.includes(
+        oldWard
+      )
+    ) {
+
+      wardSelect.value =
+        oldWard;
+
+    }
+
+  }
+
+
+  /* ===============================================
+     COACH CARD
+  ================================================ */
+
+  function renderCoaches() {
+
+    const area =
+      normalize(
+        areaSelect.value
+      );
+
+
+    const ward =
+      normalize(
+        wardSelect.value
+      );
+
+
+    const rows =
+      allCoaches.filter(
+        function (coach) {
+
+          const coachArea =
+            normalize(
+              coach.preferred_area
+            );
+
+
+          const coachWard =
+            normalize(
+              coach.preferred_ward
+            );
+
+
+          if (
+            area
+            &&
+            coachArea !== area
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            ward
+            &&
+            coachWard !== ward
+          ) {
+
+            return false;
+
+          }
+
+
+          return true;
+
+        }
+      );
+
+
+    coachCount.textContent =
+      String(
+        rows.length
+      );
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      coachList.innerHTML = `
+
+        <div class="empty">
+
+          Hiện chưa có Coach hoạt động
+          tại khu vực này.
+
+          <br><br>
+
+          Anh/chị có thể chọn khu vực khác
+          hoặc đăng ký nhu cầu học để
+          PickDee hỗ trợ kết nối Coach.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    coachList.innerHTML =
+      rows
+        .map(
+          function (coach) {
+
+            return `
+
+              <article class="coach-card">
+
+                <div class="coach-icon">
+
+                  🏓
+
+                </div>
+
+
+                <div class="coach-name">
+
+                  ${
+                    escapeHtml(
+                      coach.full_name
+                      ||
+                      "Coach PickDee"
+                    )
+                  }
+
+                </div>
+
+
+                <div class="coach-code">
+
+                  ${
+                    escapeHtml(
+                      coach.coach_code
+                      ||
+                      ""
+                    )
+                  }
+
+                </div>
+
+
+                <div class="coach-info">
+
+
+                  <div class="info-row">
+
+                    <span class="info-label">
+
+                      Tỉnh / Thành
+
+                    </span>
+
+                    <span class="info-value">
+
+                      ${
+                        escapeHtml(
+                          coach.preferred_area
+                          ||
+                          "—"
+                        )
+                      }
+
+                    </span>
+
+                  </div>
+
+
+                  <div class="info-row">
+
+                    <span class="info-label">
+
+                      Phường / Xã
+
+                    </span>
+
+                    <span class="info-value">
+
+                      ${
+                        escapeHtml(
+                          coach.preferred_ward
+                          ||
+                          "—"
+                        )
+                      }
+
+                    </span>
+
+                  </div>
+
+
+                </div>
+
+
+                <div class="status">
+
+                  ● ĐANG NHẬN HỌC VIÊN
+
+                </div>
+
+
+              </article>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* ===============================================
+     LOAD
+  ================================================ */
+
+  async function loadCoaches() {
+
+    message.textContent =
+      "";
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "public_find_coaches",
+        {
+          p_area: null,
+          p_ward: null
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        error
+      );
+
+
+      coachList.innerHTML = `
+
+        <div class="empty">
+
+          Không tải được danh sách Coach.
+
+        </div>
+
+      `;
+
+
+      message.textContent =
+        error.message
+        ||
+        "Có lỗi khi tải Coach.";
+
+
+      return;
+
+    }
+
+
+    allCoaches =
+      Array.isArray(data)
+        ?
+          data
+        :
+          [];
+
+
+    renderAreas();
+
+    renderWards();
+
+    renderCoaches();
+
+  }
+
+
+  /* ===============================================
+     EVENT
+  ================================================ */
+
+  areaSelect.addEventListener(
+    "change",
+    function () {
+
+      wardSelect.value =
+        "";
+
+      renderWards();
+
+      renderCoaches();
+
+    }
+  );
+
+
+  wardSelect.addEventListener(
+    "change",
+    renderCoaches
+  );
+
+
+  await loadCoaches();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
