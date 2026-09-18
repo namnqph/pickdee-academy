@@ -1009,6 +1009,154 @@ async function init() {
 init();
 
 </script>
+<script>
+(async function () {
 
+  const learningGoalInput =
+    document.getElementById(
+      "learningGoalInput"
+    );
+
+  const saveLearningGoalBtn =
+    document.getElementById(
+      "saveLearningGoalBtn"
+    );
+
+  if (
+    !learningGoalInput
+    ||
+    !saveLearningGoalBtn
+    ||
+    !registrationId
+  ) {
+    return;
+  }
+
+
+  async function loadLearningGoal() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("registrations")
+        .select("learning_goal")
+        .eq(
+          "id",
+          registrationId
+        )
+        .single();
+
+
+    if (error) {
+
+      console.error(
+        "Load learning goal:",
+        error
+      );
+
+      learningGoalInput.value =
+        "";
+
+      return;
+    }
+
+
+    learningGoalInput.value =
+      data?.learning_goal
+      ||
+      "";
+
+  }
+
+
+  saveLearningGoalBtn.addEventListener(
+    "click",
+    async function () {
+
+      const value =
+        learningGoalInput.value
+          .trim();
+
+
+      saveLearningGoalBtn.disabled =
+        true;
+
+      saveLearningGoalBtn.textContent =
+        "ĐANG LƯU...";
+
+
+      const {
+        error
+      } =
+        await sb
+          .from("registrations")
+          .update({
+            learning_goal:
+              value || null
+          })
+          .eq(
+            "id",
+            registrationId
+          );
+
+
+      if (error) {
+
+        console.error(
+          "Save learning goal:",
+          error
+        );
+
+        alert(
+          "Không lưu được mục tiêu học: "
+          +
+          error.message
+        );
+
+        saveLearningGoalBtn.disabled =
+          false;
+
+        saveLearningGoalBtn.textContent =
+          "💾 LƯU MỤC TIÊU HỌC";
+
+        return;
+      }
+
+
+      if (currentRegistration) {
+
+        currentRegistration.learning_goal =
+          value || null;
+
+      }
+
+
+      saveLearningGoalBtn.textContent =
+        "✓ ĐÃ LƯU";
+
+
+      setTimeout(
+        function () {
+
+          saveLearningGoalBtn.disabled =
+            false;
+
+          saveLearningGoalBtn.textContent =
+            "💾 LƯU MỤC TIÊU HỌC";
+
+        },
+        1200
+      );
+
+    }
+  );
+
+
+  await loadLearningGoal();
+
+})();
+</script>
 </body>
 </html>
