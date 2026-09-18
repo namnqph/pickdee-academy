@@ -7823,6 +7823,809 @@ document.addEventListener("DOMContentLoaded", function () {
 
 })();
 </script>
+  <!-- =========================================================
+     PICKDEE - COACH OF THE MONTH
+========================================================= -->
+
+<style>
+
+  #coachRewardCard {
+    grid-column: 1 / -1;
+    min-height: 0;
+    border:
+      1px solid rgba(216,255,69,.42);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(7,48,98,.98),
+        rgba(25,71,83,.92)
+      );
+  }
+
+
+  .coach-reward-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+
+  .coach-reward-badge {
+    padding: 7px 11px;
+
+    border-radius: 999px;
+
+    background:
+      rgba(216,255,69,.12);
+
+    border:
+      1px solid
+      rgba(216,255,69,.32);
+
+    color: #d8ff45;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    white-space: nowrap;
+  }
+
+
+  .coach-reward-hours {
+    margin-top: 4px;
+
+    color: #d8ff45;
+
+    font-size: 32px;
+    font-weight: 900;
+  }
+
+
+  .coach-reward-progress {
+    height: 12px;
+
+    margin-top: 14px;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background:
+      rgba(255,255,255,.10);
+  }
+
+
+  #coachRewardProgressBar {
+    width: 0%;
+
+    height: 100%;
+
+    border-radius: inherit;
+
+    background: #d8ff45;
+
+    transition:
+      width .35s ease;
+  }
+
+
+  .coach-reward-stats {
+    display: grid;
+
+    grid-template-columns:
+      repeat(4,1fr);
+
+    gap: 10px;
+
+    margin-top: 17px;
+  }
+
+
+  .coach-reward-stat {
+    padding: 12px;
+
+    border-radius: 12px;
+
+    background:
+      rgba(0,0,0,.15);
+
+    border:
+      1px solid
+      rgba(255,255,255,.08);
+  }
+
+
+  .coach-reward-stat-label {
+    color:
+      rgba(255,255,255,.52);
+
+    font-size: 11px;
+  }
+
+
+  .coach-reward-stat-value {
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+
+  .coach-reward-rule {
+    margin-top: 17px;
+
+    padding-top: 14px;
+
+    border-top:
+      1px solid
+      rgba(255,255,255,.09);
+
+    color:
+      rgba(255,255,255,.68);
+
+    font-size: 12px;
+
+    line-height: 1.6;
+  }
+
+
+  #coachRewardStatus {
+    margin-top: 13px;
+
+    color: #d8ff45;
+
+    font-size: 14px;
+    font-weight: 900;
+
+    line-height: 1.5;
+  }
+
+
+  @media(max-width:700px) {
+
+    .coach-reward-stats {
+      grid-template-columns:
+        1fr 1fr;
+    }
+
+
+    .coach-reward-head {
+      display: block;
+    }
+
+
+    .coach-reward-badge {
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+  }
+
+
+  @media(max-width:430px) {
+
+    .coach-reward-stats {
+      grid-template-columns: 1fr;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  /* =====================================================
+     1. TÌM DASHBOARD
+  ====================================================== */
+
+  const dashboardGrid =
+    document.querySelector(
+      ".dashboard-grid"
+    );
+
+
+  if (!dashboardGrid) {
+
+    console.warn(
+      "Coach Reward: không tìm thấy dashboard."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Tránh tạo card trùng nếu script chạy lại.
+  */
+
+  if (
+    document.getElementById(
+      "coachRewardCard"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     2. TẠO CARD
+  ====================================================== */
+
+  const card =
+    document.createElement(
+      "div"
+    );
+
+
+  card.id =
+    "coachRewardCard";
+
+
+  card.className =
+    "dashboard-card highlight";
+
+
+  card.innerHTML = `
+
+    <div class="coach-reward-head">
+
+      <div>
+
+        <div class="dashboard-title">
+          🏆 COACH OF THE MONTH
+        </div>
+
+        <div
+          id="coachRewardHours"
+          class="coach-reward-hours"
+        >
+          Đang tải...
+        </div>
+
+        <div
+          id="coachRewardProgressText"
+          class="dashboard-sub"
+        >
+          Đang tính tiến độ tháng này...
+        </div>
+
+      </div>
+
+
+      <div
+        id="coachRewardBadge"
+        class="coach-reward-badge"
+      >
+        THƯỞNG COACH THÁNG
+      </div>
+
+    </div>
+
+
+    <div class="coach-reward-progress">
+
+      <div
+        id="coachRewardProgressBar"
+      ></div>
+
+    </div>
+
+
+    <div class="coach-reward-stats">
+
+
+      <div class="coach-reward-stat">
+
+        <div class="coach-reward-stat-label">
+          Buổi hoàn thành
+        </div>
+
+        <div
+          id="coachRewardSessions"
+          class="coach-reward-stat-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="coach-reward-stat">
+
+        <div class="coach-reward-stat-label">
+          Điểm đánh giá
+        </div>
+
+        <div
+          id="coachRewardRating"
+          class="coach-reward-stat-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="coach-reward-stat">
+
+        <div class="coach-reward-stat-label">
+          Xếp hạng giờ dạy
+        </div>
+
+        <div
+          id="coachRewardRank"
+          class="coach-reward-stat-value"
+        >
+          —
+        </div>
+
+      </div>
+
+
+      <div class="coach-reward-stat">
+
+        <div class="coach-reward-stat-label">
+          Thưởng hiện tại
+        </div>
+
+        <div
+          id="coachRewardBonus"
+          class="coach-reward-stat-value"
+        >
+          0đ
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="coachRewardStatus"
+    >
+      Đang kiểm tra điều kiện thưởng...
+    </div>
+
+
+    <div class="coach-reward-rule">
+
+      <b>Chính sách thưởng PickDee:</b><br>
+
+      • Từ 80 đến dưới 100 giờ:
+      mở mốc thưởng
+      <b>3.000.000đ</b><br>
+
+      • Từ 100 giờ trở lên:
+      mở mốc thưởng
+      <b>5.000.000đ</b><br>
+
+      • Coach phải đạt
+      <b>5★</b><br>
+
+      • Chỉ
+      <b>01 Coach đứng đầu đủ điều kiện cuối tháng</b>
+      được nhận thưởng.
+
+    </div>
+
+  `;
+
+
+  dashboardGrid.appendChild(
+    card
+  );
+
+
+  /* =====================================================
+     3. SUPABASE CLIENT DÙNG CHUNG
+  ====================================================== */
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.sb
+    ||
+    window.supabaseClient;
+
+
+  if (!sb) {
+
+    document.getElementById(
+      "coachRewardHours"
+    ).textContent =
+      "Không tải được";
+
+    document.getElementById(
+      "coachRewardStatus"
+    ).textContent =
+      "Không kết nối được hệ thống PickDee.";
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     4. HELPERS
+  ====================================================== */
+
+  function rewardMoney(
+    value
+  ) {
+
+    return (
+      Number(
+        value || 0
+      )
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function firstDayOfMonth() {
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      )
+        .padStart(
+          2,
+          "0"
+        );
+
+
+    return (
+      year
+      +
+      "-"
+      +
+      month
+      +
+      "-01"
+    );
+
+  }
+
+
+  /* =====================================================
+     5. LOAD DỮ LIỆU THƯỞNG
+  ====================================================== */
+
+  async function loadCoachReward() {
+
+    const hoursEl =
+      document.getElementById(
+        "coachRewardHours"
+      );
+
+
+    const progressTextEl =
+      document.getElementById(
+        "coachRewardProgressText"
+      );
+
+
+    const progressBarEl =
+      document.getElementById(
+        "coachRewardProgressBar"
+      );
+
+
+    const sessionsEl =
+      document.getElementById(
+        "coachRewardSessions"
+      );
+
+
+    const ratingEl =
+      document.getElementById(
+        "coachRewardRating"
+      );
+
+
+    const rankEl =
+      document.getElementById(
+        "coachRewardRank"
+      );
+
+
+    const bonusEl =
+      document.getElementById(
+        "coachRewardBonus"
+      );
+
+
+    const statusEl =
+      document.getElementById(
+        "coachRewardStatus"
+      );
+
+
+    try {
+
+      const {
+        data: sessionData,
+        error: sessionError
+      } =
+        await sb.auth.getSession();
+
+
+      if (
+        sessionError
+        ||
+        !sessionData?.session
+      ) {
+
+        throw new Error(
+          "Coach chưa đăng nhập."
+        );
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "get_my_coach_monthly_reward",
+          {
+            p_month:
+              firstDayOfMonth()
+          }
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      const row =
+        Array.isArray(data)
+          ?
+            data[0]
+          :
+            data;
+
+
+      /*
+        Coach chưa có buổi hoàn thành trong tháng.
+      */
+
+      if (!row) {
+
+        hoursEl.textContent =
+          "0 / 80 giờ";
+
+
+        progressTextEl.textContent =
+          "Còn 80 giờ để đạt mốc thưởng 3.000.000đ";
+
+
+        progressBarEl.style.width =
+          "0%";
+
+
+        sessionsEl.textContent =
+          "0";
+
+
+        ratingEl.textContent =
+          "Chưa có";
+
+
+        rankEl.textContent =
+          "—";
+
+
+        bonusEl.textContent =
+          "0đ";
+
+
+        statusEl.textContent =
+          "Chưa đạt điều kiện Coach of the Month.";
+
+
+        return;
+
+      }
+
+
+      const totalHours =
+        Number(
+          row.total_hours || 0
+        );
+
+
+      const targetHours =
+        totalHours >= 80
+          ?
+            100
+          :
+            80;
+
+
+      const progress =
+        Math.min(
+          100,
+          Math.max(
+            0,
+            (
+              totalHours
+              /
+              targetHours
+            )
+            *
+            100
+          )
+        );
+
+
+      hoursEl.textContent =
+        totalHours >= 100
+          ?
+            `${totalHours} giờ`
+          :
+            `${totalHours} / ${targetHours} giờ`;
+
+
+      progressTextEl.textContent =
+        row.progress_text
+        ||
+        "Đang cập nhật tiến độ...";
+
+
+      progressBarEl.style.width =
+        `${progress}%`;
+
+
+      sessionsEl.textContent =
+        Number(
+          row.completed_sessions
+          ||
+          0
+        );
+
+
+      if (
+        Number(
+          row.rating_count || 0
+        ) > 0
+      ) {
+
+        ratingEl.textContent =
+          `${
+            Number(
+              row.avg_rating || 0
+            ).toFixed(1)
+          } ★ · ${
+            Number(
+              row.rating_count || 0
+            )
+          } lượt`;
+
+      }
+      else {
+
+        ratingEl.textContent =
+          "Chưa có";
+
+      }
+
+
+      rankEl.textContent =
+        row.hours_rank
+          ?
+            `#${row.hours_rank}`
+          :
+            "—";
+
+
+      bonusEl.textContent =
+        rewardMoney(
+          row.final_bonus
+        );
+
+
+      statusEl.textContent =
+        row.reward_status
+        ||
+        "Đang cập nhật điều kiện thưởng...";
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "COACH MONTHLY REWARD:",
+        error
+      );
+
+
+      hoursEl.textContent =
+        "Không tải được";
+
+
+      progressTextEl.textContent =
+        "Không tải được dữ liệu thưởng Coach.";
+
+
+      statusEl.textContent =
+        error?.message
+        ||
+        "Không tải được chương trình thưởng.";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     6. CHẠY
+  ====================================================== */
+
+  await loadCoachReward();
+
+
+  /*
+    Tự cập nhật mỗi 60 giây,
+    giống Dashboard Coach hiện tại.
+  */
+
+  setInterval(
+    loadCoachReward,
+    60000
+  );
+
+
+  /*
+    Khi quay lại tab,
+    cập nhật lại dữ liệu.
+  */
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadCoachReward,
+        500
+      );
+
+    }
+  );
+
+
+})();
+
+</script>
 </body>
 
 </html>
