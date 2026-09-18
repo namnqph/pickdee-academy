@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Hồ sơ Coach | PickDee Academy
+  </title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: white;
+
+      background:
+        radial-gradient(
+          circle at 85% 5%,
+          rgba(90,255,180,.13),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 68px;
+
+      padding:
+        14px 22px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.11);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .container {
+      width:
+        min(
+          760px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        35px 0 70px;
+    }
+
+    .profile-card {
+      padding: 26px;
+
+      border-radius: 20px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(6,39,88,.76);
+    }
+
+    .coach-top {
+      display: flex;
+      align-items: center;
+
+      gap: 18px;
+
+      margin-bottom: 24px;
+    }
+
+    .avatar {
+      width: 76px;
+      height: 76px;
+
+      flex:
+        0 0 76px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      background:
+        rgba(216,255,69,.12);
+
+      border:
+        1px solid
+        rgba(216,255,69,.3);
+
+      font-size: 34px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+    .coach-name {
+      margin: 0 0 6px;
+
+      font-size:
+        clamp(
+          25px,
+          5vw,
+          36px
+        );
+
+      line-height: 1.05;
+    }
+
+    .coach-code {
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status {
+      margin-top: 10px;
+
+      display: inline-flex;
+      align-items: center;
+
+      min-height: 30px;
+
+      padding:
+        0 11px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.11);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .section {
+      margin-top: 18px;
+
+      padding: 18px;
+
+      border-radius: 15px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      border:
+        1px solid
+        rgba(255,255,255,.08);
+    }
+
+    .section-title {
+      margin-bottom: 13px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 11px;
+      font-weight: 900;
+
+      letter-spacing: .5px;
+    }
+
+    .info-row {
+      min-height: 42px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 20px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.07);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .info-label {
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 13px;
+    }
+
+    .info-value {
+      text-align: right;
+
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .program-list {
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 8px;
+    }
+
+    .program {
+      padding:
+        8px 11px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.1);
+
+      border:
+        1px solid
+        rgba(216,255,69,.22);
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .privacy-note {
+      margin-top: 18px;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .message {
+      padding: 30px 18px;
+
+      text-align: center;
+
+      border-radius: 16px;
+
+      border:
+        1px dashed
+        rgba(255,255,255,.18);
+
+      color:
+        rgba(255,255,255,.65);
+
+      line-height: 1.6;
+    }
+
+    @media(max-width:600px) {
+
+      .topbar {
+        padding:
+          14px;
+      }
+
+      .profile-card {
+        padding: 20px;
+      }
+
+      .coach-top {
+        align-items: flex-start;
+      }
+
+      .avatar {
+        width: 62px;
+        height: 62px;
+
+        flex-basis: 62px;
+
+        font-size: 28px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>
+      Academy
+    </span>
+
+  </div>
+
+
+  <a
+    class="back"
+    href="./find-coach"
+  >
+    ← TÌM COACH
+  </a>
+
+</header>
+
+
+<main class="container">
+
+  <div
+    id="profileBox"
+    class="message"
+  >
+    Đang tải hồ sơ Coach...
+  </div>
+
+</main>
+
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const profileBox =
+    document.getElementById(
+      "profileBox"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    profileBox.textContent =
+      "Không tải được hệ thống PickDee Academy.";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const coachId =
+    Number(
+      params.get("id")
+    );
+
+
+  if (
+    !Number.isInteger(coachId)
+    ||
+    coachId <= 0
+  ) {
+
+    profileBox.textContent =
+      "Không tìm thấy Coach.";
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "public_get_coach_profile",
+      {
+        p_coach_id:
+          coachId
+      }
+    );
+
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+    profileBox.textContent =
+      "Không tải được hồ sơ Coach.";
+
+    return;
+
+  }
+
+
+  const coach =
+    Array.isArray(data)
+      ?
+        data[0]
+      :
+        null;
+
+
+  if (!coach) {
+
+    profileBox.textContent =
+      "Coach này hiện không còn hoạt động.";
+
+    return;
+
+  }
+
+
+  const programs =
+    Array.isArray(
+      coach.programs
+    )
+      ?
+        coach.programs.filter(Boolean)
+      :
+        [];
+
+
+  const yearsPlaying =
+    coach.years_playing
+    ?? "—";
+
+
+  const yearsCoaching =
+    coach.years_coaching
+    ?? "—";
+
+
+  profileBox.className =
+    "profile-card";
+
+
+  profileBox.innerHTML = `
+
+    <div class="coach-top">
+
+      <div class="avatar">
+        🏓
+      </div>
+
+      <div>
+
+        <div class="eyebrow">
+          COACH PICKDEE
+        </div>
+
+        <h1 class="coach-name">
+
+          ${
+            escapeHtml(
+              coach.full_name
+              ||
+              "Coach PickDee"
+            )
+          }
+
+        </h1>
+
+        <div class="coach-code">
+
+          ${
+            escapeHtml(
+              coach.coach_code
+              ||
+              ""
+            )
+          }
+
+        </div>
+
+        <div class="status">
+
+          ● ĐANG NHẬN HỌC VIÊN
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        KHU VỰC HOẠT ĐỘNG
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Tỉnh / Thành
+        </span>
+
+        <span class="info-value">
+
+          ${
+            escapeHtml(
+              coach.preferred_area
+              ||
+              "—"
+            )
+          }
+
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Phường / Xã
+        </span>
+
+        <span class="info-value">
+
+          ${
+            escapeHtml(
+              coach.preferred_ward
+              ||
+              "—"
+            )
+          }
+
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        KINH NGHIỆM
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Kinh nghiệm chơi
+        </span>
+
+        <span class="info-value">
+
+          ${
+            escapeHtml(
+              yearsPlaying
+            )
+          } năm
+
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Kinh nghiệm huấn luyện
+        </span>
+
+        <span class="info-value">
+
+          ${
+            escapeHtml(
+              yearsCoaching
+            )
+          } năm
+
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        CHƯƠNG TRÌNH CÓ THỂ HUẤN LUYỆN
+      </div>
+
+
+      <div class="program-list">
+
+        ${
+          programs.length
+            ?
+              programs
+                .map(
+                  item => `
+
+                    <span class="program">
+
+                      ${
+                        escapeHtml(
+                          item
+                        )
+                      }
+
+                    </span>
+
+                  `
+                )
+                .join("")
+            :
+              `
+
+                <span
+                  style="
+                    color:
+                      rgba(255,255,255,.55);
+                    font-size:13px;
+                  "
+                >
+                  Chưa cập nhật chương trình.
+                </span>
+
+              `
+        }
+
+      </div>
+
+    </div>
+
+
+    <div class="privacy-note">
+
+      🔒 Thông tin liên hệ của Coach
+      không được công khai.
+
+      Học viên chỉ được xem thông tin
+      liên hệ của Coach đang trực tiếp
+      phụ trách mình trong hệ thống PickDee.
+
+    </div>
+
+  `;
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
