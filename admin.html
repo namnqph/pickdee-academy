@@ -8321,6 +8321,841 @@ document.addEventListener(
 );
 
 </script>
+  <!-- =========================================================
+     PICKDEE - ADMIN FINALIZE COACH REWARD
+========================================================= -->
+
+<style>
+
+  #adminRewardSettlementBox {
+    margin-top: 16px;
+    padding: 16px;
+
+    border-radius: 12px;
+
+    border:
+      1px solid rgba(185,255,24,.18);
+
+    background:
+      rgba(0,0,0,.15);
+  }
+
+
+  .admin-settlement-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+  }
+
+
+  .admin-settlement-label {
+    color: #aab6c5;
+
+    font-size: 12px;
+  }
+
+
+  #adminRewardSettlementStatus {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    background:
+      rgba(255,191,105,.10);
+
+    border:
+      1px solid rgba(255,191,105,.32);
+
+    color: #ffbf69;
+  }
+
+
+  #adminRewardSettlementStatus.done {
+    color: #b9ff18;
+
+    background:
+      rgba(185,255,24,.10);
+
+    border-color:
+      rgba(185,255,24,.32);
+  }
+
+
+  #adminRewardSettlementInfo {
+    margin-top: 10px;
+
+    color: #d7dee8;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+  }
+
+
+  #adminFinalizeRewardBtn {
+    width: 100%;
+
+    margin-top: 14px;
+
+    min-height: 44px;
+
+    border: 0;
+
+    border-radius: 11px;
+
+    background: #b9ff18;
+
+    color: #132000;
+
+    font-size: 13px;
+
+    font-weight: 900;
+
+    cursor: pointer;
+  }
+
+
+  #adminFinalizeRewardBtn:disabled {
+    opacity: .45;
+
+    cursor: not-allowed;
+  }
+
+
+  #adminRewardSettlementMessage {
+    min-height: 18px;
+
+    margin-top: 10px;
+
+    color: #aab6c5;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+  }
+
+
+  @media(max-width:600px) {
+
+    .admin-settlement-top {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async function () {
+
+    /* =====================================================
+       1. TÌM CARD COACH OF THE MONTH
+    ====================================================== */
+
+    const rewardSection =
+      document.getElementById(
+        "adminCoachRewardSection"
+      );
+
+
+    if (!rewardSection) {
+
+      console.warn(
+        "Reward settlement: chưa tìm thấy Coach of the Month."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      document.getElementById(
+        "adminRewardSettlementBox"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    /* =====================================================
+       2. TẠO KHỐI CHỐT THƯỞNG
+    ====================================================== */
+
+    const box =
+      document.createElement(
+        "div"
+      );
+
+
+    box.id =
+      "adminRewardSettlementBox";
+
+
+    box.innerHTML = `
+
+      <div class="admin-settlement-top">
+
+        <div>
+
+          <div class="admin-settlement-label">
+            Trạng thái thưởng tháng
+          </div>
+
+        </div>
+
+
+        <div
+          id="adminRewardSettlementStatus"
+        >
+          ĐANG KIỂM TRA
+        </div>
+
+      </div>
+
+
+      <div
+        id="adminRewardSettlementInfo"
+      >
+        Đang kiểm tra dữ liệu chốt thưởng...
+      </div>
+
+
+      <button
+        id="adminFinalizeRewardBtn"
+        type="button"
+        disabled
+      >
+        ĐANG KIỂM TRA...
+      </button>
+
+
+      <div
+        id="adminRewardSettlementMessage"
+      ></div>
+
+    `;
+
+
+    rewardSection.appendChild(
+      box
+    );
+
+
+    /* =====================================================
+       3. SUPABASE
+    ====================================================== */
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      return;
+
+    }
+
+
+    const settlementSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    /* =====================================================
+       4. ELEMENTS
+    ====================================================== */
+
+    const statusEl =
+      document.getElementById(
+        "adminRewardSettlementStatus"
+      );
+
+
+    const infoEl =
+      document.getElementById(
+        "adminRewardSettlementInfo"
+      );
+
+
+    const buttonEl =
+      document.getElementById(
+        "adminFinalizeRewardBtn"
+      );
+
+
+    const messageEl =
+      document.getElementById(
+        "adminRewardSettlementMessage"
+      );
+
+
+    /* =====================================================
+       5. HELPERS
+    ====================================================== */
+
+    function currentMonthStart() {
+
+      const now =
+        new Date();
+
+
+      return (
+        now.getFullYear()
+        +
+        "-"
+        +
+        String(
+          now.getMonth() + 1
+        ).padStart(
+          2,
+          "0"
+        )
+        +
+        "-01"
+      );
+
+    }
+
+
+    function money(
+      value
+    ) {
+
+      return (
+        Number(
+          value || 0
+        )
+          .toLocaleString(
+            "vi-VN"
+          )
+        +
+        "đ"
+      );
+
+    }
+
+
+    function setMessage(
+      text,
+      isError = false
+    ) {
+
+      messageEl.textContent =
+        text || "";
+
+
+      messageEl.style.color =
+        isError
+          ?
+          "#ff9f9f"
+          :
+          "#aab6c5";
+
+    }
+
+
+    /* =====================================================
+       6. KIỂM TRA TRẠNG THÁI THÁNG
+    ====================================================== */
+
+    async function loadSettlementStatus() {
+
+      buttonEl.disabled =
+        true;
+
+
+      buttonEl.textContent =
+        "ĐANG KIỂM TRA...";
+
+
+      setMessage(
+        ""
+      );
+
+
+      try {
+
+        const {
+          data: authData,
+          error: authError
+        } =
+          await settlementSb.auth
+            .getSession();
+
+
+        if (
+          authError
+          ||
+          !authData?.session
+        ) {
+
+          throw new Error(
+            "Chưa đăng nhập Admin."
+          );
+
+        }
+
+
+        /* =================================================
+           A. KIỂM TRA ĐÃ CHỐT CHƯA
+        ================================================= */
+
+        const {
+          data: settlementData,
+          error: settlementError
+        } =
+          await settlementSb.rpc(
+            "admin_get_coach_reward_settlement",
+            {
+              p_month:
+                currentMonthStart()
+            }
+          );
+
+
+        if (settlementError) {
+
+          throw settlementError;
+
+        }
+
+
+        const settlements =
+          Array.isArray(
+            settlementData
+          )
+            ?
+            settlementData
+            :
+            [];
+
+
+        const settlement =
+          settlements[0];
+
+
+        /* =================================================
+           ĐÃ CHỐT
+        ================================================= */
+
+        if (
+          settlement
+          &&
+          settlement.status !==
+            "Đã hủy"
+        ) {
+
+          statusEl.textContent =
+            settlement.status
+            ||
+            "ĐÃ CHỐT";
+
+
+          statusEl.classList.add(
+            "done"
+          );
+
+
+          infoEl.textContent =
+            (
+              "Coach: "
+              +
+              (
+                settlement.coach_name
+                ||
+                settlement.coach_code
+                ||
+                "—"
+              )
+              +
+              " · "
+              +
+              Number(
+                settlement.total_hours || 0
+              )
+              +
+              " giờ"
+              +
+              " · Thưởng: "
+              +
+              money(
+                settlement.final_bonus
+              )
+            );
+
+
+          buttonEl.disabled =
+            true;
+
+
+          buttonEl.textContent =
+            "✓ THƯỞNG THÁNG ĐÃ ĐƯỢC CHỐT";
+
+
+          return;
+
+        }
+
+
+        /* =================================================
+           B. CHƯA CHỐT → KIỂM TRA NGƯỜI ĐỦ ĐIỀU KIỆN
+        ================================================= */
+
+        statusEl.textContent =
+          "CHƯA CHỐT";
+
+
+        statusEl.classList.remove(
+          "done"
+        );
+
+
+        const {
+          data: rankingData,
+          error: rankingError
+        } =
+          await settlementSb.rpc(
+            "admin_get_coach_monthly_rewards",
+            {
+              p_month:
+                currentMonthStart()
+            }
+          );
+
+
+        if (rankingError) {
+
+          throw rankingError;
+
+        }
+
+
+        const ranking =
+          Array.isArray(
+            rankingData
+          )
+            ?
+            rankingData
+            :
+            [];
+
+
+        const winner =
+          ranking.find(
+            function (
+              row
+            ) {
+
+              return (
+                Number(
+                  row.final_bonus || 0
+                ) > 0
+              );
+
+            }
+          );
+
+
+        /* =================================================
+           CHƯA CÓ NGƯỜI ĐỦ ĐIỀU KIỆN
+        ================================================= */
+
+        if (!winner) {
+
+          infoEl.textContent =
+            "Hiện chưa có Coach đủ điều kiện nhận thưởng tháng này.";
+
+
+          buttonEl.disabled =
+            true;
+
+
+          buttonEl.textContent =
+            "CHƯA CÓ COACH ĐỦ ĐIỀU KIỆN";
+
+
+          return;
+
+        }
+
+
+        /* =================================================
+           CÓ NGƯỜI DỰ KIẾN THẮNG
+        ================================================= */
+
+        infoEl.textContent =
+          (
+            "Dự kiến: "
+            +
+            (
+              winner.coach_name
+              ||
+              winner.coach_code
+              ||
+              "Coach"
+            )
+            +
+            " · "
+            +
+            Number(
+              winner.total_hours || 0
+            )
+            +
+            " giờ"
+            +
+            " · "
+            +
+            Number(
+              winner.avg_rating || 0
+            ).toFixed(1)
+            +
+            "★"
+            +
+            " · Thưởng "
+            +
+            money(
+              winner.final_bonus
+            )
+          );
+
+
+        buttonEl.disabled =
+          false;
+
+
+        buttonEl.textContent =
+          "✓ CHỐT THƯỞNG THÁNG";
+
+      }
+      catch (error) {
+
+        console.error(
+          "ADMIN REWARD SETTLEMENT:",
+          error
+        );
+
+
+        statusEl.textContent =
+          "LỖI";
+
+
+        statusEl.classList.remove(
+          "done"
+        );
+
+
+        infoEl.textContent =
+          "Không tải được trạng thái chốt thưởng.";
+
+
+        buttonEl.disabled =
+          true;
+
+
+        buttonEl.textContent =
+          "KHÔNG THỂ CHỐT";
+
+
+        setMessage(
+          error?.message
+          ||
+          "Có lỗi khi tải dữ liệu.",
+          true
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       7. CHỐT THƯỞNG
+    ====================================================== */
+
+    buttonEl.addEventListener(
+      "click",
+      async function () {
+
+        if (
+          buttonEl.disabled
+        ) {
+
+          return;
+
+        }
+
+
+        const confirmed =
+          window.confirm(
+            "Bạn chắc chắn muốn CHỐT THƯỞNG COACH tháng này?\n\nSau khi chốt, kết quả sẽ được lưu snapshot và không thay đổi theo dữ liệu phát sinh sau đó."
+          );
+
+
+        if (!confirmed) {
+
+          return;
+
+        }
+
+
+        buttonEl.disabled =
+          true;
+
+
+        buttonEl.textContent =
+          "ĐANG CHỐT...";
+
+
+        setMessage(
+          "Đang tạo snapshot thưởng Coach..."
+        );
+
+
+        try {
+
+          const {
+            data,
+            error
+          } =
+            await settlementSb.rpc(
+              "admin_finalize_coach_monthly_reward",
+              {
+                p_month:
+                  currentMonthStart()
+              }
+            );
+
+
+          if (error) {
+
+            throw error;
+
+          }
+
+
+          const rows =
+            Array.isArray(data)
+              ?
+              data
+              :
+              [];
+
+
+          const result =
+            rows[0];
+
+
+          if (!result) {
+
+            throw new Error(
+              "Không nhận được kết quả chốt thưởng."
+            );
+
+          }
+
+
+          setMessage(
+            (
+              "✓ Đã chốt thưởng "
+              +
+              money(
+                result.final_bonus
+              )
+              +
+              " cho "
+              +
+              (
+                result.coach_name
+                ||
+                result.coach_code
+                ||
+                "Coach"
+              )
+              +
+              "."
+            )
+          );
+
+
+          await loadSettlementStatus();
+
+        }
+        catch (error) {
+
+          console.error(
+            "FINALIZE COACH REWARD:",
+            error
+          );
+
+
+          setMessage(
+            error?.message
+            ||
+            "Không thể chốt thưởng.",
+            true
+          );
+
+
+          await loadSettlementStatus();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       8. CHẠY
+    ====================================================== */
+
+    await loadSettlementStatus();
+
+
+    setInterval(
+      loadSettlementStatus,
+      60000
+    );
+
+
+    window.addEventListener(
+      "focus",
+      function () {
+
+        setTimeout(
+          loadSettlementStatus,
+          500
+        );
+
+      }
+    );
+
+  }
+);
+
+</script>
 </body>
 
 </html>
