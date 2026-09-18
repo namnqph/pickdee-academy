@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>Đăng ký học | PickDee Academy</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: #fff;
+
+      background:
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+    .topbar {
+      min-height: 68px;
+
+      padding: 14px 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.1);
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .container {
+      width:
+        min(
+          820px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        34px 0 70px;
+    }
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: .6px;
+    }
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          30px,
+          6vw,
+          46px
+        );
+
+      line-height: 1.05;
+    }
+
+    .lead {
+      margin:
+        0 0 24px;
+
+      color:
+        rgba(255,255,255,.65);
+
+      line-height: 1.6;
+    }
+
+    .card {
+      margin-top: 16px;
+
+      padding: 20px;
+
+      border-radius: 18px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(6,39,88,.76);
+    }
+
+    .card-title {
+      margin-bottom: 16px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      letter-spacing: .6px;
+    }
+
+    .coach-box {
+      display: none;
+
+      padding: 16px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid
+        rgba(216,255,69,.24);
+
+      background:
+        rgba(216,255,69,.07);
+    }
+
+    .coach-box.show {
+      display: block;
+    }
+
+    .coach-name {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .coach-meta {
+      margin-top: 7px;
+
+      color:
+        rgba(255,255,255,.65);
+
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+
+      margin-top: 15px;
+    }
+
+    .field.full {
+      grid-column:
+        1 / -1;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 900;
+
+      color:
+        rgba(255,255,255,.72);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+
+      min-height: 48px;
+
+      padding:
+        11px 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.15);
+
+      outline: none;
+
+      background: #081c3b;
+
+      color: white;
+
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 105px;
+
+      resize: vertical;
+
+      line-height: 1.5;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color:
+        rgba(216,255,69,.75);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.08);
+    }
+
+    .package-info {
+      margin-top: 10px;
+
+      padding: 12px;
+
+      display: none;
+
+      border-radius: 10px;
+
+      color:
+        rgba(255,255,255,.75);
+
+      background:
+        rgba(255,255,255,.05);
+
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .package-info.show {
+      display: block;
+    }
+
+    .goal-field {
+      display: none;
+    }
+
+    .goal-field.show {
+      display: grid;
+    }
+
+    .button {
+      width: 100%;
+
+      min-height: 54px;
+
+      margin-top: 22px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      background: #d8ff45;
+
+      color: #06152c;
+
+      font-size: 14px;
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .message {
+      min-height: 22px;
+
+      margin-top: 14px;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      line-height: 1.5;
+    }
+
+    .message.ok {
+      color: #d8ff45;
+    }
+
+    .message.error {
+      color: #ff9b9b;
+    }
+
+    .note {
+      margin-top: 14px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    @media(max-width:650px) {
+
+      .grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .field.full {
+        grid-column:
+          auto;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <div class="brand">
+
+    PickDee
+    <span>Academy</span>
+
+  </div>
+
+  <a
+    class="back"
+    href="./find-coach"
+  >
+    ← TÌM COACH
+  </a>
+
+</header>
+
+
+<main class="container">
+
+  <div class="eyebrow">
+    ĐĂNG KÝ HỌC PICKLEBALL
+  </div>
+
+  <h1>
+    BẮT ĐẦU CÙNG PICKDEE
+  </h1>
+
+  <p class="lead">
+    Điền thông tin học viên,
+    chọn khu vực và gói học.
+    Nếu bạn đã chọn Coach,
+    PickDee sẽ giữ đúng Coach đó trong đăng ký.
+  </p>
+
+
+  <section class="card">
+
+    <div class="card-title">
+      COACH ĐÃ CHỌN
+    </div>
+
+    <div
+      id="coachBox"
+      class="coach-box"
+    >
+
+      <div
+        id="coachName"
+        class="coach-name"
+      ></div>
+
+      <div
+        id="coachMeta"
+        class="coach-meta"
+      ></div>
+
+    </div>
+
+    <div
+      id="noCoach"
+      style="
+        color:rgba(255,255,255,.58);
+        font-size:13px;
+      "
+    >
+      Bạn chưa chọn Coach.
+      PickDee có thể hỗ trợ kết nối Coach sau.
+    </div>
+
+  </section>
+
+
+  <form
+    id="registerForm"
+    class="card"
+  >
+
+    <div class="card-title">
+      THÔNG TIN HỌC VIÊN
+    </div>
+
+
+    <div class="grid">
+
+
+      <div class="field">
+
+        <label for="fullName">
+          HỌ VÀ TÊN *
+        </label>
+
+        <input
+          id="fullName"
+          type="text"
+          autocomplete="name"
+          required
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="phone">
+          SỐ ĐIỆN THOẠI *
+        </label>
+
+        <input
+          id="phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          required
+        >
+
+      </div>
+
+
+      <div class="field full">
+
+        <label for="email">
+          EMAIL *
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          autocomplete="email"
+          required
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="area">
+          TỈNH / THÀNH *
+        </label>
+
+        <select
+          id="area"
+          required
+        >
+
+          <option value="">
+            Chọn Tỉnh / Thành
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="ward">
+          PHƯỜNG / XÃ *
+        </label>
+
+        <select
+          id="ward"
+          disabled
+          required
+        >
+
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field full">
+
+        <label for="packageSelect">
+          GÓI HỌC *
+        </label>
+
+        <select
+          id="packageSelect"
+          required
+        >
+
+          <option value="">
+            Chọn gói học
+          </option>
+
+        </select>
+
+        <div
+          id="packageInfo"
+          class="package-info"
+        ></div>
+
+      </div>
+
+
+      <div
+        id="goalField"
+        class="field full goal-field"
+      >
+
+        <label for="learningGoal">
+          MỤC TIÊU HỌC *
+        </label>
+
+        <textarea
+          id="learningGoal"
+          placeholder="Ví dụ: cải thiện backhand, reset, chiến thuật đánh đôi..."
+        ></textarea>
+
+      </div>
+
+
+      <div class="field full">
+
+        <label for="referralCode">
+          MÃ NGƯỜI GIỚI THIỆU
+        </label>
+
+        <input
+          id="referralCode"
+          type="text"
+          placeholder="Không có thì để trống"
+        >
+
+      </div>
+
+
+    </div>
+
+
+    <button
+      class="button"
+      type="submit"
+    >
+      TIẾP TỤC →
+    </button>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+
+    <div class="note">
+
+      Bước hiện tại chỉ kiểm tra
+      giao diện và dữ liệu đăng ký mới.
+      Chưa tạo học viên hoặc đăng ký thật
+      cho đến khi backend được nối ở bước tiếp theo.
+
+    </div>
+
+  </form>
+
+</main>
+
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const coachBox =
+    document.getElementById(
+      "coachBox"
+    );
+
+  const coachName =
+    document.getElementById(
+      "coachName"
+    );
+
+  const coachMeta =
+    document.getElementById(
+      "coachMeta"
+    );
+
+  const noCoach =
+    document.getElementById(
+      "noCoach"
+    );
+
+  const area =
+    document.getElementById(
+      "area"
+    );
+
+  const ward =
+    document.getElementById(
+      "ward"
+    );
+
+  const packageSelect =
+    document.getElementById(
+      "packageSelect"
+    );
+
+  const packageInfo =
+    document.getElementById(
+      "packageInfo"
+    );
+
+  const goalField =
+    document.getElementById(
+      "goalField"
+    );
+
+  const learningGoal =
+    document.getElementById(
+      "learningGoal"
+    );
+
+  const registerForm =
+    document.getElementById(
+      "registerForm"
+    );
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    message.textContent =
+      "Không tải được hệ thống PickDee Academy.";
+
+    message.className =
+      "message error";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function money(value) {
+
+    if (
+      value === null
+      ||
+      value === undefined
+      ||
+      value === ""
+    ) {
+      return "";
+    }
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value)
+    ) + "đ";
+
+  }
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const urlCoachId =
+    Number(
+      params.get("coach_id")
+    );
+
+
+  const storedCoachId =
+    Number(
+      sessionStorage.getItem(
+        "pickdee_selected_coach_id"
+      )
+    );
+
+
+  const selectedCoachId =
+    Number.isInteger(urlCoachId)
+    &&
+    urlCoachId > 0
+      ?
+        urlCoachId
+      :
+        (
+          Number.isInteger(
+            storedCoachId
+          )
+          &&
+          storedCoachId > 0
+            ?
+              storedCoachId
+            :
+              null
+        );
+
+
+  let allAreas = [];
+  let allWards = [];
+  let allPackages = [];
+
+
+  /* ===============================================
+     LOAD COACH
+  ================================================ */
+
+  if (selectedCoachId) {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "public_get_coach_profile",
+        {
+          p_coach_id:
+            selectedCoachId
+        }
+      );
+
+
+    const coach =
+      Array.isArray(data)
+        ?
+          data[0]
+        :
+          null;
+
+
+    if (
+      !error
+      &&
+      coach
+    ) {
+
+      coachName.textContent =
+        coach.full_name
+        ||
+        "Coach PickDee";
+
+
+      coachMeta.textContent =
+        [
+          coach.coach_code,
+          coach.preferred_ward,
+          coach.preferred_area
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+
+      coachBox.classList.add(
+        "show"
+      );
+
+
+      noCoach.style.display =
+        "none";
+
+
+      sessionStorage.setItem(
+        "pickdee_selected_coach_id",
+        String(
+          selectedCoachId
+        )
+      );
+
+    }
+
+  }
+
+
+  /* ===============================================
+     LOAD KHU VỰC + GÓI HỌC
+  ================================================ */
+
+  const [
+    areasResult,
+    wardsResult,
+    packagesResult
+  ] =
+    await Promise.all([
+
+      sb
+        .from("dm_khu_vuc")
+        .select(
+          "ma_khu_vuc,tinh_thanh"
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        ),
+
+      sb
+        .from("dm_xa_phuong")
+        .select(
+          "ma_xa_phuong,ma_khu_vuc,tinh_thanh,ten_xa_phuong"
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        ),
+
+      sb.rpc(
+        "public_get_active_packages"
+      )
+
+    ]);
+
+
+  if (
+    areasResult.error
+    ||
+    wardsResult.error
+    ||
+    packagesResult.error
+  ) {
+
+    console.error(
+      areasResult.error,
+      wardsResult.error,
+      packagesResult.error
+    );
+
+    message.textContent =
+      "Không tải được dữ liệu đăng ký.";
+
+    message.className =
+      "message error";
+
+    return;
+
+  }
+
+
+  allAreas =
+    areasResult.data || [];
+
+  allWards =
+    wardsResult.data || [];
+
+  allPackages =
+    packagesResult.data || [];
+
+
+  const areaNames =
+    [
+      ...new Set(
+        allAreas
+          .map(
+            item =>
+              String(
+                item.tinh_thanh
+                ||
+                ""
+              ).trim()
+          )
+          .filter(Boolean)
+      )
+    ]
+      .sort(
+        (a,b) =>
+          a.localeCompare(
+            b,
+            "vi"
+          )
+      );
+
+
+  area.innerHTML = `
+
+    <option value="">
+      Chọn Tỉnh / Thành
+    </option>
+
+    ${
+      areaNames
+        .map(
+          item => `
+
+            <option
+              value="${escapeHtml(item)}"
+            >
+              ${escapeHtml(item)}
+            </option>
+
+          `
+        )
+        .join("")
+    }
+
+  `;
+
+
+  packageSelect.innerHTML = `
+
+    <option value="">
+      Chọn gói học
+    </option>
+
+    ${
+      allPackages
+        .map(
+          item => `
+
+            <option
+              value="${Number(item.id)}"
+            >
+              ${escapeHtml(
+                item.package_name
+              )}
+            </option>
+
+          `
+        )
+        .join("")
+    }
+
+  `;
+
+
+  /* ===============================================
+     PHƯỜNG / XÃ
+  ================================================ */
+
+  area.addEventListener(
+    "change",
+    function () {
+
+      const selectedArea =
+        String(
+          area.value || ""
+        ).trim();
+
+
+      if (!selectedArea) {
+
+        ward.disabled =
+          true;
+
+        ward.innerHTML = `
+
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+
+        `;
+
+        return;
+
+      }
+
+
+      const wards =
+        [
+          ...new Set(
+            allWards
+              .filter(
+                item =>
+                  String(
+                    item.tinh_thanh
+                    ||
+                    ""
+                  ).trim()
+                  ===
+                  selectedArea
+              )
+              .map(
+                item =>
+                  String(
+                    item.ten_xa_phuong
+                    ||
+                    ""
+                  ).trim()
+              )
+              .filter(Boolean)
+          )
+        ]
+          .sort(
+            (a,b) =>
+              a.localeCompare(
+                b,
+                "vi"
+              )
+          );
+
+
+      ward.innerHTML = `
+
+        <option value="">
+          Chọn Phường / Xã
+        </option>
+
+        ${
+          wards
+            .map(
+              item => `
+
+                <option
+                  value="${escapeHtml(item)}"
+                >
+                  ${escapeHtml(item)}
+                </option>
+
+              `
+            )
+            .join("")
+        }
+
+      `;
+
+
+      ward.disabled =
+        false;
+
+    }
+  );
+
+
+  /* ===============================================
+     GÓI HỌC
+  ================================================ */
+
+  packageSelect.addEventListener(
+    "change",
+    function () {
+
+      const packageId =
+        Number(
+          packageSelect.value
+        );
+
+
+      const item =
+        allPackages.find(
+          row =>
+            Number(row.id)
+            ===
+            packageId
+        );
+
+
+      if (!item) {
+
+        packageInfo.classList.remove(
+          "show"
+        );
+
+        goalField.classList.remove(
+          "show"
+        );
+
+        learningGoal.required =
+          false;
+
+        return;
+
+      }
+
+
+      const priceText =
+        item.price
+          ?
+            money(item.price)
+          :
+            (
+              item.unit_price
+                ?
+                  money(
+                    item.unit_price
+                  )
+                  +
+                  "/người/buổi"
+                :
+                  "Liên hệ"
+            );
+
+
+      packageInfo.innerHTML = `
+
+        <b>
+          ${escapeHtml(
+            item.package_name
+          )}
+        </b>
+
+        <br>
+
+        ${
+          item.total_sessions
+            ?
+              escapeHtml(
+                item.total_sessions
+              )
+              +
+              " buổi · "
+            :
+              ""
+        }
+
+        ${escapeHtml(priceText)}
+
+        ${
+          item.price_note
+            ?
+              `
+
+                <br>
+
+                ${
+                  escapeHtml(
+                    item.price_note
+                  )
+                }
+
+              `
+            :
+              ""
+        }
+
+      `;
+
+
+      packageInfo.classList.add(
+        "show"
+      );
+
+
+      const isCustom =
+        String(
+          item.package_code
+          ||
+          ""
+        )
+          .trim()
+          .toUpperCase()
+        ===
+        "TYC";
+
+
+      goalField.classList.toggle(
+        "show",
+        isCustom
+      );
+
+
+      learningGoal.required =
+        isCustom;
+
+    }
+  );
+
+
+  /* ===============================================
+     TEST FORM
+  ================================================ */
+
+  registerForm.addEventListener(
+    "submit",
+    function (event) {
+
+      event.preventDefault();
+
+
+      if (
+        !registerForm.checkValidity()
+      ) {
+
+        registerForm.reportValidity();
+
+        return;
+
+      }
+
+
+      message.textContent =
+        "✓ Form đăng ký native đã sẵn sàng. Bước tiếp theo sẽ nối tạo tài khoản và đăng ký vào Supabase.";
+
+      message.className =
+        "message ok";
+
+    }
+  );
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
