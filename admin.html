@@ -7312,6 +7312,1015 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+  <!-- =========================================================
+     PICKDEE - ADMIN COACH OF THE MONTH
+========================================================= -->
+
+<style>
+
+  #adminCoachRewardSection {
+    margin-top: 28px;
+    padding: 24px;
+
+    border-radius: 16px;
+
+    border:
+      1px solid rgba(185,255,24,.34);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(14,27,45,.98),
+        rgba(15,61,76,.90)
+      );
+  }
+
+
+  .admin-reward-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+
+    margin-bottom: 20px;
+  }
+
+
+  .admin-reward-title {
+    margin: 0;
+
+    font-size: 24px;
+    font-weight: 900;
+  }
+
+
+  .admin-reward-sub {
+    margin-top: 6px;
+
+    color: #aab6c5;
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+
+  .admin-reward-badge {
+    padding: 7px 11px;
+
+    border-radius: 999px;
+
+    border:
+      1px solid rgba(185,255,24,.32);
+
+    background:
+      rgba(185,255,24,.10);
+
+    color: #b9ff18;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    white-space: nowrap;
+  }
+
+
+  #adminRewardWinner {
+    margin-bottom: 18px;
+
+    padding: 17px;
+
+    border-radius: 13px;
+
+    border:
+      1px solid rgba(255,255,255,.10);
+
+    background:
+      rgba(0,0,0,.16);
+  }
+
+
+  .admin-reward-winner-label {
+    color: #aab6c5;
+
+    font-size: 12px;
+
+    margin-bottom: 5px;
+  }
+
+
+  .admin-reward-winner-name {
+    color: #b9ff18;
+
+    font-size: 21px;
+    font-weight: 900;
+  }
+
+
+  .admin-reward-winner-detail {
+    margin-top: 6px;
+
+    color: #d7dee8;
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+
+  .admin-reward-table {
+    width: 100%;
+
+    border-collapse: collapse;
+  }
+
+
+  .admin-reward-table th {
+    padding: 11px 10px;
+
+    border-bottom:
+      1px solid rgba(255,255,255,.11);
+
+    color: #8291a4;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    text-align: left;
+  }
+
+
+  .admin-reward-table td {
+    padding: 13px 10px;
+
+    border-bottom:
+      1px solid rgba(255,255,255,.07);
+
+    font-size: 13px;
+
+    vertical-align: middle;
+  }
+
+
+  .admin-reward-rank {
+    color: #b9ff18;
+
+    font-size: 16px;
+    font-weight: 900;
+  }
+
+
+  .admin-reward-name {
+    font-weight: 900;
+  }
+
+
+  .admin-reward-code {
+    margin-top: 3px;
+
+    color: #8291a4;
+
+    font-size: 11px;
+  }
+
+
+  .admin-reward-money {
+    color: #b9ff18;
+
+    font-weight: 900;
+  }
+
+
+  .admin-reward-status {
+    max-width: 230px;
+
+    color: #aab6c5;
+
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+
+  .admin-reward-empty {
+    padding: 22px;
+
+    border-radius: 12px;
+
+    border:
+      1px dashed rgba(255,255,255,.15);
+
+    color: #aab6c5;
+
+    text-align: center;
+  }
+
+
+  .admin-reward-note {
+    margin-top: 17px;
+
+    padding-top: 15px;
+
+    border-top:
+      1px solid rgba(255,255,255,.09);
+
+    color: #8291a4;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+  }
+
+
+  @media(max-width:800px) {
+
+    #adminCoachRewardTableWrap {
+      overflow-x: auto;
+    }
+
+
+    .admin-reward-table {
+      min-width: 760px;
+    }
+
+
+    .admin-reward-head {
+      display: block;
+    }
+
+
+    .admin-reward-badge {
+      display: inline-block;
+
+      margin-top: 10px;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async function () {
+
+    /* =====================================================
+       1. KHÔNG TẠO TRÙNG
+    ====================================================== */
+
+    if (
+      document.getElementById(
+        "adminCoachRewardSection"
+      )
+    ) {
+      return;
+    }
+
+
+    const main =
+      document.querySelector(
+        "#app main"
+      );
+
+
+    if (!main) {
+      return;
+    }
+
+
+    /* =====================================================
+       2. TẠO KHUNG BXH
+    ====================================================== */
+
+    const section =
+      document.createElement(
+        "section"
+      );
+
+
+    section.id =
+      "adminCoachRewardSection";
+
+
+    section.innerHTML = `
+
+      <div class="admin-reward-head">
+
+        <div>
+
+          <h2 class="admin-reward-title">
+            🏆 Coach of the Month
+          </h2>
+
+          <div
+            id="adminRewardMonth"
+            class="admin-reward-sub"
+          >
+            Đang tải BXH Coach tháng...
+          </div>
+
+        </div>
+
+
+        <div class="admin-reward-badge">
+          BXH COACH THÁNG
+        </div>
+
+      </div>
+
+
+      <div id="adminRewardWinner">
+
+        <div class="admin-reward-winner-label">
+          Người dự kiến nhận thưởng
+        </div>
+
+        <div
+          id="adminRewardWinnerName"
+          class="admin-reward-winner-name"
+        >
+          Đang kiểm tra...
+        </div>
+
+        <div
+          id="adminRewardWinnerDetail"
+          class="admin-reward-winner-detail"
+        ></div>
+
+      </div>
+
+
+      <div id="adminCoachRewardTableWrap">
+
+        <table class="admin-reward-table">
+
+          <thead>
+
+            <tr>
+
+              <th>HẠNG</th>
+
+              <th>COACH</th>
+
+              <th>GIỜ DẠY</th>
+
+              <th>BUỔI</th>
+
+              <th>ĐÁNH GIÁ</th>
+
+              <th>MỐC MỞ</th>
+
+              <th>THƯỞNG</th>
+
+              <th>TRẠNG THÁI</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="adminCoachRewardRows">
+
+            <tr>
+
+              <td colspan="8">
+
+                <div class="admin-reward-empty">
+                  Đang tải dữ liệu...
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <div class="admin-reward-note">
+
+        <b>Chính sách PickDee:</b>
+        80 đến dưới 100 giờ mở mốc 3.000.000đ ·
+        từ 100 giờ mở mốc 5.000.000đ ·
+        Coach phải đạt 5★ ·
+        chỉ 01 Coach đứng đầu đủ điều kiện cuối tháng
+        được nhận thưởng.
+
+        <br><br>
+
+        Hiện hệ thống đang trong giai đoạn TEST.
+        Khi PickDee chính thức launch,
+        dữ liệu trước ngày launch sẽ được loại khỏi
+        KPI và thưởng Coach.
+
+      </div>
+
+    `;
+
+
+    main.appendChild(
+      section
+    );
+
+
+    /* =====================================================
+       3. SUPABASE
+    ====================================================== */
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      return;
+
+    }
+
+
+    const rewardSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    /* =====================================================
+       4. HELPERS
+    ====================================================== */
+
+    function monthStart() {
+
+      const now =
+        new Date();
+
+
+      return (
+        now.getFullYear()
+        +
+        "-"
+        +
+        String(
+          now.getMonth() + 1
+        ).padStart(
+          2,
+          "0"
+        )
+        +
+        "-01"
+      );
+
+    }
+
+
+    function monthLabel() {
+
+      const now =
+        new Date();
+
+
+      return (
+        "Tháng "
+        +
+        String(
+          now.getMonth() + 1
+        ).padStart(
+          2,
+          "0"
+        )
+        +
+        "/"
+        +
+        now.getFullYear()
+      );
+
+    }
+
+
+    function money(
+      value
+    ) {
+
+      return (
+        Number(
+          value || 0
+        )
+          .toLocaleString(
+            "vi-VN"
+          )
+        +
+        "đ"
+      );
+
+    }
+
+
+    function ratingText(
+      row
+    ) {
+
+      if (
+        Number(
+          row.rating_count || 0
+        ) <= 0
+      ) {
+
+        return "Chưa có";
+
+      }
+
+
+      return (
+        Number(
+          row.avg_rating || 0
+        ).toFixed(1)
+        +
+        "★ · "
+        +
+        Number(
+          row.rating_count || 0
+        )
+        +
+        " lượt"
+      );
+
+    }
+
+
+    /* =====================================================
+       5. RENDER 1 DÒNG
+    ====================================================== */
+
+    function createRow(
+      row
+    ) {
+
+      const tr =
+        document.createElement(
+          "tr"
+        );
+
+
+      const values = [
+
+        {
+          text:
+            row.hours_rank
+              ?
+              "#" + row.hours_rank
+              :
+              "—",
+
+          className:
+            "admin-reward-rank"
+        },
+
+        {
+          custom:
+            function (
+              td
+            ) {
+
+              const name =
+                document.createElement(
+                  "div"
+                );
+
+
+              name.className =
+                "admin-reward-name";
+
+
+              name.textContent =
+                row.coach_name
+                ||
+                "Coach";
+
+
+              const code =
+                document.createElement(
+                  "div"
+                );
+
+
+              code.className =
+                "admin-reward-code";
+
+
+              code.textContent =
+                row.coach_code
+                ||
+                "—";
+
+
+              td.appendChild(
+                name
+              );
+
+
+              td.appendChild(
+                code
+              );
+
+            }
+        },
+
+        {
+          text:
+            Number(
+              row.total_hours || 0
+            )
+            +
+            " giờ"
+        },
+
+        {
+          text:
+            String(
+              Number(
+                row.completed_sessions
+                ||
+                0
+              )
+            )
+        },
+
+        {
+          text:
+            ratingText(
+              row
+            )
+        },
+
+        {
+          text:
+            money(
+              row.unlocked_bonus
+            )
+        },
+
+        {
+          text:
+            money(
+              row.final_bonus
+            ),
+
+          className:
+            "admin-reward-money"
+        },
+
+        {
+          text:
+            row.reward_status
+            ||
+            "—",
+
+          className:
+            "admin-reward-status"
+        }
+
+      ];
+
+
+      values.forEach(
+        function (
+          item
+        ) {
+
+          const td =
+            document.createElement(
+              "td"
+            );
+
+
+          if (
+            item.className
+          ) {
+
+            td.className =
+              item.className;
+
+          }
+
+
+          if (
+            item.custom
+          ) {
+
+            item.custom(
+              td
+            );
+
+          }
+          else {
+
+            td.textContent =
+              item.text;
+
+          }
+
+
+          tr.appendChild(
+            td
+          );
+
+        }
+      );
+
+
+      return tr;
+
+    }
+
+
+    /* =====================================================
+       6. LOAD BXH
+    ====================================================== */
+
+    async function loadAdminCoachRewards() {
+
+      const monthEl =
+        document.getElementById(
+          "adminRewardMonth"
+        );
+
+
+      const winnerNameEl =
+        document.getElementById(
+          "adminRewardWinnerName"
+        );
+
+
+      const winnerDetailEl =
+        document.getElementById(
+          "adminRewardWinnerDetail"
+        );
+
+
+      const rowsEl =
+        document.getElementById(
+          "adminCoachRewardRows"
+        );
+
+
+      monthEl.textContent =
+        monthLabel();
+
+
+      try {
+
+        const {
+          data: authData,
+          error: authError
+        } =
+          await rewardSb.auth
+            .getSession();
+
+
+        if (
+          authError
+          ||
+          !authData?.session
+        ) {
+
+          throw new Error(
+            "Chưa đăng nhập Admin."
+          );
+
+        }
+
+
+        const {
+          data,
+          error
+        } =
+          await rewardSb.rpc(
+            "admin_get_coach_monthly_rewards",
+            {
+              p_month:
+                monthStart()
+            }
+          );
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        const rows =
+          Array.isArray(data)
+            ?
+            data
+            :
+            [];
+
+
+        rowsEl.innerHTML =
+          "";
+
+
+        if (
+          rows.length === 0
+        ) {
+
+          winnerNameEl.textContent =
+            "Chưa có dữ liệu Coach";
+
+
+          winnerDetailEl.textContent =
+            "Chưa có buổi hoàn thành trong tháng này.";
+
+
+          const tr =
+            document.createElement(
+              "tr"
+            );
+
+
+          const td =
+            document.createElement(
+              "td"
+            );
+
+
+          td.colSpan =
+            8;
+
+
+          td.innerHTML =
+            '<div class="admin-reward-empty">'
+            +
+            'Chưa có dữ liệu BXH tháng này.'
+            +
+            '</div>';
+
+
+          tr.appendChild(
+            td
+          );
+
+
+          rowsEl.appendChild(
+            tr
+          );
+
+
+          return;
+
+        }
+
+
+        rows.forEach(
+          function (
+            row
+          ) {
+
+            rowsEl.appendChild(
+              createRow(
+                row
+              )
+            );
+
+          }
+        );
+
+
+        const winner =
+          rows.find(
+            function (
+              row
+            ) {
+
+              return (
+                Number(
+                  row.final_bonus || 0
+                ) > 0
+              );
+
+            }
+          );
+
+
+        if (winner) {
+
+          winnerNameEl.textContent =
+            winner.coach_name
+            ||
+            "Coach";
+
+
+          winnerDetailEl.textContent =
+            (
+              Number(
+                winner.total_hours || 0
+              )
+              +
+              " giờ · "
+              +
+              ratingText(
+                winner
+              )
+              +
+              " · Thưởng dự kiến "
+              +
+              money(
+                winner.final_bonus
+              )
+            );
+
+        }
+        else {
+
+          winnerNameEl.textContent =
+            "Chưa có Coach đủ điều kiện";
+
+
+          winnerDetailEl.textContent =
+            "Hiện chưa có Coach đạt đồng thời mốc giờ, 5★ và vị trí #1 đủ điều kiện.";
+
+        }
+
+      }
+      catch (error) {
+
+        console.error(
+          "ADMIN COACH REWARD:",
+          error
+        );
+
+
+        winnerNameEl.textContent =
+          "Không tải được BXH";
+
+
+        winnerDetailEl.textContent =
+          error?.message
+          ||
+          "Có lỗi khi tải chương trình thưởng Coach.";
+
+
+        rowsEl.innerHTML =
+          `
+
+            <tr>
+
+              <td colspan="8">
+
+                <div class="admin-reward-empty">
+                  Không tải được dữ liệu BXH Coach.
+                </div>
+
+              </td>
+
+            </tr>
+
+          `;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       7. CHẠY
+    ====================================================== */
+
+    await loadAdminCoachRewards();
+
+
+    setInterval(
+      loadAdminCoachRewards,
+      60000
+    );
+
+
+    window.addEventListener(
+      "focus",
+      function () {
+
+        setTimeout(
+          loadAdminCoachRewards,
+          400
+        );
+
+      }
+    );
+
+  }
+);
+
+</script>
 </body>
 
 </html>
