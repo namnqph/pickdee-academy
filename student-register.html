@@ -711,13 +711,9 @@
 
 
     <div class="note">
-
-      Bước hiện tại chỉ kiểm tra
-      giao diện và dữ liệu đăng ký mới.
-      Chưa tạo học viên hoặc đăng ký thật
-      cho đến khi backend được nối ở bước tiếp theo.
-
-    </div>
+  Thông tin đăng ký sẽ được gửi trực tiếp đến PickDee Academy.
+  Vui lòng sử dụng email chính xác để đăng nhập tài khoản học viên.
+</div>
 
   </form>
 
@@ -893,7 +889,18 @@
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
 
-
+const authSb =
+  window.supabase.createClient(
+    cfg.SUPABASE_URL,
+    cfg.SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    }
+  );
   function escapeHtml(value) {
 
     return String(
@@ -1610,7 +1617,116 @@
         "message";
 
 
-      try {
+         try {
+
+        const emailValue =
+          document
+            .getElementById(
+              "email"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+
+        /*
+        ===============================================
+        TẠO TÀI KHOẢN SUPABASE AUTH CHO HỌC VIÊN
+        ===============================================
+        */
+
+        const {
+          data: authData,
+          error: authError
+        } =
+          await authSb.auth.signUp({
+            email:
+              emailValue,
+
+            password:
+              password.value
+          });
+
+
+        if (authError) {
+
+          let authErrorText =
+            authError.message
+            ||
+            "Không tạo được tài khoản học viên.";
+
+
+          const lowerError =
+            authErrorText
+              .toLowerCase();
+
+
+          if (
+            lowerError.includes(
+              "already registered"
+            )
+            ||
+            lowerError.includes(
+              "already exists"
+            )
+          ) {
+
+            authErrorText =
+              "Email này đã có tài khoản PickDee. Vui lòng dùng tài khoản hiện có.";
+
+          }
+
+
+          throw new Error(
+            authErrorText
+          );
+
+        }
+
+
+        const authUserId =
+          authData?.user?.id;
+
+
+        if (
+          !authUserId
+        ) {
+
+          throw new Error(
+            "Không lấy được mã tài khoản học viên."
+          );
+
+        }
+
+
+        /*
+        Một số cấu hình Supabase không báo lỗi trực tiếp
+        khi email đã tồn tại mà trả user không có identity.
+        Không cho tiếp tục trong trường hợp đó.
+        */
+
+        if (
+          Array.isArray(
+            authData?.user?.identities
+          )
+          &&
+          authData.user.identities.length
+          ===
+          0
+        ) {
+
+          throw new Error(
+            "Email này đã có tài khoản PickDee. Vui lòng dùng tài khoản hiện có."
+          );
+
+        }
+
+
+        /*
+        ===============================================
+        PAYLOAD ĐĂNG KÝ HỌC
+        ===============================================
+        */
 
         const payload = {
 
@@ -1631,13 +1747,10 @@
               .trim(),
 
           email:
-            document
-              .getElementById(
-                "email"
-              )
-              .value
-              .trim()
-              .toLowerCase(),
+            emailValue,
+
+          auth_user_id:
+            authUserId,
 
           preferred_area:
             area.value,
@@ -1677,7 +1790,6 @@
             "Web PickDee"
 
         };
-
 
         const {
           data,
