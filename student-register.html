@@ -1313,6 +1313,33 @@ const authSb =
   `;
 
 
+  function renderPackageOptions() {
+
+  const groupMode =
+    groupPreference.value !== "solo";
+
+  const allowedPackages =
+    allPackages.filter(item => {
+
+      const code =
+        String(
+          item.package_code || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      const isGroupPackage =
+        code === "CB12N2"
+        ||
+        code === "NC12N2";
+
+      return groupMode
+        ? isGroupPackage
+        : !isGroupPackage;
+
+    });
+
+
   packageSelect.innerHTML = `
 
     <option value="">
@@ -1320,7 +1347,7 @@ const authSb =
     </option>
 
     ${
-      allPackages
+      allowedPackages
         .map(
           item => `
 
@@ -1338,6 +1365,38 @@ const authSb =
     }
 
   `;
+
+
+  packageSelect.value = "";
+
+  packageInfo.classList.remove(
+    "show"
+  );
+
+  requestedSessionsField.classList.remove(
+    "show"
+  );
+
+  goalField.classList.remove(
+    "show"
+  );
+
+  requestedSessions.required =
+    false;
+
+  learningGoal.required =
+    false;
+
+}
+
+
+renderPackageOptions();
+
+
+groupPreference.addEventListener(
+  "change",
+  renderPackageOptions
+);
 
 
   /* ===============================================
