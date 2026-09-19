@@ -1,732 +1,8 @@
-<!doctype html>
-<html lang="vi">
-
-<head>
-
-  <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-
-  <title>Đăng ký học | PickDee Academy</title>
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
-
-  <script src="./config.js"></script>
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-      color: #fff;
-
-      background:
-        linear-gradient(
-          145deg,
-          #041733,
-          #062456 50%,
-          #03142d
-        );
-    }
-
-    .topbar {
-      min-height: 68px;
-
-      padding: 14px 20px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      border-bottom:
-        1px solid
-        rgba(255,255,255,.1);
-    }
-
-    .brand {
-      font-size: 19px;
-      font-weight: 900;
-    }
-
-    .brand span {
-      color: #d8ff45;
-    }
-
-    .back {
-      color: #d8ff45;
-
-      text-decoration: none;
-
-      font-size: 13px;
-      font-weight: 900;
-    }
-
-    .container {
-      width:
-        min(
-          820px,
-          calc(100% - 28px)
-        );
-
-      margin: auto;
-
-      padding:
-        34px 0 70px;
-    }
-
-    .eyebrow {
-      color: #d8ff45;
-
-      font-size: 12px;
-      font-weight: 900;
-
-      letter-spacing: .6px;
-    }
-
-    h1 {
-      margin:
-        8px 0 8px;
-
-      font-size:
-        clamp(
-          30px,
-          6vw,
-          46px
-        );
-
-      line-height: 1.05;
-    }
-
-    .lead {
-      margin:
-        0 0 24px;
-
-      color:
-        rgba(255,255,255,.65);
-
-      line-height: 1.6;
-    }
-
-    .card {
-      margin-top: 16px;
-
-      padding: 20px;
-
-      border-radius: 18px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.12);
-
-      background:
-        rgba(6,39,88,.76);
-    }
-
-    .card-title {
-      margin-bottom: 16px;
-
-      color: #d8ff45;
-
-      font-size: 12px;
-      font-weight: 900;
-
-      letter-spacing: .6px;
-    }
-
-    .coach-box {
-      display: none;
-
-      padding: 16px;
-
-      border-radius: 14px;
-
-      border:
-        1px solid
-        rgba(216,255,69,.24);
-
-      background:
-        rgba(216,255,69,.07);
-    }
-
-    .coach-box.show {
-      display: block;
-    }
-
-    .coach-name {
-      font-size: 20px;
-      font-weight: 900;
-    }
-
-    .coach-meta {
-      margin-top: 7px;
-
-      color:
-        rgba(255,255,255,.65);
-
-      font-size: 13px;
-    }
-
-    .grid {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 14px;
-    }
-
-    .field {
-      display: grid;
-      gap: 7px;
-
-      margin-top: 15px;
-    }
-
-    .field.full {
-      grid-column:
-        1 / -1;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: 900;
-
-      color:
-        rgba(255,255,255,.72);
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-
-      min-height: 48px;
-
-      padding:
-        11px 13px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.15);
-
-      outline: none;
-
-      background: #081c3b;
-
-      color: white;
-
-      font: inherit;
-    }
-
-    textarea {
-      min-height: 105px;
-
-      resize: vertical;
-
-      line-height: 1.5;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color:
-        rgba(216,255,69,.75);
-
-      box-shadow:
-        0 0 0 3px
-        rgba(216,255,69,.08);
-    }
-
-    .package-info {
-      margin-top: 10px;
-
-      padding: 12px;
-
-      display: none;
-
-      border-radius: 10px;
-
-      color:
-        rgba(255,255,255,.75);
-
-      background:
-        rgba(255,255,255,.05);
-
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .package-info.show {
-      display: block;
-    }
-
-    .goal-field {
-      display: none;
-    }
-
-    .goal-field.show {
-      display: grid;
-    }
-
-    .button {
-      width: 100%;
-
-      min-height: 54px;
-
-      margin-top: 22px;
-
-      border: 0;
-
-      border-radius: 12px;
-
-      background: #d8ff45;
-
-      color: #06152c;
-
-      font-size: 14px;
-      font-weight: 900;
-
-      cursor: pointer;
-    }
-
-    .message {
-      min-height: 22px;
-
-      margin-top: 14px;
-
-      font-size: 13px;
-      font-weight: 800;
-
-      line-height: 1.5;
-    }
-
-    .message.ok {
-      color: #d8ff45;
-    }
-
-    .message.error {
-      color: #ff9b9b;
-    }
-
-    .note {
-      margin-top: 14px;
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    @media(max-width:650px) {
-
-      .grid {
-        grid-template-columns:
-          1fr;
-      }
-
-      .field.full {
-        grid-column:
-          auto;
-      }
-
-      .card {
-        padding: 16px;
-      }
-
-    }
-
-  </style>
-
-</head>
-
-
-<body>
-
-
-<header class="topbar">
-
-  <div class="brand">
-
-    PickDee
-    <span>Academy</span>
-
-  </div>
-
-  <a
-    class="back"
-    href="./find-coach"
-  >
-    ← TÌM COACH
-  </a>
-
-</header>
-
-
-<main class="container">
-
-  <div class="eyebrow">
-    ĐĂNG KÝ HỌC PICKLEBALL
-  </div>
-
-  <h1>
-    BẮT ĐẦU CÙNG PICKDEE
-  </h1>
-
-  <p class="lead">
-    Điền thông tin học viên,
-    chọn khu vực và gói học.
-    Nếu bạn đã chọn Coach,
-    PickDee sẽ giữ đúng Coach đó trong đăng ký.
-  </p>
-
-
-  <section class="card">
-
-    <div class="card-title">
-      COACH ĐÃ CHỌN
-    </div>
-
-    <div
-      id="coachBox"
-      class="coach-box"
-    >
-
-      <div
-        id="coachName"
-        class="coach-name"
-      ></div>
-
-      <div
-        id="coachMeta"
-        class="coach-meta"
-      ></div>
-
-    </div>
-
-    <div
-      id="noCoach"
-      style="
-        color:rgba(255,255,255,.58);
-        font-size:13px;
-      "
-    >
-      Bạn chưa chọn Coach.
-      PickDee có thể hỗ trợ kết nối Coach sau.
-    </div>
-
-  </section>
-
-
-  <form
-    id="registerForm"
-    class="card"
-  >
-
-    <div class="card-title">
-      THÔNG TIN HỌC VIÊN
-    </div>
-
-
-    <div class="grid">
-
-
-      <div class="field">
-
-        <label for="fullName">
-          HỌ VÀ TÊN *
-        </label>
-
-        <input
-          id="fullName"
-          type="text"
-          autocomplete="name"
-          required
-        >
-
-      </div>
-
-
-      <div class="field">
-
-        <label for="phone">
-          SỐ ĐIỆN THOẠI *
-        </label>
-
-        <input
-          id="phone"
-          type="tel"
-          inputmode="tel"
-          autocomplete="tel"
-          required
-        >
-
-      </div>
-
-
-      <div class="field full">
-
-        <label for="email">
-          EMAIL *
-        </label>
-
-        <input
-          id="email"
-          type="email"
-          autocomplete="email"
-          required
-        >
-
-      </div>
-
-            <div class="field">
-
-        <label for="password">
-          MẬT KHẨU *
-        </label>
-
-        <div style="position:relative;">
-
-          <input
-            id="password"
-            type="password"
-            minlength="8"
-            autocomplete="new-password"
-            placeholder="Tối thiểu 8 ký tự"
-            required
-            style="padding-right:52px;"
-          >
-
-          <button
-            type="button"
-            id="togglePassword"
-            aria-label="Hiện mật khẩu"
-            style="
-              position:absolute;
-              right:12px;
-              top:50%;
-              transform:translateY(-50%);
-              border:0;
-              background:transparent;
-              cursor:pointer;
-              font-size:20px;
-              padding:4px;
-            "
-          >
-            👁️
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <div class="field">
-
-        <label for="confirmPassword">
-          XÁC NHẬN MẬT KHẨU *
-        </label>
-
-        <div style="position:relative;">
-
-          <input
-            id="confirmPassword"
-            type="password"
-            minlength="8"
-            autocomplete="new-password"
-            placeholder="Nhập lại mật khẩu"
-            required
-            style="padding-right:52px;"
-          >
-
-          <button
-            type="button"
-            id="toggleConfirmPassword"
-            aria-label="Hiện mật khẩu"
-            style="
-              position:absolute;
-              right:12px;
-              top:50%;
-              transform:translateY(-50%);
-              border:0;
-              background:transparent;
-              cursor:pointer;
-              font-size:20px;
-              padding:4px;
-            "
-          >
-            👁️
-          </button>
-
-        </div>
-
-      </div>
-      <div class="field">
-
-        <label for="area">
-          TỈNH / THÀNH *
-        </label>
-
-        <select
-          id="area"
-          required
-        >
-
-          <option value="">
-            Chọn Tỉnh / Thành
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="field">
-
-        <label for="ward">
-          PHƯỜNG / XÃ *
-        </label>
-
-        <select
-          id="ward"
-          disabled
-          required
-        >
-
-          <option value="">
-            Chọn Tỉnh / Thành trước
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="field full">
-
-        <label for="packageSelect">
-          GÓI HỌC *
-        </label>
-
-        <select
-          id="packageSelect"
-          required
-        >
-
-          <option value="">
-            Chọn gói học
-          </option>
-
-        </select>
-
-        <div
-          id="packageInfo"
-          class="package-info"
-        ></div>
-
-      </div>
-
-      <div
-        id="requestedSessionsField"
-        class="field full goal-field"
-      >
-
-        <label for="requestedSessions">
-          SỐ BUỔI MUỐN HỌC *
-        </label>
-
-        <input
-          id="requestedSessions"
-          type="number"
-          min="1"
-          step="1"
-          placeholder="Ví dụ: 4"
-        >
-
-      </div>
-      <div
-        id="goalField"
-        class="field full goal-field"
-      >
-
-        <label for="learningGoal">
-          MỤC TIÊU HỌC *
-        </label>
-
-        <textarea
-          id="learningGoal"
-          placeholder="Ví dụ: cải thiện backhand, reset, chiến thuật đánh đôi..."
-        ></textarea>
-
-      </div>
-
-
-      <div class="field full">
-
-        <label for="referralCode">
-          MÃ NGƯỜI GIỚI THIỆU
-        </label>
-
-        <input
-          id="referralCode"
-          type="text"
-          placeholder="Không có thì để trống"
-        >
-
-      </div>
-
-
-    </div>
-
-
-    <button
-      class="button"
-      type="submit"
-    >
-      TIẾP TỤC →
-    </button>
-
-
-    <div
-      id="message"
-      class="message"
-    ></div>
-
-
-    <div class="note">
-  Thông tin đăng ký sẽ được gửi trực tiếp đến PickDee Academy.
-  Vui lòng sử dụng email chính xác để đăng nhập tài khoản học viên.
-</div>
-
-  </form>
-
-</main>
-
-
 <script>
-
 (async function () {
 
   const cfg =
     window.PICKDEE_CONFIG || {};
-
 
   const coachBox =
     document.getElementById(
@@ -767,6 +43,7 @@
     document.getElementById(
       "packageInfo"
     );
+
   const requestedSessionsField =
     document.getElementById(
       "requestedSessionsField"
@@ -776,6 +53,7 @@
     document.getElementById(
       "requestedSessions"
     );
+
   const goalField =
     document.getElementById(
       "goalField"
@@ -791,7 +69,12 @@
       "registerForm"
     );
 
-   const password =
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  const password =
     document.getElementById(
       "password"
     );
@@ -811,6 +94,26 @@
       "toggleConfirmPassword"
     );
 
+  const groupPreference =
+    document.getElementById(
+      "groupPreference"
+    );
+
+  const partnerFields =
+    document.getElementById(
+      "partnerFields"
+    );
+
+  const partnerPhone =
+    document.getElementById(
+      "partnerPhone"
+    );
+
+  const partnerEmail =
+    document.getElementById(
+      "partnerEmail"
+    );
+
 
   function setupPasswordToggle(
     input,
@@ -824,18 +127,15 @@
         const isHidden =
           input.type === "password";
 
-
         input.type =
           isHidden
             ? "text"
             : "password";
 
-
         button.textContent =
           isHidden
             ? "🙈"
             : "👁️";
-
 
         button.setAttribute(
           "aria-label",
@@ -860,6 +160,37 @@
     confirmPassword,
     toggleConfirmPassword
   );
+
+
+  function updateGroupFields() {
+
+    const hasPartner =
+      groupPreference.value
+      ===
+      "bring_partner";
+
+    partnerFields.style.display =
+      hasPartner
+        ? "grid"
+        : "none";
+
+    if (!hasPartner) {
+
+      partnerPhone.value = "";
+      partnerEmail.value = "";
+
+    }
+
+  }
+
+
+  groupPreference.addEventListener(
+    "change",
+    updateGroupFields
+  );
+
+
+  updateGroupFields();
 
 
   if (
@@ -889,18 +220,21 @@
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
 
-const authSb =
-  window.supabase.createClient(
-    cfg.SUPABASE_URL,
-    cfg.SUPABASE_PUBLISHABLE_KEY,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
+
+  const authSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
       }
-    }
-  );
+    );
+
+
   function escapeHtml(value) {
 
     return String(
@@ -1342,7 +676,7 @@ const authSb =
           "show"
         );
 
-               requestedSessionsField.classList.remove(
+        requestedSessionsField.classList.remove(
           "show"
         );
 
@@ -1440,6 +774,7 @@ const authSb =
         ===
         "TYC";
 
+
       requestedSessionsField.classList.toggle(
         "show",
         isCustom
@@ -1484,6 +819,7 @@ const authSb =
 
       }
 
+
       if (
         password.value
         !==
@@ -1501,6 +837,8 @@ const authSb =
         return;
 
       }
+
+
       const submitBtn =
         registerForm.querySelector(
           ".button"
@@ -1603,6 +941,116 @@ const authSb =
       }
 
 
+      const groupPreferenceValue =
+        String(
+          groupPreference.value
+          ||
+          "solo"
+        ).trim();
+
+
+      const partnerPhoneValue =
+        String(
+          partnerPhone.value
+          ||
+          ""
+        ).trim();
+
+
+      const partnerEmailValue =
+        String(
+          partnerEmail.value
+          ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+
+      const ownPhoneValue =
+        document
+          .getElementById(
+            "phone"
+          )
+          .value
+          .trim();
+
+
+      const ownEmailValue =
+        document
+          .getElementById(
+            "email"
+          )
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        groupPreferenceValue
+        ===
+        "bring_partner"
+        &&
+        !partnerPhoneValue
+        &&
+        !partnerEmailValue
+      ) {
+
+        message.textContent =
+          "Vui lòng nhập SĐT hoặc email của người bạn muốn học cùng.";
+
+        message.className =
+          "message error";
+
+        partnerPhone.focus();
+
+        return;
+
+      }
+
+
+      if (
+        partnerPhoneValue
+        &&
+        partnerPhoneValue
+        ===
+        ownPhoneValue
+      ) {
+
+        message.textContent =
+          "SĐT bạn học không được trùng với SĐT của bạn.";
+
+        message.className =
+          "message error";
+
+        partnerPhone.focus();
+
+        return;
+
+      }
+
+
+      if (
+        partnerEmailValue
+        &&
+        partnerEmailValue
+        ===
+        ownEmailValue
+      ) {
+
+        message.textContent =
+          "Email bạn học không được trùng với email của bạn.";
+
+        message.className =
+          "message error";
+
+        partnerEmail.focus();
+
+        return;
+
+      }
+
+
       submitBtn.disabled =
         true;
 
@@ -1617,16 +1065,10 @@ const authSb =
         "message";
 
 
-         try {
+      try {
 
         const emailValue =
-          document
-            .getElementById(
-              "email"
-            )
-            .value
-            .trim()
-            .toLowerCase();
+          ownEmailValue;
 
 
         /*
@@ -1699,12 +1141,6 @@ const authSb =
         }
 
 
-        /*
-        Một số cấu hình Supabase không báo lỗi trực tiếp
-        khi email đã tồn tại mà trả user không có identity.
-        Không cho tiếp tục trong trường hợp đó.
-        */
-
         if (
           Array.isArray(
             authData?.user?.identities
@@ -1739,12 +1175,7 @@ const authSb =
               .trim(),
 
           phone:
-            document
-              .getElementById(
-                "phone"
-              )
-              .value
-              .trim(),
+            ownPhoneValue,
 
           email:
             emailValue,
@@ -1786,10 +1217,40 @@ const authSb =
               :
                 null,
 
+          group_preference:
+            groupPreferenceValue,
+
+          partner_email:
+            groupPreferenceValue
+            ===
+            "bring_partner"
+              ?
+                (
+                  partnerEmailValue
+                  ||
+                  null
+                )
+              :
+                null,
+
+          partner_phone:
+            groupPreferenceValue
+            ===
+            "bring_partner"
+              ?
+                (
+                  partnerPhoneValue
+                  ||
+                  null
+                )
+              :
+                null,
+
           source:
             "Web PickDee"
 
         };
+
 
         const {
           data,
@@ -1942,11 +1403,6 @@ const authSb =
 
     }
   );
+
 })();
-
 </script>
-
-
-</body>
-
-</html>
