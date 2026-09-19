@@ -1727,7 +1727,91 @@ const authSb =
 
       submitBtn.disabled =
         true;
+const groupPreferenceValue =
+  String(
+    groupPreference.value || "solo"
+  ).trim();
 
+const partnerPhoneValue =
+  String(
+    partnerPhone.value || ""
+  ).trim();
+
+const partnerEmailValue =
+  String(
+    partnerEmail.value || ""
+  )
+    .trim()
+    .toLowerCase();
+
+const ownPhoneValue =
+  document
+    .getElementById("phone")
+    .value
+    .trim();
+
+const ownEmailValue =
+  document
+    .getElementById("email")
+    .value
+    .trim()
+    .toLowerCase();
+
+
+if (
+  groupPreferenceValue === "bring_partner"
+  &&
+  !partnerPhoneValue
+  &&
+  !partnerEmailValue
+) {
+
+  message.textContent =
+    "Vui lòng nhập SĐT hoặc email của người bạn muốn học cùng.";
+
+  message.className =
+    "message error";
+
+  partnerPhone.focus();
+
+  return;
+}
+
+
+if (
+  partnerPhoneValue
+  &&
+  partnerPhoneValue === ownPhoneValue
+) {
+
+  message.textContent =
+    "SĐT bạn học không được trùng với SĐT của bạn.";
+
+  message.className =
+    "message error";
+
+  partnerPhone.focus();
+
+  return;
+}
+
+
+if (
+  partnerEmailValue
+  &&
+  partnerEmailValue === ownEmailValue
+) {
+
+  message.textContent =
+    "Email bạn học không được trùng với email của bạn.";
+
+  message.className =
+    "message error";
+
+  partnerEmail.focus();
+
+  return;
+}
       submitBtn.textContent =
         "ĐANG GỬI ĐĂNG KÝ...";
 
