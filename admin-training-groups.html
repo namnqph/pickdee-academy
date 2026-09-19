@@ -1,0 +1,1318 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+  <meta
+    name="theme-color"
+    content="#09111f"
+  >
+
+  <title>Nhóm học | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(185,255,24,.08),
+          transparent 30%
+        ),
+        #09111f;
+      color: #fff;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 18px 22px;
+      border-bottom: 1px solid #26364b;
+    }
+
+    .brand {
+      font-weight: 900;
+    }
+
+    .back {
+      color: #b9ff18;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    main {
+      width: min(
+        1000px,
+        calc(100% - 30px)
+      );
+      margin: auto;
+      padding: 38px 0 70px;
+    }
+
+    .eyebrow {
+      color: #b9ff18;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 7px;
+      font-size: clamp(
+        34px,
+        6vw,
+        48px
+      );
+    }
+
+    .sub {
+      margin: 0 0 25px;
+      color: #aab6c5;
+      line-height: 1.5;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 17px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .btn-primary {
+      background: #b9ff18;
+      color: #08111d;
+    }
+
+    .btn-secondary {
+      background: #19283b;
+      color: #fff;
+      border: 1px solid #394b62;
+    }
+
+    #message {
+      min-height: 24px;
+      margin-bottom: 18px;
+      color: #aab6c5;
+      font-weight: 800;
+    }
+
+    .group-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .group-card {
+      border: 1px solid #26364b;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #0d1828;
+    }
+
+    .group-main {
+      padding: 20px;
+    }
+
+    .group-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .group-code {
+      color: #b9ff18;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .5px;
+    }
+
+    .group-name {
+      margin-top: 5px;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(
+        185,
+        255,
+        24,
+        .1
+      );
+      border: 1px solid rgba(
+        185,
+        255,
+        24,
+        .28
+      );
+      color: #dfff87;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 10px 20px;
+      margin-top: 18px;
+    }
+
+    .info-item {
+      min-width: 0;
+      line-height: 1.5;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 2px;
+      color: #8999aa;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .value {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .members-summary {
+      margin-top: 17px;
+      padding: 13px;
+      border-radius: 10px;
+      background: #08111d;
+      border: 1px solid #26364b;
+      line-height: 1.65;
+    }
+
+    .members-title {
+      margin-bottom: 4px;
+      color: #aab6c5;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .member-name {
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    .detail-btn {
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid #394b62;
+      border-radius: 9px;
+      background: #19283b;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .detail-btn:hover {
+      border-color: #b9ff18;
+    }
+
+    .details {
+      display: none;
+      padding: 18px 20px;
+      border-top: 1px solid #26364b;
+      background: #08111d;
+    }
+
+    .details.show {
+      display: block;
+    }
+
+    .detail-title {
+      margin-bottom: 12px;
+      color: #b9ff18;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .member-detail {
+      padding: 13px 0;
+      border-bottom: 1px solid #1c2a3b;
+      line-height: 1.65;
+    }
+
+    .member-detail:last-child {
+      border-bottom: 0;
+    }
+
+    .muted {
+      color: #8999aa;
+    }
+
+    .empty {
+      padding: 28px;
+      border: 1px dashed #394b62;
+      border-radius: 14px;
+      color: #aab6c5;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 650px) {
+      header {
+        padding: 15px;
+      }
+
+      main {
+        width: calc(100% - 24px);
+        padding-top: 26px;
+      }
+
+      .group-head {
+        display: block;
+      }
+
+      .status {
+        display: inline-block;
+        margin-top: 12px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        display: block;
+      }
+
+      .top-actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="brand">
+    PickDee Academy
+  </div>
+
+  <a
+    class="back"
+    href="/admin"
+  >
+    ← Admin
+  </a>
+
+</header>
+
+
+<main>
+
+  <div class="eyebrow">
+    QUẢN TRỊ • NHÓM HỌC
+  </div>
+
+  <h1>Nhóm học</h1>
+
+  <p class="sub">
+    Quản lý các nhóm học 2 người đã được tạo trên PickDee Academy.
+  </p>
+
+
+  <div class="top-actions">
+
+    <a
+      class="btn btn-primary"
+      href="/admin-create-training-group"
+    >
+      + TẠO NHÓM HỌC
+    </a>
+
+    <button
+      id="refreshBtn"
+      class="btn btn-secondary"
+      type="button"
+    >
+      ↻ TẢI LẠI
+    </button>
+
+  </div>
+
+
+  <div id="message">
+    Đang tải nhóm học...
+  </div>
+
+
+  <div
+    id="groupList"
+    class="group-list"
+  ></div>
+
+</main>
+
+
+<script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    alert(
+      "Thiếu cấu hình Supabase."
+    );
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  const groupList =
+    document.getElementById(
+      "groupList"
+    );
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  async function checkAdmin() {
+
+    const {
+      data: { session },
+      error: sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError ||
+      !session
+    ) {
+
+      window.location.replace(
+        "/"
+      );
+
+      return false;
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          session.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      profileError ||
+      !profile ||
+      String(
+        profile.role || ""
+      ).toLowerCase()
+        !== "admin"
+    ) {
+
+      window.location.replace(
+        "/"
+      );
+
+      return false;
+    }
+
+
+    return true;
+  }
+
+
+  async function loadGroups() {
+
+    message.style.color =
+      "#aab6c5";
+
+    message.textContent =
+      "Đang tải nhóm học...";
+
+    groupList.innerHTML =
+      "";
+
+
+    const {
+      data: groups,
+      error: groupsError
+    } =
+      await sb
+        .from("training_groups")
+        .select(`
+          id,
+          group_code,
+          group_name,
+          package_id,
+          coach_id,
+          max_students,
+          status,
+          note,
+          created_at
+        `)
+        .order(
+          "id",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (groupsError) {
+
+      console.error(
+        groupsError
+      );
+
+      message.style.color =
+        "#ffb4b4";
+
+      message.textContent =
+        "Không tải được nhóm học: "
+        +
+        groupsError.message;
+
+      return;
+    }
+
+
+    const list =
+      groups || [];
+
+
+    if (!list.length) {
+
+      message.textContent =
+        "";
+
+      groupList.innerHTML = `
+        <div class="empty">
+          Chưa có nhóm học nào.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    const groupIds =
+      list.map(
+        item => Number(item.id)
+      );
+
+
+    const packageIds = [
+      ...new Set(
+        list
+          .map(
+            item =>
+              Number(
+                item.package_id
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+    const coachIds = [
+      ...new Set(
+        list
+          .map(
+            item =>
+              Number(
+                item.coach_id
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+    const [
+      packagesResult,
+      coachesResult,
+      membersResult
+    ] =
+      await Promise.all([
+
+        packageIds.length
+          ?
+          sb
+            .from("packages")
+            .select(`
+              id,
+              package_code,
+              package_name
+            `)
+            .in(
+              "id",
+              packageIds
+            )
+          :
+          Promise.resolve({
+            data: [],
+            error: null
+          }),
+
+        coachIds.length
+          ?
+          sb
+            .from("coaches")
+            .select(`
+              id,
+              coach_code,
+              full_name
+            `)
+            .in(
+              "id",
+              coachIds
+            )
+          :
+          Promise.resolve({
+            data: [],
+            error: null
+          }),
+
+        sb
+          .from(
+            "training_group_members"
+          )
+          .select(`
+            id,
+            group_id,
+            registration_id
+          `)
+          .in(
+            "group_id",
+            groupIds
+          )
+
+      ]);
+
+
+    if (
+      packagesResult.error ||
+      coachesResult.error ||
+      membersResult.error
+    ) {
+
+      console.error({
+        packagesError:
+          packagesResult.error,
+
+        coachesError:
+          coachesResult.error,
+
+        membersError:
+          membersResult.error
+      });
+
+      message.style.color =
+        "#ffb4b4";
+
+      message.textContent =
+        "Không tải đủ dữ liệu nhóm học.";
+
+      return;
+    }
+
+
+    const packages =
+      packagesResult.data || [];
+
+    const coaches =
+      coachesResult.data || [];
+
+    const members =
+      membersResult.data || [];
+
+
+    const registrationIds = [
+      ...new Set(
+        members
+          .map(
+            item =>
+              Number(
+                item.registration_id
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+    let registrations = [];
+
+
+    if (
+      registrationIds.length
+    ) {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from("registrations")
+          .select(`
+            id,
+            registration_code,
+            student_id,
+            package_name,
+            status
+          `)
+          .in(
+            "id",
+            registrationIds
+          );
+
+
+      if (error) {
+
+        console.error(error);
+
+        message.style.color =
+          "#ffb4b4";
+
+        message.textContent =
+          "Không tải được thành viên nhóm.";
+
+        return;
+      }
+
+
+      registrations =
+        data || [];
+    }
+
+
+    const studentIds = [
+      ...new Set(
+        registrations
+          .map(
+            item =>
+              Number(
+                item.student_id
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+    let students = [];
+
+
+    if (
+      studentIds.length
+    ) {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from("students")
+          .select(`
+            id,
+            student_code,
+            full_name,
+            phone,
+            email
+          `)
+          .in(
+            "id",
+            studentIds
+          );
+
+
+      if (error) {
+
+        console.error(error);
+
+        message.style.color =
+          "#ffb4b4";
+
+        message.textContent =
+          "Không tải được thông tin học viên.";
+
+        return;
+      }
+
+
+      students =
+        data || [];
+    }
+
+
+    const packageMap =
+      new Map(
+        packages.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const coachMap =
+      new Map(
+        coaches.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const registrationMap =
+      new Map(
+        registrations.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const studentMap =
+      new Map(
+        students.map(
+          item => [
+            Number(item.id),
+            item
+          ]
+        )
+      );
+
+
+    const membersByGroup =
+      new Map();
+
+
+    members.forEach(
+      member => {
+
+        const groupId =
+          Number(
+            member.group_id
+          );
+
+        if (
+          !membersByGroup.has(
+            groupId
+          )
+        ) {
+
+          membersByGroup.set(
+            groupId,
+            []
+          );
+        }
+
+
+        membersByGroup
+          .get(groupId)
+          .push(member);
+
+      }
+    );
+
+
+    groupList.innerHTML =
+      list
+        .map(
+          group => {
+
+            const packageRow =
+              packageMap.get(
+                Number(
+                  group.package_id
+                )
+              );
+
+            const coach =
+              coachMap.get(
+                Number(
+                  group.coach_id
+                )
+              );
+
+            const groupMembers =
+              membersByGroup.get(
+                Number(group.id)
+              ) || [];
+
+
+            const resolvedMembers =
+              groupMembers.map(
+                member => {
+
+                  const registration =
+                    registrationMap.get(
+                      Number(
+                        member.registration_id
+                      )
+                    );
+
+                  const student =
+                    registration
+                      ?
+                      studentMap.get(
+                        Number(
+                          registration.student_id
+                        )
+                      )
+                      :
+                      null;
+
+                  return {
+                    member,
+                    registration,
+                    student
+                  };
+
+                }
+              );
+
+
+            const memberNames =
+              resolvedMembers.length
+                ?
+                resolvedMembers
+                  .map(
+                    item =>
+                      item.student
+                        ?.full_name
+                        ||
+                        "Không rõ học viên"
+                  )
+                  .join(" + ")
+                :
+                "Chưa có thành viên";
+
+
+            const memberDetails =
+              resolvedMembers.length
+                ?
+                resolvedMembers
+                  .map(
+                    item => {
+
+                      return `
+                        <div class="member-detail">
+
+                          <strong>
+                            ${escapeHtml(
+                              item.student
+                                ?.full_name
+                                ||
+                                "Không rõ học viên"
+                            )}
+                          </strong>
+
+                          <br>
+
+                          <span class="muted">
+                            Mã HV:
+                          </span>
+
+                          ${escapeHtml(
+                            item.student
+                              ?.student_code
+                              ||
+                              "—"
+                          )}
+
+                          <br>
+
+                          <span class="muted">
+                            Đăng ký:
+                          </span>
+
+                          ${escapeHtml(
+                            item.registration
+                              ?.registration_code
+                              ||
+                              "—"
+                          )}
+
+                          <br>
+
+                          <span class="muted">
+                            SĐT:
+                          </span>
+
+                          ${escapeHtml(
+                            item.student
+                              ?.phone
+                              ||
+                              "—"
+                          )}
+
+                          <br>
+
+                          <span class="muted">
+                            Email:
+                          </span>
+
+                          ${escapeHtml(
+                            item.student
+                              ?.email
+                              ||
+                              "—"
+                          )}
+
+                        </div>
+                      `;
+
+                    }
+                  )
+                  .join("")
+                :
+                `
+                  <div class="muted">
+                    Nhóm chưa có thành viên.
+                  </div>
+                `;
+
+
+            return `
+              <section class="group-card">
+
+                <div class="group-main">
+
+                  <div class="group-head">
+
+                    <div>
+
+                      <div class="group-code">
+                        ${escapeHtml(
+                          group.group_code
+                          ||
+                          `GROUP-${group.id}`
+                        )}
+                      </div>
+
+                      <div class="group-name">
+                        ${escapeHtml(
+                          group.group_name
+                          ||
+                          "Nhóm học"
+                        )}
+                      </div>
+
+                    </div>
+
+                    <div class="status">
+                      ${escapeHtml(
+                        group.status
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="info-grid">
+
+                    <div class="info-item">
+
+                      <span class="label">
+                        Gói học
+                      </span>
+
+                      <span class="value">
+                        ${escapeHtml(
+                          packageRow
+                            ?.package_name
+                            ||
+                            "—"
+                        )}
+                      </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                      <span class="label">
+                        Coach
+                      </span>
+
+                      <span class="value">
+                        ${escapeHtml(
+                          coach
+                            ?.full_name
+                            ||
+                            "—"
+                        )}
+                      </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                      <span class="label">
+                        Số thành viên
+                      </span>
+
+                      <span class="value">
+                        ${resolvedMembers.length}
+                        /
+                        ${escapeHtml(
+                          group.max_students
+                          ||
+                          2
+                        )}
+                      </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                      <span class="label">
+                        Mã Coach
+                      </span>
+
+                      <span class="value">
+                        ${escapeHtml(
+                          coach
+                            ?.coach_code
+                            ||
+                            "—"
+                        )}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="members-summary">
+
+                    <div class="members-title">
+                      HỌC VIÊN
+                    </div>
+
+                    <div class="member-name">
+                      ${escapeHtml(
+                        memberNames
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="card-actions">
+
+                    <button
+                      class="detail-btn"
+                      type="button"
+                      data-group-id="${Number(
+                        group.id
+                      )}"
+                    >
+                      XEM CHI TIẾT
+                    </button>
+
+                  </div>
+
+                </div>
+
+
+                <div
+                  id="details-${Number(
+                    group.id
+                  )}"
+                  class="details"
+                >
+
+                  <div class="detail-title">
+                    THÀNH VIÊN NHÓM
+                  </div>
+
+                  ${memberDetails}
+
+                </div>
+
+              </section>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    document
+      .querySelectorAll(
+        ".detail-btn"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              const groupId =
+                this.dataset.groupId;
+
+              const details =
+                document.getElementById(
+                  `details-${groupId}`
+                );
+
+              if (!details) {
+                return;
+              }
+
+              const isOpen =
+                details.classList
+                  .toggle("show");
+
+              this.textContent =
+                isOpen
+                  ?
+                  "THU GỌN"
+                  :
+                  "XEM CHI TIẾT";
+
+            }
+          );
+
+        }
+      );
+
+
+    message.style.color =
+      "#b9ff18";
+
+    message.textContent =
+      `Đã tải ${list.length} nhóm học.`;
+
+  }
+
+
+  refreshBtn.addEventListener(
+    "click",
+    loadGroups
+  );
+
+
+  const isAdmin =
+    await checkAdmin();
+
+
+  if (!isAdmin) {
+    return;
+  }
+
+
+  await loadGroups();
+
+})();
+</script>
+
+</body>
+
+</html>
