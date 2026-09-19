@@ -258,7 +258,52 @@
       font-size: 12px;
       line-height: 1.5;
     }
+.member-list {
+  display: grid;
+  gap: 10px;
+}
 
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 13px 14px;
+
+  border-radius: 10px;
+
+  background:
+    rgba(255,255,255,.045);
+
+  border:
+    1px solid rgba(255,255,255,.07);
+}
+
+.member-info {
+  min-width: 0;
+}
+
+.member-name {
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.member-meta {
+  margin-top: 4px;
+
+  color:
+    rgba(255,255,255,.48);
+
+  font-size: 11px;
+}
+
+.status.pending {
+  background:
+    rgba(255,196,107,.12);
+
+  color: #ffc46b;
+}
     @media(max-width:760px) {
       .grid {
         grid-template-columns: 1fr;
@@ -332,13 +377,23 @@
 
       <div class="card-body">
 
-        <div class="info-row">
-          <span class="label">Học viên</span>
-          <span
-            id="studentName"
-            class="value accent"
-          >—</span>
-        </div>
+       <div class="info-row">
+
+  <span
+    id="subjectLabel"
+    class="label"
+  >
+    Học viên
+  </span>
+
+  <span
+    id="studentName"
+    class="value accent"
+  >
+    —
+  </span>
+
+</div>
 
         <div class="info-row">
           <span class="label">Mã buổi</span>
@@ -413,7 +468,26 @@
 
     </div>
 
+<div
+  id="groupMembersCard"
+  class="card full"
+  style="display:none;"
+>
 
+  <div class="card-head">
+    👥 Thành viên nhóm
+  </div>
+
+  <div class="card-body">
+
+    <div
+      id="groupMembers"
+      class="member-list"
+    ></div>
+
+  </div>
+
+</div>
     <div class="card full">
 
       <div class="card-head">
@@ -523,7 +597,18 @@
         5
       );
   }
+function escapeHtml(value) {
 
+  return String(
+    value ?? ""
+  )
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
 
   const params =
     new URLSearchParams(
@@ -729,90 +814,87 @@
   }
 
 
-  /* ==============================
-     REGISTRATION
-     PHẢI THUỘC COACH HIỆN TẠI
-  ============================== */
+/* ==============================
+   PARTICIPANTS
+   CÁ NHÂN + NHÓM
+============================== */
 
-  const {
-    data: registration,
-    error: registrationError
-  } =
-    await sb
-      .from(
-        "registrations"
-      )
-      .select(`
-        id,
-        student_id,
-        coach_id
-      `)
-      .eq(
-        "id",
-        session.registration_id
-      )
-      .eq(
-        "coach_id",
-        coach.id
-      )
-      .maybeSingle();
+const {
+  data: participantData,
+  error: participantError
+} =
+  await sb.rpc(
+    "coach_get_session_participants",
+    {
+      p_session_id:
+        sessionId
+    }
+  );
 
 
-  if (
-    registrationError
+if (
+  participantError
+  ||
+  !participantData
+) {
+
+  console.error(
+    "PARTICIPANTS ERROR:",
+    participantError
+  );
+
+  message.textContent =
+    participantError?.message
     ||
-    !registration
-  ) {
+    "Không tải được thành viên của buổi học.";
 
-    message.textContent =
-      "Bạn không có quyền xem lịch sử của học viên này.";
+  message.classList.add(
+    "error"
+  );
 
-    message.classList.add(
-      "error"
-    );
-
-    return;
-  }
+  return;
+}
 
 
-  /* ==============================
-     STUDENT
-  ============================== */
+const isGroup =
+  Boolean(
+    participantData.is_group
+  );
 
-  const {
-    data: student,
-    error: studentError
-  } =
-    await sb
-      .from(
-        "students"
+
+const members =
+  Array.isArray(
+    participantData.members
+  )
+    ?
+    participantData.members
+    :
+    [];
+
+
+const firstMember =
+  members[0]
+  ||
+  {};
+
+
+const subjectName =
+
+  isGroup
+    ?
+      (
+        participantData.group_name
+        ||
+        participantData.group_code
+        ||
+        "Nhóm học"
       )
-      .select(`
-        id,
-        full_name
-      `)
-      .eq(
-        "id",
-        registration.student_id
-      )
-      .maybeSingle();
-
-
-  if (
-    studentError
-    ||
-    !student
-  ) {
-
-    message.textContent =
-      "Không tải được học viên.";
-
-    message.classList.add(
-      "error"
-    );
-
-    return;
-  }
+    :
+      (
+        firstMember.student_name
+        ||
+        "Học viên"
+      );
 
 
   /* ==============================
@@ -828,15 +910,26 @@
       ||
       `Buổi ${session.session_no || ""}`;
 
+document
+  .getElementById(
+    "studentName"
+  )
+  .textContent =
+    subjectName
+    ||
+    "—";
 
-  document
-    .getElementById(
-      "studentName"
-    )
-    .textContent =
-      student.full_name
-      ||
-      "—";
+
+document
+  .getElementById(
+    "subjectLabel"
+  )
+  .textContent =
+    isGroup
+      ?
+      "Nhóm học"
+      :
+      "Học viên";
 
 
   document
@@ -924,7 +1017,98 @@
     );
   }
 
+const groupMembersCard =
+  document.getElementById(
+    "groupMembersCard"
+  );
 
+
+const groupMembersEl =
+  document.getElementById(
+    "groupMembers"
+  );
+
+
+if (isGroup) {
+
+  groupMembersCard.style.display =
+    "block";
+
+
+  groupMembersEl.innerHTML =
+
+    members
+      .map(
+        member => {
+
+          const attendance =
+            member.attendance_status
+            ||
+            "Chưa điểm danh";
+
+
+          const attendanceClass =
+
+            attendance === "Vắng"
+              ?
+              "absent"
+              :
+              attendance === "Có mặt"
+                ?
+                ""
+                :
+                "pending";
+
+
+          const meta =
+
+            [
+              member.student_code,
+              member.registration_code
+            ]
+              .filter(Boolean)
+              .join(" · ");
+
+
+          return `
+
+            <div class="member-row">
+
+              <div class="member-info">
+
+                <div class="member-name">
+                  ${escapeHtml(
+                    member.student_name
+                    ||
+                    "Học viên"
+                  )}
+                </div>
+
+                <div class="member-meta">
+                  ${escapeHtml(meta)}
+                </div>
+
+              </div>
+
+              <span class="status ${attendanceClass}">
+                ${escapeHtml(attendance)}
+              </span>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+else {
+
+  groupMembersCard.style.display =
+    "none";
+
+}
   document
     .getElementById(
       "note"
@@ -933,12 +1117,34 @@
       "Không có ghi chú.";
 
 
-  document
-    .getElementById(
-      "backLink"
-    )
-    .href =
-      `./coach-student-detail?registration_id=${registration.id}`;
+ const backLink =
+  document.getElementById(
+    "backLink"
+  );
+
+
+if (isGroup) {
+
+  backLink.href =
+    "./coach-sessions";
+
+  backLink.textContent =
+    "← Lịch dạy";
+
+}
+else {
+
+  backLink.href =
+    `./coach-student-detail?registration_id=${
+      firstMember.registration_id
+      ||
+      session.registration_id
+    }`;
+
+  backLink.textContent =
+    "← Hồ sơ học viên";
+
+}
 
 
   message.textContent =
