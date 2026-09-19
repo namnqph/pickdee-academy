@@ -598,7 +598,56 @@
             thành viên, Coach
             và trạng thái nhóm.
           </p>
+          <div class="card-stats">
 
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                👥 Tổng nhóm
+              </span>
+
+              <span
+                id="trainingGroupTotal"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🟢 Đang học
+              </span>
+
+              <span
+                id="trainingGroupActive"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+
+            <div class="card-stat">
+
+              <span class="card-stat-label">
+                🤝 Đủ 2/2 thành viên
+              </span>
+
+              <span
+                id="trainingGroupFull"
+                class="card-stat-value value-green"
+              >
+                ...
+              </span>
+
+            </div>
+
+          </div>
         </div>
 
       </a>
@@ -9178,6 +9227,197 @@ document.addEventListener(
   }
 );
 
+</script>
+  <script>
+(async function () {
+
+  const totalEl =
+    document.getElementById(
+      "trainingGroupTotal"
+    );
+
+  const activeEl =
+    document.getElementById(
+      "trainingGroupActive"
+    );
+
+  const fullEl =
+    document.getElementById(
+      "trainingGroupFull"
+    );
+
+
+  if (
+    !totalEl ||
+    !activeEl ||
+    !fullEl
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    totalEl.textContent = "—";
+    activeEl.textContent = "—";
+    fullEl.textContent = "—";
+
+    return;
+  }
+
+
+  const groupSb =
+    window.PICKDEE_SUPABASE ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  async function loadTrainingGroupSummary() {
+
+    try {
+
+      const [
+        groupsResult,
+        membersResult
+      ] =
+        await Promise.all([
+
+          groupSb
+            .from("training_groups")
+            .select(
+              "id,status,max_students"
+            ),
+
+          groupSb
+            .from(
+              "training_group_members"
+            )
+            .select(
+              "group_id"
+            )
+
+        ]);
+
+
+      if (groupsResult.error) {
+        throw groupsResult.error;
+      }
+
+
+      if (membersResult.error) {
+        throw membersResult.error;
+      }
+
+
+      const groups =
+        groupsResult.data || [];
+
+      const members =
+        membersResult.data || [];
+
+
+      const memberCountMap =
+        new Map();
+
+
+      members.forEach(
+        item => {
+
+          const groupId =
+            Number(item.group_id);
+
+          memberCountMap.set(
+            groupId,
+            (
+              memberCountMap.get(
+                groupId
+              ) || 0
+            ) + 1
+          );
+
+        }
+      );
+
+
+      const activeCount =
+        groups.filter(
+          item =>
+            String(
+              item.status || ""
+            ).trim()
+            ===
+            "Đang học"
+        ).length;
+
+
+      const fullCount =
+        groups.filter(
+          item => {
+
+            const memberCount =
+              memberCountMap.get(
+                Number(item.id)
+              ) || 0;
+
+            const maxStudents =
+              Number(
+                item.max_students || 2
+              );
+
+            return (
+              memberCount >=
+              maxStudents
+            );
+
+          }
+        ).length;
+
+
+      totalEl.textContent =
+        groups.length;
+
+      activeEl.textContent =
+        activeCount;
+
+      fullEl.textContent =
+        fullCount;
+
+    }
+    catch (error) {
+
+      console.error(
+        "TRAINING GROUP SUMMARY:",
+        error
+      );
+
+      totalEl.textContent = "—";
+      activeEl.textContent = "—";
+      fullEl.textContent = "—";
+
+    }
+
+  }
+
+
+  await loadTrainingGroupSummary();
+
+
+  setInterval(
+    loadTrainingGroupSummary,
+    60000
+  );
+
+})();
 </script>
 </body>
 
