@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#09111f">
+
+  <title>Tạo nhóm học | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(185,255,24,.08),
+          transparent 30%
+        ),
+        #09111f;
+      color: #fff;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 18px 22px;
+      border-bottom: 1px solid #26364b;
+    }
+
+    .brand {
+      font-weight: 900;
+    }
+
+    .back {
+      color: #b9ff18;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    main {
+      width: min(900px, calc(100% - 30px));
+      margin: auto;
+      padding: 38px 0 70px;
+    }
+
+    .eyebrow {
+      color: #b9ff18;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      margin: 8px 0 7px;
+      font-size: clamp(34px, 6vw, 48px);
+    }
+
+    .sub {
+      margin: 0 0 28px;
+      color: #aab6c5;
+      line-height: 1.5;
+    }
+
+    .card {
+      padding: 22px;
+      margin-bottom: 18px;
+      border: 1px solid #26364b;
+      border-radius: 16px;
+      background: #0d1828;
+    }
+
+    .card-title {
+      margin-bottom: 17px;
+      color: #b9ff18;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #dce5ef;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    select,
+    input {
+      width: 100%;
+      height: 50px;
+      padding: 0 14px;
+      border: 1px solid #394b62;
+      border-radius: 10px;
+      background: #08111d;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #b9ff18;
+    }
+
+    .member-box {
+      display: none;
+      margin-top: 11px;
+      padding: 14px;
+      border: 1px solid #26364b;
+      border-radius: 10px;
+      background: #08111d;
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .member-name {
+      color: #b9ff18;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .muted {
+      color: #9aa9ba;
+    }
+
+    .check-box {
+      display: none;
+      margin-bottom: 18px;
+      padding: 15px;
+      border-radius: 11px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .check-box.ok {
+      display: block;
+      border: 1px solid rgba(185,255,24,.35);
+      background: rgba(185,255,24,.08);
+      color: #dfff87;
+    }
+
+    .check-box.error {
+      display: block;
+      border: 1px solid rgba(255,100,100,.35);
+      background: rgba(255,100,100,.08);
+      color: #ffb4b4;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      height: 50px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    #createBtn {
+      flex: 1;
+      min-width: 220px;
+      background: #b9ff18;
+      color: #08111d;
+    }
+
+    #createBtn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .secondary {
+      background: #19283b;
+      color: #fff;
+      border: 1px solid #394b62;
+    }
+
+    #message {
+      min-height: 22px;
+      margin-top: 17px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .success-card {
+      display: none;
+      margin-top: 22px;
+      padding: 20px;
+      border: 1px solid rgba(185,255,24,.38);
+      border-radius: 14px;
+      background: rgba(185,255,24,.08);
+    }
+
+    .success-title {
+      margin-bottom: 12px;
+      color: #b9ff18;
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .result-line {
+      margin: 6px 0;
+      color: #dce5ef;
+    }
+
+    .note {
+      margin-top: 15px;
+      color: #8999aa;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 650px) {
+      header {
+        padding: 15px;
+      }
+
+      main {
+        width: calc(100% - 24px);
+        padding-top: 26px;
+      }
+
+      .card {
+        padding: 17px;
+      }
+
+      .actions {
+        display: block;
+      }
+
+      button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    PickDee Academy
+  </div>
+
+  <a class="back" href="/students">
+    ← Học viên
+  </a>
+</header>
+
+<main>
+
+  <div class="eyebrow">
+    QUẢN TRỊ • NHÓM HỌC
+  </div>
+
+  <h1>Tạo nhóm học</h1>
+
+  <p class="sub">
+    Chọn 2 đăng ký học để ghép thành một nhóm học chung.
+  </p>
+
+  <section class="card">
+
+    <div class="card-title">
+      👤 Học viên thứ nhất
+    </div>
+
+    <div class="field">
+
+      <label for="registration1">
+        Chọn đăng ký học
+      </label>
+
+      <select id="registration1">
+        <option value="">
+          Đang tải danh sách...
+        </option>
+      </select>
+
+      <div
+        id="member1"
+        class="member-box"
+      ></div>
+
+    </div>
+
+  </section>
+
+  <section class="card">
+
+    <div class="card-title">
+      👤 Học viên thứ hai
+    </div>
+
+    <div class="field">
+
+      <label for="registration2">
+        Chọn đăng ký học
+      </label>
+
+      <select id="registration2">
+        <option value="">
+          Đang tải danh sách...
+        </option>
+      </select>
+
+      <div
+        id="member2"
+        class="member-box"
+      ></div>
+
+    </div>
+
+  </section>
+
+  <section class="card">
+
+    <div class="card-title">
+      🏓 Thông tin nhóm
+    </div>
+
+    <div
+      id="compatibility"
+      class="check-box"
+    ></div>
+
+    <div class="field">
+
+      <label for="groupName">
+        Tên nhóm
+      </label>
+
+      <input
+        id="groupName"
+        type="text"
+        maxlength="100"
+        placeholder="Ví dụ: NHÓM CƠ BẢN BẮC GIANG 01"
+      >
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        id="createBtn"
+        type="button"
+        disabled
+      >
+        + TẠO NHÓM HỌC
+      </button>
+
+      <button
+        class="secondary"
+        type="button"
+        onclick="window.location.href='/students'"
+      >
+        HỦY
+      </button>
+
+    </div>
+
+    <div id="message"></div>
+
+    <div
+      id="successCard"
+      class="success-card"
+    >
+
+      <div class="success-title">
+        ✓ Đã tạo nhóm thành công
+      </div>
+
+      <div
+        id="successContent"
+      ></div>
+
+    </div>
+
+    <div class="note">
+      Hệ thống backend vẫn kiểm tra lại điều kiện nhóm trước khi tạo.
+      Hai đăng ký phải phù hợp về Coach, gói học và các điều kiện dữ liệu của PickDee.
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    alert("Thiếu cấu hình Supabase.");
+    return;
+  }
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+  const registration1 =
+    document.getElementById("registration1");
+
+  const registration2 =
+    document.getElementById("registration2");
+
+  const member1 =
+    document.getElementById("member1");
+
+  const member2 =
+    document.getElementById("member2");
+
+  const groupName =
+    document.getElementById("groupName");
+
+  const compatibility =
+    document.getElementById("compatibility");
+
+  const createBtn =
+    document.getElementById("createBtn");
+
+  const message =
+    document.getElementById("message");
+
+  const successCard =
+    document.getElementById("successCard");
+
+  const successContent =
+    document.getElementById("successContent");
+
+  let registrations = [];
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  function relation(value) {
+
+    if (Array.isArray(value)) {
+      return value[0] || null;
+    }
+
+    return value || null;
+
+  }
+
+
+  function findRegistration(id) {
+
+    return registrations.find(
+      item =>
+        Number(item.id) === Number(id)
+    ) || null;
+
+  }
+
+
+  function studentOf(item) {
+
+    return relation(
+      item?.students
+    );
+
+  }
+
+
+  function coachOf(item) {
+
+    return relation(
+      item?.coaches
+    );
+
+  }
+
+
+  function optionLabel(item) {
+
+    const student =
+      studentOf(item);
+
+    const coach =
+      coachOf(item);
+
+    return [
+      item.registration_code || `ĐK ${item.id}`,
+      student?.full_name || "Không rõ học viên",
+      item.package_name || "Không rõ gói",
+      coach?.full_name || "Chưa có Coach"
+    ].join(" • ");
+
+  }
+
+
+  function renderMember(
+    element,
+    registration
+  ) {
+
+    if (!registration) {
+
+      element.style.display =
+        "none";
+
+      element.innerHTML =
+        "";
+
+      return;
+    }
+
+    const student =
+      studentOf(registration);
+
+    const coach =
+      coachOf(registration);
+
+    element.innerHTML = `
+      <div class="member-name">
+        ${escapeHtml(
+          student?.full_name ||
+          "Không rõ học viên"
+        )}
+      </div>
+
+      <div>
+        <span class="muted">Mã HV:</span>
+        ${escapeHtml(
+          student?.student_code || "—"
+        )}
+      </div>
+
+      <div>
+        <span class="muted">Đăng ký:</span>
+        ${escapeHtml(
+          registration.registration_code || "—"
+        )}
+      </div>
+
+      <div>
+        <span class="muted">Gói:</span>
+        ${escapeHtml(
+          registration.package_name || "—"
+        )}
+      </div>
+
+      <div>
+        <span class="muted">Coach:</span>
+        ${escapeHtml(
+          coach?.full_name || "—"
+        )}
+      </div>
+
+      <div>
+        <span class="muted">Trạng thái:</span>
+        ${escapeHtml(
+          registration.status || "—"
+        )}
+      </div>
+    `;
+
+    element.style.display =
+      "block";
+
+  }
+
+
+  function normalizeText(value) {
+
+    return String(value || "")
+      .trim()
+      .toLowerCase();
+
+  }
+
+
+  function validateSelection() {
+
+    message.textContent =
+      "";
+
+    successCard.style.display =
+      "none";
+
+    const r1 =
+      findRegistration(
+        registration1.value
+      );
+
+    const r2 =
+      findRegistration(
+        registration2.value
+      );
+
+    renderMember(
+      member1,
+      r1
+    );
+
+    renderMember(
+      member2,
+      r2
+    );
+
+    compatibility.className =
+      "check-box";
+
+    compatibility.textContent =
+      "";
+
+    createBtn.disabled =
+      true;
+
+
+    if (!r1 || !r2) {
+      return;
+    }
+
+
+    if (
+      Number(r1.id) ===
+      Number(r2.id)
+    ) {
+
+      compatibility.className =
+        "check-box error";
+
+      compatibility.textContent =
+        "Hai vị trí đang chọn cùng một đăng ký học.";
+
+      return;
+    }
+
+
+    if (
+      Number(r1.student_id) ===
+      Number(r2.student_id)
+    ) {
+
+      compatibility.className =
+        "check-box error";
+
+      compatibility.textContent =
+        "Không thể ghép một học viên với chính họ.";
+
+      return;
+    }
+
+
+    if (
+      Number(r1.coach_id) !==
+      Number(r2.coach_id)
+    ) {
+
+      compatibility.className =
+        "check-box error";
+
+      compatibility.textContent =
+        "Hai học viên đang được phân cho Coach khác nhau.";
+
+      return;
+    }
+
+
+    if (
+      normalizeText(r1.package_name)
+      !==
+      normalizeText(r2.package_name)
+    ) {
+
+      compatibility.className =
+        "check-box error";
+
+      compatibility.textContent =
+        "Hai học viên đang sử dụng gói học khác nhau.";
+
+      return;
+    }
+
+
+    compatibility.className =
+      "check-box ok";
+
+    compatibility.textContent =
+      "✓ Hai đăng ký phù hợp bước kiểm tra ban đầu: cùng Coach và cùng gói học.";
+
+    createBtn.disabled =
+      false;
+
+  }
+
+
+  async function checkAdmin() {
+
+    const {
+      data: { session },
+      error: sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError ||
+      !session
+    ) {
+
+      window.location.replace("/");
+      return false;
+
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await sb
+        .from("profiles")
+        .select("role")
+        .eq(
+          "id",
+          session.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      profileError ||
+      !profile ||
+      String(profile.role).toLowerCase()
+      !==
+      "admin"
+    ) {
+
+      window.location.replace("/");
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  async function loadRegistrations() {
+
+    message.style.color =
+      "#aab6c5";
+
+    message.textContent =
+      "Đang tải đăng ký học...";
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("registrations")
+        .select(`
+          id,
+          registration_code,
+          student_id,
+          coach_id,
+          package_name,
+          purchased_sessions,
+          status,
+          students (
+            id,
+            student_code,
+            full_name,
+            email
+          ),
+          coaches (
+            id,
+            coach_code,
+            full_name
+          )
+        `)
+        .in(
+          "status",
+          [
+            "Đã duyệt",
+            "Đang học"
+          ]
+        )
+        .order(
+          "id",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(error);
+
+      message.style.color =
+        "#ffb4b4";
+
+      message.textContent =
+        "Không tải được đăng ký học: "
+        +
+        error.message;
+
+      return;
+
+    }
+
+
+    registrations =
+      data || [];
+
+
+    const options =
+      registrations
+        .map(
+          item => `
+            <option value="${Number(item.id)}">
+              ${escapeHtml(
+                optionLabel(item)
+              )}
+            </option>
+          `
+        )
+        .join("");
+
+
+    const firstOption = `
+      <option value="">
+        -- Chọn đăng ký học --
+      </option>
+    `;
+
+
+    registration1.innerHTML =
+      firstOption + options;
+
+    registration2.innerHTML =
+      firstOption + options;
+
+
+    message.style.color =
+      "#aab6c5";
+
+    message.textContent =
+      registrations.length
+        ?
+        `Đã tải ${registrations.length} đăng ký có thể chọn.`
+        :
+        "Không có đăng ký phù hợp để tạo nhóm.";
+
+  }
+
+
+  registration1.addEventListener(
+    "change",
+    validateSelection
+  );
+
+
+  registration2.addEventListener(
+    "change",
+    validateSelection
+  );
+
+
+  groupName.addEventListener(
+    "input",
+    function () {
+
+      if (
+        registration1.value &&
+        registration2.value
+      ) {
+        validateSelection();
+      }
+
+    }
+  );
+
+
+  createBtn.addEventListener(
+    "click",
+    async function () {
+
+      const r1 =
+        findRegistration(
+          registration1.value
+        );
+
+      const r2 =
+        findRegistration(
+          registration2.value
+        );
+
+      const name =
+        groupName.value.trim();
+
+
+      if (!r1 || !r2) {
+
+        message.style.color =
+          "#ffb4b4";
+
+        message.textContent =
+          "Hãy chọn đủ 2 học viên.";
+
+        return;
+
+      }
+
+
+      if (!name) {
+
+        message.style.color =
+          "#ffb4b4";
+
+        message.textContent =
+          "Hãy nhập tên nhóm.";
+
+        groupName.focus();
+
+        return;
+
+      }
+
+
+      createBtn.disabled =
+        true;
+
+      createBtn.textContent =
+        "ĐANG TẠO NHÓM...";
+
+      message.style.color =
+        "#aab6c5";
+
+      message.textContent =
+        "Đang kiểm tra và tạo nhóm học...";
+
+      successCard.style.display =
+        "none";
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "admin_create_training_group",
+            {
+              p_registration_id_1:
+                Number(r1.id),
+
+              p_registration_id_2:
+                Number(r2.id),
+
+              p_group_name:
+                name
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const result =
+          Array.isArray(data)
+            ?
+            data[0]
+            :
+            data;
+
+
+        message.style.color =
+          "#b9ff18";
+
+        message.textContent =
+          "✓ Tạo nhóm học thành công.";
+
+
+        successContent.innerHTML = `
+          <div class="result-line">
+            <strong>Tên nhóm:</strong>
+            ${escapeHtml(
+              result?.group_name || name
+            )}
+          </div>
+
+          <div class="result-line">
+            <strong>Mã nhóm:</strong>
+            ${escapeHtml(
+              result?.group_code || "—"
+            )}
+          </div>
+
+          <div class="result-line">
+            <strong>Số thành viên:</strong>
+            ${escapeHtml(
+              result?.members ?? 2
+            )}
+          </div>
+
+          <div class="result-line">
+            <strong>Trạng thái:</strong>
+            ${escapeHtml(
+              result?.status || "Đang học"
+            )}
+          </div>
+        `;
+
+
+        successCard.style.display =
+          "block";
+
+        createBtn.textContent =
+          "ĐÃ TẠO NHÓM";
+
+        createBtn.disabled =
+          true;
+
+        registration1.disabled =
+          true;
+
+        registration2.disabled =
+          true;
+
+        groupName.disabled =
+          true;
+
+      }
+      catch (error) {
+
+        console.error(error);
+
+        message.style.color =
+          "#ffb4b4";
+
+        message.textContent =
+          "Không tạo được nhóm: "
+          +
+          (
+            error.message ||
+            error
+          );
+
+        createBtn.disabled =
+          false;
+
+        createBtn.textContent =
+          "+ TẠO NHÓM HỌC";
+
+      }
+
+    }
+  );
+
+
+  const isAdmin =
+    await checkAdmin();
+
+
+  if (!isAdmin) {
+    return;
+  }
+
+
+  await loadRegistrations();
+
+})();
+</script>
+
+</body>
+</html>
