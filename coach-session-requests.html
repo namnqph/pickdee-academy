@@ -1074,48 +1074,13 @@
        REQUEST
     ================================================== */
 
-    const {
-      data: requestRows,
-      error: requestError
-    } =
-      await sb
-        .from("session_requests")
-        .select(`
-          id,
-          request_code,
-          registration_id,
-          student_id,
-          coach_id,
-          session_no,
-          requested_date,
-          requested_time,
-          duration_minutes,
-          requested_area,
-          requested_ward,
-          note,
-          status,
-          created_at
-        `)
-        .eq(
-          "coach_id",
-          currentCoachId
-        )
-        .eq(
-          "status",
-          "Chờ Coach"
-        )
-        .order(
-          "requested_date",
-          {
-            ascending:true
-          }
-        )
-        .order(
-          "requested_time",
-          {
-            ascending:true
-          }
-        );
+  const {
+  data: requestRows,
+  error: requestError
+} =
+  await sb.rpc(
+    "coach_get_session_requests"
+  );
 
 
     if (requestError) {
@@ -1433,24 +1398,78 @@
       request => {
 
 
-        const registration =
-          registrationMap.get(
-            Number(
-              request.registration_id
-            )
-          )
-          ||
-          {};
+       const isGroup =
+  Boolean(
+    request.is_group
+    ||
+    request.training_group_id
+  );
 
 
-        const student =
-          studentMap.get(
-            Number(
-              request.student_id
-            )
-          )
-          ||
-          {};
+const displayName =
+
+  isGroup
+    ?
+      (
+        request.group_name
+        ||
+        request.group_code
+        ||
+        request.display_name
+        ||
+        "Nhóm học"
+      )
+    :
+      (
+        request.student_name
+        ||
+        "Học viên"
+      );
+
+
+const memberCount =
+  Number(
+    request.member_count
+    ||
+    0
+  );
+
+
+const detailLine =
+
+  isGroup
+    ?
+      [
+        memberCount > 0
+          ?
+            `${memberCount} học viên`
+          :
+            "",
+
+        request.member_names
+        ||
+        "",
+
+        request.group_code
+        ||
+        ""
+
+      ]
+        .filter(Boolean)
+        .join(" · ")
+
+    :
+      [
+        request.student_code
+        ||
+        "",
+
+        request.registration_code
+        ||
+        ""
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
 
         /* =============================================
@@ -1599,36 +1618,22 @@
                 </div>
 
 
-                <div class="student-name">
+              <div class="student-name">
 
-                  ${escapeHtml(
-                    student.full_name
-                    ||
-                    "Học viên"
-                  )}
+  ${escapeHtml(
+    displayName
+  )}
 
-                </div>
+</div>
 
 
-                <div class="student-code">
+<div class="student-code">
 
-                  ${escapeHtml(
-                    student.student_code
-                    ||
-                    ""
-                  )}
+  ${escapeHtml(
+    detailLine
+  )}
 
-                  ${
-                    registration.registration_code
-                      ?
-                      ` · ${escapeHtml(
-                        registration.registration_code
-                      )}`
-                      :
-                      ""
-                  }
-
-                </div>
+</div>
 
 
               </div>
@@ -1655,15 +1660,15 @@
 
                 </div>
 
-                <div class="info-value">
+        <div class="info-value">
 
-                  ${escapeHtml(
-                    registration.package_name
-                    ||
-                    "—"
-                  )}
+  ${escapeHtml(
+    request.package_name
+    ||
+    "—"
+  )}
 
-                </div>
+</div>
 
               </div>
 
