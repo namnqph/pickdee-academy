@@ -798,6 +798,7 @@
           registration_code,
           student_id,
           coach_id,
+          package_id,
           package_name,
           purchased_sessions,
           status,
@@ -847,7 +848,49 @@
 
       const allRegistrations =
       data || [];
+    const {
+      data: groupPackages,
+      error: groupPackagesError
+    } =
+      await sb
+        .from("packages")
+        .select("id")
+        .eq(
+          "group_size",
+          2
+        );
 
+
+    if (groupPackagesError) {
+
+      console.error(
+        groupPackagesError
+      );
+
+      message.style.color =
+        "#ffb4b4";
+
+      message.textContent =
+        "Không tải được danh sách gói nhóm: "
+        +
+        groupPackagesError.message;
+
+      return;
+    }
+
+
+    const groupPackageIds =
+      new Set(
+        (groupPackages || [])
+          .map(
+            item =>
+              Number(item.id)
+          )
+          .filter(
+            id =>
+              Number.isFinite(id)
+          )
+      );
 
     const {
       data: existingMembers,
@@ -896,12 +939,27 @@
       );
 
 
-    registrations =
+        registrations =
       allRegistrations.filter(
-        item =>
-          !groupedRegistrationIds.has(
-            Number(item.id)
-          )
+        item => {
+
+          const notGrouped =
+            !groupedRegistrationIds.has(
+              Number(item.id)
+            );
+
+          const isGroupPackage =
+            groupPackageIds.has(
+              Number(item.package_id)
+            );
+
+          return (
+            notGrouped
+            &&
+            isGroupPackage
+          );
+
+        }
       );
 
 
