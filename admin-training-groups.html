@@ -1312,7 +1312,878 @@
 
 })();
 </script>
+<!-- =========================================================
+     PICKDEE - TẠO BUỔI HỌC CHO NHÓM
+========================================================= -->
 
+<script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase ||
+    !cfg.SUPABASE_URL ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const groupSessionSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement("style");
+
+  style.textContent = `
+    .create-group-session-btn {
+      min-height: 42px;
+      padding: 0 15px;
+      border: 0;
+      border-radius: 9px;
+      background: #b9ff18;
+      color: #08111d;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .create-group-session-btn:hover {
+      filter: brightness(.95);
+    }
+
+    .group-session-form {
+      display: none;
+      margin-top: 17px;
+      padding: 16px;
+      border: 1px solid #394b62;
+      border-radius: 12px;
+      background: #08111d;
+    }
+
+    .group-session-form.show {
+      display: block;
+    }
+
+    .group-session-title {
+      margin-bottom: 14px;
+      color: #b9ff18;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .group-session-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .group-session-field {
+      min-width: 0;
+    }
+
+    .group-session-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .group-session-field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #aab6c5;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .group-session-field input,
+    .group-session-field select,
+    .group-session-field textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #394b62;
+      border-radius: 9px;
+      outline: none;
+      background: #0d1828;
+      color: #fff;
+      font: inherit;
+    }
+
+    .group-session-field textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .group-session-form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .group-session-save,
+    .group-session-cancel {
+      min-height: 42px;
+      padding: 0 15px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .group-session-save {
+      border: 0;
+      background: #b9ff18;
+      color: #08111d;
+    }
+
+    .group-session-cancel {
+      border: 1px solid #394b62;
+      background: #19283b;
+      color: #fff;
+    }
+
+    .group-session-message {
+      min-height: 22px;
+      margin-top: 12px;
+      color: #aab6c5;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    @media(max-width:650px) {
+      .group-session-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .group-session-field.full {
+        grid-column: auto;
+      }
+
+      .card-actions {
+        flex-wrap: wrap;
+      }
+    }
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  function localToday() {
+
+    const now =
+      new Date();
+
+    return (
+      now.getFullYear()
+      +
+      "-"
+      +
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      )
+      +
+      "-"
+      +
+      String(
+        now.getDate()
+      ).padStart(
+        2,
+        "0"
+      )
+    );
+  }
+
+
+  /* =====================================================
+     LOAD COURTS
+  ====================================================== */
+
+  let courtOptions =
+    `<option value="">
+       — Không chọn sân —
+     </option>`;
+
+
+  async function loadCourts() {
+
+    const {
+      data,
+      error
+    } =
+      await groupSessionSb
+        .from("courts")
+        .select(`
+          id,
+          name,
+          status,
+          verified,
+          price_verified,
+          cost_type,
+          price_per_session
+        `)
+        .order(
+          "name",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "LOAD GROUP SESSION COURTS:",
+        error
+      );
+
+      return;
+    }
+
+
+    const usableCourts =
+      (data || [])
+        .filter(
+          court => {
+
+            if (
+              String(
+                court.status || ""
+              ).trim()
+              !==
+              "Hoạt động"
+            ) {
+              return false;
+            }
+
+
+            if (
+              court.verified !== true
+            ) {
+              return false;
+            }
+
+
+            const costType =
+              String(
+                court.cost_type || "Có phí"
+              ).trim();
+
+
+            if (
+              costType === "Miễn phí"
+            ) {
+
+              return (
+                Number(
+                  court.price_per_session || 0
+                ) === 0
+              );
+            }
+
+
+            return (
+              court.price_verified === true
+              &&
+              Number(
+                court.price_per_session || 0
+              ) > 0
+            );
+
+          }
+        );
+
+
+    courtOptions +=
+      usableCourts
+        .map(
+          court => {
+
+            const costType =
+              String(
+                court.cost_type || "Có phí"
+              ).trim();
+
+
+            const priceText =
+              costType === "Miễn phí"
+                ?
+                "Miễn phí"
+                :
+                (
+                  Number(
+                    court.price_per_session || 0
+                  )
+                    .toLocaleString(
+                      "vi-VN"
+                    )
+                  +
+                  "đ"
+                );
+
+
+            return `
+              <option
+                value="${Number(court.id)}"
+              >
+                ${escapeHtml(
+                  court.name || "Sân"
+                )}
+                ·
+                ${escapeHtml(priceText)}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+  }
+
+
+  /* =====================================================
+     GẮN FORM VÀO TỪNG NHÓM
+  ====================================================== */
+
+  function enhanceGroupCards() {
+
+    document
+      .querySelectorAll(
+        ".detail-btn"
+      )
+      .forEach(
+        detailButton => {
+
+          const groupId =
+            Number(
+              detailButton.dataset.groupId
+            );
+
+
+          if (
+            !Number.isFinite(groupId)
+          ) {
+            return;
+          }
+
+
+          const cardActions =
+            detailButton.closest(
+              ".card-actions"
+            );
+
+
+          if (!cardActions) {
+            return;
+          }
+
+
+          const groupMain =
+            cardActions.closest(
+              ".group-main"
+            );
+
+
+          if (!groupMain) {
+            return;
+          }
+
+
+          if (
+            groupMain.querySelector(
+              `.create-group-session-btn[data-group-id="${groupId}"]`
+            )
+          ) {
+            return;
+          }
+
+
+          /* =========================
+             BUTTON TẠO BUỔI
+          ========================= */
+
+          const createButton =
+            document.createElement(
+              "button"
+            );
+
+          createButton.type =
+            "button";
+
+          createButton.className =
+            "create-group-session-btn";
+
+          createButton.dataset.groupId =
+            String(groupId);
+
+          createButton.textContent =
+            "📅 TẠO BUỔI HỌC";
+
+
+          cardActions.insertBefore(
+            createButton,
+            detailButton
+          );
+
+
+          /* =========================
+             FORM
+          ========================= */
+
+          const form =
+            document.createElement(
+              "div"
+            );
+
+          form.className =
+            "group-session-form";
+
+          form.dataset.groupId =
+            String(groupId);
+
+
+          form.innerHTML = `
+            <div class="group-session-title">
+              📅 TẠO BUỔI HỌC CHUNG CHO NHÓM
+            </div>
+
+            <div class="group-session-grid">
+
+              <div class="group-session-field">
+                <label>
+                  NGÀY HỌC
+                </label>
+
+                <input
+                  class="group-session-date"
+                  type="date"
+                  min="${localToday()}"
+                >
+              </div>
+
+
+              <div class="group-session-field">
+                <label>
+                  GIỜ BẮT ĐẦU
+                </label>
+
+                <input
+                  class="group-session-time"
+                  type="time"
+                >
+              </div>
+
+
+              <div class="group-session-field">
+                <label>
+                  THỜI LƯỢNG
+                </label>
+
+                <input
+                  class="group-session-duration"
+                  type="number"
+                  min="15"
+                  step="15"
+                  value="60"
+                >
+              </div>
+
+
+              <div class="group-session-field">
+                <label>
+                  SÂN
+                </label>
+
+                <select
+                  class="group-session-court"
+                >
+                  ${courtOptions}
+                </select>
+              </div>
+
+
+              <div
+                class="
+                  group-session-field
+                  full
+                "
+              >
+                <label>
+                  GHI CHÚ
+                </label>
+
+                <textarea
+                  class="group-session-note"
+                  placeholder="Không bắt buộc"
+                ></textarea>
+              </div>
+
+            </div>
+
+
+            <div class="group-session-form-actions">
+
+              <button
+                class="group-session-save"
+                type="button"
+              >
+                TẠO BUỔI HỌC
+              </button>
+
+              <button
+                class="group-session-cancel"
+                type="button"
+              >
+                HỦY
+              </button>
+
+            </div>
+
+
+            <div
+              class="group-session-message"
+            ></div>
+          `;
+
+
+          cardActions.insertAdjacentElement(
+            "afterend",
+            form
+          );
+
+
+          /* =========================
+             MỞ FORM
+          ========================= */
+
+          createButton.addEventListener(
+            "click",
+            function () {
+
+              form.classList.toggle(
+                "show"
+              );
+
+            }
+          );
+
+
+          /* =========================
+             HỦY
+          ========================= */
+
+          form
+            .querySelector(
+              ".group-session-cancel"
+            )
+            .addEventListener(
+              "click",
+              function () {
+
+                form.classList.remove(
+                  "show"
+                );
+
+              }
+            );
+
+
+          /* =========================
+             TẠO SESSION
+          ========================= */
+
+          form
+            .querySelector(
+              ".group-session-save"
+            )
+            .addEventListener(
+              "click",
+              async function () {
+
+                const saveButton =
+                  this;
+
+                const message =
+                  form.querySelector(
+                    ".group-session-message"
+                  );
+
+
+                const sessionDate =
+                  form.querySelector(
+                    ".group-session-date"
+                  ).value;
+
+
+                const startTime =
+                  form.querySelector(
+                    ".group-session-time"
+                  ).value;
+
+
+                const duration =
+                  Number(
+                    form.querySelector(
+                      ".group-session-duration"
+                    ).value
+                  );
+
+
+                const courtValue =
+                  form.querySelector(
+                    ".group-session-court"
+                  ).value;
+
+
+                const note =
+                  form.querySelector(
+                    ".group-session-note"
+                  ).value.trim();
+
+
+                if (
+                  !sessionDate
+                  ||
+                  !startTime
+                ) {
+
+                  message.style.color =
+                    "#ffb4b4";
+
+                  message.textContent =
+                    "Vui lòng chọn ngày và giờ học.";
+
+                  return;
+                }
+
+
+                if (
+                  !Number.isFinite(duration)
+                  ||
+                  duration <= 0
+                ) {
+
+                  message.style.color =
+                    "#ffb4b4";
+
+                  message.textContent =
+                    "Thời lượng buổi học không hợp lệ.";
+
+                  return;
+                }
+
+
+                saveButton.disabled =
+                  true;
+
+                saveButton.textContent =
+                  "ĐANG TẠO...";
+
+
+                message.style.color =
+                  "#aab6c5";
+
+                message.textContent =
+                  "Đang kiểm tra và tạo buổi học nhóm...";
+
+
+                try {
+
+                  const {
+                    data,
+                    error
+                  } =
+                    await groupSessionSb.rpc(
+                      "admin_create_training_group_session",
+                      {
+                        p_group_id:
+                          groupId,
+
+                        p_session_date:
+                          sessionDate,
+
+                        p_start_time:
+                          startTime,
+
+                        p_duration_minutes:
+                          duration,
+
+                        p_court_id:
+                          courtValue
+                            ?
+                            Number(courtValue)
+                            :
+                            null,
+
+                        p_note:
+                          note || null
+                      }
+                    );
+
+
+                  if (error) {
+                    throw error;
+                  }
+
+
+                  if (
+                    !data
+                    ||
+                    data.ok !== true
+                  ) {
+
+                    throw new Error(
+                      "Không tạo được buổi học nhóm."
+                    );
+                  }
+
+
+                  message.style.color =
+                    "#b9ff18";
+
+                  message.textContent =
+                    "✓ Đã tạo "
+                    +
+                    (
+                      data.session_code
+                      ||
+                      "buổi học"
+                    )
+                    +
+                    " thành công.";
+
+
+                  saveButton.textContent =
+                    "ĐÃ TẠO ✓";
+
+
+                  if (
+                    data.session_id
+                  ) {
+
+                    setTimeout(
+                      function () {
+
+                        window.location.href =
+                          "/session-detail?id="
+                          +
+                          encodeURIComponent(
+                            data.session_id
+                          );
+
+                      },
+                      700
+                    );
+
+                  }
+
+                }
+                catch (error) {
+
+                  console.error(
+                    "CREATE TRAINING GROUP SESSION:",
+                    error
+                  );
+
+
+                  message.style.color =
+                    "#ffb4b4";
+
+                  message.textContent =
+                    error?.message
+                    ||
+                    "Không tạo được buổi học nhóm.";
+
+
+                  saveButton.disabled =
+                    false;
+
+                  saveButton.textContent =
+                    "TẠO BUỔI HỌC";
+
+                }
+
+              }
+            );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCourts();
+
+
+  enhanceGroupCards();
+
+
+  const groupList =
+    document.getElementById(
+      "groupList"
+    );
+
+
+  if (groupList) {
+
+    const observer =
+      new MutationObserver(
+        function () {
+
+          enhanceGroupCards();
+
+        }
+      );
+
+
+    observer.observe(
+      groupList,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+  }
+
+})();
+</script>
 </body>
 
 </html>
