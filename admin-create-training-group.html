@@ -845,8 +845,64 @@
     }
 
 
-    registrations =
+      const allRegistrations =
       data || [];
+
+
+    const {
+      data: existingMembers,
+      error: membersError
+    } =
+      await sb
+        .from(
+          "training_group_members"
+        )
+        .select(
+          "registration_id"
+        );
+
+
+    if (membersError) {
+
+      console.error(
+        membersError
+      );
+
+      message.style.color =
+        "#ffb4b4";
+
+      message.textContent =
+        "Không kiểm tra được các học viên đã thuộc nhóm: "
+        +
+        membersError.message;
+
+      return;
+    }
+
+
+    const groupedRegistrationIds =
+      new Set(
+        (existingMembers || [])
+          .map(
+            item =>
+              Number(
+                item.registration_id
+              )
+          )
+          .filter(
+            id =>
+              Number.isFinite(id)
+          )
+      );
+
+
+    registrations =
+      allRegistrations.filter(
+        item =>
+          !groupedRegistrationIds.has(
+            Number(item.id)
+          )
+      );
 
 
     const options =
