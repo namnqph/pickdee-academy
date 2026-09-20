@@ -5975,7 +5975,191 @@ document.addEventListener("DOMContentLoaded", function () {
 })();
 </script>
 
-  
+  <script>
+/* =========================================================
+   PICKDEE - FIX SAFARI / IOS SERVICE WORKER REDIRECT
+   + Logo PickDee Academy quay về trang chủ
+   + Xóa Service Worker / Cache cũ
+   + Không xóa đăng nhập Supabase
+========================================================= */
+
+(function () {
+
+  const HOME_URL =
+    "https://pickdee.vn/";
+
+  const CLEANUP_FLAG =
+    "pickdee_sw_cleanup_go_home";
+
+
+  async function cleanupOldServiceWorker() {
+
+    try {
+
+      if (
+        "serviceWorker"
+        in navigator
+      ) {
+
+        const registrations =
+          await navigator
+            .serviceWorker
+            .getRegistrations();
+
+
+        await Promise.all(
+          registrations.map(
+            registration =>
+              registration.unregister()
+          )
+        );
+
+      }
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee SW unregister:",
+        error
+      );
+
+    }
+
+
+    try {
+
+      if (
+        "caches"
+        in window
+      ) {
+
+        const cacheNames =
+          await caches.keys();
+
+
+        await Promise.all(
+          cacheNames.map(
+            cacheName =>
+              caches.delete(
+                cacheName
+              )
+          )
+        );
+
+      }
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee cache cleanup:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /*
+    Sau lần reload làm sạch,
+    trang hiện tại không còn bị
+    Service Worker cũ kiểm soát.
+    Khi đó mới chuyển về trang chủ.
+  */
+
+  if (
+    sessionStorage.getItem(
+      CLEANUP_FLAG
+    )
+    ===
+    "1"
+  ) {
+
+    sessionStorage.removeItem(
+      CLEANUP_FLAG
+    );
+
+
+    setTimeout(
+      function () {
+
+        window.location.replace(
+          HOME_URL
+        );
+
+      },
+      100
+    );
+
+
+    return;
+
+  }
+
+
+  const brand =
+    document.querySelector(
+      ".topbar .brand"
+    );
+
+
+  if (!brand) {
+    return;
+  }
+
+
+  /*
+    Đổi logo thành link
+    về đúng trang chủ.
+  */
+
+  brand.setAttribute(
+    "href",
+    HOME_URL
+  );
+
+
+  brand.addEventListener(
+    "click",
+    async function (event) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      event.stopImmediatePropagation();
+
+
+      brand.style.pointerEvents =
+        "none";
+
+
+      await cleanupOldServiceWorker();
+
+
+      sessionStorage.setItem(
+        CLEANUP_FLAG,
+        "1"
+      );
+
+
+      /*
+        Reload /student một lần
+        để thoát controller cũ.
+        Sau reload code phía trên
+        sẽ tự đưa về pickdee.vn.
+      */
+
+      window.location.reload();
+
+    },
+    true
+  );
+
+})();
+</script>
 </body>
 
 </html>
