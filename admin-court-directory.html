@@ -4038,7 +4038,582 @@
 
 })();
 </script>
+<!-- =========================================================
+     PICKDEE - COURT IMPORT BATCH ROLLBACK
+========================================================= -->
 
+<style>
+
+  .court-batch-box {
+    margin: 18px 0;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .court-batch-box h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .court-batch-box p {
+    margin: 0 0 14px;
+    color: rgba(255,255,255,.55);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .court-batch-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .court-batch-row {
+    display: grid;
+    grid-template-columns:
+      minmax(180px,1fr)
+      100px
+      150px
+      auto;
+    gap: 10px;
+    align-items: center;
+
+    padding: 10px;
+    border-radius: 10px;
+
+    background:
+      rgba(255,255,255,.035);
+
+    border:
+      1px solid
+      rgba(255,255,255,.06);
+  }
+
+  .court-batch-code {
+    font-weight: 900;
+    color: #d8ff45;
+  }
+
+  .court-batch-sub {
+    margin-top: 3px;
+    color: rgba(255,255,255,.45);
+    font-size: 10px;
+  }
+
+  .court-batch-count {
+    font-weight: 900;
+  }
+
+  .court-batch-delete {
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+
+    border:
+      1px solid
+      rgba(255,100,100,.30);
+
+    background:
+      rgba(255,100,100,.10);
+
+    color: #ff9c9c;
+
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .court-batch-delete:hover {
+    background:
+      rgba(255,100,100,.18);
+  }
+
+  .court-batch-empty {
+    color: rgba(255,255,255,.48);
+    font-size: 12px;
+  }
+
+  @media(max-width:700px) {
+
+    .court-batch-row {
+      grid-template-columns:
+        1fr;
+    }
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+  const filters =
+    document.querySelector(
+      ".filters"
+    );
+
+  if (!filters) {
+    return;
+  }
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbBatch =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     UI
+  ====================================================== */
+
+  const box =
+    document.createElement(
+      "div"
+    );
+
+
+  box.className =
+    "court-batch-box";
+
+
+  box.innerHTML = `
+
+    <h3>
+      ↩️ Lịch sử nhập CSV
+    </h3>
+
+    <p>
+      Mỗi lần import được gắn một mã batch riêng.
+      Nếu nhập nhầm, Admin có thể xóa toàn bộ
+      các sân thuộc đúng đợt import đó.
+    </p>
+
+    <div
+      id="courtBatchList"
+      class="court-batch-list"
+    >
+      <div class="court-batch-empty">
+        Đang tải lịch sử import...
+      </div>
+    </div>
+
+  `;
+
+
+  filters.insertAdjacentElement(
+    "beforebegin",
+    box
+  );
+
+
+  const listEl =
+    document.getElementById(
+      "courtBatchList"
+    );
+
+
+  /* =====================================================
+     FORMAT
+  ====================================================== */
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const date =
+      new Date(
+        value
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return value;
+
+    }
+
+
+    return date.toLocaleString(
+      "vi-VN"
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD BATCHES
+  ====================================================== */
+
+  async function loadBatches() {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sbBatch
+          .from(
+            "court_directory"
+          )
+          .select(`
+            id,
+            import_batch,
+            imported_at
+          `)
+          .not(
+            "import_batch",
+            "is",
+            null
+          )
+          .order(
+            "imported_at",
+            {
+              ascending: false
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const rows =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      const map =
+        new Map();
+
+
+      rows.forEach(
+        row => {
+
+          const batch =
+            String(
+              row.import_batch || ""
+            ).trim();
+
+
+          if (!batch) {
+            return;
+          }
+
+
+          if (
+            !map.has(batch)
+          ) {
+
+            map.set(
+              batch,
+              {
+                batch:
+                  batch,
+
+                count:
+                  0,
+
+                imported_at:
+                  row.imported_at
+              }
+            );
+
+          }
+
+
+          map.get(
+            batch
+          ).count++;
+
+        }
+      );
+
+
+      const batches =
+        [
+          ...map.values()
+        ];
+
+
+      listEl.innerHTML =
+        "";
+
+
+      if (
+        batches.length === 0
+      ) {
+
+        listEl.innerHTML = `
+
+          <div class="court-batch-empty">
+
+            Chưa có đợt import CSV nào.
+
+          </div>
+
+        `;
+
+        return;
+
+      }
+
+
+      batches.forEach(
+        item => {
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+
+          row.className =
+            "court-batch-row";
+
+
+          row.innerHTML = `
+
+            <div>
+
+              <div class="court-batch-code">
+                ${item.batch}
+              </div>
+
+              <div class="court-batch-sub">
+                ${formatDate(
+                  item.imported_at
+                )}
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <div class="court-batch-count">
+                ${item.count} sân
+              </div>
+
+            </div>
+
+
+            <div>
+
+              Batch import
+
+            </div>
+
+
+            <button
+              type="button"
+              class="court-batch-delete"
+              data-batch="${item.batch}"
+              data-count="${item.count}"
+            >
+              XÓA ĐỢT NÀY
+            </button>
+
+          `;
+
+
+          listEl.appendChild(
+            row
+          );
+
+        }
+      );
+
+
+      bindDeleteButtons();
+
+    }
+    catch (error) {
+
+      console.error(
+        "COURT BATCH HISTORY:",
+        error
+      );
+
+
+      listEl.innerHTML = `
+
+        <div
+          class="court-batch-empty"
+          style="color:#ff9c9c;"
+        >
+
+          Không tải được lịch sử import.
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     DELETE BATCH
+  ====================================================== */
+
+  function bindDeleteButtons() {
+
+    const buttons =
+      listEl.querySelectorAll(
+        ".court-batch-delete"
+      );
+
+
+    buttons.forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          async function () {
+
+            const batch =
+              button.dataset.batch;
+
+
+            const count =
+              Number(
+                button.dataset.count || 0
+              );
+
+
+            if (!batch) {
+              return;
+            }
+
+
+            const confirmed =
+              window.confirm(
+                "Bạn chắc chắn muốn xóa toàn bộ "
+                +
+                count
+                +
+                " sân thuộc batch:\n\n"
+                +
+                batch
+                +
+                "\n\nThao tác này không thể hoàn tác."
+              );
+
+
+            if (!confirmed) {
+              return;
+            }
+
+
+            button.disabled =
+              true;
+
+
+            button.textContent =
+              "ĐANG XÓA...";
+
+
+            try {
+
+              const {
+                error
+              } =
+                await sbBatch
+                  .from(
+                    "court_directory"
+                  )
+                  .delete()
+                  .eq(
+                    "import_batch",
+                    batch
+                  );
+
+
+              if (error) {
+                throw error;
+              }
+
+
+              alert(
+                "Đã xóa "
+                +
+                count
+                +
+                " sân thuộc batch "
+                +
+                batch
+              );
+
+
+              window.location.reload();
+
+            }
+            catch (error) {
+
+              console.error(
+                "COURT BATCH DELETE:",
+                error
+              );
+
+
+              alert(
+                "Không xóa được batch: "
+                +
+                (
+                  error?.message
+                  ||
+                  "Unknown error"
+                )
+              );
+
+
+              button.disabled =
+                false;
+
+
+              button.textContent =
+                "XÓA ĐỢT NÀY";
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  await loadBatches();
+
+})();
+</script>
   
 </body>
 
