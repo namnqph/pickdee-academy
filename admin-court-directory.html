@@ -2630,6 +2630,220 @@
 
 })();
 </script>
+
+<!-- =========================================================
+     PICKDEE - DOWNLOAD COURT CSV TEMPLATE
+========================================================= -->
+
+<script>
+(function () {
+
+  const actions =
+    document.querySelector(
+      ".court-import-actions"
+    );
+
+  if (!actions) {
+    return;
+  }
+
+
+  /* =====================================================
+     1. TẠO NÚT
+  ====================================================== */
+
+  const templateBtn =
+    document.createElement(
+      "button"
+    );
+
+
+  templateBtn.type =
+    "button";
+
+
+  templateBtn.className =
+    "court-import-btn";
+
+
+  templateBtn.style.background =
+    "rgba(255,255,255,.08)";
+
+
+  templateBtn.style.color =
+    "#ffffff";
+
+
+  templateBtn.style.border =
+    "1px solid rgba(255,255,255,.12)";
+
+
+  templateBtn.textContent =
+    "TẢI CSV MẪU";
+
+
+  actions.appendChild(
+    templateBtn
+  );
+
+
+  /* =====================================================
+     2. CSV TEMPLATE
+  ====================================================== */
+
+  templateBtn.addEventListener(
+    "click",
+    function () {
+
+      const header = [
+        "court_name",
+        "province",
+        "district",
+        "ward",
+        "address",
+        "latitude",
+        "longitude",
+        "phone",
+        "zalo",
+        "facebook_url",
+        "website_url",
+        "number_of_courts",
+        "court_type",
+        "opening_hours",
+        "price_min",
+        "price_max",
+        "amenities",
+        "booking_url",
+        "source_name",
+        "source_url",
+        "source_external_id",
+        "verified",
+        "owner_claimed",
+        "status",
+        "note"
+      ];
+
+
+      const example = [
+        "Sân Pickleball ABC",
+        "Bắc Ninh",
+        "",
+        "Phường Bắc Giang",
+        "123 Đường ABC",
+        "21.2812345",
+        "106.1976543",
+        "0912345678",
+        "0912345678",
+        "https://facebook.com/example",
+        "",
+        "6",
+        "Ngoài trời",
+        "06:00-23:00",
+        "80000",
+        "120000",
+        "Bãi xe; WC; Nước uống",
+        "",
+        "Chủ sân cung cấp",
+        "",
+        "ABC001",
+        "true",
+        "true",
+        "active",
+        "Dữ liệu mẫu - xóa dòng này trước khi import thật"
+      ];
+
+
+      function csvCell(value) {
+
+        const text =
+          String(
+            value ?? ""
+          );
+
+
+        return (
+          '"'
+          +
+          text.replaceAll(
+            '"',
+            '""'
+          )
+          +
+          '"'
+        );
+
+      }
+
+
+      const csv =
+        "\uFEFF"
+        +
+        header
+          .map(
+            csvCell
+          )
+          .join(",")
+        +
+        "\n"
+        +
+        example
+          .map(
+            csvCell
+          )
+          .join(",");
+
+
+      const blob =
+        new Blob(
+          [csv],
+          {
+            type:
+              "text/csv;charset=utf-8;"
+          }
+        );
+
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+
+      link.href =
+        url;
+
+
+      link.download =
+        "pickdee-court-directory-template.csv";
+
+
+      document.body.appendChild(
+        link
+      );
+
+
+      link.click();
+
+
+      link.remove();
+
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    }
+  );
+
+})();
+</script>
+  
 </body>
 
 </html>
