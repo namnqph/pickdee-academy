@@ -1300,6 +1300,78 @@
 
 <!-- GIỮ APP.JS ĐỂ FORM ĐĂNG KÝ HIỆN TẠI VẪN CHẠY -->
 
+<script>
+(function () {
+
+  function goToRegister(event) {
+
+    const button =
+      event.target.closest(
+        "#registerBtn, #registerBtn2"
+      );
+
+    if (!button) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    window.location.replace(
+      "./student-register"
+    );
+  }
+
+
+  /*
+    Chặn NGAY TỪ CAPTURE PHASE,
+    trước mọi click handler cũ trong app.js.
+  */
+  document.addEventListener(
+    "click",
+    goToRegister,
+    true
+  );
+
+
+  /*
+    Đồng thời sửa href thật
+    để PWA / iPhone hiểu đây là link nội bộ.
+  */
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+      [
+        "registerBtn",
+        "registerBtn2"
+      ].forEach(
+        function (id) {
+
+          const button =
+            document.getElementById(id);
+
+          if (!button) {
+            return;
+          }
+
+          button.href =
+            "./student-register";
+
+          button.removeAttribute(
+            "target"
+          );
+
+        }
+      );
+
+    }
+  );
+
+})();
+</script>
+
 <script src="app.js"></script>
 
 
