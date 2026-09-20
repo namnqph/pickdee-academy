@@ -9419,6 +9419,245 @@ document.addEventListener(
 
 })();
 </script>
+
+  <!-- =========================================================
+     PICKDEE - COURT DIRECTORY DASHBOARD CARD
+========================================================= -->
+
+<script>
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     1. TÌM CARD SÂN & KHU VỰC
+  ====================================================== */
+
+  const courtCard =
+    document.querySelector(
+      'a[href="./admin-courts"], a[href="./admin-courts.html"]'
+    );
+
+  if (!courtCard) {
+
+    console.warn(
+      "PickDee: không tìm thấy card Sân & khu vực."
+    );
+
+    return;
+  }
+
+
+  /* =====================================================
+     2. TẠO CARD DANH BẠ SÂN TOÀN QUỐC
+  ====================================================== */
+
+  let directoryCard =
+    document.getElementById(
+      "courtDirectoryCard"
+    );
+
+  if (!directoryCard) {
+
+    directoryCard =
+      document.createElement(
+        "a"
+      );
+
+    directoryCard.id =
+      "courtDirectoryCard";
+
+    directoryCard.href =
+      "./admin-court-directory";
+
+    directoryCard.className =
+      "card-link";
+
+    directoryCard.innerHTML = `
+
+      <div class="card">
+
+        <h2>
+          🌏 Danh bạ sân toàn quốc
+        </h2>
+
+        <p>
+          Kho dữ liệu sân Pickleball toàn quốc,
+          phục vụ tìm sân, Open Play
+          và mở rộng hệ sinh thái PickDee.
+        </p>
+
+        <div class="card-stats">
+
+
+          <div class="card-stat">
+
+            <span class="card-stat-label">
+              🏟 Tổng sân
+            </span>
+
+            <span
+              id="courtDirectoryTotal"
+              class="card-stat-value value-green"
+            >
+              ...
+            </span>
+
+          </div>
+
+
+          <div class="card-stat">
+
+            <span class="card-stat-label">
+              ✅ Đã xác minh
+            </span>
+
+            <span
+              id="courtDirectoryVerified"
+              class="card-stat-value value-green"
+            >
+              ...
+            </span>
+
+          </div>
+
+
+          <div class="card-stat">
+
+            <span class="card-stat-label">
+              ⚠️ Chưa xác minh
+            </span>
+
+            <span
+              id="courtDirectoryUnverified"
+              class="card-stat-value value-orange"
+            >
+              ...
+            </span>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+    `;
+
+    courtCard.insertAdjacentElement(
+      "afterend",
+      directoryCard
+    );
+
+  }
+
+
+  /* =====================================================
+     3. LOAD THỐNG KÊ
+  ====================================================== */
+
+  async function loadCourtDirectoryStats() {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "court_directory"
+          )
+          .select(
+            "id, verified"
+          );
+
+      if (error) {
+        throw error;
+      }
+
+
+      const rows =
+        Array.isArray(data)
+          ? data
+          : [];
+
+
+      const total =
+        rows.length;
+
+
+      const verified =
+        rows.filter(
+          item =>
+            item.verified === true
+        ).length;
+
+
+      const unverified =
+        total - verified;
+
+
+      document.getElementById(
+        "courtDirectoryTotal"
+      ).textContent =
+        total;
+
+
+      document.getElementById(
+        "courtDirectoryVerified"
+      ).textContent =
+        verified;
+
+
+      document.getElementById(
+        "courtDirectoryUnverified"
+      ).textContent =
+        unverified;
+
+    }
+    catch (error) {
+
+      console.error(
+        "COURT DIRECTORY DASHBOARD:",
+        error
+      );
+
+
+      document.getElementById(
+        "courtDirectoryTotal"
+      ).textContent =
+        "—";
+
+
+      document.getElementById(
+        "courtDirectoryVerified"
+      ).textContent =
+        "—";
+
+
+      document.getElementById(
+        "courtDirectoryUnverified"
+      ).textContent =
+        "—";
+
+    }
+
+  }
+
+
+  await loadCourtDirectoryStats();
+
+})();
+</script>
 </body>
 
 </html>
