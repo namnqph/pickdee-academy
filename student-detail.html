@@ -2237,6 +2237,427 @@ await loadRegistrations();
 init();
 
 </script>
+<script>
+/* =========================================================
+   PICKDEE - AVATAR HỌC VIÊN TRÊN ADMIN STUDENT DETAIL
+   - Không sửa luồng cũ
+   - Ưu tiên students.avatar_path
+   - Fallback students.image_url
+   - Học viên cũ chưa có ảnh sẽ hiện chữ cái đầu
+========================================================= */
 
+(function () {
+
+  /* =========================
+     STYLE
+  ========================= */
+
+  const style =
+    document.createElement("style");
+
+  style.textContent = `
+    #pickdeeStudentAvatarBox {
+      margin: 18px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    #pickdeeStudentAvatarFrame {
+      width: 112px;
+      height: 112px;
+      flex: 0 0 112px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid #d8ff45;
+      background: rgba(6,39,88,.95);
+      box-shadow: 0 8px 30px rgba(0,0,0,.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pickdeeStudentAvatarImg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #pickdeeStudentAvatarFallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d8ff45;
+      font-size: 38px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    #pickdeeStudentAvatarInfo {
+      min-width: 0;
+    }
+
+    #pickdeeStudentAvatarLabel {
+      color: rgba(255,255,255,.48);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+
+    #pickdeeStudentAvatarStatus {
+      margin-top: 6px;
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width:600px) {
+      #pickdeeStudentAvatarBox {
+        gap: 14px;
+      }
+
+      #pickdeeStudentAvatarFrame {
+        width: 88px;
+        height: 88px;
+        flex-basis: 88px;
+      }
+
+      #pickdeeStudentAvatarFallback {
+        font-size: 30px;
+      }
+    }
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =========================
+     TẠO KHUNG AVATAR
+  ========================= */
+
+  const titleRow =
+    document.querySelector(
+      ".title-row"
+    );
+
+  if (!titleRow) {
+    return;
+  }
+
+
+  const avatarBox =
+    document.createElement(
+      "div"
+    );
+
+  avatarBox.id =
+    "pickdeeStudentAvatarBox";
+
+  avatarBox.innerHTML = `
+    <div id="pickdeeStudentAvatarFrame">
+
+      <img
+        id="pickdeeStudentAvatarImg"
+        alt="Ảnh đại diện học viên"
+      >
+
+      <div
+        id="pickdeeStudentAvatarFallback"
+      >
+        👤
+      </div>
+
+    </div>
+
+    <div id="pickdeeStudentAvatarInfo">
+
+      <div id="pickdeeStudentAvatarLabel">
+        ẢNH ĐẠI DIỆN
+      </div>
+
+      <div id="pickdeeStudentAvatarStatus">
+        Đang tải ảnh học viên...
+      </div>
+
+    </div>
+  `;
+
+
+  titleRow.parentNode.insertBefore(
+    avatarBox,
+    titleRow
+  );
+
+
+  const avatarImg =
+    document.getElementById(
+      "pickdeeStudentAvatarImg"
+    );
+
+  const avatarFallback =
+    document.getElementById(
+      "pickdeeStudentAvatarFallback"
+    );
+
+  const avatarStatus =
+    document.getElementById(
+      "pickdeeStudentAvatarStatus"
+    );
+
+
+  /* =========================
+     URL PUBLIC BUCKET AVATARS
+  ========================= */
+
+  function avatarPublicUrl(
+    path
+  ) {
+
+    const base =
+      String(
+        window.PICKDEE_CONFIG
+          ?.SUPABASE_URL
+        ||
+        ""
+      )
+        .replace(
+          /\/+$/,
+          ""
+        );
+
+
+    if (
+      !base
+      ||
+      !path
+    ) {
+      return "";
+    }
+
+
+    const encodedPath =
+      String(path)
+        .split("/")
+        .map(
+          part =>
+            encodeURIComponent(
+              part
+            )
+        )
+        .join("/");
+
+
+    return (
+      base
+      +
+      "/storage/v1/object/public/avatars/"
+      +
+      encodedPath
+    );
+  }
+
+
+  /* =========================
+     CHỮ ĐẠI DIỆN FALLBACK
+  ========================= */
+
+  function studentInitial(
+    name
+  ) {
+
+    const text =
+      String(
+        name || ""
+      ).trim();
+
+
+    if (!text) {
+      return "👤";
+    }
+
+
+    const words =
+      text
+        .split(/\s+/)
+        .filter(Boolean);
+
+
+    return (
+      words[
+        words.length - 1
+      ]
+        ?.charAt(0)
+        ?.toUpperCase()
+      ||
+      "👤"
+    );
+  }
+
+
+  /* =========================
+     RENDER AVATAR
+  ========================= */
+
+  function renderStudentAvatar() {
+
+    if (
+      typeof currentStudent
+        === "undefined"
+      ||
+      !currentStudent
+    ) {
+      return false;
+    }
+
+
+    const avatarPath =
+      String(
+        currentStudent.avatar_path
+        ||
+        ""
+      ).trim();
+
+
+    const legacyImageUrl =
+      String(
+        currentStudent.image_url
+        ||
+        ""
+      ).trim();
+
+
+    let avatarUrl =
+      "";
+
+
+    if (avatarPath) {
+
+      avatarUrl =
+        avatarPublicUrl(
+          avatarPath
+        );
+
+    }
+    else if (
+      legacyImageUrl
+    ) {
+
+      avatarUrl =
+        legacyImageUrl;
+
+    }
+
+
+    avatarFallback.textContent =
+      studentInitial(
+        currentStudent.full_name
+      );
+
+
+    if (!avatarUrl) {
+
+      avatarImg.style.display =
+        "none";
+
+      avatarImg.removeAttribute(
+        "src"
+      );
+
+      avatarFallback.style.display =
+        "flex";
+
+      avatarStatus.textContent =
+        "Học viên chưa có ảnh đại diện.";
+
+      return true;
+    }
+
+
+    avatarStatus.textContent =
+      "Đang tải ảnh đại diện...";
+
+
+    avatarImg.onload =
+      function () {
+
+        avatarImg.style.display =
+          "block";
+
+        avatarFallback.style.display =
+          "none";
+
+        avatarStatus.textContent =
+          "Ảnh đại diện học viên";
+
+      };
+
+
+    avatarImg.onerror =
+      function () {
+
+        avatarImg.style.display =
+          "none";
+
+        avatarFallback.style.display =
+          "flex";
+
+        avatarStatus.textContent =
+          "Không tải được ảnh đại diện.";
+
+      };
+
+
+    avatarImg.src =
+      avatarUrl;
+
+
+    return true;
+  }
+
+
+  /* =========================
+     CHỜ loadStudent() HOÀN THÀNH
+  ========================= */
+
+  renderStudentAvatar();
+
+
+  const studentNameEl =
+    document.getElementById(
+      "studentName"
+    );
+
+
+  if (studentNameEl) {
+
+    const observer =
+      new MutationObserver(
+        function () {
+
+          renderStudentAvatar();
+
+        }
+      );
+
+
+    observer.observe(
+      studentNameEl,
+      {
+        childList: true,
+        subtree: true,
+        characterData: true
+      }
+    );
+
+  }
+
+})();
+</script>
 </body>
 </html>
