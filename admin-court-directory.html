@@ -2843,6 +2843,1202 @@
 
 })();
 </script>
+
+<!-- =========================================================
+     PICKDEE - SAFE CSV VALIDATION + IMPORT OVERRIDE
+========================================================= -->
+
+<script>
+(function () {
+
+  const fileInput =
+    document.getElementById(
+      "courtCsvFile"
+    );
+
+  const importBtn =
+    document.getElementById(
+      "courtCsvImportBtn"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "courtCsvMessage"
+    );
+
+  if (
+    !fileInput ||
+    !importBtn ||
+    !messageEl
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbSafeImport =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let safeRows = [];
+  let safeInvalidCount = 0;
+  let safeDuplicateCount = 0;
+  let validationReady = false;
+
+
+  /* =====================================================
+     VALIDATION BOX
+  ====================================================== */
+
+  const validationBox =
+    document.createElement(
+      "div"
+    );
+
+
+  validationBox.style.marginTop =
+    "10px";
+
+  validationBox.style.fontSize =
+    "12px";
+
+  validationBox.style.lineHeight =
+    "1.6";
+
+  validationBox.style.whiteSpace =
+    "pre-line";
+
+  validationBox.style.color =
+    "rgba(255,255,255,.68)";
+
+
+  messageEl.insertAdjacentElement(
+    "afterend",
+    validationBox
+  );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function clean(value) {
+
+    return String(
+      value ?? ""
+    ).trim();
+
+  }
+
+
+  function parseCoordinate(value) {
+
+    let text =
+      clean(value);
+
+
+    if (!text) {
+      return null;
+    }
+
+
+    /*
+      Cho phép:
+      21.2812345
+      hoặc 21,2812345
+    */
+    if (
+      text.includes(",") &&
+      !text.includes(".")
+    ) {
+
+      text =
+        text.replace(
+          ",",
+          "."
+        );
+
+    }
+
+
+    const number =
+      Number(text);
+
+
+    return Number.isFinite(number)
+      ? number
+      : NaN;
+
+  }
+
+
+  function parseMoney(value) {
+
+    const text =
+      clean(value)
+        .replace(/\s/g, "")
+        .replace(/[.,]/g, "");
+
+
+    if (!text) {
+      return null;
+    }
+
+
+    const number =
+      Number(text);
+
+
+    return Number.isFinite(number)
+      ? number
+      : NaN;
+
+  }
+
+
+  function parseInteger(value) {
+
+    const text =
+      clean(value);
+
+
+    if (!text) {
+      return null;
+    }
+
+
+    const number =
+      Number(text);
+
+
+    if (
+      !Number.isInteger(number)
+    ) {
+      return NaN;
+    }
+
+
+    return number;
+
+  }
+
+
+  const trueValues =
+    new Set([
+      "true",
+      "1",
+      "yes",
+      "y",
+      "có"
+    ]);
+
+
+  const falseValues =
+    new Set([
+      "false",
+      "0",
+      "no",
+      "n",
+      "không"
+    ]);
+
+
+  function parseBoolean(value) {
+
+    const text =
+      clean(value)
+        .toLowerCase();
+
+
+    if (!text) {
+      return false;
+    }
+
+
+    if (
+      trueValues.has(text)
+    ) {
+      return true;
+    }
+
+
+    if (
+      falseValues.has(text)
+    ) {
+      return false;
+    }
+
+
+    return null;
+
+  }
+
+
+  function isBooleanValid(value) {
+
+    const text =
+      clean(value)
+        .toLowerCase();
+
+
+    if (!text) {
+      return true;
+    }
+
+
+    return (
+      trueValues.has(text) ||
+      falseValues.has(text)
+    );
+
+  }
+
+
+  function normaliseRow(row) {
+
+    return {
+
+      court_name:
+        clean(
+          row.court_name
+        ),
+
+      province:
+        clean(
+          row.province
+        ) || null,
+
+      district:
+        clean(
+          row.district
+        ) || null,
+
+      ward:
+        clean(
+          row.ward
+        ) || null,
+
+      address:
+        clean(
+          row.address
+        ) || null,
+
+      latitude:
+        parseCoordinate(
+          row.latitude
+        ),
+
+      longitude:
+        parseCoordinate(
+          row.longitude
+        ),
+
+      phone:
+        clean(
+          row.phone
+        ) || null,
+
+      zalo:
+        clean(
+          row.zalo
+        ) || null,
+
+      facebook_url:
+        clean(
+          row.facebook_url
+        ) || null,
+
+      website_url:
+        clean(
+          row.website_url
+        ) || null,
+
+      number_of_courts:
+        parseInteger(
+          row.number_of_courts
+        ),
+
+      court_type:
+        clean(
+          row.court_type
+        ) || null,
+
+      opening_hours:
+        clean(
+          row.opening_hours
+        ) || null,
+
+      price_min:
+        parseMoney(
+          row.price_min
+        ),
+
+      price_max:
+        parseMoney(
+          row.price_max
+        ),
+
+      amenities:
+        clean(
+          row.amenities
+        ) || null,
+
+      booking_url:
+        clean(
+          row.booking_url
+        ) || null,
+
+      source_name:
+        clean(
+          row.source_name
+        ) || null,
+
+      source_url:
+        clean(
+          row.source_url
+        ) || null,
+
+      source_external_id:
+        clean(
+          row.source_external_id
+        ) || null,
+
+      verified:
+        parseBoolean(
+          row.verified
+        ),
+
+      owner_claimed:
+        parseBoolean(
+          row.owner_claimed
+        ),
+
+      status:
+        clean(
+          row.status
+        )
+          .toLowerCase()
+        || "active",
+
+      note:
+        clean(
+          row.note
+        ) || null
+
+    };
+
+  }
+
+
+  /* =====================================================
+     VALIDATE ONE ROW
+  ====================================================== */
+
+  function validateRow(
+    raw,
+    rowNumber
+  ) {
+
+    const errors = [];
+
+
+    const courtName =
+      clean(
+        raw.court_name
+      );
+
+
+    if (!courtName) {
+
+      errors.push(
+        `Dòng ${rowNumber}: thiếu court_name`
+      );
+
+    }
+
+
+    const allowedStatus =
+      new Set([
+        "active",
+        "pending",
+        "inactive",
+        "closed"
+      ]);
+
+
+    const status =
+      clean(
+        raw.status
+      )
+        .toLowerCase()
+      || "active";
+
+
+    if (
+      !allowedStatus.has(status)
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: status không hợp lệ`
+      );
+
+    }
+
+
+    const lat =
+      parseCoordinate(
+        raw.latitude
+      );
+
+
+    if (
+      Number.isNaN(lat) ||
+      (
+        lat !== null &&
+        (
+          lat < -90 ||
+          lat > 90
+        )
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: latitude phải từ -90 đến 90`
+      );
+
+    }
+
+
+    const lng =
+      parseCoordinate(
+        raw.longitude
+      );
+
+
+    if (
+      Number.isNaN(lng) ||
+      (
+        lng !== null &&
+        (
+          lng < -180 ||
+          lng > 180
+        )
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: longitude phải từ -180 đến 180`
+      );
+
+    }
+
+
+    const numberOfCourts =
+      parseInteger(
+        raw.number_of_courts
+      );
+
+
+    if (
+      Number.isNaN(
+        numberOfCourts
+      ) ||
+      (
+        numberOfCourts !== null &&
+        numberOfCourts < 0
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: number_of_courts phải là số nguyên >= 0`
+      );
+
+    }
+
+
+    const priceMin =
+      parseMoney(
+        raw.price_min
+      );
+
+
+    const priceMax =
+      parseMoney(
+        raw.price_max
+      );
+
+
+    if (
+      Number.isNaN(priceMin) ||
+      (
+        priceMin !== null &&
+        priceMin < 0
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: price_min không hợp lệ`
+      );
+
+    }
+
+
+    if (
+      Number.isNaN(priceMax) ||
+      (
+        priceMax !== null &&
+        priceMax < 0
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: price_max không hợp lệ`
+      );
+
+    }
+
+
+    if (
+      priceMin !== null &&
+      priceMax !== null &&
+      !Number.isNaN(priceMin) &&
+      !Number.isNaN(priceMax) &&
+      priceMin > priceMax
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: price_min lớn hơn price_max`
+      );
+
+    }
+
+
+    if (
+      !isBooleanValid(
+        raw.verified
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: verified chỉ nhận true/false`
+      );
+
+    }
+
+
+    if (
+      !isBooleanValid(
+        raw.owner_claimed
+      )
+    ) {
+
+      errors.push(
+        `Dòng ${rowNumber}: owner_claimed chỉ nhận true/false`
+      );
+
+    }
+
+
+    return errors;
+
+  }
+
+
+  /* =====================================================
+     READ + VALIDATE FILE
+  ====================================================== */
+
+  fileInput.addEventListener(
+    "change",
+    function () {
+
+      const file =
+        fileInput.files?.[0];
+
+
+      safeRows = [];
+      safeInvalidCount = 0;
+      safeDuplicateCount = 0;
+      validationReady = false;
+
+
+      importBtn.disabled =
+        true;
+
+
+      validationBox.textContent =
+        "";
+
+
+      if (!file) {
+        return;
+      }
+
+
+      Papa.parse(
+        file,
+        {
+
+          header: true,
+
+          skipEmptyLines: true,
+
+          transformHeader:
+            header =>
+              clean(header)
+                .toLowerCase(),
+
+
+          complete:
+            async function (
+              result
+            ) {
+
+              const rawRows =
+                Array.isArray(
+                  result.data
+                )
+                  ?
+                  result.data
+                  :
+                  [];
+
+
+              const errors = [];
+
+              const candidates = [];
+
+
+              rawRows.forEach(
+                (
+                  raw,
+                  index
+                ) => {
+
+                  const rowErrors =
+                    validateRow(
+                      raw,
+                      index + 2
+                    );
+
+
+                  if (
+                    rowErrors.length > 0
+                  ) {
+
+                    errors.push(
+                      ...rowErrors
+                    );
+
+                    return;
+
+                  }
+
+
+                  candidates.push(
+                    normaliseRow(
+                      raw
+                    )
+                  );
+
+                }
+              );
+
+
+              safeInvalidCount =
+                errors.length;
+
+
+              /* =========================================
+                 CHECK DUPLICATES
+              ========================================== */
+
+              try {
+
+                const {
+                  data: existing,
+                  error
+                } =
+                  await sbSafeImport
+                    .from(
+                      "court_directory"
+                    )
+                    .select(`
+                      source_name,
+                      source_url,
+                      source_external_id
+                    `);
+
+
+                if (error) {
+                  throw error;
+                }
+
+
+                const urlSet =
+                  new Set();
+
+
+                const externalSet =
+                  new Set();
+
+
+                (
+                  existing || []
+                )
+                  .forEach(
+                    row => {
+
+                      const url =
+                        clean(
+                          row.source_url
+                        );
+
+
+                      if (url) {
+
+                        urlSet.add(
+                          url
+                        );
+
+                      }
+
+
+                      const source =
+                        clean(
+                          row.source_name
+                        )
+                          .toLowerCase();
+
+
+                      const external =
+                        clean(
+                          row.source_external_id
+                        );
+
+
+                      if (
+                        source &&
+                        external
+                      ) {
+
+                        externalSet.add(
+                          source
+                          +
+                          "::"
+                          +
+                          external
+                        );
+
+                      }
+
+                    }
+                  );
+
+
+                const readyRows = [];
+
+
+                candidates.forEach(
+                  row => {
+
+                    const url =
+                      clean(
+                        row.source_url
+                      );
+
+
+                    const source =
+                      clean(
+                        row.source_name
+                      )
+                        .toLowerCase();
+
+
+                    const external =
+                      clean(
+                        row.source_external_id
+                      );
+
+
+                    const externalKey =
+                      source &&
+                      external
+                        ?
+                        source
+                        +
+                        "::"
+                        +
+                        external
+                        :
+                        "";
+
+
+                    const duplicated =
+                      (
+                        url &&
+                        urlSet.has(
+                          url
+                        )
+                      )
+                      ||
+                      (
+                        externalKey &&
+                        externalSet.has(
+                          externalKey
+                        )
+                      );
+
+
+                    if (duplicated) {
+
+                      safeDuplicateCount++;
+
+                      return;
+
+                    }
+
+
+                    if (url) {
+
+                      urlSet.add(
+                        url
+                      );
+
+                    }
+
+
+                    if (externalKey) {
+
+                      externalSet.add(
+                        externalKey
+                      );
+
+                    }
+
+
+                    readyRows.push(
+                      row
+                    );
+
+                  }
+                );
+
+
+                safeRows =
+                  readyRows;
+
+
+                document.getElementById(
+                  "courtCsvTotal"
+                ).textContent =
+                  rawRows.length;
+
+
+                document.getElementById(
+                  "courtCsvValid"
+                ).textContent =
+                  safeRows.length;
+
+
+                document.getElementById(
+                  "courtCsvDuplicate"
+                ).textContent =
+                  safeDuplicateCount;
+
+
+                document.getElementById(
+                  "courtCsvInvalid"
+                ).textContent =
+                  safeInvalidCount;
+
+
+                if (
+                  errors.length > 0
+                ) {
+
+                  validationBox.style.color =
+                    "#ff9c9c";
+
+
+                  validationBox.textContent =
+                    "❌ CSV có lỗi. Hãy sửa trước khi nhập:\n"
+                    +
+                    errors
+                      .slice(
+                        0,
+                        8
+                      )
+                      .join(
+                        "\n"
+                      )
+                    +
+                    (
+                      errors.length > 8
+                        ?
+                        `\n... và ${errors.length - 8} lỗi khác`
+                        :
+                        ""
+                    );
+
+
+                  importBtn.disabled =
+                    true;
+
+
+                  validationReady =
+                    false;
+
+
+                  return;
+
+                }
+
+
+                validationBox.style.color =
+                  "#8cff9f";
+
+
+                validationBox.textContent =
+                  "✅ CSV hợp lệ. Có "
+                  +
+                  safeRows.length
+                  +
+                  " sân sẵn sàng nhập"
+                  +
+                  (
+                    safeDuplicateCount > 0
+                      ?
+                      `, bỏ qua ${safeDuplicateCount} sân trùng.`
+                      :
+                      "."
+                  );
+
+
+                validationReady =
+                  safeRows.length > 0;
+
+
+                importBtn.disabled =
+                  !validationReady;
+
+              }
+              catch (error) {
+
+                console.error(
+                  "COURT CSV VALIDATION:",
+                  error
+                );
+
+
+                validationBox.style.color =
+                  "#ff9c9c";
+
+
+                validationBox.textContent =
+                  "❌ Không kiểm tra được dữ liệu trùng: "
+                  +
+                  (
+                    error?.message
+                    ||
+                    "Unknown error"
+                  );
+
+
+                importBtn.disabled =
+                  true;
+
+              }
+
+            }
+
+        }
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     SAFE IMPORT
+     Capture=true để chặn handler import cũ
+  ====================================================== */
+
+  importBtn.addEventListener(
+    "click",
+    async function (
+      event
+    ) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+      event.stopImmediatePropagation();
+
+
+      if (
+        !validationReady ||
+        safeRows.length === 0 ||
+        safeInvalidCount > 0
+      ) {
+
+        validationBox.style.color =
+          "#ff9c9c";
+
+
+        validationBox.textContent =
+          "❌ File chưa vượt qua kiểm tra dữ liệu.";
+
+
+        return;
+
+      }
+
+
+      importBtn.disabled =
+        true;
+
+
+      try {
+
+        const batch =
+          "COURT-"
+          +
+          new Date()
+            .toISOString()
+            .replace(
+              /[^0-9]/g,
+              ""
+            )
+            .slice(
+              0,
+              14
+            );
+
+
+        const now =
+          new Date()
+            .toISOString();
+
+
+        const finalRows =
+          safeRows.map(
+            row => ({
+              ...row,
+              import_batch:
+                batch,
+              imported_at:
+                now
+            })
+          );
+
+
+        let inserted =
+          0;
+
+
+        for (
+          let i = 0;
+          i < finalRows.length;
+          i += 100
+        ) {
+
+          const chunk =
+            finalRows.slice(
+              i,
+              i + 100
+            );
+
+
+          messageEl.textContent =
+            `Đang nhập ${Math.min(
+              i + 100,
+              finalRows.length
+            )}/${finalRows.length}...`;
+
+
+          const {
+            error
+          } =
+            await sbSafeImport
+              .from(
+                "court_directory"
+              )
+              .insert(
+                chunk
+              );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          inserted +=
+            chunk.length;
+
+        }
+
+
+        messageEl.textContent =
+          `✅ Đã nhập ${inserted} sân. Bỏ qua ${safeDuplicateCount} sân trùng.`;
+
+
+        validationBox.style.color =
+          "#8cff9f";
+
+
+        validationBox.textContent =
+          "Import hoàn tất.";
+
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          1200
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "SAFE COURT IMPORT:",
+          error
+        );
+
+
+        messageEl.textContent =
+          "❌ "
+          +
+          (
+            error?.message
+            ||
+            "Không thể nhập dữ liệu."
+          );
+
+
+        importBtn.disabled =
+          false;
+
+      }
+
+    },
+    true
+  );
+
+})();
+</script>
+
   
 </body>
 
