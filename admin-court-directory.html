@@ -4648,6 +4648,188 @@ tr.addEventListener(
 
 })();
 </script>
+
+<script>
+/* =========================================================
+   PICKDEE - FIX VIETNAMESE PHONE / ZALO CSV IMPORT
+   Tự phục hồi số 0 đầu nếu Excel/CSV làm mất
+   Ví dụ: 912345678 -> 0912345678
+========================================================= */
+
+(function () {
+
+  if (
+    window.__PICKDEE_PHONE_CSV_FIX__
+  ) {
+    return;
+  }
+
+  window.__PICKDEE_PHONE_CSV_FIX__ =
+    true;
+
+
+  if (
+    !window.Papa ||
+    typeof window.Papa.parse !== "function"
+  ) {
+
+    console.warn(
+      "PickDee: PapaParse chưa sẵn sàng."
+    );
+
+    return;
+  }
+
+
+  const originalParse =
+    window.Papa.parse.bind(
+      window.Papa
+    );
+
+
+  function normalizeVNPhone(
+    value
+  ) {
+
+    let phone =
+      String(
+        value ?? ""
+      )
+        .trim()
+        .replace(/\s+/g, "")
+        .replace(/[.\-]/g, "");
+
+
+    if (!phone) {
+      return "";
+    }
+
+
+    /*
+      Trường hợp Excel làm mất số 0 đầu:
+
+      912345678
+      ->
+      0912345678
+    */
+    if (
+      /^\d{9}$/.test(phone) &&
+      /^[35789]/.test(phone)
+    ) {
+
+      phone =
+        "0" + phone;
+
+    }
+
+
+    return phone;
+
+  }
+
+
+  window.Papa.parse =
+    function (
+      input,
+      config = {}
+    ) {
+
+      const originalComplete =
+        config.complete;
+
+
+      const safeConfig = {
+        ...config,
+
+        complete:
+          function (
+            result,
+            file
+          ) {
+
+            if (
+              Array.isArray(
+                result?.data
+              )
+            ) {
+
+              result.data.forEach(
+                row => {
+
+                  if (
+                    !row ||
+                    typeof row !== "object"
+                  ) {
+                    return;
+                  }
+
+
+                  if (
+                    Object.prototype
+                      .hasOwnProperty
+                      .call(
+                        row,
+                        "phone"
+                      )
+                  ) {
+
+                    row.phone =
+                      normalizeVNPhone(
+                        row.phone
+                      );
+
+                  }
+
+
+                  if (
+                    Object.prototype
+                      .hasOwnProperty
+                      .call(
+                        row,
+                        "zalo"
+                      )
+                  ) {
+
+                    row.zalo =
+                      normalizeVNPhone(
+                        row.zalo
+                      );
+
+                  }
+
+                }
+              );
+
+            }
+
+
+            if (
+              typeof originalComplete
+              ===
+              "function"
+            ) {
+
+              return originalComplete(
+                result,
+                file
+              );
+
+            }
+
+          }
+
+      };
+
+
+      return originalParse(
+        input,
+        safeConfig
+      );
+
+    };
+
+})();
+</script>
   
 </body>
 
