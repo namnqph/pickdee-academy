@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Danh bạ sân toàn quốc | PickDee Academy
+  </title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+      background:
+        #080b10;
+      color:
+        #ffffff;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(
+        1180px,
+        calc(100% - 28px)
+      );
+      margin: 0 auto;
+      padding:
+        24px 0
+        60px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content:
+        space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back-btn {
+      padding:
+        10px 14px;
+      border-radius: 10px;
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .12
+        );
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .055
+        );
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero {
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin:
+        0 0 8px;
+      font-size:
+        clamp(
+          26px,
+          5vw,
+          38px
+        );
+    }
+
+    .hero p {
+      margin: 0;
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .62
+        );
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns:
+        repeat(
+          4,
+          1fr
+        );
+      gap: 12px;
+      margin:
+        20px 0;
+    }
+
+    .stat {
+      padding: 16px;
+      border-radius: 14px;
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .045
+        );
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .08
+        );
+    }
+
+    .stat-label {
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .58
+        );
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin-top: 7px;
+      font-size: 28px;
+      font-weight: 900;
+      color: #d8ff45;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns:
+        2fr
+        1fr
+        1fr
+        1fr;
+      gap: 10px;
+      margin:
+        18px 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 10px;
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .10
+        );
+      background:
+        #11161d;
+      color: white;
+      padding:
+        0 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color:
+        rgba(
+          216,
+          255,
+          69,
+          .55
+        );
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .08
+        );
+      border-radius: 14px;
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .025
+        );
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th,
+    td {
+      padding:
+        13px 12px;
+      border-bottom:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .065
+        );
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .55
+        );
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    tbody tr:hover {
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .035
+        );
+    }
+
+    .court-name {
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .sub {
+      margin-top: 4px;
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .48
+        );
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding:
+        5px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge-green {
+      background:
+        rgba(
+          120,
+          255,
+          150,
+          .11
+        );
+      color: #8cff9f;
+    }
+
+    .badge-orange {
+      background:
+        rgba(
+          255,
+          180,
+          70,
+          .12
+        );
+      color: #ffc46e;
+    }
+
+    .badge-gray {
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .08
+        );
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .68
+        );
+    }
+
+    .badge-red {
+      background:
+        rgba(
+          255,
+          95,
+          95,
+          .12
+        );
+      color: #ff9c9c;
+    }
+
+    .empty {
+      padding:
+        38px 16px;
+      text-align: center;
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .52
+        );
+    }
+
+    .message {
+      display: none;
+      margin:
+        14px 0;
+      padding: 12px;
+      border-radius: 10px;
+      background:
+        rgba(
+          255,
+          100,
+          100,
+          .10
+        );
+      color: #ffb0b0;
+      font-size: 13px;
+    }
+
+    @media (
+      max-width: 850px
+    ) {
+
+      .stats {
+        grid-template-columns:
+          repeat(
+            2,
+            1fr
+          );
+      }
+
+      .filters {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+    @media (
+      max-width: 480px
+    ) {
+
+      .page {
+        width:
+          calc(
+            100% - 20px
+          );
+      }
+
+      .topbar {
+        align-items:
+          flex-start;
+      }
+
+      .stats {
+        grid-template-columns:
+          1fr
+          1fr;
+        gap: 8px;
+      }
+
+      .stat {
+        padding: 13px;
+      }
+
+      .stat-value {
+        font-size: 23px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="page">
+
+    <div class="topbar">
+
+      <a
+        href="/"
+        class="brand"
+      >
+        PickDee
+        <span>
+          Academy
+        </span>
+      </a>
+
+      <a
+        href="./admin"
+        class="back-btn"
+      >
+        ← Admin
+      </a>
+
+    </div>
+
+
+    <section class="hero">
+
+      <h1>
+        🌏 Danh bạ sân toàn quốc
+      </h1>
+
+      <p>
+        Kho dữ liệu sân Pickleball độc lập của PickDee.
+        Danh bạ này không ảnh hưởng tới các sân đang hợp tác,
+        chi phí thuê sân hoặc đối soát Academy.
+      </p>
+
+    </section>
+
+
+    <div class="stats">
+
+      <div class="stat">
+
+        <div class="stat-label">
+          🏟 Tổng sân
+        </div>
+
+        <div
+          id="totalCount"
+          class="stat-value"
+        >
+          ...
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          ✅ Đã xác minh
+        </div>
+
+        <div
+          id="verifiedCount"
+          class="stat-value"
+        >
+          ...
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          ⚠️ Chưa xác minh
+        </div>
+
+        <div
+          id="unverifiedCount"
+          class="stat-value"
+        >
+          ...
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          👤 Chủ sân đã claim
+        </div>
+
+        <div
+          id="claimedCount"
+          class="stat-value"
+        >
+          ...
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="filters">
+
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Tìm tên sân, địa chỉ, SĐT..."
+      >
+
+
+      <select id="provinceFilter">
+
+        <option value="">
+          Tất cả Tỉnh/Thành
+        </option>
+
+      </select>
+
+
+      <select id="verifiedFilter">
+
+        <option value="">
+          Tất cả xác minh
+        </option>
+
+        <option value="verified">
+          Đã xác minh
+        </option>
+
+        <option value="unverified">
+          Chưa xác minh
+        </option>
+
+      </select>
+
+
+      <select id="statusFilter">
+
+        <option value="">
+          Tất cả trạng thái
+        </option>
+
+        <option value="active">
+          Đang hoạt động
+        </option>
+
+        <option value="pending">
+          Chờ xử lý
+        </option>
+
+        <option value="inactive">
+          Tạm ngừng
+        </option>
+
+        <option value="closed">
+          Đã đóng
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div
+      id="message"
+      class="message"
+    >
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Sân
+            </th>
+
+            <th>
+              Khu vực
+            </th>
+
+            <th>
+              Số sân
+            </th>
+
+            <th>
+              Giá
+            </th>
+
+            <th>
+              Liên hệ
+            </th>
+
+            <th>
+              Xác minh
+            </th>
+
+            <th>
+              Claim
+            </th>
+
+            <th>
+              Trạng thái
+            </th>
+
+            <th>
+              Nguồn
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="rows">
+
+          <tr>
+
+            <td
+              colspan="9"
+              class="empty"
+            >
+              Đang tải dữ liệu...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script
+    src="./config.js"
+  ></script>
+
+
+  <script>
+
+  (async function () {
+
+
+    /* =====================================================
+       1. SUPABASE
+    ====================================================== */
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    const sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    let allRows = [];
+
+
+    const rowsEl =
+      document.getElementById(
+        "rows"
+      );
+
+
+    const messageEl =
+      document.getElementById(
+        "message"
+      );
+
+
+    const searchInput =
+      document.getElementById(
+        "searchInput"
+      );
+
+
+    const provinceFilter =
+      document.getElementById(
+        "provinceFilter"
+      );
+
+
+    const verifiedFilter =
+      document.getElementById(
+        "verifiedFilter"
+      );
+
+
+    const statusFilter =
+      document.getElementById(
+        "statusFilter"
+      );
+
+
+    /* =====================================================
+       2. HELPERS
+    ====================================================== */
+
+    function text(value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        )
+        .replaceAll(
+          "'",
+          "&#039;"
+        );
+
+    }
+
+
+    function money(value) {
+
+      if (
+        value === null ||
+        value === undefined ||
+        value === ""
+      ) {
+
+        return "—";
+
+      }
+
+
+      return (
+        Number(value)
+          .toLocaleString(
+            "vi-VN"
+          )
+        +
+        "đ"
+      );
+
+    }
+
+
+    function priceText(row) {
+
+      if (
+        row.price_min == null &&
+        row.price_max == null
+      ) {
+
+        return "—";
+
+      }
+
+
+      if (
+        row.price_min != null &&
+        row.price_max != null
+      ) {
+
+        return (
+          money(
+            row.price_min
+          )
+          +
+          " - "
+          +
+          money(
+            row.price_max
+          )
+        );
+
+      }
+
+
+      return money(
+        row.price_min
+        ??
+        row.price_max
+      );
+
+    }
+
+
+    function statusBadge(status) {
+
+      const value =
+        String(
+          status || ""
+        ).trim();
+
+
+      if (
+        value === "active"
+      ) {
+
+        return `
+          <span class="badge badge-green">
+            Đang hoạt động
+          </span>
+        `;
+
+      }
+
+
+      if (
+        value === "pending"
+      ) {
+
+        return `
+          <span class="badge badge-orange">
+            Chờ xử lý
+          </span>
+        `;
+
+      }
+
+
+      if (
+        value === "closed"
+      ) {
+
+        return `
+          <span class="badge badge-red">
+            Đã đóng
+          </span>
+        `;
+
+      }
+
+
+      return `
+        <span class="badge badge-gray">
+          Tạm ngừng
+        </span>
+      `;
+
+    }
+
+
+    /* =====================================================
+       3. KIỂM TRA ADMIN
+    ====================================================== */
+
+    async function requireAdmin() {
+
+      const {
+        data: sessionData,
+        error: sessionError
+      } =
+        await sb.auth.getSession();
+
+
+      if (
+        sessionError ||
+        !sessionData?.session
+      ) {
+
+        window.location.replace(
+          "/"
+        );
+
+        return false;
+
+      }
+
+
+      const userId =
+        sessionData.session.user.id;
+
+
+      const {
+        data: profile,
+        error: profileError
+      } =
+        await sb
+          .from(
+            "profiles"
+          )
+          .select(
+            "role"
+          )
+          .eq(
+            "id",
+            userId
+          )
+          .maybeSingle();
+
+
+      if (
+        profileError ||
+        String(
+          profile?.role || ""
+        )
+          .trim()
+          .toLowerCase()
+        !==
+        "admin"
+      ) {
+
+        window.location.replace(
+          "/"
+        );
+
+        return false;
+
+      }
+
+
+      return true;
+
+    }
+
+
+    /* =====================================================
+       4. LOAD DATA
+    ====================================================== */
+
+    async function loadData() {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "court_directory"
+          )
+          .select(`
+            id,
+            court_name,
+            province,
+            district,
+            ward,
+            address,
+            phone,
+            number_of_courts,
+            court_type,
+            opening_hours,
+            price_min,
+            price_max,
+            source_name,
+            source_url,
+            verified,
+            owner_claimed,
+            status,
+            created_at
+          `)
+          .order(
+            "court_name",
+            {
+              ascending: true
+            }
+          );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      allRows =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      updateStats();
+
+      buildProvinceFilter();
+
+      render();
+
+    }
+
+
+    /* =====================================================
+       5. THỐNG KÊ
+    ====================================================== */
+
+    function updateStats() {
+
+      const total =
+        allRows.length;
+
+
+      const verified =
+        allRows.filter(
+          row =>
+            row.verified === true
+        ).length;
+
+
+      const claimed =
+        allRows.filter(
+          row =>
+            row.owner_claimed === true
+        ).length;
+
+
+      document.getElementById(
+        "totalCount"
+      ).textContent =
+        total;
+
+
+      document.getElementById(
+        "verifiedCount"
+      ).textContent =
+        verified;
+
+
+      document.getElementById(
+        "unverifiedCount"
+      ).textContent =
+        total - verified;
+
+
+      document.getElementById(
+        "claimedCount"
+      ).textContent =
+        claimed;
+
+    }
+
+
+    /* =====================================================
+       6. TỈNH / THÀNH
+    ====================================================== */
+
+    function buildProvinceFilter() {
+
+      const provinces =
+        [
+          ...new Set(
+            allRows
+              .map(
+                row =>
+                  String(
+                    row.province || ""
+                  ).trim()
+              )
+              .filter(Boolean)
+          )
+        ]
+        .sort(
+          (
+            a,
+            b
+          ) =>
+            a.localeCompare(
+              b,
+              "vi"
+            )
+        );
+
+
+      provinceFilter.innerHTML =
+        `
+          <option value="">
+            Tất cả Tỉnh/Thành
+          </option>
+        `;
+
+
+      provinces.forEach(
+        province => {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            province;
+
+
+          option.textContent =
+            province;
+
+
+          provinceFilter.appendChild(
+            option
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       7. FILTER
+    ====================================================== */
+
+    function filteredRows() {
+
+      const keyword =
+        searchInput.value
+          .trim()
+          .toLowerCase();
+
+
+      const province =
+        provinceFilter.value;
+
+
+      const verified =
+        verifiedFilter.value;
+
+
+      const status =
+        statusFilter.value;
+
+
+      return allRows.filter(
+        row => {
+
+
+          if (
+            province &&
+            row.province !== province
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            verified ===
+            "verified" &&
+            row.verified !== true
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            verified ===
+            "unverified" &&
+            row.verified === true
+          ) {
+
+            return false;
+
+          }
+
+
+          if (
+            status &&
+            row.status !== status
+          ) {
+
+            return false;
+
+          }
+
+
+          if (keyword) {
+
+            const haystack =
+              [
+                row.court_name,
+                row.address,
+                row.province,
+                row.district,
+                row.ward,
+                row.phone,
+                row.source_name
+              ]
+                .join(
+                  " "
+                )
+                .toLowerCase();
+
+
+            if (
+              !haystack.includes(
+                keyword
+              )
+            ) {
+
+              return false;
+
+            }
+
+          }
+
+
+          return true;
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       8. RENDER
+    ====================================================== */
+
+    function render() {
+
+      const data =
+        filteredRows();
+
+
+      rowsEl.innerHTML =
+        "";
+
+
+      if (
+        data.length === 0
+      ) {
+
+        rowsEl.innerHTML =
+          `
+
+            <tr>
+
+              <td
+                colspan="9"
+                class="empty"
+              >
+
+                ${
+                  allRows.length === 0
+                    ?
+                    "Danh bạ hiện chưa có sân nào."
+                    :
+                    "Không tìm thấy sân phù hợp bộ lọc."
+                }
+
+              </td>
+
+            </tr>
+
+          `;
+
+
+        return;
+
+      }
+
+
+      data.forEach(
+        row => {
+
+          const tr =
+            document.createElement(
+              "tr"
+            );
+
+
+          tr.innerHTML =
+            `
+
+              <td>
+
+                <div class="court-name">
+
+                  ${
+                    text(
+                      row.court_name
+                    )
+                  }
+
+                </div>
+
+                <div class="sub">
+
+                  ${
+                    text(
+                      row.court_type
+                      ||
+                      row.opening_hours
+                      ||
+                      ""
+                    )
+                  }
+
+                </div>
+
+              </td>
+
+
+              <td>
+
+                ${
+                  text(
+                    [
+                      row.ward,
+                      row.district,
+                      row.province
+                    ]
+                      .filter(Boolean)
+                      .join(
+                        ", "
+                      )
+                  )
+                  ||
+                  "—"
+                }
+
+                <div class="sub">
+
+                  ${
+                    text(
+                      row.address || ""
+                    )
+                  }
+
+                </div>
+
+              </td>
+
+
+              <td>
+
+                ${
+                  row.number_of_courts
+                  ??
+                  "—"
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  priceText(
+                    row
+                  )
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  text(
+                    row.phone || "—"
+                  )
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  row.verified
+                    ?
+                    `
+                      <span class="badge badge-green">
+                        Đã xác minh
+                      </span>
+                    `
+                    :
+                    `
+                      <span class="badge badge-orange">
+                        Chưa xác minh
+                      </span>
+                    `
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  row.owner_claimed
+                    ?
+                    `
+                      <span class="badge badge-green">
+                        Đã claim
+                      </span>
+                    `
+                    :
+                    `
+                      <span class="badge badge-gray">
+                        Chưa claim
+                      </span>
+                    `
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  statusBadge(
+                    row.status
+                  )
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  row.source_url
+                    ?
+                    `
+                      <a
+                        href="${text(
+                          row.source_url
+                        )}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="
+                          color:#d8ff45;
+                          font-weight:800;
+                        "
+                      >
+                        ${
+                          text(
+                            row.source_name
+                            ||
+                            "Nguồn"
+                          )
+                        }
+                      </a>
+                    `
+                    :
+                    (
+                      text(
+                        row.source_name
+                        ||
+                        "—"
+                      )
+                    )
+                }
+
+              </td>
+
+            `;
+
+
+          rowsEl.appendChild(
+            tr
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       9. EVENTS
+    ====================================================== */
+
+    searchInput.addEventListener(
+      "input",
+      render
+    );
+
+
+    provinceFilter.addEventListener(
+      "change",
+      render
+    );
+
+
+    verifiedFilter.addEventListener(
+      "change",
+      render
+    );
+
+
+    statusFilter.addEventListener(
+      "change",
+      render
+    );
+
+
+    /* =====================================================
+       10. START
+    ====================================================== */
+
+    try {
+
+      const allowed =
+        await requireAdmin();
+
+
+      if (!allowed) {
+
+        return;
+
+      }
+
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "ADMIN COURT DIRECTORY:",
+        error
+      );
+
+
+      messageEl.style.display =
+        "block";
+
+
+      messageEl.textContent =
+        error?.message
+        ||
+        "Không tải được danh bạ sân.";
+
+
+      rowsEl.innerHTML =
+        `
+
+          <tr>
+
+            <td
+              colspan="9"
+              class="empty"
+            >
+              Không tải được dữ liệu.
+            </td>
+
+          </tr>
+
+        `;
+
+    }
+
+  })();
+
+  </script>
+
+</body>
+
+</html>
