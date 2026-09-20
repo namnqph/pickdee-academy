@@ -1626,6 +1626,1010 @@
 
   </script>
 
+
+  <!-- =========================================================
+     PICKDEE - COURT DIRECTORY CSV IMPORT
+========================================================= -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
+></script>
+
+<style>
+
+  .court-import-box {
+    margin: 20px 0;
+    padding: 18px;
+    border-radius: 14px;
+    border:
+      1px solid
+      rgba(216,255,69,.20);
+    background:
+      rgba(216,255,69,.035);
+  }
+
+  .court-import-box h3 {
+    margin:
+      0 0 6px;
+    font-size: 18px;
+  }
+
+  .court-import-box p {
+    margin:
+      0 0 14px;
+    color:
+      rgba(255,255,255,.58);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .court-import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .court-import-file {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .court-import-btn {
+    min-height: 44px;
+    padding:
+      0 16px;
+    border: 0;
+    border-radius: 10px;
+    background: #d8ff45;
+    color: #080b10;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .court-import-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+
+  .court-import-info {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns:
+      repeat(4,1fr);
+    gap: 8px;
+  }
+
+  .court-import-stat {
+    padding: 10px;
+    border-radius: 9px;
+    background:
+      rgba(255,255,255,.045);
+  }
+
+  .court-import-stat-label {
+    color:
+      rgba(255,255,255,.48);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .court-import-stat-value {
+    margin-top: 4px;
+    font-size: 18px;
+    font-weight: 900;
+    color: #d8ff45;
+  }
+
+  .court-import-message {
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  @media(max-width:700px) {
+
+    .court-import-info {
+      grid-template-columns:
+        1fr 1fr;
+    }
+
+  }
+
+</style>
+
+
+<script>
+(async function () {
+
+  /* =====================================================
+     1. CHÈN KHU IMPORT VÀO TRANG
+  ====================================================== */
+
+  const filters =
+    document.querySelector(
+      ".filters"
+    );
+
+  if (!filters) {
+    return;
+  }
+
+
+  const box =
+    document.createElement(
+      "div"
+    );
+
+  box.className =
+    "court-import-box";
+
+
+  box.innerHTML = `
+
+    <h3>
+      📥 Nhập danh bạ sân bằng CSV
+    </h3>
+
+    <p>
+      Import hàng loạt sân vào court_directory.
+      Hệ thống tự bỏ qua dòng thiếu tên sân
+      và các sân trùng theo source_url
+      hoặc source_name + source_external_id.
+    </p>
+
+
+    <div class="court-import-actions">
+
+      <input
+        id="courtCsvFile"
+        class="court-import-file"
+        type="file"
+        accept=".csv,text/csv"
+      >
+
+      <button
+        id="courtCsvImportBtn"
+        class="court-import-btn"
+        type="button"
+        disabled
+      >
+        NHẬP DỮ LIỆU
+      </button>
+
+    </div>
+
+
+    <div class="court-import-info">
+
+      <div class="court-import-stat">
+
+        <div class="court-import-stat-label">
+          Tổng dòng
+        </div>
+
+        <div
+          id="courtCsvTotal"
+          class="court-import-stat-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="court-import-stat">
+
+        <div class="court-import-stat-label">
+          Hợp lệ
+        </div>
+
+        <div
+          id="courtCsvValid"
+          class="court-import-stat-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="court-import-stat">
+
+        <div class="court-import-stat-label">
+          Trùng
+        </div>
+
+        <div
+          id="courtCsvDuplicate"
+          class="court-import-stat-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="court-import-stat">
+
+        <div class="court-import-stat-label">
+          Lỗi
+        </div>
+
+        <div
+          id="courtCsvInvalid"
+          class="court-import-stat-value"
+        >
+          0
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="courtCsvMessage"
+      class="court-import-message"
+    >
+    </div>
+
+  `;
+
+
+  filters.insertAdjacentElement(
+    "beforebegin",
+    box
+  );
+
+
+  /* =====================================================
+     2. SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbImport =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const fileInput =
+    document.getElementById(
+      "courtCsvFile"
+    );
+
+
+  const importBtn =
+    document.getElementById(
+      "courtCsvImportBtn"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "courtCsvMessage"
+    );
+
+
+  let preparedRows = [];
+
+
+  /* =====================================================
+     3. HELPERS
+  ====================================================== */
+
+  function clean(value) {
+
+    return String(
+      value ?? ""
+    ).trim();
+
+  }
+
+
+  function numberOrNull(
+    value
+  ) {
+
+    const text =
+      clean(value)
+        .replaceAll(
+          ".",
+          ""
+        )
+        .replaceAll(
+          ",",
+          ""
+        );
+
+
+    if (!text) {
+      return null;
+    }
+
+
+    const n =
+      Number(text);
+
+
+    return Number.isFinite(n)
+      ? n
+      : null;
+
+  }
+
+
+  function booleanValue(
+    value
+  ) {
+
+    const v =
+      clean(value)
+        .toLowerCase();
+
+
+    return (
+      v === "true" ||
+      v === "1" ||
+      v === "yes" ||
+      v === "y" ||
+      v === "có"
+    );
+
+  }
+
+
+  function normaliseRow(
+    row
+  ) {
+
+    return {
+
+      court_name:
+        clean(
+          row.court_name
+        ),
+
+      province:
+        clean(
+          row.province
+        ) || null,
+
+      district:
+        clean(
+          row.district
+        ) || null,
+
+      ward:
+        clean(
+          row.ward
+        ) || null,
+
+      address:
+        clean(
+          row.address
+        ) || null,
+
+      latitude:
+        numberOrNull(
+          row.latitude
+        ),
+
+      longitude:
+        numberOrNull(
+          row.longitude
+        ),
+
+      phone:
+        clean(
+          row.phone
+        ) || null,
+
+      zalo:
+        clean(
+          row.zalo
+        ) || null,
+
+      facebook_url:
+        clean(
+          row.facebook_url
+        ) || null,
+
+      website_url:
+        clean(
+          row.website_url
+        ) || null,
+
+      number_of_courts:
+        numberOrNull(
+          row.number_of_courts
+        ),
+
+      court_type:
+        clean(
+          row.court_type
+        ) || null,
+
+      opening_hours:
+        clean(
+          row.opening_hours
+        ) || null,
+
+      price_min:
+        numberOrNull(
+          row.price_min
+        ),
+
+      price_max:
+        numberOrNull(
+          row.price_max
+        ),
+
+      amenities:
+        clean(
+          row.amenities
+        ) || null,
+
+      booking_url:
+        clean(
+          row.booking_url
+        ) || null,
+
+      source_name:
+        clean(
+          row.source_name
+        ) || null,
+
+      source_url:
+        clean(
+          row.source_url
+        ) || null,
+
+      source_external_id:
+        clean(
+          row.source_external_id
+        ) || null,
+
+      verified:
+        booleanValue(
+          row.verified
+        ),
+
+      owner_claimed:
+        booleanValue(
+          row.owner_claimed
+        ),
+
+      status:
+        clean(
+          row.status
+        )
+        || "active",
+
+      note:
+        clean(
+          row.note
+        ) || null
+
+    };
+
+  }
+
+
+  /* =====================================================
+     4. ĐỌC CSV
+  ====================================================== */
+
+  fileInput.addEventListener(
+    "change",
+    function () {
+
+      preparedRows = [];
+
+      importBtn.disabled = true;
+
+      messageEl.textContent =
+        "Đang đọc file...";
+
+
+      const file =
+        fileInput.files?.[0];
+
+
+      if (!file) {
+
+        messageEl.textContent =
+          "";
+
+        return;
+      }
+
+
+      Papa.parse(
+        file,
+        {
+
+          header: true,
+
+          skipEmptyLines: true,
+
+          transformHeader:
+            header =>
+              clean(header)
+                .toLowerCase(),
+
+
+          complete:
+            function (
+              result
+            ) {
+
+              const sourceRows =
+                Array.isArray(
+                  result.data
+                )
+                  ?
+                  result.data
+                  :
+                  [];
+
+
+              const normalised =
+                sourceRows.map(
+                  normaliseRow
+                );
+
+
+              const valid =
+                normalised.filter(
+                  row =>
+                    row.court_name
+                );
+
+
+              const invalid =
+                normalised.length
+                -
+                valid.length;
+
+
+              preparedRows =
+                valid;
+
+
+              document.getElementById(
+                "courtCsvTotal"
+              ).textContent =
+                normalised.length;
+
+
+              document.getElementById(
+                "courtCsvValid"
+              ).textContent =
+                valid.length;
+
+
+              document.getElementById(
+                "courtCsvDuplicate"
+              ).textContent =
+                0;
+
+
+              document.getElementById(
+                "courtCsvInvalid"
+              ).textContent =
+                invalid;
+
+
+              importBtn.disabled =
+                valid.length === 0;
+
+
+              messageEl.textContent =
+                valid.length
+                +
+                " dòng hợp lệ, "
+                +
+                invalid
+                +
+                " dòng lỗi.";
+
+            }
+
+        }
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     5. IMPORT
+  ====================================================== */
+
+  importBtn.addEventListener(
+    "click",
+    async function () {
+
+      if (
+        preparedRows.length === 0
+      ) {
+
+        return;
+
+      }
+
+
+      importBtn.disabled =
+        true;
+
+
+      messageEl.textContent =
+        "Đang kiểm tra dữ liệu trùng...";
+
+
+      try {
+
+        /* ===============================================
+           LẤY DỮ LIỆU ĐANG CÓ
+        =============================================== */
+
+        const {
+          data: existing,
+          error: existingError
+        } =
+          await sbImport
+            .from(
+              "court_directory"
+            )
+            .select(
+              `
+                source_name,
+                source_url,
+                source_external_id
+              `
+            );
+
+
+        if (existingError) {
+          throw existingError;
+        }
+
+
+        const urlSet =
+          new Set();
+
+
+        const externalSet =
+          new Set();
+
+
+        (
+          existing || []
+        )
+          .forEach(
+            row => {
+
+              const url =
+                clean(
+                  row.source_url
+                );
+
+
+              if (url) {
+
+                urlSet.add(
+                  url
+                );
+
+              }
+
+
+              const source =
+                clean(
+                  row.source_name
+                )
+                  .toLowerCase();
+
+
+              const externalId =
+                clean(
+                  row.source_external_id
+                );
+
+
+              if (
+                source &&
+                externalId
+              ) {
+
+                externalSet.add(
+                  source
+                  +
+                  "::"
+                  +
+                  externalId
+                );
+
+              }
+
+            }
+          );
+
+
+        /* ===============================================
+           LOẠI TRÙNG
+        =============================================== */
+
+        const uniqueRows =
+          [];
+
+
+        let duplicateCount =
+          0;
+
+
+        const currentUrlSet =
+          new Set(
+            urlSet
+          );
+
+
+        const currentExternalSet =
+          new Set(
+            externalSet
+          );
+
+
+        preparedRows.forEach(
+          row => {
+
+            const url =
+              clean(
+                row.source_url
+              );
+
+
+            const source =
+              clean(
+                row.source_name
+              )
+                .toLowerCase();
+
+
+            const externalId =
+              clean(
+                row.source_external_id
+              );
+
+
+            const externalKey =
+              source &&
+              externalId
+                ?
+                source
+                +
+                "::"
+                +
+                externalId
+                :
+                "";
+
+
+            const duplicated =
+              (
+                url &&
+                currentUrlSet.has(
+                  url
+                )
+              )
+              ||
+              (
+                externalKey &&
+                currentExternalSet.has(
+                  externalKey
+                )
+              );
+
+
+            if (duplicated) {
+
+              duplicateCount++;
+
+              return;
+
+            }
+
+
+            if (url) {
+
+              currentUrlSet.add(
+                url
+              );
+
+            }
+
+
+            if (externalKey) {
+
+              currentExternalSet.add(
+                externalKey
+              );
+
+            }
+
+
+            uniqueRows.push(
+              row
+            );
+
+          }
+        );
+
+
+        document.getElementById(
+          "courtCsvDuplicate"
+        ).textContent =
+          duplicateCount;
+
+
+        if (
+          uniqueRows.length === 0
+        ) {
+
+          messageEl.textContent =
+            "Không có sân mới để nhập.";
+
+          return;
+
+        }
+
+
+        /* ===============================================
+           GẮN BATCH
+        =============================================== */
+
+        const batch =
+          "COURT-"
+          +
+          new Date()
+            .toISOString()
+            .replace(
+              /[^0-9]/g,
+              ""
+            )
+            .slice(
+              0,
+              14
+            );
+
+
+        const finalRows =
+          uniqueRows.map(
+            row => ({
+              ...row,
+              import_batch:
+                batch,
+              imported_at:
+                new Date()
+                  .toISOString()
+            })
+          );
+
+
+        /* ===============================================
+           CHIA NHÓM 100 DÒNG
+        =============================================== */
+
+        let inserted =
+          0;
+
+
+        for (
+          let i = 0;
+          i < finalRows.length;
+          i += 100
+        ) {
+
+          const chunk =
+            finalRows.slice(
+              i,
+              i + 100
+            );
+
+
+          messageEl.textContent =
+            "Đang nhập "
+            +
+            Math.min(
+              i + 100,
+              finalRows.length
+            )
+            +
+            "/"
+            +
+            finalRows.length
+            +
+            "...";
+
+
+          const {
+            error
+          } =
+            await sbImport
+              .from(
+                "court_directory"
+              )
+              .insert(
+                chunk
+              );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          inserted +=
+            chunk.length;
+
+        }
+
+
+        messageEl.textContent =
+          "✅ Đã nhập "
+          +
+          inserted
+          +
+          " sân. Bỏ qua "
+          +
+          duplicateCount
+          +
+          " sân trùng.";
+
+
+        setTimeout(
+          () => {
+
+            window.location.reload();
+
+          },
+          1200
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "COURT CSV IMPORT:",
+          error
+        );
+
+
+        messageEl.textContent =
+          "❌ "
+          +
+          (
+            error?.message
+            ||
+            "Không thể nhập CSV."
+          );
+
+
+        importBtn.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+})();
+</script>
 </body>
 
 </html>
