@@ -805,5 +805,839 @@ window.addEventListener(
   }
 );
 </script>
+  <script>
+window.addEventListener(
+  "load",
+  async function () {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    if (
+      !window.supabase ||
+      !cfg.SUPABASE_URL ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+
+    const attendanceSb =
+      window.PICKDEE_SUPABASE ||
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const sessionId =
+      Number(
+        params.get("id")
+      );
+
+
+    if (
+      !Number.isFinite(sessionId) ||
+      sessionId <= 0
+    ) {
+      return;
+    }
+
+
+    function escapeHtml(value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    /* =====================================================
+       1. KIỂM TRA SESSION NHÓM
+    ====================================================== */
+
+    const {
+      data: sessionRow,
+      error: sessionError
+    } =
+      await attendanceSb
+        .from("class_sessions")
+        .select(`
+          id,
+          training_group_id,
+          status
+        `)
+        .eq(
+          "id",
+          sessionId
+        )
+        .maybeSingle();
+
+
+    if (
+      sessionError ||
+      !sessionRow ||
+      !sessionRow.training_group_id
+    ) {
+
+      /*
+        Buổi cá nhân:
+        giữ nguyên 2 nút cũ.
+      */
+
+      return;
+    }
+
+
+    const groupId =
+      Number(
+        sessionRow.training_group_id
+      );
+
+
+    /* =====================================================
+       2. BUỔI NHÓM -> ẨN 2 NÚT XỬ LÝ CHUNG CŨ
+    ====================================================== */
+
+    const completeBtn =
+      document.getElementById(
+        "completeBtn"
+      );
+
+    const absentBtn =
+      document.getElementById(
+        "absentBtn"
+      );
+
+
+    const oldActions =
+      completeBtn
+        ?.closest(
+          ".actions"
+        );
+
+
+    if (oldActions) {
+
+      oldActions.style.display =
+        "none";
+
+    }
+
+
+    /* =====================================================
+       3. LẤY THÀNH VIÊN NHÓM
+    ====================================================== */
+
+    const {
+      data: memberRows,
+      error: memberError
+    } =
+      await attendanceSb
+        .from(
+          "training_group_members"
+        )
+        .select(`
+          registration_id
+        `)
+        .eq(
+          "group_id",
+          groupId
+        );
+
+
+    if (memberError) {
+
+      console.error(
+        "GROUP ATTENDANCE MEMBERS:",
+        memberError
+      );
+
+      return;
+    }
+
+
+    const registrationIds =
+      [
+        ...new Set(
+          (memberRows || [])
+            .map(
+              item =>
+                Number(
+                  item.registration_id
+                )
+            )
+            .filter(
+              id =>
+                Number.isFinite(id) &&
+                id > 0
+            )
+        )
+      ];
+
+
+    if (
+      registrationIds.length < 2
+    ) {
+      return;
+    }
+
+
+    const {
+      data: registrations,
+      error: registrationError
+    } =
+      await attendanceSb
+        .from("registrations")
+        .select(`
+          id,
+          registration_code,
+          student_id
+        `)
+        .in(
+          "id",
+          registrationIds
+        );
+
+
+    if (registrationError) {
+
+      console.error(
+        "GROUP ATTENDANCE REGISTRATIONS:",
+        registrationError
+      );
+
+      return;
+    }
+
+
+    const studentIds =
+      [
+        ...new Set(
+          (registrations || [])
+            .map(
+              item =>
+                Number(
+                  item.student_id
+                )
+            )
+            .filter(
+              id =>
+                Number.isFinite(id) &&
+                id > 0
+            )
+        )
+      ];
+
+
+    const {
+      data: students,
+      error: studentError
+    } =
+      await attendanceSb
+        .from("students")
+        .select(`
+          id,
+          student_code,
+          full_name
+        `)
+        .in(
+          "id",
+          studentIds
+        );
+
+
+    if (studentError) {
+
+      console.error(
+        "GROUP ATTENDANCE STUDENTS:",
+        studentError
+      );
+
+      return;
+    }
+
+
+    const studentMap =
+      new Map(
+        (students || [])
+          .map(
+            student => [
+              Number(student.id),
+              student
+            ]
+          )
+      );
+
+
+    const participants =
+      (registrations || [])
+        .map(
+          registration => {
+
+            const student =
+              studentMap.get(
+                Number(
+                  registration.student_id
+                )
+              )
+              ||
+              {};
+
+
+            return {
+
+              registrationId:
+                Number(
+                  registration.id
+                ),
+
+              registrationCode:
+                registration.registration_code
+                ||
+                "",
+
+              studentCode:
+                student.student_code
+                ||
+                "",
+
+              fullName:
+                student.full_name
+                ||
+                "Học viên"
+
+            };
+
+          }
+        )
+        .sort(
+          (a,b) =>
+            a.registrationId
+            -
+            b.registrationId
+        );
+
+
+    /* =====================================================
+       4. LẤY ĐIỂM DANH HIỆN CÓ
+    ====================================================== */
+
+    const attendanceMap =
+      new Map();
+
+
+    try {
+
+      const {
+        data: attendanceRows,
+        error: attendanceError
+      } =
+        await attendanceSb
+          .from("attendance")
+          .select(`
+            registration_id,
+            attendance_status
+          `)
+          .eq(
+            "session_id",
+            sessionId
+          );
+
+
+      if (!attendanceError) {
+
+        (attendanceRows || [])
+          .forEach(
+            row => {
+
+              attendanceMap.set(
+                Number(
+                  row.registration_id
+                ),
+                String(
+                  row.attendance_status
+                  ||
+                  ""
+                )
+              );
+
+            }
+          );
+
+      }
+
+    }
+    catch (_) {}
+
+
+    /* =====================================================
+       5. TẠO KHỐI ĐIỂM DANH
+    ====================================================== */
+
+    const noteCard =
+      document.getElementById(
+        "note"
+      )
+        ?.closest(
+          ".card"
+        );
+
+
+    if (!noteCard) {
+      return;
+    }
+
+
+    let attendanceBox =
+      document.getElementById(
+        "groupAttendanceBox"
+      );
+
+
+    if (!attendanceBox) {
+
+      attendanceBox =
+        document.createElement(
+          "div"
+        );
+
+      attendanceBox.id =
+        "groupAttendanceBox";
+
+      attendanceBox.style.marginTop =
+        "22px";
+
+      attendanceBox.style.paddingTop =
+        "20px";
+
+      attendanceBox.style.borderTop =
+        "1px solid rgba(255,255,255,.15)";
+
+
+      noteCard.appendChild(
+        attendanceBox
+      );
+
+    }
+
+
+    function renderAttendance() {
+
+      const sessionClosed =
+        String(
+          sessionRow.status || ""
+        ).trim()
+        !==
+        "Chờ học";
+
+
+      attendanceBox.innerHTML = `
+
+        <h2
+          style="
+            margin:0 0 16px;
+          "
+        >
+          ✅ Điểm danh học viên
+        </h2>
+
+        <div
+          style="
+            color:#94a8c6;
+            margin-bottom:16px;
+            line-height:1.5;
+          "
+        >
+          Điểm danh riêng từng thành viên.
+          Buổi học sẽ tự hoàn tất sau khi đủ
+          ${participants.length}/${participants.length}
+          học viên được xử lý.
+        </div>
+
+        ${participants
+          .map(
+            (
+              participant,
+              index
+            ) => {
+
+              const currentStatus =
+                attendanceMap.get(
+                  participant.registrationId
+                )
+                ||
+                "";
+
+
+              return `
+
+                <div
+                  style="
+                    margin-bottom:12px;
+                    padding:16px;
+                    border:1px solid rgba(255,255,255,.15);
+                    border-radius:12px;
+                    background:rgba(0,0,0,.12);
+                  "
+                >
+
+                  <div
+                    style="
+                      font-size:16px;
+                      font-weight:800;
+                    "
+                  >
+                    ${index + 1}.
+                    ${escapeHtml(
+                      participant.fullName
+                    )}
+                  </div>
+
+                  <div
+                    style="
+                      margin-top:4px;
+                      color:#94a8c6;
+                      font-size:13px;
+                    "
+                  >
+                    ${escapeHtml(
+                      participant.studentCode
+                    )}
+                    ·
+                    ${escapeHtml(
+                      participant.registrationCode
+                    )}
+                  </div>
+
+
+                  <div
+                    id="attendance-status-${participant.registrationId}"
+                    style="
+                      margin-top:9px;
+                      font-weight:800;
+                      color:${
+                        currentStatus === "Có mặt"
+                          ?
+                          "#b7ff00"
+                          :
+                          currentStatus === "Vắng"
+                            ?
+                            "#ff9d9d"
+                            :
+                            "#b8c4d8"
+                      };
+                    "
+                  >
+                    ${
+                      currentStatus
+                        ?
+                        (
+                          "Đã điểm danh: "
+                          +
+                          escapeHtml(
+                            currentStatus
+                          )
+                        )
+                        :
+                        "Chưa điểm danh"
+                    }
+                  </div>
+
+
+                  <div
+                    style="
+                      display:grid;
+                      grid-template-columns:1fr 1fr;
+                      gap:10px;
+                      margin-top:12px;
+                    "
+                  >
+
+                    <button
+                      type="button"
+                      class="group-attendance-btn"
+                      data-registration-id="${participant.registrationId}"
+                      data-status="Có mặt"
+                      ${sessionClosed ? "disabled" : ""}
+                      style="
+                        background:#b7ff00;
+                        color:#07111f;
+                      "
+                    >
+                      ✅ CÓ MẶT
+                    </button>
+
+
+                    <button
+                      type="button"
+                      class="group-attendance-btn"
+                      data-registration-id="${participant.registrationId}"
+                      data-status="Vắng"
+                      ${sessionClosed ? "disabled" : ""}
+                      style="
+                        background:#fff;
+                        color:#07111f;
+                      "
+                    >
+                      ❌ VẮNG
+                    </button>
+
+                  </div>
+
+                </div>
+              `;
+
+            }
+          )
+          .join("")
+        }
+
+
+        <div
+          id="groupAttendanceMessage"
+          style="
+            margin-top:12px;
+            font-weight:800;
+            line-height:1.5;
+          "
+        ></div>
+      `;
+
+
+      attendanceBox
+        .querySelectorAll(
+          ".group-attendance-btn"
+        )
+        .forEach(
+          button => {
+
+            button.addEventListener(
+              "click",
+              async function () {
+
+                const registrationId =
+                  Number(
+                    this.dataset
+                      .registrationId
+                  );
+
+
+                const attendanceStatus =
+                  String(
+                    this.dataset.status
+                    ||
+                    ""
+                  );
+
+
+                const message =
+                  document.getElementById(
+                    "groupAttendanceMessage"
+                  );
+
+
+                if (
+                  !registrationId ||
+                  ![
+                    "Có mặt",
+                    "Vắng"
+                  ].includes(
+                    attendanceStatus
+                  )
+                ) {
+                  return;
+                }
+
+
+                attendanceBox
+                  .querySelectorAll(
+                    ".group-attendance-btn"
+                  )
+                  .forEach(
+                    btn => {
+
+                      btn.disabled =
+                        true;
+
+                    }
+                  );
+
+
+                if (message) {
+
+                  message.style.color =
+                    "#b8c4d8";
+
+                  message.textContent =
+                    "Đang ghi nhận điểm danh...";
+
+                }
+
+
+                try {
+
+                  const {
+                    data,
+                    error
+                  } =
+                    await attendanceSb.rpc(
+                      "coach_mark_group_attendance",
+                      {
+
+                        p_session_id:
+                          sessionId,
+
+                        p_registration_id:
+                          registrationId,
+
+                        p_attendance_status:
+                          attendanceStatus
+
+                      }
+                    );
+
+
+                  if (error) {
+                    throw error;
+                  }
+
+
+                  attendanceMap.set(
+                    registrationId,
+                    attendanceStatus
+                  );
+
+
+                  if (
+                    data?.session_finished
+                    === true
+                  ) {
+
+                    if (message) {
+
+                      message.style.color =
+                        "#b7ff00";
+
+                      message.textContent =
+                        "✓ Đã điểm danh đủ "
+                        +
+                        String(
+                          data.marked || participants.length
+                        )
+                        +
+                        "/"
+                        +
+                        String(
+                          data.members || participants.length
+                        )
+                        +
+                        ". Trạng thái buổi: "
+                        +
+                        String(
+                          data.session_status
+                          ||
+                          "Đã xử lý"
+                        )
+                        +
+                        ".";
+
+                    }
+
+
+                    setTimeout(
+                      function () {
+
+                        window.location.reload();
+
+                      },
+                      800
+                    );
+
+
+                    return;
+                  }
+
+
+                  if (message) {
+
+                    message.style.color =
+                      "#b7ff00";
+
+                    message.textContent =
+                      "✓ Đã ghi nhận. Còn "
+                      +
+                      String(
+                        data?.remaining ?? 0
+                      )
+                      +
+                      " học viên chưa điểm danh.";
+
+                  }
+
+
+                  renderAttendance();
+
+                }
+                catch (error) {
+
+                  console.error(
+                    "GROUP ATTENDANCE:",
+                    error
+                  );
+
+
+                  if (message) {
+
+                    message.style.color =
+                      "#ff9d9d";
+
+                    message.textContent =
+                      error?.message
+                      ||
+                      "Không thể điểm danh.";
+
+                  }
+
+
+                  attendanceBox
+                    .querySelectorAll(
+                      ".group-attendance-btn"
+                    )
+                    .forEach(
+                      btn => {
+
+                        btn.disabled =
+                          false;
+
+                      }
+                    );
+
+                }
+
+              }
+            );
+
+          }
+        );
+
+    }
+
+
+    renderAttendance();
+
+  }
+);
+</script>
 </body>
 </html>
