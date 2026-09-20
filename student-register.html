@@ -444,7 +444,114 @@
       THÔNG TIN HỌC VIÊN
     </div>
 
+<div
+  class="field full"
+  style="
+    margin-top:18px;
+    margin-bottom:22px;
+  "
+>
+  <label for="avatarInput">
+    ẢNH ĐẠI DIỆN *
+  </label>
 
+  <div
+    style="
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      flex-wrap:wrap;
+    "
+  >
+
+    <div
+      style="
+        width:104px;
+        height:104px;
+        border-radius:50%;
+        overflow:hidden;
+        border:2px solid rgba(216,255,69,.55);
+        background:#081a36;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex:0 0 104px;
+      "
+    >
+
+      <img
+        id="avatarPreview"
+        alt="Ảnh đại diện"
+        style="
+          display:none;
+          width:100%;
+          height:100%;
+          object-fit:cover;
+        "
+      >
+
+      <div
+        id="avatarPlaceholder"
+        style="
+          font-size:38px;
+        "
+      >
+        👤
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        flex:1;
+        min-width:220px;
+      "
+    >
+
+      <label
+        for="avatarInput"
+        style="
+          min-height:48px;
+          padding:0 18px;
+          border-radius:10px;
+          background:#d8ff45;
+          color:#07101b;
+          font-weight:900;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          cursor:pointer;
+        "
+      >
+        📷 CHỤP / CHỌN ẢNH
+      </label>
+
+      <input
+        id="avatarInput"
+        type="file"
+        accept="image/*"
+        required
+        style="display:none;"
+      >
+
+      <div
+        id="avatarHint"
+        style="
+          margin-top:10px;
+          color:rgba(255,255,255,.65);
+          font-size:13px;
+          line-height:1.5;
+        "
+      >
+        Ảnh sẽ được tự cắt vuông và nén trước khi tải lên.
+      </div>
+
+    </div>
+
+  </div>
+</div>
     <div class="grid">
 
 
@@ -871,7 +978,285 @@
     document.getElementById(
       "registerForm"
     );
+  const avatarInput =
+    document.getElementById(
+      "avatarInput"
+    );
 
+  const avatarPreview =
+    document.getElementById(
+      "avatarPreview"
+    );
+
+  const avatarPlaceholder =
+    document.getElementById(
+      "avatarPlaceholder"
+    );
+
+  const avatarHint =
+    document.getElementById(
+      "avatarHint"
+    );
+
+
+  let avatarBase64 = "";
+  let avatarMime = "";
+
+
+  function loadAvatarImage(url) {
+
+    return new Promise(
+      (resolve, reject) => {
+
+        const image =
+          new Image();
+
+        image.onload =
+          () => resolve(image);
+
+        image.onerror =
+          reject;
+
+        image.src =
+          url;
+
+      }
+    );
+  }
+
+
+  function dataUrlBytes(
+    dataUrl
+  ) {
+
+    const base64 =
+      String(dataUrl)
+        .split(",")[1]
+        || "";
+
+    return Math.ceil(
+      base64.length * 3 / 4
+    );
+  }
+
+
+  avatarInput.addEventListener(
+    "change",
+    async function () {
+
+      avatarBase64 = "";
+      avatarMime = "";
+
+      avatarPreview.style.display =
+        "none";
+
+      avatarPlaceholder.style.display =
+        "block";
+
+
+      const file =
+        avatarInput.files?.[0];
+
+
+      if (!file) {
+
+        avatarHint.textContent =
+          "Vui lòng chọn ảnh đại diện.";
+
+        return;
+      }
+
+
+      avatarHint.textContent =
+        "Đang xử lý ảnh...";
+
+
+      try {
+
+        if (
+          file.size
+          >
+          20 * 1024 * 1024
+        ) {
+
+          throw new Error(
+            "Ảnh gốc quá lớn."
+          );
+        }
+
+
+        const objectUrl =
+          URL.createObjectURL(
+            file
+          );
+
+
+        const image =
+          await loadAvatarImage(
+            objectUrl
+          );
+
+
+        URL.revokeObjectURL(
+          objectUrl
+        );
+
+
+        const width =
+          image.naturalWidth;
+
+        const height =
+          image.naturalHeight;
+
+        const side =
+          Math.min(
+            width,
+            height
+          );
+
+        const sourceX =
+          (width - side) / 2;
+
+        const sourceY =
+          (height - side) / 2;
+
+
+        const canvas =
+          document.createElement(
+            "canvas"
+          );
+
+        canvas.width =
+          512;
+
+        canvas.height =
+          512;
+
+
+        const context =
+          canvas.getContext(
+            "2d"
+          );
+
+
+        context.drawImage(
+          image,
+          sourceX,
+          sourceY,
+          side,
+          side,
+          0,
+          0,
+          512,
+          512
+        );
+
+
+        let outputMime =
+          "image/webp";
+
+        let output =
+          canvas.toDataURL(
+            outputMime,
+            0.78
+          );
+
+
+        if (
+          !output.startsWith(
+            "data:image/webp"
+          )
+        ) {
+
+          outputMime =
+            "image/jpeg";
+
+          output =
+            canvas.toDataURL(
+              outputMime,
+              0.82
+            );
+        }
+
+
+        if (
+          dataUrlBytes(output)
+          >
+          1024 * 1024
+        ) {
+
+          outputMime =
+            "image/jpeg";
+
+          output =
+            canvas.toDataURL(
+              outputMime,
+              0.65
+            );
+        }
+
+
+        if (
+          dataUrlBytes(output)
+          >
+          1024 * 1024
+        ) {
+
+          throw new Error(
+            "Ảnh sau khi nén vẫn quá lớn."
+          );
+        }
+
+
+        avatarBase64 =
+          output;
+
+        avatarMime =
+          outputMime;
+
+
+        avatarPreview.src =
+          output;
+
+        avatarPreview.style.display =
+          "block";
+
+        avatarPlaceholder.style.display =
+          "none";
+
+
+        avatarHint.textContent =
+          "✓ Ảnh đã sẵn sàng.";
+
+        avatarInput.setCustomValidity(
+          ""
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "PICKDEE AVATAR:",
+          error
+        );
+
+        avatarBase64 = "";
+        avatarMime = "";
+
+        avatarInput.value =
+          "";
+
+        avatarInput.setCustomValidity(
+          "Vui lòng chọn ảnh hợp lệ."
+        );
+
+        avatarHint.textContent =
+          "Không xử lý được ảnh này. Vui lòng chụp hoặc chọn ảnh khác.";
+
+      }
+
+    }
+  );
    const password =
     document.getElementById(
       "password"
@@ -1667,7 +2052,22 @@ groupPreference.addEventListener(
         return;
 
       }
+      if (
+        !avatarBase64
+        ||
+        !avatarMime
+      ) {
 
+        message.textContent =
+          "Vui lòng chụp hoặc chọn ảnh đại diện.";
+
+        message.className =
+          "message error";
+
+        avatarInput.focus();
+
+        return;
+      }
       if (
         password.value
         !==
@@ -2066,7 +2466,11 @@ if (
             groupPreferenceValue === "bring_partner"
               ? (partnerPhoneValue || null)
               : null,
+avatar_base64:
+  avatarBase64,
 
+avatar_mime:
+  avatarMime,
           source:
             "Web PickDee"
 
