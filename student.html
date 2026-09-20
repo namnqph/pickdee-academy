@@ -5974,6 +5974,643 @@ document.addEventListener("DOMContentLoaded", function () {
 
 })();
 </script>
+
+  <script>
+/* =========================================================
+   PICKDEE - AVATAR TRONG DANH SÁCH HỌC VIÊN ADMIN
+   - Patch độc lập, không sửa students.js
+   - Tự nhận diện từng row qua link/onclick student-detail?id=
+   - Ưu tiên avatar_path
+   - Fallback image_url
+   - Không có ảnh -> chữ cái đầu tên học viên
+========================================================= */
+
+(function () {
+
+  if (
+    !window.supabase
+    ||
+    !window.PICKDEE_CONFIG
+  ) {
+    return;
+  }
+
+
+  /* =========================
+     STYLE
+  ========================= */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+  style.textContent = `
+    .pickdee-student-list-avatar-wrap {
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-width:0;
+    }
+
+    .pickdee-student-list-avatar {
+      width:42px;
+      height:42px;
+      min-width:42px;
+      border-radius:50%;
+      overflow:hidden;
+      border:2px solid rgba(216,255,69,.72);
+      background:#08234d;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#d8ff45;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .pickdee-student-list-avatar img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .pickdee-student-list-text {
+      min-width:0;
+    }
+
+    @media (max-width:600px) {
+      .pickdee-student-list-avatar {
+        width:38px;
+        height:38px;
+        min-width:38px;
+      }
+
+      .pickdee-student-list-avatar-wrap {
+        gap:9px;
+      }
+    }
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =========================
+     SUPABASE RIÊNG CHO PATCH
+  ========================= */
+
+  const avatarSb =
+    window.supabase.createClient(
+      window.PICKDEE_CONFIG.SUPABASE_URL,
+      window.PICKDEE_CONFIG.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let studentMap =
+    new Map();
+
+  let decorating =
+    false;
+
+
+  /* =========================
+     PUBLIC URL AVATAR
+  ========================= */
+
+  function publicAvatarUrl(
+    path
+  ) {
+
+    if (!path) {
+      return "";
+    }
+
+
+    const base =
+      String(
+        window.PICKDEE_CONFIG.SUPABASE_URL
+        ||
+        ""
+      )
+        .replace(
+          /\/+$/,
+          ""
+        );
+
+
+    const safePath =
+      String(path)
+        .split("/")
+        .map(
+          part =>
+            encodeURIComponent(
+              part
+            )
+        )
+        .join("/");
+
+
+    return (
+      base
+      +
+      "/storage/v1/object/public/avatars/"
+      +
+      safePath
+    );
+  }
+
+
+  /* =========================
+     CHỮ FALLBACK
+  ========================= */
+
+  function initialFromName(
+    name
+  ) {
+
+    const text =
+      String(
+        name || ""
+      ).trim();
+
+
+    if (!text) {
+      return "👤";
+    }
+
+
+    const parts =
+      text
+        .split(/\s+/)
+        .filter(Boolean);
+
+
+    return (
+      parts[
+        parts.length - 1
+      ]
+        ?.charAt(0)
+        ?.toUpperCase()
+      ||
+      "👤"
+    );
+  }
+
+
+  /* =========================
+     LẤY STUDENT ID TỪ ROW
+  ========================= */
+
+  function getStudentIdFromRow(
+    row
+  ) {
+
+    if (!row) {
+      return null;
+    }
+
+
+    const link =
+      row.querySelector(
+        'a[href*="student-detail"]'
+      );
+
+
+    const sources = [
+      link?.getAttribute("href") || "",
+      row.getAttribute("onclick") || ""
+    ];
+
+
+    for (
+      const source
+      of sources
+    ) {
+
+      const match =
+        String(source)
+          .match(
+            /student-detail(?:\.html)?\?id=(\d+)/i
+          );
+
+
+      if (match) {
+        return Number(
+          match[1]
+        );
+      }
+
+    }
+
+
+    return null;
+  }
+
+
+  /* =========================
+     TÌM Ô CHỨA TÊN HỌC VIÊN
+  ========================= */
+
+  function findNameCell(
+    row,
+    student
+  ) {
+
+    const cells =
+      Array.from(
+        row.querySelectorAll(
+          "td"
+        )
+      );
+
+
+    const wanted =
+      String(
+        student?.full_name
+        ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (wanted) {
+
+      const exactCell =
+        cells.find(
+          cell =>
+            String(
+              cell.textContent
+              ||
+              ""
+            )
+              .trim()
+              .toLowerCase()
+              ===
+              wanted
+        );
+
+
+      if (exactCell) {
+        return exactCell;
+      }
+
+
+      const containsCell =
+        cells.find(
+          cell =>
+            String(
+              cell.textContent
+              ||
+              ""
+            )
+              .trim()
+              .toLowerCase()
+              .includes(
+                wanted
+              )
+        );
+
+
+      if (containsCell) {
+        return containsCell;
+      }
+
+    }
+
+
+    /*
+      Fallback:
+      danh sách PickDee thường để mã HV trước,
+      họ tên ở cột kế tiếp.
+    */
+    return (
+      cells[1]
+      ||
+      cells[0]
+      ||
+      null
+    );
+  }
+
+
+  /* =========================
+     TẠO AVATAR
+  ========================= */
+
+  function buildAvatar(
+    student
+  ) {
+
+    const avatar =
+      document.createElement(
+        "div"
+      );
+
+    avatar.className =
+      "pickdee-student-list-avatar";
+
+
+    const avatarPath =
+      String(
+        student?.avatar_path
+        ||
+        ""
+      ).trim();
+
+
+    const legacyUrl =
+      String(
+        student?.image_url
+        ||
+        ""
+      ).trim();
+
+
+    const url =
+      avatarPath
+        ?
+        publicAvatarUrl(
+          avatarPath
+        )
+        :
+        legacyUrl;
+
+
+    const fallback =
+      initialFromName(
+        student?.full_name
+      );
+
+
+    avatar.textContent =
+      fallback;
+
+
+    if (url) {
+
+      const img =
+        document.createElement(
+          "img"
+        );
+
+
+      img.alt =
+        student?.full_name
+        ||
+        "Học viên";
+
+
+      img.onload =
+        function () {
+
+          avatar.textContent =
+            "";
+
+          avatar.appendChild(
+            img
+          );
+
+        };
+
+
+      img.onerror =
+        function () {
+
+          avatar.textContent =
+            fallback;
+
+        };
+
+
+      img.src =
+        url;
+
+    }
+
+
+    return avatar;
+  }
+
+
+  /* =========================
+     GẮN AVATAR VÀO TỪNG ROW
+  ========================= */
+
+  function decorateRows() {
+
+    if (
+      decorating
+      ||
+      studentMap.size === 0
+    ) {
+      return;
+    }
+
+
+    decorating =
+      true;
+
+
+    try {
+
+      const rows =
+        document.querySelectorAll(
+          "tbody tr"
+        );
+
+
+      rows.forEach(
+        row => {
+
+          if (
+            row.dataset
+              .pickdeeAvatarReady
+            ===
+            "1"
+          ) {
+            return;
+          }
+
+
+          const studentId =
+            getStudentIdFromRow(
+              row
+            );
+
+
+          if (!studentId) {
+            return;
+          }
+
+
+          const student =
+            studentMap.get(
+              Number(studentId)
+            );
+
+
+          if (!student) {
+            return;
+          }
+
+
+          const cell =
+            findNameCell(
+              row,
+              student
+            );
+
+
+          if (!cell) {
+            return;
+          }
+
+
+          const originalContent =
+            document.createElement(
+              "div"
+            );
+
+          originalContent.className =
+            "pickdee-student-list-text";
+
+
+          while (
+            cell.firstChild
+          ) {
+
+            originalContent
+              .appendChild(
+                cell.firstChild
+              );
+
+          }
+
+
+          const wrapper =
+            document.createElement(
+              "div"
+            );
+
+          wrapper.className =
+            "pickdee-student-list-avatar-wrap";
+
+
+          wrapper.appendChild(
+            buildAvatar(
+              student
+            )
+          );
+
+
+          wrapper.appendChild(
+            originalContent
+          );
+
+
+          cell.appendChild(
+            wrapper
+          );
+
+
+          row.dataset
+            .pickdeeAvatarReady =
+            "1";
+
+        }
+      );
+
+    }
+    finally {
+
+      decorating =
+        false;
+
+    }
+
+  }
+
+
+  /* =========================
+     LOAD DỮ LIỆU AVATAR
+  ========================= */
+
+  async function loadStudentAvatars() {
+
+    const {
+      data,
+      error
+    } =
+      await avatarSb
+        .from(
+          "students"
+        )
+        .select(
+          "id,full_name,avatar_path,image_url"
+        );
+
+
+    if (error) {
+
+      console.error(
+        "PICKDEE STUDENT LIST AVATAR:",
+        error
+      );
+
+      return;
+    }
+
+
+    studentMap =
+      new Map(
+        (data || [])
+          .map(
+            student => [
+              Number(
+                student.id
+              ),
+              student
+            ]
+          )
+      );
+
+
+    decorateRows();
+
+  }
+
+
+  /* =========================
+     THEO DÕI students.js RENDER
+  ========================= */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        decorateRows();
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  loadStudentAvatars();
+
+})();
+</script>
 </body>
 
 </html>
