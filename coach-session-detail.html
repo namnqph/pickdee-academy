@@ -4319,5 +4319,633 @@ updateControls();
 
 })();
 </script>
+  <script>
+window.addEventListener(
+  "load",
+  async function () {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    if (
+      !window.supabase ||
+      !cfg.SUPABASE_URL ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+    const groupSb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const sessionId =
+      Number(
+        params.get("id") ||
+        params.get("session_id")
+      );
+
+    if (
+      !Number.isFinite(sessionId) ||
+      sessionId <= 0
+    ) {
+      return;
+    }
+
+    await new Promise(
+      resolve =>
+        setTimeout(resolve, 800)
+    );
+
+    const {
+      data: participantData,
+      error: participantError
+    } =
+      await groupSb.rpc(
+        "coach_get_session_participants",
+        {
+          p_session_id:
+            sessionId
+        }
+      );
+
+    if (
+      participantError ||
+      !participantData ||
+      participantData.is_group !== true
+    ) {
+      return;
+    }
+
+    const members =
+      Array.isArray(
+        participantData.members
+      )
+        ? participantData.members
+        : [];
+
+    if (
+      members.length < 2
+    ) {
+      return;
+    }
+
+    const {
+      data: sessionRow,
+      error: sessionError
+    } =
+      await groupSb
+        .from("class_sessions")
+        .select(`
+          id,
+          status,
+          training_group_id
+        `)
+        .eq(
+          "id",
+          sessionId
+        )
+        .maybeSingle();
+
+    if (
+      sessionError ||
+      !sessionRow
+    ) {
+      console.error(
+        "GROUP SESSION:",
+        sessionError
+      );
+
+      return;
+    }
+
+    function escapeHtml(value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /* =====================================
+       HIỂN THỊ ĐỦ 2 HỌC VIÊN
+    ====================================== */
+
+    const studentName =
+      document.getElementById(
+        "studentName"
+      );
+
+    if (studentName) {
+
+      studentName.textContent =
+        members
+          .map(
+            item =>
+              item.student_name ||
+              item.student_code ||
+              "Học viên"
+          )
+          .join(" + ");
+
+      const item =
+        studentName.closest(
+          ".item"
+        );
+
+      const label =
+        item?.querySelector(
+          ".label"
+        );
+
+      if (label) {
+        label.textContent =
+          "Học viên trong nhóm";
+      }
+    }
+
+    /* =====================================
+       DÒNG ĐĂNG KÝ NHÓM
+    ====================================== */
+
+    const coachLine =
+      document.getElementById(
+        "coachLine"
+      );
+
+    if (coachLine) {
+
+      const oldText =
+        coachLine.textContent || "";
+
+      const coachIndex =
+        oldText.indexOf(
+          "· Coach:"
+        );
+
+      const coachPart =
+        coachIndex >= 0
+          ? oldText.slice(
+              coachIndex
+            )
+          : "";
+
+      const registrationCodes =
+        members
+          .map(
+            item =>
+              item.registration_code
+          )
+          .filter(Boolean)
+          .join(" + ");
+
+      coachLine.textContent =
+        "Đăng ký nhóm: "
+        +
+        (
+          registrationCodes ||
+          "—"
+        )
+        +
+        (
+          coachPart
+            ? " " + coachPart
+            : ""
+        );
+    }
+
+    /* =====================================
+       ẨN NÚT ĐIỂM DANH CŨ
+       GIỮ NÚT GỌI COACH HỖ TRỢ
+    ====================================== */
+
+    const completeBtn =
+      document.getElementById(
+        "completeBtn"
+      );
+
+    const absentBtn =
+      document.getElementById(
+        "absentBtn"
+      );
+
+    if (completeBtn) {
+      completeBtn.style.display =
+        "none";
+    }
+
+    if (absentBtn) {
+      absentBtn.style.display =
+        "none";
+    }
+
+    /* =====================================
+       TẠO KHỐI ĐIỂM DANH NHÓM
+    ====================================== */
+
+    const actions =
+      document.querySelector(
+        ".actions"
+      );
+
+    if (!actions) {
+      return;
+    }
+
+    let box =
+      document.getElementById(
+        "coachGroupAttendance"
+      );
+
+    if (!box) {
+
+      box =
+        document.createElement(
+          "section"
+        );
+
+      box.id =
+        "coachGroupAttendance";
+
+      box.className =
+        "card";
+
+      box.style.marginTop =
+        "16px";
+
+      actions.parentNode.insertBefore(
+        box,
+        actions
+      );
+    }
+
+    const sessionClosed =
+      String(
+        sessionRow.status || ""
+      ).trim()
+      !==
+      "Chờ học";
+
+    box.innerHTML = `
+      <h2>
+        ✅ Điểm danh học viên trong nhóm
+      </h2>
+
+      <div
+        style="
+          color:rgba(255,255,255,.65);
+          margin-bottom:16px;
+          line-height:1.5;
+        "
+      >
+        Coach điểm danh riêng từng học viên.
+        Khi đủ ${members.length}/${members.length}
+        học viên được xử lý,
+        hệ thống tự kết thúc buổi.
+      </div>
+
+      ${members.map(
+        (member, index) => {
+
+          const attendanceStatus =
+            String(
+              member.attendance_status ||
+              ""
+            ).trim();
+
+          const alreadyMarked =
+            attendanceStatus !== "";
+
+          return `
+            <div
+              style="
+                padding:15px;
+                margin-bottom:12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.14);
+                background:rgba(0,0,0,.10);
+              "
+            >
+
+              <div
+                style="
+                  font-size:16px;
+                  font-weight:900;
+                "
+              >
+                ${index + 1}.
+                ${escapeHtml(
+                  member.student_name ||
+                  member.student_code ||
+                  "Học viên"
+                )}
+              </div>
+
+              <div
+                style="
+                  margin-top:5px;
+                  font-size:12px;
+                  color:rgba(255,255,255,.55);
+                "
+              >
+                ${escapeHtml(
+                  member.student_code || "—"
+                )}
+                ·
+                ${escapeHtml(
+                  member.registration_code || "—"
+                )}
+              </div>
+
+              <div
+                style="
+                  margin-top:8px;
+                  font-weight:900;
+                  color:${
+                    attendanceStatus === "Có mặt"
+                      ? "#d8ff45"
+                      : attendanceStatus === "Vắng"
+                        ? "#ffb3b3"
+                        : "rgba(255,255,255,.7)"
+                  };
+                "
+              >
+                ${
+                  alreadyMarked
+                    ? "Đã điểm danh: "
+                      +
+                      escapeHtml(
+                        attendanceStatus
+                      )
+                    : "Chưa điểm danh"
+                }
+              </div>
+
+              <div
+                style="
+                  display:grid;
+                  grid-template-columns:1fr 1fr;
+                  gap:10px;
+                  margin-top:12px;
+                "
+              >
+
+                <button
+                  type="button"
+                  class="group-mark-btn"
+                  data-registration-id="${Number(
+                    member.registration_id
+                  )}"
+                  data-status="Có mặt"
+                  ${
+                    sessionClosed ||
+                    alreadyMarked
+                      ? "disabled"
+                      : ""
+                  }
+                  style="
+                    background:#d8ff45;
+                    color:#172600;
+                  "
+                >
+                  ✅ CÓ MẶT
+                </button>
+
+                <button
+                  type="button"
+                  class="group-mark-btn"
+                  data-registration-id="${Number(
+                    member.registration_id
+                  )}"
+                  data-status="Vắng"
+                  ${
+                    sessionClosed ||
+                    alreadyMarked
+                      ? "disabled"
+                      : ""
+                  }
+                  style="
+                    background:#ffb3b3;
+                    color:#401010;
+                  "
+                >
+                  ❌ VẮNG
+                </button>
+
+              </div>
+
+            </div>
+          `;
+        }
+      ).join("")}
+
+      <div
+        id="coachGroupAttendanceMessage"
+        style="
+          margin-top:12px;
+          font-weight:900;
+          line-height:1.5;
+        "
+      ></div>
+    `;
+
+    box
+      .querySelectorAll(
+        ".group-mark-btn"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            async function () {
+
+              const registrationId =
+                Number(
+                  this.dataset
+                    .registrationId
+                );
+
+              const attendanceStatus =
+                String(
+                  this.dataset.status ||
+                  ""
+                );
+
+              const member =
+                members.find(
+                  item =>
+                    Number(
+                      item.registration_id
+                    )
+                    ===
+                    registrationId
+                );
+
+              if (
+                !registrationId ||
+                ![
+                  "Có mặt",
+                  "Vắng"
+                ].includes(
+                  attendanceStatus
+                )
+              ) {
+                return;
+              }
+
+              const confirmed =
+                window.confirm(
+                  "Xác nhận "
+                  +
+                  attendanceStatus
+                  +
+                  " cho "
+                  +
+                  (
+                    member?.student_name ||
+                    "Học viên"
+                  )
+                  +
+                  "?"
+                );
+
+              if (!confirmed) {
+                return;
+              }
+
+              const message =
+                document.getElementById(
+                  "coachGroupAttendanceMessage"
+                );
+
+              box
+                .querySelectorAll(
+                  ".group-mark-btn"
+                )
+                .forEach(
+                  btn => {
+                    btn.disabled = true;
+                  }
+                );
+
+              if (message) {
+
+                message.style.color =
+                  "rgba(255,255,255,.7)";
+
+                message.textContent =
+                  "Đang ghi nhận điểm danh...";
+              }
+
+              const {
+                data,
+                error
+              } =
+                await groupSb.rpc(
+                  "coach_mark_group_attendance",
+                  {
+                    p_session_id:
+                      sessionId,
+
+                    p_registration_id:
+                      registrationId,
+
+                    p_attendance_status:
+                      attendanceStatus
+                  }
+                );
+
+              if (error) {
+
+                console.error(
+                  "GROUP ATTENDANCE:",
+                  error
+                );
+
+                if (message) {
+
+                  message.style.color =
+                    "#ffb3b3";
+
+                  message.textContent =
+                    error.message ||
+                    "Không thể điểm danh.";
+                }
+
+                box
+                  .querySelectorAll(
+                    ".group-mark-btn"
+                  )
+                  .forEach(
+                    btn => {
+                      btn.disabled = false;
+                    }
+                  );
+
+                return;
+              }
+
+              if (message) {
+
+                message.style.color =
+                  "#d8ff45";
+
+                if (
+                  data?.session_finished
+                  === true
+                ) {
+
+                  message.textContent =
+                    "✓ Đã điểm danh đủ học viên. "
+                    +
+                    "Buổi học: "
+                    +
+                    (
+                      data.session_status ||
+                      "Đã xử lý"
+                    );
+
+                }
+                else {
+
+                  message.textContent =
+                    "✓ Đã ghi nhận. Còn "
+                    +
+                    String(
+                      data?.remaining ?? 0
+                    )
+                    +
+                    " học viên chưa điểm danh.";
+                }
+              }
+
+              setTimeout(
+                function () {
+                  window.location.reload();
+                },
+                700
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
+);
+</script>
 </body>
 </html>
