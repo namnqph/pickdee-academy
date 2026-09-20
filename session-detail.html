@@ -1369,7 +1369,7 @@ window.addEventListener(
                       class="group-attendance-btn"
                       data-registration-id="${participant.registrationId}"
                       data-status="Có mặt"
-                      ${sessionClosed ? "disabled" : ""}
+                      ${sessionClosed || currentStatus ? "disabled" : ""}
                       style="
                         background:#b7ff00;
                         color:#07111f;
@@ -1445,7 +1445,45 @@ window.addEventListener(
                   document.getElementById(
                     "groupAttendanceMessage"
                   );
+if (
+  attendanceMap.has(
+    registrationId
+  )
+) {
+  return;
+}
 
+
+const selectedParticipant =
+  participants.find(
+    item =>
+      item.registrationId
+      ===
+      registrationId
+  );
+
+
+const confirmed =
+  window.confirm(
+    "Xác nhận "
+    +
+    attendanceStatus
+    +
+    " cho "
+    +
+    (
+      selectedParticipant?.fullName
+      ||
+      "Học viên"
+    )
+    +
+    "?"
+  );
+
+
+if (!confirmed) {
+  return;
+}
 
                 if (
                   !registrationId ||
