@@ -186,5 +186,412 @@
 <script src="config.js"></script>
 <script src="students.js"></script>
 
+  <script>
+/* =========================================================
+   PICKDEE - FIX AVATAR DANH SÁCH HỌC VIÊN
+   Nhận diện bằng MÃ HV ở cột đầu tiên
+========================================================= */
+
+(function () {
+
+  if (
+    !window.supabase ||
+    !window.PICKDEE_CONFIG
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.textContent = `
+    .pickdee-avatar-name-wrap {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .pickdee-avatar-list {
+      width:42px;
+      height:42px;
+      min-width:42px;
+      border-radius:50%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#08234d;
+      border:2px solid #d8ff45;
+      color:#d8ff45;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .pickdee-avatar-list img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .pickdee-avatar-name-text {
+      min-width:0;
+    }
+
+    @media (max-width:600px) {
+      .pickdee-avatar-list {
+        width:36px;
+        height:36px;
+        min-width:36px;
+      }
+
+      .pickdee-avatar-name-wrap {
+        gap:8px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+
+
+  const avatarSb =
+    window.supabase.createClient(
+      window.PICKDEE_CONFIG.SUPABASE_URL,
+      window.PICKDEE_CONFIG.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let studentsByCode =
+    new Map();
+
+  let running =
+    false;
+
+
+  function avatarUrl(path) {
+
+    if (!path) {
+      return "";
+    }
+
+    const base =
+      String(
+        window.PICKDEE_CONFIG.SUPABASE_URL || ""
+      ).replace(/\/+$/, "");
+
+    const safePath =
+      String(path)
+        .split("/")
+        .map(
+          item =>
+            encodeURIComponent(item)
+        )
+        .join("/");
+
+    return (
+      base +
+      "/storage/v1/object/public/avatars/" +
+      safePath
+    );
+  }
+
+
+  function initial(name) {
+
+    const parts =
+      String(name || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (!parts.length) {
+      return "👤";
+    }
+
+    return (
+      parts[
+        parts.length - 1
+      ]
+        .charAt(0)
+        .toUpperCase()
+    );
+  }
+
+
+  function createAvatar(student) {
+
+    const box =
+      document.createElement("div");
+
+    box.className =
+      "pickdee-avatar-list";
+
+    const fallback =
+      initial(
+        student.full_name
+      );
+
+    box.textContent =
+      fallback;
+
+
+    const path =
+      String(
+        student.avatar_path || ""
+      ).trim();
+
+    const legacy =
+      String(
+        student.image_url || ""
+      ).trim();
+
+    const url =
+      path
+        ? avatarUrl(path)
+        : legacy;
+
+
+    if (!url) {
+      return box;
+    }
+
+
+    const img =
+      document.createElement("img");
+
+    img.alt =
+      student.full_name || "Học viên";
+
+
+    img.onload =
+      function () {
+
+        box.textContent = "";
+
+        if (
+          !box.contains(img)
+        ) {
+          box.appendChild(img);
+        }
+
+      };
+
+
+    img.onerror =
+      function () {
+
+        box.textContent =
+          fallback;
+
+      };
+
+
+    img.src =
+      url;
+
+    return box;
+  }
+
+
+  function decorate() {
+
+    if (
+      running ||
+      studentsByCode.size === 0
+    ) {
+      return;
+    }
+
+    running = true;
+
+    try {
+
+      const rows =
+        document.querySelectorAll(
+          "tbody tr"
+        );
+
+
+      rows.forEach(
+        row => {
+
+          if (
+            row.dataset
+              .pickdeeAvatarCodeReady
+            === "1"
+          ) {
+            return;
+          }
+
+
+          const cells =
+            row.querySelectorAll("td");
+
+
+          if (
+            !cells ||
+            cells.length < 2
+          ) {
+            return;
+          }
+
+
+          const studentCode =
+            String(
+              cells[0].textContent || ""
+            )
+              .trim()
+              .toUpperCase();
+
+
+          if (!studentCode) {
+            return;
+          }
+
+
+          const student =
+            studentsByCode.get(
+              studentCode
+            );
+
+
+          if (!student) {
+            return;
+          }
+
+
+          const nameCell =
+            cells[1];
+
+
+          const textBox =
+            document.createElement(
+              "div"
+            );
+
+          textBox.className =
+            "pickdee-avatar-name-text";
+
+
+          while (
+            nameCell.firstChild
+          ) {
+
+            textBox.appendChild(
+              nameCell.firstChild
+            );
+
+          }
+
+
+          const wrap =
+            document.createElement(
+              "div"
+            );
+
+          wrap.className =
+            "pickdee-avatar-name-wrap";
+
+
+          wrap.appendChild(
+            createAvatar(student)
+          );
+
+          wrap.appendChild(
+            textBox
+          );
+
+
+          nameCell.appendChild(
+            wrap
+          );
+
+
+          row.dataset
+            .pickdeeAvatarCodeReady =
+            "1";
+
+        }
+      );
+
+    }
+    finally {
+
+      running = false;
+
+    }
+  }
+
+
+  async function load() {
+
+    const {
+      data,
+      error
+    } =
+      await avatarSb
+        .from("students")
+        .select(
+          "id,student_code,full_name,avatar_path,image_url"
+        );
+
+
+    if (error) {
+
+      console.error(
+        "PICKDEE AVATAR LIST FIX:",
+        error
+      );
+
+      return;
+    }
+
+
+    studentsByCode =
+      new Map(
+        (data || [])
+          .filter(
+            item =>
+              item.student_code
+          )
+          .map(
+            item => [
+              String(
+                item.student_code
+              )
+                .trim()
+                .toUpperCase(),
+              item
+            ]
+          )
+      );
+
+
+    decorate();
+  }
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+        decorate();
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList:true,
+      subtree:true
+    }
+  );
+
+
+  load();
+
+})();
+</script>
 </body>
 </html>
