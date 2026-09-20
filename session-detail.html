@@ -257,307 +257,177 @@
 <script src="./config.js"></script>
 <script src="./session-detail-v2.js"></script>
 <script>
-(async function () {
+window.addEventListener(
+  "load",
+  async function () {
 
-  /* =====================================================
-     PICKDEE - HIỂN THỊ THÀNH VIÊN BUỔI HỌC NHÓM
-     Không ảnh hưởng buổi học cá nhân
-  ====================================================== */
-
-  const cfg =
-    window.PICKDEE_CONFIG || {};
-
-
-  if (
-    !window.supabase
-    ||
-    !cfg.SUPABASE_URL
-    ||
-    !cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
-    return;
-  }
-
-
-  const groupDetailSb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
-
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-
-  const sessionId =
-    Number(
-      params.get("id")
-    );
-
-
-  if (
-    !Number.isFinite(sessionId)
-    ||
-    sessionId <= 0
-  ) {
-    return;
-  }
-
-
-  /* =====================================================
-     HELPERS
-  ====================================================== */
-
-  function escapeHtml(value) {
-
-    return String(
-      value ?? ""
-    )
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-
-  function firstObject(value) {
+    const cfg =
+      window.PICKDEE_CONFIG || {};
 
     if (
-      Array.isArray(value)
+      !window.supabase ||
+      !cfg.SUPABASE_URL ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+    const sbGroupDetail =
+      window.PICKDEE_SUPABASE ||
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const sessionId =
+      Number(
+        params.get("id")
+      );
+
+    if (
+      !Number.isFinite(sessionId) ||
+      sessionId <= 0
+    ) {
+      return;
+    }
+
+
+    function escapeHtml(value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    /* =========================================
+       ĐỢI session-detail-v2.js TẢI XONG
+    ========================================== */
+
+    for (
+      let i = 0;
+      i < 50;
+      i++
     ) {
 
-      return (
-        value[0]
-        ||
-        {}
-      );
-    }
+      const code =
+        document.getElementById(
+          "sessionCode"
+        )?.textContent?.trim();
 
-    return (
-      value
-      ||
-      {}
-    );
-  }
+      const student =
+        document.getElementById(
+          "studentName"
+        )?.textContent?.trim();
 
+      if (
+        code &&
+        code !== "Đang tải..." &&
+        student &&
+        student !== "—"
+      ) {
+        break;
+      }
 
-  function normalizeParticipant(row) {
-
-    const registration =
-      firstObject(
-        row.registration
-        ||
-        row.registrations
-      );
-
-
-    const student =
-      firstObject(
-        row.student
-        ||
-        row.students
-      );
-
-
-    return {
-
-      registration_id:
-        Number(
-          row.registration_id
-          ||
-          registration.id
-          ||
-          0
-        ),
-
-      registration_code:
-        String(
-          row.registration_code
-          ||
-          registration.registration_code
-          ||
-          ""
-        ),
-
-      student_id:
-        Number(
-          row.student_id
-          ||
-          student.id
-          ||
-          registration.student_id
-          ||
-          0
-        ),
-
-      student_code:
-        String(
-          row.student_code
-          ||
-          student.student_code
-          ||
-          ""
-        ),
-
-      full_name:
-        String(
-          row.full_name
-          ||
-          row.student_name
-          ||
-          row.student_full_name
-          ||
-          student.full_name
-          ||
-          ""
-        )
-
-    };
-  }
-
-
-  /* =====================================================
-     1. KIỂM TRA CÓ PHẢI BUỔI NHÓM KHÔNG
-  ====================================================== */
-
-  const {
-    data: sessionRow,
-    error: sessionError
-  } =
-    await groupDetailSb
-      .from("class_sessions")
-      .select(`
-        id,
-        training_group_id
-      `)
-      .eq(
-        "id",
-        sessionId
-      )
-      .maybeSingle();
-
-
-  if (
-    sessionError
-    ||
-    !sessionRow
-    ||
-    !sessionRow.training_group_id
-  ) {
-
-    /*
-      Buổi cá nhân:
-      giữ nguyên toàn bộ giao diện cũ.
-    */
-
-    return;
-  }
-
-
-  /* =====================================================
-     2. THỬ LẤY PARTICIPANT QUA RPC CÓ SẴN
-  ====================================================== */
-
-  let participants =
-    [];
-
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await groupDetailSb.rpc(
-        "coach_get_session_participants",
-        {
-          p_session_id:
-            sessionId
-        }
-      );
-
-
-    if (!error) {
-
-      const rows =
-        Array.isArray(data)
-          ?
-          data
-          :
-          (
-            Array.isArray(
-              data?.participants
-            )
-              ?
-              data.participants
-              :
-              []
-          );
-
-
-      participants =
-        rows
-          .map(
-            normalizeParticipant
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            100
           )
-          .filter(
-            item =>
-              item.registration_id > 0
-          );
-
+      );
     }
 
-  }
-  catch (error) {
-
-    console.warn(
-      "GROUP PARTICIPANTS RPC:",
-      error
-    );
-
-  }
-
-
-  /* =====================================================
-     3. FALLBACK CHO ADMIN
-  ====================================================== */
-
-  if (
-    participants.length < 2
-  ) {
 
     try {
 
+      /* =========================================
+         1. LẤY SESSION
+      ========================================== */
+
       const {
-        data: links,
-        error: linksError
+        data: sessionRow,
+        error: sessionError
       } =
-        await groupDetailSb
+        await sbGroupDetail
+          .from("class_sessions")
+          .select(`
+            id,
+            training_group_id
+          `)
+          .eq(
+            "id",
+            sessionId
+          )
+          .maybeSingle();
+
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+
+      if (
+        !sessionRow ||
+        !sessionRow.training_group_id
+      ) {
+
+        /*
+          Đây là lịch cá nhân.
+          Không thay đổi gì.
+        */
+
+        return;
+      }
+
+
+      const groupId =
+        Number(
+          sessionRow.training_group_id
+        );
+
+
+      /* =========================================
+         2. LẤY 2 REGISTRATION CỦA NHÓM
+      ========================================== */
+
+      const {
+        data: memberRows,
+        error: memberError
+      } =
+        await sbGroupDetail
           .from(
-            "class_session_participants"
+            "training_group_members"
           )
           .select(`
             registration_id
           `)
           .eq(
-            "session_id",
-            sessionId
+            "group_id",
+            groupId
           );
 
 
-      if (linksError) {
-        throw linksError;
+      if (memberError) {
+        throw memberError;
       }
 
 
       const registrationIds =
         [
           ...new Set(
-            (links || [])
+            (memberRows || [])
               .map(
                 item =>
                   Number(
@@ -566,8 +436,7 @@
               )
               .filter(
                 id =>
-                  Number.isFinite(id)
-                  &&
+                  Number.isFinite(id) &&
                   id > 0
               )
           )
@@ -575,438 +444,366 @@
 
 
       if (
-        registrationIds.length
+        registrationIds.length < 2
       ) {
 
-        const {
-          data: registrations,
-          error: registrationsError
-        } =
-          await groupDetailSb
-            .from("registrations")
-            .select(`
-              id,
-              registration_code,
-              student_id
-            `)
-            .in(
-              "id",
-              registrationIds
-            );
+        throw new Error(
+          "Nhóm chưa đủ 2 đăng ký."
+        );
+      }
 
 
-        if (registrationsError) {
-          throw registrationsError;
-        }
+      /* =========================================
+         3. REGISTRATIONS
+      ========================================== */
+
+      const {
+        data: registrations,
+        error: registrationError
+      } =
+        await sbGroupDetail
+          .from("registrations")
+          .select(`
+            id,
+            registration_code,
+            student_id
+          `)
+          .in(
+            "id",
+            registrationIds
+          );
 
 
-        const studentIds =
-          [
-            ...new Set(
-              (registrations || [])
-                .map(
-                  item =>
-                    Number(
-                      item.student_id
-                    )
-                )
-                .filter(
-                  id =>
-                    Number.isFinite(id)
-                    &&
-                    id > 0
-                )
-            )
-          ];
+      if (registrationError) {
+        throw registrationError;
+      }
 
 
-        let students =
-          [];
+      const studentIds =
+        [
+          ...new Set(
+            (registrations || [])
+              .map(
+                item =>
+                  Number(
+                    item.student_id
+                  )
+              )
+              .filter(
+                id =>
+                  Number.isFinite(id) &&
+                  id > 0
+              )
+          )
+        ];
 
 
-        if (
-          studentIds.length
-        ) {
+      /* =========================================
+         4. STUDENTS
+      ========================================== */
 
-          const {
-            data,
-            error
-          } =
-            await groupDetailSb
-              .from("students")
-              .select(`
-                id,
-                student_code,
-                full_name
-              `)
-              .in(
-                "id",
-                studentIds
-              );
-
-
-          if (error) {
-            throw error;
-          }
+      const {
+        data: students,
+        error: studentError
+      } =
+        await sbGroupDetail
+          .from("students")
+          .select(`
+            id,
+            student_code,
+            full_name
+          `)
+          .in(
+            "id",
+            studentIds
+          );
 
 
-          students =
-            data || [];
+      if (studentError) {
+        throw studentError;
+      }
 
-        }
 
-
-        const studentMap =
-          new Map(
-            students.map(
+      const studentMap =
+        new Map(
+          (students || [])
+            .map(
               student => [
                 Number(student.id),
                 student
               ]
             )
+        );
+
+
+      const participants =
+        (registrations || [])
+          .map(
+            registration => {
+
+              const student =
+                studentMap.get(
+                  Number(
+                    registration.student_id
+                  )
+                )
+                ||
+                {};
+
+              return {
+
+                registrationId:
+                  Number(
+                    registration.id
+                  ),
+
+                registrationCode:
+                  registration.registration_code
+                  ||
+                  "",
+
+                studentCode:
+                  student.student_code
+                  ||
+                  "",
+
+                fullName:
+                  student.full_name
+                  ||
+                  ""
+
+              };
+
+            }
+          )
+          .sort(
+            (a,b) =>
+              a.registrationId
+              -
+              b.registrationId
           );
 
 
-        participants =
-          (registrations || [])
+      if (
+        participants.length < 2
+      ) {
+
+        throw new Error(
+          "Không tải đủ 2 Học viên."
+        );
+      }
+
+
+      /* =========================================
+         5. RENDER
+      ========================================== */
+
+      function renderGroupStudents() {
+
+        const studentName =
+          document.getElementById(
+            "studentName"
+          );
+
+        const registrationLine =
+          document.getElementById(
+            "registrationLine"
+          );
+
+
+        if (!studentName) {
+          return;
+        }
+
+
+        const item =
+          studentName.closest(
+            ".item"
+          );
+
+
+        const label =
+          item?.querySelector(
+            ".label"
+          );
+
+
+        if (label) {
+
+          label.textContent =
+            "Học viên trong nhóm";
+
+        }
+
+
+        studentName.textContent =
+          participants
             .map(
-              registration => {
-
-                const student =
-                  studentMap.get(
-                    Number(
-                      registration.student_id
-                    )
-                  )
-                  ||
-                  {};
-
-
-                return {
-
-                  registration_id:
-                    Number(
-                      registration.id
-                    ),
-
-                  registration_code:
-                    String(
-                      registration.registration_code
-                      ||
-                      ""
-                    ),
-
-                  student_id:
-                    Number(
-                      registration.student_id
-                      ||
-                      0
-                    ),
-
-                  student_code:
-                    String(
-                      student.student_code
-                      ||
-                      ""
-                    ),
-
-                  full_name:
-                    String(
-                      student.full_name
-                      ||
-                      ""
-                    )
-
-                };
-
-              }
+              item =>
+                item.fullName
+                ||
+                item.studentCode
+            )
+            .join(
+              " + "
             );
 
+
+        let box =
+          document.getElementById(
+            "groupParticipantBox"
+          );
+
+
+        if (!box) {
+
+          box =
+            document.createElement(
+              "div"
+            );
+
+          box.id =
+            "groupParticipantBox";
+
+          box.style.marginTop =
+            "12px";
+
+          box.style.display =
+            "grid";
+
+          box.style.gap =
+            "8px";
+
+
+          studentName.insertAdjacentElement(
+            "afterend",
+            box
+          );
+
+        }
+
+
+        box.innerHTML =
+          participants
+            .map(
+              (
+                participant,
+                index
+              ) => `
+                <div
+                  style="
+                    padding:10px 12px;
+                    border:1px solid rgba(255,255,255,.15);
+                    border-radius:10px;
+                    background:rgba(0,0,0,.14);
+                  "
+                >
+                  <div
+                    style="
+                      font-weight:800;
+                      color:#fff;
+                    "
+                  >
+                    ${index + 1}.
+                    ${escapeHtml(
+                      participant.fullName
+                      ||
+                      participant.studentCode
+                    )}
+                  </div>
+
+                  <div
+                    style="
+                      margin-top:4px;
+                      color:#94a8c6;
+                      font-size:13px;
+                    "
+                  >
+                    ${
+                      participant.studentCode
+                        ?
+                        (
+                          "Mã HV: "
+                          +
+                          escapeHtml(
+                            participant.studentCode
+                          )
+                          +
+                          " · "
+                        )
+                        :
+                        ""
+                    }
+
+                    Đăng ký:
+                    ${escapeHtml(
+                      participant.registrationCode
+                    )}
+                  </div>
+                </div>
+              `
+            )
+            .join("");
+
+
+        if (registrationLine) {
+
+          registrationLine.textContent =
+            "Đăng ký nhóm: "
+            +
+            participants
+              .map(
+                item =>
+                  item.registrationCode
+              )
+              .join(
+                " + "
+              );
+
+        }
+
       }
+
+
+      /*
+        Render ngay và render lại sau một chút
+        để chắc chắn script cũ không ghi đè.
+      */
+
+      renderGroupStudents();
+
+      setTimeout(
+        renderGroupStudents,
+        500
+      );
+
+      setTimeout(
+        renderGroupStudents,
+        1500
+      );
+
+
+      console.log(
+        "GROUP SESSION OK:",
+        {
+          sessionId,
+          groupId,
+          participants
+        }
+      );
 
     }
     catch (error) {
 
       console.error(
-        "GROUP PARTICIPANTS FALLBACK:",
+        "GROUP SESSION DETAIL:",
         error
       );
 
     }
 
   }
-
-
-  /* =====================================================
-     4. KHÔNG ĐỦ DỮ LIỆU THÌ GIỮ NGUYÊN
-  ====================================================== */
-
-  if (
-    participants.length < 2
-  ) {
-
-    console.warn(
-      "PickDee: chưa tải đủ thành viên buổi nhóm.",
-      participants
-    );
-
-    return;
-  }
-
-
-  participants.sort(
-    (
-      a,
-      b
-    ) =>
-      a.registration_id
-      -
-      b.registration_id
-  );
-
-
-  /* =====================================================
-     5. CẬP NHẬT PHẦN HỌC VIÊN
-  ====================================================== */
-
-  const studentName =
-    document.getElementById(
-      "studentName"
-    );
-
-
-  const registrationLine =
-    document.getElementById(
-      "registrationLine"
-    );
-
-
-  if (
-    studentName
-  ) {
-
-    const studentItem =
-      studentName.closest(
-        ".item"
-      );
-
-
-    const label =
-      studentItem
-        ?.querySelector(
-          ".label"
-        );
-
-
-    if (label) {
-
-      label.textContent =
-        "Học viên trong nhóm";
-
-    }
-
-
-    studentName.textContent =
-      participants
-        .map(
-          item =>
-            item.full_name
-            ||
-            item.student_code
-            ||
-            (
-              "Registration "
-              +
-              item.registration_id
-            )
-        )
-        .join(
-          " + "
-        );
-
-
-    /* ===============================================
-       CHI TIẾT 2 THÀNH VIÊN
-    =============================================== */
-
-    let participantBox =
-      document.getElementById(
-        "groupParticipantBox"
-      );
-
-
-    if (!participantBox) {
-
-      participantBox =
-        document.createElement(
-          "div"
-        );
-
-
-      participantBox.id =
-        "groupParticipantBox";
-
-
-      participantBox.style.marginTop =
-        "12px";
-
-
-      participantBox.style.display =
-        "grid";
-
-
-      participantBox.style.gap =
-        "8px";
-
-
-      studentName.insertAdjacentElement(
-        "afterend",
-        participantBox
-      );
-
-    }
-
-
-    participantBox.innerHTML =
-      participants
-        .map(
-          (
-            item,
-            index
-          ) => {
-
-            const title =
-              item.full_name
-              ||
-              item.student_code
-              ||
-              (
-                "Học viên "
-                +
-                (
-                  index + 1
-                )
-              );
-
-
-            const details =
-              [
-                item.student_code
-                  ?
-                  (
-                    "Mã HV: "
-                    +
-                    item.student_code
-                  )
-                  :
-                  "",
-
-                item.registration_code
-                  ?
-                  (
-                    "Đăng ký: "
-                    +
-                    item.registration_code
-                  )
-                  :
-                  ""
-              ]
-                .filter(Boolean)
-                .join(
-                  " · "
-                );
-
-
-            return `
-              <div
-                style="
-                  padding:10px 12px;
-                  border:1px solid rgba(255,255,255,.14);
-                  border-radius:10px;
-                  background:rgba(0,0,0,.13);
-                "
-              >
-                <div
-                  style="
-                    font-weight:800;
-                    color:#fff;
-                  "
-                >
-                  ${index + 1}. ${escapeHtml(title)}
-                </div>
-
-                ${
-                  details
-                    ?
-                    `
-                      <div
-                        style="
-                          margin-top:4px;
-                          color:#94a8c6;
-                          font-size:13px;
-                        "
-                      >
-                        ${escapeHtml(details)}
-                      </div>
-                    `
-                    :
-                    ""
-                }
-              </div>
-            `;
-
-          }
-        )
-        .join("");
-
-  }
-
-
-  /* =====================================================
-     6. KHÔNG HIỂN THỊ PRIMARY REGISTRATION GÂY HIỂU NHẦM
-  ====================================================== */
-
-  if (
-    registrationLine
-  ) {
-
-    const registrationCodes =
-      participants
-        .map(
-          item =>
-            item.registration_code
-        )
-        .filter(Boolean);
-
-
-    registrationLine.textContent =
-      registrationCodes.length
-        ?
-        (
-          "Đăng ký nhóm: "
-          +
-          registrationCodes.join(
-            " + "
-          )
-        )
-        :
-        (
-          "Buổi học nhóm · "
-          +
-          participants.length
-          +
-          " học viên"
-        );
-
-  }
-
-
-  console.log(
-    "PickDee group session participants:",
-    participants
-  );
-
-})();
+);
 </script>
 </body>
 </html>
