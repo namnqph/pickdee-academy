@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Thêm sân | PickDee Admin</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b0f;
+      color: #ffffff;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .page {
+      width: min(920px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid #2b3138;
+      background: #11161c;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .sub {
+      color: #9ca6b1;
+      line-height: 1.5;
+      margin: 8px 0 22px;
+    }
+
+    .card {
+      border: 1px solid #222a32;
+      border-radius: 18px;
+      background: #0e1319;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: #d8ff45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      color: #aeb7c1;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #2a323b;
+      border-radius: 12px;
+      background: #080c11;
+      color: #fff;
+      padding: 12px 13px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #d8ff45;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .check-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 8px;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .actions {
+      position: sticky;
+      bottom: 0;
+      padding: 14px 0;
+      background:
+        linear-gradient(
+          to top,
+          #080b0f 70%,
+          rgba(8,11,15,0)
+        );
+    }
+
+    .save-btn {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      background: #d8ff45;
+      color: #071000;
+      font-size: 16px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .save-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .message {
+      display: none;
+      margin-bottom: 14px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(82,255,132,.11);
+      border: 1px solid rgba(82,255,132,.3);
+      color: #8cffad;
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(255,87,87,.11);
+      border: 1px solid rgba(255,87,87,.3);
+      color: #ffaaaa;
+    }
+
+    .required {
+      color: #ff8383;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="topbar">
+    <a
+      class="back-btn"
+      href="./admin-court-directory"
+    >
+      ← Danh bạ sân
+    </a>
+
+    <strong>PickDee Admin</strong>
+  </div>
+
+  <h1>➕ Thêm sân mới</h1>
+
+  <p class="sub">
+    Dùng khi Admin phát hiện một sân mới ngoài đời
+    hoặc nhận thông tin trực tiếp từ chủ sân.
+  </p>
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <!-- =========================
+       THÔNG TIN CƠ BẢN
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      🏓 Thông tin sân
+    </div>
+
+    <div class="grid">
+
+      <div class="full">
+        <label>
+          Tên sân
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="courtName"
+          placeholder="VD: Sân Pickleball ABC"
+        />
+      </div>
+
+
+      <div>
+        <label>
+          Tỉnh / Thành phố
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="province"
+          value="Bắc Ninh"
+        />
+      </div>
+
+
+      <div>
+        <label>
+          Phường / Xã
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="ward"
+          value="Phường Bắc Giang"
+        />
+      </div>
+
+
+      <div class="full">
+        <label>
+          Địa chỉ
+        </label>
+
+        <input
+          id="address"
+          placeholder="Số nhà, đường, khu phố..."
+        />
+      </div>
+
+
+      <div>
+        <label>Số điện thoại</label>
+
+        <input
+          id="phone"
+          inputmode="tel"
+          placeholder="09xxxxxxxx"
+        />
+      </div>
+
+
+      <div>
+        <label>Zalo</label>
+
+        <input
+          id="zalo"
+          inputmode="tel"
+          placeholder="09xxxxxxxx"
+        />
+      </div>
+
+
+      <div>
+        <label>Số sân</label>
+
+        <input
+          id="numberOfCourts"
+          type="number"
+          min="0"
+          placeholder="VD: 6"
+        />
+      </div>
+
+
+      <div>
+        <label>Loại sân</label>
+
+        <input
+          id="courtType"
+          placeholder="Có mái che / Ngoài trời..."
+        />
+      </div>
+
+
+      <div>
+        <label>Giờ mở cửa</label>
+
+        <input
+          id="openingHours"
+          placeholder="05:00-23:00"
+        />
+      </div>
+
+
+      <div>
+        <label>Trạng thái</label>
+
+        <select id="status">
+          <option value="active">
+            Đang hoạt động
+          </option>
+
+          <option value="pending">
+            Chờ kiểm tra
+          </option>
+
+          <option value="inactive">
+            Tạm ngừng
+          </option>
+
+          <option value="closed">
+            Đã đóng cửa
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       GIÁ & TIỆN ÍCH
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      💰 Giá & tiện ích
+    </div>
+
+    <div class="grid">
+
+      <div>
+        <label>Giá thấp nhất / giờ</label>
+
+        <input
+          id="priceMin"
+          type="number"
+          min="0"
+          placeholder="80000"
+        />
+      </div>
+
+
+      <div>
+        <label>Giá cao nhất / giờ</label>
+
+        <input
+          id="priceMax"
+          type="number"
+          min="0"
+          placeholder="150000"
+        />
+      </div>
+
+
+      <div class="full">
+        <label>Tiện ích</label>
+
+        <textarea
+          id="amenities"
+          placeholder="Bãi xe; WC; Nước uống; Thuê vợt; Phòng tắm..."
+        ></textarea>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       ONLINE
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      🌐 Liên kết
+    </div>
+
+    <div class="grid">
+
+      <div class="full">
+        <label>Facebook</label>
+
+        <input
+          id="facebookUrl"
+          placeholder="https://facebook.com/..."
+        />
+      </div>
+
+
+      <div class="full">
+        <label>Website</label>
+
+        <input
+          id="websiteUrl"
+          placeholder="https://..."
+        />
+      </div>
+
+
+      <div class="full">
+        <label>Link đặt sân</label>
+
+        <input
+          id="bookingUrl"
+          placeholder="https://..."
+        />
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       TỌA ĐỘ
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      📍 Tọa độ
+    </div>
+
+    <div class="grid">
+
+      <div>
+        <label>Latitude</label>
+
+        <input
+          id="latitude"
+          inputmode="decimal"
+          placeholder="21.2812345"
+        />
+      </div>
+
+
+      <div>
+        <label>Longitude</label>
+
+        <input
+          id="longitude"
+          inputmode="decimal"
+          placeholder="106.1976543"
+        />
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       NGUỒN
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      🔎 Nguồn dữ liệu
+    </div>
+
+    <div class="grid">
+
+      <div>
+        <label>Tên nguồn</label>
+
+        <input
+          id="sourceName"
+          value="Admin nhập thủ công"
+        />
+      </div>
+
+
+      <div>
+        <label>Link nguồn</label>
+
+        <input
+          id="sourceUrl"
+          placeholder="https://..."
+        />
+      </div>
+
+
+      <div class="full">
+        <label>Ghi chú</label>
+
+        <textarea
+          id="note"
+          placeholder="VD: Admin đi thực tế, chủ sân cung cấp thông tin..."
+        ></textarea>
+      </div>
+
+    </div>
+
+
+    <div class="check-row">
+
+      <label class="check">
+        <input
+          id="verified"
+          type="checkbox"
+        />
+
+        Đã xác minh
+      </label>
+
+
+      <label class="check">
+        <input
+          id="ownerClaimed"
+          type="checkbox"
+        />
+
+        Chủ sân đã xác nhận
+      </label>
+
+    </div>
+
+  </div>
+
+
+  <div class="actions">
+    <button
+      id="saveBtn"
+      class="save-btn"
+      type="button"
+    >
+      LƯU SÂN MỚI
+    </button>
+  </div>
+
+</div>
+
+
+<script>
+(async function () {
+
+  /* =============================================
+     SUPABASE
+  ============================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    alert(
+      "Không tìm thấy cấu hình Supabase."
+    );
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =============================================
+     AUTH ADMIN
+  ============================================== */
+
+  const {
+    data: sessionData
+  } =
+    await sb.auth.getSession();
+
+
+  const session =
+    sessionData?.session;
+
+
+  if (!session) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+  }
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .single();
+
+
+  if (
+    profileError
+    ||
+    !profile
+    ||
+    String(profile.role || "")
+      .trim()
+      .toLowerCase()
+      !== "admin"
+  ) {
+
+    location.replace(
+      "./login.html"
+    );
+
+    return;
+  }
+
+
+  /* =============================================
+     ELEMENTS
+  ============================================== */
+
+  const $ =
+    (id) =>
+      document.getElementById(id);
+
+
+  const saveBtn =
+    $("saveBtn");
+
+  const message =
+    $("message");
+
+
+  /* =============================================
+     HELPERS
+  ============================================== */
+
+  function textValue(id) {
+
+    return String(
+      $(id)?.value || ""
+    ).trim();
+
+  }
+
+
+  function nullableNumber(id) {
+
+    const raw =
+      textValue(id);
+
+    if (!raw) {
+      return null;
+    }
+
+    const value =
+      Number(raw);
+
+    return Number.isFinite(value)
+      ? value
+      : null;
+
+  }
+
+
+  function nullableInteger(id) {
+
+    const value =
+      nullableNumber(id);
+
+    if (value === null) {
+      return null;
+    }
+
+    return Number.isInteger(value)
+      ? value
+      : null;
+
+  }
+
+
+  function normalizePhone(value) {
+
+    let phone =
+      String(value || "")
+        .trim()
+        .replace(/[.\s()-]/g, "");
+
+
+    if (
+      phone.startsWith("+84")
+    ) {
+
+      phone =
+        "0" +
+        phone.slice(3);
+
+    }
+
+
+    if (
+      /^84\d{9}$/.test(phone)
+    ) {
+
+      phone =
+        "0" +
+        phone.slice(2);
+
+    }
+
+
+    return phone;
+
+  }
+
+
+  function showMessage(
+    type,
+    text
+  ) {
+
+    message.className =
+      "message " + type;
+
+    message.textContent =
+      text;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  /* =============================================
+     SAVE
+  ============================================== */
+
+  saveBtn.addEventListener(
+    "click",
+    async function () {
+
+      message.className =
+        "message";
+
+      message.textContent =
+        "";
+
+
+      const courtName =
+        textValue("courtName");
+
+      const province =
+        textValue("province");
+
+      const ward =
+        textValue("ward");
+
+
+      if (!courtName) {
+
+        showMessage(
+          "error",
+          "❌ Bạn chưa nhập tên sân."
+        );
+
+        return;
+      }
+
+
+      if (!province) {
+
+        showMessage(
+          "error",
+          "❌ Bạn chưa nhập tỉnh/thành."
+        );
+
+        return;
+      }
+
+
+      if (!ward) {
+
+        showMessage(
+          "error",
+          "❌ Bạn chưa nhập phường/xã."
+        );
+
+        return;
+      }
+
+
+      const latitude =
+        nullableNumber("latitude");
+
+      const longitude =
+        nullableNumber("longitude");
+
+
+      if (
+        latitude !== null
+        &&
+        (
+          latitude < -90
+          ||
+          latitude > 90
+        )
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Latitude phải nằm từ -90 đến 90."
+        );
+
+        return;
+      }
+
+
+      if (
+        longitude !== null
+        &&
+        (
+          longitude < -180
+          ||
+          longitude > 180
+        )
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Longitude phải nằm từ -180 đến 180."
+        );
+
+        return;
+      }
+
+
+      const numberOfCourts =
+        nullableInteger(
+          "numberOfCourts"
+        );
+
+
+      if (
+        textValue("numberOfCourts")
+        &&
+        (
+          numberOfCourts === null
+          ||
+          numberOfCourts < 0
+        )
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Số sân phải là số nguyên từ 0 trở lên."
+        );
+
+        return;
+      }
+
+
+      const priceMin =
+        nullableNumber("priceMin");
+
+      const priceMax =
+        nullableNumber("priceMax");
+
+
+      if (
+        priceMin !== null
+        &&
+        priceMin < 0
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Giá thấp nhất không hợp lệ."
+        );
+
+        return;
+      }
+
+
+      if (
+        priceMax !== null
+        &&
+        priceMax < 0
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Giá cao nhất không hợp lệ."
+        );
+
+        return;
+      }
+
+
+      if (
+        priceMin !== null
+        &&
+        priceMax !== null
+        &&
+        priceMin > priceMax
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Giá thấp nhất không được lớn hơn giá cao nhất."
+        );
+
+        return;
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+      saveBtn.textContent =
+        "ĐANG LƯU...";
+
+
+      try {
+
+        /* =========================================
+           KIỂM TRA TRÙNG TÊN
+        ========================================== */
+
+        const {
+          data: duplicateRows,
+          error: duplicateError
+        } =
+          await sb
+            .from(
+              "court_directory"
+            )
+            .select(`
+              id,
+              court_name,
+              province,
+              ward,
+              address
+            `)
+            .ilike(
+              "court_name",
+              courtName
+            )
+            .limit(10);
+
+
+        if (duplicateError) {
+          throw duplicateError;
+        }
+
+
+        const duplicate =
+          (duplicateRows || [])
+            .find(
+              row =>
+                String(
+                  row.province || ""
+                )
+                  .trim()
+                  .toLowerCase()
+                ===
+                province
+                  .toLowerCase()
+                &&
+                String(
+                  row.ward || ""
+                )
+                  .trim()
+                  .toLowerCase()
+                ===
+                ward
+                  .toLowerCase()
+            );
+
+
+        if (duplicate) {
+
+          const continueSave =
+            confirm(
+              "⚠️ Có thể sân này đã tồn tại:\n\n"
+              +
+              duplicate.court_name
+              +
+              "\n"
+              +
+              (
+                duplicate.address
+                ||
+                ""
+              )
+              +
+              "\n\nBạn vẫn muốn thêm?"
+            );
+
+
+          if (!continueSave) {
+
+            saveBtn.disabled =
+              false;
+
+            saveBtn.textContent =
+              "LƯU SÂN MỚI";
+
+            return;
+          }
+
+        }
+
+
+        /* =========================================
+           PAYLOAD
+        ========================================== */
+
+        const payload = {
+
+          court_name:
+            courtName,
+
+          province:
+            province,
+
+          district:
+            null,
+
+          ward:
+            ward,
+
+          address:
+            textValue("address")
+            || null,
+
+          latitude:
+            latitude,
+
+          longitude:
+            longitude,
+
+          phone:
+            normalizePhone(
+              textValue("phone")
+            )
+            || null,
+
+          zalo:
+            normalizePhone(
+              textValue("zalo")
+            )
+            || null,
+
+          facebook_url:
+            textValue("facebookUrl")
+            || null,
+
+          website_url:
+            textValue("websiteUrl")
+            || null,
+
+          number_of_courts:
+            numberOfCourts,
+
+          court_type:
+            textValue("courtType")
+            || null,
+
+          opening_hours:
+            textValue("openingHours")
+            || null,
+
+          price_min:
+            priceMin,
+
+          price_max:
+            priceMax,
+
+          amenities:
+            textValue("amenities")
+            || null,
+
+          booking_url:
+            textValue("bookingUrl")
+            || null,
+
+          source_name:
+            textValue("sourceName")
+            || "Admin nhập thủ công",
+
+          source_url:
+            textValue("sourceUrl")
+            || null,
+
+          source_external_id:
+            null,
+
+          verified:
+            $("verified").checked,
+
+          owner_claimed:
+            $("ownerClaimed").checked,
+
+          status:
+            textValue("status")
+            || "active",
+
+          note:
+            textValue("note")
+            || null
+
+        };
+
+
+        /* =========================================
+           INSERT
+        ========================================== */
+
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from(
+              "court_directory"
+            )
+            .insert(
+              payload
+            )
+            .select("id")
+            .single();
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        showMessage(
+          "success",
+          "✅ Đã thêm sân vào danh bạ PickDee."
+        );
+
+
+        setTimeout(
+          function () {
+
+            location.href =
+              "./admin-court-detail?id="
+              +
+              encodeURIComponent(
+                data.id
+              );
+
+          },
+          700
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "ADD COURT:",
+          error
+        );
+
+
+        showMessage(
+          "error",
+          "❌ Không lưu được sân: "
+          +
+          (
+            error?.message
+            ||
+            "Lỗi không xác định"
+          )
+        );
+
+
+        saveBtn.disabled =
+          false;
+
+        saveBtn.textContent =
+          "LƯU SÂN MỚI";
+
+      }
+
+    }
+  );
+
+})();
+</script>
+
+</body>
+</html>
