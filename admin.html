@@ -3410,276 +3410,269 @@ window.addEventListener(
      VIỆC CẦN XỬ LÝ
   ====================================================== */
 
-    async function loadAdminTaskCount() {
+   async function loadAdminTaskCount() {
 
-    const adminTaskCount =
-      document.getElementById(
-        "adminTaskCount"
-      );
+  const adminTaskCount =
+    document.getElementById(
+      "adminTaskCount"
+    );
 
-    if (!adminTaskCount) {
-      return;
-    }
+  if (!adminTaskCount) {
+    return;
+  }
 
-    try {
+  try {
 
-      /*
-        =====================================================
-        PICKDEE ADMIN - MASTER TASK COUNT
+    const [
+      baseResult,
+      coachChangeResult,
+      coachApplicationResult,
+      coachBacklogResult,
+      coachSessionResult,
+      courtClaimResult
+    ] =
+      await Promise.all([
 
-        Phải đồng bộ với trang /admin-tasks:
+        sb.rpc(
+          "admin_get_pending_tasks"
+        ),
 
-        1. Việc Admin cơ bản
-        2. Yêu cầu đổi Coach đang chờ
-        3. Hồ sơ Coach đang chờ
-        4. Buổi Coach quá giờ chưa điểm danh
-        5. Học viên cần chấm trình cuối khóa
-        =====================================================
-      */
-
-      const [
-        baseResult,
-        coachChangeResult,
-        coachApplicationResult,
-        coachBacklogResult,
-        coachSessionResult
-      ] =
-        await Promise.all([
-
-          sb.rpc(
-            "admin_get_pending_tasks"
+        sb
+          .from(
+            "coach_change_requests"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "status",
+            "pending"
           ),
 
-          sb
-            .from(
-              "coach_change_requests"
-            )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            ),
-
-          sb
-            .from(
-              "coach_applications"
-            )
-            .select(
-              "id",
-              {
-                count: "exact",
-                head: true
-              }
-            )
-            .eq(
-              "status",
-              "pending"
-            ),
-
-          sb.rpc(
-            "admin_get_coach_operational_backlog"
+        sb
+          .from(
+            "coach_applications"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "status",
+            "pending"
           ),
 
-          sb.rpc(
-            "admin_get_overdue_coach_sessions"
+        sb.rpc(
+          "admin_get_coach_operational_backlog"
+        ),
+
+        sb.rpc(
+          "admin_get_overdue_coach_sessions"
+        ),
+
+        sb
+          .from(
+            "court_claim_requests"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "claim_status",
+            "pending"
           )
 
-        ]);
+      ]);
 
 
-      if (baseResult.error) {
-        throw baseResult.error;
-      }
+    if (baseResult.error) {
+      throw baseResult.error;
+    }
 
-      if (coachChangeResult.error) {
-        throw coachChangeResult.error;
-      }
+    if (coachChangeResult.error) {
+      throw coachChangeResult.error;
+    }
 
-      if (coachApplicationResult.error) {
-        throw coachApplicationResult.error;
-      }
+    if (coachApplicationResult.error) {
+      throw coachApplicationResult.error;
+    }
 
-      if (coachBacklogResult.error) {
-        throw coachBacklogResult.error;
-      }
+    if (coachBacklogResult.error) {
+      throw coachBacklogResult.error;
+    }
 
-      if (coachSessionResult.error) {
-        throw coachSessionResult.error;
-      }
+    if (coachSessionResult.error) {
+      throw coachSessionResult.error;
+    }
 
-
-      /* ===============================
-         1. VIỆC ADMIN CƠ BẢN
-      =============================== */
-
-      const baseRows =
-        Array.isArray(
-          baseResult.data
-        )
-          ?
-          baseResult.data
-          :
-          [];
-
-      const baseTotal =
-        baseRows.length;
+    if (courtClaimResult.error) {
+      throw courtClaimResult.error;
+    }
 
 
-      /* ===============================
-         2. YÊU CẦU ĐỔI COACH
-      =============================== */
+    const baseRows =
+      Array.isArray(
+        baseResult.data
+      )
+        ?
+        baseResult.data
+        :
+        [];
 
-      const coachChangeTotal =
-        Number(
-          coachChangeResult.count || 0
-        );
-
-
-      /* ===============================
-         3. HỒ SƠ COACH CHỜ DUYỆT
-      =============================== */
-
-      const coachApplicationTotal =
-        Number(
-          coachApplicationResult.count || 0
-        );
+    const baseTotal =
+      baseRows.length;
 
 
-      /* ===============================
-         4. BUỔI COACH QUÁ GIỜ
-      =============================== */
-
-      const coachSessions =
-        Array.isArray(
-          coachSessionResult.data
-        )
-          ?
-          coachSessionResult.data
-          :
-          [];
-
-      const overdueCoachSessionTotal =
-        coachSessions.length;
-
-
-      /* ===============================
-         5. CHẤM TRÌNH CUỐI KHÓA
-      =============================== */
-
-      const coachBacklogRows =
-        Array.isArray(
-          coachBacklogResult.data
-        )
-          ?
-          coachBacklogResult.data
-          :
-          [];
-
-      const finalAssessmentTotal =
-        coachBacklogRows.reduce(
-          function (
-            sum,
-            row
-          ) {
-
-            return (
-              sum
-              +
-              Number(
-                row.pending_final_assessments
-                ||
-                0
-              )
-            );
-
-          },
-          0
-        );
-
-
-      /* ===============================
-         TỔNG VIỆC CẦN XỬ LÝ
-      =============================== */
-
-      const total =
-        baseTotal
-        +
-        coachChangeTotal
-        +
-        coachApplicationTotal
-        +
-        overdueCoachSessionTotal
-        +
-        finalAssessmentTotal;
-
-
-      adminTaskCount.textContent =
-        String(
-          total
-        );
-
-
-      if (total === 0) {
-
-        adminTaskCount.style.background =
-          "#b9ff18";
-
-      }
-      else {
-
-        adminTaskCount.style.background =
-          "#ff8e8e";
-
-      }
-
-
-      console.log(
-        "PickDee Admin Task Count:",
-        {
-          baseTasks:
-            baseTotal,
-
-          coachChanges:
-            coachChangeTotal,
-
-          coachApplications:
-            coachApplicationTotal,
-
-          overdueCoachSessions:
-            overdueCoachSessionTotal,
-
-          finalAssessments:
-            finalAssessmentTotal,
-
-          total:
-            total
-        }
+    const coachChangeTotal =
+      Number(
+        coachChangeResult.count || 0
       );
+
+
+    const coachApplicationTotal =
+      Number(
+        coachApplicationResult.count || 0
+      );
+
+
+    const coachSessions =
+      Array.isArray(
+        coachSessionResult.data
+      )
+        ?
+        coachSessionResult.data
+        :
+        [];
+
+    const overdueCoachSessionTotal =
+      coachSessions.length;
+
+
+    const coachBacklogRows =
+      Array.isArray(
+        coachBacklogResult.data
+      )
+        ?
+        coachBacklogResult.data
+        :
+        [];
+
+    const finalAssessmentTotal =
+      coachBacklogRows.reduce(
+        function (
+          sum,
+          row
+        ) {
+
+          return (
+            sum
+            +
+            Number(
+              row.pending_final_assessments
+              ||
+              0
+            )
+          );
+
+        },
+        0
+      );
+
+
+    const courtClaimTotal =
+      Number(
+        courtClaimResult.count || 0
+      );
+
+
+    const total =
+      baseTotal
+      +
+      coachChangeTotal
+      +
+      coachApplicationTotal
+      +
+      overdueCoachSessionTotal
+      +
+      finalAssessmentTotal
+      +
+      courtClaimTotal;
+
+
+    adminTaskCount.textContent =
+      String(
+        total
+      );
+
+
+    if (total === 0) {
+
+      adminTaskCount.style.background =
+        "#b9ff18";
 
     }
-    catch (error) {
-
-      console.error(
-        "Lỗi đếm việc cần xử lý:",
-        error
-      );
-
-      adminTaskCount.textContent =
-        "!";
+    else {
 
       adminTaskCount.style.background =
         "#ff8e8e";
 
     }
 
+
+    console.log(
+      "PickDee Admin Task Count:",
+      {
+        baseTasks:
+          baseTotal,
+
+        coachChanges:
+          coachChangeTotal,
+
+        coachApplications:
+          coachApplicationTotal,
+
+        overdueCoachSessions:
+          overdueCoachSessionTotal,
+
+        finalAssessments:
+          finalAssessmentTotal,
+
+        courtClaims:
+          courtClaimTotal,
+
+        total:
+          total
+      }
+    );
+
+  }
+  catch (error) {
+
+    console.error(
+      "Lỗi đếm việc cần xử lý:",
+      error
+    );
+
+    adminTaskCount.textContent =
+      "!";
+
+    adminTaskCount.style.background =
+      "#ff8e8e";
+
   }
 
+}
 
   /* =====================================================
      REFRESH DASHBOARD
