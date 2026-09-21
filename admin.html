@@ -9658,6 +9658,308 @@ document.addEventListener(
 
 })();
 </script>
+<!-- =========================================================
+     PICKDEE - SÂN CHỜ DUYỆT TRÊN ADMIN DASHBOARD
+========================================================== -->
+
+<style>
+  #courtSubmissionCard .court-submission-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 34px;
+    height: 34px;
+
+    padding: 0 10px;
+
+    margin-top: 10px;
+
+    border-radius: 999px;
+
+    background: #d8ff45;
+    color: #071000;
+
+    font-size: 18px;
+    font-weight: 950;
+  }
+
+  #courtSubmissionCard.has-pending .card {
+    border-color: rgba(255, 190, 90, .55);
+  }
+
+  #courtSubmissionCard.has-pending
+  .court-submission-count {
+    background: #ffb84d;
+    color: #111;
+  }
+
+  #courtSubmissionCard .court-submission-text {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(255,255,255,.62);
+  }
+</style>
+
+
+<script>
+(async function () {
+
+  const cfgCourtSubmission =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfgCourtSubmission.SUPABASE_URL
+    ||
+    !cfgCourtSubmission.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const sbCourtSubmission =
+    window.supabase.createClient(
+      cfgCourtSubmission.SUPABASE_URL,
+      cfgCourtSubmission.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================================
+     TÌM CARD DANH BẠ SÂN
+  ========================================== */
+
+  const directoryCard =
+    document.querySelector(
+      'a[href="./admin-court-directory"], a[href="./admin-court-directory.html"]'
+    );
+
+
+  if (!directoryCard) {
+
+    console.warn(
+      "PickDee: không tìm thấy card Danh bạ sân toàn quốc."
+    );
+
+    return;
+
+  }
+
+
+  /* =========================================
+     TẠO CARD SÂN CHỜ DUYỆT
+  ========================================== */
+
+  let card =
+    document.getElementById(
+      "courtSubmissionCard"
+    );
+
+
+  if (!card) {
+
+    card =
+      document.createElement(
+        "a"
+      );
+
+
+    card.id =
+      "courtSubmissionCard";
+
+
+    card.href =
+      "./admin-court-submissions";
+
+
+    card.className =
+      directoryCard.className
+      ||
+      "card-link";
+
+
+    card.innerHTML = `
+
+      <div class="card">
+
+        <h2>
+          📨 Sân chờ duyệt
+        </h2>
+
+        <p>
+          Yêu cầu đưa sân lên PickDee
+          do chủ sân hoặc quản lý gửi.
+        </p>
+
+        <div
+          id="courtSubmissionCount"
+          class="court-submission-count"
+        >
+          ...
+        </div>
+
+        <div
+          id="courtSubmissionText"
+          class="court-submission-text"
+        >
+          Đang kiểm tra...
+        </div>
+
+      </div>
+
+    `;
+
+
+    directoryCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+  }
+
+
+  /* =========================================
+     LOAD SỐ SÂN CHỜ DUYỆT
+  ========================================== */
+
+  async function loadCourtSubmissionCount() {
+
+    const countEl =
+      document.getElementById(
+        "courtSubmissionCount"
+      );
+
+
+    const textEl =
+      document.getElementById(
+        "courtSubmissionText"
+      );
+
+
+    if (
+      !countEl
+      ||
+      !textEl
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const {
+        count,
+        error
+      } =
+        await sbCourtSubmission
+          .from(
+            "court_directory_submissions"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "submission_status",
+            "pending"
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const total =
+        Number(
+          count || 0
+        );
+
+
+      countEl.textContent =
+        String(total);
+
+
+      card.classList.toggle(
+        "has-pending",
+        total > 0
+      );
+
+
+      textEl.textContent =
+        total > 0
+
+          ?
+
+          (
+            "Có "
+            +
+            total
+            +
+            " sân đang chờ Admin kiểm tra."
+          )
+
+          :
+
+          "Hiện không có sân nào chờ duyệt.";
+
+    }
+    catch (error) {
+
+      console.error(
+        "COURT SUBMISSION DASHBOARD:",
+        error
+      );
+
+
+      countEl.textContent =
+        "!";
+
+
+      textEl.textContent =
+        "Không tải được trạng thái sân chờ duyệt.";
+
+
+      card.classList.add(
+        "has-pending"
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     START
+  ========================================== */
+
+  await loadCourtSubmissionCount();
+
+
+  setInterval(
+    loadCourtSubmissionCount,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCourtSubmissionCount
+  );
+
+})();
+</script>
+  
 </body>
 
 </html>
