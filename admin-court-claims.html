@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Yêu cầu xác minh sân | PickDee Admin</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b10;
+      color: #ffffff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      width:
+        min(
+          1100px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        24px 0
+        70px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 42px;
+
+      padding: 0 14px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.04);
+
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    h1 {
+      margin:
+        0 0 8px;
+
+      font-size:
+        clamp(
+          28px,
+          5vw,
+          40px
+        );
+    }
+
+    .lead {
+      margin:
+        0 0 22px;
+
+      color:
+        rgba(255,255,255,.58);
+
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          1fr
+        );
+
+      gap: 10px;
+
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      padding: 15px;
+
+      border-radius: 13px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .stat-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .stat-value {
+      margin-top: 6px;
+
+      font-size: 26px;
+      font-weight: 950;
+    }
+
+    .filters {
+      display: grid;
+
+      grid-template-columns:
+        1fr 220px;
+
+      gap: 10px;
+
+      margin-bottom: 18px;
+    }
+
+    .filters input,
+    .filters select {
+      min-height: 46px;
+
+      padding:
+        0 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.045);
+
+      color: #ffffff;
+    }
+
+    select option {
+      color: #111111;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .claim {
+      padding: 18px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .claim-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+
+      gap: 15px;
+
+      margin-bottom: 15px;
+    }
+
+    .court-name {
+      margin-bottom: 5px;
+
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+    .location {
+      color:
+        rgba(255,255,255,.50);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .pending {
+      background:
+        rgba(255,190,70,.12);
+
+      color: #ffc66d;
+    }
+
+    .approved {
+      background:
+        rgba(80,255,135,.11);
+
+      color: #96ffb2;
+    }
+
+    .rejected {
+      background:
+        rgba(255,90,90,.11);
+
+      color: #ffaaaa;
+    }
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 0 20px;
+    }
+
+    .item {
+      padding:
+        10px 0;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.055);
+    }
+
+    .item.full {
+      grid-column:
+        1 / -1;
+    }
+
+    .label {
+      margin-bottom: 4px;
+
+      color:
+        rgba(255,255,255,.40);
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .value {
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.5;
+
+      word-break: break-word;
+    }
+
+    .actions {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          1fr
+        );
+
+      gap: 8px;
+
+      margin-top: 16px;
+    }
+
+    .btn {
+      min-height: 46px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding:
+        0 12px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      cursor: pointer;
+
+      background:
+        rgba(255,255,255,.05);
+
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      text-align: center;
+    }
+
+    .btn.approve {
+      background: #d8ff45;
+      color: #071000;
+
+      border-color: #d8ff45;
+    }
+
+    .btn.reject {
+      color: #ff9b9b;
+
+      border-color:
+        rgba(255,100,100,.30);
+    }
+
+    .empty {
+      padding:
+        45px 15px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.50);
+    }
+
+    @media(max-width:700px) {
+
+      .stats {
+        grid-template-columns:
+          1fr;
+      }
+
+      .filters {
+        grid-template-columns:
+          1fr;
+      }
+
+      .grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .item.full {
+        grid-column:
+          auto;
+      }
+
+      .actions {
+        grid-template-columns:
+          1fr;
+      }
+
+      .claim-head {
+        flex-direction: column;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+  <div class="topbar">
+
+    <a
+      class="brand"
+      href="./admin"
+    >
+      PickDee
+      <span>Admin</span>
+    </a>
+
+    <a
+      class="back"
+      href="./admin"
+    >
+      ← Admin
+    </a>
+
+  </div>
+
+
+  <h1>
+    👤 Yêu cầu xác minh sân
+  </h1>
+
+  <p class="lead">
+    Kiểm tra thông tin chủ sân,
+    xác minh qua Zalo rồi mới duyệt claim.
+  </p>
+
+
+  <div class="stats">
+
+    <div class="stat">
+
+      <div class="stat-label">
+        CHỜ XÁC MINH
+      </div>
+
+      <div
+        id="pendingCount"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐÃ DUYỆT
+      </div>
+
+      <div
+        id="approvedCount"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐÃ TỪ CHỐI
+      </div>
+
+      <div
+        id="rejectedCount"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="filters">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm tên sân, người gửi, SĐT..."
+    >
+
+
+    <select id="statusFilter">
+
+      <option value="pending">
+        Chờ xác minh
+      </option>
+
+      <option value="">
+        Tất cả trạng thái
+      </option>
+
+      <option value="approved">
+        Đã duyệt
+      </option>
+
+      <option value="rejected">
+        Đã từ chối
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div
+    id="claimList"
+    class="list"
+  >
+
+    <div class="empty">
+      Đang tải dữ liệu...
+    </div>
+
+  </div>
+
+
+</div>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const claimList =
+    document.getElementById(
+      "claimList"
+    );
+
+
+  let claims = [];
+
+  let courtsById = {};
+
+
+  /* =========================================
+     ADMIN CHECK
+  ========================================== */
+
+  const {
+    data: authData
+  } =
+    await sb.auth.getUser();
+
+
+  const user =
+    authData?.user;
+
+
+  if (!user) {
+
+    location.href =
+      "./";
+
+    return;
+
+  }
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+    ||
+    String(
+      profile?.role || ""
+    )
+      .trim()
+      .toLowerCase()
+    !==
+    "admin"
+  ) {
+
+    location.href =
+      "./";
+
+    return;
+
+  }
+
+
+  /* =========================================
+     HELPERS
+  ========================================== */
+
+  function esc(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function cleanPhone(value) {
+
+    return String(
+      value || ""
+    )
+      .replace(
+        /[^0-9]/g,
+        ""
+      );
+
+  }
+
+
+  function zaloUrl(value) {
+
+    const phone =
+      cleanPhone(
+        value
+      );
+
+
+    if (!phone) {
+      return "";
+    }
+
+
+    return (
+      "https://zalo.me/"
+      +
+      phone
+    );
+
+  }
+
+
+  function statusLabel(status) {
+
+    if (
+      status ===
+      "approved"
+    ) {
+
+      return "Đã duyệt";
+
+    }
+
+
+    if (
+      status ===
+      "rejected"
+    ) {
+
+      return "Đã từ chối";
+
+    }
+
+
+    return "Chờ xác minh";
+
+  }
+
+
+  function dateText(value) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    try {
+
+      return new Date(
+        value
+      )
+        .toLocaleString(
+          "vi-VN"
+        );
+
+    }
+    catch (_) {
+
+      return String(value);
+
+    }
+
+  }
+
+
+  /* =========================================
+     LOAD
+  ========================================== */
+
+  async function loadData() {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "court_claim_requests"
+        )
+        .select(`
+          id,
+          court_id,
+          claimant_name,
+          claimant_phone,
+          claimant_zalo,
+          claimant_email,
+          claimant_role,
+          proof_note,
+          claim_status,
+          admin_note,
+          reviewed_at,
+          created_at
+        `)
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "LOAD CLAIMS:",
+        error
+      );
+
+
+      claimList.innerHTML = `
+        <div class="empty">
+          Không tải được yêu cầu xác minh sân.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    claims =
+      data || [];
+
+
+    const courtIds =
+      [
+        ...new Set(
+          claims
+            .map(
+              item =>
+                item.court_id
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    courtsById = {};
+
+
+    if (
+      courtIds.length
+    ) {
+
+      const {
+        data: courts,
+        error: courtsError
+      } =
+        await sb
+          .from(
+            "court_directory"
+          )
+          .select(`
+            id,
+            court_name,
+            province,
+            ward,
+            address,
+            verified,
+            owner_claimed,
+            status
+          `)
+          .in(
+            "id",
+            courtIds
+          );
+
+
+      if (
+        !courtsError
+      ) {
+
+        (
+          courts || []
+        )
+          .forEach(
+            function (court) {
+
+              courtsById[
+                court.id
+              ] =
+                court;
+
+            }
+          );
+
+      }
+
+    }
+
+
+    render();
+
+  }
+
+
+  /* =========================================
+     RENDER
+  ========================================== */
+
+  function render() {
+
+
+    document
+      .getElementById(
+        "pendingCount"
+      )
+      .textContent =
+        claims.filter(
+          x =>
+            x.claim_status
+            ===
+            "pending"
+        ).length;
+
+
+    document
+      .getElementById(
+        "approvedCount"
+      )
+      .textContent =
+        claims.filter(
+          x =>
+            x.claim_status
+            ===
+            "approved"
+        ).length;
+
+
+    document
+      .getElementById(
+        "rejectedCount"
+      )
+      .textContent =
+        claims.filter(
+          x =>
+            x.claim_status
+            ===
+            "rejected"
+        ).length;
+
+
+    const search =
+      document
+        .getElementById(
+          "searchInput"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const status =
+      document
+        .getElementById(
+          "statusFilter"
+        )
+        .value;
+
+
+    const filtered =
+      claims.filter(
+        function (claim) {
+
+
+          if (
+            status
+            &&
+            claim.claim_status
+            !==
+            status
+          ) {
+
+            return false;
+
+          }
+
+
+          if (!search) {
+            return true;
+          }
+
+
+          const court =
+            courtsById[
+              claim.court_id
+            ]
+            ||
+            {};
+
+
+          const haystack =
+            [
+              court.court_name,
+              court.province,
+              court.ward,
+              claim.claimant_name,
+              claim.claimant_phone,
+              claim.claimant_zalo,
+              claim.claimant_email
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
+
+
+          return haystack
+            .includes(
+              search
+            );
+
+        }
+      );
+
+
+    if (
+      !filtered.length
+    ) {
+
+      claimList.innerHTML = `
+        <div class="empty">
+          Không có yêu cầu phù hợp.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    claimList.innerHTML =
+      filtered
+        .map(
+          function (claim) {
+
+
+            const court =
+              courtsById[
+                claim.court_id
+              ]
+              ||
+              {};
+
+
+            const zalo =
+              claim.claimant_zalo
+              ||
+              claim.claimant_phone
+              ||
+              "";
+
+
+            const zaloLink =
+              zaloUrl(
+                zalo
+              );
+
+
+            const canProcess =
+              claim.claim_status
+              ===
+              "pending";
+
+
+            return `
+
+              <article class="claim">
+
+
+                <div class="claim-head">
+
+                  <div>
+
+                    <div class="court-name">
+                      🏟 ${esc(
+                        court.court_name
+                        ||
+                        "Sân #"
+                        +
+                        claim.court_id
+                      )}
+                    </div>
+
+                    <div class="location">
+
+                      ${esc(
+                        [
+                          court.address,
+                          court.ward,
+                          court.province
+                        ]
+                          .filter(Boolean)
+                          .join(", ")
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <span
+                    class="
+                      badge
+                      ${esc(
+                        claim.claim_status
+                      )}
+                    "
+                  >
+                    ${esc(
+                      statusLabel(
+                        claim.claim_status
+                      )
+                    )}
+                  </span>
+
+                </div>
+
+
+                <div class="grid">
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      NGƯỜI YÊU CẦU
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        claim.claimant_name
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      VAI TRÒ
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        claim.claimant_role
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      SỐ ĐIỆN THOẠI
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        claim.claimant_phone
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      ZALO
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        zalo
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      EMAIL
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        claim.claimant_email
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="label">
+                      NGÀY GỬI
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        dateText(
+                          claim.created_at
+                        )
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item full">
+
+                    <div class="label">
+                      THÔNG TIN XÁC MINH
+                    </div>
+
+                    <div class="value">
+                      ${esc(
+                        claim.proof_note
+                        ||
+                        "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  ${
+                    claim.admin_note
+
+                      ?
+
+                      `
+                        <div class="item full">
+
+                          <div class="label">
+                            GHI CHÚ ADMIN
+                          </div>
+
+                          <div class="value">
+                            ${esc(
+                              claim.admin_note
+                            )}
+                          </div>
+
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                  }
+
+
+                </div>
+
+
+                <div class="actions">
+
+
+                  <a
+                    class="btn"
+                    href="${
+                      zaloLink
+                      ?
+                      esc(zaloLink)
+                      :
+                      "#"
+                    }"
+                    ${
+                      zaloLink
+                      ?
+                      `target="_blank" rel="noopener noreferrer"`
+                      :
+                      ""
+                    }
+                  >
+                    💬 NHẮN ZALO
+                  </a>
+
+
+                  ${
+                    canProcess
+
+                      ?
+
+                      `
+                        <button
+                          class="btn approve"
+                          type="button"
+                          onclick="approveClaim(${claim.id})"
+                        >
+                          ✅ DUYỆT CLAIM
+                        </button>
+
+
+                        <button
+                          class="btn reject"
+                          type="button"
+                          onclick="rejectClaim(${claim.id})"
+                        >
+                          ❌ TỪ CHỐI
+                        </button>
+                      `
+
+                      :
+
+                      `
+                        <a
+                          class="btn"
+                          href="./admin-court-detail?id=${encodeURIComponent(
+                            claim.court_id
+                          )}"
+                        >
+                          XEM SÂN
+                        </a>
+                      `
+                  }
+
+
+                </div>
+
+
+              </article>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =========================================
+     APPROVE
+  ========================================== */
+
+  window.approveClaim =
+    async function (
+      claimId
+    ) {
+
+
+      const ok =
+        confirm(
+          "Bạn đã xác minh đúng chủ sân qua Zalo và muốn DUYỆT claim này?"
+        );
+
+
+      if (!ok) {
+        return;
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "admin_approve_court_claim",
+          {
+            p_claim_id:
+              claimId
+          }
+        );
+
+
+      if (error) {
+
+        console.error(
+          "APPROVE CLAIM:",
+          error
+        );
+
+
+        alert(
+          "Không duyệt được claim: "
+          +
+          error.message
+        );
+
+
+        return;
+
+      }
+
+
+      alert(
+        "✓ Đã xác minh và duyệt chủ sân."
+      );
+
+
+      location.href =
+        "./admin-court-detail?id="
+        +
+        encodeURIComponent(
+          data
+        );
+
+    };
+
+
+  /* =========================================
+     REJECT
+  ========================================== */
+
+  window.rejectClaim =
+    async function (
+      claimId
+    ) {
+
+
+      const reason =
+        prompt(
+          "Lý do từ chối yêu cầu xác minh:"
+        );
+
+
+      if (
+        reason === null
+      ) {
+
+        return;
+
+      }
+
+
+      const cleanReason =
+        reason.trim();
+
+
+      if (
+        !cleanReason
+      ) {
+
+        alert(
+          "Vui lòng nhập lý do từ chối."
+        );
+
+        return;
+
+      }
+
+
+      const {
+        error
+      } =
+        await sb
+          .from(
+            "court_claim_requests"
+          )
+          .update({
+
+            claim_status:
+              "rejected",
+
+            admin_note:
+              cleanReason,
+
+            reviewed_at:
+              new Date()
+                .toISOString(),
+
+            reviewed_by:
+              user.id
+
+          })
+          .eq(
+            "id",
+            claimId
+          )
+          .eq(
+            "claim_status",
+            "pending"
+          );
+
+
+      if (error) {
+
+        console.error(
+          "REJECT CLAIM:",
+          error
+        );
+
+
+        alert(
+          "Không từ chối được claim."
+        );
+
+
+        return;
+
+      }
+
+
+      await loadData();
+
+    };
+
+
+  /* =========================================
+     FILTERS
+  ========================================== */
+
+  document
+    .getElementById(
+      "searchInput"
+    )
+    .addEventListener(
+      "input",
+      render
+    );
+
+
+  document
+    .getElementById(
+      "statusFilter"
+    )
+    .addEventListener(
+      "change",
+      render
+    );
+
+
+  await loadData();
+
+
+})();
+
+</script>
+
+
+</body>
+</html>
