@@ -1070,24 +1070,43 @@
 
 
       }
-      catch (error) {
+ catch (error) {
+
+  console.error(
+    "COURT CLAIM:",
+    error
+  );
 
 
-        console.error(
-          "COURT CLAIM:",
-          error
-        );
+  message.className =
+    "message error";
 
 
-        message.className =
-          "message error";
+  const duplicatePending =
+    error?.code === "23505"
+    ||
+    String(
+      error?.message || ""
+    )
+      .includes(
+        "uq_court_claim_requests_one_pending_per_court"
+      );
 
 
-        message.textContent =
-          "Chưa gửi được yêu cầu. Vui lòng thử lại sau.";
+  if (duplicatePending) {
 
+    message.textContent =
+      "Sân này đã có yêu cầu xác minh đang chờ PickDee xử lý.";
 
-      }
+  }
+  else {
+
+    message.textContent =
+      "Chưa gửi được yêu cầu. Vui lòng thử lại sau.";
+
+  }
+
+}
       finally {
 
 
