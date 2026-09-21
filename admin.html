@@ -9959,7 +9959,316 @@ document.addEventListener(
 
 })();
 </script>
-  
+  <!-- ======================================================
+     PICKDEE ADMIN - YÊU CẦU XÁC MINH SÂN
+======================================================= -->
+
+<style>
+
+  #courtClaimCard.has-pending .card {
+    border-color:
+      rgba(255,180,70,.58) !important;
+
+    box-shadow:
+      0 0 0 1px
+      rgba(255,180,70,.05);
+  }
+
+  #courtClaimCard .claim-count {
+    margin-top: 12px;
+
+    font-size: 28px;
+    font-weight: 950;
+
+    color: #d8ff45;
+  }
+
+  #courtClaimCard.has-pending .claim-count {
+    color: #ffc46e;
+  }
+
+  #courtClaimCard .claim-status {
+    margin-top: 5px;
+
+    color:
+      rgba(255,255,255,.58);
+
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+
+  /* =========================================
+     KHÔNG TẠO TRÙNG CARD
+  ========================================== */
+
+  if (
+    document.getElementById(
+      "courtClaimCard"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /* =========================================
+     TÌM CARD MỐC
+  ========================================== */
+
+  const submissionCard =
+    document.getElementById(
+      "courtSubmissionCard"
+    );
+
+
+  const directoryCard =
+    document.querySelector(
+      'a[href="./admin-court-directory"], a[href="./admin-court-directory.html"]'
+    );
+
+
+  const referenceCard =
+    submissionCard
+    ||
+    directoryCard;
+
+
+  if (!referenceCard) {
+
+    console.warn(
+      "PickDee: không tìm thấy vị trí để gắn card xác minh sân."
+    );
+
+    return;
+
+  }
+
+
+  /* =========================================
+     TẠO CARD
+  ========================================== */
+
+  const card =
+    document.createElement(
+      "a"
+    );
+
+
+  card.id =
+    "courtClaimCard";
+
+
+  card.href =
+    "./admin-court-claims";
+
+
+  card.className =
+    referenceCard.className
+    ||
+    "card-link";
+
+
+  card.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        👤 Yêu cầu xác minh sân
+      </h2>
+
+      <p>
+        Chủ sân yêu cầu xác nhận quyền sở hữu
+        hoặc quản lý sân trên PickDee.
+      </p>
+
+      <div
+        id="courtClaimPendingCount"
+        class="claim-count"
+      >
+        ...
+      </div>
+
+      <div
+        id="courtClaimStatus"
+        class="claim-status"
+      >
+        Đang kiểm tra yêu cầu...
+      </div>
+
+    </div>
+
+  `;
+
+
+  referenceCard.insertAdjacentElement(
+    "afterend",
+    card
+  );
+
+
+  /* =========================================
+     SUPABASE
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const claimSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================================
+     LOAD COUNT
+  ========================================== */
+
+  async function loadCourtClaimCount() {
+
+
+    const countEl =
+      document.getElementById(
+        "courtClaimPendingCount"
+      );
+
+
+    const statusEl =
+      document.getElementById(
+        "courtClaimStatus"
+      );
+
+
+    try {
+
+
+      const {
+        count,
+        error
+      } =
+        await claimSb
+          .from(
+            "court_claim_requests"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "claim_status",
+            "pending"
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const total =
+        Number(
+          count || 0
+        );
+
+
+      countEl.textContent =
+        total;
+
+
+      card.classList.toggle(
+        "has-pending",
+        total > 0
+      );
+
+
+      if (
+        total > 0
+      ) {
+
+        statusEl.textContent =
+          total
+          +
+          " yêu cầu đang chờ Admin xác minh.";
+
+      }
+      else {
+
+        statusEl.textContent =
+          "Hiện không có yêu cầu nào chờ xác minh.";
+
+      }
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "COURT CLAIM DASHBOARD:",
+        error
+      );
+
+
+      countEl.textContent =
+        "—";
+
+
+      statusEl.textContent =
+        "Không tải được số yêu cầu xác minh.";
+
+    }
+
+  }
+
+
+  await loadCourtClaimCount();
+
+
+  /* =========================================
+     REFRESH
+  ========================================== */
+
+  setInterval(
+    loadCourtClaimCount,
+    60000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCourtClaimCount
+  );
+
+
+})();
+
+</script>
 </body>
 
 </html>
