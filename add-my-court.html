@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Đưa sân của tôi lên PickDee</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b10;
+      color: #ffffff;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .page {
+      width:
+        min(
+          860px,
+          calc(100% - 28px)
+        );
+      margin: 0 auto;
+      padding:
+        24px 0
+        70px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content:
+        space-between;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 15px;
+      border-radius: 11px;
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+      background:
+        rgba(255,255,255,.05);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    h1 {
+      margin:
+        0 0 10px;
+      font-size:
+        clamp(
+          28px,
+          6vw,
+          42px
+        );
+      line-height: 1.08;
+    }
+
+    .hero-text {
+      margin:
+        0 0 24px;
+      color:
+        rgba(255,255,255,.65);
+      line-height: 1.65;
+    }
+
+    .card {
+      margin-bottom: 18px;
+      padding: 18px;
+      border-radius: 16px;
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .section-title {
+      margin-bottom: 16px;
+      color: #d8ff45;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr;
+      gap: 14px;
+    }
+
+    .full {
+      grid-column:
+        1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color:
+        rgba(255,255,255,.72);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .required {
+      color: #ff9797;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 46px;
+      border-radius: 11px;
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+      background: #0e131a;
+      color: #ffffff;
+      padding:
+        11px 13px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color:
+        rgba(
+          216,
+          255,
+          69,
+          .7
+        );
+    }
+
+    .map-btn {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 11px;
+      border:
+        1px solid
+        rgba(216,255,69,.3);
+      background:
+        rgba(216,255,69,.07);
+      color: #d8ff45;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      width: 100%;
+      min-height: 54px;
+      border: 0;
+      border-radius: 13px;
+      background: #d8ff45;
+      color: #081000;
+      font-size: 16px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .message {
+      display: none;
+      margin:
+        0 0 18px;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .message.success {
+      display: block;
+      background:
+        rgba(90,255,140,.10);
+      border:
+        1px solid
+        rgba(90,255,140,.28);
+      color: #93ffb3;
+    }
+
+    .message.error {
+      display: block;
+      background:
+        rgba(255,90,90,.10);
+      border:
+        1px solid
+        rgba(255,90,90,.28);
+      color: #ffaaaa;
+    }
+
+    .note {
+      margin:
+        0 0 14px;
+      color:
+        rgba(255,255,255,.55);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .honeypot {
+      position: absolute !important;
+      left: -9999px !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    @media(max-width:700px) {
+
+      .grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .full {
+        grid-column:
+          auto;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="topbar">
+
+    <a
+      href="/"
+      class="brand"
+    >
+      PickDee
+      <span>
+        Academy
+      </span>
+    </a>
+
+    <a
+      href="/"
+      class="back-btn"
+    >
+      ← Trang chủ
+    </a>
+
+  </div>
+
+
+  <h1>
+    🏓 Đưa sân của bạn lên PickDee
+  </h1>
+
+  <p class="hero-text">
+    Chủ sân có thể gửi thông tin miễn phí.
+    PickDee sẽ kiểm tra trước khi hiển thị
+    trên danh bạ sân toàn quốc.
+  </p>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <!-- =========================
+       THÔNG TIN SÂN
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      🏟 Thông tin sân
+    </div>
+
+    <div class="grid">
+
+      <div class="full">
+
+        <label>
+          Tên sân
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="courtName"
+          placeholder="VD: Sân Pickleball ABC"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Tỉnh / Thành phố
+          <span class="required">*</span>
+        </label>
+
+        <select id="province">
+
+          <option value="">
+            Đang tải...
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Phường / Xã
+          <span class="required">*</span>
+        </label>
+
+        <select
+          id="ward"
+          disabled
+        >
+
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Địa chỉ sân
+        </label>
+
+        <input
+          id="address"
+          placeholder="Số nhà, đường, khu phố..."
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Số điện thoại sân
+        </label>
+
+        <input
+          id="phone"
+          inputmode="tel"
+          placeholder="09xxxxxxxx"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Zalo sân
+        </label>
+
+        <input
+          id="zalo"
+          inputmode="tel"
+          placeholder="09xxxxxxxx"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Số sân Pickleball
+        </label>
+
+        <input
+          id="numberOfCourts"
+          type="number"
+          min="0"
+          placeholder="VD: 6"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Loại sân
+        </label>
+
+        <input
+          id="courtType"
+          placeholder="Có mái che / Ngoài trời..."
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Giờ mở cửa
+        </label>
+
+        <input
+          id="openingHours"
+          placeholder="VD: 05:00-23:00"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Giá thấp nhất / giờ
+        </label>
+
+        <input
+          id="priceMin"
+          type="number"
+          min="0"
+          placeholder="80000"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Giá cao nhất / giờ
+        </label>
+
+        <input
+          id="priceMax"
+          type="number"
+          min="0"
+          placeholder="150000"
+        >
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Tiện ích
+        </label>
+
+        <textarea
+          id="amenities"
+          placeholder="Bãi xe; WC; Nước uống; Thuê vợt; Phòng tắm..."
+        ></textarea>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       GOOGLE MAPS
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      📍 Kiểm tra vị trí
+    </div>
+
+    <p class="note">
+      Sau khi nhập địa chỉ, bạn có thể mở
+      Google Maps để kiểm tra vị trí sân.
+    </p>
+
+    <button
+      id="mapBtn"
+      class="map-btn"
+      type="button"
+    >
+      📍 XEM TRÊN GOOGLE MAPS
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       ONLINE
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      🌐 Thông tin online
+    </div>
+
+    <div class="grid">
+
+      <div class="full">
+
+        <label>
+          Facebook sân
+        </label>
+
+        <input
+          id="facebookUrl"
+          placeholder="https://facebook.com/..."
+        >
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Website
+        </label>
+
+        <input
+          id="websiteUrl"
+          placeholder="https://..."
+        >
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Link đặt sân
+        </label>
+
+        <input
+          id="bookingUrl"
+          placeholder="https://..."
+        >
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       CHỦ SÂN
+  ========================== -->
+
+  <div class="card">
+
+    <div class="section-title">
+      👤 Người gửi thông tin
+    </div>
+
+    <p class="note">
+      Thông tin này dùng để PickDee liên hệ xác minh
+      và không tự động hiển thị công khai.
+    </p>
+
+    <div class="grid">
+
+      <div>
+
+        <label>
+          Họ tên
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="ownerName"
+          autocomplete="name"
+          placeholder="Họ tên chủ sân / quản lý"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Số điện thoại
+          <span class="required">*</span>
+        </label>
+
+        <input
+          id="ownerPhone"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="09xxxxxxxx"
+        >
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Email
+        </label>
+
+        <input
+          id="ownerEmail"
+          type="email"
+          autocomplete="email"
+          placeholder="email@example.com"
+        >
+
+      </div>
+
+
+      <div class="full">
+
+        <label>
+          Ghi chú
+        </label>
+
+        <textarea
+          id="note"
+          placeholder="Thông tin thêm mà bạn muốn PickDee biết..."
+        ></textarea>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- HONEYPOT CHỐNG BOT ĐƠN GIẢN -->
+
+  <div class="honeypot">
+
+    <label>
+      Website phụ
+    </label>
+
+    <input
+      id="websiteCheck"
+      tabindex="-1"
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <button
+    id="submitBtn"
+    class="submit-btn"
+    type="button"
+  >
+    GỬI THÔNG TIN SÂN
+  </button>
+
+</div>
+
+
+<script>
+(async function () {
+
+  /* =============================================
+     SUPABASE
+  ============================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    alert(
+      "Không tìm thấy cấu hình PickDee."
+    );
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =============================================
+     ELEMENTS
+  ============================================== */
+
+  const $ =
+    id =>
+      document.getElementById(id);
+
+
+  const provinceSelect =
+    $("province");
+
+  const wardSelect =
+    $("ward");
+
+  const submitBtn =
+    $("submitBtn");
+
+  const message =
+    $("message");
+
+
+  /* =============================================
+     HELPERS
+  ============================================== */
+
+  function clean(id) {
+
+    return String(
+      $(id)?.value || ""
+    ).trim();
+
+  }
+
+
+  function numberOrNull(id) {
+
+    const value =
+      clean(id);
+
+    if (!value) {
+      return null;
+    }
+
+    const number =
+      Number(value);
+
+    return Number.isFinite(number)
+      ? number
+      : null;
+
+  }
+
+
+  function normalizePhone(value) {
+
+    let phone =
+      String(value || "")
+        .trim()
+        .replace(
+          /[.\s()-]/g,
+          ""
+        );
+
+
+    if (
+      phone.startsWith(
+        "+84"
+      )
+    ) {
+
+      phone =
+        "0"
+        +
+        phone.slice(3);
+
+    }
+
+
+    if (
+      /^84\d{9}$/.test(
+        phone
+      )
+    ) {
+
+      phone =
+        "0"
+        +
+        phone.slice(2);
+
+    }
+
+
+    return phone;
+
+  }
+
+
+  function showMessage(
+    type,
+    text
+  ) {
+
+    message.className =
+      "message " + type;
+
+    message.textContent =
+      text;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  /* =============================================
+     LOAD TỈNH / THÀNH
+  ============================================== */
+
+  async function loadProvinces() {
+
+    provinceSelect.disabled =
+      true;
+
+    provinceSelect.innerHTML = `
+      <option value="">
+        Đang tải Tỉnh / Thành...
+      </option>
+    `;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "dm_khu_vuc"
+        )
+        .select(
+          "tinh_thanh"
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        );
+
+
+    if (error) {
+
+      console.error(
+        "LOAD PROVINCES:",
+        error
+      );
+
+      provinceSelect.innerHTML = `
+        <option value="">
+          Không tải được Tỉnh / Thành
+        </option>
+      `;
+
+      return;
+    }
+
+
+    const provinces =
+      [
+        ...new Set(
+          (data || [])
+            .map(
+              row =>
+                String(
+                  row.tinh_thanh || ""
+                ).trim()
+            )
+            .filter(Boolean)
+        )
+      ]
+        .sort(
+          (a, b) =>
+            a.localeCompare(
+              b,
+              "vi"
+            )
+        );
+
+
+    provinceSelect.innerHTML = `
+      <option value="">
+        -- Chọn Tỉnh / Thành --
+      </option>
+    `;
+
+
+    provinces.forEach(
+      province => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          province;
+
+        option.textContent =
+          province;
+
+        provinceSelect.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    provinceSelect.disabled =
+      false;
+
+  }
+
+
+  /* =============================================
+     LOAD PHƯỜNG / XÃ
+  ============================================== */
+
+  async function loadWards() {
+
+    const province =
+      String(
+        provinceSelect.value || ""
+      ).trim();
+
+
+    wardSelect.disabled =
+      true;
+
+
+    if (!province) {
+
+      wardSelect.innerHTML = `
+        <option value="">
+          Chọn Tỉnh / Thành trước
+        </option>
+      `;
+
+      return;
+    }
+
+
+    wardSelect.innerHTML = `
+      <option value="">
+        Đang tải Phường / Xã...
+      </option>
+    `;
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "dm_xa_phuong"
+        )
+        .select(
+          "ten_xa_phuong"
+        )
+        .eq(
+          "tinh_thanh",
+          province
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        )
+        .order(
+          "ten_xa_phuong",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "LOAD WARDS:",
+        error
+      );
+
+      wardSelect.innerHTML = `
+        <option value="">
+          Không tải được Phường / Xã
+        </option>
+      `;
+
+      return;
+    }
+
+
+    const wards =
+      [
+        ...new Set(
+          (data || [])
+            .map(
+              row =>
+                String(
+                  row.ten_xa_phuong || ""
+                ).trim()
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    wardSelect.innerHTML = `
+      <option value="">
+        -- Chọn Phường / Xã --
+      </option>
+    `;
+
+
+    wards.forEach(
+      ward => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          ward;
+
+        option.textContent =
+          ward;
+
+        wardSelect.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    wardSelect.disabled =
+      false;
+
+  }
+
+
+  provinceSelect.addEventListener(
+    "change",
+    loadWards
+  );
+
+
+  /* =============================================
+     GOOGLE MAPS
+  ============================================== */
+
+  $("mapBtn").addEventListener(
+    "click",
+    function () {
+
+      const query =
+        [
+          clean("address"),
+          clean("ward"),
+          clean("province"),
+          "Việt Nam"
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+
+      if (
+        !clean("province")
+        ||
+        !clean("ward")
+      ) {
+
+        alert(
+          "Hãy chọn Tỉnh/Thành và Phường/Xã trước."
+        );
+
+        return;
+      }
+
+
+      window.open(
+        "https://www.google.com/maps/search/?api=1&query="
+        +
+        encodeURIComponent(
+          query
+        ),
+        "_blank",
+        "noopener"
+      );
+
+    }
+  );
+
+
+  /* =============================================
+     SUBMIT
+  ============================================== */
+
+  submitBtn.addEventListener(
+    "click",
+    async function () {
+
+      message.className =
+        "message";
+
+      message.textContent =
+        "";
+
+
+      /* honeypot */
+
+      if (
+        clean(
+          "websiteCheck"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const courtName =
+        clean("courtName");
+
+      const province =
+        clean("province");
+
+      const ward =
+        clean("ward");
+
+      const ownerName =
+        clean("ownerName");
+
+      const ownerPhone =
+        normalizePhone(
+          clean("ownerPhone")
+        );
+
+
+      if (!courtName) {
+
+        showMessage(
+          "error",
+          "❌ Vui lòng nhập tên sân."
+        );
+
+        return;
+      }
+
+
+      if (!province) {
+
+        showMessage(
+          "error",
+          "❌ Vui lòng chọn Tỉnh / Thành."
+        );
+
+        return;
+      }
+
+
+      if (!ward) {
+
+        showMessage(
+          "error",
+          "❌ Vui lòng chọn Phường / Xã."
+        );
+
+        return;
+      }
+
+
+      if (!ownerName) {
+
+        showMessage(
+          "error",
+          "❌ Vui lòng nhập họ tên người gửi."
+        );
+
+        return;
+      }
+
+
+      if (
+        ownerPhone.length < 8
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Số điện thoại người gửi chưa hợp lệ."
+        );
+
+        return;
+      }
+
+
+      const priceMin =
+        numberOrNull(
+          "priceMin"
+        );
+
+      const priceMax =
+        numberOrNull(
+          "priceMax"
+        );
+
+
+      if (
+        priceMin !== null
+        &&
+        priceMax !== null
+        &&
+        priceMin > priceMax
+      ) {
+
+        showMessage(
+          "error",
+          "❌ Giá thấp nhất không được lớn hơn giá cao nhất."
+        );
+
+        return;
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "ĐANG GỬI...";
+
+
+      try {
+
+        const payload = {
+
+          court_name:
+            courtName,
+
+          province:
+            province,
+
+          ward:
+            ward,
+
+          address:
+            clean("address")
+            || null,
+
+          phone:
+            normalizePhone(
+              clean("phone")
+            )
+            || null,
+
+          zalo:
+            normalizePhone(
+              clean("zalo")
+            )
+            || null,
+
+          facebook_url:
+            clean("facebookUrl")
+            || null,
+
+          website_url:
+            clean("websiteUrl")
+            || null,
+
+          number_of_courts:
+            numberOrNull(
+              "numberOfCourts"
+            ),
+
+          court_type:
+            clean("courtType")
+            || null,
+
+          opening_hours:
+            clean("openingHours")
+            || null,
+
+          price_min:
+            priceMin,
+
+          price_max:
+            priceMax,
+
+          amenities:
+            clean("amenities")
+            || null,
+
+          booking_url:
+            clean("bookingUrl")
+            || null,
+
+          owner_name:
+            ownerName,
+
+          owner_phone:
+            ownerPhone,
+
+          owner_email:
+            clean("ownerEmail")
+            || null,
+
+          note:
+            clean("note")
+            || null,
+
+          submission_status:
+            "pending"
+
+        };
+
+
+        const {
+          error
+        } =
+          await sb
+            .from(
+              "court_directory_submissions"
+            )
+            .insert(
+              payload
+            );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        showMessage(
+          "success",
+          "✅ PickDee đã nhận thông tin sân. Chúng tôi sẽ kiểm tra trước khi đưa lên danh bạ."
+        );
+
+
+        document
+          .querySelectorAll(
+            "input, textarea"
+          )
+          .forEach(
+            element => {
+
+              if (
+                element.id
+                ===
+                "websiteCheck"
+              ) {
+
+                element.value =
+                  "";
+
+                return;
+              }
+
+              element.value =
+                "";
+
+            }
+          );
+
+
+        provinceSelect.value =
+          "";
+
+        wardSelect.innerHTML = `
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+        `;
+
+        wardSelect.disabled =
+          true;
+
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "GỬI THÔNG TIN SÂN";
+
+      }
+      catch (error) {
+
+        console.error(
+          "COURT SUBMISSION:",
+          error
+        );
+
+
+        showMessage(
+          "error",
+          "❌ Chưa gửi được thông tin sân. Vui lòng thử lại."
+        );
+
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "GỬI THÔNG TIN SÂN";
+
+      }
+
+    }
+  );
+
+
+  /* =============================================
+     START
+  ============================================== */
+
+  await loadProvinces();
+
+})();
+</script>
+
+</body>
+</html>
