@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Xác minh chủ sân | PickDee</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b10;
+      color: #ffffff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width:
+        min(
+          720px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        24px 0
+        70px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 42px;
+
+      padding: 0 14px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.04);
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .07em;
+    }
+
+    h1 {
+      margin:
+        0 0 10px;
+
+      font-size:
+        clamp(
+          28px,
+          6vw,
+          40px
+        );
+
+      line-height: 1.12;
+    }
+
+    .lead {
+      margin: 0;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.6;
+    }
+
+    .court-card {
+      margin:
+        20px 0;
+
+      padding: 16px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid
+        rgba(216,255,69,.20);
+
+      background:
+        rgba(216,255,69,.05);
+    }
+
+    .court-name {
+      margin-bottom: 6px;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .court-location {
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .card {
+      padding: 18px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+
+      min-height: 48px;
+
+      padding:
+        0 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.13);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color: #ffffff;
+
+      font-size: 15px;
+    }
+
+    .field textarea {
+      min-height: 110px;
+
+      padding:
+        12px 13px;
+
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color:
+        rgba(216,255,69,.7);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.06);
+    }
+
+    select option {
+      color: #111111;
+    }
+
+    .hint {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.40);
+
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .submit {
+      width: 100%;
+
+      min-height: 52px;
+
+      border: 0;
+      border-radius: 11px;
+
+      cursor: pointer;
+
+      background: #d8ff45;
+      color: #071000;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .submit:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .message {
+      margin-top: 14px;
+
+      padding: 13px;
+
+      border-radius: 10px;
+
+      display: none;
+
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(70,255,130,.10);
+
+      color: #9cffb5;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.10);
+
+      color: #ffaaaa;
+    }
+
+    .notice {
+      margin-top: 16px;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        rgba(255,255,255,.53);
+
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .loading {
+      padding:
+        45px 15px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+    .honeypot {
+      position: absolute !important;
+
+      width: 1px !important;
+      height: 1px !important;
+
+      overflow: hidden !important;
+
+      opacity: 0 !important;
+
+      pointer-events: none !important;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+  <div class="topbar">
+
+    <a
+      href="/"
+      class="brand"
+    >
+      PickDee
+      <span>Academy</span>
+    </a>
+
+
+    <a
+      id="backCourt"
+      href="./courts"
+      class="back"
+    >
+      ← Quay lại sân
+    </a>
+
+  </div>
+
+
+  <div class="hero">
+
+    <div class="eyebrow">
+      XÁC MINH CHỦ SÂN
+    </div>
+
+    <h1>
+      Đây là sân của bạn?
+    </h1>
+
+    <p class="lead">
+      Gửi thông tin cho PickDee.
+      Admin sẽ liên hệ qua Zalo để xác minh
+      trước khi đánh dấu sân là chính chủ.
+    </p>
+
+  </div>
+
+
+  <div
+    id="courtInfo"
+    class="court-card"
+  >
+    <div class="loading">
+      Đang tải thông tin sân...
+    </div>
+  </div>
+
+
+  <form
+    id="claimForm"
+    class="card"
+    style="display:none;"
+  >
+
+
+    <div class="field">
+
+      <label>
+        HỌ VÀ TÊN *
+      </label>
+
+      <input
+        id="claimantName"
+        type="text"
+        maxlength="100"
+        placeholder="Nguyễn Văn A"
+        required
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        SỐ ĐIỆN THOẠI *
+      </label>
+
+      <input
+        id="claimantPhone"
+        type="tel"
+        inputmode="tel"
+        maxlength="30"
+        placeholder="09xxxxxxxx"
+        required
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        SỐ ZALO
+      </label>
+
+      <input
+        id="claimantZalo"
+        type="tel"
+        inputmode="tel"
+        maxlength="30"
+        placeholder="Nếu giống SĐT trên có thể để trống"
+      >
+
+      <div class="hint">
+        PickDee ưu tiên liên hệ xác minh qua Zalo.
+        Nếu để trống, hệ thống sẽ hiểu Zalo dùng cùng số điện thoại trên.
+      </div>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        VAI TRÒ CỦA BẠN TẠI SÂN *
+      </label>
+
+      <select
+        id="claimantRole"
+        required
+      >
+
+        <option value="">
+          -- Chọn vai trò --
+        </option>
+
+        <option value="Chủ sân">
+          Chủ sân
+        </option>
+
+        <option value="Đồng chủ sân">
+          Đồng chủ sân
+        </option>
+
+        <option value="Quản lý sân">
+          Quản lý sân
+        </option>
+
+        <option value="Nhân sự được chủ sân ủy quyền">
+          Nhân sự được chủ sân ủy quyền
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        EMAIL
+      </label>
+
+      <input
+        id="claimantEmail"
+        type="email"
+        maxlength="150"
+        placeholder="Email nếu có"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        THÔNG TIN GIÚP PICKDEE XÁC MINH
+      </label>
+
+      <textarea
+        id="proofNote"
+        maxlength="1000"
+        placeholder="Ví dụ: Tôi là chủ sân, Zalo trên là số đang quản lý sân. Có thể nhắn Zalo để tôi xác nhận..."
+      ></textarea>
+
+    </div>
+
+
+    <div class="honeypot">
+
+      <label>
+        Website
+      </label>
+
+      <input
+        id="websiteCheck"
+        type="text"
+        tabindex="-1"
+        autocomplete="off"
+      >
+
+    </div>
+
+
+    <button
+      id="submitBtn"
+      class="submit"
+      type="submit"
+    >
+      👤 GỬI YÊU CẦU XÁC MINH
+    </button>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+
+    <div class="notice">
+
+      Sau khi gửi, PickDee sẽ kiểm tra thông tin
+      và liên hệ qua Zalo.
+
+      <br><br>
+
+      Chỉ sau khi Admin xác minh đúng,
+      sân mới được gắn nhãn
+      <b>Đã xác minh</b>
+      và
+      <b>Chủ sân đã xác nhận</b>.
+
+    </div>
+
+
+  </form>
+
+
+</div>
+
+
+<script>
+
+(async function () {
+
+
+  /* =========================================
+     CONFIG
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const courtInfo =
+    document.getElementById(
+      "courtInfo"
+    );
+
+
+  const claimForm =
+    document.getElementById(
+      "claimForm"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    courtInfo.innerHTML =
+      "Không tải được hệ thống.";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================================
+     COURT ID
+  ========================================== */
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const courtId =
+    Number(
+      params.get(
+        "id"
+      )
+    );
+
+
+  if (
+    !Number.isInteger(
+      courtId
+    )
+    ||
+    courtId <= 0
+  ) {
+
+    courtInfo.innerHTML = `
+      <div class="loading">
+        Không tìm thấy sân.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  document
+    .getElementById(
+      "backCourt"
+    )
+    .href =
+      "./court?id="
+      +
+      encodeURIComponent(
+        courtId
+      );
+
+
+  /* =========================================
+     ESCAPE
+  ========================================== */
+
+  function esc(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  /* =========================================
+     LOAD COURT
+  ========================================== */
+
+  const {
+    data: court,
+    error: courtError
+  } =
+    await sb
+      .from(
+        "court_directory"
+      )
+      .select(`
+        id,
+        court_name,
+        province,
+        ward,
+        address,
+        owner_claimed,
+        verified,
+        status
+      `)
+      .eq(
+        "id",
+        courtId
+      )
+      .eq(
+        "status",
+        "active"
+      )
+      .maybeSingle();
+
+
+  if (
+    courtError
+    ||
+    !court
+  ) {
+
+    console.error(
+      courtError
+    );
+
+
+    courtInfo.innerHTML = `
+      <div class="loading">
+        Sân không tồn tại hoặc chưa được công khai.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  document.title =
+    "Xác minh "
+    +
+    court.court_name
+    +
+    " | PickDee";
+
+
+  courtInfo.innerHTML = `
+
+    <div class="court-name">
+      🏟 ${esc(court.court_name)}
+    </div>
+
+    <div class="court-location">
+      ${
+        esc(
+          [
+            court.address,
+            court.ward,
+            court.province
+          ]
+            .filter(Boolean)
+            .join(", ")
+        )
+      }
+    </div>
+
+  `;
+
+
+  /* =========================================
+     ĐÃ CÓ CHỦ SÂN
+  ========================================== */
+
+  if (
+    court.owner_claimed
+  ) {
+
+    claimForm.style.display =
+      "none";
+
+
+    courtInfo.innerHTML += `
+
+      <div
+        style="
+          margin-top:14px;
+          padding:12px;
+          border-radius:10px;
+          background:rgba(90,255,140,.10);
+          color:#9cffb5;
+          font-size:13px;
+          font-weight:800;
+        "
+      >
+        ✓ Sân này đã có chủ sân xác nhận trên PickDee.
+      </div>
+
+    `;
+
+
+    return;
+
+  }
+
+
+  claimForm.style.display =
+    "block";
+
+
+  /* =========================================
+     SUBMIT
+  ========================================== */
+
+  claimForm.addEventListener(
+    "submit",
+    async function (event) {
+
+
+      event.preventDefault();
+
+
+      message.className =
+        "message";
+
+
+      message.textContent =
+        "";
+
+
+      /* Honeypot */
+
+      if (
+        document
+          .getElementById(
+            "websiteCheck"
+          )
+          .value
+          .trim()
+      ) {
+
+        return;
+
+      }
+
+
+      const claimantName =
+        document
+          .getElementById(
+            "claimantName"
+          )
+          .value
+          .trim();
+
+
+      const claimantPhone =
+        document
+          .getElementById(
+            "claimantPhone"
+          )
+          .value
+          .trim();
+
+
+      const claimantZaloInput =
+        document
+          .getElementById(
+            "claimantZalo"
+          )
+          .value
+          .trim();
+
+
+      const claimantZalo =
+        claimantZaloInput
+        ||
+        claimantPhone;
+
+
+      const claimantRole =
+        document
+          .getElementById(
+            "claimantRole"
+          )
+          .value
+          .trim();
+
+
+      const claimantEmail =
+        document
+          .getElementById(
+            "claimantEmail"
+          )
+          .value
+          .trim();
+
+
+      const proofNote =
+        document
+          .getElementById(
+            "proofNote"
+          )
+          .value
+          .trim();
+
+
+      if (
+        claimantName.length < 2
+        ||
+        claimantPhone.length < 8
+        ||
+        !claimantRole
+      ) {
+
+        message.className =
+          "message error";
+
+
+        message.textContent =
+          "Vui lòng nhập đầy đủ họ tên, số điện thoại và vai trò tại sân.";
+
+
+        return;
+
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "ĐANG GỬI...";
+
+
+      try {
+
+
+        const {
+          error
+        } =
+          await sb
+            .from(
+              "court_claim_requests"
+            )
+            .insert({
+
+              court_id:
+                courtId,
+
+              claimant_name:
+                claimantName,
+
+              claimant_phone:
+                claimantPhone,
+
+              claimant_zalo:
+                claimantZalo,
+
+              claimant_email:
+                claimantEmail
+                ||
+                null,
+
+              claimant_role:
+                claimantRole,
+
+              proof_note:
+                proofNote
+                ||
+                null,
+
+              claim_status:
+                "pending"
+
+            });
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        message.className =
+          "message success";
+
+
+        message.innerHTML = `
+          ✓ PickDee đã nhận yêu cầu xác minh sân.<br>
+          Admin sẽ kiểm tra và liên hệ với bạn qua Zalo.
+        `;
+
+
+        claimForm
+          .querySelectorAll(
+            "input, select, textarea"
+          )
+          .forEach(
+            function (element) {
+
+              if (
+                element.id !==
+                "websiteCheck"
+              ) {
+
+                element.disabled =
+                  true;
+
+              }
+
+            }
+          );
+
+
+        submitBtn.style.display =
+          "none";
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "COURT CLAIM:",
+          error
+        );
+
+
+        message.className =
+          "message error";
+
+
+        message.textContent =
+          "Chưa gửi được yêu cầu. Vui lòng thử lại sau.";
+
+
+      }
+      finally {
+
+
+        if (
+          submitBtn.style.display
+          !==
+          "none"
+        ) {
+
+          submitBtn.disabled =
+            false;
+
+
+          submitBtn.textContent =
+            "👤 GỬI YÊU CẦU XÁC MINH";
+
+        }
+
+      }
+
+
+    }
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+</html>
