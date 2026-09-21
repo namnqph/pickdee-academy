@@ -269,17 +269,51 @@
       </div>
 
 
-      <div>
-        <label>
-          Tỉnh / Thành phố
-          <span class="required">*</span>
-        </label>
+    <div>
+  <label>
+    Tỉnh / Thành phố
+    <span class="required">*</span>
+  </label>
 
-        <input
-          id="province"
-          value="Bắc Ninh"
-        />
-      </div>
+  <select id="province">
+    <option value="">-- Chọn tỉnh / thành phố --</option>
+
+    <option value="An Giang">An Giang</option>
+    <option value="Bắc Ninh" selected>Bắc Ninh</option>
+    <option value="Cà Mau">Cà Mau</option>
+    <option value="Cao Bằng">Cao Bằng</option>
+    <option value="Cần Thơ">Cần Thơ</option>
+    <option value="Đà Nẵng">Đà Nẵng</option>
+    <option value="Đắk Lắk">Đắk Lắk</option>
+    <option value="Điện Biên">Điện Biên</option>
+    <option value="Đồng Nai">Đồng Nai</option>
+    <option value="Đồng Tháp">Đồng Tháp</option>
+    <option value="Gia Lai">Gia Lai</option>
+    <option value="Hà Nội">Hà Nội</option>
+    <option value="Hà Tĩnh">Hà Tĩnh</option>
+    <option value="Hải Phòng">Hải Phòng</option>
+    <option value="Huế">Huế</option>
+    <option value="Hưng Yên">Hưng Yên</option>
+    <option value="Khánh Hòa">Khánh Hòa</option>
+    <option value="Lai Châu">Lai Châu</option>
+    <option value="Lâm Đồng">Lâm Đồng</option>
+    <option value="Lạng Sơn">Lạng Sơn</option>
+    <option value="Lào Cai">Lào Cai</option>
+    <option value="Nghệ An">Nghệ An</option>
+    <option value="Ninh Bình">Ninh Bình</option>
+    <option value="Phú Thọ">Phú Thọ</option>
+    <option value="Quảng Ngãi">Quảng Ngãi</option>
+    <option value="Quảng Ninh">Quảng Ninh</option>
+    <option value="Quảng Trị">Quảng Trị</option>
+    <option value="Sơn La">Sơn La</option>
+    <option value="Tây Ninh">Tây Ninh</option>
+    <option value="Thái Nguyên">Thái Nguyên</option>
+    <option value="Thanh Hóa">Thanh Hóa</option>
+    <option value="Thành phố Hồ Chí Minh">Thành phố Hồ Chí Minh</option>
+    <option value="Tuyên Quang">Tuyên Quang</option>
+    <option value="Vĩnh Long">Vĩnh Long</option>
+  </select>
+</div>
 
 
       <div>
@@ -1269,7 +1303,338 @@
 
     }
   );
+/* =============================================
+   TỈNH / THÀNH + PHƯỜNG / XÃ
+   DÙNG DỮ LIỆU CHUẨN CỦA PICKDEE
+============================================== */
 
+const provinceSelect =
+  document.getElementById(
+    "province"
+  );
+
+const oldWardField =
+  document.getElementById(
+    "ward"
+  );
+
+
+if (
+  provinceSelect
+  &&
+  oldWardField
+) {
+
+  /* =========================================
+     ĐỔI PHƯỜNG/XÃ THÀNH DROPDOWN
+  ========================================== */
+
+  const wardSelect =
+    document.createElement(
+      "select"
+    );
+
+  wardSelect.id =
+    "ward";
+
+  wardSelect.disabled =
+    true;
+
+  wardSelect.innerHTML = `
+    <option value="">
+      Chọn Tỉnh / Thành trước
+    </option>
+  `;
+
+  oldWardField.replaceWith(
+    wardSelect
+  );
+
+
+  /* =========================================
+     LOAD 34 TỈNH / THÀNH TỪ DATABASE
+  ========================================== */
+
+  async function loadCourtProvinces() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "dm_khu_vuc"
+        )
+        .select(
+          "tinh_thanh"
+        )
+        .eq(
+          "dang_hoat_dong",
+          true
+        );
+
+
+    if (error) {
+
+      console.error(
+        "LOAD COURT PROVINCES:",
+        error
+      );
+
+      return;
+    }
+
+
+    const provinces =
+      [
+        ...new Set(
+          (data || [])
+            .map(
+              item =>
+                String(
+                  item.tinh_thanh || ""
+                ).trim()
+            )
+            .filter(Boolean)
+        )
+      ]
+        .sort(
+          (a, b) =>
+            a.localeCompare(
+              b,
+              "vi"
+            )
+        );
+
+
+    provinceSelect.innerHTML = `
+      <option value="">
+        -- Chọn tỉnh / thành phố --
+      </option>
+    `;
+
+
+    provinces.forEach(
+      function (provinceName) {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          provinceName;
+
+        option.textContent =
+          provinceName;
+
+        provinceSelect.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    /* Mặc định khu vực đang vận hành */
+
+    if (
+      provinces.includes(
+        "Bắc Ninh"
+      )
+    ) {
+
+      provinceSelect.value =
+        "Bắc Ninh";
+
+    }
+
+
+    await loadCourtWards(
+      provinceSelect.value ===
+        "Bắc Ninh"
+        ?
+        "Phường Bắc Giang"
+        :
+        ""
+    );
+
+  }
+
+
+  /* =========================================
+     LOAD PHƯỜNG / XÃ THEO TỈNH
+  ========================================== */
+
+  async function loadCourtWards(
+    selectedWard = ""
+  ) {
+
+    const provinceName =
+      String(
+        provinceSelect.value || ""
+      ).trim();
+
+
+    wardSelect.disabled =
+      true;
+
+
+    if (!provinceName) {
+
+      wardSelect.innerHTML = `
+        <option value="">
+          Chọn Tỉnh / Thành trước
+        </option>
+      `;
+
+      return;
+    }
+
+
+    wardSelect.innerHTML = `
+      <option value="">
+        Đang tải Phường / Xã...
+      </option>
+    `;
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "dm_xa_phuong"
+          )
+          .select(
+            "ten_xa_phuong,tinh_thanh"
+          )
+          .eq(
+            "tinh_thanh",
+            provinceName
+          )
+          .eq(
+            "dang_hoat_dong",
+            true
+          )
+          .order(
+            "ten_xa_phuong",
+            {
+              ascending: true
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const wards =
+        [
+          ...new Set(
+            (data || [])
+              .map(
+                item =>
+                  String(
+                    item.ten_xa_phuong || ""
+                  ).trim()
+              )
+              .filter(Boolean)
+          )
+        ];
+
+
+      wardSelect.innerHTML = `
+        <option value="">
+          -- Chọn Phường / Xã --
+        </option>
+      `;
+
+
+      wards.forEach(
+        function (wardName) {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+          option.value =
+            wardName;
+
+          option.textContent =
+            wardName;
+
+          wardSelect.appendChild(
+            option
+          );
+
+        }
+      );
+
+
+      wardSelect.disabled =
+        false;
+
+
+      if (
+        selectedWard
+        &&
+        wards.includes(
+          selectedWard
+        )
+      ) {
+
+        wardSelect.value =
+          selectedWard;
+
+      }
+
+    }
+    catch (error) {
+
+      console.error(
+        "LOAD COURT WARDS:",
+        error
+      );
+
+
+      wardSelect.innerHTML = `
+        <option value="">
+          Không tải được Phường / Xã
+        </option>
+      `;
+
+    }
+
+  }
+
+
+  /* =========================================
+     ĐỔI TỈNH -> LOAD LẠI PHƯỜNG/XÃ
+  ========================================== */
+
+  provinceSelect.addEventListener(
+    "change",
+    function () {
+
+      loadCourtWards();
+
+    }
+  );
+
+
+  /* =========================================
+     START
+  ========================================== */
+
+  await loadCourtProvinces();
+
+}
 })();
 </script>
 
