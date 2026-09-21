@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Chi tiết sân Pickleball | PickDee</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+
+      background: #080b10;
+      color: #ffffff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width:
+        min(
+          900px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        24px 0
+        70px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back-btn {
+      min-height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0 15px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.05);
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin:
+        0 0 9px;
+
+      font-size:
+        clamp(
+          28px,
+          6vw,
+          42px
+        );
+
+      line-height: 1.1;
+    }
+
+    .location {
+      color:
+        rgba(255,255,255,.60);
+
+      line-height: 1.55;
+    }
+
+    .badges {
+      margin-top: 13px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 8px;
+    }
+
+    .badge {
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .verified {
+      background:
+        rgba(90,255,140,.11);
+
+      color: #91ffad;
+    }
+
+    .unverified {
+      background:
+        rgba(255,185,80,.12);
+
+      color: #ffc46e;
+    }
+
+    .card {
+      margin-bottom: 15px;
+
+      padding: 18px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .section-title {
+      margin-bottom: 15px;
+
+      color: #d8ff45;
+
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 0 22px;
+    }
+
+    .item {
+      padding:
+        11px 0;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.06);
+    }
+
+    .label {
+      margin-bottom: 5px;
+
+      color:
+        rgba(255,255,255,.43);
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .value {
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 700;
+
+      word-break: break-word;
+    }
+
+    .full {
+      grid-column:
+        1 / -1;
+    }
+
+    .actions {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          1fr
+        );
+
+      gap: 9px;
+
+      margin-top: 18px;
+    }
+
+    .action-btn {
+      min-height: 48px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 11px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.05);
+
+      color: #ffffff;
+
+      font-size: 13px;
+      font-weight: 900;
+
+      text-align: center;
+    }
+
+    .action-btn.primary {
+      background: #d8ff45;
+      color: #071000;
+
+      border-color: #d8ff45;
+    }
+
+    .action-btn.disabled {
+      opacity: .35;
+      pointer-events: none;
+    }
+
+    .empty {
+      padding:
+        50px 20px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+    @media(max-width:650px) {
+
+      .grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .full {
+        grid-column:
+          auto;
+      }
+
+      .actions {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+  <div class="topbar">
+
+    <a
+      href="/"
+      class="brand"
+    >
+      PickDee
+      <span>
+        Academy
+      </span>
+    </a>
+
+
+    <a
+      href="./courts"
+      class="back-btn"
+    >
+      ← Danh bạ sân
+    </a>
+
+  </div>
+
+
+  <div id="content">
+
+    <div class="empty">
+      Đang tải thông tin sân...
+    </div>
+
+  </div>
+
+
+</div>
+
+
+<script>
+(async function () {
+
+
+  /* =========================================
+     SUPABASE
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const content =
+    document.getElementById(
+      "content"
+    );
+
+
+  /* =========================================
+     ID
+  ========================================== */
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const courtId =
+    Number(
+      params.get(
+        "id"
+      )
+    );
+
+
+  if (
+    !Number.isInteger(
+      courtId
+    )
+    ||
+    courtId <= 0
+  ) {
+
+    content.innerHTML = `
+      <div class="empty">
+        Không tìm thấy sân.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  /* =========================================
+     HELPERS
+  ========================================== */
+
+  function esc(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function money(value) {
+
+    if (
+      value === null
+      ||
+      value === undefined
+      ||
+      value === ""
+    ) {
+
+      return null;
+
+    }
+
+
+    const number =
+      Number(value);
+
+
+    if (
+      !Number.isFinite(
+        number
+      )
+    ) {
+
+      return null;
+
+    }
+
+
+    return (
+      number
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function priceText(row) {
+
+    const min =
+      money(
+        row.price_min
+      );
+
+
+    const max =
+      money(
+        row.price_max
+      );
+
+
+    if (
+      min
+      &&
+      max
+    ) {
+
+      if (
+        min === max
+      ) {
+
+        return min;
+
+      }
+
+
+      return (
+        min
+        +
+        " - "
+        +
+        max
+      );
+
+    }
+
+
+    return (
+      min
+      ||
+      max
+      ||
+      "Liên hệ"
+    );
+
+  }
+
+
+  function mapsUrl(row) {
+
+    if (
+      row.latitude != null
+      &&
+      row.longitude != null
+    ) {
+
+      return (
+        "https://www.google.com/maps/search/?api=1&query="
+        +
+        encodeURIComponent(
+          row.latitude
+          +
+          ","
+          +
+          row.longitude
+        )
+      );
+
+    }
+
+
+    const query =
+      [
+        row.court_name,
+        row.address,
+        row.ward,
+        row.province,
+        "Việt Nam"
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+
+    return (
+      "https://www.google.com/maps/search/?api=1&query="
+      +
+      encodeURIComponent(
+        query
+      )
+    );
+
+  }
+
+
+  function phoneHref(phone) {
+
+    const clean =
+      String(
+        phone || ""
+      )
+        .replace(
+          /[^0-9+]/g,
+          ""
+        );
+
+
+    return clean
+      ?
+      "tel:" + clean
+      :
+      "";
+
+  }
+
+
+  /* =========================================
+     LOAD
+  ========================================== */
+
+  try {
+
+    const {
+      data: row,
+      error
+    } =
+      await sb
+        .from(
+          "court_directory"
+        )
+        .select(`
+          id,
+          court_name,
+          province,
+          ward,
+          address,
+          latitude,
+          longitude,
+          phone,
+          zalo,
+          facebook_url,
+          website_url,
+          number_of_courts,
+          court_type,
+          opening_hours,
+          price_min,
+          price_max,
+          amenities,
+          booking_url,
+          verified,
+          owner_claimed,
+          status
+        `)
+        .eq(
+          "id",
+          courtId
+        )
+        .eq(
+          "status",
+          "active"
+        )
+        .maybeSingle();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (!row) {
+
+      content.innerHTML = `
+        <div class="empty">
+          Sân này không tồn tại
+          hoặc chưa được công khai.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    document.title =
+      row.court_name
+      +
+      " | PickDee";
+
+
+    const locationText =
+      [
+        row.ward,
+        row.province
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+
+    const phone =
+      String(
+        row.phone || ""
+      ).trim();
+
+
+    const callUrl =
+      phoneHref(
+        phone
+      );
+
+
+    const map =
+      mapsUrl(
+        row
+      );
+
+
+    content.innerHTML = `
+
+      <section class="hero">
+
+        <h1>
+          🏟 ${esc(row.court_name)}
+        </h1>
+
+        <div class="location">
+
+          ${
+            esc(
+              row.address
+              ||
+              locationText
+              ||
+              "Việt Nam"
+            )
+          }
+
+        </div>
+
+
+        <div class="badges">
+
+          ${
+            row.verified
+
+              ?
+
+              `
+                <span class="badge verified">
+                  ✓ Đã xác minh
+                </span>
+              `
+
+              :
+
+              `
+                <span class="badge unverified">
+                  Chưa xác minh
+                </span>
+              `
+          }
+
+          ${
+            row.owner_claimed
+
+              ?
+
+              `
+                <span class="badge verified">
+                  👤 Chủ sân đã xác nhận
+                </span>
+              `
+
+              :
+
+              ""
+          }
+
+        </div>
+
+      </section>
+
+
+      <div class="card">
+
+        <div class="section-title">
+          🏓 Thông tin sân
+        </div>
+
+
+        <div class="grid">
+
+
+          <div class="item">
+
+            <div class="label">
+              Khu vực
+            </div>
+
+            <div class="value">
+              ${esc(locationText || "—")}
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Số sân
+            </div>
+
+            <div class="value">
+              ${
+                row.number_of_courts
+                ??
+                "—"
+              }
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Loại sân
+            </div>
+
+            <div class="value">
+              ${esc(row.court_type || "—")}
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Giờ mở cửa
+            </div>
+
+            <div class="value">
+              ${esc(row.opening_hours || "—")}
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Giá tham khảo
+            </div>
+
+            <div class="value">
+              ${esc(priceText(row))}
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Điện thoại
+            </div>
+
+            <div class="value">
+              ${esc(phone || "—")}
+            </div>
+
+          </div>
+
+
+          <div class="item">
+
+            <div class="label">
+              Zalo
+            </div>
+
+            <div class="value">
+              ${esc(row.zalo || "—")}
+            </div>
+
+          </div>
+
+
+          <div class="item full">
+
+            <div class="label">
+              Địa chỉ đầy đủ
+            </div>
+
+            <div class="value">
+              ${esc(row.address || "—")}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="section-title">
+          ✨ Tiện ích
+        </div>
+
+        <div class="value">
+
+          ${
+            esc(
+              row.amenities
+              ||
+              "Thông tin tiện ích đang được cập nhật."
+            )
+          }
+
+        </div>
+
+      </div>
+
+
+      <div class="actions">
+
+
+        <a
+          class="action-btn primary"
+          href="${esc(map)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          📍 XEM GOOGLE MAPS
+        </a>
+
+
+        <a
+          class="
+            action-btn
+            ${
+              callUrl
+                ?
+                ""
+                :
+                "disabled"
+            }
+          "
+          href="${
+            callUrl
+              ?
+              esc(callUrl)
+              :
+              "#"
+          }"
+        >
+          📞 GỌI SÂN
+        </a>
+
+
+        ${
+          row.booking_url
+
+            ?
+
+            `
+              <a
+                class="action-btn"
+                href="${esc(row.booking_url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                🗓 ĐẶT SÂN
+              </a>
+            `
+
+            :
+
+            ""
+        }
+
+
+        ${
+          row.facebook_url
+
+            ?
+
+            `
+              <a
+                class="action-btn"
+                href="${esc(row.facebook_url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Facebook
+              </a>
+            `
+
+            :
+
+            ""
+        }
+
+
+        ${
+          row.website_url
+
+            ?
+
+            `
+              <a
+                class="action-btn"
+                href="${esc(row.website_url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Website
+              </a>
+            `
+
+            :
+
+            ""
+        }
+
+
+      </div>
+
+    `;
+
+  }
+  catch (error) {
+
+    console.error(
+      "PUBLIC COURT DETAIL:",
+      error
+    );
+
+
+    content.innerHTML = `
+      <div class="empty">
+        Không tải được thông tin sân.
+        Vui lòng thử lại sau.
+      </div>
+    `;
+
+  }
+
+})();
+</script>
+
+</body>
+</html>
