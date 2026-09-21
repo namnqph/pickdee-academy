@@ -3278,9 +3278,11 @@
 
     "Hồ sơ Coach",
 
-    "Buổi Coach chưa điểm danh",
+   "Buổi Coach chưa điểm danh",
 
-    "Chấm trình cuối khóa"
+"Chấm trình cuối khóa",
+
+"Xác minh sân"
 
   ];
 
@@ -4072,6 +4074,661 @@
 
 
 })();
+</script>
+
+  <!-- =========================================================
+     PICKDEE ACADEMY
+     ADMIN TASKS - XÁC MINH CHỦ SÂN
+========================================================== -->
+
+<script>
+(async function () {
+
+  /* =====================================================
+     CHỐNG TẠO TRÙNG
+  ====================================================== */
+
+  if (
+    document.getElementById(
+      "courtClaimTaskSection"
+    )
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const claimTaskSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ESCAPE
+  ====================================================== */
+
+  function escClaim(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function claimDate(value) {
+
+    if (!value) {
+      return "";
+    }
+
+
+    const date =
+      new Date(value);
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+
+    return date.toLocaleString(
+      "vi-VN",
+      {
+        timeZone:
+          "Asia/Ho_Chi_Minh",
+
+        day:
+          "2-digit",
+
+        month:
+          "2-digit",
+
+        year:
+          "numeric",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit"
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     1. THÊM SUMMARY CARD
+  ====================================================== */
+
+  const summary =
+    document.querySelector(
+      ".summary"
+    );
+
+
+  if (summary) {
+
+    const summaryCard =
+      document.createElement(
+        "div"
+      );
+
+
+    summaryCard.className =
+      "summary-card";
+
+
+    summaryCard.innerHTML = `
+
+      <div class="summary-label">
+        Xác minh sân
+      </div>
+
+      <div
+        id="courtClaimTaskSummary"
+        class="summary-number yellow"
+      >
+        ...
+      </div>
+
+    `;
+
+
+    summary.appendChild(
+      summaryCard
+    );
+
+  }
+
+
+  /* =====================================================
+     2. THÊM SECTION
+  ====================================================== */
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "courtClaimTaskSection";
+
+
+  section.className =
+    "section";
+
+
+  section.innerHTML = `
+
+    <div class="section-head">
+
+      <div class="section-title">
+        👤 Xác minh chủ sân
+      </div>
+
+      <div
+        id="courtClaimTaskCount"
+        class="count yellow"
+      >
+        ...
+      </div>
+
+    </div>
+
+
+    <div
+      id="courtClaimTaskBody"
+      class="section-body"
+    >
+      <div class="empty">
+        Đang kiểm tra yêu cầu xác minh sân...
+      </div>
+    </div>
+
+  `;
+
+
+  const otherSection =
+    document.getElementById(
+      "otherSection"
+    );
+
+
+  if (otherSection) {
+
+    otherSection.insertAdjacentElement(
+      "beforebegin",
+      section
+    );
+
+  }
+  else {
+
+    const main =
+      document.querySelector(
+        "main"
+      )
+      ||
+      document.body;
+
+
+    main.appendChild(
+      section
+    );
+
+  }
+
+
+  /* =====================================================
+     3. LOAD CLAIM PENDING
+  ====================================================== */
+
+  async function loadCourtClaimTasks() {
+
+    const summaryEl =
+      document.getElementById(
+        "courtClaimTaskSummary"
+      );
+
+
+    const countEl =
+      document.getElementById(
+        "courtClaimTaskCount"
+      );
+
+
+    const bodyEl =
+      document.getElementById(
+        "courtClaimTaskBody"
+      );
+
+
+    if (
+      !summaryEl
+      ||
+      !countEl
+      ||
+      !bodyEl
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await claimTaskSb
+          .from(
+            "court_claim_requests"
+          )
+          .select(`
+            id,
+            court_id,
+            claimant_name,
+            claimant_phone,
+            claimant_zalo,
+            claimant_role,
+            created_at
+          `)
+          .eq(
+            "claim_status",
+            "pending"
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const claims =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      const courtIds =
+        [
+          ...new Set(
+            claims
+              .map(
+                row =>
+                  row.court_id
+              )
+              .filter(Boolean)
+          )
+        ];
+
+
+      const courtsById =
+        {};
+
+
+      if (
+        courtIds.length > 0
+      ) {
+
+        const {
+          data: courts,
+          error: courtError
+        } =
+          await claimTaskSb
+            .from(
+              "court_directory"
+            )
+            .select(`
+              id,
+              court_name,
+              province,
+              ward,
+              address
+            `)
+            .in(
+              "id",
+              courtIds
+            );
+
+
+        if (courtError) {
+          throw courtError;
+        }
+
+
+        (
+          courts || []
+        )
+          .forEach(
+            function (court) {
+
+              courtsById[
+                court.id
+              ] =
+                court;
+
+            }
+          );
+
+      }
+
+
+      const total =
+        claims.length;
+
+
+      summaryEl.textContent =
+        String(total);
+
+
+      countEl.textContent =
+        String(total);
+
+
+      if (
+        total === 0
+      ) {
+
+        bodyEl.innerHTML = `
+
+          <div class="empty">
+            ✅ Không có yêu cầu xác minh sân đang chờ.
+          </div>
+
+        `;
+
+
+        return;
+
+      }
+
+
+      bodyEl.innerHTML =
+        claims
+          .map(
+            function (claim) {
+
+              const court =
+                courtsById[
+                  claim.court_id
+                ]
+                ||
+                {};
+
+
+              const courtName =
+                court.court_name
+                ||
+                (
+                  "Sân #"
+                  +
+                  claim.court_id
+                );
+
+
+              const area =
+                [
+                  court.ward,
+                  court.province
+                ]
+                  .filter(Boolean)
+                  .join(
+                    " • "
+                  );
+
+
+              const zalo =
+                claim.claimant_zalo
+                ||
+                claim.claimant_phone
+                ||
+                "Chưa có";
+
+
+              return `
+
+                <div class="task">
+
+                  <div
+                    class="priority-bar medium"
+                  ></div>
+
+
+                  <div>
+
+                    <div class="task-title">
+
+                      👤 Xác minh chủ sân ·
+                      ${escClaim(
+                        courtName
+                      )}
+
+                    </div>
+
+
+                    <div class="task-meta">
+
+                      Người yêu cầu:
+                      <strong>
+                        ${escClaim(
+                          claim.claimant_name
+                          ||
+                          "Chưa khai báo"
+                        )}
+                      </strong>
+
+                      ${
+                        claim.claimant_role
+                          ?
+                          " • "
+                          +
+                          escClaim(
+                            claim.claimant_role
+                          )
+                          :
+                          ""
+                      }
+
+                      <br>
+
+                      Zalo:
+                      ${escClaim(
+                        zalo
+                      )}
+
+                      ${
+                        area
+                          ?
+                          "<br>📍 "
+                          +
+                          escClaim(
+                            area
+                          )
+                          :
+                          ""
+                      }
+
+                    </div>
+
+
+                    ${
+                      claim.created_at
+                        ?
+                        `
+
+                          <div class="task-time">
+
+                            Gửi lúc:
+                            ${escClaim(
+                              claimDate(
+                                claim.created_at
+                              )
+                            )}
+
+                          </div>
+
+                        `
+                        :
+                        ""
+                    }
+
+
+                    <div
+                      class="task-priority yellow"
+                    >
+                      Cần Admin xác minh qua Zalo
+                    </div>
+
+                  </div>
+
+
+                  <a
+                    class="task-action"
+                    href="./admin-court-claims"
+                  >
+                    XÁC MINH →
+                  </a>
+
+                </div>
+
+              `;
+
+            }
+          )
+          .join("");
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "ADMIN COURT CLAIM TASK:",
+        error
+      );
+
+
+      summaryEl.textContent =
+        "!";
+
+
+      countEl.textContent =
+        "!";
+
+
+      bodyEl.innerHTML = `
+
+        <div
+          class="empty"
+          style="color:#ff9f9f;"
+        >
+          Không tải được yêu cầu xác minh sân.
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadCourtClaimTasks();
+
+
+  setInterval(
+    loadCourtClaimTasks,
+    30000
+  );
+
+
+  window.addEventListener(
+    "focus",
+    loadCourtClaimTasks
+  );
+
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+
+  if (refreshBtn) {
+
+    refreshBtn.addEventListener(
+      "click",
+      function () {
+
+        setTimeout(
+          loadCourtClaimTasks,
+          500
+        );
+
+      }
+    );
+
+  }
+
+
+})();
+
 </script>
 </body>
 
