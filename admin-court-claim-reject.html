@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Từ chối xác minh sân | PickDee Admin</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b10;
+      color: #fff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .page {
+      width: min(650px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 25px 0 70px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .back {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+
+      padding: 0 14px;
+
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+    }
+
+    .lead {
+      color: rgba(255,255,255,.58);
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      padding: 18px;
+
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.09);
+
+      background: rgba(255,255,255,.035);
+    }
+
+    .court {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .court-name {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .meta {
+      color: rgba(255,255,255,.55);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+
+      padding: 12px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+
+      outline: none;
+
+      resize: vertical;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color: #fff;
+
+      font-size: 14px;
+    }
+
+    textarea:focus {
+      border-color: #d8ff45;
+    }
+
+    .actions {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 9px;
+
+      margin-top: 15px;
+    }
+
+    .btn {
+      min-height: 48px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.05);
+
+      color: #fff;
+
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .reject {
+      border-color:
+        rgba(255,100,100,.35);
+
+      color: #ffaaaa;
+
+      background:
+        rgba(255,90,90,.10);
+    }
+
+    .message {
+      margin-top: 12px;
+
+      color: #ffaaaa;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      min-height: 20px;
+    }
+
+    @media(max-width:600px) {
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+  <a
+    href="./admin-court-claims"
+    class="back"
+  >
+    ← Yêu cầu xác minh sân
+  </a>
+
+  <h1>
+    ❌ Từ chối xác minh sân
+  </h1>
+
+  <p class="lead">
+    Nhập lý do từ chối để lưu lại trong hệ thống.
+  </p>
+
+  <div class="card">
+
+    <div
+      id="claimInfo"
+      class="court"
+    >
+      Đang tải yêu cầu...
+    </div>
+
+    <form id="rejectForm">
+
+      <label for="reason">
+        LÝ DO TỪ CHỐI *
+      </label>
+
+      <textarea
+        id="reason"
+        placeholder="Ví dụ: Không xác minh được quyền sở hữu hoặc quản lý sân..."
+        required
+      ></textarea>
+
+      <div class="actions">
+
+        <a
+          class="btn"
+          href="./admin-court-claims"
+        >
+          HỦY
+        </a>
+
+        <button
+          id="rejectBtn"
+          class="btn reject"
+          type="submit"
+        >
+          ❌ XÁC NHẬN TỪ CHỐI
+        </button>
+
+      </div>
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const claimId =
+    Number(
+      params.get("id")
+    );
+
+
+  const claimInfo =
+    document.getElementById(
+      "claimInfo"
+    );
+
+
+  const form =
+    document.getElementById(
+      "rejectForm"
+    );
+
+
+  const reasonInput =
+    document.getElementById(
+      "reason"
+    );
+
+
+  const rejectBtn =
+    document.getElementById(
+      "rejectBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  /* ===============================
+     ADMIN
+  ================================ */
+
+  const {
+    data: authData
+  } =
+    await sb.auth.getUser();
+
+
+  const user =
+    authData?.user;
+
+
+  if (!user) {
+
+    location.href = "./";
+
+    return;
+
+  }
+
+
+  const {
+    data: profile
+  } =
+    await sb
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+
+  if (
+    String(
+      profile?.role || ""
+    )
+      .trim()
+      .toLowerCase()
+    !==
+    "admin"
+  ) {
+
+    location.href = "./";
+
+    return;
+
+  }
+
+
+  if (
+    !Number.isInteger(claimId)
+    ||
+    claimId <= 0
+  ) {
+
+    claimInfo.textContent =
+      "Không xác định được yêu cầu.";
+
+    form.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  /* ===============================
+     CLAIM
+  ================================ */
+
+  const {
+    data: claim,
+    error: claimError
+  } =
+    await sb
+      .from(
+        "court_claim_requests"
+      )
+      .select(`
+        id,
+        court_id,
+        claimant_name,
+        claimant_phone,
+        claimant_zalo,
+        claimant_role,
+        claim_status
+      `)
+      .eq(
+        "id",
+        claimId
+      )
+      .maybeSingle();
+
+
+  if (
+    claimError
+    ||
+    !claim
+  ) {
+
+    claimInfo.textContent =
+      "Không tìm thấy yêu cầu.";
+
+    form.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  if (
+    claim.claim_status !==
+    "pending"
+  ) {
+
+    claimInfo.textContent =
+      "Yêu cầu này đã được xử lý.";
+
+    form.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  const {
+    data: court
+  } =
+    await sb
+      .from(
+        "court_directory"
+      )
+      .select(`
+        court_name,
+        province,
+        ward
+      `)
+      .eq(
+        "id",
+        claim.court_id
+      )
+      .maybeSingle();
+
+
+  claimInfo.innerHTML = `
+
+    <div class="court-name">
+      🏟 ${court?.court_name || "Sân"}
+    </div>
+
+    <div class="meta">
+      ${court?.ward || ""}${court?.province ? ", " + court.province : ""}
+      <br>
+      Người yêu cầu: ${claim.claimant_name || "—"}
+      <br>
+      Zalo: ${claim.claimant_zalo || claim.claimant_phone || "—"}
+    </div>
+
+  `;
+
+
+  /* ===============================
+     SUBMIT
+  ================================ */
+
+  form.addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+
+      const reason =
+        reasonInput.value.trim();
+
+
+      if (!reason) {
+
+        message.textContent =
+          "Vui lòng nhập lý do từ chối.";
+
+        return;
+
+      }
+
+
+      rejectBtn.disabled =
+        true;
+
+
+      rejectBtn.textContent =
+        "ĐANG XỬ LÝ...";
+
+
+      const {
+        error
+      } =
+        await sb
+          .from(
+            "court_claim_requests"
+          )
+          .update({
+
+            claim_status:
+              "rejected",
+
+            admin_note:
+              reason,
+
+            reviewed_at:
+              new Date()
+                .toISOString(),
+
+            reviewed_by:
+              user.id
+
+          })
+          .eq(
+            "id",
+            claimId
+          )
+          .eq(
+            "claim_status",
+            "pending"
+          );
+
+
+      if (error) {
+
+        console.error(error);
+
+        message.textContent =
+          "Không từ chối được yêu cầu: "
+          +
+          error.message;
+
+
+        rejectBtn.disabled =
+          false;
+
+
+        rejectBtn.textContent =
+          "❌ XÁC NHẬN TỪ CHỐI";
+
+
+        return;
+
+      }
+
+
+      location.href =
+        "./admin-court-claims";
+
+    }
+  );
+
+})();
+
+</script>
+
+</body>
+</html>
