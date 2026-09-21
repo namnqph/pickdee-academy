@@ -1930,14 +1930,15 @@ groupPreference.addEventListener(
       }
 
 
-   const packageCode =
+const packageCode =
   String(
     item.package_code || ""
   )
     .trim()
     .toUpperCase();
 
-const priceText =
+
+const defaultPriceText =
   packageCode === "TYC"
     ?
       "550.000đ - 600.000đ/người/buổi"
@@ -1961,54 +1962,172 @@ const priceText =
       );
 
 
-      packageInfo.innerHTML = `
+function renderPackagePriceInfo(
+  displayPriceText
+) {
 
-        <b>
-          ${escapeHtml(
-            item.package_name
-          )}
-        </b>
+  packageInfo.innerHTML = `
 
-        <br>
+    <b>
+      ${escapeHtml(
+        item.package_name
+      )}
+    </b>
 
-        ${
-          item.total_sessions
-            ?
+    <br>
+
+    ${
+      item.total_sessions
+        ?
+          escapeHtml(
+            item.total_sessions
+          )
+          +
+          " buổi · "
+        :
+          ""
+    }
+
+    ${escapeHtml(
+      displayPriceText
+    )}
+
+    ${
+      item.price_note
+        ?
+          `
+
+            <br>
+
+            ${
               escapeHtml(
-                item.total_sessions
+                item.price_note
               )
-              +
-              " buổi · "
-            :
-              ""
+            }
+
+          `
+        :
+          ""
+    }
+
+  `;
+
+
+  packageInfo.classList.add(
+    "show"
+  );
+
+}
+
+
+renderPackagePriceInfo(
+  defaultPriceText
+);
+
+
+/*
+  =====================================================
+  TYC + COACH ĐÃ CHỌN
+  -> Hiển thị đúng giá theo hạng Coach
+
+  Standard  = 550.000đ/người/buổi
+  Certified = 600.000đ/người/buổi
+  =====================================================
+*/
+
+if (
+  packageCode === "TYC"
+  &&
+  selectedCoachId
+) {
+
+  sb.rpc(
+    "public_get_coach_pricing_tier",
+    {
+      p_coach_id:
+        selectedCoachId
+    }
+  )
+    .then(
+      ({
+        data,
+        error
+      }) => {
+
+        if (error) {
+
+          console.error(
+            "PICKDEE COACH PRICING:",
+            error
+          );
+
+          return;
+
         }
 
-        ${escapeHtml(priceText)}
 
-        ${
-          item.price_note
+        /*
+          Nếu khách đã đổi sang gói khác
+          trong lúc RPC đang chạy
+          thì không cập nhật giao diện cũ.
+        */
+
+        if (
+          Number(
+            packageSelect.value
+          )
+          !==
+          packageId
+        ) {
+          return;
+        }
+
+
+        const pricingRow =
+          Array.isArray(data)
             ?
-              `
-
-                <br>
-
-                ${
-                  escapeHtml(
-                    item.price_note
-                  )
-                }
-
-              `
+              data[0]
             :
-              ""
+              null;
+
+
+        const pricingTier =
+          String(
+            pricingRow
+              &&
+            pricingRow.pricing_tier
+              ?
+                pricingRow.pricing_tier
+              :
+                ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        if (
+          pricingTier === "certified"
+        ) {
+
+          renderPackagePriceInfo(
+            "600.000đ/người/buổi"
+          );
+
+        }
+        else if (
+          pricingTier === "standard"
+        ) {
+
+          renderPackagePriceInfo(
+            "550.000đ/người/buổi"
+          );
+
         }
 
-      `;
+      }
+    );
 
-
-      packageInfo.classList.add(
-        "show"
-      );
+}
 
 
       const isCustom =
