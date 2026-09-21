@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Sân chờ duyệt | PickDee Admin
+  </title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+      background: #080b10;
+      color: #ffffff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+
+    .page {
+      width:
+        min(
+          1050px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        24px 0
+        70px;
+    }
+
+
+    .topbar {
+      display: flex;
+      justify-content:
+        space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+
+    .brand {
+      font-size: 22px;
+      font-weight: 950;
+      text-decoration: none;
+      color: #ffffff;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 42px;
+
+      padding:
+        0 15px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.05);
+
+      color: #ffffff;
+
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+
+    h1 {
+      margin:
+        0 0 8px;
+
+      font-size:
+        clamp(
+          27px,
+          5vw,
+          38px
+        );
+    }
+
+
+    .sub {
+      margin:
+        0 0 22px;
+
+      color:
+        rgba(255,255,255,.58);
+
+      line-height: 1.6;
+    }
+
+
+    .summary {
+      margin-bottom: 20px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          1fr
+        );
+
+      gap: 10px;
+    }
+
+
+    .summary-card {
+      padding: 15px;
+
+      border-radius: 13px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+
+    .summary-value {
+      margin-top: 6px;
+
+      font-size: 26px;
+      font-weight: 950;
+
+      color: #d8ff45;
+    }
+
+
+    .filter-row {
+      margin-bottom: 18px;
+
+      display: grid;
+
+      grid-template-columns:
+        2fr
+        1fr;
+
+      gap: 10px;
+    }
+
+
+    input,
+    select,
+    textarea {
+
+      width: 100%;
+
+      min-height: 44px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.10);
+
+      border-radius: 10px;
+
+      background: #10151c;
+
+      color: #ffffff;
+
+      padding:
+        10px 12px;
+
+      font-size: 14px;
+
+      outline: none;
+    }
+
+
+    .list {
+      display: grid;
+      gap: 14px;
+    }
+
+
+    .card {
+      padding: 18px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+
+    .card-top {
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      gap: 14px;
+
+      align-items:
+        flex-start;
+
+      margin-bottom: 14px;
+    }
+
+
+    .court-name {
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+
+    .location {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.58);
+
+      font-size: 13px;
+
+      line-height: 1.5;
+    }
+
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .pending {
+      color: #ffc46e;
+
+      background:
+        rgba(255,180,70,.12);
+    }
+
+
+    .approved {
+      color: #8cff9f;
+
+      background:
+        rgba(120,255,150,.11);
+    }
+
+
+    .rejected {
+      color: #ff9c9c;
+
+      background:
+        rgba(255,95,95,.12);
+    }
+
+
+    .details {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        10px 18px;
+    }
+
+
+    .item {
+      padding:
+        8px 0;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.06);
+    }
+
+
+    .item-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 11px;
+      font-weight: 800;
+
+      margin-bottom: 4px;
+    }
+
+
+    .item-value {
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+
+    .full {
+      grid-column:
+        1 / -1;
+    }
+
+
+    .owner-box {
+      margin-top: 14px;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(216,255,69,.04);
+
+      border:
+        1px solid
+        rgba(216,255,69,.12);
+    }
+
+
+    .owner-title {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      margin-bottom: 8px;
+    }
+
+
+    .actions {
+      margin-top: 16px;
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 9px;
+    }
+
+
+    button {
+      min-height: 43px;
+
+      padding:
+        0 15px;
+
+      border-radius: 10px;
+
+      border: 0;
+
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+
+    .approve-btn {
+      background: #d8ff45;
+      color: #081000;
+    }
+
+
+    .reject-btn {
+      background:
+        rgba(255,90,90,.12);
+
+      color: #ffaaaa;
+
+      border:
+        1px solid
+        rgba(255,90,90,.25);
+    }
+
+
+    .map-btn {
+      background:
+        rgba(255,255,255,.06);
+
+      color: #ffffff;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+    }
+
+
+    button:disabled {
+      opacity: .5;
+      cursor: wait;
+    }
+
+
+    .empty {
+      padding:
+        45px 18px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.5);
+    }
+
+
+    .message {
+      display: none;
+
+      margin-bottom: 16px;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.10);
+
+      color: #ffaaaa;
+    }
+
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(90,255,140,.10);
+
+      color: #93ffb3;
+    }
+
+
+    @media(max-width:700px) {
+
+      .summary {
+        grid-template-columns:
+          repeat(
+            3,
+            1fr
+          );
+      }
+
+
+      .summary-value {
+        font-size: 22px;
+      }
+
+
+      .filter-row {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .details {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .full {
+        grid-column:
+          auto;
+      }
+
+
+      .card-top {
+        flex-direction:
+          column;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+  <div class="topbar">
+
+    <a
+      href="./admin"
+      class="brand"
+    >
+      PickDee
+      <span>
+        Admin
+      </span>
+    </a>
+
+
+    <a
+      href="./admin-court-directory"
+      class="back-btn"
+    >
+      ← Danh bạ sân
+    </a>
+
+  </div>
+
+
+  <h1>
+    📨 Sân chờ duyệt
+  </h1>
+
+
+  <p class="sub">
+    Các sân do chủ sân hoặc quản lý gửi lên PickDee.
+    Chỉ khi Admin duyệt mới được đưa vào danh bạ toàn quốc.
+  </p>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <!-- THỐNG KÊ -->
+
+  <div class="summary">
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        🟠 CHỜ DUYỆT
+      </div>
+
+      <div
+        id="pendingCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        ✅ ĐÃ DUYỆT
+      </div>
+
+      <div
+        id="approvedCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+      <div class="summary-label">
+        ❌ TỪ CHỐI
+      </div>
+
+      <div
+        id="rejectedCount"
+        class="summary-value"
+      >
+        0
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- FILTER -->
+
+  <div class="filter-row">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm tên sân, SĐT, địa chỉ..."
+    >
+
+
+    <select id="statusFilter">
+
+      <option value="pending">
+        Chờ duyệt
+      </option>
+
+      <option value="">
+        Tất cả trạng thái
+      </option>
+
+      <option value="approved">
+        Đã duyệt
+      </option>
+
+      <option value="rejected">
+        Từ chối
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div
+    id="list"
+    class="list"
+  >
+
+    <div class="empty">
+      Đang tải...
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+(async function () {
+
+
+  /* =========================================
+     SUPABASE
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let allRows = [];
+
+  let currentUserId =
+    null;
+
+
+  const listEl =
+    document.getElementById(
+      "list"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "message"
+    );
+
+
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+
+  /* =========================================
+     HELPERS
+  ========================================== */
+
+  function esc(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function money(value) {
+
+    if (
+      value === null
+      ||
+      value === undefined
+      ||
+      value === ""
+    ) {
+
+      return "—";
+
+    }
+
+
+    return (
+      Number(value)
+        .toLocaleString(
+          "vi-VN"
+        )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function statusBadge(
+    status
+  ) {
+
+    if (
+      status === "approved"
+    ) {
+
+      return `
+        <span class="badge approved">
+          Đã duyệt
+        </span>
+      `;
+
+    }
+
+
+    if (
+      status === "rejected"
+    ) {
+
+      return `
+        <span class="badge rejected">
+          Từ chối
+        </span>
+      `;
+
+    }
+
+
+    return `
+      <span class="badge pending">
+        Chờ duyệt
+      </span>
+    `;
+
+  }
+
+
+  function showMessage(
+    type,
+    text
+  ) {
+
+    messageEl.className =
+      "message " + type;
+
+    messageEl.textContent =
+      text;
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  /* =========================================
+     ADMIN AUTH
+  ========================================== */
+
+  async function requireAdmin() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const session =
+      sessionData?.session;
+
+
+    if (!session) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+
+    }
+
+
+    currentUserId =
+      session.user.id;
+
+
+    const {
+      data: profile,
+      error
+    } =
+      await sb
+        .from(
+          "profiles"
+        )
+        .select(
+          "role"
+        )
+        .eq(
+          "id",
+          currentUserId
+        )
+        .single();
+
+
+    if (
+      error
+      ||
+      String(
+        profile?.role || ""
+      )
+        .trim()
+        .toLowerCase()
+        !== "admin"
+    ) {
+
+      location.replace(
+        "./login.html"
+      );
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =========================================
+     LOAD DATA
+  ========================================== */
+
+  async function loadData() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "court_directory_submissions"
+        )
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    allRows =
+      data || [];
+
+
+    updateStats();
+
+    render();
+
+  }
+
+
+  /* =========================================
+     STATS
+  ========================================== */
+
+  function updateStats() {
+
+    document.getElementById(
+      "pendingCount"
+    ).textContent =
+      allRows.filter(
+        row =>
+          row.submission_status
+          ===
+          "pending"
+      ).length;
+
+
+    document.getElementById(
+      "approvedCount"
+    ).textContent =
+      allRows.filter(
+        row =>
+          row.submission_status
+          ===
+          "approved"
+      ).length;
+
+
+    document.getElementById(
+      "rejectedCount"
+    ).textContent =
+      allRows.filter(
+        row =>
+          row.submission_status
+          ===
+          "rejected"
+      ).length;
+
+  }
+
+
+  /* =========================================
+     FILTER
+  ========================================== */
+
+  function filteredRows() {
+
+    const keyword =
+      String(
+        searchInput.value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const status =
+      statusFilter.value;
+
+
+    return allRows.filter(
+      row => {
+
+
+        if (
+          status
+          &&
+          row.submission_status
+          !==
+          status
+        ) {
+
+          return false;
+
+        }
+
+
+        if (keyword) {
+
+          const haystack =
+            [
+              row.court_name,
+              row.address,
+              row.ward,
+              row.province,
+              row.phone,
+              row.owner_name,
+              row.owner_phone
+            ]
+              .join(" ")
+              .toLowerCase();
+
+
+          if (
+            !haystack.includes(
+              keyword
+            )
+          ) {
+
+            return false;
+
+          }
+
+        }
+
+
+        return true;
+
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     RENDER
+  ========================================== */
+
+  function render() {
+
+    const rows =
+      filteredRows();
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      listEl.innerHTML = `
+        <div class="empty">
+          Không có sân phù hợp.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    listEl.innerHTML =
+      rows
+        .map(
+          row => {
+
+
+            const location =
+              [
+                row.address,
+                row.ward,
+                row.province
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+
+            const mapsUrl =
+              "https://www.google.com/maps/search/?api=1&query="
+              +
+              encodeURIComponent(
+                location
+                ||
+                row.court_name
+              );
+
+
+            return `
+
+              <div
+                class="card"
+                data-id="${row.id}"
+              >
+
+
+                <div class="card-top">
+
+                  <div>
+
+                    <div class="court-name">
+                      ${esc(row.court_name)}
+                    </div>
+
+                    <div class="location">
+                      ${esc(location || "—")}
+                    </div>
+
+                  </div>
+
+
+                  ${
+                    statusBadge(
+                      row.submission_status
+                    )
+                  }
+
+                </div>
+
+
+                <div class="details">
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      SĐT sân
+                    </div>
+
+                    <div class="item-value">
+                      ${esc(row.phone || "—")}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      Zalo
+                    </div>
+
+                    <div class="item-value">
+                      ${esc(row.zalo || "—")}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      Số sân
+                    </div>
+
+                    <div class="item-value">
+                      ${
+                        row.number_of_courts
+                        ??
+                        "—"
+                      }
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      Loại sân
+                    </div>
+
+                    <div class="item-value">
+                      ${esc(row.court_type || "—")}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      Giờ mở cửa
+                    </div>
+
+                    <div class="item-value">
+                      ${esc(row.opening_hours || "—")}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item">
+
+                    <div class="item-label">
+                      Giá
+                    </div>
+
+                    <div class="item-value">
+
+                      ${
+                        row.price_min != null
+                        ||
+                        row.price_max != null
+
+                          ?
+
+                          (
+                            money(
+                              row.price_min
+                            )
+                            +
+                            " - "
+                            +
+                            money(
+                              row.price_max
+                            )
+                          )
+
+                          :
+
+                          "—"
+                      }
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="item full">
+
+                    <div class="item-label">
+                      Tiện ích
+                    </div>
+
+                    <div class="item-value">
+                      ${esc(row.amenities || "—")}
+                    </div>
+
+                  </div>
+
+
+                  <div class="item full">
+
+                    <div class="item-label">
+                      Facebook / Website
+                    </div>
+
+                    <div class="item-value">
+
+                      ${
+                        row.facebook_url
+                          ?
+
+                          `
+                            <a
+                              href="${esc(row.facebook_url)}"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style="color:#d8ff45"
+                            >
+                              Facebook
+                            </a>
+                          `
+
+                          :
+
+                          ""
+                      }
+
+                      ${
+                        row.website_url
+                          ?
+
+                          `
+                            ${
+                              row.facebook_url
+                              ?
+                              " · "
+                              :
+                              ""
+                            }
+
+                            <a
+                              href="${esc(row.website_url)}"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style="color:#d8ff45"
+                            >
+                              Website
+                            </a>
+                          `
+
+                          :
+
+                          ""
+                      }
+
+                      ${
+                        !row.facebook_url
+                        &&
+                        !row.website_url
+                          ?
+                          "—"
+                          :
+                          ""
+                      }
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <div class="owner-box">
+
+                  <div class="owner-title">
+                    👤 Người gửi thông tin
+                  </div>
+
+                  <div>
+                    ${esc(row.owner_name)}
+                  </div>
+
+                  <div style="margin-top:4px">
+                    📞 ${esc(row.owner_phone)}
+                  </div>
+
+                  ${
+                    row.owner_email
+                      ?
+
+                      `
+                        <div style="margin-top:4px">
+                          ✉️ ${esc(row.owner_email)}
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                  }
+
+                  ${
+                    row.note
+                      ?
+
+                      `
+                        <div
+                          style="
+                            margin-top:8px;
+                            color:rgba(255,255,255,.62);
+                          "
+                        >
+                          ${esc(row.note)}
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                  }
+
+                </div>
+
+
+                <div class="actions">
+
+                  <button
+                    class="map-btn"
+                    data-map="${esc(mapsUrl)}"
+                  >
+                    📍 GOOGLE MAPS
+                  </button>
+
+
+                  ${
+                    row.submission_status
+                    ===
+                    "pending"
+
+                      ?
+
+                      `
+
+                        <button
+                          class="approve-btn"
+                          data-approve="${row.id}"
+                        >
+                          ✅ DUYỆT SÂN
+                        </button>
+
+
+                        <button
+                          class="reject-btn"
+                          data-reject="${row.id}"
+                        >
+                          ❌ TỪ CHỐI
+                        </button>
+
+                      `
+
+                      :
+
+                      ""
+                  }
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =========================================
+     EVENTS
+  ========================================== */
+
+  searchInput.addEventListener(
+    "input",
+    render
+  );
+
+
+  statusFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  listEl.addEventListener(
+    "click",
+    async function (
+      event
+    ) {
+
+
+      /* GOOGLE MAPS */
+
+      const mapBtn =
+        event.target.closest(
+          "[data-map]"
+        );
+
+
+      if (mapBtn) {
+
+        window.open(
+          mapBtn.dataset.map,
+          "_blank",
+          "noopener"
+        );
+
+        return;
+
+      }
+
+
+      /* DUYỆT */
+
+      const approveBtn =
+        event.target.closest(
+          "[data-approve]"
+        );
+
+
+      if (approveBtn) {
+
+        const id =
+          Number(
+            approveBtn.dataset.approve
+          );
+
+
+        if (
+          !confirm(
+            "Duyệt sân này và đưa lên danh bạ PickDee?"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        approveBtn.disabled =
+          true;
+
+        approveBtn.textContent =
+          "ĐANG DUYỆT...";
+
+
+        try {
+
+          const {
+            data: courtId,
+            error
+          } =
+            await sb.rpc(
+              "admin_approve_court_submission",
+              {
+                p_submission_id:
+                  id
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          showMessage(
+            "success",
+            "✅ Đã duyệt sân và đưa vào danh bạ."
+          );
+
+
+          await loadData();
+
+
+          setTimeout(
+            function () {
+
+              location.href =
+                "./admin-court-detail?id="
+                +
+                encodeURIComponent(
+                  courtId
+                );
+
+            },
+            700
+          );
+
+        }
+        catch (error) {
+
+          console.error(
+            "APPROVE COURT:",
+            error
+          );
+
+
+          showMessage(
+            "error",
+            "❌ Không duyệt được sân: "
+            +
+            (
+              error?.message
+              ||
+              "Lỗi không xác định"
+            )
+          );
+
+
+          approveBtn.disabled =
+            false;
+
+          approveBtn.textContent =
+            "✅ DUYỆT SÂN";
+
+        }
+
+
+        return;
+
+      }
+
+
+      /* TỪ CHỐI */
+
+      const rejectBtn =
+        event.target.closest(
+          "[data-reject]"
+        );
+
+
+      if (rejectBtn) {
+
+        const id =
+          Number(
+            rejectBtn.dataset.reject
+          );
+
+
+        const reason =
+          prompt(
+            "Lý do từ chối sân này:"
+          );
+
+
+        if (
+          reason === null
+        ) {
+
+          return;
+
+        }
+
+
+        const cleanReason =
+          String(
+            reason || ""
+          ).trim();
+
+
+        if (!cleanReason) {
+
+          alert(
+            "Hãy nhập lý do từ chối."
+          );
+
+          return;
+
+        }
+
+
+        rejectBtn.disabled =
+          true;
+
+        rejectBtn.textContent =
+          "ĐANG XỬ LÝ...";
+
+
+        try {
+
+          const {
+            error
+          } =
+            await sb
+              .from(
+                "court_directory_submissions"
+              )
+              .update({
+
+                submission_status:
+                  "rejected",
+
+                admin_note:
+                  cleanReason,
+
+                reviewed_at:
+                  new Date()
+                    .toISOString(),
+
+                reviewed_by:
+                  currentUserId
+
+              })
+              .eq(
+                "id",
+                id
+              )
+              .eq(
+                "submission_status",
+                "pending"
+              );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          showMessage(
+            "success",
+            "✅ Đã từ chối yêu cầu sân."
+          );
+
+
+          await loadData();
+
+        }
+        catch (error) {
+
+          console.error(
+            "REJECT COURT:",
+            error
+          );
+
+
+          showMessage(
+            "error",
+            "❌ Không xử lý được yêu cầu."
+          );
+
+
+          rejectBtn.disabled =
+            false;
+
+          rejectBtn.textContent =
+            "❌ TỪ CHỐI";
+
+        }
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     START
+  ========================================== */
+
+  try {
+
+    const allowed =
+      await requireAdmin();
+
+
+    if (!allowed) {
+      return;
+    }
+
+
+    await loadData();
+
+  }
+  catch (error) {
+
+    console.error(
+      "COURT SUBMISSIONS:",
+      error
+    );
+
+
+    listEl.innerHTML = `
+      <div class="empty">
+        Không tải được dữ liệu.
+      </div>
+    `;
+
+
+    showMessage(
+      "error",
+      error?.message
+      ||
+      "Không tải được sân chờ duyệt."
+    );
+
+  }
+
+})();
+</script>
+
+</body>
+</html>
