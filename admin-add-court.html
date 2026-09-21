@@ -519,53 +519,97 @@
 
 
   <!-- =========================
-       TỌA ĐỘ
-  ========================== -->
+     ĐỊNH VỊ GOOGLE MAPS
+========================== -->
 
-  <div class="card">
+<div class="card">
 
-    <div class="section-title">
-      📍 Tọa độ
-    </div>
-
-    <div class="grid">
-
-      <div>
-        <label>Latitude</label>
-
-        <input
-          id="latitude"
-          inputmode="decimal"
-          placeholder="21.2812345"
-        />
-      </div>
-
-
-      <div>
-        <label>Longitude</label>
-
-        <input
-          id="longitude"
-          inputmode="decimal"
-          placeholder="106.1976543"
-        />
-      </div>
-
-    </div>
-
+  <div class="section-title">
+    📍 Định vị Google Maps
   </div>
 
+  <!--
+    Giữ 2 field này để phần SAVE cũ
+    vẫn hoạt động và lưu null.
+  -->
+  <input
+    id="latitude"
+    type="hidden"
+    value=""
+  />
 
-  <!-- =========================
-       NGUỒN
-  ========================== -->
+  <input
+    id="longitude"
+    type="hidden"
+    value=""
+  />
 
-  <div class="card">
 
-    <div class="section-title">
-      🔎 Nguồn dữ liệu
-    </div>
+  <p
+    style="
+      margin:0 0 14px;
+      color:#9ca6b1;
+      line-height:1.55;
+    "
+  >
+    Kiểm tra vị trí sân trên Google Maps
+    từ địa chỉ, Phường/Xã và Tỉnh/Thành đã nhập.
+  </p>
 
+
+  <button
+    type="button"
+    class="back-btn"
+    style="
+      width:100%;
+      min-height:48px;
+      cursor:pointer;
+    "
+    onclick="
+      (function () {
+
+        const address =
+          document.getElementById('address')?.value?.trim() || '';
+
+        const ward =
+          document.getElementById('ward')?.value?.trim() || '';
+
+        const province =
+          document.getElementById('province')?.value?.trim() || '';
+
+        const query =
+          [address, ward, province, 'Việt Nam']
+            .filter(Boolean)
+            .join(', ');
+
+        if (!query) {
+          alert('Hãy chọn Tỉnh/Thành và Phường/Xã trước.');
+          return;
+        }
+
+        window.open(
+          'https://www.google.com/maps/search/?api=1&query='
+          + encodeURIComponent(query),
+          '_blank',
+          'noopener'
+        );
+
+      })();
+    "
+  >
+    📍 XEM TRÊN GOOGLE MAPS
+  </button>
+
+</div>
+<!-- =========================
+     NGUỒN DỮ LIỆU
+========================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    🔎 Nguồn dữ liệu
+  </div>
     <div class="grid">
 
       <div>
