@@ -1016,15 +1016,9 @@
 
     <br>
 
-
     <a
-     <a
-  class="home-btn"
-  href="./?v=1000041"
->
-  VỀ TRANG CHỦ →
-</a>
-      href="./"
+      class="home-btn"
+      href="./?v=1000041"
     >
       VỀ TRANG CHỦ →
     </a>
@@ -1111,16 +1105,23 @@
      CONFIG
   ====================================================== */
 
-  const cfg =
+   const cfg =
     window.PICKDEE_CONFIG || {};
 
 
-      <a
-      class="home-btn"
-      href="./?v=1000041"
-    >
-      VỀ TRANG CHỦ →
-    </a>
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không kết nối được hệ thống PickDee Academy.",
+      "error"
+    );
+
     submitBtn.disabled =
       true;
 
@@ -1134,7 +1135,6 @@
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
-
 
   /* =====================================================
      API HÀNH CHÍNH VIỆT NAM 2025
@@ -1921,7 +1921,818 @@
   }
 
 
-  ensureCoachProfileFields();
+    ensureCoachProfileFields();
+
+
+  /* =====================================================
+     ẢNH ĐẠI DIỆN COACH - BẮT BUỘC
+  ====================================================== */
+
+  let coachAvatarDataUrl = "";
+  let coachAvatarMime = "image/jpeg";
+
+
+  function ensureCoachAvatarField() {
+
+    if (
+      document.getElementById(
+        "coachAvatarBlock"
+      )
+    ) {
+      return;
+    }
+
+
+    const block =
+      document.createElement(
+        "div"
+      );
+
+
+    block.id =
+      "coachAvatarBlock";
+
+
+    block.style.cssText = `
+      margin:28px 0 0;
+      padding-top:24px;
+      border-top:1px solid rgba(255,255,255,.09);
+    `;
+
+
+    block.innerHTML = `
+
+      <div class="section-title">
+        7. ẢNH ĐẠI DIỆN
+        <span class="required">*</span>
+      </div>
+
+      <div
+        class="helper"
+        style="
+          margin-bottom:14px;
+          font-size:12px;
+        "
+      >
+        Bắt buộc có ảnh rõ khuôn mặt.
+        Bạn có thể chụp trực tiếp hoặc chọn ảnh có sẵn.
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:10px;
+          margin-bottom:14px;
+        "
+      >
+
+        <button
+          id="takeCoachAvatarBtn"
+          type="button"
+          style="
+            min-height:48px;
+            border:1px solid rgba(216,255,69,.45);
+            border-radius:10px;
+            background:rgba(216,255,69,.09);
+            color:#d8ff45;
+            font-weight:900;
+            cursor:pointer;
+          "
+        >
+          📷 CHỤP ẢNH
+        </button>
+
+
+        <button
+          id="chooseCoachAvatarBtn"
+          type="button"
+          style="
+            min-height:48px;
+            border:1px solid rgba(255,255,255,.16);
+            border-radius:10px;
+            background:rgba(255,255,255,.04);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+          "
+        >
+          🖼️ CHỌN ẢNH
+        </button>
+
+      </div>
+
+
+      <input
+        id="takeCoachAvatarInput"
+        type="file"
+        accept="image/*"
+        capture="user"
+        style="display:none"
+      >
+
+
+      <input
+        id="chooseCoachAvatarInput"
+        type="file"
+        accept="image/*"
+        style="display:none"
+      >
+
+
+      <div
+        id="coachAvatarPreviewWrap"
+        style="
+          display:none;
+          margin-top:14px;
+        "
+      >
+
+        <img
+          id="coachAvatarPreview"
+          alt="Ảnh đại diện Coach"
+          style="
+            width:150px;
+            height:150px;
+            object-fit:cover;
+            border-radius:18px;
+            border:2px solid rgba(216,255,69,.55);
+            background:#06182e;
+          "
+        >
+
+      </div>
+
+
+      <div
+        id="coachAvatarStatus"
+        class="helper"
+        style="
+          margin-top:10px;
+          font-size:12px;
+        "
+      >
+        Chưa có ảnh đại diện.
+      </div>
+
+    `;
+
+
+    submitBtn.parentNode.insertBefore(
+      block,
+      submitBtn
+    );
+
+
+    const takeBtn =
+      document.getElementById(
+        "takeCoachAvatarBtn"
+      );
+
+
+    const chooseBtn =
+      document.getElementById(
+        "chooseCoachAvatarBtn"
+      );
+
+
+    const takeInput =
+      document.getElementById(
+        "takeCoachAvatarInput"
+      );
+
+
+    const chooseInput =
+      document.getElementById(
+        "chooseCoachAvatarInput"
+      );
+
+
+    const previewWrap =
+      document.getElementById(
+        "coachAvatarPreviewWrap"
+      );
+
+
+    const preview =
+      document.getElementById(
+        "coachAvatarPreview"
+      );
+
+
+    const status =
+      document.getElementById(
+        "coachAvatarStatus"
+      );
+
+
+    submitBtn.disabled =
+      true;
+
+
+    submitBtn.title =
+      "Vui lòng chụp hoặc chọn ảnh đại diện trước.";
+
+
+    takeBtn.addEventListener(
+      "click",
+      function () {
+
+        takeInput.click();
+
+      }
+    );
+
+
+    chooseBtn.addEventListener(
+      "click",
+      function () {
+
+        chooseInput.click();
+
+      }
+    );
+
+
+    async function handleAvatar(
+      file
+    ) {
+
+      if (!file) {
+        return;
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+
+      status.style.color =
+        "";
+
+
+      status.textContent =
+        "Đang xử lý ảnh...";
+
+
+      try {
+
+        const result =
+          await compressCoachAvatar(
+            file
+          );
+
+
+        coachAvatarDataUrl =
+          result.dataUrl;
+
+
+        coachAvatarMime =
+          result.mime;
+
+
+        preview.src =
+          coachAvatarDataUrl;
+
+
+        previewWrap.style.display =
+          "block";
+
+
+        status.style.color =
+          "#d8ff45";
+
+
+        status.textContent =
+          "✓ Ảnh đã sẵn sàng · "
+          +
+          Math.round(
+            result.bytes / 1024
+          )
+          +
+          " KB";
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.title =
+          "";
+
+      }
+      catch (error) {
+
+        console.error(
+          "COACH AVATAR ERROR:",
+          error
+        );
+
+
+        coachAvatarDataUrl =
+          "";
+
+
+        preview.removeAttribute(
+          "src"
+        );
+
+
+        previewWrap.style.display =
+          "none";
+
+
+        status.style.color =
+          "#ffb1b1";
+
+
+        status.textContent =
+          error?.message
+          ||
+          "Không xử lý được ảnh.";
+
+
+        submitBtn.disabled =
+          true;
+
+      }
+
+    }
+
+
+    takeInput.addEventListener(
+      "change",
+      async function () {
+
+        await handleAvatar(
+          takeInput.files?.[0]
+        );
+
+        takeInput.value =
+          "";
+
+      }
+    );
+
+
+    chooseInput.addEventListener(
+      "change",
+      async function () {
+
+        await handleAvatar(
+          chooseInput.files?.[0]
+        );
+
+        chooseInput.value =
+          "";
+
+      }
+    );
+
+  }
+
+
+
+  /* =====================================================
+     NÉN ẢNH XUỐNG DƯỚI 1 MB
+  ====================================================== */
+
+  function compressCoachAvatar(
+    file
+  ) {
+
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        if (!file) {
+
+          reject(
+            new Error(
+              "Vui lòng chọn ảnh đại diện."
+            )
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !String(
+            file.type || ""
+          )
+            .toLowerCase()
+            .startsWith(
+              "image/"
+            )
+        ) {
+
+          reject(
+            new Error(
+              "File đã chọn không phải hình ảnh."
+            )
+          );
+
+          return;
+
+        }
+
+
+        const objectUrl =
+          URL.createObjectURL(
+            file
+          );
+
+
+        const image =
+          new Image();
+
+
+        image.onload =
+          async function () {
+
+            URL.revokeObjectURL(
+              objectUrl
+            );
+
+
+            try {
+
+              let width =
+                image.naturalWidth
+                ||
+                image.width;
+
+
+              let height =
+                image.naturalHeight
+                ||
+                image.height;
+
+
+              if (
+                !width
+                ||
+                !height
+              ) {
+
+                throw new Error(
+                  "Không đọc được ảnh."
+                );
+
+              }
+
+
+              const maxSide =
+                1200;
+
+
+              if (
+                Math.max(
+                  width,
+                  height
+                )
+                >
+                maxSide
+              ) {
+
+                const ratio =
+                  maxSide
+                  /
+                  Math.max(
+                    width,
+                    height
+                  );
+
+
+                width =
+                  Math.round(
+                    width * ratio
+                  );
+
+
+                height =
+                  Math.round(
+                    height * ratio
+                  );
+
+              }
+
+
+              let quality =
+                0.88;
+
+
+              let currentWidth =
+                width;
+
+
+              let currentHeight =
+                height;
+
+
+              let finalBlob =
+                null;
+
+
+              for (
+                let attempt = 0;
+                attempt < 10;
+                attempt += 1
+              ) {
+
+                const canvas =
+                  document.createElement(
+                    "canvas"
+                  );
+
+
+                canvas.width =
+                  Math.max(
+                    1,
+                    Math.round(
+                      currentWidth
+                    )
+                  );
+
+
+                canvas.height =
+                  Math.max(
+                    1,
+                    Math.round(
+                      currentHeight
+                    )
+                  );
+
+
+                const ctx =
+                  canvas.getContext(
+                    "2d"
+                  );
+
+
+                if (!ctx) {
+
+                  throw new Error(
+                    "Thiết bị không xử lý được ảnh."
+                  );
+
+                }
+
+
+                ctx.fillStyle =
+                  "#ffffff";
+
+
+                ctx.fillRect(
+                  0,
+                  0,
+                  canvas.width,
+                  canvas.height
+                );
+
+
+                ctx.drawImage(
+                  image,
+                  0,
+                  0,
+                  canvas.width,
+                  canvas.height
+                );
+
+
+                const blob =
+                  await new Promise(
+                    function (
+                      done
+                    ) {
+
+                      canvas.toBlob(
+                        done,
+                        "image/jpeg",
+                        quality
+                      );
+
+                    }
+                  );
+
+
+                if (!blob) {
+
+                  throw new Error(
+                    "Không nén được ảnh."
+                  );
+
+                }
+
+
+                finalBlob =
+                  blob;
+
+
+                if (
+                  blob.size
+                  <=
+                  900 * 1024
+                ) {
+
+                  break;
+
+                }
+
+
+                if (
+                  quality > 0.58
+                ) {
+
+                  quality -=
+                    0.08;
+
+                }
+                else {
+
+                  currentWidth *=
+                    0.85;
+
+
+                  currentHeight *=
+                    0.85;
+
+                }
+
+              }
+
+
+              if (
+                !finalBlob
+                ||
+                finalBlob.size
+                >
+                1024 * 1024
+              ) {
+
+                throw new Error(
+                  "Ảnh quá lớn. Vui lòng chọn ảnh khác."
+                );
+
+              }
+
+
+              const dataUrl =
+                await new Promise(
+                  function (
+                    done,
+                    fail
+                  ) {
+
+                    const reader =
+                      new FileReader();
+
+
+                    reader.onload =
+                      function () {
+
+                        done(
+                          String(
+                            reader.result
+                            ||
+                            ""
+                          )
+                        );
+
+                      };
+
+
+                    reader.onerror =
+                      function () {
+
+                        fail(
+                          new Error(
+                            "Không đọc được ảnh."
+                          )
+                        );
+
+                      };
+
+
+                    reader.readAsDataURL(
+                      finalBlob
+                    );
+
+                  }
+                );
+
+
+              resolve(
+                {
+                  dataUrl:
+                    dataUrl,
+
+                  mime:
+                    "image/jpeg",
+
+                  bytes:
+                    finalBlob.size
+                }
+              );
+
+            }
+            catch (error) {
+
+              reject(
+                error
+              );
+
+            }
+
+          };
+
+
+        image.onerror =
+          function () {
+
+            URL.revokeObjectURL(
+              objectUrl
+            );
+
+
+            reject(
+              new Error(
+                "Không đọc được ảnh này. Vui lòng chọn ảnh khác."
+              )
+            );
+
+          };
+
+
+        image.src =
+          objectUrl;
+
+      }
+    );
+
+  }
+
+
+
+  /* =====================================================
+     ĐỌC LỖI EDGE FUNCTION
+  ====================================================== */
+
+  async function getCoachApplicationError(
+    error
+  ) {
+
+    let text =
+      error?.message
+      ||
+      String(
+        error || ""
+      );
+
+
+    try {
+
+      if (
+        error?.context
+        &&
+        typeof
+          error.context.json
+        ===
+        "function"
+      ) {
+
+        const body =
+          await error.context.json();
+
+
+        if (
+          body?.error
+        ) {
+
+          text =
+            body.error;
+
+        }
+
+      }
+
+    }
+    catch (_) {}
+
+
+    return text;
+
+  }
+
+
+
+  ensureCoachAvatarField();
+
 
 
   /* =====================================================
@@ -1933,7 +2744,6 @@
     async function (
       event
     ) {
-
 
       event.preventDefault();
 
@@ -2035,6 +2845,20 @@
       }
 
 
+      if (
+        !coachAvatarDataUrl
+      ) {
+
+        showMessage(
+          "Vui lòng chụp hoặc tải ảnh đại diện trước khi gửi hồ sơ.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
       submitBtn.disabled =
         true;
 
@@ -2045,101 +2869,127 @@
 
       try {
 
-
         const {
           data,
           error
         } =
-          await sb.rpc(
-            "submit_coach_application",
+          await sb.functions.invoke(
+            "pickdee-coach-application",
             {
+              body: {
 
-              p_full_name:
-                fullName,
+                full_name:
+                  fullName,
 
-              p_phone:
-                phone,
+                phone:
+                  phone,
 
-              p_email:
-                email,
+                email:
+                  email,
 
-              p_preferred_area:
-                area,
+                preferred_area:
+                  area,
 
-              p_preferred_ward:
-                ward,
+                preferred_ward:
+                  ward,
 
-              p_years_playing:
-                numberOf(
-                  "yearsPlaying"
-                )
-                ??
-                0,
+                years_playing:
+                  numberOf(
+                    "yearsPlaying"
+                  )
+                  ??
+                  0,
 
-              p_years_coaching:
-                numberOf(
-                  "yearsCoaching"
-                )
-                ??
-                0,
+                years_coaching:
+                  numberOf(
+                    "yearsCoaching"
+                  )
+                  ??
+                  0,
 
-              p_specialties:
-                valueOf(
-                  "specialties"
-                )
-                ||
-                null,
+                specialties:
+                  valueOf(
+                    "specialties"
+                  )
+                  ||
+                  null,
 
-              p_programs:
-                selectedPrograms(),
+                programs:
+                  selectedPrograms(),
 
-              p_available_time:
-                valueOf(
-                  "availableTime"
-                )
-                ||
-                null,
+                available_time:
+                  valueOf(
+                    "availableTime"
+                  )
+                  ||
+                  null,
 
-              p_expected_rate:
-                numberOf(
-                  "expectedRate"
-                ),
+                expected_rate:
+                  numberOf(
+                    "expectedRate"
+                  ),
 
-              p_bio:
-                valueOf(
-                  "bio"
-                )
-                ||
-                null,
+                bio:
+                  valueOf(
+                    "bio"
+                  )
+                  ||
+                  null,
 
-              p_achievements:
-                valueOf(
-                  "achievements"
-                )
-                ||
-                null,
+                achievements:
+                  valueOf(
+                    "achievements"
+                  )
+                  ||
+                  null,
 
-              p_pickleball_level:
-                valueOf(
-                  "pickleballLevel"
-                )
-                ||
-                null,
+                pickleball_level:
+                  valueOf(
+                    "pickleballLevel"
+                  )
+                  ||
+                  null,
 
-              p_qualifications:
-                valueOf(
-                  "qualifications"
-                )
-                ||
-                null
+                qualifications:
+                  valueOf(
+                    "qualifications"
+                  )
+                  ||
+                  null,
 
+                avatar_base64:
+                  coachAvatarDataUrl,
+
+                avatar_mime:
+                  coachAvatarMime
+
+              }
             }
           );
 
 
         if (error) {
 
-          throw error;
+          throw new Error(
+            await getCoachApplicationError(
+              error
+            )
+          );
+
+        }
+
+
+        if (
+          !data
+          ||
+          data.success !== true
+        ) {
+
+          throw new Error(
+            data?.error
+            ||
+            "Không gửi được hồ sơ Coach."
+          );
 
         }
 
@@ -2186,10 +3036,8 @@
           }
         );
 
-
       }
       catch (error) {
-
 
         console.error(
           "COACH APPLICATION ERROR:",
@@ -2207,20 +3055,6 @@
           );
 
 
-        if (
-          text
-            .toLowerCase()
-            .includes(
-              "already"
-            )
-        ) {
-
-          text =
-            "Bạn đã có hồ sơ đang chờ PickDee Academy xử lý.";
-
-        }
-
-
         showMessage(
           text
           ||
@@ -2230,7 +3064,7 @@
 
 
         submitBtn.disabled =
-          false;
+          !coachAvatarDataUrl;
 
 
         submitBtn.textContent =
@@ -2240,8 +3074,6 @@
 
     }
   );
-
-
   /* =====================================================
      START
   ====================================================== */
