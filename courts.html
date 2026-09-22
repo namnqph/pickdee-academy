@@ -959,9 +959,110 @@
   }
 
 
-  /* =========================================
-     LOAD DATA
+    /* =========================================
+     LOAD DATA + DANH MỤC HÀNH CHÍNH TOÀN QUỐC
   ========================================== */
+
+  async function fetchPagedRows(
+    table,
+    columns,
+    filterColumn,
+    filterValue,
+    orderColumn
+  ) {
+
+    const pageSize = 1000;
+
+    let from = 0;
+
+    let rows = [];
+
+
+    while (true) {
+
+      let query =
+        sb
+          .from(table)
+          .select(columns);
+
+
+      if (
+        filterColumn
+      ) {
+
+        query =
+          query.eq(
+            filterColumn,
+            filterValue
+          );
+
+      }
+
+
+      if (
+        orderColumn
+      ) {
+
+        query =
+          query.order(
+            orderColumn,
+            {
+              ascending: true
+            }
+          );
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await query.range(
+          from,
+          from + pageSize - 1
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      const page =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      rows.push(
+        ...page
+      );
+
+
+      if (
+        page.length < pageSize
+      ) {
+
+        break;
+
+      }
+
+
+      from +=
+        pageSize;
+
+    }
+
+
+    return rows;
+
+  }
+
 
   async function loadData() {
 
@@ -969,60 +1070,80 @@
       "Đang tải...";
 
 
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from(
-          "court_directory"
-        )
-        .select(`
-          id,
-          court_name,
-          province,
-          ward,
-          address,
-          latitude,
-          longitude,
-          phone,
-          zalo,
-          facebook_url,
-          website_url,
-          number_of_courts,
-          court_type,
-          opening_hours,
-          price_min,
-          price_max,
-          amenities,
-          booking_url,
-          verified,
-          owner_claimed,
-          status
-        `)
-        .eq(
+    const [
+      courtRows,
+      areaRows,
+      wardRows
+    ] =
+      await Promise.all([
+
+        fetchPagedRows(
+          "court_directory",
+          `
+            id,
+            court_name,
+            province,
+            ward,
+            address,
+            latitude,
+            longitude,
+            phone,
+            zalo,
+            facebook_url,
+            website_url,
+            number_of_courts,
+            court_type,
+            opening_hours,
+            price_min,
+            price_max,
+            amenities,
+            booking_url,
+            verified,
+            owner_claimed,
+            status
+          `,
           "status",
-          "active"
+          "active",
+          "court_name"
+        ),
+
+        fetchPagedRows(
+          "dm_khu_vuc",
+          `
+            ma_khu_vuc,
+            tinh_thanh
+          `,
+          "dang_hoat_dong",
+          true,
+          "tinh_thanh"
+        ),
+
+        fetchPagedRows(
+          "dm_xa_phuong",
+          `
+            ma_xa_phuong,
+            ma_khu_vuc,
+            tinh_thanh,
+            ten_xa_phuong
+          `,
+          "dang_hoat_dong",
+          true,
+          "ten_xa_phuong"
         )
-        .order(
-          "court_name",
-          {
-            ascending: true
-          }
-        );
 
-
-    if (error) {
-      throw error;
-    }
+      ]);
 
 
     allRows =
-      Array.isArray(data)
-        ?
-        data
-        :
-        [];
+      courtRows;
+
+
+    loadData.allAreas =
+      areaRows;
+
+
+    loadData.allWards =
+      wardRows;
 
 
     buildProvinceFilter();
@@ -1040,6 +1161,8 @@
 
   /* =========================================
      PROVINCE FILTER
+     LẤY TỪ dm_khu_vuc
+     KHÔNG LẤY TỪ court_directory
   ========================================== */
 
   function buildProvinceFilter() {
@@ -1048,14 +1171,26 @@
       provinceFilter.value;
 
 
+    const allAreas =
+      Array.isArray(
+        loadData.allAreas
+      )
+        ?
+        loadData.allAreas
+        :
+        [];
+
+
     const provinces =
       [
         ...new Set(
-          allRows
+          allAreas
             .map(
-              row =>
+              item =>
                 String(
-                  row.province || ""
+                  item.tinh_thanh
+                  ||
+                  ""
                 ).trim()
             )
             .filter(Boolean)
@@ -1071,9 +1206,11 @@
 
 
     provinceFilter.innerHTML = `
+
       <option value="">
         Tất cả Tỉnh/Thành
       </option>
+
     `;
 
 
@@ -1120,28 +1257,48 @@
 
   /* =========================================
      WARD FILTER
+     LẤY TỪ dm_xa_phuong
+     KHÔNG LẤY TỪ court_directory
   ========================================== */
 
   function buildWardFilter() {
 
     const province =
-      provinceFilter.value;
+      String(
+        provinceFilter.value
+        ||
+        ""
+      ).trim();
 
 
     const currentWard =
       wardFilter.value;
 
 
+    const allWards =
+      Array.isArray(
+        loadData.allWards
+      )
+        ?
+        loadData.allWards
+        :
+        [];
+
+
     if (!province) {
 
       wardFilter.innerHTML = `
+
         <option value="">
           Tất cả Phường/Xã
         </option>
+
       `;
+
 
       wardFilter.disabled =
         true;
+
 
       return;
 
@@ -1151,17 +1308,23 @@
     const wards =
       [
         ...new Set(
-          allRows
+          allWards
             .filter(
-              row =>
-                row.province
+              item =>
+                String(
+                  item.tinh_thanh
+                  ||
+                  ""
+                ).trim()
                 ===
                 province
             )
             .map(
-              row =>
+              item =>
                 String(
-                  row.ward || ""
+                  item.ten_xa_phuong
+                  ||
+                  ""
                 ).trim()
             )
             .filter(Boolean)
@@ -1177,9 +1340,11 @@
 
 
     wardFilter.innerHTML = `
+
       <option value="">
         Tất cả Phường/Xã
       </option>
+
     `;
 
 
@@ -1224,6 +1389,8 @@
         currentWard;
 
     }
+
+  
 
   }
 
