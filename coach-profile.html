@@ -544,6 +544,103 @@
     ?? "—";
 
 
+  /* ===============================================
+     LOAD HẠNG COACH + GIÁ TYC
+  ================================================ */
+
+  let pricingTier =
+    null;
+
+
+  try {
+
+    const {
+      data: pricingData,
+      error: pricingError
+    } =
+      await sb.rpc(
+        "public_get_coach_pricing_tier",
+        {
+          p_coach_id:
+            coachId
+        }
+      );
+
+
+    if (pricingError) {
+
+      console.warn(
+        "COACH PRICING TIER:",
+        pricingError
+      );
+
+    }
+    else {
+
+      const pricingRow =
+        Array.isArray(pricingData)
+          ?
+            pricingData[0]
+          :
+            null;
+
+
+      if (
+        pricingRow
+        &&
+        (
+          pricingRow.pricing_tier === "standard"
+          ||
+          pricingRow.pricing_tier === "certified"
+        )
+      ) {
+
+        pricingTier =
+          pricingRow.pricing_tier;
+
+      }
+
+    }
+
+  }
+  catch (pricingException) {
+
+    console.warn(
+      "COACH PRICING TIER:",
+      pricingException
+    );
+
+  }
+
+
+  const coachTierText =
+    pricingTier === "certified"
+      ?
+        "Coach Chứng nhận"
+      :
+        (
+          pricingTier === "standard"
+            ?
+              "Coach Tiêu chuẩn"
+            :
+              "Đang cập nhật"
+        );
+
+
+  const tycPriceText =
+    pricingTier === "certified"
+      ?
+        "600.000đ/người/buổi"
+      :
+        (
+          pricingTier === "standard"
+            ?
+              "550.000đ/người/buổi"
+            :
+              "550.000đ - 600.000đ/người/buổi"
+        );
+
+
   profileBox.className =
     "profile-card";
 
@@ -587,10 +684,46 @@
         </div>
 
         <div class="status">
-
           ● ĐANG NHẬN HỌC VIÊN
-
         </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        HẠNG COACH & GIÁ THEO YÊU CẦU
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Hạng Coach
+        </span>
+
+        <span class="info-value">
+          ${escapeHtml(coachTierText)}
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Theo yêu cầu
+        </span>
+
+        <span
+          class="info-value"
+          style="color:#d8ff45;"
+        >
+          ${escapeHtml(tycPriceText)}
+        </span>
 
       </div>
 
@@ -647,6 +780,7 @@
 
     </div>
 
+
     <div class="section">
 
       <div class="section-title">
@@ -696,6 +830,8 @@
       </div>
 
     </div>
+
+
     <div class="section">
 
       <div class="section-title">
@@ -710,13 +846,7 @@
         </span>
 
         <span class="info-value">
-
-          ${
-            escapeHtml(
-              yearsPlaying
-            )
-          } năm
-
+          ${escapeHtml(yearsPlaying)} năm
         </span>
 
       </div>
@@ -729,13 +859,7 @@
         </span>
 
         <span class="info-value">
-
-          ${
-            escapeHtml(
-              yearsCoaching
-            )
-          } năm
-
+          ${escapeHtml(yearsCoaching)} năm
         </span>
 
       </div>
@@ -760,13 +884,7 @@
                   item => `
 
                     <span class="program">
-
-                      ${
-                        escapeHtml(
-                          item
-                        )
-                      }
-
+                      ${escapeHtml(item)}
                     </span>
 
                   `
@@ -777,8 +895,7 @@
 
                 <span
                   style="
-                    color:
-                      rgba(255,255,255,.55);
+                    color:rgba(255,255,255,.55);
                     font-size:13px;
                   "
                 >
@@ -792,43 +909,34 @@
 
     </div>
 
-<a
- href="./student-register?coach_id=${coach.id}"
-  onclick="
-    sessionStorage.setItem(
-      'pickdee_selected_coach_id',
-      '${Number(coach.id)}'
-    );
-  "
-  style="
-    margin-top:22px;
-    min-height:52px;
-    width:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:12px;
-    background:#d8ff45;
-    color:#06152c;
-    text-decoration:none;
-    font-size:14px;
-    font-weight:900;
-  "
->
-  CHỌN COACH NÀY →
-</a>
+
+    <a
+      href="./student-register?coach_id=${coach.id}"
+      onclick="
+        sessionStorage.setItem(
+          'pickdee_selected_coach_id',
+          '${Number(coach.id)}'
+        );
+      "
+      style="
+        margin-top:22px;
+        min-height:52px;
+        width:100%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:12px;
+        background:#d8ff45;
+        color:#06152c;
+        text-decoration:none;
+        font-size:14px;
+        font-weight:900;
+      "
+    >
+      ĐĂNG KÝ HỌC VỚI COACH NÀY →
+    </a>
 
 
-<div class="privacy-note">
-
-  🔒 Thông tin liên hệ của Coach
-  không được công khai.
-
-  Học viên chỉ được xem thông tin
-  liên hệ của Coach đang trực tiếp
-  phụ trách mình trong hệ thống PickDee.
-
-</div>
     <div class="privacy-note">
 
       🔒 Thông tin liên hệ của Coach
@@ -841,7 +949,6 @@
     </div>
 
   `;
-
 })();
 
 </script>
