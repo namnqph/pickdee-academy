@@ -1519,7 +1519,430 @@ function renderWards() {
 
 </script>
 
+<!-- =====================================================
+     ẢNH ĐẠI DIỆN COACH TRÊN TRANG TÌM COACH
+====================================================== -->
 
+<style>
+
+  .coach-icon {
+    overflow: hidden;
+  }
+
+  .coach-icon img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    border-radius: inherit;
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG
+    ||
+    {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.warn(
+      "FIND COACH AVATAR: thiếu Supabase config."
+    );
+
+    return;
+
+  }
+
+
+  const avatarSb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const avatarCache =
+    new Map();
+
+
+  let avatarRenderTimer =
+    null;
+
+
+
+  /* =====================================================
+     LẤY COACH ID TỪ LINK HỒ SƠ
+  ====================================================== */
+
+  function getCoachIdFromCard(
+    card
+  ) {
+
+
+    const profileLink =
+      card.querySelector(
+        'a[href*="coach-profile?id="]'
+      );
+
+
+    if (!profileLink) {
+      return null;
+    }
+
+
+    try {
+
+
+      const url =
+        new URL(
+          profileLink.getAttribute(
+            "href"
+          ),
+          window.location.href
+        );
+
+
+      const coachId =
+        Number(
+          url.searchParams.get(
+            "id"
+          )
+        );
+
+
+      return (
+        Number.isInteger(
+          coachId
+        )
+        &&
+        coachId > 0
+      )
+        ?
+        coachId
+        :
+        null;
+
+
+    }
+    catch (_) {
+
+
+      return null;
+
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     TẢI ẢNH CHO 1 CARD
+  ====================================================== */
+
+  async function loadCardAvatar(
+    card
+  ) {
+
+
+    const icon =
+      card.querySelector(
+        ".coach-icon"
+      );
+
+
+    if (!icon) {
+      return;
+    }
+
+
+    if (
+      icon.dataset.avatarReady
+      ===
+      "1"
+    ) {
+      return;
+    }
+
+
+    if (
+      icon.dataset.avatarLoading
+      ===
+      "1"
+    ) {
+      return;
+    }
+
+
+    const coachId =
+      getCoachIdFromCard(
+        card
+      );
+
+
+    if (!coachId) {
+      return;
+    }
+
+
+    icon.dataset.avatarLoading =
+      "1";
+
+
+    try {
+
+
+      let avatarPath =
+        avatarCache.get(
+          coachId
+        );
+
+
+      if (
+        !avatarCache.has(
+          coachId
+        )
+      ) {
+
+
+        const {
+          data,
+          error
+        } =
+          await avatarSb.rpc(
+            "public_get_coach_avatar",
+            {
+              p_coach_id:
+                coachId
+            }
+          );
+
+
+        if (error) {
+
+
+          console.warn(
+            "FIND COACH AVATAR:",
+            coachId,
+            error
+          );
+
+
+          avatarPath =
+            null;
+
+
+        }
+        else {
+
+
+          const row =
+            Array.isArray(
+              data
+            )
+              ?
+              data[0]
+              :
+              null;
+
+
+          avatarPath =
+            row?.avatar_path
+            ||
+            null;
+
+
+        }
+
+
+        avatarCache.set(
+          coachId,
+          avatarPath
+        );
+
+      }
+
+
+      if (avatarPath) {
+
+
+        const {
+          data: publicData
+        } =
+          avatarSb
+            .storage
+            .from(
+              "avatars"
+            )
+            .getPublicUrl(
+              avatarPath
+            );
+
+
+        const publicUrl =
+          publicData?.publicUrl
+          ||
+          "";
+
+
+        if (publicUrl) {
+
+
+          const img =
+            document.createElement(
+              "img"
+            );
+
+
+          img.src =
+            publicUrl;
+
+
+          img.alt =
+            "Ảnh Coach";
+
+
+          img.loading =
+            "lazy";
+
+
+          icon.innerHTML =
+            "";
+
+
+          icon.appendChild(
+            img
+          );
+
+
+        }
+
+      }
+
+
+    }
+    catch (error) {
+
+
+      console.warn(
+        "FIND COACH AVATAR:",
+        coachId,
+        error
+      );
+
+
+    }
+    finally {
+
+
+      delete
+        icon.dataset.avatarLoading;
+
+
+      icon.dataset.avatarReady =
+        "1";
+
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     ÁP ẢNH CHO TẤT CẢ CARD
+  ====================================================== */
+
+  function renderCoachAvatars() {
+
+
+    document
+      .querySelectorAll(
+        ".coach-card"
+      )
+      .forEach(
+        function (
+          card
+        ) {
+
+
+          loadCardAvatar(
+            card
+          );
+
+
+        }
+      );
+
+  }
+
+
+
+  /* =====================================================
+     KHI FILTER / RENDER LẠI CARD
+  ====================================================== */
+
+  function scheduleAvatarRender() {
+
+
+    clearTimeout(
+      avatarRenderTimer
+    );
+
+
+    avatarRenderTimer =
+      setTimeout(
+        renderCoachAvatars,
+        80
+      );
+
+
+  }
+
+
+  const observer =
+    new MutationObserver(
+      scheduleAvatarRender
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList:
+        true,
+
+      subtree:
+        true
+    }
+  );
+
+
+  renderCoachAvatars();
+
+
+})();
+
+</script>
 </body>
 
 </html>
