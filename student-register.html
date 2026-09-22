@@ -2763,7 +2763,371 @@ avatar_mime:
 
 </script>
 
+<!-- =====================================================
+     ẢNH COACH ĐÃ CHỌN
+====================================================== -->
 
+<style>
+
+  .coach-box.show {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .selected-coach-avatar {
+    width: 72px;
+    height: 72px;
+
+    flex: 0 0 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    border:
+      2px solid rgba(216,255,69,.45);
+
+    background:
+      rgba(216,255,69,.08);
+
+    font-size: 30px;
+  }
+
+  .selected-coach-avatar img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+  }
+
+  .selected-coach-text {
+    min-width: 0;
+    flex: 1;
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+
+  const coachBox =
+    document.getElementById(
+      "coachBox"
+    );
+
+
+  const coachName =
+    document.getElementById(
+      "coachName"
+    );
+
+
+  const coachMeta =
+    document.getElementById(
+      "coachMeta"
+    );
+
+
+  if (
+    !coachBox
+    ||
+    !coachName
+    ||
+    !coachMeta
+  ) {
+    return;
+  }
+
+
+  /* ===============================================
+     BỌC PHẦN TÊN + THÔNG TIN
+  ================================================ */
+
+  if (
+    !coachBox.querySelector(
+      ".selected-coach-text"
+    )
+  ) {
+
+
+    const textWrap =
+      document.createElement(
+        "div"
+      );
+
+
+    textWrap.className =
+      "selected-coach-text";
+
+
+    coachBox.insertBefore(
+      textWrap,
+      coachName
+    );
+
+
+    textWrap.appendChild(
+      coachName
+    );
+
+
+    textWrap.appendChild(
+      coachMeta
+    );
+
+  }
+
+
+  /* ===============================================
+     TẠO AVATAR FALLBACK
+  ================================================ */
+
+  let avatar =
+    coachBox.querySelector(
+      ".selected-coach-avatar"
+    );
+
+
+  if (!avatar) {
+
+
+    avatar =
+      document.createElement(
+        "div"
+      );
+
+
+    avatar.className =
+      "selected-coach-avatar";
+
+
+    avatar.textContent =
+      "🏓";
+
+
+    coachBox.insertBefore(
+      avatar,
+      coachBox.firstChild
+    );
+
+  }
+
+
+  /* ===============================================
+     LẤY COACH ID
+  ================================================ */
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const urlCoachId =
+    Number(
+      params.get(
+        "coach_id"
+      )
+    );
+
+
+  const storedCoachId =
+    Number(
+      sessionStorage.getItem(
+        "pickdee_selected_coach_id"
+      )
+    );
+
+
+  const selectedCoachId =
+    (
+      Number.isInteger(
+        urlCoachId
+      )
+      &&
+      urlCoachId > 0
+    )
+      ?
+      urlCoachId
+      :
+      (
+        Number.isInteger(
+          storedCoachId
+        )
+        &&
+        storedCoachId > 0
+          ?
+          storedCoachId
+          :
+          null
+      );
+
+
+  if (!selectedCoachId) {
+    return;
+  }
+
+
+  /* ===============================================
+     SUPABASE
+  ================================================ */
+
+  const cfg =
+    window.PICKDEE_CONFIG
+    ||
+    {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* ===============================================
+     LOAD AVATAR
+  ================================================ */
+
+  try {
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "public_get_coach_avatar",
+        {
+          p_coach_id:
+            selectedCoachId
+        }
+      );
+
+
+    if (error) {
+
+      console.warn(
+        "SELECTED COACH AVATAR:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    const row =
+      Array.isArray(
+        data
+      )
+        ?
+        data[0]
+        :
+        null;
+
+
+    const avatarPath =
+      row?.avatar_path
+      ||
+      "";
+
+
+    if (!avatarPath) {
+      return;
+    }
+
+
+    const {
+      data: publicData
+    } =
+      sb
+        .storage
+        .from(
+          "avatars"
+        )
+        .getPublicUrl(
+          avatarPath
+        );
+
+
+    const publicUrl =
+      publicData?.publicUrl
+      ||
+      "";
+
+
+    if (!publicUrl) {
+      return;
+    }
+
+
+    avatar.innerHTML =
+      "";
+
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    img.src =
+      publicUrl;
+
+
+    img.alt =
+      "Ảnh Coach đã chọn";
+
+
+    img.loading =
+      "lazy";
+
+
+    avatar.appendChild(
+      img
+    );
+
+
+  }
+  catch (error) {
+
+
+    console.warn(
+      "SELECTED COACH AVATAR:",
+      error
+    );
+
+
+  }
+
+
+})();
+
+</script>
 </body>
 
 </html>
