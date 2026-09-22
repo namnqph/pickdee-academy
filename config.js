@@ -1,11 +1,15 @@
 window.PICKDEE_CONFIG = {
- REGISTER_URL: "https://pickdee.vn/student-register",
+  REGISTER_URL:
+    "https://pickdee.vn/student-register",
 
   SUPABASE_URL:
     "https://snxztjsluhdibrklougo.supabase.co",
 
   SUPABASE_PUBLISHABLE_KEY:
-    "sb_publishable_DvbmLROzxKtDU_V9ACO4-Q_hUSDjmK0"
+    "sb_publishable_DvbmLROzxKtDU_V9ACO4-Q_hUSDjmK0",
+
+  VAPID_PUBLIC_KEY:
+    "BBTX2lpI1qdfCnsbAgEARxkgYeAPqmME7OnaGmx4rFzLMrhiAzK2xDS9fsswouwp4YPtEtX8TIQF68IEn6zSbgI"
 };
 
 
