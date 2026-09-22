@@ -893,18 +893,19 @@ function renderWards() {
      COACH CARD
   ================================================ */
 
-  function renderCoaches() {
+  async function renderCoaches() {
 
-    const area =
-      normalize(
-        areaSelect.value
-      );
+  const area =
+    normalize(
+      areaSelect.value
+    );
 
 
-    const ward =
-      normalize(
-        wardSelect.value
-      );
+  const ward =
+    normalize(
+      wardSelect.value
+    );
+
 
   if (!area) {
 
@@ -925,211 +926,418 @@ function renderWards() {
     return;
 
   }
-    const rows =
-      allCoaches.filter(
-        function (coach) {
-
-          const coachArea =
-            normalize(
-              coach.preferred_area
-            );
 
 
-          const coachWard =
-            normalize(
-              coach.preferred_ward
-            );
+  const rows =
+    allCoaches.filter(
+      function (coach) {
+
+        const coachArea =
+          normalize(
+            coach.preferred_area
+          );
 
 
-          if (
-            area
-            &&
-            coachArea !== area
-          ) {
-
-            return false;
-
-          }
+        const coachWard =
+          normalize(
+            coach.preferred_ward
+          );
 
 
-          if (
-            ward
-            &&
-            coachWard !== ward
-          ) {
+        if (
+          area
+          &&
+          coachArea !== area
+        ) {
 
-            return false;
-
-          }
-
-
-          return true;
+          return false;
 
         }
-      );
 
 
-    coachCount.textContent =
-      String(
-        rows.length
-      );
+        if (
+          ward
+          &&
+          coachWard !== ward
+        ) {
+
+          return false;
+
+        }
 
 
-    if (
-      rows.length === 0
-    ) {
+        return true;
 
-      coachList.innerHTML = `
-
-        <div class="empty">
-
-          Hiện chưa có Coach hoạt động
-          tại khu vực này.
-
-          <br><br>
-
-          Anh/chị có thể chọn khu vực khác
-          hoặc đăng ký nhu cầu học để
-          PickDee hỗ trợ kết nối Coach.
-
-        </div>
-
-      `;
-
-      return;
-
-    }
+      }
+    );
 
 
-    coachList.innerHTML =
-      rows
-        .map(
-          function (coach) {
-
-            return `
-
-              <article class="coach-card">
-
-                <div class="coach-icon">
-
-                  🏓
-
-                </div>
+  coachCount.textContent =
+    String(
+      rows.length
+    );
 
 
-                <div class="coach-name">
+  if (
+    rows.length === 0
+  ) {
 
-                  ${
-                    escapeHtml(
-                      coach.full_name
-                      ||
-                      "Coach PickDee"
-                    )
-                  }
+    coachList.innerHTML = `
 
-                </div>
+      <div class="empty">
 
+        Hiện chưa có Coach hoạt động
+        tại khu vực này.
 
-                <div class="coach-code">
+        <br><br>
 
-                  ${
-                    escapeHtml(
-                      coach.coach_code
-                      ||
-                      ""
-                    )
-                  }
+        Anh/chị có thể chọn khu vực khác
+        hoặc đăng ký nhu cầu học để
+        PickDee hỗ trợ kết nối Coach.
 
-                </div>
+      </div>
 
+    `;
 
-                <div class="coach-info">
-
-
-                  <div class="info-row">
-
-                    <span class="info-label">
-
-                      Tỉnh / Thành
-
-                    </span>
-
-                    <span class="info-value">
-
-                      ${
-                        escapeHtml(
-                          coach.preferred_area
-                          ||
-                          "—"
-                        )
-                      }
-
-                    </span>
-
-                  </div>
-
-
-                  <div class="info-row">
-
-                    <span class="info-label">
-
-                      Phường / Xã
-
-                    </span>
-
-                    <span class="info-value">
-
-                      ${
-                        escapeHtml(
-                          coach.preferred_ward
-                          ||
-                          "—"
-                        )
-                      }
-
-                    </span>
-
-                  </div>
-
-
-                </div>
-
-
-                <div class="status">
-
-                  ● ĐANG NHẬN HỌC VIÊN
-
-                </div>
-
-                <a
-                  href="./coach-profile?id=${coach.id}"
-                  style="
-                    margin-top:14px;
-                    min-height:42px;
-                    width:100%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    border-radius:10px;
-                    border:1px solid rgba(216,255,69,.45);
-                    color:#d8ff45;
-                    text-decoration:none;
-                    font-size:12px;
-                    font-weight:900;
-                  "
-                >
-                  XEM HỒ SƠ →
-                </a>
-              </article>
-
-            `;
-
-          }
-        )
-        .join("");
+    return;
 
   }
 
+
+  /*
+    =====================================================
+    LẤY HẠNG GIÁ COACH
+
+    standard
+    -> Coach Tiêu chuẩn
+    -> TYC 550.000đ/người/buổi
+
+    certified
+    -> Coach Chứng nhận
+    -> TYC 600.000đ/người/buổi
+    =====================================================
+  */
+
+  const pricingCache =
+    renderCoaches.pricingCache
+    ||
+    (
+      renderCoaches.pricingCache =
+        new Map()
+    );
+
+
+  const rowsWithPricing =
+    await Promise.all(
+
+      rows.map(
+        async function (coach) {
+
+          const cacheKey =
+            String(
+              coach.id
+            );
+
+
+          let pricingTier =
+            pricingCache.get(
+              cacheKey
+            );
+
+
+          if (
+            !pricingTier
+          ) {
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "public_get_coach_pricing_tier",
+                {
+                  p_coach_id:
+                    Number(
+                      coach.id
+                    )
+                }
+              );
+
+
+            if (error) {
+
+              console.error(
+                "PICKDEE COACH PRICING:",
+                coach.id,
+                error
+              );
+
+              pricingTier =
+                "unknown";
+
+            }
+            else {
+
+              const pricingRow =
+                Array.isArray(data)
+                  ?
+                    data[0]
+                  :
+                    null;
+
+
+              pricingTier =
+                String(
+                  pricingRow
+                    &&
+                  pricingRow.pricing_tier
+                    ?
+                      pricingRow.pricing_tier
+                    :
+                      "unknown"
+                )
+                  .trim()
+                  .toLowerCase();
+
+            }
+
+
+            pricingCache.set(
+              cacheKey,
+              pricingTier
+            );
+
+          }
+
+
+          let pricingLabel =
+            "Chưa xác định";
+
+
+          let customPrice =
+            "550.000đ - 600.000đ/người/buổi";
+
+
+          if (
+            pricingTier === "certified"
+          ) {
+
+            pricingLabel =
+              "Coach Chứng nhận";
+
+            customPrice =
+              "600.000đ/người/buổi";
+
+          }
+          else if (
+            pricingTier === "standard"
+          ) {
+
+            pricingLabel =
+              "Coach Tiêu chuẩn";
+
+            customPrice =
+              "550.000đ/người/buổi";
+
+          }
+
+
+          return {
+            ...coach,
+
+            pricing_tier:
+              pricingTier,
+
+            pricing_label:
+              pricingLabel,
+
+            custom_price:
+              customPrice
+          };
+
+        }
+      )
+
+    );
+
+
+  coachList.innerHTML =
+    rowsWithPricing
+      .map(
+        function (coach) {
+
+          return `
+
+            <article class="coach-card">
+
+              <div class="coach-icon">
+
+                🏓
+
+              </div>
+
+
+              <div class="coach-name">
+
+                ${
+                  escapeHtml(
+                    coach.full_name
+                    ||
+                    "Coach PickDee"
+                  )
+                }
+
+              </div>
+
+
+              <div class="coach-code">
+
+                ${
+                  escapeHtml(
+                    coach.coach_code
+                    ||
+                    ""
+                  )
+                }
+
+              </div>
+
+
+              <div class="coach-info">
+
+
+                <div class="info-row">
+
+                  <span class="info-label">
+
+                    Tỉnh / Thành
+
+                  </span>
+
+                  <span class="info-value">
+
+                    ${
+                      escapeHtml(
+                        coach.preferred_area
+                        ||
+                        "—"
+                      )
+                    }
+
+                  </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                  <span class="info-label">
+
+                    Phường / Xã
+
+                  </span>
+
+                  <span class="info-value">
+
+                    ${
+                      escapeHtml(
+                        coach.preferred_ward
+                        ||
+                        "—"
+                      )
+                    }
+
+                  </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                  <span class="info-label">
+
+                    Hạng Coach
+
+                  </span>
+
+                  <span class="info-value">
+
+                    ${
+                      escapeHtml(
+                        coach.pricing_label
+                      )
+                    }
+
+                  </span>
+
+                </div>
+
+
+                <div class="info-row">
+
+                  <span class="info-label">
+
+                    Theo yêu cầu
+
+                  </span>
+
+                  <span
+                    class="info-value"
+                    style="color:#d8ff45;"
+                  >
+
+                    ${
+                      escapeHtml(
+                        coach.custom_price
+                      )
+                    }
+
+                  </span>
+
+                </div>
+
+
+              </div>
+
+
+              <div class="status">
+
+                ● ĐANG NHẬN HỌC VIÊN
+
+              </div>
+
+
+              <a
+                href="./coach-profile?id=${coach.id}"
+                style="
+                  margin-top:14px;
+                  min-height:42px;
+                  width:100%;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  border-radius:10px;
+                  border:1px solid rgba(216,255,69,.45);
+                  color:#d8ff45;
+                  text-decoration:none;
+                  font-size:12px;
+                  font-weight:900;
+                "
+              >
+
+                XEM HỒ SƠ →
+
+              </a>
+
+            </article>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
 
   /* ===============================================
      LOAD
