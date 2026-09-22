@@ -2332,7 +2332,303 @@
      BỔ SUNG DỮ LIỆU VÀ SELECT HẠNG COACH
   ====================================================== */
 
+   /* =====================================================
+     DUYỆT COACH - HANDLER TRỰC TIẾP
+  ====================================================== */
+
+  async function handleApproveCoach(
+    event,
+    button
+  ) {
+
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+    event.stopImmediatePropagation();
+
+
+    if (approvingCoach) {
+      return false;
+    }
+
+
+    const applicationId =
+      Number(
+        button.dataset.id
+      );
+
+
+    if (
+      !Number.isFinite(
+        applicationId
+      )
+    ) {
+
+      showApproveError(
+        "Không xác định được ID hồ sơ Coach."
+      );
+
+      return false;
+
+    }
+
+
+    const card =
+      button.closest(
+        ".application"
+      );
+
+
+    const tierSelect =
+      card
+        ?.querySelector(
+          ".coach-tier-select"
+        );
+
+
+    const compensationTier =
+      tierSelect?.value
+      ===
+      "certified"
+        ?
+        "certified"
+        :
+        "standard";
+
+
+    const tierLabel =
+      compensationTier
+      ===
+      "certified"
+        ?
+        "Coach Chứng nhận"
+        :
+        "Coach Tiêu chuẩn";
+
+
+    const confirmed =
+      window.confirm(
+        "Xác nhận duyệt hồ sơ này thành "
+        +
+        tierLabel
+        +
+        "?"
+      );
+
+
+    if (!confirmed) {
+      return false;
+    }
+
+
+    const originalText =
+      button.textContent;
+
+
+    approvingCoach =
+      true;
+
+
+    button.disabled =
+      true;
+
+
+    if (tierSelect) {
+
+      tierSelect.disabled =
+        true;
+
+    }
+
+
+    button.textContent =
+      "ĐANG DUYỆT...";
+
+
+    showApproveStatus(
+      "Đang duyệt hồ sơ thành "
+      +
+      tierLabel
+      +
+      "..."
+    );
+
+
+    try {
+
+
+      const approveSb =
+        getApproveClient();
+
+
+      const {
+        data: sessionData,
+        error: sessionError
+      } =
+        await approveSb.auth
+          .getSession();
+
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+
+      if (
+        !sessionData
+        ||
+        !sessionData.session
+      ) {
+
+        throw new Error(
+          "Phiên đăng nhập Admin đã hết. Hãy đăng nhập lại."
+        );
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await approveSb.rpc(
+          "admin_approve_coach_application",
+          {
+
+            p_application_id:
+              applicationId,
+
+            p_compensation_tier:
+              compensationTier,
+
+            p_admin_note:
+              null
+
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      console.log(
+        "APPROVE COACH SUCCESS:",
+        data
+      );
+
+
+      showApproveSuccess(
+        "✓ ĐÃ DUYỆT "
+        +
+        tierLabel.toUpperCase()
+        +
+        " THÀNH CÔNG"
+      );
+
+
+      button.textContent =
+        "✓ ĐÃ DUYỆT";
+
+
+      try {
+
+        if (
+          window.PickDeeNotifications
+          &&
+          typeof
+            window
+              .PickDeeNotifications
+              .refresh
+          ===
+          "function"
+        ) {
+
+          await window
+            .PickDeeNotifications
+            .refresh();
+
+        }
+
+      }
+      catch (_) {}
+
+
+      setTimeout(
+        function () {
+
+          window.location.href =
+            "./admin-coach-applications?v="
+            +
+            Date.now();
+
+        },
+        1000
+      );
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "APPROVE COACH ERROR:",
+        error
+      );
+
+
+      showApproveError(
+        "KHÔNG DUYỆT ĐƯỢC COACH: "
+        +
+        (
+          error?.message
+          ||
+          String(error)
+        )
+      );
+
+
+      button.disabled =
+        false;
+
+
+      if (tierSelect) {
+
+        tierSelect.disabled =
+          false;
+
+      }
+
+
+      button.textContent =
+        originalText;
+
+
+    }
+    finally {
+
+
+      approvingCoach =
+        false;
+
+
+    }
+
+
+    return false;
+
+  }
+
+
+  /* =====================================================
+     BỔ SUNG DỮ LIỆU + HẠNG COACH + GẮN NÚT
+  ====================================================== */
+
   function enhanceApplicationCards() {
+
 
     const cards =
       document.querySelectorAll(
@@ -2367,6 +2663,10 @@
           {};
 
 
+        /* ==============================
+           TRÌNH ĐỘ + CHỨNG CHỈ
+        ============================== */
+
         const infoGrid =
           card.querySelector(
             ".info-grid"
@@ -2380,6 +2680,7 @@
             ".pickdee-extra-coach-info"
           )
         ) {
+
 
           const block =
             document.createElement(
@@ -2441,71 +2742,95 @@
         }
 
 
+        /* ==============================
+           HẠNG COACH
+        ============================== */
+
         const actions =
           card.querySelector(
             ".actions"
           );
 
 
+        if (!actions) {
+          return;
+        }
+
+
+        const approveButton =
+          actions.querySelector(
+            ".approve-btn[data-id]"
+          );
+
+
+        if (!approveButton) {
+          return;
+        }
+
+
         if (
-          actions
-          &&
           !actions.querySelector(
             ".coach-tier-box"
           )
         ) {
 
-          const approveButton =
-            actions.querySelector(
-              ".approve-btn"
+
+          const tierBox =
+            document.createElement(
+              "div"
             );
 
 
-          if (approveButton) {
-
-            const tierBox =
-              document.createElement(
-                "div"
-              );
+          tierBox.className =
+            "coach-tier-box";
 
 
-            tierBox.className =
-              "coach-tier-box";
+          tierBox.innerHTML =
+            `
+
+              <label>
+                HẠNG COACH KHI DUYỆT
+              </label>
+
+              <select
+                class="coach-tier-select"
+                data-tier-for="${applicationId}"
+              >
+
+                <option value="standard">
+                  Coach Tiêu chuẩn
+                </option>
+
+                <option value="certified">
+                  Coach Chứng nhận
+                </option>
+
+              </select>
+
+            `;
 
 
-            tierBox.innerHTML =
-              `
+          actions.insertBefore(
+            tierBox,
+            approveButton
+          );
 
-                <label>
-                  HẠNG COACH KHI DUYỆT
-                </label>
-
-                <select
-                  class="coach-tier-select"
-                  data-tier-for="${applicationId}"
-                >
-
-                  <option value="standard">
-                    Coach Tiêu chuẩn
-                  </option>
-
-                  <option value="certified">
-                    Coach Chứng nhận
-                  </option>
-
-                </select>
-
-              `;
+        }
 
 
-            actions.insertBefore(
-              tierBox,
+        /* ==============================
+           GẮN CLICK TRỰC TIẾP VÀO NÚT
+        ============================== */
+
+        approveButton.onclick =
+          function (event) {
+
+            return handleApproveCoach(
+              event,
               approveButton
             );
 
-          }
-
-        }
+          };
 
 
       }
@@ -2515,10 +2840,11 @@
 
 
   /* =====================================================
-     THEO DÕI KHI DANH SÁCH RENDER LẠI
+     THEO DÕI DANH SÁCH RENDER LẠI
   ====================================================== */
 
   function scheduleEnhance() {
+
 
     clearTimeout(
       enhanceTimer
@@ -2542,6 +2868,7 @@
 
   if (applicationList) {
 
+
     const observer =
       new MutationObserver(
         scheduleEnhance
@@ -2556,358 +2883,11 @@
       }
     );
 
-  }
-
-
-    /* =====================================================
-     GẮN CLICK TRỰC TIẾP VÀO NÚT DUYỆT
-  ====================================================== */
-
-  function wireApproveButtons() {
-
-    const buttons =
-      document.querySelectorAll(
-        ".approve-btn[data-id]"
-      );
-
-
-    buttons.forEach(
-      function (button) {
-
-
-        if (
-          button.dataset.pickdeeApproveBound
-          ===
-          "1"
-        ) {
-          return;
-        }
-
-
-        button.dataset.pickdeeApproveBound =
-          "1";
-
-
-        button.addEventListener(
-          "click",
-          async function (event) {
-
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-            event.stopImmediatePropagation();
-
-
-            if (approvingCoach) {
-              return;
-            }
-
-
-            const applicationId =
-              Number(
-                button.dataset.id
-              );
-
-
-            if (
-              !Number.isFinite(
-                applicationId
-              )
-            ) {
-
-              showApproveError(
-                "Không xác định được ID hồ sơ Coach."
-              );
-
-              return;
-
-            }
-
-
-            const card =
-              button.closest(
-                ".application"
-              );
-
-
-            const tierSelect =
-              card
-                ?.querySelector(
-                  ".coach-tier-select"
-                );
-
-
-            const compensationTier =
-              tierSelect?.value
-              ===
-              "certified"
-                ?
-                "certified"
-                :
-                "standard";
-
-
-            const tierLabel =
-              compensationTier
-              ===
-              "certified"
-                ?
-                "Coach Chứng nhận"
-                :
-                "Coach Tiêu chuẩn";
-
-
-            const confirmed =
-              window.confirm(
-                "Xác nhận duyệt hồ sơ này thành "
-                +
-                tierLabel
-                +
-                "?"
-              );
-
-
-            if (!confirmed) {
-              return;
-            }
-
-
-            const originalText =
-              button.textContent;
-
-
-            approvingCoach =
-              true;
-
-
-            button.disabled =
-              true;
-
-
-            if (tierSelect) {
-
-              tierSelect.disabled =
-                true;
-
-            }
-
-
-            button.textContent =
-              "ĐANG DUYỆT...";
-
-
-            showApproveStatus(
-              "Đang duyệt hồ sơ thành "
-              +
-              tierLabel
-              +
-              "..."
-            );
-
-
-            try {
-
-
-              const approveSb =
-                getApproveClient();
-
-
-              const {
-                data: sessionData,
-                error: sessionError
-              } =
-                await approveSb.auth
-                  .getSession();
-
-
-              if (sessionError) {
-
-                throw sessionError;
-
-              }
-
-
-              if (
-                !sessionData
-                ||
-                !sessionData.session
-              ) {
-
-                throw new Error(
-                  "Phiên đăng nhập Admin đã hết. Hãy đăng nhập lại."
-                );
-
-              }
-
-
-              const {
-                data,
-                error
-              } =
-                await approveSb.rpc(
-                  "admin_approve_coach_application",
-                  {
-
-                    p_application_id:
-                      applicationId,
-
-                    p_compensation_tier:
-                      compensationTier,
-
-                    p_admin_note:
-                      null
-
-                  }
-                );
-
-
-              if (error) {
-
-                throw error;
-
-              }
-
-
-              console.log(
-                "APPROVE COACH SUCCESS:",
-                data
-              );
-
-
-              showApproveSuccess(
-                "✓ ĐÃ DUYỆT "
-                +
-                tierLabel.toUpperCase()
-                +
-                " THÀNH CÔNG"
-              );
-
-
-              button.textContent =
-                "✓ ĐÃ DUYỆT";
-
-
-              try {
-
-                if (
-                  window.PickDeeNotifications
-                  &&
-                  typeof
-                    window
-                      .PickDeeNotifications
-                      .refresh
-                  ===
-                  "function"
-                ) {
-
-                  await window
-                    .PickDeeNotifications
-                    .refresh();
-
-                }
-
-              }
-              catch (_) {}
-
-
-              setTimeout(
-                function () {
-
-                  window.location.href =
-                    "./admin-coach-applications?v="
-                    +
-                    Date.now();
-
-                },
-                1000
-              );
-
-
-            }
-            catch (error) {
-
-
-              console.error(
-                "APPROVE COACH ERROR:",
-                error
-              );
-
-
-              showApproveError(
-                "KHÔNG DUYỆT ĐƯỢC COACH: "
-                +
-                (
-                  error?.message
-                  ||
-                  String(error)
-                )
-              );
-
-
-              button.disabled =
-                false;
-
-
-              if (tierSelect) {
-
-                tierSelect.disabled =
-                  false;
-
-              }
-
-
-              button.textContent =
-                originalText;
-
-
-            }
-            finally {
-
-
-              approvingCoach =
-                false;
-
-
-            }
-
-
-          },
-          false
-        );
-
-
-      }
-    );
 
   }
 
 
-  const approveButtonObserver =
-    new MutationObserver(
-      function () {
-
-        wireApproveButtons();
-
-      }
-    );
-
-
-  if (applicationList) {
-
-    approveButtonObserver.observe(
-      applicationList,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
-
-  }
-
-
-  wireApproveButtons();
+  enhanceApplicationCards();
 
 
   function getStatusBox() {
