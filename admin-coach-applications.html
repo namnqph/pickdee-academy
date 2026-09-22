@@ -2135,8 +2135,7 @@
 
 
 <!-- =====================================================
-     FIX NÚT DUYỆT COACH
-     ONE CLICK - KHÔNG CONFIRM - KHÔNG POPUP
+     DUYỆT COACH + HẠNG COACH + THÔNG TIN CHUYÊN MÔN
 ====================================================== -->
 
 <style>
@@ -2145,6 +2144,7 @@
     position: relative !important;
     z-index: 50 !important;
     pointer-events: auto !important;
+    align-items: center;
   }
 
   .approve-btn {
@@ -2154,6 +2154,45 @@
     cursor: pointer !important;
   }
 
+  .coach-tier-box {
+    min-width: 220px;
+    display: grid;
+    gap: 5px;
+  }
+
+  .coach-tier-box label {
+    color: #718399;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .05em;
+  }
+
+  .coach-tier-select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid #34475e;
+    border-radius: 9px;
+    outline: none;
+    background: #0e1b2d;
+    color: white;
+    font: inherit;
+    font-weight: 800;
+  }
+
+  .coach-tier-select:focus {
+    border-color: #b9ff18;
+  }
+
+  @media(max-width:520px) {
+
+    .coach-tier-box {
+      width: 100%;
+      min-width: 0;
+    }
+
+  }
+
 </style>
 
 
@@ -2161,16 +2200,368 @@
 
 (function () {
 
-  let approvingCoach =
-    false;
+
+  let approvingCoach = false;
+
+  let extraCoachData =
+    new Map();
+
+  let enhanceTimer =
+    null;
 
 
-  /*
-    BẮT CLICK Ở CAPTURE PHASE.
+  /* =====================================================
+     SUPABASE CLIENT
+  ====================================================== */
 
-    Nghĩa là đoạn này nhận click
-    TRƯỚC các listener cũ trong trang.
-  */
+  function getApproveClient() {
+
+    const cfg =
+      window.PICKDEE_CONFIG
+      ||
+      {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      throw new Error(
+        "Không tìm thấy cấu hình Supabase."
+      );
+
+    }
+
+
+    return window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+  }
+
+
+  /* =====================================================
+     ESCAPE HTML
+  ====================================================== */
+
+  function safeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+
+  /* =====================================================
+     TẢI TRÌNH ĐỘ + CHỨNG CHỈ
+  ====================================================== */
+
+  async function loadExtraCoachData() {
+
+    try {
+
+      const sb =
+        getApproveClient();
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "coach_applications"
+          )
+          .select(`
+            id,
+            pickleball_level,
+            qualifications
+          `);
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      extraCoachData =
+        new Map(
+          (
+            Array.isArray(data)
+              ?
+              data
+              :
+              []
+          )
+            .map(
+              item => [
+                Number(item.id),
+                item
+              ]
+            )
+        );
+
+
+      enhanceApplicationCards();
+
+    }
+    catch (error) {
+
+      console.error(
+        "LOAD COACH EXTRA DATA:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     BỔ SUNG DỮ LIỆU VÀ SELECT HẠNG COACH
+  ====================================================== */
+
+  function enhanceApplicationCards() {
+
+    const cards =
+      document.querySelectorAll(
+        ".application[data-application-id]"
+      );
+
+
+    cards.forEach(
+      function (card) {
+
+
+        const applicationId =
+          Number(
+            card.dataset.applicationId
+          );
+
+
+        if (
+          !Number.isFinite(
+            applicationId
+          )
+        ) {
+          return;
+        }
+
+
+        const extra =
+          extraCoachData.get(
+            applicationId
+          )
+          ||
+          {};
+
+
+        const infoGrid =
+          card.querySelector(
+            ".info-grid"
+          );
+
+
+        if (
+          infoGrid
+          &&
+          !card.querySelector(
+            ".pickdee-extra-coach-info"
+          )
+        ) {
+
+          const block =
+            document.createElement(
+              "div"
+            );
+
+
+          block.className =
+            "pickdee-extra-coach-info";
+
+
+          block.style.display =
+            "contents";
+
+
+          block.innerHTML =
+            `
+
+              <div class="info">
+
+                <div class="label">
+                  TRÌNH ĐỘ PICKLEBALL
+                </div>
+
+                <div class="value">
+                  ${safeHtml(
+                    extra.pickleball_level
+                    ||
+                    "—"
+                  )}
+                </div>
+
+              </div>
+
+
+              <div class="info">
+
+                <div class="label">
+                  BẰNG CẤP / CHỨNG CHỈ
+                </div>
+
+                <div class="value">
+                  ${safeHtml(
+                    extra.qualifications
+                    ||
+                    "—"
+                  )}
+                </div>
+
+              </div>
+
+            `;
+
+
+          infoGrid.appendChild(
+            block
+          );
+
+        }
+
+
+        const actions =
+          card.querySelector(
+            ".actions"
+          );
+
+
+        if (
+          actions
+          &&
+          !actions.querySelector(
+            ".coach-tier-box"
+          )
+        ) {
+
+          const approveButton =
+            actions.querySelector(
+              ".approve-btn"
+            );
+
+
+          if (approveButton) {
+
+            const tierBox =
+              document.createElement(
+                "div"
+              );
+
+
+            tierBox.className =
+              "coach-tier-box";
+
+
+            tierBox.innerHTML =
+              `
+
+                <label>
+                  HẠNG COACH KHI DUYỆT
+                </label>
+
+                <select
+                  class="coach-tier-select"
+                  data-tier-for="${applicationId}"
+                >
+
+                  <option value="standard">
+                    Coach Tiêu chuẩn
+                  </option>
+
+                  <option value="certified">
+                    Coach Chứng nhận
+                  </option>
+
+                </select>
+
+              `;
+
+
+            actions.insertBefore(
+              tierBox,
+              approveButton
+            );
+
+          }
+
+        }
+
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     THEO DÕI KHI DANH SÁCH RENDER LẠI
+  ====================================================== */
+
+  function scheduleEnhance() {
+
+    clearTimeout(
+      enhanceTimer
+    );
+
+
+    enhanceTimer =
+      setTimeout(
+        enhanceApplicationCards,
+        50
+      );
+
+  }
+
+
+  const applicationList =
+    document.getElementById(
+      "applicationList"
+    );
+
+
+  if (applicationList) {
+
+    const observer =
+      new MutationObserver(
+        scheduleEnhance
+      );
+
+
+    observer.observe(
+      applicationList,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     BẮT CLICK DUYỆT Ở CAPTURE PHASE
+  ====================================================== */
 
   document.addEventListener(
     "click",
@@ -2187,11 +2578,6 @@
         return;
       }
 
-
-      /*
-        Chặn handler cũ,
-        tránh chạy 2 lần.
-      */
 
       event.preventDefault();
 
@@ -2222,6 +2608,55 @@
         );
 
         return;
+
+      }
+
+
+      const card =
+        button.closest(
+          ".application"
+        );
+
+
+      const tierSelect =
+        card
+          ?.querySelector(
+            ".coach-tier-select"
+          );
+
+
+      const compensationTier =
+        tierSelect?.value
+        ===
+        "certified"
+          ?
+          "certified"
+          :
+          "standard";
+
+
+      const tierLabel =
+        compensationTier
+        ===
+        "certified"
+          ?
+          "Coach Chứng nhận"
+          :
+          "Coach Tiêu chuẩn";
+
+
+      const confirmed =
+        window.confirm(
+          "Xác nhận duyệt hồ sơ này thành "
+          +
+          tierLabel
+          +
+          "?"
+        );
+
+
+      if (!confirmed) {
+        return;
       }
 
 
@@ -2237,55 +2672,30 @@
         true;
 
 
+      if (tierSelect) {
+        tierSelect.disabled = true;
+      }
+
+
       button.textContent =
         "ĐANG DUYỆT...";
 
 
       showApproveStatus(
-        "Đang duyệt hồ sơ Coach..."
+        "Đang duyệt hồ sơ thành "
+        +
+        tierLabel
+        +
+        "..."
       );
 
 
       try {
 
 
-        const cfg =
-          window.PICKDEE_CONFIG
-          ||
-          {};
-
-
-        if (
-          !window.supabase
-          ||
-          !cfg.SUPABASE_URL
-          ||
-          !cfg.SUPABASE_PUBLISHABLE_KEY
-        ) {
-
-          throw new Error(
-            "Không tìm thấy cấu hình Supabase."
-          );
-
-        }
-
-
-        /*
-          Dùng client riêng,
-          không phụ thuộc biến sb
-          bên trong script khác.
-        */
-
         const approveSb =
-          window.supabase.createClient(
-            cfg.SUPABASE_URL,
-            cfg.SUPABASE_PUBLISHABLE_KEY
-          );
+          getApproveClient();
 
-
-        /*
-          Kiểm tra session Admin
-        */
 
         const {
           data: sessionData,
@@ -2296,9 +2706,7 @@
 
 
         if (sessionError) {
-
           throw sessionError;
-
         }
 
 
@@ -2315,10 +2723,6 @@
         }
 
 
-        /*
-          GỌI RPC DUYỆT COACH
-        */
-
         const {
           data,
           error
@@ -2330,6 +2734,9 @@
               p_application_id:
                 applicationId,
 
+              p_compensation_tier:
+                compensationTier,
+
               p_admin_note:
                 null
 
@@ -2338,9 +2745,7 @@
 
 
         if (error) {
-
           throw error;
-
         }
 
 
@@ -2351,17 +2756,17 @@
 
 
         showApproveSuccess(
-          "✓ ĐÃ DUYỆT COACH THÀNH CÔNG"
+          "✓ ĐÃ DUYỆT "
+          +
+          tierLabel.toUpperCase()
+          +
+          " THÀNH CÔNG"
         );
 
 
         button.textContent =
           "✓ ĐÃ DUYỆT";
 
-
-        /*
-          Cập nhật chuông nếu có
-        */
 
         try {
 
@@ -2385,11 +2790,6 @@
         }
         catch (_) {}
 
-
-        /*
-          Reload sau 1 giây
-          để trang lấy trạng thái mới.
-        */
 
         setTimeout(
           function () {
@@ -2429,6 +2829,11 @@
           false;
 
 
+        if (tierSelect) {
+          tierSelect.disabled = false;
+        }
+
+
         button.textContent =
           originalText;
 
@@ -2446,19 +2851,13 @@
 
     },
 
-    /*
-      QUAN TRỌNG:
-      true = capture phase.
-    */
-
     true
 
   );
 
 
-
   /* =====================================================
-     HIỂN THỊ TRẠNG THÁI
+     HỘP TRẠNG THÁI
   ====================================================== */
 
   function getStatusBox() {
@@ -2549,7 +2948,6 @@
   }
 
 
-
   function showApproveStatus(
     text
   ) {
@@ -2579,7 +2977,6 @@
       text;
 
   }
-
 
 
   function showApproveSuccess(
@@ -2613,7 +3010,6 @@
   }
 
 
-
   function showApproveError(
     text
   ) {
@@ -2643,6 +3039,13 @@
       text;
 
   }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  loadExtraCoachData();
 
 
 })();
