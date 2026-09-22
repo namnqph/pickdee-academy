@@ -1499,18 +1499,67 @@
 
 
     if (
-      rows.length === 0
-    ) {
+  rows.length === 0
+) {
 
-      grid.innerHTML = `
-        <div class="empty">
-          Chưa tìm thấy sân phù hợp khu vực này.
-        </div>
-      `;
+  const selectedProvince =
+    String(
+      provinceFilter.value
+      ||
+      ""
+    ).trim();
 
-      return;
 
-    }
+  const selectedWard =
+    String(
+      wardFilter.value
+      ||
+      ""
+    ).trim();
+
+
+  let emptyMessage =
+    "Chưa tìm thấy sân phù hợp.";
+
+
+  if (
+    selectedProvince
+  ) {
+
+    emptyMessage =
+      selectedWard
+        ?
+          `PickDee đang cập nhật danh sách sân tại ${selectedWard}, ${selectedProvince}.`
+        :
+          `PickDee đang cập nhật danh sách sân tại ${selectedProvince}.`;
+
+  }
+
+
+  grid.innerHTML = `
+
+    <div class="empty">
+
+      🏟️ ${esc(emptyMessage)}
+
+      <br><br>
+
+      <span style="
+        font-size:12px;
+        color:rgba(255,255,255,.42);
+      ">
+        Danh bạ sân đang được mở rộng liên tục trên toàn quốc.
+      </span>
+
+    </div>
+
+  `;
+
+
+  return;
+
+}
+    
 
 
     grid.innerHTML =
