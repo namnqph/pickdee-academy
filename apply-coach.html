@@ -1803,6 +1803,134 @@
   );
 
 
+    /* =====================================================
+     BỔ SUNG HỒ SƠ CHUYÊN MÔN COACH
+  ====================================================== */
+
+  function ensureCoachProfileFields() {
+
+    if (
+      document.getElementById(
+        "pickleballLevel"
+      )
+    ) {
+      return;
+    }
+
+
+    const specialties =
+      document.getElementById(
+        "specialties"
+      );
+
+
+    const specialtiesField =
+      specialties
+        ?.closest(
+          ".field"
+        );
+
+
+    const experienceGrid =
+      specialtiesField
+        ?.parentElement;
+
+
+    if (
+      !experienceGrid
+      ||
+      !specialtiesField
+    ) {
+      return;
+    }
+
+
+    const levelField =
+      document.createElement(
+        "div"
+      );
+
+
+    levelField.className =
+      "field";
+
+
+    levelField.innerHTML =
+      `
+        <label for="pickleballLevel">
+          TRÌNH ĐỘ PICKLEBALL
+        </label>
+
+        <input
+          id="pickleballLevel"
+          type="text"
+          placeholder="Ví dụ: 3.5, 4.0, 4.5 hoặc trình độ tương đương"
+        >
+
+        <div class="helper">
+          Ghi trình độ hiện tại của bạn nếu đã có đánh giá.
+        </div>
+      `;
+
+
+    const qualificationsField =
+      document.createElement(
+        "div"
+      );
+
+
+    qualificationsField.className =
+      "field full";
+
+
+    qualificationsField.innerHTML =
+      `
+        <label for="qualifications">
+          BẰNG CẤP / CHỨNG CHỈ
+        </label>
+
+        <textarea
+          id="qualifications"
+          placeholder="Ví dụ: chứng chỉ huấn luyện viên, chứng nhận đào tạo Pickleball hoặc bằng cấp chuyên môn liên quan..."
+        ></textarea>
+
+        <div class="helper">
+          PickDee sẽ kiểm tra thông tin này khi xét hạng Coach.
+        </div>
+      `;
+
+
+    experienceGrid.insertBefore(
+      levelField,
+      specialtiesField
+    );
+
+
+    experienceGrid.insertBefore(
+      qualificationsField,
+      specialtiesField
+    );
+
+
+    const achievementsLabel =
+      document.querySelector(
+        'label[for="achievements"]'
+      );
+
+
+    if (achievementsLabel) {
+
+      achievementsLabel.textContent =
+        "THÀNH TÍCH";
+
+    }
+
+  }
+
+
+  ensureCoachProfileFields();
+
+
   /* =====================================================
      SUBMIT
   ====================================================== */
@@ -1994,6 +2122,20 @@
               p_achievements:
                 valueOf(
                   "achievements"
+                )
+                ||
+                null,
+
+              p_pickleball_level:
+                valueOf(
+                  "pickleballLevel"
+                )
+                ||
+                null,
+
+              p_qualifications:
+                valueOf(
+                  "qualifications"
                 )
                 ||
                 null
