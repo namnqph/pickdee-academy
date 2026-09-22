@@ -1468,37 +1468,28 @@ const authSb =
 
 
   const urlCoachId =
-    Number(
-      params.get("coach_id")
-    );
+  Number(
+    params.get("coach_id")
+  );
 
 
-  const storedCoachId =
-    Number(
-      sessionStorage.getItem(
-        "pickdee_selected_coach_id"
-      )
-    );
+const selectedCoachId =
+  Number.isInteger(urlCoachId)
+  &&
+  urlCoachId > 0
+    ?
+      urlCoachId
+    :
+      null;
 
 
-  const selectedCoachId =
-    Number.isInteger(urlCoachId)
-    &&
-    urlCoachId > 0
-      ?
-        urlCoachId
-      :
-        (
-          Number.isInteger(
-            storedCoachId
-          )
-          &&
-          storedCoachId > 0
-            ?
-              storedCoachId
-            :
-              null
-        );
+if (!selectedCoachId) {
+
+  sessionStorage.removeItem(
+    "pickdee_selected_coach_id"
+  );
+
+}
 
 
   let allAreas = [];
