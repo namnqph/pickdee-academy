@@ -3085,7 +3085,351 @@
   src="./notifications.js?v=20260913-coach-approval-fix"
 ></script>
 
+<!-- =====================================================
+     ẢNH ĐẠI DIỆN HỒ SƠ COACH
+====================================================== -->
 
+<style>
+
+  .coach-application-avatar-box {
+    padding: 18px 20px 0;
+  }
+
+  .coach-application-avatar-title {
+    margin-bottom: 8px;
+    color: #718399;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .05em;
+  }
+
+  .coach-application-avatar {
+    width: 150px;
+    height: 150px;
+
+    display: block;
+
+    object-fit: cover;
+
+    border:
+      2px solid rgba(185,255,24,.45);
+
+    border-radius: 18px;
+
+    background: #09111f;
+
+    box-shadow:
+      0 10px 30px rgba(0,0,0,.24);
+  }
+
+  @media(max-width:520px) {
+
+    .coach-application-avatar {
+      width: 120px;
+      height: 120px;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG
+    ||
+    {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.warn(
+      "Không tải được ảnh hồ sơ Coach: thiếu Supabase config."
+    );
+
+    return;
+
+  }
+
+
+  const avatarSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let avatarMap =
+    new Map();
+
+
+  let avatarTimer =
+    null;
+
+
+
+  /* =====================================================
+     TẢI AVATAR_PATH
+  ====================================================== */
+
+  async function loadCoachApplicationAvatars() {
+
+
+    try {
+
+
+      const {
+        data,
+        error
+      } =
+        await avatarSb
+          .from(
+            "coach_applications"
+          )
+          .select(`
+            id,
+            avatar_path
+          `);
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      avatarMap =
+        new Map(
+          (
+            Array.isArray(data)
+              ?
+              data
+              :
+              []
+          )
+            .map(
+              item => [
+                Number(item.id),
+                item.avatar_path
+                ||
+                null
+              ]
+            )
+        );
+
+
+      renderCoachApplicationAvatars();
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "LOAD COACH APPLICATION AVATARS:",
+        error
+      );
+
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     RENDER ẢNH VÀO CARD
+  ====================================================== */
+
+  function renderCoachApplicationAvatars() {
+
+
+    const cards =
+      document.querySelectorAll(
+        ".application[data-application-id]"
+      );
+
+
+    cards.forEach(
+      function (card) {
+
+
+        if (
+          card.querySelector(
+            ".coach-application-avatar-box"
+          )
+        ) {
+          return;
+        }
+
+
+        const applicationId =
+          Number(
+            card.dataset.applicationId
+          );
+
+
+        if (
+          !Number.isFinite(
+            applicationId
+          )
+        ) {
+          return;
+        }
+
+
+        const avatarPath =
+          avatarMap.get(
+            applicationId
+          );
+
+
+        if (!avatarPath) {
+          return;
+        }
+
+
+        const {
+          data
+        } =
+          avatarSb
+            .storage
+            .from(
+              "avatars"
+            )
+            .getPublicUrl(
+              avatarPath
+            );
+
+
+        const publicUrl =
+          data?.publicUrl
+          ||
+          "";
+
+
+        if (!publicUrl) {
+          return;
+        }
+
+
+        const applicationBody =
+          card.querySelector(
+            ".application-body"
+          );
+
+
+        if (!applicationBody) {
+          return;
+        }
+
+
+        const box =
+          document.createElement(
+            "div"
+          );
+
+
+        box.className =
+          "coach-application-avatar-box";
+
+
+        box.innerHTML =
+          `
+
+            <div
+              class="coach-application-avatar-title"
+            >
+              ẢNH ĐẠI DIỆN
+            </div>
+
+            <img
+              class="coach-application-avatar"
+              src="${publicUrl}"
+              alt="Ảnh đại diện Coach"
+              loading="lazy"
+            >
+
+          `;
+
+
+        card.insertBefore(
+          box,
+          applicationBody
+        );
+
+
+      }
+    );
+
+  }
+
+
+
+  /* =====================================================
+     CARD CÓ THỂ RENDER LẠI SAU FILTER / REFRESH
+  ====================================================== */
+
+  function scheduleAvatarRender() {
+
+
+    clearTimeout(
+      avatarTimer
+    );
+
+
+    avatarTimer =
+      setTimeout(
+        renderCoachApplicationAvatars,
+        60
+      );
+
+
+  }
+
+
+  const applicationList =
+    document.getElementById(
+      "applicationList"
+    );
+
+
+  if (applicationList) {
+
+
+    const observer =
+      new MutationObserver(
+        scheduleAvatarRender
+      );
+
+
+    observer.observe(
+      applicationList,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+
+  }
+
+
+  loadCoachApplicationAvatars();
+
+
+})();
+
+</script>
 </body>
 
 </html>
