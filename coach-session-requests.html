@@ -772,7 +772,76 @@
         "success";
 
   }
+  /* =====================================================
+     NOTIFY STUDENT - SESSION REQUEST RESULT
 
+     Push chỉ là bước phụ.
+     Push lỗi KHÔNG được làm hỏng việc
+     Coach duyệt / từ chối yêu cầu.
+  ====================================================== */
+
+  async function notifyStudentSessionRequestResult(
+    requestId,
+    action
+  ) {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb.functions.invoke(
+          "pickdee-session-request-result-notify",
+          {
+            body: {
+              request_id:
+                Number(requestId),
+
+              action:
+                action
+            }
+          }
+        );
+
+
+      if (error) {
+
+        console.warn(
+          "SESSION REQUEST RESULT PUSH:",
+          error
+        );
+
+        return false;
+
+      }
+
+
+      console.log(
+        "SESSION REQUEST RESULT PUSH:",
+        data
+      );
+
+
+      return (
+        data?.notification_sent
+        ===
+        true
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "SESSION REQUEST RESULT PUSH EXCEPTION:",
+        error
+      );
+
+      return false;
+
+    }
+
+  }
 
   /* =====================================================
      SAFE DATE
@@ -2117,7 +2186,10 @@ const detailLine =
           `✓ Đã duyệt và tạo buổi học ID ${data}.`
         );
 
-
+        await notifyStudentSessionRequestResult(
+          requestId,
+          "approved"
+        );
         await loadRequests();
 
 
@@ -2288,7 +2360,10 @@ const detailLine =
           "✓ Đã từ chối yêu cầu lịch học."
         );
 
-
+        await notifyStudentSessionRequestResult(
+          requestId,
+          "rejected"
+        );
         await loadRequests();
 
 
