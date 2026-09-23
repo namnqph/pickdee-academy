@@ -3118,13 +3118,17 @@ async function mountPushUi() {
     i += 1
   ) {
 
-    panel =
+        panel =
       document.getElementById(
         "pickdeeNotificationPanel"
       )
       ||
       document.getElementById(
         "coachNotificationPanel"
+      )
+      ||
+      document.getElementById(
+        "studentNotificationPanel"
       );
 
 
@@ -3162,13 +3166,17 @@ async function mountPushUi() {
   }
 
 
-  const list =
+    const list =
     document.getElementById(
       "pickdeeNotificationList"
     )
     ||
     document.getElementById(
       "coachNotificationList"
+    )
+    ||
+    document.getElementById(
+      "studentNotificationList"
     );
 
 
