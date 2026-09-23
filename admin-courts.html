@@ -2505,6 +2505,178 @@
     updateCourtMap();
 
   })();
+
+    /* =====================================
+     TỰ TẠO + LƯU GOOGLE MAPS URL
+  ====================================== */
+
+  (function setupAutoGoogleMapsSave() {
+
+    function normalizeLocationText(value) {
+
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    }
+
+
+    function buildCleanCourtLocation() {
+
+      const name =
+        courtName.value.trim();
+
+      const address =
+        courtAddress.value.trim();
+
+      const ward =
+        courtWard.value.trim();
+
+      const area =
+        courtArea.value.trim();
+
+
+      const parts = [];
+
+
+      if (name) {
+
+        parts.push(name);
+
+      }
+
+
+      if (address) {
+
+        parts.push(address);
+
+      }
+
+
+      const normalizedAddress =
+        normalizeLocationText(address);
+
+
+      const simplifiedWard =
+        normalizeLocationText(ward)
+          .replace(
+            /^(phuong|xa|thi tran)\s+/,
+            ""
+          );
+
+
+      if (
+        ward &&
+        simplifiedWard &&
+        !normalizedAddress.includes(
+          simplifiedWard
+        )
+      ) {
+
+        parts.push(ward);
+
+      }
+
+
+      const simplifiedArea =
+        normalizeLocationText(area)
+          .replace(
+            /^(tinh|thanh pho)\s+/,
+            ""
+          );
+
+
+      if (
+        area &&
+        simplifiedArea &&
+        !normalizedAddress.includes(
+          simplifiedArea
+        )
+      ) {
+
+        parts.push(area);
+
+      }
+
+
+      if (
+        !normalizedAddress.includes(
+          "viet nam"
+        )
+      ) {
+
+        parts.push("Việt Nam");
+
+      }
+
+
+      return parts.join(", ");
+
+    }
+
+
+    function buildAutoGoogleMapsUrl() {
+
+      const location =
+        buildCleanCourtLocation();
+
+
+      if (!location) {
+
+        return null;
+
+      }
+
+
+      return (
+        "https://www.google.com/maps/dir/?api=1&destination="
+        +
+        encodeURIComponent(location)
+      );
+
+    }
+
+
+    const originalCourtRpc =
+      sb.rpc.bind(sb);
+
+
+    sb.rpc =
+      function (
+        functionName,
+        params,
+        options
+      ) {
+
+
+        if (
+          functionName ===
+          "admin_save_court"
+        ) {
+
+          params = {
+
+            ...(params || {}),
+
+            p_google_maps_url:
+              buildAutoGoogleMapsUrl()
+
+          };
+
+        }
+
+
+        return originalCourtRpc(
+          functionName,
+          params,
+          options
+        );
+
+      };
+
+  })();
   /* =====================================
      START
   ====================================== */
