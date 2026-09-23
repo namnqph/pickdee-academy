@@ -643,7 +643,36 @@
         pointer;
 
     }
+    .map-btn {
 
+      display:
+        inline-block;
+
+      padding:
+        8px 11px;
+
+      border-radius:
+        8px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #172600;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+      text-decoration:
+        none;
+
+      white-space:
+        nowrap;
+
+    }
 
     #message {
 
@@ -947,7 +976,21 @@
         >
 
       </div>
+      <!-- GOOGLE MAPS -->
 
+      <div class="field">
+
+        <label>
+          Link Google Maps
+        </label>
+
+        <input
+          id="courtGoogleMaps"
+          type="url"
+          placeholder="Ví dụ: https://maps.app.goo.gl/..."
+        >
+
+      </div>
 
       <!-- TRẠNG THÁI -->
 
@@ -1127,8 +1170,10 @@
     document.getElementById(
       "courtAddress"
     );
-
-
+const courtGoogleMaps =
+  document.getElementById(
+    "courtGoogleMaps"
+  );
   const courtPrice =
     document.getElementById(
       "courtPrice"
@@ -2221,7 +2266,396 @@
 
     }
   );
+  /* =====================================
+     GOOGLE MAPS - HOÀN THIỆN
+  ====================================== */
 
+  function getCourtMapUrl(court) {
+
+    const directUrl =
+      String(
+        court.google_maps_url || ""
+      ).trim();
+
+
+    if (
+      directUrl &&
+      /^https?:\/\//i.test(directUrl)
+    ) {
+
+      return directUrl;
+
+    }
+
+
+    const address =
+      String(
+        court.address || ""
+      ).trim();
+
+
+    if (!address) {
+
+      return "";
+
+    }
+
+
+    return (
+      "https://www.google.com/maps/search/?api=1&query="
+      +
+      encodeURIComponent(address)
+    );
+
+  }
+
+
+  /*
+    Thêm cột BẢN ĐỒ vào tiêu đề bảng.
+  */
+
+  const courtHeaderRow =
+    document.querySelector(
+      "table thead tr"
+    );
+
+
+  if (courtHeaderRow) {
+
+    const headers =
+      Array.from(
+        courtHeaderRow.querySelectorAll(
+          "th"
+        )
+      );
+
+
+    const hasMapHeader =
+      headers.some(
+        th =>
+          th.textContent
+            .trim() === "Bản đồ"
+      );
+
+
+    if (!hasMapHeader) {
+
+      const mapHeader =
+        document.createElement(
+          "th"
+        );
+
+
+      mapHeader.textContent =
+        "Bản đồ";
+
+
+      const actionHeader =
+        headers.find(
+          th =>
+            th.textContent
+              .trim() === "Thao tác"
+        );
+
+
+      if (actionHeader) {
+
+        courtHeaderRow.insertBefore(
+          mapHeader,
+          actionHeader
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /*
+    Sửa colspan của dòng Đang tải.
+  */
+
+  const loadingCourtCell =
+    courtBody.querySelector(
+      "td[colspan]"
+    );
+
+
+  if (loadingCourtCell) {
+
+    loadingCourtCell.colSpan =
+      8;
+
+  }
+
+
+  /*
+    Ghi đè renderCourts để có thêm
+    cột CHỈ ĐƯỜNG.
+  */
+
+  renderCourts =
+    function () {
+
+
+      if (
+        courts.length === 0
+      ) {
+
+
+        courtBody.innerHTML =
+          `
+            <tr>
+
+              <td
+                colspan="8"
+                class="empty"
+              >
+                Chưa có sân.
+              </td>
+
+            </tr>
+          `;
+
+
+        return;
+
+      }
+
+
+      courtBody.innerHTML =
+        courts
+          .map(
+            court => {
+
+
+              const mapUrl =
+                getCourtMapUrl(
+                  court
+                );
+
+
+              return `
+
+                <tr>
+
+                  <td>
+
+                    ${escapeHTML(
+                      court.court_code ||
+                      "—"
+                    )}
+
+                  </td>
+
+
+                  <td>
+
+                    <strong>
+
+                      ${escapeHTML(
+                        court.name
+                      )}
+
+                    </strong>
+
+                  </td>
+
+
+                  <td>
+
+                    ${escapeHTML(
+                      court.area ||
+                      "—"
+                    )}
+
+                  </td>
+
+
+                  <td>
+
+                    ${escapeHTML(
+                      court.ward ||
+                      "—"
+                    )}
+
+                  </td>
+
+
+                  <td class="money">
+
+                    ${money(
+                      court.price_per_session
+                    )}
+
+                  </td>
+
+
+                  <td>
+
+                    <span
+                      class="badge ${
+                        court.status ===
+                        "Hoạt động"
+                          ? ""
+                          : "off"
+                      }"
+                    >
+
+                      ${escapeHTML(
+                        court.status
+                      )}
+
+                    </span>
+
+                  </td>
+
+
+                  <td>
+
+                    ${
+                      mapUrl
+                        ? `
+                          <a
+                            class="map-btn"
+                            href="${escapeHTML(
+                              mapUrl
+                            )}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            CHỈ ĐƯỜNG
+                          </a>
+                        `
+                        : "—"
+                    }
+
+                  </td>
+
+
+                  <td>
+
+                    <button
+                      type="button"
+                      class="edit-btn"
+                      data-id="${court.id}"
+                    >
+
+                      SỬA
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              `;
+
+            }
+          )
+          .join("");
+
+    };
+
+
+  /*
+    Khi bấm SỬA:
+    nạp Google Maps URL của sân vào form.
+  */
+
+  courtBody.addEventListener(
+    "click",
+    function (event) {
+
+
+      const button =
+        event.target.closest(
+          ".edit-btn[data-id]"
+        );
+
+
+      if (!button) {
+
+        return;
+
+      }
+
+
+      const court =
+        courts.find(
+          item =>
+            Number(item.id) ===
+            Number(
+              button.dataset.id
+            )
+        );
+
+
+      if (!court) {
+
+        return;
+
+      }
+
+
+      courtGoogleMaps.value =
+        court.google_maps_url ||
+        "";
+
+    }
+  );
+
+
+  /*
+    Tự thêm p_google_maps_url
+    vào RPC admin_save_court.
+  */
+
+  const originalRpc =
+    sb.rpc.bind(
+      sb
+    );
+
+
+  sb.rpc =
+    function (
+      functionName,
+      params,
+      options
+    ) {
+
+
+      if (
+        functionName ===
+        "admin_save_court"
+      ) {
+
+
+        params = {
+
+          ...(
+            params || {}
+          ),
+
+          p_google_maps_url:
+            courtGoogleMaps.value
+              .trim()
+            ||
+            null
+
+        };
+
+      }
+
+
+      return originalRpc(
+        functionName,
+        params,
+        options
+      );
+
+    };
 
   /* =====================================
      START
