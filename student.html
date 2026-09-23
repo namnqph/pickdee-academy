@@ -5797,6 +5797,442 @@
 
 })();
 </script>
+  <script>
+(function () {
+  const panel =
+    document.getElementById(
+      "studentNotificationPanel"
+    );
+
+  const list =
+    document.getElementById(
+      "studentNotificationList"
+    );
+
+  if (
+    !panel
+    ||
+    document.getElementById(
+      "pickdeePushBox"
+    )
+  ) {
+    return;
+  }
+
+  const box =
+    document.createElement("div");
+
+  box.id =
+    "pickdeePushBox";
+
+  box.style.cssText = [
+    "padding:12px 14px",
+    "border-bottom:1px solid rgba(255,255,255,.08)",
+    "background:rgba(216,255,69,.04)"
+  ].join(";");
+
+  box.innerHTML = `
+    <button
+      id="pickdeeEnablePushButton"
+      type="button"
+      style="
+        width:100%;
+        min-height:44px;
+        border:0;
+        border-radius:10px;
+        padding:0 12px;
+        background:#d8ff45;
+        color:#071426;
+        font-size:12px;
+        font-weight:900;
+        cursor:pointer;
+      "
+    >
+      📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI
+    </button>
+
+    <div
+      id="pickdeePushStatus"
+      style="
+        margin-top:8px;
+        color:#94a4b8;
+        font-size:11px;
+        line-height:1.45;
+      "
+    >
+      Đang kiểm tra trạng thái thông báo...
+    </div>
+  `;
+
+  if (
+    list
+    &&
+    list.parentNode === panel
+  ) {
+    panel.insertBefore(
+      box,
+      list
+    );
+  }
+  else {
+    panel.appendChild(box);
+  }
+
+  const button =
+    document.getElementById(
+      "pickdeeEnablePushButton"
+    );
+
+  const status =
+    document.getElementById(
+      "pickdeePushStatus"
+    );
+
+  function isIOS() {
+    return /iphone|ipad|ipod/i
+      .test(navigator.userAgent);
+  }
+
+  function isStandalone() {
+    return (
+      window.matchMedia?.(
+        "(display-mode: standalone)"
+      )?.matches
+      ||
+      window.navigator.standalone
+        === true
+    );
+  }
+
+  function urlBase64ToUint8Array(
+    base64String
+  ) {
+    const padding =
+      "=".repeat(
+        (
+          4 -
+          base64String.length % 4
+        ) % 4
+      );
+
+    const base64 =
+      (
+        base64String +
+        padding
+      )
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+    const rawData =
+      window.atob(base64);
+
+    const outputArray =
+      new Uint8Array(
+        rawData.length
+      );
+
+    for (
+      let i = 0;
+      i < rawData.length;
+      i += 1
+    ) {
+      outputArray[i] =
+        rawData.charCodeAt(i);
+    }
+
+    return outputArray;
+  }
+
+  async function getRegistration() {
+    let registration =
+      await navigator
+        .serviceWorker
+        .getRegistration("/");
+
+    if (!registration) {
+      registration =
+        await navigator
+          .serviceWorker
+          .register(
+            "/sw.js",
+            {
+              scope: "/"
+            }
+          );
+    }
+
+    await navigator
+      .serviceWorker
+      .ready;
+
+    return registration;
+  }
+
+  async function saveSubscription(
+    subscription
+  ) {
+    const client =
+      window.PICKDEE_NOTIFICATION_SB;
+
+    if (!client) {
+      throw new Error(
+        "Chưa kết nối được Supabase."
+      );
+    }
+
+    const json =
+      subscription.toJSON();
+
+    const endpoint =
+      json?.endpoint
+      ||
+      subscription.endpoint
+      ||
+      "";
+
+    const p256dh =
+      json?.keys?.p256dh
+      ||
+      "";
+
+    const authKey =
+      json?.keys?.auth
+      ||
+      "";
+
+    if (
+      !endpoint
+      ||
+      !p256dh
+      ||
+      !authKey
+    ) {
+      throw new Error(
+        "Push Subscription không đầy đủ."
+      );
+    }
+
+    const {
+      error
+    } =
+      await client.rpc(
+        "register_push_subscription",
+        {
+          p_endpoint:
+            endpoint,
+
+          p_p256dh:
+            p256dh,
+
+          p_auth_key:
+            authKey,
+
+          p_user_agent:
+            navigator.userAgent
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async function refreshPushState() {
+    if (
+      !(
+        "Notification"
+        in window
+      )
+      ||
+      !(
+        "PushManager"
+        in window
+      )
+      ||
+      !(
+        "serviceWorker"
+        in navigator
+      )
+    ) {
+      button.disabled = true;
+
+      button.textContent =
+        "THIẾT BỊ KHÔNG HỖ TRỢ PUSH";
+
+      status.textContent =
+        "Trình duyệt này chưa hỗ trợ Web Push.";
+
+      return;
+    }
+
+    if (
+      isIOS()
+      &&
+      !isStandalone()
+    ) {
+      button.disabled = true;
+
+      button.textContent =
+        "MỞ PICKDEE TỪ MÀN HÌNH CHÍNH";
+
+      status.textContent =
+        "Trên iPhone, hãy mở PickDee bằng icon ngoài Màn hình chính.";
+
+      return;
+    }
+
+    if (
+      Notification.permission
+      ===
+      "denied"
+    ) {
+      button.disabled = true;
+
+      button.textContent =
+        "THÔNG BÁO ĐANG BỊ CHẶN";
+
+      status.textContent =
+        "Hãy bật quyền thông báo cho PickDee trong Cài đặt iPhone.";
+
+      return;
+    }
+
+    try {
+      const registration =
+        await getRegistration();
+
+      const subscription =
+        await registration
+          .pushManager
+          .getSubscription();
+
+      if (subscription) {
+        await saveSubscription(
+          subscription
+        );
+
+        button.disabled = false;
+
+        button.textContent =
+          "✅ THÔNG BÁO ĐÃ BẬT";
+
+        status.textContent =
+          "Thiết bị này đã đăng ký nhận thông báo PickDee.";
+
+        return;
+      }
+    }
+    catch (error) {
+      console.warn(
+        "STUDENT PUSH STATE:",
+        error
+      );
+    }
+
+    button.disabled = false;
+
+    button.textContent =
+      "📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI";
+
+    status.textContent =
+      "Nhận thông báo ngay khi Coach xử lý yêu cầu lịch học.";
+  }
+
+  button.addEventListener(
+    "click",
+    async function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      try {
+        button.disabled = true;
+
+        status.textContent =
+          "Đang bật thông báo...";
+
+        const permission =
+          await Notification
+            .requestPermission();
+
+        if (
+          permission !== "granted"
+        ) {
+          throw new Error(
+            "Bạn chưa cho phép PickDee gửi thông báo."
+          );
+        }
+
+        const vapidPublicKey =
+          String(
+            window.PICKDEE_CONFIG
+              ?.VAPID_PUBLIC_KEY
+            ||
+            ""
+          ).trim();
+
+        if (!vapidPublicKey) {
+          throw new Error(
+            "Thiếu VAPID Public Key."
+          );
+        }
+
+        const registration =
+          await getRegistration();
+
+        let subscription =
+          await registration
+            .pushManager
+            .getSubscription();
+
+        if (!subscription) {
+          subscription =
+            await registration
+              .pushManager
+              .subscribe(
+                {
+                  userVisibleOnly:
+                    true,
+
+                  applicationServerKey:
+                    urlBase64ToUint8Array(
+                      vapidPublicKey
+                    )
+                }
+              );
+        }
+
+        await saveSubscription(
+          subscription
+        );
+
+        button.disabled = false;
+
+        button.textContent =
+          "✅ THÔNG BÁO ĐÃ BẬT";
+
+        status.textContent =
+          "Thiết bị này đã đăng ký nhận thông báo PickDee.";
+      }
+      catch (error) {
+        console.error(
+          "STUDENT ENABLE PUSH:",
+          error
+        );
+
+        button.disabled = false;
+
+        status.textContent =
+          error?.message
+          ||
+          String(error);
+      }
+    }
+  );
+
+  refreshPushState();
+
+})();
+</script>
  <script src="./notifications.js?v=20260923-4"></script>
   <script>
 document.addEventListener("DOMContentLoaded", function () {
