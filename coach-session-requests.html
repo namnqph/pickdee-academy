@@ -2375,7 +2375,309 @@ const detailLine =
     }
   );
 
+  /* =====================================================
+     HIỂN THỊ CHI TIẾT SÂN + GOOGLE MAPS
+  ====================================================== */
 
+  listEl.addEventListener(
+    "change",
+    async function (event) {
+
+      const courtSelect =
+        event.target.closest(
+          ".court-select"
+        );
+
+
+      if (!courtSelect) {
+
+        return;
+
+      }
+
+
+      const card =
+        courtSelect.closest(
+          ".request-card"
+        );
+
+
+      if (!card) {
+
+        return;
+
+      }
+
+
+      let detailBox =
+        card.querySelector(
+          ".court-detail-box"
+        );
+
+
+      if (!detailBox) {
+
+        detailBox =
+          document.createElement(
+            "div"
+          );
+
+
+        detailBox.className =
+          "court-detail-box";
+
+
+        detailBox.style.marginTop =
+          "10px";
+
+
+        detailBox.style.padding =
+          "13px";
+
+
+        detailBox.style.borderRadius =
+          "11px";
+
+
+        detailBox.style.background =
+          "rgba(216,255,69,.07)";
+
+
+        detailBox.style.border =
+          "1px solid rgba(216,255,69,.20)";
+
+
+        detailBox.style.fontSize =
+          "13px";
+
+
+        detailBox.style.lineHeight =
+          "1.6";
+
+
+        const courtNote =
+          card.querySelector(
+            ".court-note"
+          );
+
+
+        if (courtNote) {
+
+          courtNote.insertAdjacentElement(
+            "afterend",
+            detailBox
+          );
+
+        }
+        else {
+
+          courtSelect.insertAdjacentElement(
+            "afterend",
+            detailBox
+          );
+
+        }
+
+      }
+
+
+      const courtId =
+        Number(
+          courtSelect.value
+          ||
+          0
+        );
+
+
+      if (!courtId) {
+
+        detailBox.innerHTML =
+          "";
+
+
+        detailBox.style.display =
+          "none";
+
+
+        return;
+
+      }
+
+
+      detailBox.style.display =
+        "block";
+
+
+      detailBox.innerHTML =
+        "Đang tải thông tin sân...";
+
+
+      try {
+
+        const {
+          data: court,
+          error
+        } =
+          await sb
+            .from("courts")
+            .select(`
+              id,
+              name,
+              area,
+              ward,
+              address,
+              cost_type,
+              price_per_session,
+              google_maps_url
+            `)
+            .eq(
+              "id",
+              courtId
+            )
+            .maybeSingle();
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        if (!court) {
+
+          detailBox.innerHTML =
+            "Không tìm thấy thông tin sân.";
+
+
+          return;
+
+        }
+
+
+        const priceText =
+          String(
+            court.cost_type
+            ||
+            ""
+          ).trim()
+          ===
+          "Miễn phí"
+            ?
+            "MIỄN PHÍ"
+            :
+            money(
+              court.price_per_session
+            );
+
+
+        const addressText =
+          court.address
+          ||
+          [
+            court.ward,
+            court.area
+          ]
+            .filter(Boolean)
+            .join(", ")
+          ||
+          "Chưa có địa chỉ";
+
+
+        const mapButton =
+          court.google_maps_url
+            ?
+            `
+              <a
+                href="${escapeHtml(
+                  court.google_maps_url
+                )}"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="
+                  display:inline-block;
+                  margin-top:10px;
+                  padding:10px 14px;
+                  border-radius:9px;
+                  background:#d8ff45;
+                  color:#162400;
+                  text-decoration:none;
+                  font-weight:900;
+                "
+              >
+                📍 CHỈ ĐƯỜNG GOOGLE MAPS
+              </a>
+            `
+            :
+            `
+              <div
+                style="
+                  margin-top:8px;
+                  color:#ffb0b0;
+                "
+              >
+                ⚠ Sân này chưa có Google Maps.
+              </div>
+            `;
+
+
+        detailBox.innerHTML =
+          `
+            <div
+              style="
+                font-size:15px;
+                font-weight:900;
+                color:#d8ff45;
+                margin-bottom:5px;
+              "
+            >
+              ${escapeHtml(
+                court.name
+                ||
+                "Sân học"
+              )}
+            </div>
+
+            <div>
+              📍
+              <strong>Địa chỉ:</strong>
+              ${escapeHtml(
+                addressText
+              )}
+            </div>
+
+            <div>
+              💰
+              <strong>Giá sân:</strong>
+              ${escapeHtml(
+                priceText
+              )}
+              / buổi
+            </div>
+
+            ${mapButton}
+          `;
+
+      }
+      catch (error) {
+
+        console.error(
+          "COURT DETAIL ERROR:",
+          error
+        );
+
+
+        detailBox.innerHTML =
+          `
+            <span style="color:#ffb0b0;">
+              Không tải được thông tin sân.
+            </span>
+          `;
+
+      }
+
+    }
+  );
   /* =====================================================
      START
   ====================================================== */
