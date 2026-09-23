@@ -2307,70 +2307,126 @@
         "ĐANG GỬI...";
 
 
-      const {
-        error
-      } =
-        await sb.rpc(
-          "student_create_session_request",
-          {
+  const {
+  data: requestId,
+  error
+} =
+  await sb.rpc(
+    "student_create_session_request",
+    {
 
-            p_registration_id:
-              registrationId,
+      p_registration_id:
+        registrationId,
 
-            p_requested_date:
-              requestedDate.value,
+      p_requested_date:
+        requestedDate.value,
 
-            p_requested_time:
-              requestedTime.value,
+      p_requested_time:
+        requestedTime.value,
 
-            p_duration_minutes:
-              Number(
-                durationMinutes.value
-                ||
-                60
-              ),
-
-            p_requested_area:
-              requestedArea.value,
-
-            p_requested_ward:
-              requestedWard.value,
-
-            p_note:
-              note.value.trim()
-              ||
-              null
-
-          }
-        );
-
-
-      if (error) {
-
-        console.error(
-          error
-        );
-
-
-        showMessage(
-          error.message
+      p_duration_minutes:
+        Number(
+          durationMinutes.value
           ||
-          "Không gửi được yêu cầu.",
-          "error"
-        );
+          60
+        ),
+
+      p_requested_area:
+        requestedArea.value,
+
+      p_requested_ward:
+        requestedWard.value,
+
+      p_note:
+        note.value.trim()
+        ||
+        null
+
+    }
+  );
 
 
-        submitBtn.disabled =
-          false;
+if (error) {
+
+  console.error(
+    error
+  );
 
 
-        submitBtn.textContent =
-          "GỬI YÊU CẦU CHO COACH";
+  showMessage(
+    error.message
+    ||
+    "Không gửi được yêu cầu.",
+    "error"
+  );
 
 
-        return;
+  submitBtn.disabled =
+    false;
 
-      }
+
+  submitBtn.textContent =
+    "GỬI YÊU CẦU CHO COACH";
+
+
+  return;
+
+}
+
+
+/*
+  Yêu cầu lịch đã được tạo thành công.
+  Push cho Coach là bước phụ:
+  Push lỗi KHÔNG được làm hỏng yêu cầu lịch.
+*/
+
+try {
+
+  if (requestId) {
+
+    const {
+      data: notifyData,
+      error: notifyError
+    } =
+      await sb.functions.invoke(
+        "pickdee-session-request-notify",
+        {
+          body: {
+            request_id:
+              Number(requestId)
+          }
+        }
+      );
+
+
+    if (notifyError) {
+
+      console.warn(
+        "SESSION REQUEST PUSH:",
+        notifyError
+      );
+
+    }
+    else {
+
+      console.log(
+        "SESSION REQUEST PUSH:",
+        notifyData
+      );
+
+    }
+
+  }
+
+}
+catch (notifyException) {
+
+  console.warn(
+    "SESSION REQUEST PUSH EXCEPTION:",
+    notifyException
+  );
+
+}
 
 
       showMessage(
