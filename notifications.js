@@ -3098,173 +3098,180 @@
 
 
 
-  async function mountPushUi() {
+async function mountPushUi() {
 
-    /*
-      Chờ hệ thống notifications.js cũ
-      tạo panel thông báo.
-    */
+  /*
+    Hỗ trợ cả panel thông báo chung
+    và panel riêng của Coach.
+  */
 
-    let panel = null;
-
-
-    for (
-      let i = 0;
-      i < 50;
-      i += 1
-    ) {
-
-      panel =
-        document.getElementById(
-          "pickdeeNotificationPanel"
-        );
+  let panel = null;
 
 
-      if (panel) {
-        break;
-      }
+  for (
+    let i = 0;
+    i < 50;
+    i += 1
+  ) {
 
-
-      await sleep(
-        100
-      );
-
-    }
-
-
-    if (!panel) {
-
-      console.warn(
-        "PickDee Push: không tìm thấy notification panel."
-      );
-
-      return;
-
-    }
-
-
-    if (
+    panel =
       document.getElementById(
-        "pickdeePushBox"
+        "pickdeeNotificationPanel"
       )
-    ) {
+      ||
+      document.getElementById(
+        "coachNotificationPanel"
+      );
 
-      return;
 
+    if (panel) {
+      break;
     }
 
 
-    const list =
-      document.getElementById(
-        "pickdeeNotificationList"
-      );
-
-
-    const box =
-      document.createElement(
-        "div"
-      );
-
-
-    box.id =
-      "pickdeePushBox";
-
-
-    box.style.cssText =
-      [
-        "padding:12px 14px",
-        "border-bottom:1px solid rgba(255,255,255,.08)",
-        "background:rgba(216,255,69,.04)"
-      ].join(";");
-
-
-    box.innerHTML = `
-      <button
-        id="pickdeeEnablePushButton"
-        type="button"
-        style="
-          width:100%;
-          min-height:44px;
-          border:0;
-          border-radius:10px;
-          padding:0 12px;
-          background:#d8ff45;
-          color:#071426;
-          font-size:12px;
-          font-weight:900;
-          cursor:pointer;
-        "
-      >
-        📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI
-      </button>
-
-      <div
-        id="pickdeePushStatus"
-        style="
-          margin-top:8px;
-          color:#94a4b8;
-          font-size:11px;
-          line-height:1.45;
-        "
-      >
-        Đang kiểm tra trạng thái thông báo...
-      </div>
-    `;
-
-
-    if (list) {
-
-      panel.insertBefore(
-        box,
-        list
-      );
-
-    }
-    else {
-
-      panel.appendChild(
-        box
-      );
-
-    }
-
-
-    const button =
-      document.getElementById(
-        "pickdeeEnablePushButton"
-      );
-
-
-    const status =
-      document.getElementById(
-        "pickdeePushStatus"
-      );
-
-
-    button.addEventListener(
-      "click",
-      async function (event) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        await enablePushNotifications(
-          button,
-          status
-        );
-
-      }
-    );
-
-
-    await refreshPushButton(
-      button,
-      status
+    await sleep(
+      100
     );
 
   }
 
+
+  if (!panel) {
+
+    console.warn(
+      "PickDee Push: không tìm thấy notification panel."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    document.getElementById(
+      "pickdeePushBox"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const list =
+    document.getElementById(
+      "pickdeeNotificationList"
+    )
+    ||
+    document.getElementById(
+      "coachNotificationList"
+    );
+
+
+  const box =
+    document.createElement(
+      "div"
+    );
+
+
+  box.id =
+    "pickdeePushBox";
+
+
+  box.style.cssText =
+    [
+      "padding:12px 14px",
+      "border-bottom:1px solid rgba(255,255,255,.08)",
+      "background:rgba(216,255,69,.04)"
+    ].join(";");
+
+
+  box.innerHTML = `
+    <button
+      id="pickdeeEnablePushButton"
+      type="button"
+      style="
+        width:100%;
+        min-height:44px;
+        border:0;
+        border-radius:10px;
+        padding:0 12px;
+        background:#d8ff45;
+        color:#071426;
+        font-size:12px;
+        font-weight:900;
+        cursor:pointer;
+      "
+    >
+      📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI
+    </button>
+
+    <div
+      id="pickdeePushStatus"
+      style="
+        margin-top:8px;
+        color:#94a4b8;
+        font-size:11px;
+        line-height:1.45;
+      "
+    >
+      Đang kiểm tra trạng thái thông báo...
+    </div>
+  `;
+
+
+  if (list) {
+
+    panel.insertBefore(
+      box,
+      list
+    );
+
+  }
+  else {
+
+    panel.appendChild(
+      box
+    );
+
+  }
+
+
+  const button =
+    document.getElementById(
+      "pickdeeEnablePushButton"
+    );
+
+
+  const status =
+    document.getElementById(
+      "pickdeePushStatus"
+    );
+
+
+  button.addEventListener(
+    "click",
+    async function (event) {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+
+      await enablePushNotifications(
+        button,
+        status
+      );
+
+    }
+  );
+
+
+  await refreshPushButton(
+    button,
+    status
+  );
+
+}
 
 
   if (
