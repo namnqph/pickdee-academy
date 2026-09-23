@@ -1330,32 +1330,84 @@
         }
 
 
-        const {
-          error: submitError
-        } =
-          await sb.rpc(
-            "student_submit_payment_proof",
-            {
-              p_registration_id:
-                Number(
-                  checkoutData
-                    .registration_id
-                ),
+       const {
+  data: submitData,
+  error: submitError
+} =
+  await sb.functions.invoke(
+    "pickdee-payment-submit",
+    {
+      body: {
+        registration_id:
+          Number(
+            checkoutData
+              .registration_id
+          ),
 
-              p_proof_path:
-                uploadedPath,
-
-              p_policy_accepted:
-                true
-            }
-          );
+        proof_path:
+          uploadedPath
+      }
+    }
+  );
 
 
-        if (submitError) {
+if (submitError) {
 
-          throw submitError;
+  let submitMessage =
+    submitError.message
+    ||
+    "Không gửi được xác nhận thanh toán.";
 
-        }
+
+  try {
+
+    if (
+      submitError.context
+      &&
+      typeof submitError.context.json
+        ===
+        "function"
+    ) {
+
+      const errorBody =
+        await submitError.context.json();
+
+
+      if (
+        errorBody?.error
+      ) {
+
+        submitMessage =
+          errorBody.error;
+
+      }
+
+    }
+
+  }
+  catch (_) {}
+
+
+  throw new Error(
+    submitMessage
+  );
+
+}
+
+
+if (
+  !submitData
+  ||
+  submitData.ok !== true
+) {
+
+  throw new Error(
+    submitData?.error
+    ||
+    "Không gửi được xác nhận thanh toán."
+  );
+
+}
 
 
         showStatus(
