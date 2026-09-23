@@ -2904,20 +2904,24 @@
           .getSubscription();
 
 
-      if (subscription) {
+if (subscription) {
 
-        button.disabled =
-          false;
+  await savePushSubscription(
+    subscription
+  );
 
-        button.textContent =
-          "✅ THÔNG BÁO ĐÃ BẬT";
+  button.disabled =
+    false;
 
-        status.textContent =
-          "Thiết bị này đã đăng ký nhận thông báo PickDee.";
+  button.textContent =
+    "✅ THÔNG BÁO ĐÃ BẬT";
 
-        return;
+  status.textContent =
+    "Thiết bị này đã đăng ký nhận thông báo PickDee.";
 
-      }
+  return;
+
+}
 
     }
     catch (error) {
