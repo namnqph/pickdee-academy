@@ -960,64 +960,76 @@
 
   function formatDateTime(value) {
 
-
-    if (!value) {
-
-      return "—";
-
-    }
-
-
-    /*
-      KHÔNG dùng Intl.DateTimeFormat
-      để tránh Invalid time value.
-    */
-
-
-    const raw =
-      String(value).trim();
-
-
-    /*
-      Ví dụ:
-      2026-09-10T12:15:30+00:00
-    */
-
-    const match =
-      raw.match(
-        /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
-      );
-
-
-    if (match) {
-
-      return (
-        match[3]
-        +
-        "/"
-        +
-        match[2]
-        +
-        "/"
-        +
-        match[1]
-        +
-        " · "
-        +
-        match[4]
-        +
-        ":"
-        +
-        match[5]
-      );
-
-    }
-
-
-    return raw;
-
+  if (!value) {
+    return "—";
   }
 
+  const raw =
+    String(value).trim();
+
+  const date =
+    new Date(raw);
+
+  if (
+    !Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    const parts =
+      new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          timeZone:
+            "Asia/Ho_Chi_Minh",
+
+          day:
+            "2-digit",
+
+          month:
+            "2-digit",
+
+          year:
+            "numeric",
+
+          hour:
+            "2-digit",
+
+          minute:
+            "2-digit",
+
+          hour12:
+            false,
+
+          hourCycle:
+            "h23"
+        }
+      )
+        .formatToParts(
+          date
+        );
+
+    const map =
+      Object.fromEntries(
+        parts.map(
+          part => [
+            part.type,
+            part.value
+          ]
+        )
+      );
+
+    return (
+      `${map.day}/${map.month}/${map.year}`
+      +
+      " · "
+      +
+      `${map.hour}:${map.minute}`
+    );
+  }
+
+  return raw;
+}
 
   function statusClass(status) {
 
