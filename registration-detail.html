@@ -735,89 +735,175 @@ function renderActions() {
 
 
     coachBtn.onclick =
-      async function () {
+  async function () {
 
-        if (!select.value) {
+    if (!select.value) {
 
-          alert(
-            "Hãy chọn Coach."
-          );
+      alert(
+        "Hãy chọn Coach."
+      );
 
-          return;
-        }
-
-
-        coachBtn.disabled =
-          true;
-
-        coachBtn.textContent =
-          "ĐANG LƯU...";
+      return;
+    }
 
 
-        const coachId =
-          Number(select.value);
+    coachBtn.disabled =
+      true;
+
+    coachBtn.textContent =
+      "ĐANG LƯU...";
 
 
-        const {
-          error
-        } =
-          await sb
-            .from("registrations")
-            .update({
-              coach_id: coachId
-            })
-            .eq(
-              "id",
-              registrationId
-            );
+    const coachId =
+      Number(select.value);
 
 
-        if (error) {
+    const {
+      data: assignData,
+      error: assignError
+    } =
+      await sb.functions.invoke(
+        "pickdee-assign-coach",
+        {
+          body: {
+            registration_id:
+              registrationId,
 
-          console.error(error);
-
-          alert(
-            "Không thể gán Coach: " +
-            error.message
-          );
-
-          coachBtn.disabled =
-            false;
-
-          coachBtn.textContent =
-            "ĐỔI COACH";
-
-          return;
-        }
-
-
-        currentRegistration.coach_id =
-          coachId;
-
-
-        const selectedCoach =
-          coaches.find(
-            coach =>
-              Number(coach.id) ===
+            coach_id:
               coachId
-          );
+          }
+        }
+      );
 
 
-        show(
-          "coachLine",
-          selectedCoach
-            ? `${selectedCoach.full_name || "—"} (${selectedCoach.coach_code || "—"})`
-            : "Chưa gán Coach"
-        );
+    if (assignError) {
+
+      let message =
+        assignError.message
+        ||
+        "Không thể gán Coach.";
 
 
-        renderActions();
+      try {
 
-        alert(
-          "Đã gán Coach thành công."
-        );
-      };
+        if (
+          assignError.context
+          &&
+          typeof assignError.context.json
+            ===
+            "function"
+        ) {
 
+          const errorBody =
+            await assignError.context.json();
+
+
+          if (
+            errorBody?.error
+          ) {
+
+            message =
+              errorBody.error;
+
+          }
+
+        }
+
+      }
+      catch (_) {}
+
+
+      console.error(
+        assignError
+      );
+
+
+      alert(
+        "Không thể gán Coach: "
+        +
+        message
+      );
+
+
+      coachBtn.disabled =
+        false;
+
+
+      coachBtn.textContent =
+        currentRegistration.coach_id
+          ?
+            "ĐỔI COACH"
+          :
+            "GÁN COACH";
+
+
+      return;
+    }
+
+
+    if (
+      !assignData
+      ||
+      assignData.ok !== true
+    ) {
+
+      alert(
+        "Không thể gán Coach: "
+        +
+        (
+          assignData?.error
+          ||
+          "Không xác định được lỗi."
+        )
+      );
+
+
+      coachBtn.disabled =
+        false;
+
+
+      coachBtn.textContent =
+        currentRegistration.coach_id
+          ?
+            "ĐỔI COACH"
+          :
+            "GÁN COACH";
+
+
+      return;
+    }
+
+
+    currentRegistration.coach_id =
+      coachId;
+
+
+    const selectedCoach =
+      coaches.find(
+        coach =>
+          Number(coach.id) ===
+          coachId
+      );
+
+
+    show(
+      "coachLine",
+      selectedCoach
+        ?
+          `${selectedCoach.full_name || "—"} (${selectedCoach.coach_code || "—"})`
+        :
+          "Chưa gán Coach"
+    );
+
+
+    renderActions();
+
+
+    alert(
+      "Đã gán Coach thành công."
+    );
+
+  };
 
     wrap.appendChild(label);
     wrap.appendChild(select);
