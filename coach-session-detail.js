@@ -216,8 +216,18 @@ async function loadSession() {
       "Không tìm thấy ID buổi học.";
 
     return false;
+
   }
 
+
+  messageEl.textContent =
+    "Đang tải buổi học...";
+
+
+  /* =====================================
+     1. LOAD BUỔI HỌC
+     Không dùng nested query nữa
+  ====================================== */
 
   const {
     data,
@@ -229,44 +239,43 @@ async function loadSession() {
         id,
         session_code,
         registration_id,
+        training_group_id,
         coach_id,
+        substitute_coach_id,
         session_no,
         session_date,
         start_time,
         duration_minutes,
+        court_id,
         court_name,
+        court_cost,
         status,
-        note,
-        registrations (
-          id,
-          student_id,
-          students (
-            id,
-            student_code,
-            full_name
-          )
-        )
+        note
       `)
       .eq(
         "id",
         sessionId
       )
-      .eq(
-        "coach_id",
-        currentCoach.id
+      .or(
+        `coach_id.eq.${currentCoach.id},substitute_coach_id.eq.${currentCoach.id}`
       )
       .maybeSingle();
 
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      "LOAD SESSION ERROR:",
+      error
+    );
 
     messageEl.textContent =
-      "Không tải được buổi học: " +
+      "Không tải được buổi học: "
+      +
       error.message;
 
     return false;
+
   }
 
 
@@ -276,22 +285,254 @@ async function loadSession() {
       "Bạn không có quyền xem buổi học này.";
 
     return false;
+
   }
 
+
+  /* =====================================
+     2. XÁC ĐỊNH COACH THỰC TẾ DẠY
+
+     Nếu đã có Coach hỗ trợ thì Coach hỗ trợ
+     là người được thao tác, giống backend.
+  ====================================== */
+
+  const actualCoachId =
+    Number(
+      data.substitute_coach_id
+      ||
+      data.coach_id
+      ||
+      0
+    );
+
+
+  if (
+    actualCoachId !==
+    Number(currentCoach.id)
+  ) {
+
+    messageEl.textContent =
+      "Buổi học này hiện do Coach khác phụ trách.";
+
+    return false;
+
+  }
+
+
+  /* =====================================
+     3. LẤY HỌC VIÊN
+  ====================================== */
+
+  let studentName =
+    "—";
+
+  let studentCode =
+    "";
+
+
+  if (data.training_group_id) {
+
+    /*
+      Buổi nhóm:
+      lấy toàn bộ thành viên.
+    */
+
+    const {
+      data: participantData,
+      error: participantError
+    } =
+      await sb.rpc(
+        "coach_get_session_participants",
+        {
+          p_session_id:
+            data.id
+        }
+      );
+
+
+    if (participantError) {
+
+      console.warn(
+        "LOAD GROUP PARTICIPANTS:",
+        participantError
+      );
+
+    }
+    else {
+
+      const members =
+        (
+          participantData
+          &&
+          Array.isArray(
+            participantData.members
+          )
+        )
+          ?
+          participantData.members
+          :
+          [];
+
+
+      const names =
+        [
+          ...new Set(
+            members
+              .map(
+                item =>
+                  String(
+                    item.student_name
+                    ||
+                    item.student_code
+                    ||
+                    ""
+                  ).trim()
+              )
+              .filter(Boolean)
+          )
+        ];
+
+
+      if (names.length > 0) {
+
+        studentName =
+          names.join(" + ");
+
+      }
+
+    }
+
+  }
+  else {
+
+    /*
+      Buổi cá nhân:
+      load registration riêng trước.
+    */
+
+    const {
+      data: registration,
+      error: registrationError
+    } =
+      await sb
+        .from("registrations")
+        .select(`
+          id,
+          student_id
+        `)
+        .eq(
+          "id",
+          data.registration_id
+        )
+        .maybeSingle();
+
+
+    if (registrationError) {
+
+      console.error(
+        "LOAD REGISTRATION ERROR:",
+        registrationError
+      );
+
+      messageEl.textContent =
+        "Không tải được đăng ký học: "
+        +
+        registrationError.message;
+
+      return false;
+
+    }
+
+
+    if (
+      registration
+      &&
+      registration.student_id
+    ) {
+
+      const {
+        data: student,
+        error: studentError
+      } =
+        await sb
+          .from("students")
+          .select(`
+            id,
+            student_code,
+            full_name
+          `)
+          .eq(
+            "id",
+            registration.student_id
+          )
+          .maybeSingle();
+
+
+      if (studentError) {
+
+        console.error(
+          "LOAD STUDENT ERROR:",
+          studentError
+        );
+
+        messageEl.textContent =
+          "Không tải được Học viên: "
+          +
+          studentError.message;
+
+        return false;
+
+      }
+
+
+      if (student) {
+
+        studentName =
+          student.full_name
+          ||
+          student.student_code
+          ||
+          "—";
+
+        studentCode =
+          student.student_code
+          ||
+          "";
+
+      }
+
+    }
+
+  }
+
+
+  /* =====================================
+     4. GÁN DỮ LIỆU HIỆN TẠI
+  ====================================== */
 
   currentSession =
     data;
 
 
-  const registration =
-    one(
-      data.registrations
-    );
+  /*
+    Sửa luôn tiêu đề mặc định
+    "Không tải được buổi học".
+  */
 
-  const student =
-    one(
-      registration?.students
-    );
+  const pageTitle =
+    document.querySelector("h1");
+
+
+  if (pageTitle) {
+
+    pageTitle.textContent =
+      data.session_code
+        ?
+        `Chi tiết ${data.session_code}`
+        :
+        "Chi tiết buổi học";
+
+  }
 
 
   show(
@@ -299,43 +540,63 @@ async function loadSession() {
     data.session_code
   );
 
+
   show(
     "studentName",
-    student?.full_name ||
-    student?.student_code
+    studentName
   );
+
 
   show(
     "sessionNo",
-    String(data.session_no)
+    String(
+      data.session_no
+      ??
+      "—"
+    )
   );
+
 
   show(
     "status",
     data.status
   );
 
+
   show(
     "sessionDate",
-    dateVN(data.session_date)
+    dateVN(
+      data.session_date
+    )
   );
+
 
   show(
     "startTime",
     String(
-      data.start_time || ""
-    ).slice(0, 5)
+      data.start_time
+      ||
+      ""
+    ).slice(
+      0,
+      5
+    )
   );
+
 
   show(
     "duration",
-    `${data.duration_minutes} phút`
+    `${data.duration_minutes || 60} phút`
   );
+
 
   show(
     "courtName",
     data.court_name
+    ||
+    "Chưa chọn sân"
   );
+
 
   show(
     "note",
@@ -343,31 +604,111 @@ async function loadSession() {
   );
 
 
-  /*
-    Hiện tại Coach mới có SELECT.
-    Chưa bật thao tác UPDATE.
-  */
+  /* =====================================
+     5. TRẠNG THÁI NÚT
+  ====================================== */
 
   if (
-  data.status === "Chờ học"
-) {
+    data.status === "Chờ học"
+  ) {
 
-  completeBtn.disabled = false;
-  absentBtn.disabled = false;
+    /*
+      Backend chỉ cho điểm danh
+      sau khi buổi học kết thúc.
+      Frontend hiển thị đúng quy tắc đó.
+    */
 
-  messageEl.textContent =
-    "Buổi học đang Chờ học. Bạn có thể điểm danh.";
+    const startText =
+      String(
+        data.start_time
+        ||
+        "00:00:00"
+      );
 
-} else {
 
-  completeBtn.disabled = true;
-  absentBtn.disabled = true;
+    const sessionStart =
+      new Date(
+        `${data.session_date}T${startText}+07:00`
+      );
 
-  messageEl.textContent =
-    `Buổi học đã được xử lý: ${data.status}`;
-}
+
+    const sessionEnd =
+      new Date(
+        sessionStart.getTime()
+        +
+        Number(
+          data.duration_minutes
+          ||
+          60
+        )
+        *
+        60
+        *
+        1000
+      );
+
+
+    if (
+      Date.now() <
+      sessionEnd.getTime()
+    ) {
+
+      completeBtn.disabled =
+        true;
+
+      absentBtn.disabled =
+        true;
+
+
+      messageEl.textContent =
+        "Buổi học đang Chờ học. "
+        +
+        "Chỉ có thể điểm danh sau khi buổi học kết thúc.";
+
+    }
+    else {
+
+      completeBtn.disabled =
+        false;
+
+      absentBtn.disabled =
+        false;
+
+
+      messageEl.textContent =
+        "Buổi học đã đến thời điểm điểm danh.";
+
+    }
+
+  }
+  else {
+
+    completeBtn.disabled =
+      true;
+
+    absentBtn.disabled =
+      true;
+
+
+    messageEl.textContent =
+      `Buổi học đã được xử lý: ${data.status}`;
+
+  }
+
+
+  console.log(
+    "COACH SESSION DETAIL OK:",
+    data,
+    {
+      studentName,
+      studentCode,
+      actualCoachId
+    }
+  );
+
 
   return true;
+
 }
 
 /* =====================================
