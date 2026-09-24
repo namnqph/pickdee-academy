@@ -2710,6 +2710,520 @@
 
 <script src="./notifications.js?v=20260911-3"></script>
 
+<script>
+(async function setupStudentSessionCourtDirections() {
 
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const mapSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const wait = (ms) =>
+    new Promise(
+      resolve => setTimeout(resolve, ms)
+    );
+
+
+  /*
+    Chờ bảng lịch học render xong.
+  */
+
+  await wait(1200);
+
+
+  const sessionBody =
+    document.querySelector(
+      "tbody"
+    );
+
+
+  if (!sessionBody) {
+
+    console.warn(
+      "STUDENT COURT MAP: Không tìm thấy tbody."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Mã buổi -> court_id
+  */
+
+  const sessionCourtMap =
+    new Map();
+
+
+  /*
+    court_id -> thông tin sân
+  */
+
+  const courtMap =
+    new Map();
+
+
+  async function loadCourtData() {
+
+    try {
+
+      const {
+        data: sessionRows,
+        error: sessionError
+      } =
+        await mapSb
+          .from("class_sessions")
+          .select(`
+            id,
+            session_code,
+            court_id,
+            court_name
+          `);
+
+
+      if (sessionError) {
+
+        throw sessionError;
+
+      }
+
+
+      const rows =
+        sessionRows || [];
+
+
+      const courtIds =
+        [
+          ...new Set(
+            rows
+              .map(
+                item =>
+                  Number(
+                    item.court_id || 0
+                  )
+              )
+              .filter(Boolean)
+          )
+        ];
+
+
+      sessionCourtMap.clear();
+
+
+      rows.forEach(
+        item => {
+
+          const code =
+            String(
+              item.session_code || ""
+            ).trim();
+
+
+          if (!code) {
+
+            return;
+
+          }
+
+
+          sessionCourtMap.set(
+            code,
+            {
+              court_id:
+                Number(
+                  item.court_id || 0
+                ),
+
+              court_name:
+                item.court_name || ""
+            }
+          );
+
+        }
+      );
+
+
+      if (
+        courtIds.length === 0
+      ) {
+
+        return;
+
+      }
+
+
+      const {
+        data: courtRows,
+        error: courtError
+      } =
+        await mapSb
+          .from("courts")
+          .select(`
+            id,
+            name,
+            address,
+            area,
+            ward,
+            google_maps_url
+          `)
+          .in(
+            "id",
+            courtIds
+          );
+
+
+      if (courtError) {
+
+        throw courtError;
+
+      }
+
+
+      courtMap.clear();
+
+
+      (courtRows || []).forEach(
+        court => {
+
+          courtMap.set(
+            Number(court.id),
+            court
+          );
+
+        }
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "STUDENT SESSION COURT DATA:",
+        error
+      );
+
+    }
+
+  }
+
+
+  function decorateStudentCourtCells() {
+
+    const rows =
+      sessionBody.querySelectorAll(
+        "tr"
+      );
+
+
+    rows.forEach(
+      row => {
+
+        const cells =
+          row.querySelectorAll(
+            "td"
+          );
+
+
+        /*
+          Bảng hiện tại:
+          0 Mã buổi
+          1 Buổi số
+          2 Ngày
+          3 Giờ
+          4 Coach
+          5 Sân
+          6 Trạng thái
+          7 Đánh giá Coach
+        */
+
+        if (
+          cells.length < 8
+        ) {
+
+          return;
+
+        }
+
+
+        const sessionCode =
+          String(
+            cells[0].textContent || ""
+          ).trim();
+
+
+        const sessionInfo =
+          sessionCourtMap.get(
+            sessionCode
+          );
+
+
+        if (
+          !sessionInfo
+          ||
+          !sessionInfo.court_id
+        ) {
+
+          return;
+
+        }
+
+
+        const court =
+          courtMap.get(
+            Number(
+              sessionInfo.court_id
+            )
+          );
+
+
+        if (!court) {
+
+          return;
+
+        }
+
+
+        const courtCell =
+          cells[5];
+
+
+        if (
+          courtCell.querySelector(
+            ".student-court-route"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const box =
+          document.createElement(
+            "div"
+          );
+
+
+        box.className =
+          "student-court-route";
+
+
+        box.style.marginTop =
+          "7px";
+
+
+        box.style.display =
+          "flex";
+
+
+        box.style.flexDirection =
+          "column";
+
+
+        box.style.alignItems =
+          "flex-start";
+
+
+        box.style.gap =
+          "5px";
+
+
+        const address =
+          document.createElement(
+            "div"
+          );
+
+
+        address.style.fontSize =
+          "11px";
+
+
+        address.style.lineHeight =
+          "1.4";
+
+
+        address.style.color =
+          "rgba(255,255,255,.58)";
+
+
+        address.textContent =
+          "📍 "
+          +
+          (
+            court.address
+            ||
+            [
+              court.ward,
+              court.area
+            ]
+              .filter(Boolean)
+              .join(", ")
+            ||
+            "Chưa có địa chỉ"
+          );
+
+
+        box.appendChild(
+          address
+        );
+
+
+        const mapUrl =
+          court.google_maps_url
+          ||
+          (
+            "https://www.google.com/maps/search/?api=1&query="
+            +
+            encodeURIComponent(
+              [
+                court.name,
+                court.address,
+                court.ward,
+                court.area,
+                "Việt Nam"
+              ]
+                .filter(Boolean)
+                .join(", ")
+            )
+          );
+
+
+        const button =
+          document.createElement(
+            "a"
+          );
+
+
+        button.href =
+          mapUrl;
+
+
+        button.target =
+          "_blank";
+
+
+        button.rel =
+          "noopener noreferrer";
+
+
+        button.textContent =
+          "📍 CHỈ ĐƯỜNG";
+
+
+        button.style.display =
+          "inline-block";
+
+
+        button.style.padding =
+          "6px 9px";
+
+
+        button.style.borderRadius =
+          "7px";
+
+
+        button.style.background =
+          "#d8ff45";
+
+
+        button.style.color =
+          "#172600";
+
+
+        button.style.fontSize =
+          "11px";
+
+
+        button.style.fontWeight =
+          "900";
+
+
+        button.style.textDecoration =
+          "none";
+
+
+        button.addEventListener(
+          "click",
+          function (event) {
+
+            event.stopPropagation();
+
+          }
+        );
+
+
+        box.appendChild(
+          button
+        );
+
+
+        courtCell.appendChild(
+          box
+        );
+
+      }
+    );
+
+  }
+
+
+  await loadCourtData();
+
+
+  await wait(300);
+
+
+  decorateStudentCourtCells();
+
+
+  /*
+    Nếu bảng render lại do tìm kiếm / tải dữ liệu,
+    tự gắn lại địa chỉ và nút chỉ đường.
+  */
+
+  let timer =
+    null;
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        clearTimeout(
+          timer
+        );
+
+
+        timer =
+          setTimeout(
+            decorateStudentCourtCells,
+            80
+          );
+
+      }
+    );
+
+
+  observer.observe(
+    sessionBody,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  console.log(
+    "STUDENT SESSION GOOGLE MAPS OK"
+  );
+
+})();
+</script>
 </body>
 </html>
