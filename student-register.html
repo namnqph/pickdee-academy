@@ -2705,23 +2705,698 @@ avatar_mime:
         );
 
 
-        message.textContent =
+                /* =====================================================
+           ĐĂNG KÝ THÀNH CÔNG + BẬT WEB PUSH CHO HỌC VIÊN MỚI
+
+           - Thiết bị đã cấp quyền: tự gắn Push vào tài khoản mới
+           - Thiết bị chưa cấp quyền: hiện 1 nút để người dùng bấm
+           - Dùng authSb riêng, không làm thay đổi session Admin
+             nếu Admin đang test trang đăng ký.
+        ====================================================== */
+
+        message.innerHTML =
           "✓ Đăng ký học thành công. Mã đăng ký: "
           +
-          (
+          escapeHtml(
             registrationCode
             ||
             registrationId
-          );
-
+          )
+          +
+          '<br><span id="newStudentPushStatus" style="font-weight:700;color:rgba(255,255,255,.72);">Đang kiểm tra thông báo...</span>';
 
         message.className =
           "message ok";
 
 
-        submitBtn.textContent =
-          "ĐÃ ĐĂNG KÝ ✓";
+        const pushStatus =
+          document.getElementById(
+            "newStudentPushStatus"
+          );
 
+
+        /*
+          Sau khi đăng ký thành công,
+          nút submit cũ được chuyển thành nút Push.
+          Vì type="button" nên bấm lại sẽ KHÔNG tạo
+          thêm đăng ký học lần thứ hai.
+        */
+
+        submitBtn.type =
+          "button";
+
+        submitBtn.disabled =
+          false;
+
+
+        function urlBase64ToUint8Array(
+          base64String
+        ) {
+
+          const padding =
+            "=".repeat(
+              (
+                4
+                -
+                base64String.length % 4
+              )
+              %
+              4
+            );
+
+
+          const base64 =
+            (
+              base64String
+              +
+              padding
+            )
+              .replace(
+                /-/g,
+                "+"
+              )
+              .replace(
+                /_/g,
+                "/"
+              );
+
+
+          const rawData =
+            window.atob(
+              base64
+            );
+
+
+          const outputArray =
+            new Uint8Array(
+              rawData.length
+            );
+
+
+          for (
+            let i = 0;
+            i < rawData.length;
+            i += 1
+          ) {
+
+            outputArray[i] =
+              rawData.charCodeAt(i);
+
+          }
+
+
+          return outputArray;
+
+        }
+
+
+        async function ensureNewStudentAuth() {
+
+          /*
+            signUp phía trên thường đã tạo session
+            trong authSb.
+
+            Nếu chưa có session thì đăng nhập lại
+            bằng chính email + mật khẩu vừa tạo.
+          */
+
+          let {
+            data: sessionData
+          } =
+            await authSb.auth
+              .getSession();
+
+
+          if (
+            sessionData?.session
+          ) {
+
+            return sessionData.session;
+
+          }
+
+
+          const {
+            data: signInData,
+            error: signInError
+          } =
+            await authSb.auth
+              .signInWithPassword(
+                {
+                  email:
+                    emailValue,
+
+                  password:
+                    password.value
+                }
+              );
+
+
+          if (
+            signInError
+            ||
+            !signInData?.session
+          ) {
+
+            throw new Error(
+              signInError?.message
+              ||
+              "Tài khoản đã tạo nhưng chưa đăng nhập được để bật thông báo."
+            );
+
+          }
+
+
+          return signInData.session;
+
+        }
+
+
+        async function saveNewStudentPush(
+          subscription
+        ) {
+
+          await ensureNewStudentAuth();
+
+
+          const json =
+            subscription.toJSON();
+
+
+          const endpoint =
+            json?.endpoint
+            ||
+            subscription.endpoint
+            ||
+            "";
+
+
+          const p256dh =
+            json?.keys?.p256dh
+            ||
+            "";
+
+
+          const authKey =
+            json?.keys?.auth
+            ||
+            "";
+
+
+          if (
+            !endpoint
+            ||
+            !p256dh
+            ||
+            !authKey
+          ) {
+
+            throw new Error(
+              "Push Subscription không đầy đủ."
+            );
+
+          }
+
+
+          /*
+            Registration Edge Function vừa chạy xong.
+            Retry ngắn để phòng trường hợp profile Student
+            vừa được tạo nhưng database chưa sẵn sàng ngay.
+          */
+
+          let lastError =
+            null;
+
+
+          for (
+            let attempt = 0;
+            attempt < 5;
+            attempt += 1
+          ) {
+
+            const {
+              error
+            } =
+              await authSb.rpc(
+                "register_push_subscription",
+                {
+                  p_endpoint:
+                    endpoint,
+
+                  p_p256dh:
+                    p256dh,
+
+                  p_auth_key:
+                    authKey,
+
+                  p_user_agent:
+                    navigator.userAgent
+                }
+              );
+
+
+            if (!error) {
+
+              return true;
+
+            }
+
+
+            lastError =
+              error;
+
+
+            await new Promise(
+              resolve =>
+                setTimeout(
+                  resolve,
+                  400
+                )
+            );
+
+          }
+
+
+          throw lastError
+            ||
+            new Error(
+              "Không lưu được thiết bị nhận thông báo."
+            );
+
+        }
+
+
+        async function enableNewStudentPush(
+          allowPermissionRequest
+        ) {
+
+          if (
+            !(
+              "Notification"
+              in
+              window
+            )
+            ||
+            !(
+              "PushManager"
+              in
+              window
+            )
+            ||
+            !(
+              "serviceWorker"
+              in
+              navigator
+            )
+          ) {
+
+            throw new Error(
+              "Thiết bị này chưa hỗ trợ Web Push."
+            );
+
+          }
+
+
+          const isIOS =
+            /iphone|ipad|ipod/i
+              .test(
+                navigator.userAgent
+              );
+
+
+          const isStandalone =
+            (
+              window.matchMedia
+              &&
+              window.matchMedia(
+                "(display-mode: standalone)"
+              ).matches
+            )
+            ||
+            window.navigator.standalone
+              ===
+              true;
+
+
+          if (
+            isIOS
+            &&
+            !isStandalone
+          ) {
+
+            throw new Error(
+              "Trên iPhone, hãy mở PickDee bằng icon đã thêm vào Màn hình chính để bật thông báo."
+            );
+
+          }
+
+
+          let permission =
+            Notification.permission;
+
+
+          if (
+            permission
+            ===
+            "default"
+            &&
+            allowPermissionRequest
+          ) {
+
+            permission =
+              await Notification
+                .requestPermission();
+
+          }
+
+
+          if (
+            permission
+            !==
+            "granted"
+          ) {
+
+            if (
+              permission
+              ===
+              "denied"
+            ) {
+
+              throw new Error(
+                "Thông báo đang bị chặn. Hãy bật lại quyền thông báo cho PickDee trong Cài đặt."
+              );
+
+            }
+
+
+            return false;
+
+          }
+
+
+          let registration =
+            await navigator
+              .serviceWorker
+              .getRegistration(
+                "/"
+              );
+
+
+          if (!registration) {
+
+            registration =
+              await navigator
+                .serviceWorker
+                .register(
+                  "/sw.js",
+                  {
+                    scope:
+                      "/"
+                  }
+                );
+
+          }
+
+
+          await navigator
+            .serviceWorker
+            .ready;
+
+
+          let subscription =
+            await registration
+              .pushManager
+              .getSubscription();
+
+
+          if (!subscription) {
+
+            const vapidPublicKey =
+              String(
+                cfg.VAPID_PUBLIC_KEY
+                ||
+                ""
+              ).trim();
+
+
+            if (!vapidPublicKey) {
+
+              throw new Error(
+                "Thiếu VAPID Public Key."
+              );
+
+            }
+
+
+            subscription =
+              await registration
+                .pushManager
+                .subscribe(
+                  {
+                    userVisibleOnly:
+                      true,
+
+                    applicationServerKey:
+                      urlBase64ToUint8Array(
+                        vapidPublicKey
+                      )
+                  }
+                );
+
+          }
+
+
+          await saveNewStudentPush(
+            subscription
+          );
+
+
+          return true;
+
+        }
+
+
+        async function finishPushEnabled() {
+
+          submitBtn.disabled =
+            true;
+
+          submitBtn.textContent =
+            "✅ THÔNG BÁO ĐÃ BẬT";
+
+          pushStatus.textContent =
+            "Thiết bị này đã được đăng ký nhận thông báo PickDee cho tài khoản học viên mới.";
+
+        }
+
+
+        /*
+          TRƯỜNG HỢP 1:
+          thiết bị đã từng cho phép Notification.
+
+          → Không cần người dùng bấm lại.
+          → Tự chuyển subscription sang tài khoản mới.
+        */
+
+        if (
+          "Notification"
+          in
+          window
+          &&
+          Notification.permission
+          ===
+          "granted"
+        ) {
+
+          submitBtn.disabled =
+            true;
+
+          submitBtn.textContent =
+            "ĐANG BẬT THÔNG BÁO...";
+
+
+          try {
+
+            const enabled =
+              await enableNewStudentPush(
+                false
+              );
+
+
+            if (enabled) {
+
+              await finishPushEnabled();
+
+            }
+            else {
+
+              submitBtn.disabled =
+                false;
+
+              submitBtn.textContent =
+                "📱 BẬT THÔNG BÁO";
+
+            }
+
+          }
+          catch (pushError) {
+
+            console.warn(
+              "PICKDEE NEW STUDENT PUSH:",
+              pushError
+            );
+
+
+                     submitBtn.disabled =
+              false;
+
+            submitBtn.textContent =
+              "📱 BẬT THÔNG BÁO";
+
+            pushStatus.textContent =
+              pushError?.message
+              ||
+              "Đăng ký học đã thành công. Bạn có thể thử bật thông báo lại.";
+
+            submitBtn.onclick =
+              async function () {
+
+                submitBtn.disabled =
+                  true;
+
+                submitBtn.textContent =
+                  "ĐANG BẬT THÔNG BÁO...";
+
+                pushStatus.textContent =
+                  "Đang đăng ký thiết bị...";
+
+                try {
+
+                  const enabled =
+                    await enableNewStudentPush(
+                      false
+                    );
+
+                  if (enabled) {
+
+                    await finishPushEnabled();
+
+                    return;
+
+                  }
+
+                  submitBtn.disabled =
+                    false;
+
+                  submitBtn.textContent =
+                    "📱 BẬT THÔNG BÁO";
+
+                }
+                catch (retryError) {
+
+                  console.warn(
+                    "PICKDEE NEW STUDENT PUSH RETRY:",
+                    retryError
+                  );
+
+                  submitBtn.disabled =
+                    false;
+
+                  submitBtn.textContent =
+                    "📱 BẬT THÔNG BÁO";
+
+                  pushStatus.textContent =
+                    retryError?.message
+                    ||
+                    "Không bật được thông báo. Đăng ký học vẫn đã thành công.";
+
+                }
+
+              };
+          }
+
+        }
+
+        /*
+          TRƯỜNG HỢP 2:
+          thiết bị chưa từng cấp quyền.
+
+          → Người dùng bấm đúng 1 lần.
+        */
+
+        else {
+
+          submitBtn.textContent =
+            "📱 BẬT THÔNG BÁO";
+
+          pushStatus.textContent =
+            "Bật thông báo để nhận lịch học, thay đổi Coach và các cập nhật từ PickDee.";
+
+
+          submitBtn.onclick =
+            async function () {
+
+              submitBtn.disabled =
+                true;
+
+              submitBtn.textContent =
+                "ĐANG BẬT THÔNG BÁO...";
+
+              pushStatus.textContent =
+                "Đang đăng ký thiết bị...";
+
+
+              try {
+
+                const enabled =
+                  await enableNewStudentPush(
+                    true
+                  );
+
+
+                if (enabled) {
+
+                  await finishPushEnabled();
+
+                  return;
+
+                }
+
+
+                submitBtn.disabled =
+                  false;
+
+                submitBtn.textContent =
+                  "📱 BẬT THÔNG BÁO";
+
+                pushStatus.textContent =
+                  "Bạn chưa cho phép PickDee gửi thông báo.";
+
+              }
+              catch (pushError) {
+
+                console.warn(
+                  "PICKDEE NEW STUDENT PUSH:",
+                  pushError
+                );
+
+
+                submitBtn.disabled =
+                  false;
+
+                submitBtn.textContent =
+                  "📱 BẬT THÔNG BÁO";
+
+                pushStatus.textContent =
+                  pushError?.message
+                  ||
+                  "Không bật được thông báo. Đăng ký học của bạn vẫn đã thành công.";
+
+              }
+
+            };
+
+        }
       }
       catch (error) {
 
