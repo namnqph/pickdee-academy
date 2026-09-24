@@ -6243,6 +6243,519 @@ async function loadStudents(
   <script>
 (async function () {
 
+  /* =====================================================
+     PICKDEE - COACH PUSH ONBOARDING
+
+     - Nếu Push đã bật: không hiện gì.
+     - Nếu chưa bật: hiện 1 màn hình để Coach bấm 1 lần.
+     - Dùng lại nút + logic Push trong notifications.js.
+     - Không tạo Push logic thứ hai.
+  ====================================================== */
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb
+    ||
+    null;
+
+
+  if (!sb) {
+    return;
+  }
+
+
+  /*
+    Phải có Coach đang đăng nhập.
+  */
+
+  const {
+    data: {
+      user
+    }
+  } =
+    await sb.auth.getUser();
+
+
+  if (!user) {
+    return;
+  }
+
+
+  /*
+    Không hiện đi hiện lại trong cùng một phiên
+    nếu Coach đã chọn "Để sau".
+  */
+
+  const sessionKey =
+    "pickdee_coach_push_prompt_"
+    +
+    user.id;
+
+
+  if (
+    sessionStorage.getItem(
+      sessionKey
+    )
+    ===
+    "later"
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    Chờ notifications.js tạo phần Push.
+  */
+
+  let pushButton =
+    null;
+
+  let pushStatus =
+    null;
+
+
+  for (
+    let i = 0;
+    i < 80;
+    i += 1
+  ) {
+
+    pushButton =
+      document.getElementById(
+        "pickdeeEnablePushButton"
+      );
+
+
+    pushStatus =
+      document.getElementById(
+        "pickdeePushStatus"
+      );
+
+
+    if (
+      pushButton
+      &&
+      pushStatus
+    ) {
+
+      break;
+
+    }
+
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          100
+        )
+    );
+
+  }
+
+
+  if (
+    !pushButton
+    ||
+    !pushStatus
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    Cho notifications.js thêm chút thời gian
+    để kiểm tra subscription hiện tại.
+  */
+
+  await new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        700
+      )
+  );
+
+
+  /*
+    Nếu thiết bị đã được gắn Push
+    vào Coach hiện tại thì không hiện onboarding.
+  */
+
+  if (
+    String(
+      pushButton.textContent
+      ||
+      ""
+    ).includes(
+      "THÔNG BÁO ĐÃ BẬT"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    Nếu trình duyệt không hỗ trợ Notification.
+  */
+
+  if (
+    !(
+      "Notification"
+      in
+      window
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    Nếu quyền đã bị người dùng chặn,
+    không ép hiện popup xin quyền nữa.
+  */
+
+  if (
+    Notification.permission
+    ===
+    "denied"
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    Nếu notifications.js báo thiết bị
+    chưa sẵn sàng như iPhone chưa mở từ Home Screen,
+    không hiện onboarding chồng lên.
+  */
+
+  if (
+    pushButton.disabled
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     TẠO OVERLAY
+  ====================================================== */
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+
+  overlay.id =
+    "pickdeeCoachPushOnboarding";
+
+
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:9999999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(0,8,22,.86);
+    backdrop-filter:blur(7px);
+  `;
+
+
+  overlay.innerHTML = `
+
+    <div
+      style="
+        width:min(460px,100%);
+        padding:24px;
+        border-radius:20px;
+        background:#082653;
+        border:1px solid rgba(216,255,69,.34);
+        box-shadow:0 28px 90px rgba(0,0,0,.55);
+        text-align:center;
+      "
+    >
+
+      <div
+        style="
+          font-size:42px;
+          margin-bottom:12px;
+        "
+      >
+        🔔
+      </div>
+
+
+      <div
+        style="
+          color:#d8ff45;
+          font-size:21px;
+          font-weight:900;
+          line-height:1.25;
+        "
+      >
+        BẬT THÔNG BÁO PICKDEE
+      </div>
+
+
+      <div
+        id="pickdeeCoachPushOnboardingText"
+        style="
+          margin-top:12px;
+          color:rgba(255,255,255,.72);
+          font-size:14px;
+          line-height:1.6;
+        "
+      >
+        Bật thông báo để nhận ngay yêu cầu lịch học,
+        thay đổi lịch, công Coach và các cập nhật quan trọng từ PickDee.
+      </div>
+
+
+      <button
+        id="pickdeeCoachEnablePushBtn"
+        type="button"
+        style="
+          width:100%;
+          min-height:52px;
+          margin-top:20px;
+          border:0;
+          border-radius:12px;
+          background:#d8ff45;
+          color:#071426;
+          font-size:14px;
+          font-weight:900;
+          cursor:pointer;
+        "
+      >
+        🔔 BẬT THÔNG BÁO & VÀO PICKDEE
+      </button>
+
+
+      <button
+        id="pickdeeCoachPushLaterBtn"
+        type="button"
+        style="
+          width:100%;
+          min-height:44px;
+          margin-top:10px;
+          border:1px solid rgba(255,255,255,.16);
+          border-radius:11px;
+          background:rgba(255,255,255,.06);
+          color:rgba(255,255,255,.74);
+          font-size:12px;
+          font-weight:800;
+          cursor:pointer;
+        "
+      >
+        ĐỂ SAU
+      </button>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    overlay
+  );
+
+
+  const enableBtn =
+    document.getElementById(
+      "pickdeeCoachEnablePushBtn"
+    );
+
+
+  const laterBtn =
+    document.getElementById(
+      "pickdeeCoachPushLaterBtn"
+    );
+
+
+  const onboardingText =
+    document.getElementById(
+      "pickdeeCoachPushOnboardingText"
+    );
+
+
+  /*
+    Coach bấm 1 lần.
+
+    Nút thật của notifications.js được click
+    ngay trong thao tác của người dùng,
+    nên requestPermission vẫn xuất phát
+    từ user gesture.
+  */
+
+  enableBtn.addEventListener(
+    "click",
+    async function () {
+
+      enableBtn.disabled =
+        true;
+
+
+      enableBtn.textContent =
+        "ĐANG BẬT THÔNG BÁO...";
+
+
+      onboardingText.textContent =
+        "Đang đăng ký thiết bị nhận thông báo PickDee...";
+
+
+      /*
+        Gọi đúng hệ thống Push đã có.
+      */
+
+      pushButton.click();
+
+
+      /*
+        Chờ kết quả từ notifications.js.
+      */
+
+      for (
+        let i = 0;
+        i < 50;
+        i += 1
+      ) {
+
+        await new Promise(
+          resolve =>
+            setTimeout(
+              resolve,
+              120
+            )
+        );
+
+
+        const buttonText =
+          String(
+            pushButton.textContent
+            ||
+            ""
+          );
+
+
+        if (
+          buttonText.includes(
+            "THÔNG BÁO ĐÃ BẬT"
+          )
+        ) {
+
+          enableBtn.textContent =
+            "✅ THÔNG BÁO ĐÃ BẬT";
+
+
+          onboardingText.textContent =
+            "Thiết bị này đã được đăng ký nhận thông báo PickDee cho tài khoản Coach.";
+
+
+          await new Promise(
+            resolve =>
+              setTimeout(
+                resolve,
+                800
+              )
+          );
+
+
+          overlay.remove();
+
+
+          return;
+
+        }
+
+
+        /*
+          Nếu hệ thống Push trả về lỗi,
+          lấy chính nội dung lỗi đang hiển thị
+          trong notification panel.
+        */
+
+        const currentStatus =
+          String(
+            pushStatus.textContent
+            ||
+            ""
+          ).trim();
+
+
+        if (
+          currentStatus
+          &&
+          !currentStatus.includes(
+            "Đang"
+          )
+          &&
+          !currentStatus.includes(
+            "Nhận thông báo ngay"
+          )
+        ) {
+
+          onboardingText.textContent =
+            currentStatus;
+
+        }
+
+      }
+
+
+      enableBtn.disabled =
+        false;
+
+
+      enableBtn.textContent =
+        "🔔 THỬ BẬT LẠI THÔNG BÁO";
+
+  });
+
+
+  /*
+    Để sau chỉ ẩn trong phiên hiện tại.
+    Lần đăng nhập sau PickDee vẫn có thể nhắc lại.
+  */
+
+  laterBtn.addEventListener(
+    "click",
+    function () {
+
+      sessionStorage.setItem(
+        sessionKey,
+        "later"
+      );
+
+
+      overlay.remove();
+
+    }
+  );
+
+
+})();
+</script>
+  <script>
+(async function () {
+
   const cfg =
     window.PICKDEE_CONFIG || {};
 
