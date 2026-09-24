@@ -119,6 +119,33 @@ function dateVN(value) {
 }
 
 
+function paidDateVN(value) {
+
+  if (!value) {
+    return "—";
+  }
+
+  const date =
+    new Date(value);
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "—";
+  }
+
+
+  return new Intl.DateTimeFormat(
+    "vi-VN",
+    {
+      timeZone:
+        "Asia/Ho_Chi_Minh"
+    }
+  ).format(date);
+}
 function one(value) {
 
   if (
@@ -460,7 +487,7 @@ async function loadWorks() {
 
     body.innerHTML = `
       <tr>
-        <td colspan="8">
+        <td colspan="9">
           Không tải được Công Coach.
         </td>
       </tr>
@@ -530,7 +557,7 @@ async function loadWorks() {
 
       body.innerHTML = `
         <tr>
-          <td colspan="8">
+          <td colspan="9">
             Không tải được Công Coach.
           </td>
         </tr>
@@ -778,7 +805,13 @@ function renderWorks(
                 </span>
 
               </td>
+<td>
 
+  ${paidDateVN(
+    row.paid_at
+  )}
+
+</td>
             </tr>
           `;
         }
