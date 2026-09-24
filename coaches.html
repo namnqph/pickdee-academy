@@ -1139,28 +1139,33 @@
       data,
       error
     } =
-      await sb
-        .from(
-          "coaches"
-        )
-        .select(`
-          id,
-          coach_code,
-          full_name,
-          phone,
-          email,
-          preferred_area,
-          preferred_ward,
-          status,
-          auth_user_id
-        `)
-        .order(
-          "id",
-          {
-            ascending:
-              false
-          }
-        );
+     await sb
+  .from(
+    "coaches"
+  )
+  .select(`
+    id,
+    coach_code,
+    full_name,
+    phone,
+    email,
+    preferred_area,
+    preferred_ward,
+    status,
+    auth_user_id,
+    is_test
+  `)
+  .eq(
+    "is_test",
+    false
+  )
+  .order(
+    "id",
+    {
+      ascending:
+        false
+    }
+  );
 
 
     if (error) {
