@@ -2818,19 +2818,11 @@
         }
 
 
-        /* ==============================
-           GẮN CLICK TRỰC TIẾP VÀO NÚT
+               /* ==============================
+           KHÔNG GẮN ONCLICK TRỰC TIẾP
+           Nút DUYỆT được xử lý bằng
+           event delegation duy nhất bên dưới.
         ============================== */
-
-        approveButton.onclick =
-          function (event) {
-
-            return handleApproveCoach(
-              event,
-              approveButton
-            );
-
-          };
 
 
       }
@@ -2844,7 +2836,6 @@
   ====================================================== */
 
   function scheduleEnhance() {
-
 
     clearTimeout(
       enhanceTimer
@@ -2881,6 +2872,52 @@
         childList: true,
         subtree: true
       }
+    );
+
+
+    /*
+      =====================================================
+      DUYỆT COACH - CLICK HANDLER DUY NHẤT
+
+      Dùng capture = true để chặn handler DUYỆT cũ
+      phía trên trước khi nó chạy.
+
+      Không phụ thuộc việc card vừa render hay render lại.
+      =====================================================
+    */
+
+    applicationList.addEventListener(
+      "click",
+      function (event) {
+
+
+        const approveButton =
+          event.target.closest(
+            ".approve-btn[data-id]"
+          );
+
+
+        if (
+          !approveButton
+          ||
+          !applicationList.contains(
+            approveButton
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        void handleApproveCoach(
+          event,
+          approveButton
+        );
+
+
+      },
+      true
     );
 
 
