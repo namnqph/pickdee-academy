@@ -1785,23 +1785,36 @@ function renderWards() {
       if (avatarPath) {
 
 
-        const {
-          data: publicData
-        } =
-          avatarSb
-            .storage
-           .from(
-  "profile-photos"
-)
-            .getPublicUrl(
-              avatarPath
-            );
+      const {
+  data: signedData,
+  error: signedError
+} =
+  await avatarSb
+    .storage
+    .from(
+      "profile-photos"
+    )
+    .createSignedUrl(
+      avatarPath,
+      60 * 60
+    );
 
 
-        const publicUrl =
-          publicData?.publicUrl
-          ||
-          "";
+if (signedError) {
+
+  console.warn(
+    "FIND COACH AVATAR SIGNED URL:",
+    coachId,
+    signedError
+  );
+
+}
+
+
+const publicUrl =
+  signedData?.signedUrl
+  ||
+  "";
 
 
         if (publicUrl) {
