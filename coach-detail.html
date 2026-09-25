@@ -919,35 +919,322 @@ function renderCoach() {
     currentCoach.coach_code
   );
 
-  show(
-    "phone",
-    currentCoach.phone
-  );
 
-  show(
-    "email",
-    currentCoach.email
-  );
+  const acceptingText =
+    currentCoach.accepting_students === false
+      ?
+      "TẠM NGỪNG NHẬN HỌC VIÊN"
+      :
+      "ĐANG NHẬN HỌC VIÊN";
 
-  show(
-    "area",
-    currentCoach.preferred_area
-  );
 
-  show(
-    "ward",
-    currentCoach.preferred_ward
-  );
+  const rateText =
+    currentCoach.session_rate !== null
+    &&
+    currentCoach.session_rate !== undefined
+    &&
+    currentCoach.session_rate !== ""
+      ?
+      Number(
+        currentCoach.session_rate
+      ).toLocaleString(
+        "vi-VN"
+      )
+      +
+      "đ / buổi"
+      :
+      "—";
 
-  show(
-    "status",
-    currentCoach.status
-  );
 
-  show(
-    "note",
-    currentCoach.note
-  );
+  const yearsText =
+    currentCoach.years_coaching !== null
+    &&
+    currentCoach.years_coaching !== undefined
+    &&
+    currentCoach.years_coaching !== ""
+      ?
+      `${currentCoach.years_coaching} năm`
+      :
+      "—";
+
+
+  viewMode.innerHTML = `
+
+    <!-- THÔNG TIN CƠ BẢN -->
+
+    <section class="grid">
+
+      <div class="card">
+
+        <h2>
+          👤 Thông tin Coach
+        </h2>
+
+        <div class="item">
+          <div class="label">
+            Số điện thoại
+          </div>
+
+          <div class="value">
+            ${currentCoach.phone || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Email
+          </div>
+
+          <div class="value">
+            ${currentCoach.email || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Trạng thái hoạt động
+          </div>
+
+          <div class="value">
+            <span class="badge">
+              ${currentCoach.status || "—"}
+            </span>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Trạng thái nhận học viên
+          </div>
+
+          <div class="value">
+            <span class="badge">
+              ${acceptingText}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- KHU VỰC -->
+
+      <div class="card">
+
+        <h2>
+          📍 Khu vực nhận dạy
+        </h2>
+
+        <div class="item">
+          <div class="label">
+            Tỉnh / Thành
+          </div>
+
+          <div class="value">
+            ${currentCoach.preferred_area || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Xã / Phường
+          </div>
+
+          <div class="value">
+            ${currentCoach.preferred_ward || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Sân ưu tiên
+          </div>
+
+          <div class="value">
+            ${currentCoach.preferred_courts || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Thời gian có thể nhận lớp
+          </div>
+
+          <div class="value">
+            ${currentCoach.availability_note || "—"}
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CHUYÊN MÔN -->
+
+    <section class="grid full">
+
+      <div class="card">
+
+        <h2>
+          🏓 Năng lực chuyên môn
+        </h2>
+
+        <div class="item">
+          <div class="label">
+            Trình độ Pickleball
+          </div>
+
+          <div class="value">
+            ${currentCoach.pickleball_level || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Kinh nghiệm huấn luyện
+          </div>
+
+          <div class="value">
+            ${yearsText}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Chuyên môn / Sở trường
+          </div>
+
+          <div class="value">
+            ${currentCoach.coaching_specialties || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Phong cách huấn luyện
+          </div>
+
+          <div class="value">
+            ${currentCoach.coaching_style || "—"}
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- CHỨNG CHỈ -->
+
+      <div class="card">
+
+        <h2>
+          🎓 Chứng chỉ & Thành tích
+        </h2>
+
+        <div class="item">
+          <div class="label">
+            Bằng cấp / Chứng chỉ
+          </div>
+
+          <div class="value">
+            ${currentCoach.qualifications || "—"}
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="label">
+            Thành tích
+          </div>
+
+          <div class="value">
+            ${currentCoach.achievements || "—"}
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- GIỚI THIỆU -->
+
+    <section class="card full">
+
+      <h2>
+        💬 Giới thiệu Coach
+      </h2>
+
+      <div class="value">
+        ${currentCoach.bio || "Chưa có phần giới thiệu."}
+      </div>
+
+    </section>
+
+
+    <!-- NỘI BỘ ADMIN -->
+
+    <section class="card full">
+
+      <h2>
+        🔐 Thông tin vận hành nội bộ
+      </h2>
+
+      <div class="grid">
+
+        <div>
+
+          <div class="item">
+
+            <div class="label">
+              Hạng Coach
+            </div>
+
+            <div class="value">
+              ${currentCoach.compensation_tier || "—"}
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="item">
+
+            <div class="label">
+              Mức trả Coach
+            </div>
+
+            <div class="value">
+              ${rateText}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- GHI CHÚ ADMIN -->
+
+    <section class="card full">
+
+      <h2>
+        📝 Ghi chú Admin
+      </h2>
+
+      <div class="value">
+        ${currentCoach.note || "—"}
+      </div>
+
+    </section>
+
+  `;
+
 }
 
 
@@ -1410,7 +1697,7 @@ editForm.addEventListener(
           "id",
           coachId
         )
-                .select(`
+                 .select(`
           id,
           coach_code,
           full_name,
@@ -1434,8 +1721,7 @@ editForm.addEventListener(
           availability_note,
           accepting_students
         `)
-
-
+        .single();
     if (error) {
 
       console.error(error);
