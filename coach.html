@@ -10541,6 +10541,904 @@ document.addEventListener("DOMContentLoaded", function () {
 })();
 
 </script>
+
+  <!-- =========================================================
+     PICKDEE - HẠNG COACH & QUYỀN LỢI
+========================================================= -->
+
+<style>
+
+  #coachBenefitsCard {
+    grid-column: 1 / -1;
+    min-height: 0;
+
+    border:
+      1px solid rgba(216,255,69,.35);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(6,39,88,.98),
+        rgba(14,55,83,.94)
+      );
+  }
+
+
+  .coach-benefits-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+
+  .coach-benefits-current {
+    display:inline-block;
+
+    padding:
+      7px 11px;
+
+    border-radius:
+      999px;
+
+    background:
+      rgba(216,255,69,.13);
+
+    border:
+      1px solid rgba(216,255,69,.30);
+
+    color:
+      #d8ff45;
+
+    font-size:
+      12px;
+
+    font-weight:
+      900;
+  }
+
+
+  .coach-benefits-grid {
+    display:grid;
+
+    grid-template-columns:
+      repeat(2,1fr);
+
+    gap:
+      14px;
+
+    margin-top:
+      18px;
+  }
+
+
+  .coach-benefits-tier {
+    padding:
+      16px;
+
+    border-radius:
+      14px;
+
+    background:
+      rgba(0,0,0,.14);
+
+    border:
+      1px solid rgba(255,255,255,.09);
+  }
+
+
+  .coach-benefits-tier.current {
+    border:
+      1px solid rgba(216,255,69,.55);
+
+    background:
+      rgba(216,255,69,.07);
+  }
+
+
+  .coach-benefits-tier-title {
+    font-size:
+      17px;
+
+    font-weight:
+      900;
+
+    color:
+      #fff;
+  }
+
+
+  .coach-benefits-tier.current
+  .coach-benefits-tier-title {
+    color:
+      #d8ff45;
+  }
+
+
+  .coach-benefits-tier-badge {
+    display:inline-block;
+
+    margin-top:
+      7px;
+
+    padding:
+      4px 8px;
+
+    border-radius:
+      999px;
+
+    background:
+      #d8ff45;
+
+    color:
+      #172600;
+
+    font-size:
+      10px;
+
+    font-weight:
+      900;
+  }
+
+
+  .coach-benefit-policy {
+    margin-top:
+      13px;
+
+    padding-top:
+      13px;
+
+    border-top:
+      1px solid rgba(255,255,255,.09);
+  }
+
+
+  .coach-benefit-policy:first-of-type {
+    margin-top:
+      15px;
+  }
+
+
+  .coach-benefit-name {
+    font-weight:
+      900;
+
+    line-height:
+      1.4;
+  }
+
+
+  .coach-benefit-row {
+    display:flex;
+
+    justify-content:
+      space-between;
+
+    align-items:flex-start;
+
+    gap:
+      14px;
+
+    margin-top:
+      8px;
+
+    font-size:
+      13px;
+
+    line-height:
+      1.45;
+  }
+
+
+  .coach-benefit-label {
+    color:
+      rgba(255,255,255,.55);
+  }
+
+
+  .coach-benefit-value {
+    text-align:right;
+
+    font-weight:
+      900;
+
+    color:
+      #d8ff45;
+  }
+
+
+  .coach-benefit-note {
+    margin-top:
+      8px;
+
+    color:
+      rgba(255,255,255,.58);
+
+    font-size:
+      12px;
+
+    line-height:
+      1.5;
+  }
+
+
+  .coach-benefits-footer {
+    margin-top:
+      16px;
+
+    padding-top:
+      14px;
+
+    border-top:
+      1px solid rgba(255,255,255,.09);
+
+    color:
+      rgba(255,255,255,.58);
+
+    font-size:
+      12px;
+
+    line-height:
+      1.55;
+  }
+
+
+  @media(max-width:700px) {
+
+    .coach-benefits-grid {
+      grid-template-columns:
+        1fr;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  const dashboardGrid =
+    document.querySelector(
+      ".dashboard-grid"
+    );
+
+
+  if (!dashboardGrid) {
+
+    console.warn(
+      "Coach Benefits: không tìm thấy dashboard."
+    );
+
+    return;
+  }
+
+
+  if (
+    document.getElementById(
+      "coachBenefitsCard"
+    )
+  ) {
+
+    return;
+  }
+
+
+  const card =
+    document.createElement(
+      "div"
+    );
+
+
+  card.id =
+    "coachBenefitsCard";
+
+
+  card.className =
+    "dashboard-card highlight";
+
+
+  card.innerHTML = `
+
+    <div class="coach-benefits-head">
+
+      <div>
+
+        <div class="dashboard-title">
+          🏅 HẠNG COACH & QUYỀN LỢI
+        </div>
+
+        <div
+          id="coachBenefitsSubtitle"
+          class="dashboard-sub"
+        >
+          Đang tải chính sách công Coach...
+        </div>
+
+      </div>
+
+
+      <div
+        id="coachBenefitsCurrent"
+        class="coach-benefits-current"
+      >
+        ĐANG TẢI...
+      </div>
+
+    </div>
+
+
+    <div
+      id="coachBenefitsGrid"
+      class="coach-benefits-grid"
+    ></div>
+
+
+    <div class="coach-benefits-footer">
+
+      Mức công và thưởng được lấy trực tiếp
+      từ chính sách PickDee đang áp dụng.
+
+      <br>
+
+      Hạng Coach và việc xét bằng cấp /
+      chứng chỉ do PickDee quản lý.
+
+    </div>
+
+  `;
+
+
+  const rewardCard =
+    document.getElementById(
+      "coachRewardCard"
+    );
+
+
+  if (rewardCard) {
+
+    dashboardGrid.insertBefore(
+      card,
+      rewardCard
+    );
+
+  }
+  else {
+
+    dashboardGrid.appendChild(
+      card
+    );
+
+  }
+
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.sb
+    ||
+    window.supabaseClient;
+
+
+  const currentEl =
+    document.getElementById(
+      "coachBenefitsCurrent"
+    );
+
+
+  const subtitleEl =
+    document.getElementById(
+      "coachBenefitsSubtitle"
+    );
+
+
+  const gridEl =
+    document.getElementById(
+      "coachBenefitsGrid"
+    );
+
+
+  function escapeBenefitsHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function formatBenefitsMoney(
+    value
+  ) {
+
+    const number =
+      Number(
+        value || 0
+      );
+
+
+    return (
+      number.toLocaleString(
+        "vi-VN"
+      )
+      +
+      "đ"
+    );
+
+  }
+
+
+  function tierLabel(
+    tier
+  ) {
+
+    const value =
+      String(
+        tier || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      value === "certified"
+    ) {
+
+      return "Coach có bằng / chứng chỉ";
+
+    }
+
+
+    if (
+      value === "standard"
+    ) {
+
+      return "Coach Tiêu chuẩn";
+
+    }
+
+
+    return (
+      tier
+      ||
+      "Hạng Coach"
+    );
+
+  }
+
+
+  async function loadCoachBenefits() {
+
+    if (!sb) {
+
+      subtitleEl.textContent =
+        "Không tìm thấy kết nối Supabase.";
+
+      return;
+    }
+
+
+    subtitleEl.textContent =
+      "Đang tải chính sách công Coach...";
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "get_my_coach_compensation_benefits"
+      );
+
+
+    if (error) {
+
+      console.error(
+        "GET COACH BENEFITS:",
+        error
+      );
+
+
+      currentEl.textContent =
+        "KHÔNG TẢI ĐƯỢC";
+
+
+      subtitleEl.textContent =
+        "Không tải được quyền lợi Coach.";
+
+
+      gridEl.innerHTML = "";
+
+      return;
+    }
+
+
+    const currentTier =
+      String(
+        data?.current_tier
+        ||
+        "standard"
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const policies =
+      Array.isArray(
+        data?.policies
+      )
+        ?
+        data.policies
+        :
+        [];
+
+
+    currentEl.textContent =
+      "HẠNG HIỆN TẠI: "
+      +
+      tierLabel(
+        currentTier
+      );
+
+
+    subtitleEl.textContent =
+      "Xem mức công và quyền lợi theo từng hạng Coach.";
+
+
+    const grouped =
+      new Map();
+
+
+    policies.forEach(
+      function (policy) {
+
+        const tier =
+          String(
+            policy.coach_tier
+            ||
+            "other"
+          )
+            .trim()
+            .toLowerCase();
+
+
+        if (
+          !grouped.has(
+            tier
+          )
+        ) {
+
+          grouped.set(
+            tier,
+            []
+          );
+
+        }
+
+
+        grouped
+          .get(
+            tier
+          )
+          .push(
+            policy
+          );
+
+      }
+    );
+
+
+    const tierOrder =
+      [
+        "standard",
+        "certified"
+      ];
+
+
+    grouped.forEach(
+      function (
+        value,
+        key
+      ) {
+
+        if (
+          !tierOrder.includes(
+            key
+          )
+        ) {
+
+          tierOrder.push(
+            key
+          );
+
+        }
+
+      }
+    );
+
+
+    gridEl.innerHTML =
+      tierOrder
+        .map(
+          function (tier) {
+
+            const rows =
+              grouped.get(
+                tier
+              )
+              ||
+              [];
+
+
+            if (
+              rows.length === 0
+            ) {
+
+              return "";
+
+            }
+
+
+            const isCurrent =
+              tier ===
+              currentTier;
+
+
+            return `
+
+              <div
+                class="
+                  coach-benefits-tier
+                  ${
+                    isCurrent
+                      ?
+                      "current"
+                      :
+                      ""
+                  }
+                "
+              >
+
+                <div
+                  class="
+                    coach-benefits-tier-title
+                  "
+                >
+                  ${
+                    escapeBenefitsHtml(
+                      tierLabel(
+                        tier
+                      )
+                    )
+                  }
+                </div>
+
+
+                ${
+                  isCurrent
+                    ?
+                    `
+                      <div
+                        class="
+                          coach-benefits-tier-badge
+                        "
+                      >
+                        HẠNG HIỆN TẠI CỦA BẠN
+                      </div>
+                    `
+                    :
+                    ""
+                }
+
+
+                ${
+                  rows
+                    .map(
+                      function (
+                        policy
+                      ) {
+
+                        const bonus =
+                          Number(
+                            policy.completion_bonus
+                            ||
+                            0
+                          );
+
+
+                        return `
+
+                          <div
+                            class="
+                              coach-benefit-policy
+                            "
+                          >
+
+                            <div
+                              class="
+                                coach-benefit-name
+                              "
+                            >
+                              ${
+                                escapeBenefitsHtml(
+                                  policy.policy_name
+                                  ||
+                                  policy.learning_mode
+                                  ||
+                                  policy.policy_code
+                                  ||
+                                  "Chính sách Coach"
+                                )
+                              }
+                            </div>
+
+
+                            <div
+                              class="
+                                coach-benefit-row
+                              "
+                            >
+
+                              <span
+                                class="
+                                  coach-benefit-label
+                                "
+                              >
+                                Công / buổi
+                              </span>
+
+                              <span
+                                class="
+                                  coach-benefit-value
+                                "
+                              >
+                                ${
+                                  formatBenefitsMoney(
+                                    policy.session_amount
+                                  )
+                                }
+                              </span>
+
+                            </div>
+
+
+                            <div
+                              class="
+                                coach-benefit-row
+                              "
+                            >
+
+                              <span
+                                class="
+                                  coach-benefit-label
+                                "
+                              >
+                                Thưởng hoàn thành
+                              </span>
+
+                              <span
+                                class="
+                                  coach-benefit-value
+                                "
+                              >
+                                ${
+                                  bonus > 0
+                                    ?
+                                    formatBenefitsMoney(
+                                      bonus
+                                    )
+                                    :
+                                    "—"
+                                }
+                              </span>
+
+                            </div>
+
+
+                            ${
+                              policy.note
+                                ?
+                                `
+                                  <div
+                                    class="
+                                      coach-benefit-note
+                                    "
+                                  >
+                                    ${
+                                      escapeBenefitsHtml(
+                                        policy.note
+                                      )
+                                    }
+                                  </div>
+                                `
+                                :
+                                ""
+                            }
+
+                          </div>
+
+                        `;
+
+                      }
+                    )
+                    .join("")
+                }
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    if (
+      !gridEl.innerHTML.trim()
+    ) {
+
+      gridEl.innerHTML = `
+
+        <div
+          style="
+            color:rgba(255,255,255,.6);
+            font-size:13px;
+          "
+        >
+          Hiện chưa có chính sách công Coach
+          đang áp dụng.
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  await loadCoachBenefits();
+
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadCoachBenefits,
+        400
+      );
+
+    }
+  );
+
+
+})();
+
+</script>
 </body>
 
 </html>
