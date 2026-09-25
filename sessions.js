@@ -952,16 +952,15 @@ async function loadSessions() {
         ),
 
 
-        coaches (
+       coaches:coaches!class_sessions_coach_id_fkey (
 
-          id,
+  id,
 
-          coach_code,
+  coach_code,
 
-          full_name
+  full_name
 
-        )
-
+)
       `);
 
 
