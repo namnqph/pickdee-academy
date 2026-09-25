@@ -2161,7 +2161,64 @@ https://pickdee.vn/`;
   );
 
 
+  /* =====================================================
+     CLICK COACH -> XEM CHI TIẾT
+  ====================================================== */
 
+  coachRows.addEventListener(
+    "click",
+    function (event) {
+
+      // Nếu bấm nút TẠO TÀI KHOẢN thì giữ nguyên chức năng cũ
+      if (
+        event.target.closest(
+          ".account-btn"
+        )
+      ) {
+        return;
+      }
+
+      const row =
+        event.target.closest(
+          "tr"
+        );
+
+      if (!row) {
+        return;
+      }
+
+      const visibleRows =
+        Array.from(
+          coachRows.querySelectorAll(
+            "tr"
+          )
+        );
+
+      const rowIndex =
+        visibleRows.indexOf(
+          row
+        );
+
+      if (rowIndex < 0) {
+        return;
+      }
+
+      const coach =
+        getFilteredCoaches()[
+          rowIndex
+        ];
+
+      if (!coach?.id) {
+        return;
+      }
+
+      window.location.href =
+        `./coach-detail?id=${encodeURIComponent(
+          coach.id
+        )}`;
+
+    }
+  );
   /* =====================================================
      SEARCH
   ====================================================== */
