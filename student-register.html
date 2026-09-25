@@ -2165,6 +2165,35 @@ if (
 
       event.preventDefault();
 
+      if (
+        !avatarBase64
+        ||
+        !avatarMime
+      ) {
+
+        message.textContent =
+          "Vui lòng thêm ảnh đại diện để hoàn tất đăng ký.";
+
+        message.className =
+          "message error";
+
+        const avatarField =
+          avatarInput.closest(
+            ".field"
+          );
+
+        if (avatarField) {
+
+          avatarField.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+
+        }
+
+        return;
+      }
+
 
       if (
         !registerForm.checkValidity()
@@ -2174,22 +2203,6 @@ if (
 
         return;
 
-      }
-      if (
-        !avatarBase64
-        ||
-        !avatarMime
-      ) {
-
-        message.textContent =
-          "Vui lòng chụp hoặc chọn ảnh đại diện.";
-
-        message.className =
-          "message error";
-
-        avatarInput.focus();
-
-        return;
       }
       if (
         password.value
