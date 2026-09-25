@@ -11186,12 +11186,34 @@ document.addEventListener("DOMContentLoaded", function () {
         .map(
           function (tier) {
 
-            const rows =
-              grouped.get(
-                tier
-              )
-              ||
-              [];
+           const rows =
+  (
+    grouped.get(
+      tier
+    )
+    ||
+    []
+  )
+    .slice()
+    .sort(
+      function (a, b) {
+
+        const order = {
+          solo: 1,
+          group_2: 2,
+          custom: 3
+        };
+
+        return (
+          order[a.learning_mode] || 99
+        )
+        -
+        (
+          order[b.learning_mode] || 99
+        );
+
+      }
+    );
 
 
             if (
