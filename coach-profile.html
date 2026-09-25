@@ -562,45 +562,81 @@
           null;
 
 
-      const avatarPath =
-        avatarRow?.avatar_path
-        ||
-        "";
-
-
-      if (avatarPath) {
-
-       const {
-  data: signedData,
-  error: signedError
-} =
-  await sb
-    .storage
-    .from(
-      "profile-photos"
-    )
-    .createSignedUrl(
-      avatarPath,
-      60 * 60
-    );
-
-
-if (signedError) {
-
-  console.warn(
-    "COACH PROFILE AVATAR SIGNED URL:",
-    coachId,
-    signedError
-  );
-
-}
-
-
-const publicUrl =
-  signedData?.signedUrl
+    const avatarPath =
+  avatarRow?.avatar_path
   ||
   "";
 
+
+const avatarBucket =
+  (
+    avatarRow?.avatar_bucket ===
+      "avatars"
+    ||
+    avatarRow?.avatar_bucket ===
+      "profile-photos"
+  )
+    ?
+    avatarRow.avatar_bucket
+    :
+    "profile-photos";
+
+
+if (avatarPath) {
+
+  const {
+    data: signedData,
+    error: signedError
+  } =
+    await sb
+      .storage
+      .from(
+        avatarBucket
+      )
+      .createSignedUrl(
+        avatarPath,
+        60 * 60
+      );
+
+
+  if (signedError) {
+
+    console.warn(
+      "COACH PROFILE AVATAR SIGNED URL:",
+      coachId,
+      signedError
+    );
+
+  }
+
+
+  let publicUrl =
+    signedData?.signedUrl
+    ||
+    "";
+
+
+  if (!publicUrl) {
+
+    const {
+      data: publicData
+    } =
+      sb
+        .storage
+        .from(
+          avatarBucket
+        )
+        .getPublicUrl(
+          avatarPath
+        );
+
+
+    publicUrl =
+      publicData?.publicUrl
+      ||
+      "";
+
+  }
 
         if (publicUrl) {
 
