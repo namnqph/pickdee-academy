@@ -1777,18 +1777,27 @@
             Sân ưu tiên
           </div>
 
-          <textarea
-            id="coachEditPreferredCourts"
-            style="
-              width:100%;
-              min-height:85px;
-              padding:12px;
-              border-radius:10px;
-              border:1px solid rgba(255,255,255,.18);
-              background:rgba(255,255,255,.07);
-              color:white;
-            "
-          ></textarea>
+         <div
+  id="coachEditPreferredCourts"
+  style="
+    width:100%;
+    min-height:52px;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:white;
+  "
+>
+  <div
+    style="
+      color:rgba(255,255,255,.6);
+      font-size:13px;
+    "
+  >
+    Đang tải danh sách sân...
+  </div>
+</div>
         </div>
 
 
@@ -2855,8 +2864,347 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
     );
 
 
-  function openCoachProfileEdit() {
 
+async function loadCoachPreferredCourtPicker() {
+
+  const box =
+    document.getElementById(
+      "coachEditPreferredCourts"
+    );
+
+
+  if (!box) {
+    return;
+  }
+
+
+  box.innerHTML = `
+    <div
+      style="
+        color:rgba(255,255,255,.6);
+        font-size:13px;
+      "
+    >
+      Đang tải danh sách sân...
+    </div>
+  `;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb.rpc(
+      "get_my_available_courts"
+    );
+
+
+  if (error) {
+
+    console.error(
+      "GET AVAILABLE COURTS:",
+      error
+    );
+
+
+    box.innerHTML = `
+      <div
+        style="
+          color:#ffaaaa;
+          font-size:13px;
+        "
+      >
+        Không tải được danh sách sân.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const courts =
+    Array.isArray(data)
+      ?
+      data
+      :
+      [];
+
+
+  if (courts.length === 0) {
+
+    box.innerHTML = `
+      <div
+        style="
+          color:rgba(255,255,255,.6);
+          font-size:13px;
+        "
+      >
+        Hiện chưa có sân phù hợp.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const escapeCourtText =
+    function (value) {
+
+      return String(
+        value ?? ""
+      )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    };
+
+
+  box.innerHTML = `
+
+    <button
+      id="coachCourtPickerToggle"
+      type="button"
+      style="
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border-radius:9px;
+        border:1px solid rgba(216,255,69,.28);
+        background:#092653;
+        color:white;
+        text-align:left;
+        font-weight:800;
+        cursor:pointer;
+      "
+    >
+      🏓 Chọn sân ưu tiên ▼
+    </button>
+
+
+    <div
+      id="coachCourtPickerList"
+      style="
+        display:none;
+        margin-top:8px;
+        max-height:280px;
+        overflow:auto;
+      "
+    >
+
+      ${
+        courts
+          .map(
+            function (court) {
+
+              return `
+
+                <label
+                  style="
+                    display:flex;
+                    gap:10px;
+                    align-items:flex-start;
+                    padding:11px 6px;
+                    border-bottom:
+                      1px solid
+                      rgba(255,255,255,.08);
+                    cursor:pointer;
+                  "
+                >
+
+                  <input
+                    type="checkbox"
+                    class="coach-preferred-court-checkbox"
+                    value="${Number(court.court_id)}"
+                    data-court-name="${escapeCourtText(
+                      court.court_name
+                    )}"
+                    ${
+                      court.is_selected
+                        ?
+                        "checked"
+                        :
+                        ""
+                    }
+                    style="
+                      margin-top:3px;
+                      width:18px;
+                      height:18px;
+                    "
+                  >
+
+
+                  <span>
+
+                    <strong>
+                      ${escapeCourtText(
+                        court.court_name
+                      )}
+                    </strong>
+
+                    <br>
+
+                    <span
+                      style="
+                        color:rgba(255,255,255,.55);
+                        font-size:12px;
+                        line-height:1.5;
+                      "
+                    >
+                      ${escapeCourtText(
+                        court.ward || ""
+                      )}
+                      ${
+                        court.area
+                          ?
+                          " · "
+                          +
+                          escapeCourtText(
+                            court.area
+                          )
+                          :
+                          ""
+                      }
+
+                      ${
+                        court.address
+                          ?
+                          "<br>"
+                          +
+                          escapeCourtText(
+                            court.address
+                          )
+                          :
+                          ""
+                      }
+
+                    </span>
+
+                  </span>
+
+                </label>
+
+              `;
+
+            }
+          )
+          .join("")
+      }
+
+    </div>
+
+
+    <div
+      id="coachCourtPickerSummary"
+      style="
+        margin-top:9px;
+        color:#d8ff45;
+        font-size:12px;
+        line-height:1.5;
+      "
+    ></div>
+
+  `;
+
+
+  const toggle =
+    document.getElementById(
+      "coachCourtPickerToggle"
+    );
+
+
+  const list =
+    document.getElementById(
+      "coachCourtPickerList"
+    );
+
+
+  const summary =
+    document.getElementById(
+      "coachCourtPickerSummary"
+    );
+
+
+  function updateCourtSummary() {
+
+    const selected =
+      [
+        ...box.querySelectorAll(
+          ".coach-preferred-court-checkbox:checked"
+        )
+      ];
+
+
+    const names =
+      selected.map(
+        item =>
+          item.dataset.courtName
+      );
+
+
+    summary.textContent =
+      names.length
+        ?
+        `Đã chọn ${names.length} sân: ${names.join(", ")}`
+        :
+        "Chưa chọn sân nào.";
+
+
+    box.value =
+      names.join(", ");
+
+  }
+
+
+  toggle.addEventListener(
+    "click",
+    function () {
+
+      const isOpen =
+        list.style.display !== "none";
+
+
+      list.style.display =
+        isOpen
+          ?
+          "none"
+          :
+          "block";
+
+
+      toggle.textContent =
+        isOpen
+          ?
+          "🏓 Chọn sân ưu tiên ▼"
+          :
+          "🏓 Chọn sân ưu tiên ▲";
+
+    }
+  );
+
+
+  box
+    .querySelectorAll(
+      ".coach-preferred-court-checkbox"
+    )
+    .forEach(
+      function (checkbox) {
+
+        checkbox.addEventListener(
+          "change",
+          updateCourtSummary
+        );
+
+      }
+    );
+
+
+  updateCourtSummary();
+
+}
+  async function openCoachProfileEdit() {
     if (!currentCoach) return;
 
 
@@ -2890,10 +3238,7 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
       currentCoach.years_coaching ?? "";
 
 
-    document.getElementById(
-      "coachEditPreferredCourts"
-    ).value =
-      currentCoach.preferred_courts || "";
+   await loadCoachPreferredCourtPicker();
 
 
     document.getElementById(
@@ -3040,6 +3385,48 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
       }
 
 
+          const courtBox =
+        document.getElementById(
+          "coachEditPreferredCourts"
+        );
+
+
+      const selectedCourtCheckboxes =
+        courtBox
+          ?
+          [
+            ...courtBox.querySelectorAll(
+              ".coach-preferred-court-checkbox:checked"
+            )
+          ]
+          :
+          [];
+
+
+      const selectedCourtIds =
+        selectedCourtCheckboxes
+          .map(
+            item =>
+              Number(item.value)
+          )
+          .filter(
+            value =>
+              Number.isInteger(value)
+              &&
+              value > 0
+          );
+
+
+      const selectedCourtNames =
+        selectedCourtCheckboxes
+          .map(
+            item =>
+              item.dataset.courtName
+          )
+          .filter(Boolean)
+          .join(", ");
+
+
       saveCoachProfileBtn.disabled =
         true;
 
@@ -3105,9 +3492,7 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
               ).value.trim() || null,
 
             p_preferred_courts:
-              document.getElementById(
-                "coachEditPreferredCourts"
-              ).value.trim() || null,
+              selectedCourtNames || null,
 
             p_availability_note:
               document.getElementById(
@@ -3155,6 +3540,50 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
         return;
       }
 
+
+      const {
+        error: preferredCourtsError
+      } =
+        await sb.rpc(
+          "save_my_preferred_courts",
+          {
+            p_court_ids:
+              selectedCourtIds
+          }
+        );
+
+
+      if (preferredCourtsError) {
+
+        console.error(
+          "SAVE PREFERRED COURTS:",
+          preferredCourtsError
+        );
+
+
+        coachProfileEditMessage.textContent =
+          "Hồ sơ đã lưu nhưng chưa lưu được sân ưu tiên: "
+          +
+          (
+            preferredCourtsError.message ||
+            preferredCourtsError
+          );
+
+
+        coachProfileEditMessage.style.color =
+          "#ffaaaa";
+
+
+        saveCoachProfileBtn.disabled =
+          false;
+
+
+        saveCoachProfileBtn.textContent =
+          "LƯU HỒ SƠ";
+
+
+        return;
+      }
 
       const {
         data: updatedCoach,
