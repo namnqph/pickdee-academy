@@ -570,23 +570,36 @@
 
       if (avatarPath) {
 
-        const {
-          data: publicData
-        } =
-          sb
-            .storage
-            .from(
-              "avatars"
-            )
-            .getPublicUrl(
-              avatarPath
-            );
+       const {
+  data: signedData,
+  error: signedError
+} =
+  await sb
+    .storage
+    .from(
+      "profile-photos"
+    )
+    .createSignedUrl(
+      avatarPath,
+      60 * 60
+    );
 
 
-        const publicUrl =
-          publicData?.publicUrl
-          ||
-          "";
+if (signedError) {
+
+  console.warn(
+    "COACH PROFILE AVATAR SIGNED URL:",
+    coachId,
+    signedError
+  );
+
+}
+
+
+const publicUrl =
+  signedData?.signedUrl
+  ||
+  "";
 
 
         if (publicUrl) {
@@ -972,7 +985,194 @@
 
     </div>
 
+    <div class="section">
 
+      <div class="section-title">
+        HỒ SƠ HUẤN LUYỆN
+      </div>
+
+
+      <div style="margin-bottom:16px;">
+
+        <div
+          style="
+            color:rgba(255,255,255,.52);
+            font-size:12px;
+            margin-bottom:6px;
+          "
+        >
+          Giới thiệu Coach
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.bio
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:16px;">
+
+        <div
+          style="
+            color:rgba(255,255,255,.52);
+            font-size:12px;
+            margin-bottom:6px;
+          "
+        >
+          Chuyên môn / Sở trường
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.coaching_specialties
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:16px;">
+
+        <div
+          style="
+            color:rgba(255,255,255,.52);
+            font-size:12px;
+            margin-bottom:6px;
+          "
+        >
+          Phong cách huấn luyện
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.coaching_style
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:16px;">
+
+        <div
+          style="
+            color:#d8ff45;
+            font-size:12px;
+            font-weight:900;
+            margin-bottom:6px;
+          "
+        >
+          Thành tích
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.achievements
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+
+      <div style="margin-bottom:16px;">
+
+        <div
+          style="
+            color:rgba(255,255,255,.52);
+            font-size:12px;
+            margin-bottom:6px;
+          "
+        >
+          Sân ưu tiên
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.preferred_courts
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+
+      <div>
+
+        <div
+          style="
+            color:rgba(255,255,255,.52);
+            font-size:12px;
+            margin-bottom:6px;
+          "
+        >
+          Thời gian / Ghi chú nhận học viên
+        </div>
+
+        <div
+          style="
+            font-size:14px;
+            font-weight:700;
+            line-height:1.6;
+            white-space:pre-line;
+          "
+        >
+          ${escapeHtml(
+            coach.availability_note
+            ||
+            "Chưa cập nhật"
+          )}
+        </div>
+
+      </div>
+
+    </div>
     <div class="section">
 
       <div class="section-title">
