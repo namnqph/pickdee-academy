@@ -620,16 +620,29 @@ async function loadCoach() {
     await sb
       .from("coaches")
       .select(`
-        id,
-        coach_code,
-        full_name,
-        phone,
-        email,
-        preferred_area,
-        preferred_ward,
-        status,
-        note
-      `)
+  id,
+  coach_code,
+  full_name,
+  phone,
+  email,
+  preferred_area,
+  preferred_ward,
+  status,
+  note,
+  avatar_path,
+  pickleball_level,
+  qualifications,
+  compensation_tier,
+  session_rate,
+  bio,
+  years_coaching,
+  coaching_specialties,
+  coaching_style,
+  achievements,
+  preferred_courts,
+  availability_note,
+  accepting_students
+`)
       .eq(
         "id",
         coachId
@@ -654,11 +667,239 @@ async function loadCoach() {
 
   currentCoach = data;
 
-
+await loadCoachAvatar();
   renderCoach();
 }
 
+/* =====================================================
+   AVATAR COACH
+===================================================== */
 
+async function loadCoachAvatar() {
+
+  if (!currentCoach) return;
+
+
+  let avatarUrl = "";
+
+
+  if (currentCoach.avatar_path) {
+
+    try {
+
+      const {
+        data: signedData,
+        error: signedError
+      } =
+        await sb.storage
+          .from("avatars")
+          .createSignedUrl(
+            currentCoach.avatar_path,
+            60 * 60
+          );
+
+
+      if (
+        !signedError
+        &&
+        signedData?.signedUrl
+      ) {
+
+        avatarUrl =
+          signedData.signedUrl;
+
+      }
+
+      else {
+
+        const {
+          data: publicData
+        } =
+          sb.storage
+            .from("avatars")
+            .getPublicUrl(
+              currentCoach.avatar_path
+            );
+
+
+        avatarUrl =
+          publicData?.publicUrl
+          ||
+          "";
+
+      }
+
+    }
+
+    catch (error) {
+
+      console.warn(
+        "LOAD COACH AVATAR:",
+        error
+      );
+
+    }
+
+  }
+
+
+  const oldAvatar =
+    document.getElementById(
+      "coachProfileAvatarWrap"
+    );
+
+
+  if (oldAvatar) {
+    oldAvatar.remove();
+  }
+
+
+  const wrap =
+    document.createElement(
+      "div"
+    );
+
+
+  wrap.id =
+    "coachProfileAvatarWrap";
+
+
+  wrap.style.cssText = `
+    margin: 18px 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  `;
+
+
+  const firstLetter =
+    String(
+      currentCoach.full_name || "C"
+    )
+      .trim()
+      .charAt(0)
+      .toUpperCase()
+    ||
+    "C";
+
+
+  if (avatarUrl) {
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    img.src =
+      avatarUrl;
+
+
+    img.alt =
+      currentCoach.full_name
+      ||
+      "Coach";
+
+
+    img.style.cssText = `
+      width: 112px;
+      height: 112px;
+      min-width: 112px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid rgba(216,255,69,.75);
+      background: rgba(255,255,255,.08);
+    `;
+
+
+    wrap.appendChild(
+      img
+    );
+
+  }
+
+  else {
+
+    const placeholder =
+      document.createElement(
+        "div"
+      );
+
+
+    placeholder.textContent =
+      firstLetter;
+
+
+    placeholder.style.cssText = `
+      width: 112px;
+      height: 112px;
+      min-width: 112px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(216,255,69,.10);
+      border: 3px solid rgba(216,255,69,.45);
+      color: #d8ff45;
+      font-size: 38px;
+      font-weight: 900;
+    `;
+
+
+    wrap.appendChild(
+      placeholder
+    );
+
+  }
+
+
+  const text =
+    document.createElement(
+      "div"
+    );
+
+
+  text.innerHTML = `
+    <div style="
+      color:#d8ff45;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:6px;
+    ">
+      ẢNH ĐẠI DIỆN COACH
+    </div>
+
+    <div style="
+      color:rgba(255,255,255,.65);
+      font-size:13px;
+      line-height:1.5;
+    ">
+      ${
+        currentCoach.avatar_path
+          ? "Ảnh đại diện hiện tại của Coach."
+          : "Coach chưa có ảnh đại diện."
+      }
+    </div>
+  `;
+
+
+  wrap.appendChild(
+    text
+  );
+
+
+  const codeElement =
+    document.getElementById(
+      "coachCode"
+    );
+
+
+  codeElement.insertAdjacentElement(
+    "afterend",
+    wrap
+  );
+
+}
 /* =====================================================
    HIỂN THỊ COACH
 ===================================================== */
@@ -1169,7 +1410,7 @@ editForm.addEventListener(
           "id",
           coachId
         )
-        .select(`
+                .select(`
           id,
           coach_code,
           full_name,
@@ -1178,9 +1419,21 @@ editForm.addEventListener(
           preferred_area,
           preferred_ward,
           status,
-          note
+          note,
+          avatar_path,
+          pickleball_level,
+          qualifications,
+          compensation_tier,
+          session_rate,
+          bio,
+          years_coaching,
+          coaching_specialties,
+          coaching_style,
+          achievements,
+          preferred_courts,
+          availability_note,
+          accepting_students
         `)
-        .single();
 
 
     if (error) {
