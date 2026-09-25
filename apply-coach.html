@@ -677,7 +677,42 @@
           >
 
         </div>
+<div class="field">
 
+  <label for="password">
+    MẬT KHẨU
+    <span class="required">*</span>
+  </label>
+
+  <input
+    id="password"
+    type="password"
+    autocomplete="new-password"
+    minlength="8"
+    placeholder="Tối thiểu 8 ký tự"
+    required
+  >
+
+</div>
+
+
+<div class="field">
+
+  <label for="confirmPassword">
+    XÁC NHẬN MẬT KHẨU
+    <span class="required">*</span>
+  </label>
+
+  <input
+    id="confirmPassword"
+    type="password"
+    autocomplete="new-password"
+    minlength="8"
+    placeholder="Nhập lại mật khẩu"
+    required
+  >
+
+</div>
       </div>
 
 
@@ -2768,7 +2803,16 @@
           "email"
         );
 
+const password =
+  valueOf(
+    "password"
+  );
 
+
+const confirmPassword =
+  valueOf(
+    "confirmPassword"
+  );
       const area =
         valueOf(
           "area"
@@ -2815,7 +2859,68 @@
         return;
 
       }
+if (!password) {
 
+  showMessage(
+    "Vui lòng nhập mật khẩu.",
+    "error"
+  );
+
+  document
+    .getElementById("password")
+    ?.focus();
+
+  return;
+
+}
+
+
+if (password.length < 8) {
+
+  showMessage(
+    "Mật khẩu phải có ít nhất 8 ký tự.",
+    "error"
+  );
+
+  document
+    .getElementById("password")
+    ?.focus();
+
+  return;
+
+}
+
+
+if (!confirmPassword) {
+
+  showMessage(
+    "Vui lòng xác nhận lại mật khẩu.",
+    "error"
+  );
+
+  document
+    .getElementById("confirmPassword")
+    ?.focus();
+
+  return;
+
+}
+
+
+if (password !== confirmPassword) {
+
+  showMessage(
+    "Mật khẩu xác nhận không khớp.",
+    "error"
+  );
+
+  document
+    .getElementById("confirmPassword")
+    ?.focus();
+
+  return;
+
+}
 
       if (!area) {
 
@@ -2886,7 +2991,8 @@
 
                 email:
                   email,
-
+password:
+  password,
                 preferred_area:
                   area,
 
