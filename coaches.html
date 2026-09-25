@@ -308,7 +308,39 @@
       background:
         rgba(255,255,255,.045);
     }
+.coach-avatar {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid rgba(216,255,69,.55);
+  background: rgba(255,255,255,.08);
+}
 
+.coach-avatar-placeholder {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #d8ff45;
+  background: rgba(216,255,69,.10);
+
+  border: 2px solid rgba(216,255,69,.30);
+
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.coach-photo-cell {
+  width: 76px;
+}
 
     .badge {
       display: inline-block;
@@ -670,17 +702,18 @@
     <div class="table-wrap">
 
 
-      <table>
+    <table>
 
+  <thead>
 
-        <thead>
+    <tr>
+  <th>
+    Ảnh
+  </th>
 
-          <tr>
-
-            <th>
-              Mã Coach
-            </th>
-
+  <th>
+    Mã Coach
+  </th>
             <th>
               Họ tên
             </th>
@@ -1144,17 +1177,18 @@
     "coaches"
   )
   .select(`
-    id,
-    coach_code,
-    full_name,
-    phone,
-    email,
-    preferred_area,
-    preferred_ward,
-    status,
-    auth_user_id,
-    is_test
-  `)
+  id,
+  coach_code,
+  full_name,
+  phone,
+  email,
+  preferred_area,
+  preferred_ward,
+  status,
+  auth_user_id,
+  avatar_path,
+  is_test
+`)
   .eq(
     "is_test",
     false
@@ -1194,12 +1228,92 @@
     }
 
 
-    coaches =
+   coaches =
+  await Promise.all(
+
+    (
       Array.isArray(data)
         ?
         data
         :
-        [];
+        []
+    ).map(
+
+      async function (coach) {
+
+        let avatarUrl = "";
+
+        if (coach.avatar_path) {
+
+          try {
+
+            const {
+              data: signedData,
+              error: signedError
+            } =
+              await sb.storage
+                .from("avatars")
+                .createSignedUrl(
+                  coach.avatar_path,
+                  60 * 60
+                );
+
+
+            if (
+              !signedError
+              &&
+              signedData?.signedUrl
+            ) {
+
+              avatarUrl =
+                signedData.signedUrl;
+
+            }
+
+            else {
+
+              const {
+                data: publicData
+              } =
+                sb.storage
+                  .from("avatars")
+                  .getPublicUrl(
+                    coach.avatar_path
+                  );
+
+
+              avatarUrl =
+                publicData?.publicUrl
+                ||
+                "";
+
+            }
+
+          }
+
+          catch (error) {
+
+            console.warn(
+              "LOAD COACH AVATAR:",
+              coach.id,
+              error
+            );
+
+          }
+
+        }
+
+
+        return {
+          ...coach,
+          avatar_url: avatarUrl
+        };
+
+      }
+
+    )
+
+  );
 
 
     renderCoaches();
@@ -1313,7 +1427,58 @@
             return `
 
               <tr>
+<td class="coach-photo-cell">
 
+  ${
+    coach.avatar_url
+      ?
+
+      `
+        <img
+          class="coach-avatar"
+          src="${escapeHtml(coach.avatar_url)}"
+          alt="${escapeHtml(
+            coach.full_name || "Coach"
+          )}"
+          loading="lazy"
+          onerror="
+            this.style.display='none';
+            this.nextElementSibling.style.display='flex';
+          "
+        >
+
+        <div
+          class="coach-avatar-placeholder"
+          style="display:none"
+        >
+          ${escapeHtml(
+            String(
+              coach.full_name || "C"
+            )
+              .trim()
+              .charAt(0)
+              .toUpperCase()
+          )}
+        </div>
+      `
+
+      :
+
+      `
+        <div class="coach-avatar-placeholder">
+          ${escapeHtml(
+            String(
+              coach.full_name || "C"
+            )
+              .trim()
+              .charAt(0)
+              .toUpperCase()
+          )}
+        </div>
+      `
+  }
+
+</td>
                 <td>
 
                   ${escapeHtml(
