@@ -1178,16 +1178,17 @@
   )
   .select(`
   id,
-  coach_code,
-  full_name,
-  phone,
-  email,
-  preferred_area,
-  preferred_ward,
-  status,
-  auth_user_id,
-  avatar_path,
-  is_test
+coach_code,
+full_name,
+phone,
+email,
+preferred_area,
+preferred_ward,
+status,
+auth_user_id,
+avatar_path,
+avatar_bucket,
+is_test
 `)
   .eq(
     "is_test",
@@ -1251,12 +1252,16 @@
               data: signedData,
               error: signedError
             } =
-              await sb.storage
-                .from("profile-photos")
-                .createSignedUrl(
-                  coach.avatar_path,
-                  60 * 60
-                );
+     await sb.storage
+  .from(
+    coach.avatar_bucket
+    ||
+    "profile-photos"
+  )
+  .createSignedUrl(
+    coach.avatar_path,
+    60 * 60
+  );
 
 
             if (
@@ -1276,11 +1281,14 @@
                 data: publicData
               } =
                 sb.storage
-                 .from("profile-photos")
-                  .getPublicUrl(
-                    coach.avatar_path
-                  );
-
+  .from(
+    coach.avatar_bucket
+    ||
+    "profile-photos"
+  )
+  .getPublicUrl(
+    coach.avatar_path
+  );
 
               avatarUrl =
                 publicData?.publicUrl
