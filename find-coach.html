@@ -1724,111 +1724,160 @@ function renderWards() {
     try {
 
 
-      let avatarPath =
-        avatarCache.get(
+     let avatarInfo =
+  avatarCache.get(
+    coachId
+  );
+
+
+if (
+  !avatarCache.has(
+    coachId
+  )
+) {
+
+  const {
+    data,
+    error
+  } =
+    await avatarSb.rpc(
+      "public_get_coach_avatar",
+      {
+        p_coach_id:
           coachId
-        );
-
-
-      if (
-        !avatarCache.has(
-          coachId
-        )
-      ) {
-
-
-        const {
-          data,
-          error
-        } =
-          await avatarSb.rpc(
-            "public_get_coach_avatar",
-            {
-              p_coach_id:
-                coachId
-            }
-          );
-
-
-        if (error) {
-
-
-          console.warn(
-            "FIND COACH AVATAR:",
-            coachId,
-            error
-          );
-
-
-          avatarPath =
-            null;
-
-
-        }
-        else {
-
-
-          const row =
-            Array.isArray(
-              data
-            )
-              ?
-              data[0]
-              :
-              null;
-
-
-          avatarPath =
-            row?.avatar_path
-            ||
-            null;
-
-
-        }
-
-
-        avatarCache.set(
-          coachId,
-          avatarPath
-        );
-
       }
-
-
-      if (avatarPath) {
-
-
-      const {
-  data: signedData,
-  error: signedError
-} =
-  await avatarSb
-    .storage
-    .from(
-      "profile-photos"
-    )
-    .createSignedUrl(
-      avatarPath,
-      60 * 60
     );
 
 
-if (signedError) {
+  if (error) {
 
-  console.warn(
-    "FIND COACH AVATAR SIGNED URL:",
+    console.warn(
+      "FIND COACH AVATAR:",
+      coachId,
+      error
+    );
+
+    avatarInfo =
+      null;
+
+  }
+  else {
+
+    const row =
+      Array.isArray(
+        data
+      )
+        ?
+        data[0]
+        :
+        null;
+
+
+    const avatarPath =
+      row?.avatar_path
+      ||
+      null;
+
+
+    const avatarBucket =
+      (
+        row?.avatar_bucket ===
+          "avatars"
+        ||
+        row?.avatar_bucket ===
+          "profile-photos"
+      )
+        ?
+        row.avatar_bucket
+        :
+        "profile-photos";
+
+
+    avatarInfo =
+      avatarPath
+        ?
+        {
+          path:
+            avatarPath,
+
+          bucket:
+            avatarBucket
+        }
+        :
+        null;
+
+  }
+
+
+  avatarCache.set(
     coachId,
-    signedError
+    avatarInfo
   );
 
 }
 
 
-const publicUrl =
-  signedData?.signedUrl
-  ||
-  "";
+if (
+  avatarInfo?.path
+) {
 
+  const {
+    data: signedData,
+    error: signedError
+  } =
+    await avatarSb
+      .storage
+      .from(
+        avatarInfo.bucket
+      )
+      .createSignedUrl(
+        avatarInfo.path,
+        60 * 60
+      );
+
+
+  if (signedError) {
+
+    console.warn(
+      "FIND COACH AVATAR SIGNED URL:",
+      coachId,
+      signedError
+    );
+
+  }
+
+
+  let publicUrl =
+    signedData?.signedUrl
+    ||
+    "";
+
+
+  /*
+    Nếu bucket là public và signed URL
+    không tạo được thì dùng public URL.
+  */
+  if (!publicUrl) {
+
+    const {
+      data: publicData
+    } =
+      avatarSb
+        .storage
+        .from(
+          avatarInfo.bucket
+        )
+        .getPublicUrl(
+          avatarInfo.path
+        );
+
+
+    publicUrl =
+      publicData?.publicUrl
+      ||
+      "";
+
+  }
 
         if (publicUrl) {
 
