@@ -46,14 +46,33 @@ form.addEventListener("submit", async (event) => {
       .eq("id", user.id)
       .single();
 
-  if (profileError || !profile) {
+if (profileError || !profile) {
+
+  const accountType =
+    String(
+      user?.user_metadata?.account_type
+      ||
+      ""
+    );
+
+  if (
+    accountType ===
+    "coach_application"
+  ) {
+
+    message.textContent =
+      "Hồ sơ Coach của bạn đang chờ Admin duyệt. Bạn chỉ có thể đăng nhập khu vực Coach sau khi hồ sơ được phê duyệt.";
+
+  } else {
 
     message.textContent =
       "Không đọc được hồ sơ tài khoản.";
 
-    return;
   }
 
+  return;
+
+}
   if (profile.role === "admin") {
 
     window.location.href = "/admin";
