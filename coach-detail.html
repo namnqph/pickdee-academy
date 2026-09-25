@@ -780,6 +780,7 @@ async function loadCoach() {
   status,
   note,
   avatar_path,
+  avatar_bucket,
   pickleball_level,
   qualifications,
   compensation_tier,
@@ -835,62 +836,78 @@ async function loadCoachAvatar() {
 
   if (currentCoach.avatar_path) {
 
-    try {
+  try {
 
-      const {
-        data: signedData,
-        error: signedError
-      } =
-        await sb.storage
-          .from("profile-photos")
-          .createSignedUrl(
-            currentCoach.avatar_path,
-            60 * 60
-          );
-
-
-      if (
-        !signedError
-        &&
-        signedData?.signedUrl
-      ) {
-
-        avatarUrl =
-          signedData.signedUrl;
-
-      }
-
-      else {
-
-        const {
-          data: publicData
-        } =
-          sb.storage
-           .from("profile-photos")
-            .getPublicUrl(
-              currentCoach.avatar_path
-            );
+    const avatarBucket =
+      (
+        currentCoach.avatar_bucket === "avatars"
+        ||
+        currentCoach.avatar_bucket === "profile-photos"
+      )
+        ?
+        currentCoach.avatar_bucket
+        :
+        "profile-photos";
 
 
-        avatarUrl =
-          publicData?.publicUrl
-          ||
-          "";
+    const {
+      data: signedData,
+      error: signedError
+    } =
+      await sb.storage
+        .from(
+          avatarBucket
+        )
+        .createSignedUrl(
+          currentCoach.avatar_path,
+          60 * 60
+        );
 
-      }
+
+    if (
+      !signedError
+      &&
+      signedData?.signedUrl
+    ) {
+
+      avatarUrl =
+        signedData.signedUrl;
 
     }
 
-    catch (error) {
+    else {
 
-      console.warn(
-        "LOAD COACH AVATAR:",
-        error
-      );
+      const {
+        data: publicData
+      } =
+        sb.storage
+          .from(
+            avatarBucket
+          )
+          .getPublicUrl(
+            currentCoach.avatar_path
+          );
+
+
+      avatarUrl =
+        publicData?.publicUrl
+        ||
+        "";
 
     }
 
   }
+
+  catch (error) {
+
+    console.warn(
+      "LOAD COACH AVATAR:",
+      error
+    );
+
+  }
+
+}
 
 
   const oldAvatar =
@@ -2129,6 +2146,7 @@ editForm.addEventListener(
           status,
           note,
           avatar_path,
+          avatar_bucket,
           pickleball_level,
           qualifications,
           compensation_tier,
