@@ -2659,53 +2659,66 @@
 
   async function getPushRegistration() {
 
-    if (
-      !(
-        "serviceWorker"
-        in navigator
-      )
-    ) {
+  if (
+    !(
+      "serviceWorker"
+      in navigator
+    )
+  ) {
 
-      throw new Error(
-        "Thiết bị không hỗ trợ Service Worker."
-      );
-
-    }
-
-
-    let registration =
-      await navigator
-        .serviceWorker
-        .getRegistration(
-          "/"
-        );
-
-
-    if (!registration) {
-
-      registration =
-        await navigator
-          .serviceWorker
-          .register(
-            "/sw.js",
-            {
-              scope: "/"
-            }
-          );
-
-    }
-
-
-    await navigator
-      .serviceWorker
-      .ready;
-
-
-    return registration;
+    throw new Error(
+      "Thiết bị không hỗ trợ Service Worker."
+    );
 
   }
 
 
+  /*
+    Luôn đăng ký lại đúng /sw.js.
+
+    Nếu thiết bị đang giữ Service Worker cũ,
+    trình duyệt sẽ kiểm tra và cập nhật bản mới.
+  */
+
+  const registration =
+    await navigator
+      .serviceWorker
+      .register(
+        "/sw.js",
+        {
+          scope: "/",
+          updateViaCache: "none"
+        }
+      );
+
+
+  /*
+    Ép kiểm tra phiên bản Service Worker mới nhất.
+  */
+
+  try {
+
+    await registration.update();
+
+  }
+  catch (error) {
+
+    console.warn(
+      "PickDee SW update:",
+      error
+    );
+
+  }
+
+
+  await navigator
+    .serviceWorker
+    .ready;
+
+
+  return registration;
+
+} 
 
   async function savePushSubscription(
     subscription
