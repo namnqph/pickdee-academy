@@ -11105,11 +11105,47 @@ document.addEventListener("DOMContentLoaded", function () {
       "Xem mức công và quyền lợi theo từng hạng Coach.";
 
 
+    const groupPolicies =
+      policies.filter(
+        function (policy) {
+
+          return (
+            String(
+              policy.learning_mode || ""
+            )
+              .trim()
+              .toLowerCase()
+            ===
+            "group_2"
+          );
+
+        }
+      );
+
+
+    const tierPolicies =
+      policies.filter(
+        function (policy) {
+
+          return (
+            String(
+              policy.learning_mode || ""
+            )
+              .trim()
+              .toLowerCase()
+            !==
+            "group_2"
+          );
+
+        }
+      );
+
+
     const grouped =
       new Map();
 
 
-    policies.forEach(
+    tierPolicies.forEach(
       function (policy) {
 
         const tier =
@@ -11155,61 +11191,88 @@ document.addEventListener("DOMContentLoaded", function () {
       ];
 
 
-    grouped.forEach(
-      function (
-        value,
-        key
+    function displayPolicyName(
+      policy
+    ) {
+
+      const code =
+        String(
+          policy.policy_code || ""
+        )
+          .trim()
+          .toUpperCase();
+
+
+      if (
+        code ===
+        "SOLO_STANDARD"
       ) {
 
-        if (
-          !tierOrder.includes(
-            key
-          )
-        ) {
-
-          tierOrder.push(
-            key
-          );
-
-        }
+        return "1:1 - Coach Tiêu chuẩn";
 
       }
-    );
 
 
-    gridEl.innerHTML =
+      if (
+        code ===
+        "SOLO_CERTIFIED"
+      ) {
+
+        return "1:1 - Coach có bằng/chứng chỉ";
+
+      }
+
+
+      return (
+        policy.policy_name
+        ||
+        policy.learning_mode
+        ||
+        policy.policy_code
+        ||
+        "Chính sách Coach"
+      );
+
+    }
+
+
+    const tierHtml =
       tierOrder
         .map(
           function (tier) {
 
-           const rows =
-  (
-    grouped.get(
-      tier
-    )
-    ||
-    []
-  )
-    .slice()
-    .sort(
-      function (a, b) {
+            const rows =
+              (
+                grouped.get(
+                  tier
+                )
+                ||
+                []
+              )
+                .slice()
+                .sort(
+                  function (a, b) {
 
-        const order = {
-          solo: 1,
-          group_2: 2,
-          custom: 3
-        };
+                    const order = {
+                      solo: 1,
+                      custom: 2
+                    };
 
-        return (
-          order[a.learning_mode] || 99
-        )
-        -
-        (
-          order[b.learning_mode] || 99
-        );
 
-      }
-    );
+                    return (
+                      order[a.learning_mode]
+                      ||
+                      99
+                    )
+                    -
+                    (
+                      order[b.learning_mode]
+                      ||
+                      99
+                    );
+
+                  }
+                );
 
 
             if (
@@ -11276,9 +11339,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 ${
                   rows
                     .map(
-                      function (
-                        policy
-                      ) {
+                      function (policy) {
 
                         const bonus =
                           Number(
@@ -11303,13 +11364,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             >
                               ${
                                 escapeBenefitsHtml(
-                                  policy.policy_name
-                                  ||
-                                  policy.learning_mode
-                                  ||
-                                  policy.policy_code
-                                  ||
-                                  "Chính sách Coach"
+                                  displayPolicyName(
+                                    policy
+                                  )
                                 )
                               }
                             </div>
@@ -11413,6 +11470,127 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         )
         .join("");
+
+
+    const groupHtml =
+      groupPolicies
+        .map(
+          function (policy) {
+
+            const bonus =
+              Number(
+                policy.completion_bonus
+                ||
+                0
+              );
+
+
+            return `
+
+              <div
+                class="
+                  coach-benefits-tier
+                "
+                style="
+                  grid-column:1 / -1;
+                "
+              >
+
+                <div
+                  class="
+                    coach-benefits-tier-title
+                  "
+                  style="
+                    color:#d8ff45;
+                  "
+                >
+                  👥 Nhóm 2 học viên
+                </div>
+
+
+                <div
+                  class="
+                    coach-benefit-note
+                  "
+                >
+                  Áp dụng chung cho Coach đủ điều kiện nhận lớp nhóm.
+                </div>
+
+
+                <div
+                  class="
+                    coach-benefit-row
+                  "
+                >
+
+                  <span
+                    class="
+                      coach-benefit-label
+                    "
+                  >
+                    Công / buổi
+                  </span>
+
+                  <span
+                    class="
+                      coach-benefit-value
+                    "
+                  >
+                    ${
+                      formatBenefitsMoney(
+                        policy.session_amount
+                      )
+                    }
+                  </span>
+
+                </div>
+
+
+                <div
+                  class="
+                    coach-benefit-row
+                  "
+                >
+
+                  <span
+                    class="
+                      coach-benefit-label
+                    "
+                  >
+                    Thưởng hoàn thành
+                  </span>
+
+                  <span
+                    class="
+                      coach-benefit-value
+                    "
+                  >
+                    ${
+                      bonus > 0
+                        ?
+                        formatBenefitsMoney(
+                          bonus
+                        )
+                        :
+                        "—"
+                    }
+                  </span>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    gridEl.innerHTML =
+      tierHtml
+      +
+      groupHtml;
 
 
     if (
