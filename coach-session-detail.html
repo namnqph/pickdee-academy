@@ -4760,189 +4760,466 @@ window.addEventListener(
       ></div>
     `;
 
-    box
-      .querySelectorAll(
+        /* =====================================
+       ĐIỂM DANH NHÓM - PHẢN HỒI NHANH V2
+
+       - Chạm / click 1 lần là nhận ngay.
+       - Không dùng window.confirm.
+       - Khóa nút ngay lập tức để chống bấm trùng.
+       - PointerUp ưu tiên cho cảm giác nhạy trên
+         điện thoại / trackpad / chuột.
+       - Click vẫn giữ làm fallback cho keyboard.
+    ====================================== */
+
+    let groupAttendanceBusy =
+      false;
+
+    let lastPointerHandledAt =
+      0;
+
+
+    const groupButtons =
+      box.querySelectorAll(
         ".group-mark-btn"
-      )
-      .forEach(
-        button => {
+      );
 
-          button.addEventListener(
-            "click",
-            async function () {
 
-              const registrationId =
-                Number(
-                  this.dataset
-                    .registrationId
-                );
+    groupButtons.forEach(
+      button => {
 
-              const attendanceStatus =
-                String(
-                  this.dataset.status ||
-                  ""
-                );
+        button.style.touchAction =
+          "manipulation";
 
-              const member =
-                members.find(
-                  item =>
-                    Number(
-                      item.registration_id
-                    )
-                    ===
-                    registrationId
-                );
+        button.style.userSelect =
+          "none";
 
-              if (
-                !registrationId ||
-                ![
-                  "Có mặt",
-                  "Vắng"
-                ].includes(
-                  attendanceStatus
-                )
-              ) {
-                return;
-              }
+        button.style.webkitUserSelect =
+          "none";
 
-              const confirmed =
-                window.confirm(
-                  "Xác nhận "
-                  +
-                  attendanceStatus
-                  +
-                  " cho "
-                  +
-                  (
-                    member?.student_name ||
-                    "Học viên"
-                  )
-                  +
-                  "?"
-                );
+        button.style.webkitTapHighlightColor =
+          "transparent";
 
-              if (!confirmed) {
-                return;
-              }
+      }
+    );
 
-              const message =
-                document.getElementById(
-                  "coachGroupAttendanceMessage"
-                );
 
-              box
-                .querySelectorAll(
-                  ".group-mark-btn"
-                )
-                .forEach(
-                  btn => {
-                    btn.disabled = true;
-                  }
-                );
+    function restoreGroupButtons() {
 
-              if (message) {
+      box
+        .querySelectorAll(
+          ".group-mark-btn"
+        )
+        .forEach(
+          btn => {
 
-                message.style.color =
-                  "rgba(255,255,255,.7)";
-
-                message.textContent =
-                  "Đang ghi nhận điểm danh...";
-              }
-
-              const {
-                data,
-                error
-              } =
-                await groupSb.rpc(
-                  "coach_mark_group_attendance",
-                  {
-                    p_session_id:
-                      sessionId,
-
-                    p_registration_id:
-                      registrationId,
-
-                    p_attendance_status:
-                      attendanceStatus
-                  }
-                );
-
-              if (error) {
-
-                console.error(
-                  "GROUP ATTENDANCE:",
-                  error
-                );
-
-                if (message) {
-
-                  message.style.color =
-                    "#ffb3b3";
-
-                  message.textContent =
-                    error.message ||
-                    "Không thể điểm danh.";
-                }
-
-                box
-                  .querySelectorAll(
-                    ".group-mark-btn"
-                  )
-                  .forEach(
-                    btn => {
-                      btn.disabled = false;
-                    }
-                  );
-
-                return;
-              }
-
-              if (message) {
-
-                message.style.color =
-                  "#d8ff45";
-
-                if (
-                  data?.session_finished
-                  === true
-                ) {
-
-                  message.textContent =
-                    "✓ Đã điểm danh đủ học viên. "
-                    +
-                    "Buổi học: "
-                    +
-                    (
-                      data.session_status ||
-                      "Đã xử lý"
-                    );
-
-                }
-                else {
-
-                  message.textContent =
-                    "✓ Đã ghi nhận. Còn "
-                    +
-                    String(
-                      data?.remaining ?? 0
-                    )
-                    +
-                    " học viên chưa điểm danh.";
-                }
-              }
-
-              setTimeout(
-                function () {
-                  window.location.reload();
-                },
-                700
+            const registrationId =
+              Number(
+                btn.dataset.registrationId
               );
 
+
+            const member =
+              members.find(
+                item =>
+                  Number(
+                    item.registration_id
+                  )
+                  ===
+                  registrationId
+              );
+
+
+            const alreadyMarked =
+              String(
+                member?.attendance_status
+                ||
+                ""
+              ).trim()
+              !==
+              "";
+
+
+            btn.disabled =
+              sessionClosed
+              ||
+              alreadyMarked;
+
+          }
+        );
+
+    }
+
+
+    async function markGroupAttendance(
+      button
+    ) {
+
+      if (
+        !button
+        ||
+        button.disabled
+        ||
+        groupAttendanceBusy
+      ) {
+
+        return;
+
+      }
+
+
+      const registrationId =
+        Number(
+          button.dataset.registrationId
+        );
+
+
+      const attendanceStatus =
+        String(
+          button.dataset.status
+          ||
+          ""
+        ).trim();
+
+
+      const member =
+        members.find(
+          item =>
+            Number(
+              item.registration_id
+            )
+            ===
+            registrationId
+        );
+
+
+      if (
+        !registrationId
+        ||
+        ![
+          "Có mặt",
+          "Vắng"
+        ].includes(
+          attendanceStatus
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        NHẬN CLICK NGAY LẬP TỨC
+      */
+
+      groupAttendanceBusy =
+        true;
+
+
+      const oldButtonText =
+        button.textContent;
+
+
+      box
+        .querySelectorAll(
+          ".group-mark-btn"
+        )
+        .forEach(
+          btn => {
+
+            btn.disabled =
+              true;
+
+          }
+        );
+
+
+      button.textContent =
+        "⏳ ĐANG GHI NHẬN...";
+
+
+      const message =
+        document.getElementById(
+          "coachGroupAttendanceMessage"
+        );
+
+
+      if (message) {
+
+        message.style.color =
+          "#d8ff45";
+
+
+        message.textContent =
+          attendanceStatus
+          ===
+          "Có mặt"
+
+            ? `⏳ Đang ghi nhận Có mặt cho ${
+                member?.student_name
+                ||
+                "học viên"
+              }...`
+
+            : `⏳ Đang ghi nhận Vắng cho ${
+                member?.student_name
+                ||
+                "học viên"
+              }...`;
+
+      }
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await groupSb.rpc(
+            "coach_mark_group_attendance",
+            {
+              p_session_id:
+                sessionId,
+
+              p_registration_id:
+                registrationId,
+
+              p_attendance_status:
+                attendanceStatus
             }
           );
 
+
+        if (error) {
+
+          throw error;
+
         }
-      );
+
+
+        /*
+          BACKEND ĐÃ GHI NHẬN
+        */
+
+        member.attendance_status =
+          attendanceStatus;
+
+
+        button.textContent =
+          attendanceStatus
+          ===
+          "Có mặt"
+
+            ? "✅ ĐÃ GHI NHẬN CÓ MẶT"
+
+            : "✅ ĐÃ GHI NHẬN VẮNG";
+
+
+        if (message) {
+
+          message.style.color =
+            "#d8ff45";
+
+
+          if (
+            data?.session_finished
+            ===
+            true
+          ) {
+
+            message.textContent =
+              "✅ Đã điểm danh đủ học viên. Buổi học đã hoàn thành.";
+
+          }
+          else {
+
+            message.textContent =
+              "✅ Đã ghi nhận "
+              +
+              attendanceStatus
+              +
+              ". Còn "
+              +
+              String(
+                data?.remaining
+                ??
+                0
+              )
+              +
+              " học viên chưa điểm danh.";
+
+          }
+
+        }
+
+
+        /*
+          Reload nhanh để lấy trạng thái chính xác
+          từ backend và cập nhật toàn bộ trang.
+        */
+
+        setTimeout(
+          function () {
+
+            window.location.reload();
+
+          },
+          300
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "GROUP ATTENDANCE:",
+          error
+        );
+
+
+        groupAttendanceBusy =
+          false;
+
+
+        button.textContent =
+          oldButtonText;
+
+
+        restoreGroupButtons();
+
+
+        if (message) {
+
+          message.style.color =
+            "#ffb3b3";
+
+
+          message.textContent =
+            error?.message
+            ||
+            "Không thể điểm danh. Vui lòng thử lại.";
+
+        }
+
+      }
+
+    }
+
+
+    /*
+      POINTERUP:
+      phản hồi nhanh cho chuột, trackpad,
+      màn hình cảm ứng.
+    */
+
+    box.addEventListener(
+      "pointerup",
+      function (event) {
+
+        const button =
+          event.target.closest(
+            ".group-mark-btn"
+          );
+
+
+        if (
+          !button
+          ||
+          button.disabled
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          event.pointerType
+          ===
+          "mouse"
+          &&
+          event.button
+          !==
+          0
+        ) {
+
+          return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        lastPointerHandledAt =
+          Date.now();
+
+
+        markGroupAttendance(
+          button
+        );
+
+      },
+      {
+        passive: false
+      }
+    );
+
+
+    /*
+      CLICK FALLBACK:
+      hỗ trợ bàn phím và browser
+      không xử lý PointerEvent như mong muốn.
+    */
+
+    box.addEventListener(
+      "click",
+      function (event) {
+
+        const button =
+          event.target.closest(
+            ".group-mark-btn"
+          );
+
+
+        if (
+          !button
+          ||
+          button.disabled
+        ) {
+
+          return;
+
+        }
+
+
+        /*
+          PointerUp vừa xử lý rồi thì bỏ click
+          tiếp theo để không gọi RPC 2 lần.
+        */
+
+        if (
+          Date.now()
+          -
+          lastPointerHandledAt
+          <
+          700
+        ) {
+
+          return;
+
+        }
+
+
+        event.preventDefault();
+
+
+        markGroupAttendance(
+          button
+        );
+
+      }
+    );
 
   }
 );
