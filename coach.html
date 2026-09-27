@@ -7645,16 +7645,21 @@ async function loadStudents(
 
 </script>
 <script src="./notifications.js?v=20260923-3"></script>
-  <script>
+<script>
 (async function () {
 
   /* =====================================================
-     PICKDEE - COACH PUSH ONBOARDING
+     PICKDEE - COACH PUSH ONBOARDING V2
 
-     - Nếu Push đã bật: không hiện gì.
-     - Nếu chưa bật: hiện 1 màn hình để Coach bấm 1 lần.
-     - Dùng lại nút + logic Push trong notifications.js.
-     - Không tạo Push logic thứ hai.
+     Mục tiêu:
+     1. Nếu thiết bị THỰC SỰ đã có Push subscription:
+        tuyệt đối không hiện popup lại.
+     2. Không còn phụ thuộc vào việc notifications.js
+        cập nhật chữ trên nút nhanh hay chậm.
+     3. "ĐỂ SAU" được nhớ bằng localStorage trong 7 ngày,
+        kể cả mở tab mới hoặc đóng/mở trình duyệt.
+     4. Vẫn dùng notifications.js để đăng ký Push,
+        không tạo hệ thống Push thứ hai.
   ====================================================== */
 
   const sb =
@@ -7672,9 +7677,9 @@ async function loadStudents(
   }
 
 
-  /*
-    Phải có Coach đang đăng nhập.
-  */
+  /* =====================================================
+     COACH ĐANG ĐĂNG NHẬP
+  ====================================================== */
 
   const {
     data: {
@@ -7689,23 +7694,112 @@ async function loadStudents(
   }
 
 
-  /*
-    Không hiện đi hiện lại trong cùng một phiên
-    nếu Coach đã chọn "Để sau".
-  */
+  /* =====================================================
+     GHI NHỚ NÚT "ĐỂ SAU"
 
-  const sessionKey =
-    "pickdee_coach_push_prompt_"
+     Không dùng sessionStorage nữa.
+     localStorage hoạt động xuyên tab / xuyên phiên browser.
+
+     Sau 7 ngày nếu vẫn chưa bật Push,
+     PickDee mới được phép nhắc lại.
+  ====================================================== */
+
+  const snoozeKey =
+    "pickdee_coach_push_prompt_until_"
     +
     user.id;
 
 
+  const SNOOZE_MS =
+    7
+    *
+    24
+    *
+    60
+    *
+    60
+    *
+    1000;
+
+
+  function getSnoozeUntil() {
+
+    try {
+
+      return Number(
+        localStorage.getItem(
+          snoozeKey
+        )
+        ||
+        0
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee Push: không đọc được localStorage.",
+        error
+      );
+
+      return 0;
+
+    }
+
+  }
+
+
+  function snoozePushPrompt() {
+
+    try {
+
+      localStorage.setItem(
+        snoozeKey,
+        String(
+          Date.now()
+          +
+          SNOOZE_MS
+        )
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee Push: không lưu được thời gian ĐỂ SAU.",
+        error
+      );
+
+    }
+
+  }
+
+
+  function clearPushSnooze() {
+
+    try {
+
+      localStorage.removeItem(
+        snoozeKey
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee Push: không xoá được trạng thái ĐỂ SAU.",
+        error
+      );
+
+    }
+
+  }
+
+
   if (
-    sessionStorage.getItem(
-      sessionKey
-    )
-    ===
-    "later"
+    getSnoozeUntil()
+    >
+    Date.now()
   ) {
 
     return;
@@ -7713,9 +7807,9 @@ async function loadStudents(
   }
 
 
-  /*
-    Chờ notifications.js tạo phần Push.
-  */
+  /* =====================================================
+     CHỜ notifications.js TẠO NÚT PUSH
+  ====================================================== */
 
   let pushButton =
     null;
@@ -7726,7 +7820,7 @@ async function loadStudents(
 
   for (
     let i = 0;
-    i < 80;
+    i < 100;
     i += 1
   ) {
 
@@ -7775,43 +7869,9 @@ async function loadStudents(
   }
 
 
-  /*
-    Cho notifications.js thêm chút thời gian
-    để kiểm tra subscription hiện tại.
-  */
-
-  await new Promise(
-    resolve =>
-      setTimeout(
-        resolve,
-        700
-      )
-  );
-
-
-  /*
-    Nếu thiết bị đã được gắn Push
-    vào Coach hiện tại thì không hiện onboarding.
-  */
-
-  if (
-    String(
-      pushButton.textContent
-      ||
-      ""
-    ).includes(
-      "THÔNG BÁO ĐÃ BẬT"
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  /*
-    Nếu trình duyệt không hỗ trợ Notification.
-  */
+  /* =====================================================
+     KIỂM TRA HỖ TRỢ PUSH
+  ====================================================== */
 
   if (
     !(
@@ -7826,11 +7886,6 @@ async function loadStudents(
   }
 
 
-  /*
-    Nếu quyền đã bị người dùng chặn,
-    không ép hiện popup xin quyền nữa.
-  */
-
   if (
     Notification.permission
     ===
@@ -7842,10 +7897,195 @@ async function loadStudents(
   }
 
 
+  /* =====================================================
+     KIỂM TRA PUSH SUBSCRIPTION THẬT TRÊN THIẾT BỊ
+
+     Đây là điểm sửa quan trọng:
+     Không chỉ nhìn chữ trên nút nữa.
+  ====================================================== */
+
+  async function hasRealPushSubscription() {
+
+    if (
+      Notification.permission
+      !==
+      "granted"
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      !(
+        "serviceWorker"
+        in
+        navigator
+      )
+      ||
+      !(
+        "PushManager"
+        in
+        window
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    try {
+
+      const registration =
+        await Promise.race(
+          [
+
+            navigator.serviceWorker.ready,
+
+            new Promise(
+              resolve =>
+                setTimeout(
+                  () =>
+                    resolve(
+                      null
+                    ),
+                  5000
+                )
+            )
+
+          ]
+        );
+
+
+      if (
+        !registration
+        ||
+        !registration.pushManager
+      ) {
+
+        return false;
+
+      }
+
+
+      const subscription =
+        await registration
+          .pushManager
+          .getSubscription();
+
+
+      return Boolean(
+        subscription
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee Push: không kiểm tra được subscription.",
+        error
+      );
+
+      return false;
+
+    }
+
+  }
+
+
+  function buttonSaysPushEnabled() {
+
+    return String(
+      pushButton.textContent
+      ||
+      ""
+    ).includes(
+      "THÔNG BÁO ĐÃ BẬT"
+    );
+
+  }
+
+
+  /* =====================================================
+     NẾU PUSH ĐÃ BẬT THẬT → DỪNG NGAY
+
+     Đây là trường hợp Coach quay lại /coach.
+     Không hiện popup nữa.
+  ====================================================== */
+
+  if (
+    buttonSaysPushEnabled()
+    ||
+    await hasRealPushSubscription()
+  ) {
+
+    clearPushSnooze();
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     Nếu browser đã cấp quyền nhưng notifications.js
+     vẫn đang kiểm tra subscription, cho nó thêm thời gian.
+
+     Tránh lỗi cũ:
+     chỉ chờ 700ms rồi hiện popup nhầm.
+  ====================================================== */
+
+  if (
+    Notification.permission
+    ===
+    "granted"
+  ) {
+
+    for (
+      let i = 0;
+      i < 40;
+      i += 1
+    ) {
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            100
+          )
+      );
+
+
+      if (
+        buttonSaysPushEnabled()
+      ) {
+
+        clearPushSnooze();
+
+        return;
+
+      }
+
+    }
+
+
+    if (
+      await hasRealPushSubscription()
+    ) {
+
+      clearPushSnooze();
+
+      return;
+
+    }
+
+  }
+
+
   /*
-    Nếu notifications.js báo thiết bị
-    chưa sẵn sàng như iPhone chưa mở từ Home Screen,
-    không hiện onboarding chồng lên.
+    Nếu notifications.js xác định thiết bị
+    không thể bật Push thì không hiện onboarding.
   */
 
   if (
@@ -8001,14 +8241,36 @@ async function loadStudents(
     );
 
 
-  /*
-    Coach bấm 1 lần.
+  /* =====================================================
+     BẬT THÔNG BÁO
+  ====================================================== */
 
-    Nút thật của notifications.js được click
-    ngay trong thao tác của người dùng,
-    nên requestPermission vẫn xuất phát
-    từ user gesture.
-  */
+  async function finishPushEnabled() {
+
+    clearPushSnooze();
+
+
+    enableBtn.textContent =
+      "✅ THÔNG BÁO ĐÃ BẬT";
+
+
+    onboardingText.textContent =
+      "Thiết bị này đã được đăng ký nhận thông báo PickDee cho tài khoản Coach.";
+
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          600
+        )
+    );
+
+
+    overlay.remove();
+
+  }
+
 
   enableBtn.addEventListener(
     "click",
@@ -8027,19 +8289,28 @@ async function loadStudents(
 
 
       /*
-        Gọi đúng hệ thống Push đã có.
+        Người dùng đã chủ động bấm bật,
+        xoá trạng thái ĐỂ SAU cũ.
+      */
+
+      clearPushSnooze();
+
+
+      /*
+        Vẫn dùng đúng logic Push
+        trong notifications.js.
       */
 
       pushButton.click();
 
 
       /*
-        Chờ kết quả từ notifications.js.
+        Chờ notifications.js hoàn thành.
       */
 
       for (
         let i = 0;
-        i < 50;
+        i < 80;
         i += 1
       ) {
 
@@ -8047,44 +8318,16 @@ async function loadStudents(
           resolve =>
             setTimeout(
               resolve,
-              120
+              100
             )
         );
 
 
-        const buttonText =
-          String(
-            pushButton.textContent
-            ||
-            ""
-          );
-
-
         if (
-          buttonText.includes(
-            "THÔNG BÁO ĐÃ BẬT"
-          )
+          buttonSaysPushEnabled()
         ) {
 
-          enableBtn.textContent =
-            "✅ THÔNG BÁO ĐÃ BẬT";
-
-
-          onboardingText.textContent =
-            "Thiết bị này đã được đăng ký nhận thông báo PickDee cho tài khoản Coach.";
-
-
-          await new Promise(
-            resolve =>
-              setTimeout(
-                resolve,
-                800
-              )
-          );
-
-
-          overlay.remove();
-
+          await finishPushEnabled();
 
           return;
 
@@ -8092,10 +8335,22 @@ async function loadStudents(
 
 
         /*
-          Nếu hệ thống Push trả về lỗi,
-          lấy chính nội dung lỗi đang hiển thị
-          trong notification panel.
+          Mỗi khoảng 1 giây kiểm tra
+          subscription thật một lần.
         */
+
+        if (
+          i % 10 === 9
+          &&
+          await hasRealPushSubscription()
+        ) {
+
+          await finishPushEnabled();
+
+          return;
+
+        }
+
 
         const currentStatus =
           String(
@@ -8125,6 +8380,21 @@ async function loadStudents(
       }
 
 
+      /*
+        Kiểm tra lần cuối bằng PushManager.
+      */
+
+      if (
+        await hasRealPushSubscription()
+      ) {
+
+        await finishPushEnabled();
+
+        return;
+
+      }
+
+
       enableBtn.disabled =
         false;
 
@@ -8135,20 +8405,18 @@ async function loadStudents(
   });
 
 
-  /*
-    Để sau chỉ ẩn trong phiên hiện tại.
-    Lần đăng nhập sau PickDee vẫn có thể nhắc lại.
-  */
+  /* =====================================================
+     ĐỂ SAU
+
+     Ghi nhớ 7 ngày bằng localStorage.
+     Mở tab khác / quay về Coach sẽ không hỏi lại.
+  ====================================================== */
 
   laterBtn.addEventListener(
     "click",
     function () {
 
-      sessionStorage.setItem(
-        sessionKey,
-        "later"
-      );
-
+      snoozePushPrompt();
 
       overlay.remove();
 
