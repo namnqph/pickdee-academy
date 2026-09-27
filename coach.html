@@ -12119,53 +12119,43 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
 
-      const {
-        data,
-        error
-      } =
-        await sb
-          .from(
-            "coach_telegram_links"
-          )
-          .select(`
-            telegram_username,
-            linked_at,
-            is_active
-          `)
-          .eq(
-            "is_active",
-            true
-          )
-          .maybeSingle();
+    const {
+  data,
+  error
+} =
+  await sb.rpc(
+    "coach_get_telegram_status"
+  );
 
 
-      if (error) {
+if (error) {
 
-        console.error(
-          "COACH TELEGRAM STATUS:",
-          error
-        );
-
-
-        showDisconnected();
-
-        return;
-      }
+  console.error(
+    "COACH TELEGRAM STATUS:",
+    error
+  );
 
 
-      if (data) {
+  showDisconnected();
 
-        showConnected(
-          data
-        );
+  return;
+}
 
-      }
-      else {
 
-        showDisconnected();
+if (
+  data?.connected === true
+) {
 
-      }
+  showConnected(
+    data
+  );
 
+}
+else {
+
+  showDisconnected();
+
+}
     }
     catch (error) {
 
