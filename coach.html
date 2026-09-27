@@ -11906,6 +11906,417 @@ document.addEventListener("DOMContentLoaded", function () {
 })();
 
 </script>
+  <!-- =========================================================
+     PICKDEE - COACH TELEGRAM CONNECTION
+========================================================= -->
+
+<script>
+(async function () {
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb
+    ||
+    null;
+
+
+  const menuGrid =
+    document.querySelector(
+      ".menu-grid"
+    );
+
+
+  if (
+    !sb
+    ||
+    !menuGrid
+    ||
+    document.getElementById(
+      "coachTelegramCard"
+    )
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     TẠO CARD TELEGRAM
+  ====================================================== */
+
+  const card =
+    document.createElement(
+      "a"
+    );
+
+
+  card.id =
+    "coachTelegramCard";
+
+
+  card.className =
+    "menu-card request";
+
+
+  card.href =
+    "#";
+
+
+  card.innerHTML = `
+
+    <div class="menu-icon">
+      ✈️
+    </div>
+
+    <div
+      id="coachTelegramTitle"
+      class="menu-title"
+    >
+      KẾT NỐI TELEGRAM
+    </div>
+
+    <div
+      id="coachTelegramSub"
+      class="menu-sub"
+    >
+      Kết nối với PickDee Coach Bot để nhận
+      thông báo và cơ hội nhận học viên phù hợp.
+    </div>
+
+  `;
+
+
+  menuGrid.appendChild(
+    card
+  );
+
+
+  const titleEl =
+    document.getElementById(
+      "coachTelegramTitle"
+    );
+
+
+  const subEl =
+    document.getElementById(
+      "coachTelegramSub"
+    );
+
+
+  let telegramConnected =
+    false;
+
+
+  let telegramBusy =
+    false;
+
+
+  /* =====================================================
+     CHƯA KẾT NỐI
+  ====================================================== */
+
+  function showDisconnected() {
+
+    telegramConnected =
+      false;
+
+
+    card.classList.add(
+      "request"
+    );
+
+
+    card.href =
+      "#";
+
+
+    card.removeAttribute(
+      "target"
+    );
+
+
+    titleEl.textContent =
+      "KẾT NỐI TELEGRAM";
+
+
+    subEl.textContent =
+      "Kết nối với PickDee Coach Bot để nhận thông báo và cơ hội nhận học viên phù hợp.";
+
+  }
+
+
+  /* =====================================================
+     ĐÃ KẾT NỐI
+  ====================================================== */
+
+  function showConnected(
+    row
+  ) {
+
+    telegramConnected =
+      true;
+
+
+    card.classList.remove(
+      "request"
+    );
+
+
+    card.href =
+      "https://t.me/PickDeeCoachBot";
+
+
+    card.target =
+      "_blank";
+
+
+    card.rel =
+      "noopener noreferrer";
+
+
+    titleEl.textContent =
+      "TELEGRAM ĐÃ KẾT NỐI ✅";
+
+
+    const username =
+      String(
+        row?.telegram_username
+        ||
+        ""
+      ).trim();
+
+
+    subEl.textContent =
+      username
+        ?
+        `@${username} · PickDee có thể gửi thông báo Coach qua Telegram.`
+        :
+        "PickDee có thể gửi thông báo Coach qua Telegram.";
+
+  }
+
+
+  /* =====================================================
+     KIỂM TRA TRẠNG THÁI TELEGRAM
+  ====================================================== */
+
+  async function loadTelegramStatus() {
+
+    try {
+
+      const {
+        data: {
+          session
+        }
+      } =
+        await sb.auth.getSession();
+
+
+      if (!session) {
+        return;
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "coach_telegram_links"
+          )
+          .select(`
+            telegram_username,
+            linked_at,
+            is_active
+          `)
+          .eq(
+            "is_active",
+            true
+          )
+          .maybeSingle();
+
+
+      if (error) {
+
+        console.error(
+          "COACH TELEGRAM STATUS:",
+          error
+        );
+
+
+        showDisconnected();
+
+        return;
+      }
+
+
+      if (data) {
+
+        showConnected(
+          data
+        );
+
+      }
+      else {
+
+        showDisconnected();
+
+      }
+
+    }
+    catch (error) {
+
+      console.error(
+        "COACH TELEGRAM STATUS:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     BẤM KẾT NỐI
+  ====================================================== */
+
+  card.addEventListener(
+    "click",
+    async function (
+      event
+    ) {
+
+      /*
+        Nếu đã liên kết:
+        cho link mở thẳng Bot Telegram.
+      */
+
+      if (
+        telegramConnected
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      if (
+        telegramBusy
+      ) {
+        return;
+      }
+
+
+      telegramBusy =
+        true;
+
+
+      titleEl.textContent =
+        "ĐANG TẠO LIÊN KẾT...";
+
+
+      subEl.textContent =
+        "Vui lòng chờ trong giây lát.";
+
+
+      try {
+
+        const {
+          data: token,
+          error
+        } =
+          await sb.rpc(
+            "coach_create_telegram_link_token"
+          );
+
+
+        if (
+          error
+          ||
+          !token
+        ) {
+
+          throw (
+            error
+            ||
+            new Error(
+              "Không tạo được mã Telegram."
+            )
+          );
+
+        }
+
+
+        const telegramUrl =
+          "https://t.me/PickDeeCoachBot?start="
+          +
+          encodeURIComponent(
+            String(
+              token
+            )
+          );
+
+
+        /*
+          Dùng cùng tab để tránh trình duyệt
+          chặn popup sau khi chờ RPC.
+        */
+
+        window.location.href =
+          telegramUrl;
+
+      }
+      catch (error) {
+
+        console.error(
+          "COACH TELEGRAM LINK:",
+          error
+        );
+
+
+        titleEl.textContent =
+          "KẾT NỐI TELEGRAM";
+
+
+        subEl.textContent =
+          "Không tạo được liên kết Telegram. Bấm để thử lại.";
+
+
+        telegramBusy =
+          false;
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     KHI COACH QUAY LẠI WEB SAU TELEGRAM
+  ====================================================== */
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadTelegramStatus,
+        600
+      );
+
+    }
+  );
+
+
+  await loadTelegramStatus();
+
+
+})();
+</script>
 </body>
 
 </html>
