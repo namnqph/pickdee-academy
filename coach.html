@@ -12776,7 +12776,127 @@ else {
   }
 
 
-  function renderWards() {
+  async function renderWards() {
+
+  const areaCode =
+    String(
+      areaSelect.value || ""
+    ).trim();
+
+
+  if (!areaCode) {
+
+    wardSelect.disabled =
+      true;
+
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          Chọn Tỉnh / Thành trước
+        </option>
+      `;
+
+
+    return;
+
+  }
+
+
+  wardSelect.disabled =
+    true;
+
+
+  wardSelect.innerHTML =
+    `
+      <option value="">
+        Đang tải Phường / Xã...
+      </option>
+    `;
+
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from(
+        "dm_xa_phuong"
+      )
+      .select(`
+        ma_xa_phuong,
+        ma_khu_vuc,
+        ten_xa_phuong
+      `)
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .eq(
+        "ma_khu_vuc",
+        areaCode
+      )
+      .order(
+        "ten_xa_phuong",
+        {
+          ascending: true
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "LOAD COACH WARDS:",
+      error
+    );
+
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          Không tải được Phường / Xã
+        </option>
+      `;
+
+
+    return;
+
+  }
+
+
+  const rows =
+    Array.isArray(data)
+      ?
+      data
+      :
+      [];
+
+
+  wardSelect.disabled =
+    false;
+
+
+  wardSelect.innerHTML =
+    `
+      <option value="">
+        Toàn Tỉnh / Thành
+      </option>
+    `
+    +
+    rows
+      .map(
+        item => `
+          <option
+            value="${escapeHtml(item.ma_xa_phuong)}"
+          >
+            ${escapeHtml(item.ten_xa_phuong)}
+          </option>
+        `
+      )
+      .join("");
+
+}
 
     const areaCode =
       String(
@@ -13069,15 +13189,14 @@ else {
      THÊM KHU VỰC
   ====================================================== */
 
-  areaSelect.addEventListener(
-    "change",
-    function () {
+areaSelect.addEventListener(
+  "change",
+  async function () {
 
-      renderWards();
+    await renderWards();
 
-    }
-  );
-
+  }
+);
 
   addBtn.addEventListener(
     "click",
