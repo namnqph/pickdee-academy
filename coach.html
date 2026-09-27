@@ -12307,6 +12307,919 @@ else {
 
 })();
 </script>
+
+  <!-- =========================================================
+     PICKDEE - COACH MULTI SERVICE AREAS
+========================================================= -->
+
+<script>
+(async function () {
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb
+    ||
+    null;
+
+
+  const menuGrid =
+    document.querySelector(
+      ".menu-grid"
+    );
+
+
+  if (
+    !sb
+    ||
+    !menuGrid
+    ||
+    document.getElementById(
+      "coachServiceAreasCard"
+    )
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+
+    #coachServiceAreasCard {
+      margin-bottom:22px;
+      padding:22px;
+      border-radius:18px;
+      border:1px solid rgba(216,255,69,.28);
+      background:rgba(6,39,88,.74);
+    }
+
+    #coachServiceAreasCard h2 {
+      margin:0 0 8px;
+      font-size:21px;
+    }
+
+    .coach-area-help {
+      color:rgba(255,255,255,.58);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:18px;
+    }
+
+    .coach-area-list {
+      display:grid;
+      gap:10px;
+      margin-bottom:18px;
+    }
+
+    .coach-area-item {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:13px;
+      border-radius:12px;
+      background:rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .coach-area-name {
+      font-size:14px;
+      font-weight:900;
+      line-height:1.4;
+    }
+
+    .coach-area-badge {
+      display:inline-block;
+      margin-top:5px;
+      padding:4px 8px;
+      border-radius:999px;
+      color:#d8ff45;
+      background:rgba(216,255,69,.10);
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .coach-area-remove {
+      flex:0 0 auto;
+      border:1px solid rgba(255,150,150,.28);
+      background:rgba(255,100,100,.08);
+      color:#ffb0b0;
+      border-radius:9px;
+      padding:8px 10px;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .coach-area-form {
+      display:grid;
+      grid-template-columns:1fr 1fr auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .coach-area-field {
+      display:grid;
+      gap:6px;
+    }
+
+    .coach-area-field label {
+      color:rgba(255,255,255,.55);
+      font-size:11px;
+      font-weight:900;
+    }
+
+    .coach-area-field select {
+      width:100%;
+      min-height:44px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.16);
+      background:#092653;
+      color:white;
+      outline:none;
+    }
+
+    #coachAddAreaBtn {
+      min-height:44px;
+      border:0;
+      border-radius:10px;
+      padding:0 15px;
+      background:#d8ff45;
+      color:#172600;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    #coachAddAreaBtn:disabled,
+    .coach-area-remove:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    #coachAreaMessage {
+      min-height:18px;
+      margin-top:11px;
+      font-size:12px;
+      color:#d8ff45;
+    }
+
+    @media(max-width:700px) {
+
+      .coach-area-form {
+        grid-template-columns:1fr;
+      }
+
+      .coach-area-item {
+        align-items:flex-start;
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     HTML
+  ====================================================== */
+
+  const card =
+    document.createElement(
+      "section"
+    );
+
+
+  card.id =
+    "coachServiceAreasCard";
+
+
+  card.innerHTML = `
+
+    <h2>
+      📍 Khu vực nhận học viên
+    </h2>
+
+    <div class="coach-area-help">
+
+      Khu vực chính được giữ nguyên theo hồ sơ Coach.
+
+      Coach có thể thêm các khu vực khác mà mình
+      sẵn sàng nhận học viên.
+
+      Sau này PickDee Bot sẽ dùng danh sách này
+      để gửi cơ hội học viên phù hợp đúng khu vực.
+
+    </div>
+
+
+    <div
+      id="coachServiceAreaList"
+      class="coach-area-list"
+    >
+      Đang tải khu vực...
+    </div>
+
+
+    <div class="coach-area-form">
+
+      <div class="coach-area-field">
+
+        <label>
+          TỈNH / THÀNH
+        </label>
+
+        <select id="coachAreaSelect">
+
+          <option value="">
+            Chọn Tỉnh / Thành
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="coach-area-field">
+
+        <label>
+          PHƯỜNG / XÃ
+        </label>
+
+        <select
+          id="coachWardSelect"
+          disabled
+        >
+
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <button
+        id="coachAddAreaBtn"
+        type="button"
+      >
+        + THÊM KHU VỰC
+      </button>
+
+    </div>
+
+
+    <div id="coachAreaMessage"></div>
+
+  `;
+
+
+  menuGrid.parentNode.insertBefore(
+    card,
+    menuGrid
+  );
+
+
+  const listEl =
+    document.getElementById(
+      "coachServiceAreaList"
+    );
+
+
+  const areaSelect =
+    document.getElementById(
+      "coachAreaSelect"
+    );
+
+
+  const wardSelect =
+    document.getElementById(
+      "coachWardSelect"
+    );
+
+
+  const addBtn =
+    document.getElementById(
+      "coachAddAreaBtn"
+    );
+
+
+  const messageEl =
+    document.getElementById(
+      "coachAreaMessage"
+    );
+
+
+  let allAreas = [];
+  let allWards = [];
+
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function showMessage(
+    text,
+    isError = false
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+
+    messageEl.style.color =
+      isError
+        ?
+        "#ffaaaa"
+        :
+        "#d8ff45";
+
+  }
+
+
+  /* =====================================================
+     DANH MỤC KHU VỰC
+  ====================================================== */
+
+  async function loadLocationCatalog() {
+
+    const [
+      areaResult,
+      wardResult
+    ] =
+      await Promise.all([
+
+        sb
+          .from(
+            "dm_khu_vuc"
+          )
+          .select(`
+            ma_khu_vuc,
+            tinh_thanh
+          `)
+          .eq(
+            "dang_hoat_dong",
+            true
+          )
+          .order(
+            "tinh_thanh",
+            {
+              ascending:true
+            }
+          ),
+
+        sb
+          .from(
+            "dm_xa_phuong"
+          )
+          .select(`
+            ma_xa_phuong,
+            ma_khu_vuc,
+            ten_xa_phuong
+          `)
+          .eq(
+            "dang_hoat_dong",
+            true
+          )
+          .order(
+            "ten_xa_phuong",
+            {
+              ascending:true
+            }
+          )
+
+      ]);
+
+
+    if (
+      areaResult.error
+      ||
+      wardResult.error
+    ) {
+
+      throw (
+        areaResult.error
+        ||
+        wardResult.error
+      );
+
+    }
+
+
+    allAreas =
+      Array.isArray(
+        areaResult.data
+      )
+        ?
+        areaResult.data
+        :
+        [];
+
+
+    allWards =
+      Array.isArray(
+        wardResult.data
+      )
+        ?
+        wardResult.data
+        :
+        [];
+
+
+    areaSelect.innerHTML =
+      `
+        <option value="">
+          Chọn Tỉnh / Thành
+        </option>
+      `
+      +
+      allAreas
+        .map(
+          item => `
+            <option
+              value="${escapeHtml(item.ma_khu_vuc)}"
+            >
+              ${escapeHtml(item.tinh_thanh)}
+            </option>
+          `
+        )
+        .join("");
+
+  }
+
+
+  function renderWards() {
+
+    const areaCode =
+      String(
+        areaSelect.value || ""
+      );
+
+
+    if (!areaCode) {
+
+      wardSelect.disabled =
+        true;
+
+
+      wardSelect.innerHTML =
+        `
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+        `;
+
+
+      return;
+
+    }
+
+
+    const rows =
+      allWards.filter(
+        item =>
+          String(
+            item.ma_khu_vuc
+          )
+          ===
+          areaCode
+      );
+
+
+    wardSelect.disabled =
+      false;
+
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          Toàn Tỉnh / Thành
+        </option>
+      `
+      +
+      rows
+        .map(
+          item => `
+            <option
+              value="${escapeHtml(item.ma_xa_phuong)}"
+            >
+              ${escapeHtml(item.ten_xa_phuong)}
+            </option>
+          `
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     DANH SÁCH KHU VỰC COACH
+  ====================================================== */
+
+  async function loadServiceAreas() {
+
+    listEl.innerHTML =
+      "Đang tải khu vực...";
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "coach_get_service_areas"
+      );
+
+
+    if (error) {
+
+      console.error(
+        "COACH SERVICE AREAS:",
+        error
+      );
+
+
+      listEl.innerHTML =
+        `
+          <div style="color:#ffaaaa;">
+            Không tải được khu vực Coach.
+          </div>
+        `;
+
+
+      return;
+
+    }
+
+
+    const rows =
+      Array.isArray(data)
+        ?
+        data
+        :
+        [];
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      listEl.innerHTML =
+        `
+          <div
+            style="
+              color:rgba(255,255,255,.55);
+              font-size:13px;
+            "
+          >
+            Chưa có khu vực nhận học viên.
+          </div>
+        `;
+
+
+      return;
+
+    }
+
+
+    listEl.innerHTML =
+      rows
+        .map(
+          row => {
+
+            const locationText =
+              row.ward_name
+                ?
+                `${row.ward_name} · ${row.area_name}`
+                :
+                `Toàn ${row.area_name}`;
+
+
+            return `
+
+              <div class="coach-area-item">
+
+                <div>
+
+                  <div class="coach-area-name">
+                    ${escapeHtml(locationText)}
+                  </div>
+
+                  ${
+                    row.is_primary
+                      ?
+                      `
+                        <span class="coach-area-badge">
+                          KHU VỰC CHÍNH
+                        </span>
+                      `
+                      :
+                      `
+                        <span class="coach-area-badge">
+                          KHU VỰC NHẬN THÊM
+                        </span>
+                      `
+                  }
+
+                </div>
+
+
+                ${
+                  row.is_primary
+                    ?
+                    ""
+                    :
+                    `
+                      <button
+                        type="button"
+                        class="coach-area-remove"
+                        data-id="${Number(row.id)}"
+                      >
+                        XÓA
+                      </button>
+                    `
+                }
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    listEl
+      .querySelectorAll(
+        ".coach-area-remove"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            async function () {
+
+              const id =
+                Number(
+                  button.dataset.id
+                );
+
+
+              if (
+                !Number.isInteger(id)
+                ||
+                id <= 0
+              ) {
+                return;
+              }
+
+
+              button.disabled =
+                true;
+
+
+              showMessage(
+                "Đang xóa khu vực..."
+              );
+
+
+              const {
+                error
+              } =
+                await sb.rpc(
+                  "coach_remove_service_area",
+                  {
+                    p_service_area_id:
+                      id
+                  }
+                );
+
+
+              if (error) {
+
+                console.error(
+                  "REMOVE COACH AREA:",
+                  error
+                );
+
+
+                showMessage(
+                  error.message
+                  ||
+                  "Không xóa được khu vực.",
+                  true
+                );
+
+
+                button.disabled =
+                  false;
+
+
+                return;
+
+              }
+
+
+              showMessage(
+                "✓ Đã xóa khu vực."
+              );
+
+
+              await loadServiceAreas();
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     THÊM KHU VỰC
+  ====================================================== */
+
+  areaSelect.addEventListener(
+    "change",
+    function () {
+
+      renderWards();
+
+    }
+  );
+
+
+  addBtn.addEventListener(
+    "click",
+    async function () {
+
+      const areaCode =
+        String(
+          areaSelect.value || ""
+        ).trim();
+
+
+      const wardCode =
+        String(
+          wardSelect.value || ""
+        ).trim();
+
+
+      if (!areaCode) {
+
+        showMessage(
+          "Hãy chọn Tỉnh / Thành.",
+          true
+        );
+
+
+        return;
+
+      }
+
+
+      addBtn.disabled =
+        true;
+
+
+      addBtn.textContent =
+        "ĐANG THÊM...";
+
+
+      showMessage(
+        "Đang thêm khu vực..."
+      );
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sb.rpc(
+            "coach_save_service_area",
+            {
+              p_area_code:
+                areaCode,
+
+              p_ward_code:
+                wardCode
+                ||
+                null
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        areaSelect.value =
+          "";
+
+
+        renderWards();
+
+
+        showMessage(
+          "✓ Đã thêm khu vực nhận học viên."
+        );
+
+
+        await loadServiceAreas();
+
+      }
+      catch (error) {
+
+        console.error(
+          "ADD COACH AREA:",
+          error
+        );
+
+
+        showMessage(
+          error?.message
+          ||
+          "Không thêm được khu vực.",
+          true
+        );
+
+      }
+      finally {
+
+        addBtn.disabled =
+          false;
+
+
+        addBtn.textContent =
+          "+ THÊM KHU VỰC";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  try {
+
+    await loadLocationCatalog();
+
+    await loadServiceAreas();
+
+  }
+  catch (error) {
+
+    console.error(
+      "COACH AREA INIT:",
+      error
+    );
+
+
+    showMessage(
+      "Không tải được danh mục khu vực.",
+      true
+    );
+
+  }
+
+
+})();
+</script>
 </body>
 
 </html>
