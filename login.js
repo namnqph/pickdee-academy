@@ -73,23 +73,46 @@ if (profileError || !profile) {
   return;
 
 }
-  if (profile.role === "admin") {
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
 
-    window.location.href = "/admin";
+const next =
+  params.get("next") || "";
 
-  } else if (profile.role === "coach") {
+const safeCoachNext =
+  (
+    next === "/coach-opportunity"
+    ||
+    next.startsWith(
+      "/coach-opportunity?"
+    )
+  )
+    ? next
+    : "/coach";
 
-    window.location.href = "/coach";
 
-  } else if (profile.role === "student") {
+if (profile.role === "admin") {
 
-    window.location.href = "/student";
+  window.location.href =
+    "/admin";
 
-  } else {
+} else if (profile.role === "coach") {
 
-    message.textContent =
-      "Tài khoản chưa được phân quyền.";
+  window.location.href =
+    safeCoachNext;
 
-  }
+} else if (profile.role === "student") {
+
+  window.location.href =
+    "/student";
+
+} else {
+
+  message.textContent =
+    "Tài khoản chưa được phân quyền.";
+
+}
 
 });
