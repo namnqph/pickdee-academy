@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#041733"
+  >
+
+  <title>Cơ hội học viên | PickDee Academy</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: #fff;
+
+      background:
+        radial-gradient(
+          circle at 80% 10%,
+          rgba(80,255,190,.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 50%,
+          #03142d
+        );
+    }
+
+
+    .topbar {
+      padding: 18px 24px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.12);
+    }
+
+
+    .brand {
+      color: white;
+
+      text-decoration: none;
+
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .top-actions {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+    }
+
+
+    .back-link {
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 13px;
+
+      font-weight: 900;
+    }
+
+
+    .logout-btn {
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,255,255,.08);
+
+      color: white;
+
+      padding: 9px 12px;
+
+      border-radius: 9px;
+
+      cursor: pointer;
+
+      font-weight: 800;
+    }
+
+
+    .container {
+      width:
+        min(
+          720px,
+          calc(100% - 28px)
+        );
+
+      margin: auto;
+
+      padding:
+        42px 0 70px;
+    }
+
+
+    .eyebrow {
+      color: #d8ff45;
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      letter-spacing: 1px;
+    }
+
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(
+          32px,
+          6vw,
+          48px
+        );
+    }
+
+
+    .subtitle {
+      margin-bottom: 26px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      font-size: 14px;
+
+      line-height: 1.6;
+    }
+
+
+    .card {
+      padding: 24px;
+
+      border-radius: 20px;
+
+      background:
+        rgba(6,39,88,.78);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.18);
+    }
+
+
+    .status-box {
+      margin-bottom: 20px;
+
+      padding: 14px 16px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      font-size: 14px;
+
+      line-height: 1.55;
+    }
+
+
+    .status-box.success {
+      color: #d8ff45;
+
+      border-color:
+        rgba(216,255,69,.28);
+
+      background:
+        rgba(216,255,69,.08);
+    }
+
+
+    .status-box.error {
+      color: #ffb0b0;
+
+      border-color:
+        rgba(255,130,130,.28);
+
+      background:
+        rgba(255,100,100,.07);
+    }
+
+
+    .status-box.warning {
+      color: #ffd58a;
+
+      border-color:
+        rgba(255,199,100,.28);
+
+      background:
+        rgba(255,180,80,.07);
+    }
+
+
+    .opportunity-title {
+      margin:
+        0 0 20px;
+
+      font-size: 22px;
+    }
+
+
+    .info-grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 14px;
+
+      margin-bottom: 22px;
+    }
+
+
+    .info-item {
+      padding: 15px;
+
+      border-radius: 13px;
+
+      background:
+        rgba(0,0,0,.13);
+
+      border:
+        1px solid rgba(255,255,255,.08);
+    }
+
+
+    .info-label {
+      margin-bottom: 6px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 12px;
+    }
+
+
+    .info-value {
+      color: #fff;
+
+      font-size: 15px;
+
+      font-weight: 900;
+
+      line-height: 1.45;
+    }
+
+
+    .privacy-box {
+      margin:
+        4px 0 22px;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      color:
+        rgba(255,255,255,.66);
+
+      background:
+        rgba(216,255,69,.06);
+
+      border:
+        1px solid rgba(216,255,69,.18);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+
+    .claim-btn {
+      width: 100%;
+
+      min-height: 52px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      background: #d8ff45;
+
+      color: #172600;
+
+      font-size: 15px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+      transition: .15s ease;
+    }
+
+
+    .claim-btn:hover {
+      transform:
+        translateY(-1px);
+    }
+
+
+    .claim-btn:disabled {
+      opacity: .5;
+
+      cursor: not-allowed;
+
+      transform: none;
+    }
+
+
+    .dashboard-btn {
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      width: 100%;
+
+      min-height: 48px;
+
+      margin-top: 12px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(255,255,255,.16);
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: white;
+
+      text-decoration: none;
+
+      font-size: 14px;
+
+      font-weight: 900;
+    }
+
+
+    .loading {
+      padding: 28px 0;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.65);
+    }
+
+
+    #opportunityContent {
+      display: none;
+    }
+
+
+    @media(max-width:600px) {
+
+      .topbar {
+        padding: 15px;
+      }
+
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+
+      .card {
+        padding: 19px;
+      }
+
+
+      .back-link {
+        display: none;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+  <a
+    class="brand"
+    href="/coach"
+  >
+    PickDee <span>Academy</span>
+  </a>
+
+
+  <div class="top-actions">
+
+    <a
+      class="back-link"
+      href="/coach"
+    >
+      ← DASHBOARD
+    </a>
+
+    <button
+      id="logoutBtn"
+      class="logout-btn"
+      type="button"
+    >
+      ĐĂNG XUẤT
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <div class="eyebrow">
+    CƠ HỘI DÀNH CHO COACH
+  </div>
+
+
+  <h1>
+    Học viên mới
+  </h1>
+
+
+  <div class="subtitle">
+    Xem thông tin cơ hội phù hợp với khu vực hoạt động của bạn.
+    Coach nhận trước sẽ được ưu tiên phụ trách học viên.
+  </div>
+
+
+  <section class="card">
+
+
+    <div
+      id="loadingBox"
+      class="loading"
+    >
+      Đang kiểm tra cơ hội học viên...
+    </div>
+
+
+    <div
+      id="messageBox"
+      class="status-box"
+      style="display:none;"
+    ></div>
+
+
+    <div id="opportunityContent">
+
+
+      <h2 class="opportunity-title">
+        🎯 Cơ hội học viên mới
+      </h2>
+
+
+      <div class="info-grid">
+
+
+        <div class="info-item">
+
+          <div class="info-label">
+            Mã đăng ký
+          </div>
+
+          <div
+            id="registrationCode"
+            class="info-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="info-item">
+
+          <div class="info-label">
+            Gói học
+          </div>
+
+          <div
+            id="packageName"
+            class="info-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="info-item">
+
+          <div class="info-label">
+            Tỉnh / Thành
+          </div>
+
+          <div
+            id="preferredArea"
+            class="info-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="info-item">
+
+          <div class="info-label">
+            Xã / Phường
+          </div>
+
+          <div
+            id="preferredWard"
+            class="info-value"
+          >
+            —
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <div class="privacy-box">
+        🔒 Thông tin cá nhân của học viên chưa được hiển thị tại bước này.
+        Sau khi Coach nhận học viên thành công, PickDee sẽ tiếp tục xử lý
+        theo quy trình vận hành của Academy.
+      </div>
+
+
+      <button
+        id="claimBtn"
+        class="claim-btn"
+        type="button"
+      >
+        NHẬN HỌC VIÊN
+      </button>
+
+
+      <a
+        class="dashboard-btn"
+        href="/coach"
+      >
+        QUAY LẠI DASHBOARD COACH
+      </a>
+
+
+    </div>
+
+  </section>
+
+
+</main>
+
+
+<script>
+
+(async function () {
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    alert(
+      "PickDee: thiếu cấu hình Supabase."
+    );
+
+    return;
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ELEMENTS
+  ====================================================== */
+
+  const loadingBox =
+    document.getElementById(
+      "loadingBox"
+    );
+
+
+  const messageBox =
+    document.getElementById(
+      "messageBox"
+    );
+
+
+  const opportunityContent =
+    document.getElementById(
+      "opportunityContent"
+    );
+
+
+  const registrationCodeEl =
+    document.getElementById(
+      "registrationCode"
+    );
+
+
+  const packageNameEl =
+    document.getElementById(
+      "packageName"
+    );
+
+
+  const preferredAreaEl =
+    document.getElementById(
+      "preferredArea"
+    );
+
+
+  const preferredWardEl =
+    document.getElementById(
+      "preferredWard"
+    );
+
+
+  const claimBtn =
+    document.getElementById(
+      "claimBtn"
+    );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+
+  /* =====================================================
+     STATE
+  ====================================================== */
+
+  let registrationId =
+    null;
+
+
+  let opportunity =
+    null;
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function showMessage(
+    text,
+    type = ""
+  ) {
+
+    messageBox.textContent =
+      text || "";
+
+    messageBox.className =
+      "status-box";
+
+    if (type) {
+      messageBox.classList.add(
+        type
+      );
+    }
+
+    messageBox.style.display =
+      text
+        ? "block"
+        : "none";
+
+  }
+
+
+  function hideLoading() {
+
+    loadingBox.style.display =
+      "none";
+
+  }
+
+
+  function showOpportunity() {
+
+    opportunityContent.style.display =
+      "block";
+
+  }
+
+
+  function hideOpportunity() {
+
+    opportunityContent.style.display =
+      "none";
+
+  }
+
+
+  function readRegistrationId() {
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const value =
+      Number(
+        params.get("id")
+      );
+
+
+    if (
+      !Number.isFinite(value)
+      ||
+      value <= 0
+    ) {
+
+      return null;
+    }
+
+
+    return value;
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireCoach() {
+
+    const {
+      data: {
+        session
+      },
+      error
+    } =
+      await sb.auth
+        .getSession();
+
+
+    if (
+      error
+      ||
+      !session
+    ) {
+
+      window.location.href =
+        "/login";
+
+      return false;
+    }
+
+
+    const {
+      data: coach,
+      error: coachError
+    } =
+      await sb.rpc(
+        "get_my_coach_profile"
+      );
+
+
+    if (
+      coachError
+      ||
+      !coach
+    ) {
+
+      hideLoading();
+
+      showMessage(
+        "Không tìm thấy hồ sơ Coach của tài khoản này.",
+        "error"
+      );
+
+      return false;
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD OPPORTUNITY
+  ====================================================== */
+
+  async function loadOpportunity() {
+
+    hideOpportunity();
+
+    loadingBox.style.display =
+      "block";
+
+    loadingBox.textContent =
+      "Đang kiểm tra cơ hội học viên...";
+
+    showMessage("");
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "coach_get_registration_opportunity",
+        {
+          p_registration_id:
+            registrationId
+        }
+      );
+
+
+    hideLoading();
+
+
+    if (error) {
+
+      console.error(
+        "LOAD OPPORTUNITY:",
+        error
+      );
+
+
+      showMessage(
+        "Không tải được cơ hội học viên. Vui lòng thử lại.",
+        "error"
+      );
+
+      return;
+    }
+
+
+    opportunity =
+      data || {};
+
+
+    /*
+      CƠ HỘI KHÔNG CÒN KHẢ DỤNG
+    */
+
+    if (
+      opportunity.ok !== true
+    ) {
+
+      const code =
+        String(
+          opportunity.code
+          || ""
+        );
+
+
+      if (
+        code ===
+        "already_claimed"
+      ) {
+
+        showMessage(
+          "Cơ hội này đã có Coach khác nhận.",
+          "warning"
+        );
+
+      }
+      else if (
+        code ===
+        "not_eligible"
+      ) {
+
+        showMessage(
+          "Cơ hội này không thuộc khu vực nhận học viên của bạn.",
+          "warning"
+        );
+
+      }
+      else if (
+        code ===
+        "not_available"
+      ) {
+
+        showMessage(
+          "Cơ hội này hiện không còn khả dụng.",
+          "warning"
+        );
+
+      }
+      else {
+
+        showMessage(
+          opportunity.message
+          ||
+          "Không thể mở cơ hội học viên này.",
+          "error"
+        );
+
+      }
+
+
+      return;
+    }
+
+
+    /*
+      HIỂN THỊ THÔNG TIN
+    */
+
+    registrationCodeEl.textContent =
+      opportunity.registration_code
+      || "—";
+
+
+    packageNameEl.textContent =
+      opportunity.package_name
+      || "—";
+
+
+    preferredAreaEl.textContent =
+      opportunity.preferred_area
+      || "—";
+
+
+    preferredWardEl.textContent =
+      opportunity.preferred_ward
+      || "—";
+
+
+    showOpportunity();
+
+
+    /*
+      COACH ĐÃ NHẬN TRƯỚC ĐÓ
+    */
+
+    if (
+      opportunity.claimed_by_you
+      === true
+    ) {
+
+      claimBtn.disabled =
+        true;
+
+      claimBtn.textContent =
+        "ĐÃ NHẬN HỌC VIÊN";
+
+
+      showMessage(
+        "✅ Bạn đã nhận học viên này.",
+        "success"
+      );
+
+
+      return;
+    }
+
+
+    /*
+      CƠ HỘI CÒN TRỐNG
+    */
+
+    claimBtn.disabled =
+      false;
+
+    claimBtn.textContent =
+      "NHẬN HỌC VIÊN";
+
+  }
+
+
+  /* =====================================================
+     CLAIM
+  ====================================================== */
+
+  async function claimOpportunity() {
+
+    if (!registrationId) {
+      return;
+    }
+
+
+    const confirmed =
+      window.confirm(
+        "Bạn xác nhận muốn nhận học viên này?"
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    claimBtn.disabled =
+      true;
+
+    claimBtn.textContent =
+      "ĐANG NHẬN...";
+
+
+    showMessage(
+      "Đang xử lý yêu cầu...",
+      ""
+    );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "coach_claim_registration_opportunity",
+        {
+          p_registration_id:
+            registrationId
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        "CLAIM OPPORTUNITY:",
+        error
+      );
+
+
+      claimBtn.disabled =
+        false;
+
+      claimBtn.textContent =
+        "NHẬN HỌC VIÊN";
+
+
+      showMessage(
+        "Không thể nhận học viên. Vui lòng thử lại.",
+        "error"
+      );
+
+
+      return;
+    }
+
+
+    const result =
+      data || {};
+
+
+    const code =
+      String(
+        result.code
+        || ""
+      );
+
+
+    if (
+      result.ok === true
+      &&
+      (
+        code === "claimed"
+        ||
+        code ===
+          "already_claimed_by_you"
+      )
+    ) {
+
+      claimBtn.disabled =
+        true;
+
+      claimBtn.textContent =
+        "ĐÃ NHẬN HỌC VIÊN";
+
+
+      showMessage(
+        code === "claimed"
+          ?
+          "✅ Nhận học viên thành công."
+          :
+          "✅ Bạn đã nhận học viên này trước đó.",
+        "success"
+      );
+
+
+      await loadOpportunity();
+
+
+      return;
+    }
+
+
+    if (
+      code ===
+      "already_claimed"
+    ) {
+
+      hideOpportunity();
+
+
+      showMessage(
+        "Cơ hội này vừa được Coach khác nhận trước.",
+        "warning"
+      );
+
+
+      return;
+    }
+
+
+    if (
+      code ===
+      "not_eligible"
+    ) {
+
+      hideOpportunity();
+
+
+      showMessage(
+        "Bạn không nằm trong khu vực phù hợp để nhận học viên này.",
+        "warning"
+      );
+
+
+      return;
+    }
+
+
+    claimBtn.disabled =
+      false;
+
+    claimBtn.textContent =
+      "NHẬN HỌC VIÊN";
+
+
+    showMessage(
+      result.message
+      ||
+      "Không thể nhận học viên này.",
+      "error"
+    );
+
+  }
+
+
+  /* =====================================================
+     LOGOUT
+  ====================================================== */
+
+  logoutBtn.addEventListener(
+    "click",
+    async function () {
+
+      await sb.auth.signOut();
+
+      window.location.href =
+        "/login";
+
+    }
+  );
+
+
+  claimBtn.addEventListener(
+    "click",
+    claimOpportunity
+  );
+
+
+  /* =====================================================
+     INIT
+  ====================================================== */
+
+  registrationId =
+    readRegistrationId();
+
+
+  if (!registrationId) {
+
+    hideLoading();
+
+
+    showMessage(
+      "Link cơ hội học viên không hợp lệ hoặc thiếu mã đăng ký.",
+      "error"
+    );
+
+
+    return;
+  }
+
+
+  const coachReady =
+    await requireCoach();
+
+
+  if (!coachReady) {
+    return;
+  }
+
+
+  await loadOpportunity();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
