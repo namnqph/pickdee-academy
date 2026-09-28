@@ -754,27 +754,83 @@ function renderActions() {
       "ĐANG LƯU...";
 
 
-    const coachId =
-      Number(select.value);
+   const coachId =
+  Number(select.value);
 
 
-    const {
-      data: assignData,
-      error: assignError
-    } =
-      await sb.functions.invoke(
-        "pickdee-assign-coach",
-        {
-          body: {
-            registration_id:
-              registrationId,
+const isReplacing =
+  currentRegistration.coach_id
+  &&
+  Number(
+    currentRegistration.coach_id
+  ) !== coachId;
 
-            coach_id:
-              coachId
-          }
-        }
-      );
 
+if (isReplacing) {
+
+  const oldCoach =
+    coaches.find(
+      coach =>
+        Number(coach.id) ===
+        Number(
+          currentRegistration.coach_id
+        )
+    );
+
+
+  const newCoach =
+    coaches.find(
+      coach =>
+        Number(coach.id) ===
+        coachId
+    );
+
+
+  const confirmed =
+    window.confirm(
+      "Đăng ký này đã có Coach phụ trách.\n\n"
+      +
+      `Coach hiện tại: ${oldCoach?.full_name || "—"}\n`
+      +
+      `Đổi sang: ${newCoach?.full_name || "—"}\n\n`
+      +
+      "Bạn có chắc muốn ĐỔI COACH không?"
+    );
+
+
+  if (!confirmed) {
+
+    coachBtn.disabled =
+      false;
+
+    coachBtn.textContent =
+      "ĐỔI COACH";
+
+    return;
+  }
+
+}
+
+
+const {
+  data: assignData,
+  error: assignError
+} =
+  await sb.functions.invoke(
+    "pickdee-assign-coach",
+    {
+      body: {
+        registration_id:
+          registrationId,
+
+        coach_id:
+          coachId,
+
+        allow_replace:
+          isReplacing === true
+      }
+    }
+  );
 
     if (assignError) {
 
