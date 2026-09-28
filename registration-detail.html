@@ -441,6 +441,7 @@ async function loadRegistration() {
         registration_code,
         student_id,
         coach_id,
+        is_test,
         package_name,
         preferred_area,
         preferred_ward,
@@ -592,6 +593,9 @@ async function loadRegistration() {
 
 async function loadCoaches() {
 
+  const isTestRegistration =
+    currentRegistration?.is_test === true;
+
   const {
     data,
     error
@@ -601,8 +605,13 @@ async function loadCoaches() {
       .select(`
         id,
         coach_code,
-        full_name
+        full_name,
+        is_test
       `)
+      .eq(
+        "is_test",
+        isTestRegistration
+      )
       .order(
         "full_name",
         { ascending: true }
