@@ -233,3 +233,66 @@ window.PICKDEE_CONFIG = {
   );
 
 })();
+(function () {
+
+  const path =
+    window.location.pathname;
+
+  const isCoachArea =
+    path === "/coach"
+    ||
+    path === "/coach.html"
+    ||
+    path.startsWith("/coach-");
+
+  if (!isCoachArea) {
+    return;
+  }
+
+  function loadCoachTelegramGate() {
+
+    if (
+      document.querySelector(
+        'script[data-pickdee-coach-gate]'
+      )
+    ) {
+      return;
+    }
+
+    const script =
+      document.createElement("script");
+
+    script.src =
+      "/coach-telegram-gate.js?v=20260930-2";
+
+    script.setAttribute(
+      "data-pickdee-coach-gate",
+      "1"
+    );
+
+    document.body.appendChild(
+      script
+    );
+
+  }
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      loadCoachTelegramGate,
+      {
+        once: true
+      }
+    );
+
+  }
+  else {
+
+    loadCoachTelegramGate();
+
+  }
+
+})();
