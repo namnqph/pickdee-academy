@@ -238,12 +238,35 @@ window.PICKDEE_CONFIG = {
   const path =
     window.location.pathname;
 
-  const isCoachArea =
-    path === "/coach"
-    ||
-    path === "/coach.html"
-    ||
-    path.startsWith("/coach-");
+ const coachPrivatePaths = [
+  "/coach",
+  "/coach.html",
+
+  "/coach-sessions",
+  "/coach-sessions.html",
+
+  "/coach-session-requests",
+  "/coach-session-requests.html",
+
+  "/coach-cover-requests",
+  "/coach-cover-requests.html",
+
+  "/coach-my-work",
+  "/coach-my-work.html",
+
+  "/coach-students",
+  "/coach-students.html",
+
+  "/coach-session-detail",
+  "/coach-session-detail.html",
+
+  "/coach-opportunity",
+  "/coach-opportunity.html"
+];
+
+
+const isCoachArea =
+  coachPrivatePaths.includes(path);
 
   if (!isCoachArea) {
     return;
