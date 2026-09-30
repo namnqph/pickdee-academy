@@ -562,47 +562,70 @@
      ĐÃ KẾT NỐI NHƯNG CHƯA VÀO NHÓM
   ===================================================== */
 
-  function renderJoinGroup() {
+  function renderJoinGroup(
+  telegramStatus
+) {
 
-    lockCoach();
-
-
-    statusEl.textContent =
-      "Telegram đã kết nối ✅ · Bạn chưa tham gia nhóm Coach PickDee.";
+  lockCoach();
 
 
-    actionsEl.innerHTML = `
-
-      <a
-        class="pickdee-coach-gate-btn primary"
-        href="${GROUP_URL}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        👥 THAM GIA NHÓM COACH
-      </a>
-
-      <button
-        id="pickdeeCoachMembershipRetry"
-        class="pickdee-coach-gate-btn"
-        type="button"
-      >
-        ✓ TÔI ĐÃ THAM GIA · KIỂM TRA LẠI
-      </button>
-
-    `;
+  const username =
+    String(
+      telegramStatus?.telegram_username
+      ||
+      ""
+    ).trim();
 
 
-    document
-      .getElementById(
-        "pickdeeCoachMembershipRetry"
-      )
-      ?.addEventListener(
-        "click",
-        checkTelegramGate
-      );
+  statusEl.innerHTML =
+    username
+      ?
+      `Telegram đã kết nối ✅<br>
+       Tài khoản đang liên kết:
+       <strong style="color:#d8ff45;">
+         @${username}
+       </strong><br><br>
+       Hãy đảm bảo chính tài khoản Telegram này
+       tham gia nhóm Coach PickDee.`
+      :
+      `Telegram đã kết nối ✅<br>
+       Bạn chưa tham gia nhóm Coach PickDee.<br><br>
+       Hãy dùng đúng tài khoản Telegram
+       đã kết nối với PickDee Bot để tham gia nhóm.`;
 
-  }
+
+  actionsEl.innerHTML = `
+
+    <a
+      class="pickdee-coach-gate-btn primary"
+      href="${GROUP_URL}"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      👥 THAM GIA NHÓM COACH
+    </a>
+
+    <button
+      id="pickdeeCoachMembershipRetry"
+      class="pickdee-coach-gate-btn"
+      type="button"
+    >
+      ✓ TÔI ĐÃ THAM GIA · KIỂM TRA LẠI
+    </button>
+
+  `;
+
+
+  document
+    .getElementById(
+      "pickdeeCoachMembershipRetry"
+    )
+    ?.addEventListener(
+      "click",
+      checkTelegramGate
+    );
+
+}
 
 
   /* =====================================================
@@ -784,7 +807,9 @@
       }
 
 
-      renderJoinGroup();
+      renderJoinGroup(
+  telegramStatus
+);
 
     }
     catch (error) {
