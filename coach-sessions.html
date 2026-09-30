@@ -436,16 +436,44 @@
   <div id="message"></div>
 
 
-  <div class="toolbar">
+ <div
+  class="toolbar"
+  style="
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  "
+>
 
-    <input
-      id="search"
-      type="search"
-      placeholder="Tìm mã buổi, học viên, sân, trạng thái..."
-    >
+  <input
+    id="search"
+    type="search"
+    placeholder="Tìm mã buổi, học viên, sân, trạng thái..."
+    style="
+      flex:1 1 320px;
+    "
+  >
 
-  </div>
+  <button
+    id="requestDayCoverBtn"
+    type="button"
+    style="
+      min-height:47px;
+      padding:0 16px;
+      border:1px solid rgba(216,255,69,.40);
+      border-radius:10px;
+      background:rgba(216,255,69,.12);
+      color:#d8ff45;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    "
+  >
+    🔄 NHỜ DẠY THAY CẢ NGÀY
+  </button>
 
+</div>
 
   <section class="card">
 
@@ -494,6 +522,382 @@
 ====================================== -->
 
 <script src="./coach-sessions.js?v=20260930-1"></script>
+  <script>
+(function setupRequestDayCover() {
+
+  const button =
+    document.getElementById(
+      "requestDayCoverBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (!button) {
+    return;
+  }
+
+
+  function localTodayISO() {
+
+    const now =
+      new Date();
+
+
+    const year =
+      now.getFullYear();
+
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+
+    const day =
+      String(
+        now.getDate()
+      ).padStart(
+        2,
+        "0"
+      );
+
+
+    return (
+      `${year}-${month}-${day}`
+    );
+
+  }
+
+
+  button.addEventListener(
+    "click",
+    async function (event) {
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      if (
+        typeof sb === "undefined"
+      ) {
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          "Chưa kết nối được dữ liệu Coach. Vui lòng tải lại trang.";
+
+
+        return;
+      }
+
+
+      const today =
+        localTodayISO();
+
+
+      const inputDate =
+        window.prompt(
+          "Nhập ngày cần nhờ Coach dạy thay.\nĐịnh dạng: YYYY-MM-DD",
+          today
+        );
+
+
+      if (
+        inputDate === null
+      ) {
+
+        return;
+      }
+
+
+      const sessionDate =
+        String(
+          inputDate || ""
+        ).trim();
+
+
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+          sessionDate
+        )
+      ) {
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          "Ngày không đúng định dạng YYYY-MM-DD.";
+
+
+        return;
+      }
+
+
+      const parsedDate =
+        new Date(
+          `${sessionDate}T00:00:00`
+        );
+
+
+      if (
+        Number.isNaN(
+          parsedDate.getTime()
+        )
+      ) {
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          "Ngày đã nhập không hợp lệ.";
+
+
+        return;
+      }
+
+
+      if (
+        sessionDate < today
+      ) {
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          "Không thể nhờ dạy thay cho ngày đã qua.";
+
+
+        return;
+      }
+
+
+      const inputReason =
+        window.prompt(
+          "Lý do cần Coach khác dạy thay cả ngày:",
+          "Coach chính bận cả ngày"
+        );
+
+
+      if (
+        inputReason === null
+      ) {
+
+        return;
+      }
+
+
+      const reason =
+        String(
+          inputReason || ""
+        ).trim()
+        ||
+        "Coach chính bận cả ngày";
+
+
+      const confirmed =
+        window.confirm(
+          `Xác nhận nhờ Coach khác dạy thay toàn bộ các buổi đủ điều kiện ngày ${sessionDate}?\n\nLý do: ${reason}`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "⏳ ĐANG GỬI...";
+
+
+      message.style.color =
+        "#ffd884";
+
+
+      message.textContent =
+        "Đang tạo yêu cầu dạy thay cho các buổi trong ngày...";
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "request_coach_cover_for_day",
+            {
+              p_session_date:
+                sessionDate,
+
+              p_reason:
+                reason
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        const result =
+          (
+            data &&
+            typeof data === "object"
+          )
+            ?
+            data
+            :
+            {};
+
+
+        const requested =
+          Number(
+            result.requested || 0
+          );
+
+
+        const skipped =
+          Number(
+            result.skipped || 0
+          );
+
+
+        if (
+          Array.isArray(
+            result.failed
+          )
+          &&
+          result.failed.length > 0
+        ) {
+
+          console.warn(
+            "COACH DAY COVER SKIPPED:",
+            result.failed
+          );
+
+        }
+
+
+        if (
+          requested === 0
+          &&
+          skipped === 0
+        ) {
+
+          message.style.color =
+            "#ffd884";
+
+
+          message.textContent =
+            `Ngày ${sessionDate} không có buổi nào đủ điều kiện để nhờ Coach dạy thay.`;
+
+
+          return;
+        }
+
+
+        if (
+          requested > 0
+          &&
+          skipped === 0
+        ) {
+
+          message.style.color =
+            "#d8ff45";
+
+
+          message.textContent =
+            `✓ Đã gửi yêu cầu dạy thay cho ${requested} buổi ngày ${sessionDate}.`;
+
+
+          return;
+        }
+
+
+        if (
+          requested > 0
+          &&
+          skipped > 0
+        ) {
+
+          message.style.color =
+            "#ffd884";
+
+
+          message.textContent =
+            `✓ Đã gửi ${requested} buổi · Bỏ qua ${skipped} buổi không đủ điều kiện ngày ${sessionDate}.`;
+
+
+          return;
+        }
+
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          `Không có yêu cầu mới được tạo. Có ${skipped} buổi đã được bỏ qua.`;
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "REQUEST DAY COACH COVER:",
+          error
+        );
+
+
+        message.style.color =
+          "#ffb0b0";
+
+
+        message.textContent =
+          "Không tạo được yêu cầu dạy thay cả ngày: "
+          +
+          (
+            error?.message
+            ||
+            error
+          );
+
+      }
+      finally {
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          "🔄 NHỜ DẠY THAY CẢ NGÀY";
+
+      }
+
+    }
+  );
+
+})();
+</script>
 <script>
 (async function () {
 
