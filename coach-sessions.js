@@ -659,6 +659,175 @@ async function loadSessions() {
 
 
 /* =====================================
+   NHỜ COACH DẠY THAY
+===================================== */
+
+async function requestCoachCover(
+  sessionId,
+  button
+) {
+
+  const session =
+    sessions.find(
+      item =>
+        Number(item.id) ===
+        Number(sessionId)
+    );
+
+
+  if (!session) {
+
+    messageEl.textContent =
+      "Không xác định được buổi học.";
+
+    return;
+  }
+
+
+  const isPrimaryCoach =
+    Number(session.coach_id || 0) ===
+    Number(currentCoach?.id || 0);
+
+
+  const hasSubstituteCoach =
+    Number(
+      session.substitute_coach_id || 0
+    ) > 0;
+
+
+  const isWaiting =
+    normalizeStatus(
+      session.status
+    ) === "chờ học";
+
+
+  const startTime =
+    getSessionTime(
+      session
+    );
+
+
+  if (
+    !isPrimaryCoach
+    ||
+    hasSubstituteCoach
+    ||
+    !isWaiting
+    ||
+    !startTime
+    ||
+    startTime <= Date.now()
+  ) {
+
+    messageEl.textContent =
+      "Buổi học này hiện không thể tạo yêu cầu Coach dạy thay.";
+
+    return;
+  }
+
+
+  const inputReason =
+    window.prompt(
+      "Lý do anh/chị cần Coach khác dạy thay buổi này:",
+      "Coach chính bận"
+    );
+
+
+  if (inputReason === null) {
+    return;
+  }
+
+
+  const reason =
+    String(
+      inputReason || ""
+    ).trim()
+    ||
+    "Coach chính bận";
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "⏳ ĐANG GỬI YÊU CẦU...";
+
+
+  messageEl.textContent =
+    "Đang gửi yêu cầu tìm Coach dạy thay...";
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "request_coach_cover",
+        {
+          p_session_id:
+            Number(sessionId),
+
+          p_reason:
+            reason
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    button.textContent =
+      "✓ ĐÃ NHỜ DẠY THAY";
+
+
+    messageEl.style.color =
+      "#d8ff45";
+
+
+    messageEl.textContent =
+      `✓ Đã gửi yêu cầu tìm Coach dạy thay. Mã yêu cầu: ${data}.`;
+
+  }
+  catch (error) {
+
+    console.error(
+      "REQUEST COACH COVER:",
+      error
+    );
+
+
+    button.disabled =
+      false;
+
+
+    button.textContent =
+      "🔄 NHỜ COACH DẠY THAY";
+
+
+    messageEl.style.color =
+      "#ffb0b0";
+
+
+    messageEl.textContent =
+      "Không tạo được yêu cầu dạy thay: "
+      +
+      (
+        error?.message
+        ||
+        error
+      );
+
+  }
+
+}
+
+
+/* =====================================
    RENDER
 ===================================== */
 
@@ -698,6 +867,7 @@ function renderSessions(
               session.registrations
             );
 
+
           const student =
             one(
               registration?.students
@@ -711,32 +881,79 @@ function renderSessions(
 
 
           const isToday =
-  session.session_date ===
-  today;
+            session.session_date ===
+            today;
 
-const isOverdue =
-  isOverdueSession(
-    session
-  );
+
+          const isOverdue =
+            isOverdueSession(
+              session
+            );
+
+
+          const isTestSession =
+            registration?.is_test ===
+            true;
+
+
+          const isPrimaryCoach =
+            Number(
+              session.coach_id || 0
+            )
+            ===
+            Number(
+              currentCoach?.id || 0
+            );
+
+
+          const hasSubstituteCoach =
+            Number(
+              session.substitute_coach_id || 0
+            ) > 0;
+
+
+          const isWaiting =
+            normalizeStatus(
+              session.status
+            ) ===
+            "chờ học";
+
+
+          const sessionTime =
+            getSessionTime(
+              session
+            );
+
+
+          const canRequestCover =
+            !isTestSession
+            &&
+            isPrimaryCoach
+            &&
+            !hasSubstituteCoach
+            &&
+            isWaiting
+            &&
+            sessionTime > Date.now();
 
 
           return `
-           <tr
-  style="
-    cursor:pointer;
-    ${
-      isOverdue
-        ? "background:rgba(255,80,80,.10);"
-        : ""
-    }
-  "
-  onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
-  title="${
-    isOverdue
-      ? "⚠ Buổi học đã quá hạn nhưng chưa được xử lý"
-      : "Mở chi tiết buổi học"
-  }"
->
+            <tr
+              style="
+                cursor:pointer;
+                ${
+                  isOverdue
+                    ? "background:rgba(255,80,80,.10);"
+                    : ""
+                }
+              "
+              onclick="window.location.href='./coach-session-detail.html?id=${session.id}'"
+              title="${
+                isOverdue
+                  ? "⚠ Buổi học đã quá hạn nhưng chưa được xử lý"
+                  : "Mở chi tiết buổi học"
+              }"
+            >
 
               <td>
                 <strong>
@@ -763,6 +980,7 @@ const isOverdue =
                   ? "today"
                   : ""
               }">
+
                 ${dateVN(
                   session.session_date
                 )}
@@ -772,6 +990,7 @@ const isOverdue =
                     ? " · Hôm nay"
                     : ""
                 }
+
               </td>
 
               <td>
@@ -790,37 +1009,106 @@ const isOverdue =
                 )}
               </td>
 
-             <td>
-  <span
-    class="badge"
-    style="${
-      isOverdue
-        ? `
-          background:rgba(255,80,80,.16);
-          color:#ff9b9b;
-          border:1px solid rgba(255,80,80,.35);
-        `
-        : ""
-    }"
-  >
-    ${
-      isOverdue
-        ? "⚠ QUÁ HẠN · "
-        : ""
-    }
+              <td>
 
-    ${escapeHTML(
-      session.status ||
-      "—"
-    )}
-  </span>
-</td>
+                <span
+                  class="badge"
+                  style="${
+                    isOverdue
+                      ? `
+                          background:rgba(255,80,80,.16);
+                          color:#ff9b9b;
+                          border:1px solid rgba(255,80,80,.35);
+                        `
+                      : ""
+                  }"
+                >
+
+                  ${
+                    isOverdue
+                      ? "⚠ QUÁ HẠN · "
+                      : ""
+                  }
+
+                  ${escapeHTML(
+                    session.status ||
+                    "—"
+                  )}
+
+                </span>
+
+
+                ${
+                  canRequestCover
+                    ? `
+                      <button
+                        type="button"
+                        class="coach-cover-request-btn"
+                        data-session-id="${Number(session.id)}"
+                        style="
+                          display:block;
+                          margin-top:8px;
+                          padding:7px 9px;
+                          border:1px solid rgba(216,255,69,.35);
+                          border-radius:8px;
+                          background:rgba(216,255,69,.10);
+                          color:#d8ff45;
+                          font-size:11px;
+                          font-weight:900;
+                          cursor:pointer;
+                          white-space:nowrap;
+                        "
+                      >
+                        🔄 NHỜ COACH DẠY THAY
+                      </button>
+                    `
+                    : ""
+                }
+
+              </td>
 
             </tr>
           `;
         }
       )
       .join("");
+
+
+  const coverButtons =
+    body.querySelectorAll(
+      ".coach-cover-request-btn"
+    );
+
+
+  coverButtons.forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        async event => {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          const sessionId =
+            Number(
+              button.dataset.sessionId
+            );
+
+
+          await requestCoachCover(
+            sessionId,
+            button
+          );
+
+        }
+      );
+
+    }
+  );
+
 }
 
 
