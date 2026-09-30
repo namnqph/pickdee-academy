@@ -600,22 +600,30 @@ async function loadCoaches() {
     data,
     error
   } =
-    await sb
-      .from("coaches")
-      .select(`
-        id,
-        coach_code,
-        full_name,
-        is_test
-      `)
-      .eq(
-        "is_test",
-        isTestRegistration
-      )
-      .order(
-        "full_name",
-        { ascending: true }
-      );
+await sb
+  .from("coaches")
+  .select(`
+    id,
+    coach_code,
+    full_name,
+    is_test,
+    status
+  `)
+  .eq(
+    "is_test",
+    isTestRegistration
+  )
+  .in(
+    "status",
+    [
+      "Đang hoạt động",
+      "Hoạt động"
+    ]
+  )
+  .order(
+    "full_name",
+    { ascending: true }
+  );
 
   if (error) {
 
