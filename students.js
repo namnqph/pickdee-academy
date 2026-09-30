@@ -43,16 +43,17 @@ async function loadStudents() {
   const { data, error } =
     await supabaseClient
       .from("students")
-    .select(`
-  id,
-  student_code,
-  full_name,
-  phone,
-  email,
-  preferred_area,
-  preferred_ward,
-  status
-`)
+      .select(`
+        id,
+        student_code,
+        full_name,
+        phone,
+        email,
+        preferred_area,
+        preferred_ward,
+        status
+      `)
+      .eq("is_test", false)
       .order("created_at", {
         ascending: false
       });
