@@ -237,7 +237,16 @@ window.PICKDEE_CONFIG = {
 
   const path =
     window.location.pathname;
+const publicCoachPaths = [
+  "/coach-profile",
+  "/coach-profile.html"
+];
 
+if (
+  publicCoachPaths.includes(path)
+) {
+  return;
+}
  const coachPrivatePaths = [
   "/coach",
   "/coach.html",
