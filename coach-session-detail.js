@@ -151,10 +151,12 @@ async function checkCoachLogin() {
 
 
 /* =====================================
-   LOAD COACH
+   LOAD COACH THEO AUTH USER ID
 ===================================== */
 
-async function loadCoach(email) {
+async function loadCoach(
+  authUserId
+) {
 
   const {
     data,
@@ -170,8 +172,15 @@ async function loadCoach(email) {
         status
       `)
       .eq(
-        "email",
-        email
+        "auth_user_id",
+        authUserId
+      )
+      .in(
+        "status",
+        [
+          "Đang hoạt động",
+          "Hoạt động"
+        ]
       )
       .maybeSingle();
 
@@ -184,7 +193,7 @@ async function loadCoach(email) {
     console.error(error);
 
     messageEl.textContent =
-      "Không tìm thấy hồ sơ Coach.";
+      "Không tìm thấy Coach đang hoạt động gắn với tài khoản này.";
 
     return false;
   }
@@ -317,7 +326,54 @@ async function loadSession() {
     return false;
 
   }
+/* =====================================
+   CHẶN REGISTRATION TEST TRÊN PRODUCTION
+===================================== */
 
+if (data.registration_id) {
+
+  const {
+    data: registrationCheck,
+    error: registrationCheckError
+  } =
+    await sb
+      .from("registrations")
+      .select(`
+        id,
+        is_test
+      `)
+      .eq(
+        "id",
+        data.registration_id
+      )
+      .maybeSingle();
+
+
+  if (registrationCheckError) {
+
+    console.error(
+      "CHECK TEST REGISTRATION:",
+      registrationCheckError
+    );
+
+    messageEl.textContent =
+      "Không kiểm tra được đăng ký học.";
+
+    return false;
+  }
+
+
+  if (
+    registrationCheck?.is_test === true
+  ) {
+
+    messageEl.textContent =
+      "Buổi học thử nghiệm không hiển thị trên hệ thống Coach.";
+
+    return false;
+  }
+
+}
 
   /* =====================================
      3. LẤY HỌC VIÊN
@@ -816,9 +872,9 @@ async function init() {
 
 
     const coachLoaded =
-      await loadCoach(
-        loginSession.user.email
-      );
+  await loadCoach(
+    loginSession.user.id
+  );
 
 
     if (!coachLoaded) {
