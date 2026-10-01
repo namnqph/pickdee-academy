@@ -486,11 +486,11 @@ async function checkCoachLogin() {
 
 
 /* =====================================
-   TÌM COACH THEO EMAIL ĐĂNG NHẬP
+   TÌM COACH THEO AUTH USER ID
 ===================================== */
 
 async function loadCurrentCoach(
-  email
+  authUserId
 ) {
 
   const {
@@ -507,8 +507,15 @@ async function loadCurrentCoach(
         status
       `)
       .eq(
-        "email",
-        email
+        "auth_user_id",
+        authUserId
+      )
+      .in(
+        "status",
+        [
+          "Đang hoạt động",
+          "Hoạt động"
+        ]
       )
       .maybeSingle();
 
@@ -521,7 +528,7 @@ async function loadCurrentCoach(
     console.error(error);
 
     messageEl.textContent =
-      "Không tìm thấy hồ sơ Coach gắn với tài khoản này.";
+      "Không tìm thấy Coach đang hoạt động gắn với tài khoản này.";
 
     return false;
   }
@@ -1197,9 +1204,9 @@ async function init() {
 
 
     const coachLoaded =
-      await loadCurrentCoach(
-        session.user.email
-      );
+  await loadCurrentCoach(
+    session.user.id
+  );
 
 
     if (!coachLoaded) {
