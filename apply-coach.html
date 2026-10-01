@@ -3473,6 +3473,2649 @@ password:
 
 </script>
 
+  <script>
+/* =========================================================
+   PICKDEE - HỒ SƠ CHUYÊN MÔN COACH V2
+   - Bắt buộc khai kinh nghiệm
+   - Nhiều hệ thống rating
+   - Ảnh minh chứng rating
+   - Có/Không chứng chỉ
+   - Ảnh chứng chỉ
+   - Chặn submit cũ và gửi payload mới
+========================================================= */
+
+(function () {
+
+  const form =
+    document.getElementById(
+      "coachApplicationForm"
+    );
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  const formCard =
+    document.getElementById(
+      "formCard"
+    );
+
+  const successBox =
+    document.getElementById(
+      "successBox"
+    );
+
+  const applicationCode =
+    document.getElementById(
+      "applicationCode"
+    );
+
+
+  if (
+    !form
+    ||
+    !submitBtn
+  ) {
+    return;
+  }
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const sbV2 =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     STYLE
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+    .coach-v2-panel {
+      margin-top: 6px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 15px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .coach-v2-title {
+      margin-bottom: 6px;
+      color: #d8ff45;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .coach-v2-sub {
+      margin-bottom: 15px;
+      color: rgba(255,255,255,.52);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .coach-v2-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .coach-v2-full {
+      grid-column: 1 / -1;
+    }
+
+    .coach-rating-row {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 13px;
+      background: #06182e;
+    }
+
+    .coach-rating-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .coach-rating-name {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .coach-remove-rating {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid rgba(255,120,120,.25);
+      border-radius: 8px;
+      background: rgba(255,100,100,.07);
+      color: #ffb1b1;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .coach-add-rating {
+      width: 100%;
+      min-height: 45px;
+      margin-top: 12px;
+      border: 1px dashed rgba(216,255,69,.45);
+      border-radius: 10px;
+      background: rgba(216,255,69,.06);
+      color: #d8ff45;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .coach-proof-status {
+      margin-top: 7px;
+      color: rgba(255,255,255,.46);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .coach-v2-note {
+      margin-top: 12px;
+      padding: 12px 13px;
+      border: 1px solid rgba(216,255,69,.18);
+      border-radius: 10px;
+      background: rgba(216,255,69,.05);
+      color: rgba(255,255,255,.66);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    @media(max-width:700px) {
+      .coach-v2-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .coach-v2-full {
+        grid-column: auto;
+      }
+    }
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     MESSAGE
+  ====================================================== */
+
+  function showV2Message(
+    text,
+    type = "error"
+  ) {
+
+    message.className =
+      "message show " + type;
+
+    message.textContent =
+      text;
+
+
+    message.scrollIntoView(
+      {
+        behavior:
+          "smooth",
+
+        block:
+          "center"
+      }
+    );
+
+  }
+
+
+  function clearV2Message() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  function valueOfV2(
+    id
+  ) {
+
+    return String(
+      document
+        .getElementById(id)
+        ?.value
+      ||
+      ""
+    ).trim();
+
+  }
+
+
+  function numberOfV2(
+    id
+  ) {
+
+    const raw =
+      valueOfV2(id);
+
+
+    if (
+      raw === ""
+    ) {
+      return null;
+    }
+
+
+    const n =
+      Number(raw);
+
+
+    return Number.isFinite(n)
+      ?
+      n
+      :
+      null;
+
+  }
+
+
+  /* =====================================================
+     KINH NGHIỆM - BẮT BUỘC KHAI
+  ====================================================== */
+
+  const yearsPlaying =
+    document.getElementById(
+      "yearsPlaying"
+    );
+
+
+  const yearsCoaching =
+    document.getElementById(
+      "yearsCoaching"
+    );
+
+
+  if (yearsPlaying) {
+
+    yearsPlaying.required =
+      true;
+
+    yearsPlaying.value =
+      "";
+
+    yearsPlaying.placeholder =
+      "Ví dụ: 2.5";
+
+
+    const label =
+      document.querySelector(
+        'label[for="yearsPlaying"]'
+      );
+
+
+    if (
+      label
+      &&
+      !label.querySelector(
+        ".required"
+      )
+    ) {
+
+      label.insertAdjacentHTML(
+        "beforeend",
+        ' <span class="required">*</span>'
+      );
+
+    }
+
+  }
+
+
+  if (yearsCoaching) {
+
+    yearsCoaching.required =
+      true;
+
+    yearsCoaching.value =
+      "";
+
+    yearsCoaching.placeholder =
+      "Có thể nhập 0 nếu chưa từng huấn luyện";
+
+
+    const label =
+      document.querySelector(
+        'label[for="yearsCoaching"]'
+      );
+
+
+    if (
+      label
+      &&
+      !label.querySelector(
+        ".required"
+      )
+    ) {
+
+      label.insertAdjacentHTML(
+        "beforeend",
+        ' <span class="required">*</span>'
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     GỠ Ô TRÌNH + CHỨNG CHỈ CŨ
+  ====================================================== */
+
+  const oldLevel =
+    document.getElementById(
+      "pickleballLevel"
+    );
+
+
+  if (oldLevel) {
+
+    oldLevel
+      .closest(
+        ".field"
+      )
+      ?.remove();
+
+  }
+
+
+  const oldQualifications =
+    document.getElementById(
+      "qualifications"
+    );
+
+
+  if (oldQualifications) {
+
+    oldQualifications
+      .closest(
+        ".field"
+      )
+      ?.remove();
+
+  }
+
+
+  /* =====================================================
+     TẠO KHỐI HỒ SƠ MỚI
+  ====================================================== */
+
+  const specialties =
+    document.getElementById(
+      "specialties"
+    );
+
+
+  const specialtiesField =
+    specialties
+      ?.closest(
+        ".field"
+      );
+
+
+  const experienceGrid =
+    specialtiesField
+      ?.parentElement;
+
+
+  if (
+    !experienceGrid
+    ||
+    !specialtiesField
+  ) {
+    return;
+  }
+
+
+  const profileBlock =
+    document.createElement(
+      "div"
+    );
+
+
+  profileBlock.className =
+    "field full";
+
+
+  profileBlock.id =
+    "coachProfessionalProfileV2";
+
+
+  profileBlock.innerHTML = `
+
+    <div class="coach-v2-panel">
+
+      <div class="coach-v2-title">
+        ĐIỂM TRÌNH / XẾP HẠNG BÊN NGOÀI
+        <span class="required">*</span>
+      </div>
+
+      <div class="coach-v2-sub">
+        Hãy khai các hệ thống chấm trình bạn đang có.
+        Bạn có thể khai nhiều hệ thống cùng lúc.
+        Nếu chưa có, hãy chọn “Tôi chưa có điểm”.
+      </div>
+
+
+      <div class="field">
+
+        <label for="hasExternalRating">
+          BẠN CÓ ĐIỂM TRÌNH Ở HỆ THỐNG NÀO KHÔNG?
+          <span class="required">*</span>
+        </label>
+
+        <select
+          id="hasExternalRating"
+          required
+        >
+          <option value="">
+            -- Chọn --
+          </option>
+
+          <option value="yes">
+            Có
+          </option>
+
+          <option value="no">
+            Tôi chưa có điểm trên hệ thống nào
+          </option>
+        </select>
+
+      </div>
+
+
+      <div
+        id="externalRatingArea"
+        style="display:none;"
+      >
+
+        <div id="externalRatingRows"></div>
+
+        <button
+          id="addExternalRatingBtn"
+          class="coach-add-rating"
+          type="button"
+        >
+          + THÊM HỆ THỐNG ĐIỂM TRÌNH
+        </button>
+
+      </div>
+
+
+      <div class="coach-v2-note">
+        Điểm Sport Connect, DUPR, PVNA, VDPR hoặc hệ thống khác
+        chỉ là thông tin tham khảo bên ngoài.
+        <strong>Trình PickDee Academy</strong>
+        sẽ do PickDee đánh giá riêng và không phải là phép quy đổi chính thức
+        từ các hệ thống trên.
+      </div>
+
+    </div>
+
+
+    <div
+      class="coach-v2-panel"
+      style="margin-top:14px;"
+    >
+
+      <div class="coach-v2-title">
+        BẰNG CẤP / CHỨNG CHỈ
+        <span class="required">*</span>
+      </div>
+
+      <div class="coach-v2-sub">
+        Hãy xác nhận bạn có bằng hoặc chứng chỉ chuyên môn hay không.
+        Nếu có, ảnh chứng chỉ là bắt buộc để PickDee xác minh.
+      </div>
+
+
+      <div class="field">
+
+        <label for="hasCertificate">
+          BẠN CÓ BẰNG / CHỨNG CHỈ KHÔNG?
+          <span class="required">*</span>
+        </label>
+
+        <select
+          id="hasCertificate"
+          required
+        >
+          <option value="">
+            -- Chọn --
+          </option>
+
+          <option value="yes">
+            Có
+          </option>
+
+          <option value="no">
+            Chưa có
+          </option>
+        </select>
+
+      </div>
+
+
+      <div
+        id="certificateFields"
+        style="
+          display:none;
+          margin-top:14px;
+        "
+      >
+
+        <div class="coach-v2-grid">
+
+          <div class="field">
+
+            <label for="certificateName">
+              TÊN BẰNG / CHỨNG CHỈ
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="certificateName"
+              type="text"
+              placeholder="Ví dụ: PPR Level 1"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="certificateIssuer">
+              ĐƠN VỊ CẤP
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="certificateIssuer"
+              type="text"
+              placeholder="Ví dụ: PPR"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="certificateYear">
+              NĂM CẤP
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="certificateYear"
+              type="number"
+              min="1950"
+              step="1"
+              placeholder="2026"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="certificateImage">
+              ẢNH BẰNG / CHỨNG CHỈ
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="certificateImage"
+              type="file"
+              accept="image/*"
+            >
+
+            <div
+              id="certificateImageStatus"
+              class="coach-proof-status"
+            >
+              Chưa chọn ảnh.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+
+  experienceGrid.insertBefore(
+    profileBlock,
+    specialtiesField
+  );
+
+
+  /* =====================================================
+     STATE
+  ====================================================== */
+
+  const hasExternalRatingSelect =
+    document.getElementById(
+      "hasExternalRating"
+    );
+
+
+  const externalRatingArea =
+    document.getElementById(
+      "externalRatingArea"
+    );
+
+
+  const externalRatingRows =
+    document.getElementById(
+      "externalRatingRows"
+    );
+
+
+  const addExternalRatingBtn =
+    document.getElementById(
+      "addExternalRatingBtn"
+    );
+
+
+  const hasCertificateSelect =
+    document.getElementById(
+      "hasCertificate"
+    );
+
+
+  const certificateFields =
+    document.getElementById(
+      "certificateFields"
+    );
+
+
+  const certificateImageInput =
+    document.getElementById(
+      "certificateImage"
+    );
+
+
+  const certificateImageStatus =
+    document.getElementById(
+      "certificateImageStatus"
+    );
+
+
+  let ratingSystems =
+    [];
+
+
+  const ratingProofState =
+    new WeakMap();
+
+
+  let certificateImageData =
+    null;
+
+
+  /* =====================================================
+     NÉN ẢNH CHUNG
+  ====================================================== */
+
+  function compressV2Image(
+    file
+  ) {
+
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        if (
+          !file
+          ||
+          !String(
+            file.type || ""
+          )
+            .toLowerCase()
+            .startsWith(
+              "image/"
+            )
+        ) {
+
+          reject(
+            new Error(
+              "File đã chọn không phải hình ảnh."
+            )
+          );
+
+          return;
+
+        }
+
+
+        const objectUrl =
+          URL.createObjectURL(
+            file
+          );
+
+
+        const image =
+          new Image();
+
+
+        image.onload =
+          async function () {
+
+            URL.revokeObjectURL(
+              objectUrl
+            );
+
+
+            try {
+
+              let width =
+                image.naturalWidth
+                ||
+                image.width;
+
+
+              let height =
+                image.naturalHeight
+                ||
+                image.height;
+
+
+              const maxSide =
+                1400;
+
+
+              if (
+                Math.max(
+                  width,
+                  height
+                )
+                >
+                maxSide
+              ) {
+
+                const ratio =
+                  maxSide
+                  /
+                  Math.max(
+                    width,
+                    height
+                  );
+
+
+                width =
+                  Math.round(
+                    width * ratio
+                  );
+
+
+                height =
+                  Math.round(
+                    height * ratio
+                  );
+
+              }
+
+
+              let quality =
+                0.88;
+
+
+              let currentWidth =
+                width;
+
+
+              let currentHeight =
+                height;
+
+
+              let finalBlob =
+                null;
+
+
+              for (
+                let i = 0;
+                i < 10;
+                i += 1
+              ) {
+
+                const canvas =
+                  document.createElement(
+                    "canvas"
+                  );
+
+
+                canvas.width =
+                  Math.max(
+                    1,
+                    Math.round(
+                      currentWidth
+                    )
+                  );
+
+
+                canvas.height =
+                  Math.max(
+                    1,
+                    Math.round(
+                      currentHeight
+                    )
+                  );
+
+
+                const ctx =
+                  canvas.getContext(
+                    "2d"
+                  );
+
+
+                if (!ctx) {
+
+                  throw new Error(
+                    "Thiết bị không xử lý được ảnh."
+                  );
+
+                }
+
+
+                ctx.fillStyle =
+                  "#ffffff";
+
+
+                ctx.fillRect(
+                  0,
+                  0,
+                  canvas.width,
+                  canvas.height
+                );
+
+
+                ctx.drawImage(
+                  image,
+                  0,
+                  0,
+                  canvas.width,
+                  canvas.height
+                );
+
+
+                const blob =
+                  await new Promise(
+                    done =>
+                      canvas.toBlob(
+                        done,
+                        "image/jpeg",
+                        quality
+                      )
+                  );
+
+
+                if (!blob) {
+
+                  throw new Error(
+                    "Không xử lý được ảnh."
+                  );
+
+                }
+
+
+                finalBlob =
+                  blob;
+
+
+                if (
+                  blob.size <=
+                  900 * 1024
+                ) {
+
+                  break;
+
+                }
+
+
+                if (
+                  quality > 0.58
+                ) {
+
+                  quality -=
+                    0.08;
+
+                }
+                else {
+
+                  currentWidth *=
+                    0.85;
+
+
+                  currentHeight *=
+                    0.85;
+
+                }
+
+              }
+
+
+              if (
+                !finalBlob
+                ||
+                finalBlob.size >
+                  1024 * 1024
+              ) {
+
+                throw new Error(
+                  "Ảnh quá lớn. Vui lòng chọn ảnh khác."
+                );
+
+              }
+
+
+              const dataUrl =
+                await new Promise(
+                  function (
+                    done,
+                    fail
+                  ) {
+
+                    const reader =
+                      new FileReader();
+
+
+                    reader.onload =
+                      () =>
+                        done(
+                          String(
+                            reader.result || ""
+                          )
+                        );
+
+
+                    reader.onerror =
+                      () =>
+                        fail(
+                          new Error(
+                            "Không đọc được ảnh."
+                          )
+                        );
+
+
+                    reader.readAsDataURL(
+                      finalBlob
+                    );
+
+                  }
+                );
+
+
+              resolve(
+                {
+                  dataUrl,
+                  mime:
+                    "image/jpeg",
+                  bytes:
+                    finalBlob.size
+                }
+              );
+
+            }
+            catch (
+              error
+            ) {
+
+              reject(
+                error
+              );
+
+            }
+
+          };
+
+
+        image.onerror =
+          function () {
+
+            URL.revokeObjectURL(
+              objectUrl
+            );
+
+
+            reject(
+              new Error(
+                "Không đọc được ảnh."
+              )
+            );
+
+          };
+
+
+        image.src =
+          objectUrl;
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     LOAD DANH MỤC RATING
+  ====================================================== */
+
+  async function loadRatingSystems() {
+
+    const {
+      data,
+      error
+    } =
+      await sbV2.rpc(
+        "public_get_rating_systems"
+      );
+
+
+    if (
+      error
+      ||
+      !Array.isArray(
+        data
+      )
+      ||
+      data.length === 0
+    ) {
+
+      console.error(
+        "LOAD RATING SYSTEMS:",
+        error
+      );
+
+
+      ratingSystems = [
+        {
+          code:
+            "sport_connect",
+          display_name:
+            "Sport Connect"
+        },
+        {
+          code:
+            "dupr",
+          display_name:
+            "DUPR"
+        },
+        {
+          code:
+            "vdpr",
+          display_name:
+            "VDPR"
+        },
+        {
+          code:
+            "pvna",
+          display_name:
+            "PVNA"
+        },
+        {
+          code:
+            "other",
+          display_name:
+            "Khác"
+        }
+      ];
+
+
+      return;
+
+    }
+
+
+    ratingSystems =
+      data;
+
+  }
+
+
+  /* =====================================================
+     RATING ROW
+  ====================================================== */
+
+  function ratingOptionsHtml() {
+
+    return [
+      `<option value="">
+        -- Chọn hệ thống --
+      </option>`,
+
+      ...ratingSystems.map(
+        item =>
+          `
+            <option value="${String(
+              item.code
+            )
+              .replace(/"/g,"&quot;")}">
+              ${String(
+                item.display_name
+              )
+                .replace(/</g,"&lt;")
+                .replace(/>/g,"&gt;")}
+            </option>
+          `
+      )
+    ].join("");
+
+  }
+
+
+  function addRatingRow() {
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+
+    row.className =
+      "coach-rating-row";
+
+
+    row.innerHTML = `
+
+      <div class="coach-rating-head">
+
+        <div class="coach-rating-name">
+          ĐIỂM TRÌNH
+        </div>
+
+        <button
+          type="button"
+          class="coach-remove-rating"
+        >
+          XÓA
+        </button>
+
+      </div>
+
+
+      <div class="coach-v2-grid">
+
+        <div class="field">
+
+          <label>
+            HỆ THỐNG
+            <span class="required">*</span>
+          </label>
+
+          <select
+            data-role="system"
+          >
+            ${ratingOptionsHtml()}
+          </select>
+
+        </div>
+
+
+        <div
+          class="field"
+          data-role="customWrap"
+          style="display:none;"
+        >
+
+          <label>
+            TÊN HỆ THỐNG KHÁC
+            <span class="required">*</span>
+          </label>
+
+          <input
+            data-role="custom"
+            type="text"
+            placeholder="Nhập tên hệ thống"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            ĐIỂM / TRÌNH
+            <span class="required">*</span>
+          </label>
+
+          <input
+            data-role="rating"
+            type="text"
+            inputmode="decimal"
+            placeholder="Ví dụ: 3.5"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            MÃ / TÀI KHOẢN NGƯỜI CHƠI
+          </label>
+
+          <input
+            data-role="playerId"
+            type="text"
+            placeholder="Nếu có"
+          >
+
+        </div>
+
+
+        <div class="field full">
+
+          <label>
+            LINK HỒ SƠ TRÊN HỆ THỐNG NGOÀI
+          </label>
+
+          <input
+            data-role="profileUrl"
+            type="url"
+            placeholder="https://..."
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            NGÀY / THỜI ĐIỂM CỦA MỨC ĐIỂM
+          </label>
+
+          <input
+            data-role="ratingDate"
+            type="date"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            ẢNH MINH CHỨNG
+            <span class="required">*</span>
+          </label>
+
+          <input
+            data-role="proof"
+            type="file"
+            accept="image/*"
+          >
+
+          <div
+            data-role="proofStatus"
+            class="coach-proof-status"
+          >
+            Chưa chọn ảnh.
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+
+    const removeBtn =
+      row.querySelector(
+        ".coach-remove-rating"
+      );
+
+
+    const systemSelect =
+      row.querySelector(
+        '[data-role="system"]'
+      );
+
+
+    const customWrap =
+      row.querySelector(
+        '[data-role="customWrap"]'
+      );
+
+
+    const proofInput =
+      row.querySelector(
+        '[data-role="proof"]'
+      );
+
+
+    const proofStatus =
+      row.querySelector(
+        '[data-role="proofStatus"]'
+      );
+
+
+    removeBtn.addEventListener(
+      "click",
+      function () {
+
+        row.remove();
+
+      }
+    );
+
+
+    systemSelect.addEventListener(
+      "change",
+      function () {
+
+        customWrap.style.display =
+          systemSelect.value ===
+            "other"
+            ?
+            ""
+            :
+            "none";
+
+      }
+    );
+
+
+    proofInput.addEventListener(
+      "change",
+      async function () {
+
+        const file =
+          proofInput.files?.[0];
+
+
+        ratingProofState.delete(
+          row
+        );
+
+
+        if (!file) {
+
+          proofStatus.textContent =
+            "Chưa chọn ảnh.";
+
+          return;
+
+        }
+
+
+        proofStatus.style.color =
+          "";
+
+
+        proofStatus.textContent =
+          "Đang xử lý ảnh...";
+
+
+        try {
+
+          const image =
+            await compressV2Image(
+              file
+            );
+
+
+          ratingProofState.set(
+            row,
+            image
+          );
+
+
+          proofStatus.style.color =
+            "#d8ff45";
+
+
+          proofStatus.textContent =
+            "✓ Ảnh minh chứng đã sẵn sàng · "
+            +
+            Math.round(
+              image.bytes / 1024
+            )
+            +
+            " KB";
+
+        }
+        catch (
+          error
+        ) {
+
+          proofInput.value =
+            "";
+
+
+          proofStatus.style.color =
+            "#ffb1b1";
+
+
+          proofStatus.textContent =
+            error?.message
+            ||
+            "Không xử lý được ảnh.";
+
+        }
+
+      }
+    );
+
+
+    externalRatingRows.appendChild(
+      row
+    );
+
+  }
+
+
+  /* =====================================================
+     CÓ / KHÔNG RATING
+  ====================================================== */
+
+  hasExternalRatingSelect.addEventListener(
+    "change",
+    function () {
+
+      if (
+        hasExternalRatingSelect.value ===
+        "yes"
+      ) {
+
+        externalRatingArea.style.display =
+          "";
+
+
+        if (
+          externalRatingRows.children.length ===
+          0
+        ) {
+
+          addRatingRow();
+
+        }
+
+      }
+      else {
+
+        externalRatingArea.style.display =
+          "none";
+
+      }
+
+    }
+  );
+
+
+  addExternalRatingBtn.addEventListener(
+    "click",
+    function () {
+
+      if (
+        externalRatingRows.children.length >=
+        10
+      ) {
+
+        showV2Message(
+          "Tối đa 10 hệ thống điểm trình."
+        );
+
+        return;
+
+      }
+
+
+      addRatingRow();
+
+    }
+  );
+
+
+  /* =====================================================
+     CHỨNG CHỈ
+  ====================================================== */
+
+  hasCertificateSelect.addEventListener(
+    "change",
+    function () {
+
+      const has =
+        hasCertificateSelect.value ===
+        "yes";
+
+
+      certificateFields.style.display =
+        has
+          ?
+          ""
+          :
+          "none";
+
+
+      document
+        .getElementById(
+          "certificateName"
+        )
+        .required =
+          has;
+
+
+      document
+        .getElementById(
+          "certificateIssuer"
+        )
+        .required =
+          has;
+
+
+      document
+        .getElementById(
+          "certificateYear"
+        )
+        .required =
+          has;
+
+    }
+  );
+
+
+  certificateImageInput.addEventListener(
+    "change",
+    async function () {
+
+      const file =
+        certificateImageInput.files?.[0];
+
+
+      certificateImageData =
+        null;
+
+
+      if (!file) {
+
+        certificateImageStatus.textContent =
+          "Chưa chọn ảnh.";
+
+        return;
+
+      }
+
+
+      certificateImageStatus.style.color =
+        "";
+
+
+      certificateImageStatus.textContent =
+        "Đang xử lý ảnh...";
+
+
+      try {
+
+        certificateImageData =
+          await compressV2Image(
+            file
+          );
+
+
+        certificateImageStatus.style.color =
+          "#d8ff45";
+
+
+        certificateImageStatus.textContent =
+          "✓ Ảnh chứng chỉ đã sẵn sàng · "
+          +
+          Math.round(
+            certificateImageData.bytes / 1024
+          )
+          +
+          " KB";
+
+      }
+      catch (
+        error
+      ) {
+
+        certificateImageInput.value =
+          "";
+
+
+        certificateImageStatus.style.color =
+          "#ffb1b1";
+
+
+        certificateImageStatus.textContent =
+          error?.message
+          ||
+          "Không xử lý được ảnh.";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     LẤY AVATAR CŨ
+  ====================================================== */
+
+  function getAvatarPayload() {
+
+    const preview =
+      document.getElementById(
+        "coachAvatarPreview"
+      );
+
+
+    const src =
+      String(
+        preview?.src || ""
+      );
+
+
+    if (
+      !src.startsWith(
+        "data:image/"
+      )
+    ) {
+
+      return null;
+
+    }
+
+
+    const match =
+      src.match(
+        /^data:([^;]+);base64,/
+      );
+
+
+    return {
+      base64:
+        src,
+
+      mime:
+        match?.[1]
+        ||
+        "image/jpeg"
+    };
+
+  }
+
+
+  /* =====================================================
+     GOM RATING
+  ====================================================== */
+
+  function collectExternalRatings() {
+
+    const rows =
+      [
+        ...externalRatingRows
+          .querySelectorAll(
+            ".coach-rating-row"
+          )
+      ];
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      throw new Error(
+        "Hãy nhập ít nhất một điểm trình bên ngoài."
+      );
+
+    }
+
+
+    const used =
+      new Set();
+
+
+    return rows.map(
+      row => {
+
+        const system =
+          String(
+            row
+              .querySelector(
+                '[data-role="system"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        const custom =
+          String(
+            row
+              .querySelector(
+                '[data-role="custom"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        const ratingRaw =
+          String(
+            row
+              .querySelector(
+                '[data-role="rating"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        const playerId =
+          String(
+            row
+              .querySelector(
+                '[data-role="playerId"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        const profileUrl =
+          String(
+            row
+              .querySelector(
+                '[data-role="profileUrl"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        const ratingDate =
+          String(
+            row
+              .querySelector(
+                '[data-role="ratingDate"]'
+              )
+              ?.value
+            ||
+            ""
+          ).trim();
+
+
+        if (!system) {
+
+          throw new Error(
+            "Vui lòng chọn hệ thống chấm trình."
+          );
+
+        }
+
+
+        if (
+          system ===
+            "other"
+          &&
+          !custom
+        ) {
+
+          throw new Error(
+            "Vui lòng nhập tên hệ thống chấm trình khác."
+          );
+
+        }
+
+
+        if (!ratingRaw) {
+
+          throw new Error(
+            "Vui lòng nhập điểm trình."
+          );
+
+        }
+
+
+        const duplicateKey =
+          system ===
+            "other"
+            ?
+            `other:${custom.toLowerCase()}`
+            :
+            system;
+
+
+        if (
+          used.has(
+            duplicateKey
+          )
+        ) {
+
+          throw new Error(
+            "Bạn đang nhập trùng một hệ thống điểm trình."
+          );
+
+        }
+
+
+        used.add(
+          duplicateKey
+        );
+
+
+        const proof =
+          ratingProofState.get(
+            row
+          );
+
+
+        if (!proof) {
+
+          throw new Error(
+            "Mỗi điểm trình phải có ảnh minh chứng."
+          );
+
+        }
+
+
+        const normalizedNumber =
+          Number(
+            ratingRaw.replace(
+              ",",
+              "."
+            )
+          );
+
+
+        const isNumeric =
+          Number.isFinite(
+            normalizedNumber
+          );
+
+
+        return {
+
+          rating_system_code:
+            system,
+
+          custom_system_name:
+            custom
+            ||
+            null,
+
+          rating_value:
+            isNumeric
+              ?
+              normalizedNumber
+              :
+              null,
+
+          rating_text:
+            isNumeric
+              ?
+              null
+              :
+              ratingRaw,
+
+          external_player_id:
+            playerId
+            ||
+            null,
+
+          profile_url:
+            profileUrl
+            ||
+            null,
+
+          rating_date:
+            ratingDate
+            ||
+            null,
+
+          proof_image_base64:
+            proof.dataUrl,
+
+          proof_image_mime:
+            proof.mime
+
+        };
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     ĐỌC LỖI EDGE FUNCTION
+  ====================================================== */
+
+  async function getV2Error(
+    error
+  ) {
+
+    let text =
+      error?.message
+      ||
+      String(
+        error || ""
+      );
+
+
+    try {
+
+      if (
+        error?.context
+        &&
+        typeof
+          error.context.json
+        ===
+        "function"
+      ) {
+
+        const body =
+          await error.context.json();
+
+
+        if (
+          body?.error
+        ) {
+
+          text =
+            body.error;
+
+        }
+
+      }
+
+    }
+    catch (_) {}
+
+
+    return text;
+
+  }
+
+
+  /* =====================================================
+     SUBMIT V2
+     CAPTURE = TRUE ĐỂ CHẶN SUBMIT CŨ
+  ====================================================== */
+
+  form.addEventListener(
+    "submit",
+    async function (
+      event
+    ) {
+
+      event.preventDefault();
+
+      event.stopImmediatePropagation();
+
+      clearV2Message();
+
+
+      const fullName =
+        valueOfV2(
+          "fullName"
+        );
+
+
+      const phone =
+        valueOfV2(
+          "phone"
+        );
+
+
+      const email =
+        valueOfV2(
+          "email"
+        );
+
+
+      const password =
+        valueOfV2(
+          "password"
+        );
+
+
+      const confirmPassword =
+        valueOfV2(
+          "confirmPassword"
+        );
+
+
+      const area =
+        valueOfV2(
+          "area"
+        );
+
+
+      const ward =
+        valueOfV2(
+          "ward"
+        );
+
+
+      const yearsPlayingValue =
+        numberOfV2(
+          "yearsPlaying"
+        );
+
+
+      const yearsCoachingValue =
+        numberOfV2(
+          "yearsCoaching"
+        );
+
+
+      if (!fullName) {
+
+        showV2Message(
+          "Vui lòng nhập họ và tên."
+        );
+
+        return;
+
+      }
+
+
+      if (!phone) {
+
+        showV2Message(
+          "Vui lòng nhập số điện thoại."
+        );
+
+        return;
+
+      }
+
+
+      if (!email) {
+
+        showV2Message(
+          "Vui lòng nhập email."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !password
+        ||
+        password.length < 8
+      ) {
+
+        showV2Message(
+          "Mật khẩu phải có ít nhất 8 ký tự."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        password !==
+        confirmPassword
+      ) {
+
+        showV2Message(
+          "Mật khẩu xác nhận không khớp."
+        );
+
+        return;
+
+      }
+
+
+      if (!area) {
+
+        showV2Message(
+          "Vui lòng chọn Tỉnh / Thành."
+        );
+
+        return;
+
+      }
+
+
+      if (!ward) {
+
+        showV2Message(
+          "Vui lòng chọn Phường / Xã."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        yearsPlayingValue ===
+        null
+        ||
+        yearsPlayingValue < 0
+      ) {
+
+        showV2Message(
+          "Vui lòng khai số năm chơi Pickleball."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        yearsCoachingValue ===
+        null
+        ||
+        yearsCoachingValue < 0
+      ) {
+
+        showV2Message(
+          "Vui lòng khai số năm huấn luyện. Nếu chưa từng huấn luyện, hãy nhập 0."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        hasExternalRatingSelect.value !==
+          "yes"
+        &&
+        hasExternalRatingSelect.value !==
+          "no"
+      ) {
+
+        showV2Message(
+          "Vui lòng xác nhận bạn có điểm trình bên ngoài hay không."
+        );
+
+        return;
+
+      }
+
+
+      const hasExternalRating =
+        hasExternalRatingSelect.value ===
+        "yes";
+
+
+      let externalRatings =
+        [];
+
+
+      if (
+        hasExternalRating
+      ) {
+
+        try {
+
+          externalRatings =
+            collectExternalRatings();
+
+        }
+        catch (
+          error
+        ) {
+
+          showV2Message(
+            error?.message
+            ||
+            "Thông tin điểm trình chưa đầy đủ."
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      if (
+        hasCertificateSelect.value !==
+          "yes"
+        &&
+        hasCertificateSelect.value !==
+          "no"
+      ) {
+
+        showV2Message(
+          "Vui lòng xác nhận bạn có bằng/chứng chỉ hay không."
+        );
+
+        return;
+
+      }
+
+
+      const hasCertificate =
+        hasCertificateSelect.value ===
+        "yes";
+
+
+      let certificateName =
+        null;
+
+
+      let certificateIssuer =
+        null;
+
+
+      let certificateYear =
+        null;
+
+
+      if (
+        hasCertificate
+      ) {
+
+        certificateName =
+          valueOfV2(
+            "certificateName"
+          );
+
+
+        certificateIssuer =
+          valueOfV2(
+            "certificateIssuer"
+          );
+
+
+        certificateYear =
+          numberOfV2(
+            "certificateYear"
+          );
+
+
+        if (
+          !certificateName
+        ) {
+
+          showV2Message(
+            "Vui lòng nhập tên bằng/chứng chỉ."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !certificateIssuer
+        ) {
+
+          showV2Message(
+            "Vui lòng nhập đơn vị cấp bằng/chứng chỉ."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !Number.isInteger(
+            certificateYear
+          )
+          ||
+          certificateYear < 1950
+          ||
+          certificateYear >
+            new Date()
+              .getFullYear()
+        ) {
+
+          showV2Message(
+            "Năm cấp bằng/chứng chỉ không hợp lệ."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !certificateImageData
+        ) {
+
+          showV2Message(
+            "Vui lòng tải ảnh bằng/chứng chỉ."
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      const avatar =
+        getAvatarPayload();
+
+
+      if (!avatar) {
+
+        showV2Message(
+          "Vui lòng chụp hoặc tải ảnh đại diện trước khi gửi hồ sơ."
+        );
+
+        return;
+
+      }
+
+
+      const programs =
+        [
+          ...document
+            .querySelectorAll(
+              'input[name="program"]:checked'
+            )
+        ]
+          .map(
+            item =>
+              item.value
+          );
+
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "ĐANG GỬI HỒ SƠ...";
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sbV2.functions.invoke(
+            "pickdee-coach-application",
+            {
+              body: {
+
+                full_name:
+                  fullName,
+
+                phone:
+                  phone,
+
+                email:
+                  email,
+
+                password:
+                  password,
+
+                preferred_area:
+                  area,
+
+                preferred_ward:
+                  ward,
+
+                years_playing:
+                  yearsPlayingValue,
+
+                years_coaching:
+                  yearsCoachingValue,
+
+                specialties:
+                  valueOfV2(
+                    "specialties"
+                  )
+                  ||
+                  null,
+
+                programs:
+                  programs,
+
+                available_time:
+                  valueOfV2(
+                    "availableTime"
+                  )
+                  ||
+                  null,
+
+                expected_rate:
+                  numberOfV2(
+                    "expectedRate"
+                  ),
+
+                bio:
+                  valueOfV2(
+                    "bio"
+                  )
+                  ||
+                  null,
+
+                achievements:
+                  valueOfV2(
+                    "achievements"
+                  )
+                  ||
+                  null,
+
+                pickleball_level:
+                  null,
+
+                qualifications:
+                  null,
+
+                has_external_rating:
+                  hasExternalRating,
+
+                external_ratings:
+                  externalRatings,
+
+                has_certificate:
+                  hasCertificate,
+
+                certificate_name:
+                  hasCertificate
+                    ?
+                    certificateName
+                    :
+                    null,
+
+                certificate_issuer:
+                  hasCertificate
+                    ?
+                    certificateIssuer
+                    :
+                    null,
+
+                certificate_year:
+                  hasCertificate
+                    ?
+                    certificateYear
+                    :
+                    null,
+
+                certificate_image_base64:
+                  hasCertificate
+                    ?
+                    certificateImageData
+                      ?.dataUrl
+                    :
+                    null,
+
+                certificate_image_mime:
+                  hasCertificate
+                    ?
+                    certificateImageData
+                      ?.mime
+                    :
+                    null,
+
+                avatar_base64:
+                  avatar.base64,
+
+                avatar_mime:
+                  avatar.mime
+
+              }
+            }
+          );
+
+
+        if (error) {
+
+          throw new Error(
+            await getV2Error(
+              error
+            )
+          );
+
+        }
+
+
+        if (
+          !data
+          ||
+          data.success !==
+            true
+        ) {
+
+          throw new Error(
+            data?.error
+            ||
+            "Không gửi được hồ sơ Coach."
+          );
+
+        }
+
+
+        formCard.style.display =
+          "none";
+
+
+        successBox.classList.add(
+          "show"
+        );
+
+
+        const code =
+          data?.application_code
+          ||
+          (
+            data?.id
+              ?
+              "CA"
+              +
+              String(
+                data.id
+              )
+                .padStart(
+                  6,
+                  "0"
+                )
+              :
+              "Đã tiếp nhận"
+          );
+
+
+        applicationCode.textContent =
+          "Mã hồ sơ: "
+          +
+          code;
+
+
+        window.scrollTo(
+          {
+            top: 0,
+            behavior:
+              "smooth"
+          }
+        );
+
+      }
+      catch (
+        error
+      ) {
+
+        console.error(
+          "COACH APPLICATION V2 ERROR:",
+          error
+        );
+
+
+        showV2Message(
+          String(
+            error?.message
+            ||
+            error
+            ||
+            "Không gửi được hồ sơ."
+          )
+        );
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "GỬI HỒ SƠ ĐĂNG KÝ COACH →";
+
+      }
+
+    },
+    true
+  );
+
+
+  /* =====================================================
+     START V2
+  ====================================================== */
+
+  loadRatingSystems();
+
+})();
+</script>
 
 </body>
 </html>
