@@ -3455,6 +3455,1782 @@
 })();
 
 </script>
+
+  <!-- =====================================================
+     PICKDEE - ADMIN COACH APPLICATION V2
+     RATING NGOÀI + ẢNH MINH CHỨNG + CHỨNG CHỈ
+====================================================== -->
+
+<style>
+
+  .coach-v2-admin-panel {
+    margin: 18px 20px 4px;
+    padding: 17px;
+    border:
+      1px solid rgba(185,255,24,.22);
+    border-radius: 14px;
+    background:
+      rgba(185,255,24,.035);
+  }
+
+  .coach-v2-admin-title {
+    margin-bottom: 14px;
+    color: #b9ff18;
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: .04em;
+  }
+
+  .coach-v2-section {
+    padding: 14px;
+    border:
+      1px solid rgba(255,255,255,.09);
+    border-radius: 11px;
+    background: rgba(255,255,255,.025);
+  }
+
+  .coach-v2-section + .coach-v2-section {
+    margin-top: 13px;
+  }
+
+  .coach-v2-section-title {
+    margin-bottom: 11px;
+    color: #dbe4ee;
+    font-size: 11px;
+    font-weight: 1000;
+    letter-spacing: .05em;
+  }
+
+  .coach-v2-empty {
+    color: #8191a4;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .coach-v2-rating-card {
+    padding: 13px;
+    border:
+      1px solid rgba(255,255,255,.09);
+    border-radius: 10px;
+    background: #0a1728;
+  }
+
+  .coach-v2-rating-card
+  + .coach-v2-rating-card {
+    margin-top: 10px;
+  }
+
+  .coach-v2-rating-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .coach-v2-rating-system {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .coach-v2-rating-value {
+    margin-top: 4px;
+    color: #b9ff18;
+    font-size: 24px;
+    font-weight: 1000;
+  }
+
+  .coach-v2-status {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 1000;
+  }
+
+  .coach-v2-status.waiting {
+    color: #07101b;
+    background: #ffd66b;
+  }
+
+  .coach-v2-status.verified {
+    color: #07101b;
+    background: #b9ff18;
+  }
+
+  .coach-v2-status.failed {
+    color: #fff;
+    background: #c94c59;
+  }
+
+  .coach-v2-proof {
+    margin-top: 12px;
+  }
+
+  .coach-v2-proof-label {
+    margin-bottom: 7px;
+    color: #718399;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .coach-v2-proof img {
+    display: block;
+    width: min(260px,100%);
+    max-height: 280px;
+    object-fit: contain;
+    border:
+      1px solid rgba(255,255,255,.12);
+    border-radius: 10px;
+    background: #050c16;
+  }
+
+  .coach-v2-open-image {
+    margin-top: 8px;
+    display: inline-flex;
+    color: #b9ff18;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .coach-v2-verify-actions {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .coach-v2-verify-btn {
+    min-height: 36px;
+    padding: 0 10px;
+    border:
+      1px solid #34475e;
+    border-radius: 8px;
+    background: #13243a;
+    color: #dbe4ee;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .coach-v2-verify-btn.active {
+    border-color: #b9ff18;
+    color: #b9ff18;
+  }
+
+  .coach-v2-cert-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .coach-v2-cert-item {
+    min-width: 0;
+  }
+
+  .coach-v2-cert-label {
+    margin-bottom: 4px;
+    color: #718399;
+    font-size: 9px;
+    font-weight: 900;
+  }
+
+  .coach-v2-cert-value {
+    color: #dbe4ee;
+    font-size: 12px;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .coach-v2-warning {
+    color: #ffb1b1;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  @media(max-width:650px) {
+
+    .coach-v2-admin-panel {
+      margin-left: 14px;
+      margin-right: 14px;
+    }
+
+    .coach-v2-cert-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .coach-v2-rating-head {
+      flex-direction: column;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG
+    ||
+    {};
+
+
+  const applicationList =
+    document.getElementById(
+      "applicationList"
+    );
+
+
+  if (
+    !applicationList
+    ||
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    console.warn(
+      "COACH APPLICATION V2: thiếu cấu hình."
+    );
+
+    return;
+
+  }
+
+
+  const v2Sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let applicationMap =
+    new Map();
+
+
+  let ratingMap =
+    new Map();
+
+
+  let ratingSystemMap =
+    new Map();
+
+
+  const signedUrlMap =
+    new Map();
+
+
+  let renderTimer =
+    null;
+
+
+  let loading =
+    false;
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function v2Safe(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function normalizeVerification(
+    status
+  ) {
+
+    const value =
+      String(
+        status || ""
+      ).trim();
+
+
+    if (
+      value ===
+      "Đã xác minh"
+    ) {
+      return "Đã xác minh";
+    }
+
+
+    if (
+      value ===
+      "Không xác minh được"
+    ) {
+      return "Không xác minh được";
+    }
+
+
+    return "Chờ xác minh";
+
+  }
+
+
+  function verificationClass(
+    status
+  ) {
+
+    const value =
+      normalizeVerification(
+        status
+      );
+
+
+    if (
+      value ===
+      "Đã xác minh"
+    ) {
+      return "verified";
+    }
+
+
+    if (
+      value ===
+      "Không xác minh được"
+    ) {
+      return "failed";
+    }
+
+
+    return "waiting";
+
+  }
+
+
+  function ratingValueText(
+    rating
+  ) {
+
+    if (
+      rating?.rating_value !==
+        null
+      &&
+      rating?.rating_value !==
+        undefined
+      &&
+      rating?.rating_value !==
+        ""
+    ) {
+
+      const n =
+        Number(
+          rating.rating_value
+        );
+
+
+      if (
+        Number.isFinite(n)
+      ) {
+
+        return String(n);
+
+      }
+
+    }
+
+
+    return String(
+      rating?.rating_text
+      ||
+      "—"
+    );
+
+  }
+
+
+  /* =====================================================
+     SIGNED URL CHO PRIVATE BUCKET
+  ====================================================== */
+
+  async function getSignedDocumentUrl(
+    path
+  ) {
+
+    if (!path) {
+      return "";
+    }
+
+
+    if (
+      signedUrlMap.has(
+        path
+      )
+    ) {
+
+      return signedUrlMap.get(
+        path
+      );
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await v2Sb
+        .storage
+        .from(
+          "coach-documents"
+        )
+        .createSignedUrl(
+          path,
+          60 * 60
+        );
+
+
+    if (error) {
+
+      console.error(
+        "COACH DOCUMENT SIGNED URL:",
+        path,
+        error
+      );
+
+
+      signedUrlMap.set(
+        path,
+        ""
+      );
+
+
+      return "";
+
+    }
+
+
+    const url =
+      data?.signedUrl
+      ||
+      "";
+
+
+    signedUrlMap.set(
+      path,
+      url
+    );
+
+
+    return url;
+
+  }
+
+
+  /* =====================================================
+     LOAD DATA
+  ====================================================== */
+
+  async function loadCoachV2Data() {
+
+    if (loading) {
+      return;
+    }
+
+
+    loading =
+      true;
+
+
+    try {
+
+      const [
+        systemsResult,
+        applicationsResult,
+        ratingsResult
+      ] =
+        await Promise.all(
+          [
+
+            v2Sb.rpc(
+              "public_get_rating_systems"
+            ),
+
+            v2Sb
+              .from(
+                "coach_applications"
+              )
+              .select(`
+                id,
+                status,
+                has_external_rating,
+                has_certificate,
+                certificate_name,
+                certificate_issuer,
+                certificate_year,
+                certificate_image_path,
+                certificate_verification_status
+              `),
+
+            v2Sb
+              .from(
+                "coach_external_ratings"
+              )
+              .select(`
+                id,
+                coach_application_id,
+                rating_system_id,
+                custom_system_name,
+                rating_value,
+                rating_text,
+                proof_image_path,
+                verification_status,
+                is_current
+              `)
+              .not(
+                "coach_application_id",
+                "is",
+                null
+              )
+              .eq(
+                "is_current",
+                true
+              )
+
+          ]
+        );
+
+
+      if (
+        systemsResult.error
+      ) {
+        throw systemsResult.error;
+      }
+
+
+      if (
+        applicationsResult.error
+      ) {
+        throw applicationsResult.error;
+      }
+
+
+      if (
+        ratingsResult.error
+      ) {
+        throw ratingsResult.error;
+      }
+
+
+      ratingSystemMap =
+        new Map(
+          (
+            Array.isArray(
+              systemsResult.data
+            )
+              ?
+              systemsResult.data
+              :
+              []
+          )
+            .map(
+              item => [
+                Number(
+                  item.id
+                ),
+                item
+              ]
+            )
+        );
+
+
+      applicationMap =
+        new Map(
+          (
+            Array.isArray(
+              applicationsResult.data
+            )
+              ?
+              applicationsResult.data
+              :
+              []
+          )
+            .map(
+              item => [
+                Number(
+                  item.id
+                ),
+                item
+              ]
+            )
+        );
+
+
+      ratingMap =
+        new Map();
+
+
+      (
+        Array.isArray(
+          ratingsResult.data
+        )
+          ?
+          ratingsResult.data
+          :
+          []
+      )
+        .forEach(
+          function (
+            rating
+          ) {
+
+            const applicationId =
+              Number(
+                rating
+                  .coach_application_id
+              );
+
+
+            if (
+              !ratingMap.has(
+                applicationId
+              )
+            ) {
+
+              ratingMap.set(
+                applicationId,
+                []
+              );
+
+            }
+
+
+            ratingMap
+              .get(
+                applicationId
+              )
+              .push(
+                rating
+              );
+
+          }
+        );
+
+
+      /* -----------------------------------------------
+         TẠO SIGNED URL TRƯỚC
+      ----------------------------------------------- */
+
+      const documentPaths =
+        new Set();
+
+
+      applicationMap.forEach(
+        function (
+          application
+        ) {
+
+          if (
+            application
+              .certificate_image_path
+          ) {
+
+            documentPaths.add(
+              application
+                .certificate_image_path
+            );
+
+          }
+
+        }
+      );
+
+
+      ratingMap.forEach(
+        function (
+          ratings
+        ) {
+
+          ratings.forEach(
+            function (
+              rating
+            ) {
+
+              if (
+                rating
+                  .proof_image_path
+              ) {
+
+                documentPaths.add(
+                  rating
+                    .proof_image_path
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+      await Promise.all(
+        [
+          ...documentPaths
+        ]
+          .map(
+            path =>
+              getSignedDocumentUrl(
+                path
+              )
+          )
+      );
+
+
+      renderCoachV2Panels();
+
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        "LOAD COACH APPLICATION V2:",
+        error
+      );
+
+    }
+    finally {
+
+      loading =
+        false;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     STATUS BUTTONS
+  ====================================================== */
+
+  function verificationButtons(
+    kind,
+    targetId,
+    currentStatus,
+    canEdit
+  ) {
+
+    if (!canEdit) {
+      return "";
+    }
+
+
+    const current =
+      normalizeVerification(
+        currentStatus
+      );
+
+
+    const options =
+      [
+
+        {
+          code:
+            "waiting",
+
+          status:
+            "Chờ xác minh",
+
+          label:
+            "CHỜ XÁC MINH"
+        },
+
+        {
+          code:
+            "verified",
+
+          status:
+            "Đã xác minh",
+
+          label:
+            "✓ ĐÃ XÁC MINH"
+        },
+
+        {
+          code:
+            "failed",
+
+          status:
+            "Không xác minh được",
+
+          label:
+            "✕ KHÔNG XÁC MINH"
+        }
+
+      ];
+
+
+    return `
+
+      <div class="coach-v2-verify-actions">
+
+        ${options
+          .map(
+            item =>
+              `
+
+                <button
+                  type="button"
+                  class="
+                    coach-v2-verify-btn
+                    ${
+                      current ===
+                        item.status
+                        ?
+                        "active"
+                        :
+                        ""
+                    }
+                  "
+                  data-v2-kind="${v2Safe(
+                    kind
+                  )}"
+                  data-v2-target-id="${Number(
+                    targetId
+                  )}"
+                  data-v2-status="${v2Safe(
+                    item.code
+                  )}"
+                >
+                  ${v2Safe(
+                    item.label
+                  )}
+                </button>
+
+              `
+          )
+          .join("")}
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     ẢNH
+  ====================================================== */
+
+  function proofImageHtml(
+    path,
+    label
+  ) {
+
+    if (!path) {
+
+      return `
+
+        <div class="coach-v2-empty">
+          Không có ảnh.
+        </div>
+
+      `;
+
+    }
+
+
+    const url =
+      signedUrlMap.get(
+        path
+      )
+      ||
+      "";
+
+
+    if (!url) {
+
+      return `
+
+        <div class="coach-v2-warning">
+          Không mở được ảnh.
+        </div>
+
+      `;
+
+    }
+
+
+    return `
+
+      <div class="coach-v2-proof">
+
+        <div class="coach-v2-proof-label">
+          ${v2Safe(label)}
+        </div>
+
+        <a
+          href="${v2Safe(url)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src="${v2Safe(url)}"
+            alt="${v2Safe(label)}"
+            loading="lazy"
+          >
+        </a>
+
+        <a
+          class="coach-v2-open-image"
+          href="${v2Safe(url)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          MỞ ẢNH →
+        </a>
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     RATING CARD
+  ====================================================== */
+
+  function ratingCardHtml(
+    rating,
+    application
+  ) {
+
+    const system =
+      ratingSystemMap.get(
+        Number(
+          rating.rating_system_id
+        )
+      )
+      ||
+      {};
+
+
+    const systemName =
+      rating.custom_system_name
+      ||
+      system.display_name
+      ||
+      (
+        "Hệ thống #"
+        +
+        rating.rating_system_id
+      );
+
+
+    const verification =
+      normalizeVerification(
+        rating.verification_status
+      );
+
+
+    return `
+
+      <div class="coach-v2-rating-card">
+
+        <div class="coach-v2-rating-head">
+
+          <div>
+
+            <div class="coach-v2-rating-system">
+              ${v2Safe(systemName)}
+            </div>
+
+            <div class="coach-v2-rating-value">
+              ${v2Safe(
+                ratingValueText(
+                  rating
+                )
+              )}
+            </div>
+
+          </div>
+
+
+          <div
+            class="
+              coach-v2-status
+              ${verificationClass(
+                verification
+              )}
+            "
+          >
+            ${v2Safe(
+              verification
+            )}
+          </div>
+
+        </div>
+
+
+        ${proofImageHtml(
+          rating.proof_image_path,
+          "ẢNH MINH CHỨNG ĐIỂM TRÌNH"
+        )}
+
+
+        ${verificationButtons(
+          "rating",
+          rating.id,
+          verification,
+          application.status ===
+            "pending"
+        )}
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function renderCoachV2Panels() {
+
+    document
+      .querySelectorAll(
+        ".application[data-application-id]"
+      )
+      .forEach(
+        function (
+          card
+        ) {
+
+          const applicationId =
+            Number(
+              card
+                .dataset
+                .applicationId
+            );
+
+
+          if (
+            !Number.isFinite(
+              applicationId
+            )
+          ) {
+            return;
+          }
+
+
+          const application =
+            applicationMap.get(
+              applicationId
+            );
+
+
+          if (!application) {
+            return;
+          }
+
+
+          /*
+            Hồ sơ V2:
+            ẩn 2 ô legacy
+            TRÌNH ĐỘ PICKLEBALL /
+            BẰNG CẤP cũ.
+
+            Hồ sơ cũ:
+            vẫn giữ nguyên.
+          */
+          if (
+            application
+              .has_external_rating
+              !==
+              null
+            ||
+            application
+              .has_certificate
+              !==
+              null
+          ) {
+
+            const oldBlock =
+              card.querySelector(
+                ".pickdee-extra-coach-info"
+              );
+
+
+            if (oldBlock) {
+
+              oldBlock
+                .style
+                .setProperty(
+                  "display",
+                  "none",
+                  "important"
+                );
+
+            }
+
+          }
+
+
+          if (
+            card.querySelector(
+              ".coach-v2-admin-panel"
+            )
+          ) {
+            return;
+          }
+
+
+          const body =
+            card.querySelector(
+              ".application-body"
+            );
+
+
+          if (!body) {
+            return;
+          }
+
+
+          const ratings =
+            ratingMap.get(
+              applicationId
+            )
+            ||
+            [];
+
+
+          let ratingHtml =
+            "";
+
+
+          if (
+            application
+              .has_external_rating ===
+              true
+          ) {
+
+            ratingHtml =
+              ratings.length
+                ?
+                ratings
+                  .map(
+                    rating =>
+                      ratingCardHtml(
+                        rating,
+                        application
+                      )
+                  )
+                  .join("")
+                :
+                `
+
+                  <div class="coach-v2-warning">
+                    Coach khai CÓ điểm trình nhưng
+                    không tìm thấy dữ liệu rating.
+                  </div>
+
+                `;
+
+          }
+          else if (
+            application
+              .has_external_rating ===
+              false
+          ) {
+
+            ratingHtml = `
+
+              <div class="coach-v2-empty">
+                Coach xác nhận chưa có điểm trình
+                trên hệ thống bên ngoài.
+              </div>
+
+            `;
+
+          }
+          else {
+
+            ratingHtml = `
+
+              <div class="coach-v2-empty">
+                Hồ sơ cũ chưa sử dụng cấu trúc
+                điểm trình V2.
+              </div>
+
+            `;
+
+          }
+
+
+          let certificateHtml =
+            "";
+
+
+          if (
+            application
+              .has_certificate ===
+              true
+          ) {
+
+            const certStatus =
+              normalizeVerification(
+                application
+                  .certificate_verification_status
+              );
+
+
+            certificateHtml = `
+
+              <div class="coach-v2-cert-grid">
+
+                <div class="coach-v2-cert-item">
+
+                  <div class="coach-v2-cert-label">
+                    TÊN CHỨNG CHỈ
+                  </div>
+
+                  <div class="coach-v2-cert-value">
+                    ${v2Safe(
+                      application
+                        .certificate_name
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="coach-v2-cert-item">
+
+                  <div class="coach-v2-cert-label">
+                    ĐƠN VỊ CẤP
+                  </div>
+
+                  <div class="coach-v2-cert-value">
+                    ${v2Safe(
+                      application
+                        .certificate_issuer
+                      ||
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="coach-v2-cert-item">
+
+                  <div class="coach-v2-cert-label">
+                    NĂM CẤP
+                  </div>
+
+                  <div class="coach-v2-cert-value">
+                    ${v2Safe(
+                      application
+                        .certificate_year
+                      ??
+                      "—"
+                    )}
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="
+                  coach-v2-status
+                  ${verificationClass(
+                    certStatus
+                  )}
+                "
+                style="
+                  display:inline-flex;
+                  margin-bottom:10px;
+                "
+              >
+                ${v2Safe(
+                  certStatus
+                )}
+              </div>
+
+
+              ${proofImageHtml(
+                application
+                  .certificate_image_path,
+                "ẢNH BẰNG / CHỨNG CHỈ"
+              )}
+
+
+              ${verificationButtons(
+                "certificate",
+                applicationId,
+                certStatus,
+                application.status ===
+                  "pending"
+              )}
+
+            `;
+
+          }
+          else if (
+            application
+              .has_certificate ===
+              false
+          ) {
+
+            certificateHtml = `
+
+              <div class="coach-v2-empty">
+                Coach xác nhận chưa có
+                bằng / chứng chỉ.
+              </div>
+
+            `;
+
+          }
+          else {
+
+            certificateHtml = `
+
+              <div class="coach-v2-empty">
+                Hồ sơ cũ chưa sử dụng
+                cấu trúc chứng chỉ V2.
+              </div>
+
+            `;
+
+          }
+
+
+          const panel =
+            document.createElement(
+              "div"
+            );
+
+
+          panel.className =
+            "coach-v2-admin-panel";
+
+
+          panel.innerHTML = `
+
+            <div class="coach-v2-admin-title">
+              HỒ SƠ XÁC MINH COACH
+            </div>
+
+
+            <div class="coach-v2-section">
+
+              <div class="coach-v2-section-title">
+                ĐIỂM TRÌNH / XẾP HẠNG BÊN NGOÀI
+              </div>
+
+              ${ratingHtml}
+
+            </div>
+
+
+            <div class="coach-v2-section">
+
+              <div class="coach-v2-section-title">
+                BẰNG CẤP / CHỨNG CHỈ
+              </div>
+
+              ${certificateHtml}
+
+            </div>
+
+          `;
+
+
+          const adminNote =
+            body.querySelector(
+              ".admin-note"
+            );
+
+
+          body.insertBefore(
+            panel,
+            adminNote
+            ||
+            null
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     VERIFY CLICK
+  ====================================================== */
+
+  function statusFromCode(
+    code
+  ) {
+
+    if (
+      code ===
+      "verified"
+    ) {
+      return "Đã xác minh";
+    }
+
+
+    if (
+      code ===
+      "failed"
+    ) {
+      return "Không xác minh được";
+    }
+
+
+    return "Chờ xác minh";
+
+  }
+
+
+  function showV2AdminMessage(
+    text,
+    type
+  ) {
+
+    const box =
+      document.getElementById(
+        "message"
+      );
+
+
+    if (!box) {
+      return;
+    }
+
+
+    box.className =
+      "show "
+      +
+      (
+        type ===
+          "error"
+          ?
+          "error"
+          :
+          "success"
+      );
+
+
+    box.textContent =
+      text;
+
+  }
+
+
+  applicationList.addEventListener(
+    "click",
+    async function (
+      event
+    ) {
+
+      const button =
+        event.target.closest(
+          "button[data-v2-kind]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      const kind =
+        button.dataset.v2Kind;
+
+
+      const targetId =
+        Number(
+          button.dataset
+            .v2TargetId
+        );
+
+
+      const newStatus =
+        statusFromCode(
+          button.dataset.v2Status
+        );
+
+
+      if (
+        !Number.isFinite(
+          targetId
+        )
+      ) {
+        return;
+      }
+
+
+      const confirmed =
+        window.confirm(
+          "Cập nhật trạng thái thành:\n\n"
+          +
+          newStatus
+          +
+          " ?"
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      button.disabled =
+        true;
+
+
+      try {
+
+        if (
+          kind ===
+          "rating"
+        ) {
+
+          const {
+            error
+          } =
+            await v2Sb.rpc(
+              "admin_set_coach_application_rating_verification",
+              {
+                p_rating_id:
+                  targetId,
+
+                p_status:
+                  newStatus
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          ratingMap.forEach(
+            function (
+              ratings
+            ) {
+
+              ratings.forEach(
+                function (
+                  rating
+                ) {
+
+                  if (
+                    Number(
+                      rating.id
+                    )
+                    ===
+                    targetId
+                  ) {
+
+                    rating.verification_status =
+                      newStatus;
+
+                  }
+
+                }
+              );
+
+            }
+          );
+
+        }
+        else if (
+          kind ===
+          "certificate"
+        ) {
+
+          const {
+            error
+          } =
+            await v2Sb.rpc(
+              "admin_set_coach_application_certificate_verification",
+              {
+                p_application_id:
+                  targetId,
+
+                p_status:
+                  newStatus
+              }
+            );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          const application =
+            applicationMap.get(
+              targetId
+            );
+
+
+          if (application) {
+
+            application
+              .certificate_verification_status =
+                newStatus;
+
+          }
+
+        }
+        else {
+
+          return;
+
+        }
+
+
+        document
+          .querySelectorAll(
+            ".coach-v2-admin-panel"
+          )
+          .forEach(
+            element =>
+              element.remove()
+          );
+
+
+        renderCoachV2Panels();
+
+
+        showV2AdminMessage(
+          "✓ Đã cập nhật trạng thái xác minh.",
+          "success"
+        );
+
+
+      }
+      catch (
+        error
+      ) {
+
+        console.error(
+          "VERIFY COACH APPLICATION:",
+          error
+        );
+
+
+        showV2AdminMessage(
+          "KHÔNG CẬP NHẬT ĐƯỢC: "
+          +
+          (
+            error?.message
+            ||
+            String(error)
+          ),
+          "error"
+        );
+
+
+        button.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     CARD RENDER LẠI KHI FILTER / REFRESH
+  ====================================================== */
+
+  function scheduleV2Render() {
+
+    clearTimeout(
+      renderTimer
+    );
+
+
+    renderTimer =
+      setTimeout(
+        renderCoachV2Panels,
+        80
+      );
+
+  }
+
+
+  const observer =
+    new MutationObserver(
+      scheduleV2Render
+    );
+
+
+  observer.observe(
+    applicationList,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  loadCoachV2Data();
+
+
+})();
+
+</script>
 </body>
 
 </html>
