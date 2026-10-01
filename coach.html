@@ -13506,7 +13506,610 @@ areaSelect.addEventListener(
 })();
 </script>
 
+<!-- =========================================================
+     PICKDEE - HỒ SƠ HOẠT ĐỘNG COACH TOÀN THỜI GIAN
+========================================================= -->
 
+<script>
+(async function () {
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.sb
+    ||
+    window.supabaseClient
+    ||
+    null;
+
+
+  if (!sb) {
+    console.error(
+      "COACH CAREER STATS: Không tìm thấy Supabase client."
+    );
+    return;
+  }
+
+
+  /* =====================================================
+     1. KHÔNG TẠO TRÙNG
+  ===================================================== */
+
+  if (
+    document.getElementById(
+      "coachCareerStatsCard"
+    )
+  ) {
+    return;
+  }
+
+
+  /* =====================================================
+     2. TÌM ĐÚNG KHỐI HỒ SƠ COACH
+  ===================================================== */
+
+  const profileView =
+    document.getElementById(
+      "coachProfileView"
+    );
+
+
+  const profileCard =
+    profileView
+      ?.closest(
+        ".profile-card"
+      );
+
+
+  if (!profileCard) {
+
+    console.error(
+      "COACH CAREER STATS: Không tìm thấy Hồ sơ Coach."
+    );
+
+    return;
+  }
+
+
+  /* =====================================================
+     3. TẠO KHỐI HỒ SƠ HOẠT ĐỘNG
+  ===================================================== */
+
+  const card =
+    document.createElement(
+      "section"
+    );
+
+
+  card.id =
+    "coachCareerStatsCard";
+
+
+  card.style.cssText = `
+    margin-bottom:22px;
+    padding:20px;
+    border-radius:18px;
+    border:1px solid rgba(216,255,69,.28);
+    background:
+      linear-gradient(
+        145deg,
+        rgba(6,39,88,.92),
+        rgba(10,52,92,.78)
+      );
+  `;
+
+
+  card.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:14px;
+        flex-wrap:wrap;
+        margin-bottom:16px;
+      "
+    >
+
+      <div>
+
+        <div
+          style="
+            color:#d8ff45;
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.06em;
+            margin-bottom:6px;
+          "
+        >
+          HỒ SƠ HOẠT ĐỘNG
+        </div>
+
+        <div
+          style="
+            font-size:20px;
+            font-weight:900;
+            line-height:1.25;
+          "
+        >
+          Thành tích cùng PickDee
+        </div>
+
+        <div
+          style="
+            margin-top:5px;
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+            line-height:1.5;
+          "
+        >
+          Dữ liệu tích lũy trong toàn bộ thời gian hoạt động.
+        </div>
+
+      </div>
+
+
+      <div
+        id="coachCareerStatus"
+        style="
+          color:rgba(255,255,255,.48);
+          font-size:12px;
+          font-weight:700;
+        "
+      >
+        Đang tải...
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:
+          repeat(
+            auto-fit,
+            minmax(135px,1fr)
+          );
+        gap:10px;
+      "
+    >
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:13px;
+          background:rgba(255,255,255,.045);
+          border:1px solid rgba(255,255,255,.08);
+        "
+      >
+
+        <div
+          style="
+            font-size:21px;
+            margin-bottom:8px;
+          "
+        >
+          🏓
+        </div>
+
+        <div
+          id="coachCareerSessions"
+          style="
+            color:#d8ff45;
+            font-size:24px;
+            font-weight:900;
+          "
+        >
+          —
+        </div>
+
+        <div
+          style="
+            margin-top:4px;
+            color:rgba(255,255,255,.52);
+            font-size:11px;
+            line-height:1.4;
+          "
+        >
+          Tổng buổi đã dạy
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:13px;
+          background:rgba(255,255,255,.045);
+          border:1px solid rgba(255,255,255,.08);
+        "
+      >
+
+        <div
+          style="
+            font-size:21px;
+            margin-bottom:8px;
+          "
+        >
+          👥
+        </div>
+
+        <div
+          id="coachCareerStudents"
+          style="
+            color:#d8ff45;
+            font-size:24px;
+            font-weight:900;
+          "
+        >
+          —
+        </div>
+
+        <div
+          style="
+            margin-top:4px;
+            color:rgba(255,255,255,.52);
+            font-size:11px;
+            line-height:1.4;
+          "
+        >
+          Học viên đã phụ trách
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:13px;
+          background:rgba(255,255,255,.045);
+          border:1px solid rgba(255,255,255,.08);
+        "
+      >
+
+        <div
+          style="
+            font-size:21px;
+            margin-bottom:8px;
+          "
+        >
+          ⭐
+        </div>
+
+        <div
+          id="coachCareerRating"
+          style="
+            color:#d8ff45;
+            font-size:24px;
+            font-weight:900;
+          "
+        >
+          —
+        </div>
+
+        <div
+          id="coachCareerReviewCount"
+          style="
+            margin-top:4px;
+            color:rgba(255,255,255,.52);
+            font-size:11px;
+            line-height:1.4;
+          "
+        >
+          Điểm đánh giá
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          padding:14px;
+          border-radius:13px;
+          background:rgba(255,255,255,.045);
+          border:1px solid rgba(255,255,255,.08);
+        "
+      >
+
+        <div
+          style="
+            font-size:21px;
+            margin-bottom:8px;
+          "
+        >
+          🏅
+        </div>
+
+        <div
+          id="coachCareerTier"
+          style="
+            color:#d8ff45;
+            font-size:16px;
+            font-weight:900;
+            line-height:1.35;
+          "
+        >
+          —
+        </div>
+
+        <div
+          style="
+            margin-top:4px;
+            color:rgba(255,255,255,.52);
+            font-size:11px;
+            line-height:1.4;
+          "
+        >
+          Hạng Coach hiện tại
+        </div>
+
+      </div>
+
+
+    </div>
+
+  `;
+
+
+  /*
+    Đặt ngay TRƯỚC Hồ sơ Coach.
+  */
+
+  profileCard.parentNode.insertBefore(
+    card,
+    profileCard
+  );
+
+
+  /* =====================================================
+     4. ELEMENT
+  ===================================================== */
+
+  const sessionsEl =
+    document.getElementById(
+      "coachCareerSessions"
+    );
+
+
+  const studentsEl =
+    document.getElementById(
+      "coachCareerStudents"
+    );
+
+
+  const ratingEl =
+    document.getElementById(
+      "coachCareerRating"
+    );
+
+
+  const reviewCountEl =
+    document.getElementById(
+      "coachCareerReviewCount"
+    );
+
+
+  const tierEl =
+    document.getElementById(
+      "coachCareerTier"
+    );
+
+
+  const statusEl =
+    document.getElementById(
+      "coachCareerStatus"
+    );
+
+
+  /* =====================================================
+     5. LOAD DỮ LIỆU TOÀN THỜI GIAN
+  ===================================================== */
+
+  async function loadCareerStats() {
+
+    statusEl.textContent =
+      "Đang cập nhật...";
+
+
+    try {
+
+      const {
+        data: sessionData,
+        error: sessionError
+      } =
+        await sb.auth.getSession();
+
+
+      if (
+        sessionError
+        ||
+        !sessionData?.session
+      ) {
+
+        throw new Error(
+          "Coach chưa đăng nhập."
+        );
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "get_my_coach_career_stats"
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const row =
+        Array.isArray(data)
+          ?
+            data[0]
+          :
+            data;
+
+
+      if (!row) {
+
+        throw new Error(
+          "Không có dữ liệu hồ sơ hoạt động."
+        );
+
+      }
+
+
+      const totalSessions =
+        Number(
+          row.total_completed_sessions
+          ||
+          0
+        );
+
+
+      const totalStudents =
+        Number(
+          row.total_students
+          ||
+          0
+        );
+
+
+      const reviewCount =
+        Number(
+          row.review_count
+          ||
+          0
+        );
+
+
+      const rating =
+        Number(
+          row.average_rating
+          ||
+          0
+        );
+
+
+      sessionsEl.textContent =
+        String(
+          totalSessions
+        );
+
+
+      studentsEl.textContent =
+        String(
+          totalStudents
+        );
+
+
+      if (
+        reviewCount > 0
+      ) {
+
+        ratingEl.textContent =
+          rating.toFixed(1)
+          +
+          " ★";
+
+
+        reviewCountEl.textContent =
+          reviewCount
+          +
+          " lượt đánh giá";
+
+      }
+      else {
+
+        ratingEl.textContent =
+          "Chưa có";
+
+
+        reviewCountEl.textContent =
+          "Chưa có đánh giá";
+
+      }
+
+
+      tierEl.textContent =
+        row.coach_tier_label
+        ||
+        "Coach Tiêu chuẩn";
+
+
+      statusEl.textContent =
+        "✓ Đã cập nhật";
+
+    }
+    catch (error) {
+
+      console.error(
+        "COACH CAREER STATS:",
+        error
+      );
+
+
+      sessionsEl.textContent =
+        "—";
+
+
+      studentsEl.textContent =
+        "—";
+
+
+      ratingEl.textContent =
+        "—";
+
+
+      reviewCountEl.textContent =
+        "Không tải được đánh giá";
+
+
+      tierEl.textContent =
+        "—";
+
+
+      statusEl.textContent =
+        "Không tải được";
+
+    }
+
+  }
+
+
+  await loadCareerStats();
+
+
+  /*
+    Khi Coach quay lại tab,
+    cập nhật số liệu mới.
+  */
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadCareerStats,
+        500
+      );
+
+    }
+  );
+
+
+})();
+</script>
 </body>
 
 </html>
