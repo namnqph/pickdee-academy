@@ -6829,6 +6829,839 @@
 })();
 
 </script>
+
+<!-- =====================================================
+     PICKDEE - VERIFIED COACH RATINGS
+     Lịch sử trình độ Coach đã xác minh
+====================================================== -->
+
+<style>
+
+  #pickdeeVerifiedRatingSection {
+    margin: 0 0 24px;
+    padding: 20px;
+    border:
+      1px solid rgba(185,255,24,.28);
+    border-radius: 16px;
+    background:
+      rgba(185,255,24,.025);
+  }
+
+  .pickdee-verified-rating-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 16px;
+  }
+
+  .pickdee-verified-rating-eyebrow {
+    color: #b9ff18;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+  }
+
+  .pickdee-verified-rating-title {
+    margin-top: 5px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .pickdee-verified-rating-count {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #b9ff18;
+    color: #07101b;
+    font-weight: 900;
+  }
+
+  #pickdeeVerifiedRatingList {
+    display: grid;
+    gap: 14px;
+  }
+
+  .pickdee-verified-rating-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background:
+      rgba(185,255,24,.10);
+    border:
+      1px solid rgba(185,255,24,.28);
+    color: #dfff85;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .pickdee-verified-rating-meta {
+    margin-top: 12px;
+    color: #8fa0b4;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const verifiedSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     ADMIN CHECK
+  ====================================================== */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await verifiedSb.auth
+      .getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    return;
+
+  }
+
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await verifiedSb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        userData.user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+    ||
+    String(
+      profile?.role || ""
+    )
+      .trim()
+      .toLowerCase()
+    !==
+    "admin"
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function safeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function formatVerifiedDate(
+    value
+  ) {
+
+    if (!value) {
+      return "—";
+    }
+
+
+    const date =
+      new Date(value);
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return "—";
+
+    }
+
+
+    return date.toLocaleString(
+      "vi-VN",
+      {
+
+        timeZone:
+          "Asia/Ho_Chi_Minh",
+
+        day:
+          "2-digit",
+
+        month:
+          "2-digit",
+
+        year:
+          "numeric",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit"
+
+      }
+    );
+
+  }
+
+
+  async function getVerifiedProofUrl(
+    path
+  ) {
+
+    if (!path) {
+      return "";
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await verifiedSb
+        .storage
+        .from(
+          "coach-documents"
+        )
+        .createSignedUrl(
+          path,
+          60 * 60
+        );
+
+
+    if (
+      error
+      ||
+      !data?.signedUrl
+    ) {
+
+      console.error(
+        "VERIFIED RATING SIGNED URL:",
+        path,
+        error
+      );
+
+      return "";
+
+    }
+
+
+    return data.signedUrl;
+
+  }
+
+
+  /* =====================================================
+     CHỜ KHỐI PENDING TẠO XONG
+  ====================================================== */
+
+  async function waitForPendingSection() {
+
+    for (
+      let i = 0;
+      i < 100;
+      i++
+    ) {
+
+      const pendingSection =
+        document.getElementById(
+          "pickdeePendingRatingSection"
+        );
+
+
+      if (pendingSection) {
+        return pendingSection;
+      }
+
+
+      await new Promise(
+        resolve =>
+          setTimeout(
+            resolve,
+            50
+          )
+      );
+
+    }
+
+
+    return null;
+
+  }
+
+
+  /* =====================================================
+     CREATE VERIFIED SECTION
+  ====================================================== */
+
+  const main =
+    document.querySelector(
+      "main"
+    );
+
+
+  const toolbar =
+    document.querySelector(
+      "main .toolbar"
+    );
+
+
+  if (
+    !main
+    ||
+    !toolbar
+  ) {
+
+    return;
+
+  }
+
+
+  const pendingSection =
+    await waitForPendingSection();
+
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "pickdeeVerifiedRatingSection";
+
+
+  section.innerHTML = `
+
+    <div class="pickdee-verified-rating-head">
+
+      <div>
+
+        <div class="pickdee-verified-rating-eyebrow">
+          PICKDEE ADMIN
+        </div>
+
+        <div class="pickdee-verified-rating-title">
+          Trình độ Coach đã xác minh
+        </div>
+
+      </div>
+
+
+      <div
+        id="pickdeeVerifiedRatingCount"
+        class="pickdee-verified-rating-count"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div id="pickdeeVerifiedRatingList">
+
+      <div class="pickdee-pending-rating-empty">
+        Đang tải dữ liệu...
+      </div>
+
+    </div>
+
+  `;
+
+
+  if (
+    pendingSection
+    &&
+    pendingSection.parentNode
+  ) {
+
+    pendingSection.insertAdjacentElement(
+      "afterend",
+      section
+    );
+
+  }
+  else {
+
+    main.insertBefore(
+      section,
+      toolbar
+    );
+
+  }
+
+
+  const listEl =
+    section.querySelector(
+      "#pickdeeVerifiedRatingList"
+    );
+
+
+  const countEl =
+    section.querySelector(
+      "#pickdeeVerifiedRatingCount"
+    );
+
+
+  let verifiedRows =
+    [];
+
+
+  let refreshTimer =
+    null;
+
+
+  /* =====================================================
+     LOAD VERIFIED RATINGS
+  ====================================================== */
+
+  async function loadVerifiedRatings() {
+
+    try {
+
+
+      const {
+        data,
+        error
+      } =
+        await verifiedSb.rpc(
+          "admin_get_verified_coach_ratings"
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      verifiedRows =
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
+
+
+      await renderVerifiedRatings();
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "LOAD VERIFIED COACH RATINGS:",
+        error
+      );
+
+
+      countEl.textContent =
+        "0";
+
+
+      listEl.innerHTML = `
+        <div class="pickdee-pending-rating-empty">
+          Không tải được danh sách trình độ đã xác minh.
+        </div>
+      `;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  async function renderVerifiedRatings() {
+
+    countEl.textContent =
+      String(
+        verifiedRows.length
+      );
+
+
+    if (
+      verifiedRows.length === 0
+    ) {
+
+      listEl.innerHTML = `
+        <div class="pickdee-pending-rating-empty">
+          Chưa có trình độ Coach nào đã xác minh.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    const cards =
+      await Promise.all(
+        verifiedRows.map(
+          async function (row) {
+
+
+            const proofUrl =
+              await getVerifiedProofUrl(
+                row.proof_image_path
+              );
+
+
+            const ratingValue =
+              row.rating_value
+              ??
+              row.rating_text
+              ??
+              "—";
+
+
+            return `
+
+              <article
+                class="pickdee-pending-rating-card"
+                data-verified-rating-id="${Number(
+                  row.rating_id
+                )}"
+              >
+
+
+                <div class="pickdee-pending-rating-card-top">
+
+                  <div class="pickdee-pending-rating-code">
+
+                    ${safeHtml(
+                      row.coach_code || "—"
+                    )}
+
+                    ${
+                      row.source_origin ===
+                      "popup_test"
+                        ?
+                        " · TEST"
+                        :
+                        ""
+                    }
+
+                  </div>
+
+
+                  <div class="pickdee-pending-rating-name">
+
+                    ${safeHtml(
+                      row.coach_name || "Coach"
+                    )}
+
+                  </div>
+
+
+                  <div class="pickdee-pending-rating-email">
+
+                    ${safeHtml(
+                      row.coach_email || ""
+                    )}
+
+                  </div>
+
+
+                  <div class="pickdee-verified-rating-status">
+
+                    ✓ ĐÃ XÁC MINH
+
+                  </div>
+
+                </div>
+
+
+                <div class="pickdee-pending-rating-body">
+
+
+                  <div class="pickdee-pending-rating-info">
+
+
+                    <div>
+
+                      <div class="pickdee-pending-rating-label">
+                        HỆ THỐNG ĐÁNH GIÁ
+                      </div>
+
+                      <div class="pickdee-pending-rating-value">
+
+                        ${safeHtml(
+                          row.rating_system || "—"
+                        )}
+
+                      </div>
+
+                    </div>
+
+
+                    <div>
+
+                      <div class="pickdee-pending-rating-label">
+                        ĐIỂM / TRÌNH ĐỘ
+                      </div>
+
+                      <div class="pickdee-pending-rating-score">
+
+                        ${safeHtml(
+                          ratingValue
+                        )}
+
+                      </div>
+
+                    </div>
+
+
+                  </div>
+
+
+                  <div class="pickdee-pending-rating-label">
+                    ẢNH MINH CHỨNG ĐÃ XÁC MINH
+                  </div>
+
+
+                  ${
+                    proofUrl
+                      ?
+                      `
+
+                        <a
+                          href="${safeHtml(
+                            proofUrl
+                          )}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+
+                          <img
+                            class="pickdee-pending-rating-image"
+                            src="${safeHtml(
+                              proofUrl
+                            )}"
+                            alt="Ảnh minh chứng trình độ đã xác minh"
+                          >
+
+                        </a>
+
+
+                        <a
+                          class="pickdee-pending-rating-open"
+                          href="${safeHtml(
+                            proofUrl
+                          )}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          MỞ ẢNH GỐC ↗
+                        </a>
+
+                      `
+                      :
+                      `
+
+                        <div class="pickdee-pending-rating-empty">
+                          Không mở được ảnh minh chứng.
+                        </div>
+
+                      `
+                  }
+
+
+                  <div class="pickdee-verified-rating-meta">
+
+                    Xác minh lúc:
+                    <strong>
+                      ${safeHtml(
+                        formatVerifiedDate(
+                          row.verified_at
+                        )
+                      )}
+                    </strong>
+
+                  </div>
+
+
+                </div>
+
+
+              </article>
+
+            `;
+
+          }
+        )
+      );
+
+
+    listEl.innerHTML =
+      cards.join("");
+
+  }
+
+
+  /* =====================================================
+     TỰ REFRESH SAU KHI ADMIN XÁC MINH RATING MỚI
+  ====================================================== */
+
+  function scheduleVerifiedRefresh() {
+
+    clearTimeout(
+      refreshTimer
+    );
+
+
+    refreshTimer =
+      setTimeout(
+        loadVerifiedRatings,
+        250
+      );
+
+  }
+
+
+  const pendingList =
+    document.getElementById(
+      "pickdeePendingRatingList"
+    );
+
+
+  if (pendingList) {
+
+    const observer =
+      new MutationObserver(
+        scheduleVerifiedRefresh
+      );
+
+
+    observer.observe(
+      pendingList,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+  }
+
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+
+  if (refreshBtn) {
+
+    refreshBtn.addEventListener(
+      "click",
+      function () {
+
+        setTimeout(
+          loadVerifiedRatings,
+          300
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadVerifiedRatings();
+
+
+})();
+
+</script>
   
 </body>
 
