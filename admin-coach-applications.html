@@ -5470,6 +5470,1376 @@
 })();
 
 </script>
+<!-- =====================================================
+     PICKDEE - COACH RATING PROOF REVIEW
+     Coach đã duyệt bổ sung ảnh trình độ
+====================================================== -->
+
+<style>
+
+  #pickdeePendingRatingSection {
+    margin: 0 0 24px;
+    padding: 20px;
+    border:
+      1px solid rgba(255,214,107,.30);
+    border-radius: 16px;
+    background:
+      rgba(255,214,107,.035);
+  }
+
+  .pickdee-pending-rating-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 16px;
+  }
+
+  .pickdee-pending-rating-eyebrow {
+    color: #ffd66b;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+  }
+
+  .pickdee-pending-rating-title {
+    margin-top: 5px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .pickdee-pending-rating-count {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ffd66b;
+    color: #07101b;
+    font-weight: 900;
+  }
+
+  #pickdeePendingRatingList {
+    display: grid;
+    gap: 14px;
+  }
+
+  .pickdee-pending-rating-card {
+    overflow: hidden;
+    border:
+      1px solid #26364b;
+    border-radius: 14px;
+    background: #0e1b2d;
+  }
+
+  .pickdee-pending-rating-card-top {
+    padding: 15px 16px;
+    border-bottom:
+      1px solid rgba(255,255,255,.07);
+  }
+
+  .pickdee-pending-rating-code {
+    color: #718399;
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+  .pickdee-pending-rating-name {
+    margin-top: 4px;
+    color: #d8ff45;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .pickdee-pending-rating-email {
+    margin-top: 3px;
+    color: #8fa0b4;
+    font-size: 12px;
+  }
+
+  .pickdee-pending-rating-body {
+    padding: 16px;
+  }
+
+  .pickdee-pending-rating-info {
+    display: grid;
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .pickdee-pending-rating-label {
+    margin-bottom: 4px;
+    color: #718399;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .06em;
+  }
+
+  .pickdee-pending-rating-value {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .pickdee-pending-rating-score {
+    color: #ffd66b;
+    font-size: 24px;
+    font-weight: 900;
+  }
+
+  .pickdee-pending-rating-image {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    max-height: 430px;
+    margin-top: 9px;
+    object-fit: contain;
+    border-radius: 12px;
+    border:
+      1px solid rgba(255,255,255,.12);
+    background: #07101b;
+  }
+
+  .pickdee-pending-rating-open {
+    display: inline-block;
+    margin-top: 10px;
+    color: #d8ff45;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .pickdee-pending-rating-actions {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+
+  .pickdee-rating-verify-btn {
+    flex: 1;
+    border: 0;
+    background: #b9ff18;
+    color: #07101b;
+  }
+
+  .pickdee-rating-reject-btn {
+    flex: 1;
+    border:
+      1px solid rgba(255,100,100,.45);
+    background:
+      rgba(255,70,70,.10);
+    color: #ffb0b0;
+  }
+
+  .pickdee-pending-rating-empty {
+    padding: 18px;
+    border-radius: 11px;
+    border:
+      1px dashed rgba(255,255,255,.12);
+    color: #8393a6;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  #pickdeePendingRatingMessage {
+    display: none;
+    margin-bottom: 13px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  #pickdeePendingRatingMessage.success {
+    display: block;
+    color: #dfff85;
+    background:
+      rgba(185,255,24,.07);
+    border:
+      1px solid rgba(185,255,24,.25);
+  }
+
+  #pickdeePendingRatingMessage.error {
+    display: block;
+    color: #ffb2b2;
+    background:
+      rgba(255,70,70,.08);
+    border:
+      1px solid rgba(255,100,100,.30);
+  }
+
+  @media(max-width:650px) {
+
+    .pickdee-pending-rating-info {
+      grid-template-columns: 1fr;
+    }
+
+    .pickdee-pending-rating-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const ratingReviewSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     CHỈ ADMIN
+  ====================================================== */
+
+  const {
+    data: userData,
+    error: userError
+  } =
+    await ratingReviewSb.auth
+      .getUser();
+
+
+  if (
+    userError
+    ||
+    !userData?.user
+  ) {
+
+    return;
+
+  }
+
+
+  const {
+    data: adminProfile,
+    error: adminProfileError
+  } =
+    await ratingReviewSb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        userData.user.id
+      )
+      .maybeSingle();
+
+
+  if (
+    adminProfileError
+    ||
+    String(
+      adminProfile?.role || ""
+    )
+      .trim()
+      .toLowerCase()
+    !==
+    "admin"
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     TẠO KHỐI GIAO DIỆN
+  ====================================================== */
+
+  const main =
+    document.querySelector(
+      "main"
+    );
+
+
+  const toolbar =
+    document.querySelector(
+      "main .toolbar"
+    );
+
+
+  if (
+    !main
+    ||
+    !toolbar
+  ) {
+
+    return;
+
+  }
+
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "pickdeePendingRatingSection";
+
+
+  section.innerHTML = `
+
+    <div class="pickdee-pending-rating-head">
+
+      <div>
+
+        <div class="pickdee-pending-rating-eyebrow">
+          PICKDEE ADMIN
+        </div>
+
+        <div class="pickdee-pending-rating-title">
+          Trình độ Coach chờ xác minh
+        </div>
+
+      </div>
+
+      <div
+        id="pickdeePendingRatingCount"
+        class="pickdee-pending-rating-count"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div id="pickdeePendingRatingMessage"></div>
+
+
+    <div id="pickdeePendingRatingList">
+
+      <div class="pickdee-pending-rating-empty">
+        Đang tải dữ liệu...
+      </div>
+
+    </div>
+
+  `;
+
+
+  main.insertBefore(
+    section,
+    toolbar
+  );
+
+
+  const listEl =
+    section.querySelector(
+      "#pickdeePendingRatingList"
+    );
+
+
+  const countEl =
+    section.querySelector(
+      "#pickdeePendingRatingCount"
+    );
+
+
+  const messageEl =
+    section.querySelector(
+      "#pickdeePendingRatingMessage"
+    );
+
+
+  let currentRows =
+    [];
+
+
+  function safeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showReviewMessage(
+    text,
+    type
+  ) {
+
+    messageEl.className =
+      type === "error"
+        ?
+        "error"
+        :
+        "success";
+
+
+    messageEl.textContent =
+      text || "";
+
+  }
+
+
+  function clearReviewMessage() {
+
+    messageEl.className =
+      "";
+
+    messageEl.textContent =
+      "";
+
+  }
+
+
+  /* =====================================================
+     SIGNED URL
+  ====================================================== */
+
+  async function getProofUrl(
+    path
+  ) {
+
+    if (!path) {
+      return "";
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await ratingReviewSb
+        .storage
+        .from(
+          "coach-documents"
+        )
+        .createSignedUrl(
+          path,
+          60 * 60
+        );
+
+
+    if (
+      error
+      ||
+      !data?.signedUrl
+    ) {
+
+      console.error(
+        "PENDING RATING SIGNED URL:",
+        path,
+        error
+      );
+
+      return "";
+
+    }
+
+
+    return data.signedUrl;
+
+  }
+
+
+  /* =====================================================
+     TEST BRIDGE
+
+     Production RPC cố tình loại is_test=true.
+
+     Riêng giai đoạn test:
+     lấy các rating có source_origin = popup_test.
+
+     Sau khi xóa dữ liệu popup_test,
+     phần này tự động không trả gì nữa.
+  ====================================================== */
+
+  async function loadPopupTestRows() {
+
+    const {
+      data: ratings,
+      error: ratingsError
+    } =
+      await ratingReviewSb
+        .from(
+          "coach_external_ratings"
+        )
+        .select(`
+          id,
+          coach_id,
+          rating_system_id,
+          custom_system_name,
+          rating_value,
+          rating_text,
+          proof_image_path,
+          verification_status,
+          source_origin,
+          created_at
+        `)
+        .eq(
+          "source_origin",
+          "popup_test"
+        )
+        .eq(
+          "is_current",
+          true
+        )
+        .eq(
+          "verification_status",
+          "Chờ xác minh"
+        )
+        .not(
+          "proof_image_path",
+          "is",
+          null
+        );
+
+
+    if (ratingsError) {
+      throw ratingsError;
+    }
+
+
+    const rows =
+      Array.isArray(ratings)
+        ?
+        ratings.filter(
+          item =>
+            String(
+              item.proof_image_path || ""
+            ).trim()
+        )
+        :
+        [];
+
+
+    if (!rows.length) {
+      return [];
+    }
+
+
+    const coachIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              item =>
+                Number(
+                  item.coach_id
+                )
+            )
+            .filter(
+              Number.isFinite
+            )
+        )
+      ];
+
+
+    const systemIds =
+      [
+        ...new Set(
+          rows
+            .map(
+              item =>
+                Number(
+                  item.rating_system_id
+                )
+            )
+            .filter(
+              Number.isFinite
+            )
+        )
+      ];
+
+
+    const [
+      coachesResult,
+      systemsResult
+    ] =
+      await Promise.all(
+        [
+
+          ratingReviewSb
+            .from(
+              "coaches"
+            )
+            .select(`
+              id,
+              coach_code,
+              full_name,
+              email,
+              is_test
+            `)
+            .in(
+              "id",
+              coachIds
+            ),
+
+          ratingReviewSb
+            .from(
+              "rating_systems"
+            )
+            .select(`
+              id,
+              display_name
+            `)
+            .in(
+              "id",
+              systemIds
+            )
+
+        ]
+      );
+
+
+    if (coachesResult.error) {
+      throw coachesResult.error;
+    }
+
+
+    if (systemsResult.error) {
+      throw systemsResult.error;
+    }
+
+
+    const coachMap =
+      new Map(
+        (
+          Array.isArray(
+            coachesResult.data
+          )
+            ?
+            coachesResult.data
+            :
+            []
+        )
+          .map(
+            coach => [
+              Number(
+                coach.id
+              ),
+              coach
+            ]
+          )
+      );
+
+
+    const systemMap =
+      new Map(
+        (
+          Array.isArray(
+            systemsResult.data
+          )
+            ?
+            systemsResult.data
+            :
+            []
+        )
+          .map(
+            system => [
+              Number(
+                system.id
+              ),
+              system
+            ]
+          )
+      );
+
+
+    return rows
+      .map(
+        function (rating) {
+
+          const coach =
+            coachMap.get(
+              Number(
+                rating.coach_id
+              )
+            )
+            ||
+            {};
+
+
+          const system =
+            systemMap.get(
+              Number(
+                rating.rating_system_id
+              )
+            )
+            ||
+            {};
+
+
+          if (
+            coach.is_test !== true
+          ) {
+
+            return null;
+
+          }
+
+
+          return {
+
+            rating_id:
+              Number(
+                rating.id
+              ),
+
+            coach_id:
+              Number(
+                rating.coach_id
+              ),
+
+            coach_code:
+              coach.coach_code || "",
+
+            coach_name:
+              coach.full_name || "",
+
+            coach_email:
+              coach.email || "",
+
+            rating_system:
+              rating.custom_system_name
+              ||
+              system.display_name
+              ||
+              "Hệ thống khác",
+
+            rating_value:
+              rating.rating_value,
+
+            rating_text:
+              rating.rating_text,
+
+            proof_image_path:
+              rating.proof_image_path,
+
+            verification_status:
+              rating.verification_status,
+
+            source_origin:
+              rating.source_origin,
+
+            created_at:
+              rating.created_at,
+
+            is_test:
+              true
+
+          };
+
+        }
+      )
+      .filter(Boolean);
+
+  }
+
+
+  /* =====================================================
+     LOAD PRODUCTION + TEST
+  ====================================================== */
+
+  async function loadPendingRatings() {
+
+    clearReviewMessage();
+
+
+    listEl.innerHTML = `
+      <div class="pickdee-pending-rating-empty">
+        Đang tải dữ liệu...
+      </div>
+    `;
+
+
+    try {
+
+
+      const {
+        data: productionRows,
+        error: productionError
+      } =
+        await ratingReviewSb.rpc(
+          "admin_get_pending_coach_rating_proofs"
+        );
+
+
+      if (productionError) {
+        throw productionError;
+      }
+
+
+      const testRows =
+        await loadPopupTestRows();
+
+
+      const merged =
+        [
+          ...(
+            Array.isArray(
+              productionRows
+            )
+              ?
+              productionRows
+              :
+              []
+          ),
+
+          ...testRows
+
+        ];
+
+
+      const uniqueMap =
+        new Map();
+
+
+      merged.forEach(
+        function (row) {
+
+          const ratingId =
+            Number(
+              row.rating_id
+            );
+
+
+          if (
+            !Number.isFinite(
+              ratingId
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          uniqueMap.set(
+            ratingId,
+            row
+          );
+
+        }
+      );
+
+
+      currentRows =
+        [
+          ...uniqueMap.values()
+        ];
+
+
+      await renderPendingRatings();
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "LOAD PENDING COACH RATINGS:",
+        error
+      );
+
+
+      countEl.textContent =
+        "0";
+
+
+      listEl.innerHTML = `
+        <div class="pickdee-pending-rating-empty">
+          Không tải được danh sách trình độ chờ xác minh.
+        </div>
+      `;
+
+
+      showReviewMessage(
+        "Không tải được dữ liệu: "
+        +
+        (
+          error?.message
+          ||
+          String(error)
+        ),
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  async function renderPendingRatings() {
+
+    countEl.textContent =
+      String(
+        currentRows.length
+      );
+
+
+    if (
+      currentRows.length === 0
+    ) {
+
+      listEl.innerHTML = `
+        <div class="pickdee-pending-rating-empty">
+          Hiện không có trình độ Coach nào chờ xác minh.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    const cards =
+      await Promise.all(
+        currentRows.map(
+          async function (row) {
+
+            const proofUrl =
+              await getProofUrl(
+                row.proof_image_path
+              );
+
+
+            const ratingValue =
+              row.rating_value
+              ??
+              row.rating_text
+              ??
+              "—";
+
+
+            return `
+
+              <article
+                class="pickdee-pending-rating-card"
+                data-rating-id="${Number(
+                  row.rating_id
+                )}"
+              >
+
+                <div class="pickdee-pending-rating-card-top">
+
+                  <div class="pickdee-pending-rating-code">
+                    ${safeHtml(
+                      row.coach_code || "—"
+                    )}
+                    ${
+                      row.is_test === true
+                        ?
+                        " · TEST"
+                        :
+                        ""
+                    }
+                  </div>
+
+                  <div class="pickdee-pending-rating-name">
+                    ${safeHtml(
+                      row.coach_name || "Coach"
+                    )}
+                  </div>
+
+                  <div class="pickdee-pending-rating-email">
+                    ${safeHtml(
+                      row.coach_email || ""
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="pickdee-pending-rating-body">
+
+                  <div class="pickdee-pending-rating-info">
+
+                    <div>
+
+                      <div class="pickdee-pending-rating-label">
+                        HỆ THỐNG ĐÁNH GIÁ
+                      </div>
+
+                      <div class="pickdee-pending-rating-value">
+                        ${safeHtml(
+                          row.rating_system || "—"
+                        )}
+                      </div>
+
+                    </div>
+
+
+                    <div>
+
+                      <div class="pickdee-pending-rating-label">
+                        ĐIỂM / TRÌNH ĐỘ
+                      </div>
+
+                      <div class="pickdee-pending-rating-score">
+                        ${safeHtml(
+                          ratingValue
+                        )}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="pickdee-pending-rating-label">
+                    ẢNH MINH CHỨNG COACH VỪA TẢI
+                  </div>
+
+
+                  ${
+                    proofUrl
+                      ?
+                      `
+
+                        <a
+                          href="${safeHtml(
+                            proofUrl
+                          )}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+
+                          <img
+                            class="pickdee-pending-rating-image"
+                            src="${safeHtml(
+                              proofUrl
+                            )}"
+                            alt="Ảnh minh chứng trình độ Coach"
+                          >
+
+                        </a>
+
+
+                        <a
+                          class="pickdee-pending-rating-open"
+                          href="${safeHtml(
+                            proofUrl
+                          )}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          MỞ ẢNH GỐC ↗
+                        </a>
+
+                      `
+                      :
+                      `
+
+                        <div class="pickdee-pending-rating-empty">
+                          Không mở được ảnh minh chứng.
+                        </div>
+
+                      `
+                  }
+
+                </div>
+
+
+                <div class="pickdee-pending-rating-actions">
+
+                  <button
+                    type="button"
+                    class="pickdee-rating-verify-btn"
+                    data-rating-review-action="verify"
+                    data-rating-id="${Number(
+                      row.rating_id
+                    )}"
+                    data-coach-name="${safeHtml(
+                      row.coach_name || ""
+                    )}"
+                  >
+                    ✓ XÁC MINH
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="pickdee-rating-reject-btn"
+                    data-rating-review-action="reject"
+                    data-rating-id="${Number(
+                      row.rating_id
+                    )}"
+                    data-coach-name="${safeHtml(
+                      row.coach_name || ""
+                    )}"
+                  >
+                    ↻ YÊU CẦU TẢI LẠI ẢNH
+                  </button>
+
+                </div>
+
+              </article>
+
+            `;
+
+          }
+        )
+      );
+
+
+    listEl.innerHTML =
+      cards.join("");
+
+  }
+
+
+  /* =====================================================
+     XỬ LÝ XÁC MINH / TỪ CHỐI ẢNH
+  ====================================================== */
+
+  listEl.addEventListener(
+    "click",
+    async function (event) {
+
+      const button =
+        event.target.closest(
+          "button[data-rating-review-action]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      const ratingId =
+        Number(
+          button.dataset.ratingId
+        );
+
+
+      const coachName =
+        button.dataset.coachName
+        ||
+        "Coach";
+
+
+      const action =
+        button.dataset.ratingReviewAction;
+
+
+      if (
+        !Number.isFinite(
+          ratingId
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      const newStatus =
+        action === "verify"
+          ?
+          "Đã xác minh"
+          :
+          "Không xác minh được";
+
+
+      const confirmText =
+        action === "verify"
+          ?
+          (
+            'Xác nhận ảnh trình độ của "'
+            +
+            coachName
+            +
+            '" là hợp lệ?'
+          )
+          :
+          (
+            'Yêu cầu "'
+            +
+            coachName
+            +
+            '" tải lại ảnh minh chứng?\n\n'
+            +
+            "Ảnh hiện tại sẽ bị loại khỏi rating "
+            +
+            "và popup sẽ hiện lại cho Coach."
+          );
+
+
+      const confirmed =
+        window.confirm(
+          confirmText
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      const card =
+        button.closest(
+          ".pickdee-pending-rating-card"
+        );
+
+
+      const buttons =
+        card
+          ?
+          card.querySelectorAll(
+            "button"
+          )
+          :
+          [];
+
+
+      buttons.forEach(
+        item =>
+          item.disabled = true
+      );
+
+
+      clearReviewMessage();
+
+
+      try {
+
+
+        const {
+          error
+        } =
+          await ratingReviewSb.rpc(
+            "admin_set_coach_rating_verification",
+            {
+
+              p_rating_id:
+                ratingId,
+
+              p_status:
+                newStatus
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        showReviewMessage(
+          action === "verify"
+            ?
+            "✓ Đã xác minh trình độ Coach."
+            :
+            "✓ Đã yêu cầu Coach tải lại ảnh minh chứng.",
+          "success"
+        );
+
+
+        await loadPendingRatings();
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "ADMIN RATING VERIFICATION:",
+          error
+        );
+
+
+        showReviewMessage(
+          "Không cập nhật được trạng thái: "
+          +
+          (
+            error?.message
+            ||
+            String(error)
+          ),
+          "error"
+        );
+
+
+        buttons.forEach(
+          item =>
+            item.disabled = false
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  await loadPendingRatings();
+
+
+})();
+
+</script>
+  
 </body>
 
 </html>
