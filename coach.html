@@ -14131,6 +14131,1157 @@ dashboardGrid.parentNode.insertBefore(
 
 })();
 </script>
+<script>
+(async function () {
+
+  /* =====================================================
+     PICKDEE - POPUP BỔ SUNG ẢNH MINH CHỨNG RATING CŨ
+     Chỉ hiện khi Coach đang có rating nhưng thiếu proof_image_path
+  ====================================================== */
+
+  const sb =
+    window.PICKDEE_SUPABASE
+    ||
+    window.supabaseClient
+    ||
+    window.sb;
+
+
+  if (!sb) {
+
+    console.warn(
+      "MISSING RATING PROOF: Supabase client chưa sẵn sàng."
+    );
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     SESSION
+  ====================================================== */
+
+  const {
+    data: sessionData,
+    error: sessionError
+  } =
+    await sb.auth.getSession();
+
+
+  if (
+    sessionError
+    ||
+    !sessionData?.session?.user
+  ) {
+
+    return;
+
+  }
+
+
+  const session =
+    sessionData.session;
+
+
+  /* =====================================================
+     KIỂM TRA COACH CÓ ĐANG THIẾU ẢNH RATING KHÔNG
+  ====================================================== */
+
+  const {
+    data: missingData,
+    error: missingError
+  } =
+    await sb.rpc(
+      "get_my_missing_rating_proofs"
+    );
+
+
+  if (missingError) {
+
+    console.warn(
+      "GET MISSING RATING PROOFS:",
+      missingError
+    );
+
+    return;
+
+  }
+
+
+  const result =
+    Array.isArray(
+      missingData
+    )
+      ?
+        missingData[0]
+      :
+        missingData;
+
+
+  const missingRatings =
+    Array.isArray(
+      result?.missing_ratings
+    )
+      ?
+        result.missing_ratings
+      :
+        [];
+
+
+  if (
+    !result?.needs_popup
+    ||
+    missingRatings.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     STYLE POPUP
+  ====================================================== */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+
+    #pickdeeRatingProofOverlay {
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,8,25,.82);
+      backdrop-filter:blur(8px);
+    }
+
+    #pickdeeRatingProofModal {
+      width:min(520px,100%);
+      max-height:90vh;
+      overflow:auto;
+      padding:24px;
+      border-radius:20px;
+      border:1px solid rgba(216,255,69,.28);
+      background:
+        linear-gradient(
+          145deg,
+          #062456,
+          #041733
+        );
+      box-shadow:
+        0 28px 80px rgba(0,0,0,.45);
+      color:white;
+    }
+
+    .pickdee-proof-eyebrow {
+      margin-bottom:7px;
+      color:#d8ff45;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+    }
+
+    .pickdee-proof-title {
+      margin:0 0 8px;
+      font-size:23px;
+      line-height:1.25;
+    }
+
+    .pickdee-proof-desc {
+      margin-bottom:18px;
+      color:rgba(255,255,255,.68);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .pickdee-proof-card {
+      margin-top:12px;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.055);
+    }
+
+    .pickdee-proof-system {
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+    }
+
+    .pickdee-proof-value {
+      margin-top:4px;
+      color:#d8ff45;
+      font-size:21px;
+      font-weight:900;
+    }
+
+    .pickdee-proof-help {
+      margin-top:7px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .pickdee-proof-file {
+      width:100%;
+      margin-top:14px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.06);
+      color:white;
+    }
+
+    .pickdee-proof-preview {
+      display:none;
+      width:100%;
+      max-height:280px;
+      margin-top:12px;
+      object-fit:contain;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:#03142d;
+    }
+
+    .pickdee-proof-upload {
+      width:100%;
+      min-height:46px;
+      margin-top:12px;
+      border:0;
+      border-radius:11px;
+      background:#d8ff45;
+      color:#172600;
+      font-size:13px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .pickdee-proof-upload:disabled {
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .pickdee-proof-status {
+      min-height:19px;
+      margin-top:9px;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .pickdee-proof-later {
+      width:100%;
+      min-height:42px;
+      margin-top:14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.07);
+      color:white;
+      font-size:12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    @media(max-width:520px) {
+
+      #pickdeeRatingProofModal {
+        padding:19px;
+      }
+
+      .pickdee-proof-title {
+        font-size:21px;
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /* =====================================================
+     POPUP
+  ====================================================== */
+
+  const overlay =
+    document.createElement(
+      "div"
+    );
+
+
+  overlay.id =
+    "pickdeeRatingProofOverlay";
+
+
+  overlay.innerHTML = `
+
+    <div
+      id="pickdeeRatingProofModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pickdeeRatingProofTitle"
+    >
+
+      <div class="pickdee-proof-eyebrow">
+        HOÀN THIỆN HỒ SƠ COACH
+      </div>
+
+      <h2
+        id="pickdeeRatingProofTitle"
+        class="pickdee-proof-title"
+      >
+        Bổ sung ảnh minh chứng trình độ
+      </h2>
+
+      <div class="pickdee-proof-desc">
+        Hồ sơ trình độ của bạn đang thiếu ảnh minh chứng.
+        Vui lòng tải ảnh thật để PickDee kiểm tra trước khi
+        tiếp tục hiển thị trạng thái đã xác minh công khai.
+      </div>
+
+      <div id="pickdeeMissingRatingList"></div>
+
+      <button
+        id="pickdeeProofLaterBtn"
+        class="pickdee-proof-later"
+        type="button"
+      >
+        ĐỂ SAU
+      </button>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(
+    overlay
+  );
+
+
+  const oldBodyOverflow =
+    document.body.style.overflow;
+
+
+  document.body.style.overflow =
+    "hidden";
+
+
+  const listEl =
+    overlay.querySelector(
+      "#pickdeeMissingRatingList"
+    );
+
+
+  const laterBtn =
+    overlay.querySelector(
+      "#pickdeeProofLaterBtn"
+    );
+
+
+  function closePopup() {
+
+    document.body.style.overflow =
+      oldBodyOverflow;
+
+    overlay.remove();
+
+  }
+
+
+  laterBtn.addEventListener(
+    "click",
+    closePopup
+  );
+
+
+  /* =====================================================
+     NÉN ẢNH VỀ JPEG < ~950KB
+     Bucket coach-documents đang giới hạn nhỏ,
+     nên nén trước khi upload.
+  ====================================================== */
+
+  function loadLocalImage(
+    file
+  ) {
+
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        const url =
+          URL.createObjectURL(
+            file
+          );
+
+
+        const image =
+          new Image();
+
+
+        image.onload =
+          function () {
+
+            URL.revokeObjectURL(
+              url
+            );
+
+            resolve(
+              image
+            );
+
+          };
+
+
+        image.onerror =
+          function () {
+
+            URL.revokeObjectURL(
+              url
+            );
+
+            reject(
+              new Error(
+                "Không đọc được ảnh."
+              )
+            );
+
+          };
+
+
+        image.src =
+          url;
+
+      }
+    );
+
+  }
+
+
+  function canvasToBlob(
+    canvas,
+    quality
+  ) {
+
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        canvas.toBlob(
+          function (
+            blob
+          ) {
+
+            if (!blob) {
+
+              reject(
+                new Error(
+                  "Không xử lý được ảnh."
+                )
+              );
+
+              return;
+
+            }
+
+
+            resolve(
+              blob
+            );
+
+          },
+          "image/jpeg",
+          quality
+        );
+
+      }
+    );
+
+  }
+
+
+  async function compressProofImage(
+    file
+  ) {
+
+    const image =
+      await loadLocalImage(
+        file
+      );
+
+
+    const maxSide =
+      1200;
+
+
+    let width =
+      image.naturalWidth;
+
+
+    let height =
+      image.naturalHeight;
+
+
+    if (
+      width > maxSide
+      ||
+      height > maxSide
+    ) {
+
+      const ratio =
+        Math.min(
+          maxSide / width,
+          maxSide / height
+        );
+
+
+      width =
+        Math.round(
+          width * ratio
+        );
+
+
+      height =
+        Math.round(
+          height * ratio
+        );
+
+    }
+
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+
+    canvas.width =
+      width;
+
+
+    canvas.height =
+      height;
+
+
+    const ctx =
+      canvas.getContext(
+        "2d"
+      );
+
+
+    ctx.fillStyle =
+      "#ffffff";
+
+
+    ctx.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    let quality =
+      0.88;
+
+
+    let blob =
+      await canvasToBlob(
+        canvas,
+        quality
+      );
+
+
+    while (
+      blob.size > 950 * 1024
+      &&
+      quality > 0.50
+    ) {
+
+      quality -=
+        0.08;
+
+
+      blob =
+        await canvasToBlob(
+          canvas,
+          quality
+        );
+
+    }
+
+
+    if (
+      blob.size > 950 * 1024
+    ) {
+
+      throw new Error(
+        "Ảnh vẫn quá lớn sau khi nén. Vui lòng chọn ảnh khác."
+      );
+
+    }
+
+
+    return blob;
+
+  }
+
+
+  /* =====================================================
+     RENDER RATING THIẾU ẢNH
+  ====================================================== */
+
+  let completedCount =
+    0;
+
+
+  missingRatings.forEach(
+    function (
+      rating
+    ) {
+
+      const ratingId =
+        Number(
+          rating?.rating_id
+        );
+
+
+      if (
+        !Number.isInteger(
+          ratingId
+        )
+        ||
+        ratingId <= 0
+      ) {
+
+        return;
+
+      }
+
+
+      const systemName =
+        String(
+          rating?.system_name
+          ||
+          "Trình độ Pickleball"
+        );
+
+
+      const ratingValue =
+        rating?.rating_value
+        ??
+        rating?.rating_text
+        ??
+        "—";
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "pickdee-proof-card";
+
+
+      const systemEl =
+        document.createElement(
+          "div"
+        );
+
+
+      systemEl.className =
+        "pickdee-proof-system";
+
+
+      systemEl.textContent =
+        systemName;
+
+
+      const valueEl =
+        document.createElement(
+          "div"
+        );
+
+
+      valueEl.className =
+        "pickdee-proof-value";
+
+
+      valueEl.textContent =
+        String(
+          ratingValue
+        );
+
+
+      const helpEl =
+        document.createElement(
+          "div"
+        );
+
+
+      helpEl.className =
+        "pickdee-proof-help";
+
+
+      helpEl.textContent =
+        "Tải ảnh thể hiện rõ điểm/trình độ của bạn. "
+        +
+        "Chấp nhận JPG, PNG hoặc WEBP.";
+
+
+      const fileInput =
+        document.createElement(
+          "input"
+        );
+
+
+      fileInput.type =
+        "file";
+
+
+      fileInput.accept =
+        "image/jpeg,image/png,image/webp";
+
+
+      fileInput.className =
+        "pickdee-proof-file";
+
+
+      const preview =
+        document.createElement(
+          "img"
+        );
+
+
+      preview.className =
+        "pickdee-proof-preview";
+
+
+      preview.alt =
+        "Ảnh minh chứng trình độ";
+
+
+      const uploadBtn =
+        document.createElement(
+          "button"
+        );
+
+
+      uploadBtn.type =
+        "button";
+
+
+      uploadBtn.className =
+        "pickdee-proof-upload";
+
+
+      uploadBtn.textContent =
+        "TẢI ẢNH MINH CHỨNG";
+
+
+      uploadBtn.disabled =
+        true;
+
+
+      const statusEl =
+        document.createElement(
+          "div"
+        );
+
+
+      statusEl.className =
+        "pickdee-proof-status";
+
+
+      card.append(
+        systemEl,
+        valueEl,
+        helpEl,
+        fileInput,
+        preview,
+        uploadBtn,
+        statusEl
+      );
+
+
+      listEl.appendChild(
+        card
+      );
+
+
+      /* -----------------------------------------------
+         CHỌN ẢNH
+      ----------------------------------------------- */
+
+      fileInput.addEventListener(
+        "change",
+        function () {
+
+          statusEl.textContent =
+            "";
+
+
+          statusEl.style.color =
+            "";
+
+
+          uploadBtn.disabled =
+            true;
+
+
+          const file =
+            fileInput.files?.[0];
+
+
+          if (!file) {
+
+            preview.style.display =
+              "none";
+
+            preview.removeAttribute(
+              "src"
+            );
+
+            return;
+
+          }
+
+
+          const allowedTypes =
+            [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ];
+
+
+          if (
+            !allowedTypes.includes(
+              file.type
+            )
+          ) {
+
+            statusEl.textContent =
+              "Chỉ chấp nhận JPG, PNG hoặc WEBP.";
+
+
+            statusEl.style.color =
+              "#ffaaaa";
+
+
+            fileInput.value =
+              "";
+
+
+            return;
+
+          }
+
+
+          if (
+            file.size > 10 * 1024 * 1024
+          ) {
+
+            statusEl.textContent =
+              "Ảnh gốc quá lớn. Vui lòng chọn ảnh dưới 10MB.";
+
+
+            statusEl.style.color =
+              "#ffaaaa";
+
+
+            fileInput.value =
+              "";
+
+
+            return;
+
+          }
+
+
+          const previewUrl =
+            URL.createObjectURL(
+              file
+            );
+
+
+          preview.src =
+            previewUrl;
+
+
+          preview.style.display =
+            "block";
+
+
+          preview.onload =
+            function () {
+
+              URL.revokeObjectURL(
+                previewUrl
+              );
+
+            };
+
+
+          uploadBtn.disabled =
+            false;
+
+        }
+      );
+
+
+      /* -----------------------------------------------
+         UPLOAD
+      ----------------------------------------------- */
+
+      uploadBtn.addEventListener(
+        "click",
+        async function () {
+
+          const file =
+            fileInput.files?.[0];
+
+
+          if (!file) {
+
+            return;
+
+          }
+
+
+          uploadBtn.disabled =
+            true;
+
+
+          fileInput.disabled =
+            true;
+
+
+          uploadBtn.textContent =
+            "ĐANG XỬ LÝ ẢNH...";
+
+
+          statusEl.textContent =
+            "Đang chuẩn bị ảnh minh chứng...";
+
+
+          statusEl.style.color =
+            "rgba(255,255,255,.7)";
+
+
+          try {
+
+            const compressedBlob =
+              await compressProofImage(
+                file
+              );
+
+
+            const filePath =
+              "coach-profiles/rating-proofs/"
+              +
+              session.user.id
+              +
+              "/"
+              +
+              ratingId
+              +
+              "-"
+              +
+              Date.now()
+              +
+              ".jpg";
+
+
+            uploadBtn.textContent =
+              "ĐANG TẢI ẢNH...";
+
+
+            statusEl.textContent =
+              "Đang tải ảnh lên PickDee...";
+
+
+            const {
+              error: uploadError
+            } =
+              await sb
+                .storage
+                .from(
+                  "coach-documents"
+                )
+                .upload(
+                  filePath,
+                  compressedBlob,
+                  {
+                    contentType:
+                      "image/jpeg",
+
+                    cacheControl:
+                      "3600",
+
+                    upsert:
+                      false
+                  }
+                );
+
+
+            if (uploadError) {
+
+              throw uploadError;
+
+            }
+
+
+            uploadBtn.textContent =
+              "ĐANG LƯU...";
+
+
+            const {
+              data: attachData,
+              error: attachError
+            } =
+              await sb.rpc(
+                "attach_my_rating_proof",
+                {
+                  p_rating_id:
+                    ratingId,
+
+                  p_proof_image_path:
+                    filePath
+                }
+              );
+
+
+            if (attachError) {
+
+              throw attachError;
+
+            }
+
+
+            if (
+              attachData?.success ===
+              false
+            ) {
+
+              throw new Error(
+                "Không lưu được ảnh minh chứng."
+              );
+
+            }
+
+
+            completedCount +=
+              1;
+
+
+            statusEl.textContent =
+              "✓ Đã gửi ảnh. PickDee sẽ xác minh lại thông tin này.";
+
+
+            statusEl.style.color =
+              "#d8ff45";
+
+
+            uploadBtn.textContent =
+              "✓ ĐÃ GỬI";
+
+
+            preview.style.borderColor =
+              "rgba(216,255,69,.55)";
+
+
+            if (
+              completedCount >=
+              missingRatings.length
+            ) {
+
+              laterBtn.textContent =
+                "ĐÓNG";
+
+
+              setTimeout(
+                function () {
+
+                  closePopup();
+
+                },
+                1800
+              );
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "UPLOAD RATING PROOF:",
+              error
+            );
+
+
+            statusEl.textContent =
+              "Không tải được ảnh: "
+              +
+              (
+                error?.message
+                ||
+                "Vui lòng thử lại."
+              );
+
+
+            statusEl.style.color =
+              "#ffaaaa";
+
+
+            uploadBtn.disabled =
+              false;
+
+
+            fileInput.disabled =
+              false;
+
+
+            uploadBtn.textContent =
+              "THỬ TẢI LẠI";
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+})();
+</script>
+  
 </body>
 
 </html>
