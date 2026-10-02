@@ -3955,213 +3955,298 @@
      LOAD DATA
   ====================================================== */
 
-  async function loadCoachV2Data() {
+ async function loadCoachV2Data() {
 
-    if (loading) {
-      return;
+  if (loading) {
+    return;
+  }
+
+
+  loading =
+    true;
+
+
+  try {
+
+    const [
+      systemsResult,
+      applicationsResult,
+      coachesResult,
+      ratingsResult
+    ] =
+      await Promise.all(
+        [
+
+          /* ============================================
+             DANH MỤC HỆ THỐNG RATING
+          ============================================ */
+
+          v2Sb.rpc(
+            "public_get_rating_systems"
+          ),
+
+
+          /* ============================================
+             HỒ SƠ ĐĂNG KÝ
+          ============================================ */
+
+          v2Sb
+            .from(
+              "coach_applications"
+            )
+            .select(`
+              id,
+              auth_user_id,
+              status,
+              has_external_rating,
+              has_certificate,
+              certificate_name,
+              certificate_issuer,
+              certificate_year,
+              certificate_image_path,
+              certificate_verification_status
+            `),
+
+
+          /* ============================================
+             COACH ĐÃ ĐƯỢC DUYỆT
+
+             Dùng auth_user_id để nối ngược:
+             application → coach
+          ============================================ */
+
+          v2Sb
+            .from(
+              "coaches"
+            )
+            .select(`
+              id,
+              auth_user_id
+            `),
+
+
+          /* ============================================
+             TẤT CẢ RATING HIỆN TẠI
+
+             Pending:
+             coach_application_id có giá trị
+
+             Approved:
+             coach_id có giá trị
+             coach_application_id = null
+          ============================================ */
+
+          v2Sb
+            .from(
+              "coach_external_ratings"
+            )
+            .select(`
+              id,
+              coach_application_id,
+              coach_id,
+              rating_system_id,
+              custom_system_name,
+              rating_value,
+              rating_text,
+              proof_image_path,
+              verification_status,
+              is_current
+            `)
+            .eq(
+              "is_current",
+              true
+            )
+
+        ]
+      );
+
+
+    /* =================================================
+       CHECK ERROR
+    ================================================= */
+
+    if (
+      systemsResult.error
+    ) {
+      throw systemsResult.error;
     }
 
 
-    loading =
-      true;
+    if (
+      applicationsResult.error
+    ) {
+      throw applicationsResult.error;
+    }
 
 
-    try {
-
-      const [
-        systemsResult,
-        applicationsResult,
-        ratingsResult
-      ] =
-        await Promise.all(
-          [
-
-            v2Sb.rpc(
-              "public_get_rating_systems"
-            ),
-
-            v2Sb
-              .from(
-                "coach_applications"
-              )
-              .select(`
-                id,
-                status,
-                has_external_rating,
-                has_certificate,
-                certificate_name,
-                certificate_issuer,
-                certificate_year,
-                certificate_image_path,
-                certificate_verification_status
-              `),
-
-            v2Sb
-              .from(
-                "coach_external_ratings"
-              )
-              .select(`
-                id,
-                coach_application_id,
-                rating_system_id,
-                custom_system_name,
-                rating_value,
-                rating_text,
-                proof_image_path,
-                verification_status,
-                is_current
-              `)
-              .not(
-                "coach_application_id",
-                "is",
-                null
-              )
-              .eq(
-                "is_current",
-                true
-              )
-
-          ]
-        );
+    if (
+      coachesResult.error
+    ) {
+      throw coachesResult.error;
+    }
 
 
-      if (
-        systemsResult.error
-      ) {
-        throw systemsResult.error;
-      }
+    if (
+      ratingsResult.error
+    ) {
+      throw ratingsResult.error;
+    }
 
 
-      if (
-        applicationsResult.error
-      ) {
-        throw applicationsResult.error;
-      }
+    /* =================================================
+       RATING SYSTEM MAP
+    ================================================= */
 
-
-      if (
-        ratingsResult.error
-      ) {
-        throw ratingsResult.error;
-      }
-
-
-      ratingSystemMap =
-        new Map(
-          (
-            Array.isArray(
-              systemsResult.data
-            )
-              ?
-              systemsResult.data
-              :
-              []
+    ratingSystemMap =
+      new Map(
+        (
+          Array.isArray(
+            systemsResult.data
           )
-            .map(
-              item => [
-                Number(
-                  item.id
-                ),
-                item
-              ]
-            )
-        );
-
-
-      applicationMap =
-        new Map(
-          (
-            Array.isArray(
-              applicationsResult.data
-            )
-              ?
-              applicationsResult.data
-              :
-              []
-          )
-            .map(
-              item => [
-                Number(
-                  item.id
-                ),
-                item
-              ]
-            )
-        );
-
-
-      ratingMap =
-        new Map();
-
-
-      (
-        Array.isArray(
-          ratingsResult.data
+            ?
+            systemsResult.data
+            :
+            []
         )
-          ?
-          ratingsResult.data
-          :
-          []
-      )
-        .forEach(
-          function (
-            rating
-          ) {
-
-            const applicationId =
+          .map(
+            item => [
               Number(
-                rating
-                  .coach_application_id
-              );
+                item.id
+              ),
+              item
+            ]
+          )
+      );
 
 
-            if (
-              !ratingMap.has(
-                applicationId
-              )
-            ) {
+    /* =================================================
+       APPLICATION MAP
+    ================================================= */
 
-              ratingMap.set(
-                applicationId,
-                []
-              );
-
-            }
-
-
-            ratingMap
-              .get(
-                applicationId
-              )
-              .push(
-                rating
-              );
-
-          }
-        );
+    const applicationRows =
+      Array.isArray(
+        applicationsResult.data
+      )
+        ?
+        applicationsResult.data
+        :
+        [];
 
 
-      /* -----------------------------------------------
-         TẠO SIGNED URL TRƯỚC
-      ----------------------------------------------- */
+    applicationMap =
+      new Map(
+        applicationRows
+          .map(
+            item => [
+              Number(
+                item.id
+              ),
+              item
+            ]
+          )
+      );
 
-      const documentPaths =
-        new Set();
+
+    /* =================================================
+       AUTH USER → APPLICATION ID
+    ================================================= */
+
+    const applicationIdByAuthUser =
+      new Map();
 
 
-      applicationMap.forEach(
-        function (
-          application
+    applicationRows.forEach(
+      function (
+        application
+      ) {
+
+        const authUserId =
+          String(
+            application
+              .auth_user_id
+            ||
+            ""
+          ).trim();
+
+
+        if (
+          authUserId
         ) {
 
+          applicationIdByAuthUser.set(
+            authUserId,
+            Number(
+              application.id
+            )
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =================================================
+       COACH ID → APPLICATION ID
+
+       Ví dụ:
+       CA000015 auth_user_id = X
+       Coach C004 auth_user_id = X
+
+       => coach_id 28 → application CA000015
+    ================================================= */
+
+    const applicationIdByCoachId =
+      new Map();
+
+
+    (
+      Array.isArray(
+        coachesResult.data
+      )
+        ?
+        coachesResult.data
+        :
+        []
+    )
+      .forEach(
+        function (
+          coach
+        ) {
+
+          const coachId =
+            Number(
+              coach.id
+            );
+
+
+          const authUserId =
+            String(
+              coach.auth_user_id
+              ||
+              ""
+            ).trim();
+
+
+          const applicationId =
+            applicationIdByAuthUser.get(
+              authUserId
+            );
+
+
           if (
-            application
-              .certificate_image_path
+            Number.isFinite(
+              coachId
+            )
+            &&
+            Number.isFinite(
+              applicationId
+            )
           ) {
 
-            documentPaths.add(
-              application
-                .certificate_image_path
+            applicationIdByCoachId.set(
+              coachId,
+              applicationId
             );
 
           }
@@ -4170,71 +4255,225 @@
       );
 
 
-      ratingMap.forEach(
+    /* =================================================
+       GOM RATING THEO APPLICATION
+
+       Hỗ trợ cả:
+       1. Hồ sơ pending
+       2. Hồ sơ đã approved
+    ================================================= */
+
+    ratingMap =
+      new Map();
+
+
+    (
+      Array.isArray(
+        ratingsResult.data
+      )
+        ?
+        ratingsResult.data
+        :
+        []
+    )
+      .forEach(
         function (
-          ratings
+          rating
         ) {
 
-          ratings.forEach(
-            function (
-              rating
-            ) {
+          let applicationId =
+            null;
 
-              if (
+
+          /* --------------------------------------------
+             CHƯA DUYỆT
+          -------------------------------------------- */
+
+          if (
+            rating
+              .coach_application_id
+            !==
+            null
+            &&
+            rating
+              .coach_application_id
+            !==
+            undefined
+          ) {
+
+            applicationId =
+              Number(
                 rating
-                  .proof_image_path
-              ) {
+                  .coach_application_id
+              );
 
-                documentPaths.add(
-                  rating
-                    .proof_image_path
-                );
+          }
 
-              }
 
-            }
-          );
+          /* --------------------------------------------
+             ĐÃ DUYỆT
+             rating đã chuyển sang coach_id
+          -------------------------------------------- */
+
+          else if (
+            rating.coach_id
+            !==
+            null
+            &&
+            rating.coach_id
+            !==
+            undefined
+          ) {
+
+            applicationId =
+              applicationIdByCoachId.get(
+                Number(
+                  rating.coach_id
+                )
+              )
+              ??
+              null;
+
+          }
+
+
+          if (
+            !Number.isFinite(
+              applicationId
+            )
+            ||
+            applicationId <=
+              0
+          ) {
+
+            return;
+
+          }
+
+
+          if (
+            !ratingMap.has(
+              applicationId
+            )
+          ) {
+
+            ratingMap.set(
+              applicationId,
+              []
+            );
+
+          }
+
+
+          ratingMap
+            .get(
+              applicationId
+            )
+            .push(
+              rating
+            );
 
         }
       );
 
 
-      await Promise.all(
-        [
-          ...documentPaths
-        ]
-          .map(
-            path =>
-              getSignedDocumentUrl(
-                path
-              )
-          )
-      );
+    /* =================================================
+       SIGNED URL PRIVATE DOCUMENTS
+    ================================================= */
+
+    const documentPaths =
+      new Set();
 
 
-      renderCoachV2Panels();
+    applicationMap.forEach(
+      function (
+        application
+      ) {
+
+        if (
+          application
+            .certificate_image_path
+        ) {
+
+          documentPaths.add(
+            application
+              .certificate_image_path
+          );
+
+        }
+
+      }
+    );
 
 
-    }
-    catch (
+    ratingMap.forEach(
+      function (
+        ratings
+      ) {
+
+        ratings.forEach(
+          function (
+            rating
+          ) {
+
+            if (
+              rating
+                .proof_image_path
+            ) {
+
+              documentPaths.add(
+                rating
+                  .proof_image_path
+              );
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+    await Promise.all(
+      [
+        ...documentPaths
+      ]
+        .map(
+          path =>
+            getSignedDocumentUrl(
+              path
+            )
+        )
+    );
+
+
+    /* =================================================
+       RENDER
+    ================================================= */
+
+    renderCoachV2Panels();
+
+
+  }
+  catch (
+    error
+  ) {
+
+    console.error(
+      "LOAD COACH APPLICATION V2:",
       error
-    ) {
+    );
 
-      console.error(
-        "LOAD COACH APPLICATION V2:",
-        error
-      );
+  }
+  finally {
 
-    }
-    finally {
-
-      loading =
-        false;
-
-    }
+    loading =
+      false;
 
   }
 
+}
 
   /* =====================================================
      STATUS BUTTONS
