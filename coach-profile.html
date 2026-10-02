@@ -886,8 +886,8 @@ if (
 
 
 /* ===============================================
-   RATING NGOÀI
-================================================ */
+   RATING NGOÀI + ẢNH MINH CHỨNG ĐÃ XÁC MINH
+=============================================== */
 
 const verifiedExternalRatings =
   Array.isArray(
@@ -902,50 +902,221 @@ const verifiedExternalRatings =
 
 
 const externalRatingHtml =
-  verifiedExternalRatings
-    .map(
-      function (
-        rating
-      ) {
+  (
+    await Promise.all(
 
-        const ratingValue =
-          rating?.rating_value
-          ??
-          rating?.rating_text
-          ??
-          "—";
+      verifiedExternalRatings
+        .map(
+          async function (
+            rating
+          ) {
 
 
-        return `
+            const ratingValue =
+              rating?.rating_value
+              ??
+              rating?.rating_text
+              ??
+              "—";
 
-          <div class="info-row">
 
-            <span class="info-label">
-              ${escapeHtml(
-                rating?.system_name
-                ||
-                "Hệ thống khác"
-              )}
-            </span>
+            let proofImageHtml =
+              "";
 
-            <span
-              class="info-value"
-              style="color:#d8ff45;"
-            >
-              ${escapeHtml(
-                ratingValue
-              )}
-              ✓ Đã xác minh
-            </span>
 
-          </div>
+            /* ===========================================
+               ẢNH MINH CHỨNG
+            =========================================== */
 
-        `;
+            if (
+              rating?.proof_image_path
+            ) {
 
-      }
+              try {
+
+
+                const {
+                  data: proofUrlData,
+                  error: proofUrlError
+                } =
+                  await sb
+                    .storage
+                    .from(
+                      "coach-documents"
+                    )
+                    .createSignedUrl(
+                      rating.proof_image_path,
+                      60 * 60
+                    );
+
+
+                if (
+                  !proofUrlError
+                  &&
+                  proofUrlData
+                    ?.signedUrl
+                ) {
+
+
+                  const proofUrl =
+                    proofUrlData.signedUrl;
+
+
+                  proofImageHtml = `
+
+                    <div
+                      style="
+                        margin-top:14px;
+                        padding-top:14px;
+                        border-top:
+                          1px solid
+                          rgba(255,255,255,.08);
+                      "
+                    >
+
+                      <div
+                        style="
+                          margin-bottom:8px;
+                          color:
+                            rgba(255,255,255,.52);
+                          font-size:12px;
+                          font-weight:700;
+                        "
+                      >
+                        Ảnh minh chứng đã xác minh
+                      </div>
+
+
+                      <a
+                        href="${escapeHtml(
+                          proofUrl
+                        )}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="
+                          display:inline-block;
+                        "
+                      >
+
+                        <img
+                          src="${escapeHtml(
+                            proofUrl
+                          )}"
+                          alt="Ảnh minh chứng trình độ Coach"
+                          loading="lazy"
+                          style="
+                            width:min(
+                              320px,
+                              100%
+                            );
+                            max-height:360px;
+                            object-fit:contain;
+                            display:block;
+                            border-radius:12px;
+                            border:
+                              1px solid
+                              rgba(216,255,69,.25);
+                            background:#04152d;
+                          "
+                        >
+
+                      </a>
+
+
+                      <div
+                        style="
+                          margin-top:8px;
+                          color:#d8ff45;
+                          font-size:11px;
+                          font-weight:900;
+                        "
+                      >
+                        ✓ MINH CHỨNG ĐÃ ĐƯỢC PICKDEE XÁC MINH
+                      </div>
+
+                    </div>
+
+                  `;
+
+                }
+                else {
+
+                  console.warn(
+                    "COACH RATING PROOF SIGNED URL:",
+                    rating?.proof_image_path,
+                    proofUrlError
+                  );
+
+                }
+
+              }
+              catch (
+                proofImageError
+              ) {
+
+                console.warn(
+                  "COACH RATING PROOF IMAGE:",
+                  proofImageError
+                );
+
+              }
+
+            }
+
+
+            return `
+
+              <div
+                style="
+                  padding:
+                    2px 0 14px;
+                "
+              >
+
+                <div class="info-row">
+
+                  <span class="info-label">
+
+                    ${escapeHtml(
+                      rating?.system_name
+                      ||
+                      "Hệ thống khác"
+                    )}
+
+                  </span>
+
+
+                  <span
+                    class="info-value"
+                    style="
+                      color:#d8ff45;
+                    "
+                  >
+
+                    ${escapeHtml(
+                      ratingValue
+                    )}
+
+                    ✓ Đã xác minh
+
+                  </span>
+
+                </div>
+
+
+                ${proofImageHtml}
+
+
+              </div>
+
+            `;
+
+          }
+        )
+
     )
+  )
     .join("");
-
 
 /* ===============================================
    CHỨNG CHỈ
