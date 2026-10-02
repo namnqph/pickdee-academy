@@ -7776,6 +7776,210 @@
   }
 
 </style>
+<style>
+
+  /* =====================================================
+     VERIFIED RATING - THU GỌN MẶC ĐỊNH
+  ====================================================== */
+
+  #pickdeeVerifiedRatingSection {
+    padding: 16px !important;
+  }
+
+  #pickdeeVerifiedRatingList {
+    display: none !important;
+  }
+
+  #pickdeeVerifiedRatingSection.pickdee-open
+  #pickdeeVerifiedRatingList {
+    display: grid !important;
+  }
+
+  .pickdee-verified-rating-toggle {
+    width: 100%;
+    margin-top: 12px;
+    min-height: 42px;
+    border: 1px solid rgba(185,255,24,.25);
+    border-radius: 10px;
+    background: rgba(185,255,24,.06);
+    color: #dfff85;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .pickdee-verified-rating-note {
+    margin-top: 5px;
+    color: #8fa0b4;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+</style>
+
+
+<script>
+
+(function () {
+
+  function enhanceVerifiedRatingSection() {
+
+    const section =
+      document.getElementById(
+        "pickdeeVerifiedRatingSection"
+      );
+
+    if (!section) {
+      return false;
+    }
+
+
+    const title =
+      section.querySelector(
+        ".pickdee-verified-rating-title"
+      );
+
+    if (title) {
+      title.textContent =
+        "Rating bên ngoài đã xác minh";
+    }
+
+
+    const head =
+      section.querySelector(
+        ".pickdee-verified-rating-head"
+      );
+
+    if (
+      head
+      &&
+      !section.querySelector(
+        ".pickdee-verified-rating-note"
+      )
+    ) {
+
+      const left =
+        head.firstElementChild;
+
+      if (left) {
+
+        const note =
+          document.createElement(
+            "div"
+          );
+
+        note.className =
+          "pickdee-verified-rating-note";
+
+        note.textContent =
+          "Chỉ gồm các rating bên ngoài đã được PickDee xác minh.";
+
+        left.appendChild(
+          note
+        );
+
+      }
+
+    }
+
+
+    if (
+      !section.querySelector(
+        ".pickdee-verified-rating-toggle"
+      )
+    ) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      button.type =
+        "button";
+
+      button.className =
+        "pickdee-verified-rating-toggle";
+
+      button.textContent =
+        "XEM DANH SÁCH ↓";
+
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          const isOpen =
+            section.classList.toggle(
+              "pickdee-open"
+            );
+
+          button.textContent =
+            isOpen
+              ?
+              "THU GỌN ↑"
+              :
+              "XEM DANH SÁCH ↓";
+
+        }
+      );
+
+
+      const list =
+        document.getElementById(
+          "pickdeeVerifiedRatingList"
+        );
+
+      if (list) {
+
+        section.insertBefore(
+          button,
+          list
+        );
+
+      }
+
+    }
+
+
+    return true;
+
+  }
+
+
+  if (
+    enhanceVerifiedRatingSection()
+  ) {
+    return;
+  }
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        if (
+          enhanceVerifiedRatingSection()
+        ) {
+
+          observer.disconnect();
+
+        }
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+})();
+
+</script>
+  
 </body>
 
 </html>
