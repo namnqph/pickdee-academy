@@ -1395,7 +1395,7 @@ window.addEventListener(
             .eq(
   "is_test",
   false
-),
+);
 
 
         if (registrationError) {
@@ -10304,6 +10304,189 @@ document.addEventListener(
 
 })();
 
+</script>
+
+
+  <style>
+  #coachPendingShortcut {
+    display: none;
+    border-color: rgba(255, 214, 107, .45);
+    background: rgba(255, 214, 107, .08);
+  }
+
+  #coachPendingShortcut .task-shortcut-count {
+    background: #ffd66b;
+  }
+</style>
+
+<script>
+window.addEventListener(
+  "load",
+  async function () {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      return;
+    }
+
+
+    const mainTaskShortcut =
+      document.querySelector(
+        ".task-shortcut"
+      );
+
+    if (!mainTaskShortcut) {
+      return;
+    }
+
+
+    let shortcut =
+      document.getElementById(
+        "coachPendingShortcut"
+      );
+
+
+    if (!shortcut) {
+
+      shortcut =
+        document.createElement(
+          "a"
+        );
+
+      shortcut.id =
+        "coachPendingShortcut";
+
+      shortcut.className =
+        "task-shortcut";
+
+      shortcut.href =
+        "./admin-coach-applications";
+
+      shortcut.innerHTML = `
+
+        <div>
+
+          <div class="task-shortcut-title">
+            🪪 COACH CHỜ DUYỆT
+          </div>
+
+          <div class="task-shortcut-text">
+            Có hồ sơ Coach mới đang chờ Admin xem và duyệt.
+          </div>
+
+        </div>
+
+
+        <div class="task-shortcut-right">
+
+          <span
+            id="coachPendingShortcutCount"
+            class="task-shortcut-count"
+          >
+            0
+          </span>
+
+          <span class="task-shortcut-action">
+            XEM NGAY →
+          </span>
+
+        </div>
+
+      `;
+
+      mainTaskShortcut.insertAdjacentElement(
+        "afterend",
+        shortcut
+      );
+
+    }
+
+
+    try {
+
+      const sb =
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        );
+
+
+      const {
+        count,
+        error
+      } =
+        await sb
+          .from(
+            "coach_applications"
+          )
+          .select(
+            "id",
+            {
+              count: "exact",
+              head: true
+            }
+          )
+          .eq(
+            "status",
+            "pending"
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      const total =
+        Number(
+          count || 0
+        );
+
+
+      const countElement =
+        document.getElementById(
+          "coachPendingShortcutCount"
+        );
+
+
+      if (countElement) {
+
+        countElement.textContent =
+          String(total);
+
+      }
+
+
+      shortcut.style.display =
+        total > 0
+          ?
+          "flex"
+          :
+          "none";
+
+    }
+    catch (error) {
+
+      console.error(
+        "LOAD COACH PENDING SHORTCUT:",
+        error
+      );
+
+      shortcut.style.display =
+        "none";
+
+    }
+
+  }
+);
 </script>
 </body>
 
