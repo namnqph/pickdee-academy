@@ -2259,6 +2259,399 @@ https://pickdee.vn/`;
 </script>
 
 
+  <!-- =========================================================
+     PICKDEE - ADMIN COACH LOGIN + TELEGRAM STATUS
+========================================================= -->
+
+<style>
+
+  .pickdee-coach-connectivity {
+    margin-top: 9px;
+    padding-top: 9px;
+
+    border-top:
+      1px solid rgba(255,255,255,.10);
+
+    display: grid;
+    gap: 5px;
+
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .pickdee-coach-connectivity-line {
+    color:
+      rgba(255,255,255,.72);
+
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .pickdee-coach-connectivity-line strong {
+    color: #fff;
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const coachStatusSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const coachRows =
+    document.getElementById(
+      "coachRows"
+    );
+
+
+  if (!coachRows) {
+    return;
+  }
+
+
+  let statusByCoachCode =
+    new Map();
+
+
+  let renderTimer =
+    null;
+
+
+  function clean(value) {
+
+    return String(
+      value || ""
+    )
+      .trim();
+
+  }
+
+
+  function renderStatuses() {
+
+    const rows =
+      coachRows.querySelectorAll(
+        "tr"
+      );
+
+
+    rows.forEach(
+      function (row) {
+
+        const cells =
+          row.querySelectorAll(
+            "td"
+          );
+
+
+        /*
+          Cột:
+          0 Ảnh
+          1 Mã Coach
+          ...
+          cuối = Tài khoản
+        */
+
+        if (
+          cells.length < 2
+        ) {
+          return;
+        }
+
+
+        const coachCode =
+          clean(
+            cells[1].textContent
+          );
+
+
+        if (!coachCode) {
+          return;
+        }
+
+
+        const status =
+          statusByCoachCode.get(
+            coachCode
+          );
+
+
+        const accountCell =
+          cells[
+            cells.length - 1
+          ];
+
+
+        if (!accountCell) {
+          return;
+        }
+
+
+        let box =
+          accountCell.querySelector(
+            ".pickdee-coach-connectivity"
+          );
+
+
+        if (!box) {
+
+          box =
+            document.createElement(
+              "div"
+            );
+
+
+          box.className =
+            "pickdee-coach-connectivity";
+
+
+          accountCell.appendChild(
+            box
+          );
+
+        }
+
+
+        box.innerHTML =
+          "";
+
+
+        /*
+          PICKDEE LOGIN
+        */
+
+        const loginLine =
+          document.createElement(
+            "div"
+          );
+
+
+        loginLine.className =
+          "pickdee-coach-connectivity-line";
+
+
+        if (
+          status?.last_sign_in_at
+        ) {
+
+          loginLine.textContent =
+            "PickDee: 🟢 Đã đăng nhập";
+
+        }
+        else {
+
+          loginLine.textContent =
+            "PickDee: ⚪ Chưa đăng nhập";
+
+        }
+
+
+        box.appendChild(
+          loginLine
+        );
+
+
+        /*
+          TELEGRAM
+        */
+
+        const telegramLine =
+          document.createElement(
+            "div"
+          );
+
+
+        telegramLine.className =
+          "pickdee-coach-connectivity-line";
+
+
+        if (
+          status?.telegram_connected
+          === true
+        ) {
+
+          const username =
+            clean(
+              status.telegram_username
+            )
+              .replace(
+                /^@/,
+                ""
+              );
+
+
+          telegramLine.textContent =
+            username
+              ?
+              `Telegram: 🟢 Đã kết nối @${username}`
+              :
+              "Telegram: 🟢 Đã kết nối";
+
+        }
+        else {
+
+          telegramLine.textContent =
+            "Telegram: 🔴 Chưa kết nối";
+
+        }
+
+
+        box.appendChild(
+          telegramLine
+        );
+
+      }
+    );
+
+  }
+
+
+  async function loadStatuses() {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await coachStatusSb.rpc(
+          "admin_get_coach_telegram_statuses"
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      statusByCoachCode =
+        new Map();
+
+
+      (
+        Array.isArray(data)
+          ?
+          data
+          :
+          []
+      )
+        .forEach(
+          function (item) {
+
+            const coachCode =
+              clean(
+                item.coach_code
+              );
+
+
+            if (coachCode) {
+
+              statusByCoachCode.set(
+                coachCode,
+                item
+              );
+
+            }
+
+          }
+        );
+
+
+      renderStatuses();
+
+    }
+    catch (error) {
+
+      console.error(
+        "ADMIN COACH TELEGRAM STATUS:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /*
+    Danh sách Coach render lại khi tìm kiếm,
+    tạo tài khoản...
+    => tự gắn trạng thái lại.
+  */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        clearTimeout(
+          renderTimer
+        );
+
+
+        renderTimer =
+          setTimeout(
+            renderStatuses,
+            80
+          );
+
+      }
+    );
+
+
+  observer.observe(
+    coachRows,
+    {
+      childList: true
+    }
+  );
+
+
+  /*
+    Khi quay lại tab:
+    cập nhật lại trạng thái Telegram/login.
+  */
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadStatuses,
+        300
+      );
+
+    }
+  );
+
+
+  await loadStatuses();
+
+
+})();
+
+</script>
+
 </body>
 
 </html>
