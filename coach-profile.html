@@ -771,23 +771,432 @@ if (avatarPath) {
 
 
   const coachTierText =
-    pricingTier === "certified"
-      ?
-        "Coach Chứng nhận"
-      :
-        (
-          pricingTier === "standard"
-            ?
-              "Coach Tiêu chuẩn"
-            :
-              "Đang cập nhật"
-        );
+  pricingTier === "certified"
+    ?
+      "Coach Chứng nhận"
+    :
+      (
+        pricingTier === "standard"
+          ?
+            "Coach Tiêu chuẩn"
+          :
+            "Đang cập nhật"
+      );
 
 
-  
+/* ===============================================
+   LOAD TRÌNH ĐỘ / CHỨNG CHỈ ĐÃ XÁC MINH
+================================================ */
 
-  profileBox.className =
-    "profile-card";
+let verifiedCredentials =
+  {
+    pickdee: null,
+    external_ratings: [],
+    certificate: null
+  };
+
+
+try {
+
+  const {
+    data: credentialData,
+    error: credentialError
+  } =
+    await sb.rpc(
+      "public_get_coach_verified_credentials",
+      {
+        p_coach_id:
+          coachId
+      }
+    );
+
+
+  if (credentialError) {
+
+    console.warn(
+      "COACH VERIFIED CREDENTIALS:",
+      credentialError
+    );
+
+  }
+  else if (
+    credentialData
+    &&
+    typeof credentialData ===
+      "object"
+  ) {
+
+    verifiedCredentials =
+      credentialData;
+
+  }
+
+}
+catch (
+  credentialException
+) {
+
+  console.warn(
+    "COACH VERIFIED CREDENTIALS:",
+    credentialException
+  );
+
+}
+
+
+/* ===============================================
+   PICKDEE ACADEMY
+================================================ */
+
+let pickdeeCredentialHtml =
+  "";
+
+
+if (
+  verifiedCredentials
+    ?.pickdee
+    ?.level
+) {
+
+  pickdeeCredentialHtml = `
+
+    <div class="info-row">
+
+      <span class="info-label">
+        PickDee Academy
+      </span>
+
+      <span
+        class="info-value"
+        style="color:#d8ff45;"
+      >
+        ${escapeHtml(
+          verifiedCredentials
+            .pickdee
+            .level
+        )}
+        ✓ Đã xác minh
+      </span>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ===============================================
+   RATING NGOÀI
+================================================ */
+
+const verifiedExternalRatings =
+  Array.isArray(
+    verifiedCredentials
+      ?.external_ratings
+  )
+    ?
+      verifiedCredentials
+        .external_ratings
+    :
+      [];
+
+
+const externalRatingHtml =
+  verifiedExternalRatings
+    .map(
+      function (
+        rating
+      ) {
+
+        const ratingValue =
+          rating?.rating_value
+          ??
+          rating?.rating_text
+          ??
+          "—";
+
+
+        return `
+
+          <div class="info-row">
+
+            <span class="info-label">
+              ${escapeHtml(
+                rating?.system_name
+                ||
+                "Hệ thống khác"
+              )}
+            </span>
+
+            <span
+              class="info-value"
+              style="color:#d8ff45;"
+            >
+              ${escapeHtml(
+                ratingValue
+              )}
+              ✓ Đã xác minh
+            </span>
+
+          </div>
+
+        `;
+
+      }
+    )
+    .join("");
+
+
+/* ===============================================
+   CHỨNG CHỈ
+================================================ */
+
+let certificateHtml =
+  "";
+
+
+const certificate =
+  verifiedCredentials
+    ?.certificate
+  ||
+  null;
+
+
+if (certificate) {
+
+  let certificateImageHtml =
+    "";
+
+
+  if (
+    certificate.image_path
+  ) {
+
+    try {
+
+      const {
+        data: certificateUrlData,
+        error: certificateUrlError
+      } =
+        await sb
+          .storage
+          .from(
+            "coach-documents"
+          )
+          .createSignedUrl(
+            certificate.image_path,
+            60 * 60
+          );
+
+
+      if (
+        !certificateUrlError
+        &&
+        certificateUrlData
+          ?.signedUrl
+      ) {
+
+        certificateImageHtml = `
+
+          <div
+            style="
+              margin-top:14px;
+            "
+          >
+
+            <div
+              style="
+                color:rgba(255,255,255,.52);
+                font-size:12px;
+                margin-bottom:8px;
+              "
+            >
+              Ảnh chứng chỉ
+            </div>
+
+            <a
+              href="${escapeHtml(
+                certificateUrlData
+                  .signedUrl
+              )}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+
+              <img
+                src="${escapeHtml(
+                  certificateUrlData
+                    .signedUrl
+                )}"
+                alt="Chứng chỉ Coach"
+                loading="lazy"
+                style="
+                  width:min(300px,100%);
+                  max-height:300px;
+                  object-fit:contain;
+                  display:block;
+                  border-radius:12px;
+                  border:1px solid rgba(216,255,69,.25);
+                  background:#04152d;
+                "
+              >
+
+            </a>
+
+          </div>
+
+        `;
+
+      }
+
+    }
+    catch (
+      certificateImageError
+    ) {
+
+      console.warn(
+        "COACH CERTIFICATE IMAGE:",
+        certificateImageError
+      );
+
+    }
+
+  }
+
+
+  certificateHtml = `
+
+    <div
+      style="
+        margin-top:16px;
+        padding-top:15px;
+        border-top:1px solid rgba(255,255,255,.08);
+      "
+    >
+
+      <div
+        style="
+          color:#d8ff45;
+          font-size:12px;
+          font-weight:900;
+          margin-bottom:10px;
+        "
+      >
+        BẰNG / CHỨNG CHỈ
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Chứng chỉ
+        </span>
+
+        <span class="info-value">
+          ${escapeHtml(
+            certificate.name
+            ||
+            "—"
+          )}
+          ✓ Đã xác minh
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Đơn vị cấp
+        </span>
+
+        <span class="info-value">
+          ${escapeHtml(
+            certificate.issuer
+            ||
+            "—"
+          )}
+        </span>
+
+      </div>
+
+
+      <div class="info-row">
+
+        <span class="info-label">
+          Năm cấp
+        </span>
+
+        <span class="info-value">
+          ${escapeHtml(
+            certificate.year
+            ??
+            "—"
+          )}
+        </span>
+
+      </div>
+
+
+      ${certificateImageHtml}
+
+    </div>
+
+  `;
+
+}
+
+
+/* ===============================================
+   KHỐI PUBLIC TRÌNH ĐỘ COACH
+================================================ */
+
+const verifiedCredentialContent =
+  pickdeeCredentialHtml
+  +
+  externalRatingHtml
+  +
+  certificateHtml;
+
+
+const verifiedCredentialsHtml = `
+
+  <div class="section">
+
+    <div class="section-title">
+      TRÌNH ĐỘ & BẰNG CẤP
+    </div>
+
+    ${
+      verifiedCredentialContent
+        ?
+          verifiedCredentialContent
+        :
+          `
+
+            <div
+              style="
+                color:rgba(255,255,255,.52);
+                font-size:13px;
+                line-height:1.6;
+              "
+            >
+              Chưa có thông tin trình độ
+              hoặc chứng chỉ đã được
+              PickDee xác minh.
+            </div>
+
+          `
+    }
+
+  </div>
+
+`;
+
+
+profileBox.className =
+  "profile-card";
+
 
 
   profileBox.innerHTML = `
@@ -926,56 +1335,7 @@ if (avatarPath) {
     </div>
 
 
-    <div class="section">
-
-      <div class="section-title">
-        TRÌNH ĐỘ & BẰNG CẤP
-      </div>
-
-
-      <div class="info-row">
-
-        <span class="info-label">
-          Trình độ Pickleball
-        </span>
-
-        <span class="info-value">
-
-          ${
-            escapeHtml(
-              coach.pickleball_level
-              ||
-              "Chưa cập nhật"
-            )
-          }
-
-        </span>
-
-      </div>
-
-
-      <div class="info-row">
-
-        <span class="info-label">
-          Bằng cấp / chứng chỉ
-        </span>
-
-        <span class="info-value">
-
-          ${
-            escapeHtml(
-              coach.qualifications
-              ||
-              "Chưa cập nhật"
-            )
-          }
-
-        </span>
-
-      </div>
-
-    </div>
-
+   ${verifiedCredentialsHtml}
 
     <div class="section">
 
