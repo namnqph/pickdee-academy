@@ -5993,293 +5993,8 @@
   }
 
 
-  /* =====================================================
-     TEST BRIDGE
-
-     Production RPC cố tình loại is_test=true.
-
-     Riêng giai đoạn test:
-     lấy các rating có source_origin = popup_test.
-
-     Sau khi xóa dữ liệu popup_test,
-     phần này tự động không trả gì nữa.
-  ====================================================== */
-
-  async function loadPopupTestRows() {
-
-    const {
-      data: ratings,
-      error: ratingsError
-    } =
-      await ratingReviewSb
-        .from(
-          "coach_external_ratings"
-        )
-        .select(`
-          id,
-          coach_id,
-          rating_system_id,
-          custom_system_name,
-          rating_value,
-          rating_text,
-          proof_image_path,
-          verification_status,
-          source_origin,
-          created_at
-        `)
-        .eq(
-          "source_origin",
-          "popup_test"
-        )
-        .eq(
-          "is_current",
-          true
-        )
-        .eq(
-          "verification_status",
-          "Chờ xác minh"
-        )
-        .not(
-          "proof_image_path",
-          "is",
-          null
-        );
-
-
-    if (ratingsError) {
-      throw ratingsError;
-    }
-
-
-    const rows =
-      Array.isArray(ratings)
-        ?
-        ratings.filter(
-          item =>
-            String(
-              item.proof_image_path || ""
-            ).trim()
-        )
-        :
-        [];
-
-
-    if (!rows.length) {
-      return [];
-    }
-
-
-    const coachIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              item =>
-                Number(
-                  item.coach_id
-                )
-            )
-            .filter(
-              Number.isFinite
-            )
-        )
-      ];
-
-
-    const systemIds =
-      [
-        ...new Set(
-          rows
-            .map(
-              item =>
-                Number(
-                  item.rating_system_id
-                )
-            )
-            .filter(
-              Number.isFinite
-            )
-        )
-      ];
-
-
-    const [
-      coachesResult,
-      systemsResult
-    ] =
-      await Promise.all(
-        [
-
-          ratingReviewSb
-            .from(
-              "coaches"
-            )
-            .select(`
-              id,
-              coach_code,
-              full_name,
-              email,
-              is_test
-            `)
-            .in(
-              "id",
-              coachIds
-            ),
-
-         ratingReviewSb.rpc(
-  "public_get_rating_systems"
-)
-        ]
-      );
-
-
-    if (coachesResult.error) {
-      throw coachesResult.error;
-    }
-
-
-    if (systemsResult.error) {
-      throw systemsResult.error;
-    }
-
-
-    const coachMap =
-      new Map(
-        (
-          Array.isArray(
-            coachesResult.data
-          )
-            ?
-            coachesResult.data
-            :
-            []
-        )
-          .map(
-            coach => [
-              Number(
-                coach.id
-              ),
-              coach
-            ]
-          )
-      );
-
-
-    const systemMap =
-      new Map(
-        (
-          Array.isArray(
-            systemsResult.data
-          )
-            ?
-            systemsResult.data
-            :
-            []
-        )
-          .map(
-            system => [
-              Number(
-                system.id
-              ),
-              system
-            ]
-          )
-      );
-
-
-    return rows
-      .map(
-        function (rating) {
-
-          const coach =
-            coachMap.get(
-              Number(
-                rating.coach_id
-              )
-            )
-            ||
-            {};
-
-
-          const system =
-            systemMap.get(
-              Number(
-                rating.rating_system_id
-              )
-            )
-            ||
-            {};
-
-
-          if (
-            coach.is_test !== true
-          ) {
-
-            return null;
-
-          }
-
-
-          return {
-
-            rating_id:
-              Number(
-                rating.id
-              ),
-
-            coach_id:
-              Number(
-                rating.coach_id
-              ),
-
-            coach_code:
-              coach.coach_code || "",
-
-            coach_name:
-              coach.full_name || "",
-
-            coach_email:
-              coach.email || "",
-
-            rating_system:
-              rating.custom_system_name
-              ||
-              system.display_name
-              ||
-              "Hệ thống khác",
-
-            rating_value:
-              rating.rating_value,
-
-            rating_text:
-              rating.rating_text,
-
-            proof_image_path:
-              rating.proof_image_path,
-
-            verification_status:
-              rating.verification_status,
-
-            source_origin:
-              rating.source_origin,
-
-            created_at:
-              rating.created_at,
-
-            is_test:
-              true
-
-          };
-
-        }
-      )
-      .filter(Boolean);
-
-  }
-
-
-  /* =====================================================
-     LOAD PRODUCTION + TEST
+    /* =====================================================
+     LOAD PRODUCTION
   ====================================================== */
 
   async function loadPendingRatings() {
@@ -6298,77 +6013,25 @@
 
 
       const {
-        data: productionRows,
-        error: productionError
+        data,
+        error
       } =
         await ratingReviewSb.rpc(
           "admin_get_pending_coach_rating_proofs"
         );
 
 
-      if (productionError) {
-        throw productionError;
+      if (error) {
+        throw error;
       }
 
 
-      const testRows =
-        await loadPopupTestRows();
-
-
-      const merged =
-        [
-          ...(
-            Array.isArray(
-              productionRows
-            )
-              ?
-              productionRows
-              :
-              []
-          ),
-
-          ...testRows
-
-        ];
-
-
-      const uniqueMap =
-        new Map();
-
-
-      merged.forEach(
-        function (row) {
-
-          const ratingId =
-            Number(
-              row.rating_id
-            );
-
-
-          if (
-            !Number.isFinite(
-              ratingId
-            )
-          ) {
-
-            return;
-
-          }
-
-
-          uniqueMap.set(
-            ratingId,
-            row
-          );
-
-        }
-      );
-
-
       currentRows =
-        [
-          ...uniqueMap.values()
-        ];
+        Array.isArray(data)
+          ?
+          data
+          :
+          [];
 
 
       await renderPendingRatings();
@@ -6406,11 +6069,10 @@
         "error"
       );
 
+
     }
 
   }
-
-
   /* =====================================================
      RENDER
   ====================================================== */
@@ -7418,15 +7080,7 @@
                       row.coach_code || "—"
                     )}
 
-                    ${
-                      row.source_origin ===
-                      "popup_test"
-                        ?
-                        " · TEST"
-                        :
-                        ""
-                    }
-
+                   
                   </div>
 
 
