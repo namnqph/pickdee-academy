@@ -7316,7 +7316,437 @@
 })();
 
 </script>
-  
+  <!-- =====================================================
+     PICKDEE - LINK HỒ SƠ COACH HIỆN TẠI
+====================================================== -->
+
+<style>
+
+  .pickdee-current-coach-profile-box {
+    padding:
+      0 20px 20px;
+  }
+
+  .pickdee-current-coach-profile-link {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+      0 14px;
+
+    border:
+      1px solid
+      rgba(185,255,24,.30);
+
+    border-radius:
+      10px;
+
+    background:
+      rgba(185,255,24,.08);
+
+    color:
+      #b9ff18;
+
+    text-decoration:
+      none;
+
+    font-size:
+      12px;
+
+    font-weight:
+      900;
+  }
+
+  .pickdee-current-coach-profile-link:hover {
+    background:
+      rgba(185,255,24,.14);
+  }
+
+  @media(max-width:520px) {
+
+    .pickdee-current-coach-profile-link {
+      width: 100%;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+(async function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG
+    ||
+    {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    return;
+
+  }
+
+
+  const profileLinkSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const applicationList =
+    document.getElementById(
+      "applicationList"
+    );
+
+
+  if (!applicationList) {
+    return;
+  }
+
+
+  let coachIdByApplicationId =
+    new Map();
+
+
+  let renderTimer =
+    null;
+
+
+  async function loadCurrentCoachLinks() {
+
+
+    try {
+
+
+      const [
+        applicationsResult,
+        coachesResult
+      ] =
+        await Promise.all(
+          [
+
+            profileLinkSb
+              .from(
+                "coach_applications"
+              )
+              .select(`
+                id,
+                auth_user_id,
+                status
+              `)
+              .eq(
+                "status",
+                "approved"
+              ),
+
+
+            profileLinkSb
+              .from(
+                "coaches"
+              )
+              .select(`
+                id,
+                auth_user_id
+              `)
+
+          ]
+        );
+
+
+      if (
+        applicationsResult.error
+      ) {
+
+        throw applicationsResult.error;
+
+      }
+
+
+      if (
+        coachesResult.error
+      ) {
+
+        throw coachesResult.error;
+
+      }
+
+
+      const applicationIdByAuthUser =
+        new Map();
+
+
+      (
+        Array.isArray(
+          applicationsResult.data
+        )
+          ?
+          applicationsResult.data
+          :
+          []
+      )
+        .forEach(
+          function (
+            application
+          ) {
+
+
+            const authUserId =
+              String(
+                application.auth_user_id
+                ||
+                ""
+              ).trim();
+
+
+            const applicationId =
+              Number(
+                application.id
+              );
+
+
+            if (
+              authUserId
+              &&
+              Number.isFinite(
+                applicationId
+              )
+            ) {
+
+              applicationIdByAuthUser
+                .set(
+                  authUserId,
+                  applicationId
+                );
+
+            }
+
+
+          }
+        );
+
+
+      coachIdByApplicationId =
+        new Map();
+
+
+      (
+        Array.isArray(
+          coachesResult.data
+        )
+          ?
+          coachesResult.data
+          :
+          []
+      )
+        .forEach(
+          function (
+            coach
+          ) {
+
+
+            const authUserId =
+              String(
+                coach.auth_user_id
+                ||
+                ""
+              ).trim();
+
+
+            const coachId =
+              Number(
+                coach.id
+              );
+
+
+            const applicationId =
+              applicationIdByAuthUser
+                .get(
+                  authUserId
+                );
+
+
+            if (
+              Number.isFinite(
+                applicationId
+              )
+              &&
+              Number.isFinite(
+                coachId
+              )
+            ) {
+
+              coachIdByApplicationId
+                .set(
+                  applicationId,
+                  coachId
+                );
+
+            }
+
+
+          }
+        );
+
+
+      renderCurrentCoachLinks();
+
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        "LOAD CURRENT COACH PROFILE LINKS:",
+        error
+      );
+
+    }
+
+
+  }
+
+
+  function renderCurrentCoachLinks() {
+
+
+    const cards =
+      applicationList
+        .querySelectorAll(
+          ".application[data-application-id]"
+        );
+
+
+    cards.forEach(
+      function (
+        card
+      ) {
+
+
+        if (
+          card.querySelector(
+            ".pickdee-current-coach-profile-box"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const applicationId =
+          Number(
+            card.dataset.applicationId
+          );
+
+
+        const coachId =
+          coachIdByApplicationId
+            .get(
+              applicationId
+            );
+
+
+        if (
+          !Number.isFinite(
+            coachId
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const box =
+          document.createElement(
+            "div"
+          );
+
+
+        box.className =
+          "pickdee-current-coach-profile-box";
+
+
+        box.innerHTML = `
+
+          <a
+            class="pickdee-current-coach-profile-link"
+            href="./coach-profile?id=${coachId}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            XEM HỒ SƠ COACH HIỆN TẠI →
+          </a>
+
+        `;
+
+
+        card.appendChild(
+          box
+        );
+
+
+      }
+    );
+
+
+  }
+
+
+  function scheduleRender() {
+
+
+    clearTimeout(
+      renderTimer
+    );
+
+
+    renderTimer =
+      setTimeout(
+        renderCurrentCoachLinks,
+        80
+      );
+
+
+  }
+
+
+  const observer =
+    new MutationObserver(
+      scheduleRender
+    );
+
+
+  observer.observe(
+    applicationList,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  await loadCurrentCoachLinks();
+
+
+})();
+
+</script>
 </body>
 
 </html>
