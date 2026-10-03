@@ -1653,6 +1653,52 @@
     );
 
 
+  const loginIdentifier =
+    document.getElementById(
+      "loginEmail"
+    );
+
+
+  /* =====================================================
+     ĐỔI Ô EMAIL -> EMAIL HOẶC SỐ ĐIỆN THOẠI
+     Giữ nguyên id loginEmail để không ảnh hưởng code khác.
+  ====================================================== */
+
+  if (loginIdentifier) {
+
+    loginIdentifier.type =
+      "text";
+
+    loginIdentifier.setAttribute(
+      "inputmode",
+      "text"
+    );
+
+    loginIdentifier.setAttribute(
+      "autocomplete",
+      "username"
+    );
+
+    loginIdentifier.placeholder =
+      "Email hoặc số điện thoại";
+
+
+    const identifierLabel =
+      document.querySelector(
+        'label[for="loginEmail"]'
+      );
+
+
+    if (identifierLabel) {
+
+      identifierLabel.textContent =
+        "EMAIL HOẶC SỐ ĐIỆN THOẠI";
+
+    }
+
+  }
+
+
 
   /* =====================================================
      TAB
@@ -1679,7 +1725,6 @@
     loginPanel.classList.remove(
       "active"
     );
-
 
   }
 
@@ -1711,16 +1756,11 @@
     setTimeout(
       function () {
 
-        document
-          .getElementById(
-            "loginEmail"
-          )
-          ?.focus();
+        loginIdentifier?.focus();
 
       },
       100
     );
-
 
   }
 
@@ -1888,13 +1928,13 @@
       "Tài khoản chưa được gán quyền sử dụng PickDee Academy."
     );
 
-
   }
 
 
 
   /* =====================================================
      LOGIN
+     EMAIL HOẶC SỐ ĐIỆN THOẠI + MẬT KHẨU
   ====================================================== */
 
   loginForm.addEventListener(
@@ -1905,13 +1945,11 @@
       event.preventDefault();
 
 
-      const email =
-        document
-          .getElementById(
-            "loginEmail"
-          )
-          .value
-          .trim();
+      const identifier =
+        loginIdentifier
+          ?.value
+          .trim()
+        || "";
 
 
       const password =
@@ -1923,7 +1961,7 @@
 
 
       if (
-        !email
+        !identifier
         ||
         !password
       ) {
@@ -1934,7 +1972,7 @@
 
 
         loginMessage.textContent =
-          "Vui lòng nhập đầy đủ email và mật khẩu.";
+          "Vui lòng nhập email hoặc số điện thoại và mật khẩu.";
 
 
         return;
@@ -1961,30 +1999,120 @@
       try {
 
 
-        const {
-          data,
-          error
-        } =
-          await sb.auth
-            .signInWithPassword(
-              {
-                email,
+        /* ===============================================
+           1. GỌI PICKDEE LOGIN EDGE FUNCTION
+        ================================================ */
+
+        const response =
+          await fetch(
+            `${cfg.SUPABASE_URL}/functions/v1/pickdee-login`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                identifier,
                 password
-              }
-            );
+              })
+            }
+          );
 
 
-        if (error) {
+        let result = null;
 
-          throw error;
+
+        try {
+
+          result =
+            await response.json();
+
+        }
+        catch (_) {
+
+          result = {};
 
         }
 
 
         if (
-          !data?.user
+          !response.ok
+          ||
+          !result?.success
         ) {
 
+
+          throw new Error(
+            result?.error
+            ||
+            "Email/SĐT hoặc mật khẩu không chính xác."
+          );
+
+        }
+
+
+
+        /* ===============================================
+           2. LƯU SESSION VÀO SUPABASE CLIENT
+        ================================================ */
+
+        const accessToken =
+          result?.session?.access_token;
+
+
+        const refreshToken =
+          result?.session?.refresh_token;
+
+
+        if (
+          !accessToken
+          ||
+          !refreshToken
+        ) {
+
+
+          throw new Error(
+            "Không nhận được phiên đăng nhập."
+          );
+
+        }
+
+
+        const {
+          data: sessionData,
+          error: sessionError
+        } =
+          await sb.auth.setSession({
+            access_token:
+              accessToken,
+
+            refresh_token:
+              refreshToken
+          });
+
+
+        if (sessionError) {
+
+          throw sessionError;
+
+        }
+
+
+
+        /* ===============================================
+           3. LẤY USER ĐÃ XÁC THỰC
+        ================================================ */
+
+        const userId =
+          sessionData?.user?.id
+          ||
+          result?.user?.id;
+
+
+        if (!userId) {
 
           throw new Error(
             "Không lấy được thông tin tài khoản."
@@ -1992,6 +2120,11 @@
 
         }
 
+
+
+        /* ===============================================
+           4. REDIRECT ĐÚNG ROLE
+        ================================================ */
 
         loginMessage.className =
           "login-message success";
@@ -2002,7 +2135,7 @@
 
 
         await redirectByRole(
-          data.user.id
+          userId
         );
 
 
@@ -2017,9 +2150,11 @@
 
 
         let text =
-          error?.message
-          ||
-          "Không đăng nhập được.";
+          String(
+            error?.message
+            ||
+            "Không đăng nhập được."
+          );
 
 
         if (
@@ -2030,9 +2165,8 @@
             )
         ) {
 
-
           text =
-            "Email hoặc mật khẩu không đúng.";
+            "Email/SĐT hoặc mật khẩu không chính xác.";
 
         }
 
