@@ -1,0 +1,1752 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>
+    PickDee Shop | Phụ kiện Pickleball
+  </title>
+
+  <meta
+    name="description"
+    content="PickDee Shop - Phụ kiện Pickleball dành cho cộng đồng người chơi."
+  >
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background:
+        #071523;
+
+      color:
+        #ffffff;
+    }
+
+
+    a {
+      color: inherit;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .shop-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.94);
+
+      backdrop-filter:
+        blur(14px);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+    }
+
+
+    .shop-header-inner {
+      width:
+        min(1180px, calc(100% - 32px));
+
+      min-height: 74px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 18px;
+    }
+
+
+    .brand {
+      text-decoration: none;
+
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+
+      white-space: nowrap;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+
+    .header-link,
+    .cart-button {
+      min-height: 42px;
+
+      padding:
+        0 15px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 12px;
+
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 900;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+
+    .cart-button {
+      border-color:
+        rgba(216,255,69,.35);
+
+      color:
+        #d8ff45;
+    }
+
+
+    .cart-count {
+      min-width: 22px;
+      height: 22px;
+
+      margin-left: 7px;
+
+      padding:
+        0 6px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       HERO
+    ====================================================== */
+
+    .hero {
+      width:
+        min(1180px, calc(100% - 32px));
+
+      margin:
+        34px auto 0;
+
+      padding:
+        54px 50px;
+
+      border-radius:
+        26px;
+
+      overflow: hidden;
+
+      position: relative;
+
+      background:
+        linear-gradient(
+          135deg,
+          #0d2942,
+          #0a1b2d 58%,
+          #10272d
+        );
+
+      border:
+        1px solid rgba(216,255,69,.23);
+    }
+
+
+    .hero::after {
+      content: "";
+
+      position: absolute;
+
+      width: 320px;
+      height: 320px;
+
+      right: -100px;
+      top: -100px;
+
+      border-radius: 50%;
+
+      background:
+        rgba(216,255,69,.08);
+
+      filter:
+        blur(4px);
+    }
+
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+
+      max-width: 720px;
+    }
+
+
+    .eyebrow {
+      margin-bottom: 12px;
+
+      color:
+        #d8ff45;
+
+      font-size: 13px;
+      font-weight: 950;
+
+      letter-spacing:
+        .12em;
+    }
+
+
+    .hero h1 {
+      margin:
+        0 0 15px;
+
+      font-size:
+        clamp(38px, 6vw, 70px);
+
+      line-height:
+        .98;
+
+      letter-spacing:
+        -.055em;
+    }
+
+
+    .hero p {
+      max-width: 640px;
+
+      margin:
+        0;
+
+      color:
+        rgba(255,255,255,.7);
+
+      font-size:
+        17px;
+
+      line-height:
+        1.65;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(1180px, calc(100% - 32px));
+
+      margin:
+        30px auto 80px;
+    }
+
+
+    .toolbar {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0,1fr) auto;
+
+      gap: 14px;
+
+      align-items: center;
+
+      margin-bottom: 22px;
+    }
+
+
+    .search-box {
+      min-height: 50px;
+
+      width: 100%;
+
+      padding:
+        0 16px;
+
+      border-radius:
+        13px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background:
+        #0d1d2f;
+
+      color:
+        #ffffff;
+
+      font-size:
+        15px;
+    }
+
+
+    .search-box:focus {
+      border-color:
+        rgba(216,255,69,.65);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.08);
+    }
+
+
+    .result-count {
+      color:
+        rgba(255,255,255,.56);
+
+      font-size:
+        13px;
+
+      font-weight:
+        800;
+
+      white-space:
+        nowrap;
+    }
+
+
+    /* =====================================================
+       CATEGORY
+    ====================================================== */
+
+    .categories {
+      display: flex;
+
+      gap: 9px;
+
+      overflow-x: auto;
+
+      padding-bottom: 10px;
+
+      margin-bottom: 17px;
+
+      scrollbar-width:
+        none;
+    }
+
+
+    .categories::-webkit-scrollbar {
+      display: none;
+    }
+
+
+    .category-btn {
+      flex: 0 0 auto;
+
+      min-height: 40px;
+
+      padding:
+        0 14px;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.045);
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+
+      cursor: pointer;
+    }
+
+
+    .category-btn.active {
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+
+      border-color:
+        #d8ff45;
+    }
+
+
+    /* =====================================================
+       PRODUCT GRID
+    ====================================================== */
+
+    .products-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,minmax(0,1fr));
+
+      gap: 18px;
+    }
+
+
+    .product-card {
+      display: block;
+
+      overflow: hidden;
+
+      border-radius:
+        18px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background:
+        #0d1d2f;
+
+      text-decoration: none;
+
+      transition:
+        .18s ease;
+    }
+
+
+    .product-card:hover {
+      transform:
+        translateY(-3px);
+
+      border-color:
+        rgba(216,255,69,.42);
+    }
+
+
+    .product-image {
+      aspect-ratio:
+        1 / 1;
+
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      overflow: hidden;
+
+      background:
+        #13263a;
+    }
+
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+    }
+
+
+    .product-placeholder {
+      padding: 20px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.24);
+
+      font-size: 42px;
+    }
+
+
+    .product-body {
+      padding:
+        16px;
+    }
+
+
+    .product-brand {
+      min-height: 17px;
+
+      margin-bottom:
+        5px;
+
+      color:
+        rgba(255,255,255,.46);
+
+      font-size:
+        11px;
+
+      font-weight:
+        900;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        .07em;
+    }
+
+
+    .product-name {
+      min-height: 44px;
+
+      margin-bottom:
+        12px;
+
+      color:
+        #ffffff;
+
+      font-size:
+        15px;
+
+      font-weight:
+        900;
+
+      line-height:
+        1.45;
+    }
+
+
+    .product-price {
+      color:
+        #d8ff45;
+
+      font-size:
+        18px;
+
+      font-weight:
+        950;
+    }
+
+
+    .product-compare-price {
+      margin-left:
+        6px;
+
+      color:
+        rgba(255,255,255,.34);
+
+      font-size:
+        12px;
+
+      font-weight:
+        700;
+
+      text-decoration:
+        line-through;
+    }
+
+
+    /* =====================================================
+       EMPTY / LOADING
+    ====================================================== */
+
+    .state-box {
+      grid-column:
+        1 / -1;
+
+      padding:
+        50px 20px;
+
+      border-radius:
+        18px;
+
+      border:
+        1px dashed rgba(255,255,255,.14);
+
+      text-align:
+        center;
+
+      color:
+        rgba(255,255,255,.56);
+
+      background:
+        rgba(255,255,255,.025);
+    }
+
+
+    .state-box strong {
+      display: block;
+
+      margin-bottom:
+        8px;
+
+      color:
+        #ffffff;
+
+      font-size:
+        18px;
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ====================================================== */
+
+    footer {
+      padding:
+        28px 20px;
+
+      border-top:
+        1px solid rgba(255,255,255,.07);
+
+      text-align:
+        center;
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size:
+        12px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media(max-width:950px) {
+
+      .products-grid {
+        grid-template-columns:
+          repeat(3,minmax(0,1fr));
+      }
+
+    }
+
+
+    @media(max-width:700px) {
+
+      .hero {
+        padding:
+          38px 24px;
+      }
+
+
+      .products-grid {
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+
+        gap: 11px;
+      }
+
+
+      .toolbar {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .result-count {
+        display: none;
+      }
+
+
+      .header-link {
+        display: none;
+      }
+
+    }
+
+
+    @media(max-width:420px) {
+
+      .shop-header-inner,
+      .hero,
+      main {
+        width:
+          min(100% - 22px,1180px);
+      }
+
+
+      .brand {
+        font-size:
+          20px;
+      }
+
+
+      .cart-button {
+        padding:
+          0 11px;
+      }
+
+
+      .product-body {
+        padding:
+          12px;
+      }
+
+
+      .product-name {
+        font-size:
+          14px;
+      }
+
+
+      .product-price {
+        font-size:
+          16px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="shop-header">
+
+  <div class="shop-header-inner">
+
+    <a
+      href="./shop"
+      class="brand"
+    >
+      PickDee
+      <span>Shop</span>
+    </a>
+
+
+    <div class="header-actions">
+
+      <a
+        href="./"
+        class="header-link"
+      >
+        ACADEMY
+      </a>
+
+
+      <a
+        href="./shop-cart"
+        class="cart-button"
+      >
+        🛒 GIỎ HÀNG
+
+        <span
+          id="cartCount"
+          class="cart-count"
+        >
+          0
+        </span>
+
+      </a>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+
+<section class="hero">
+
+  <div class="hero-content">
+
+    <div class="eyebrow">
+      PICKDEE SHOP
+    </div>
+
+    <h1>
+      ĐỒ CHƠI PICKLEBALL.
+      CHỌN ĐÚNG THỨ BẠN CẦN.
+    </h1>
+
+    <p>
+      Vợt, bóng, phụ kiện và các sản phẩm Pickleball
+      dành cho người chơi trên toàn quốc.
+      Không cần tài khoản để đặt hàng.
+    </p>
+
+  </div>
+
+</section>
+
+
+
+<main>
+
+
+  <div
+    id="categories"
+    class="categories"
+  >
+
+    <button
+      class="category-btn active"
+      data-category=""
+      type="button"
+    >
+      TẤT CẢ
+    </button>
+
+  </div>
+
+
+
+  <div class="toolbar">
+
+    <input
+      id="searchInput"
+      class="search-box"
+      type="search"
+      placeholder="Tìm vợt, bóng, phụ kiện..."
+      autocomplete="off"
+    >
+
+    <div
+      id="resultCount"
+      class="result-count"
+    >
+      Đang tải sản phẩm...
+    </div>
+
+  </div>
+
+
+
+  <div
+    id="productsGrid"
+    class="products-grid"
+  >
+
+    <div class="state-box">
+
+      <strong>
+        Đang tải PickDee Shop...
+      </strong>
+
+      Vui lòng chờ trong giây lát.
+
+    </div>
+
+  </div>
+
+
+</main>
+
+
+
+<footer>
+
+  © PickDee Shop •
+  Hệ sinh thái PickDee Pickleball
+
+</footer>
+
+
+
+<script>
+
+(function () {
+
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const grid =
+    document.getElementById(
+      "productsGrid"
+    );
+
+
+  const categoriesBox =
+    document.getElementById(
+      "categories"
+    );
+
+
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+
+  const resultCount =
+    document.getElementById(
+      "resultCount"
+    );
+
+
+  const cartCount =
+    document.getElementById(
+      "cartCount"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    grid.innerHTML = `
+      <div class="state-box">
+        <strong>
+          Không tải được PickDee Shop
+        </strong>
+
+        Thiếu cấu hình kết nối hệ thống.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+
+  /* =====================================================
+     STATE
+  ====================================================== */
+
+  let products = [];
+
+  let variants = [];
+
+  let images = [];
+
+  let categories = [];
+
+  let selectedCategory = "";
+
+
+
+  /* =====================================================
+     CART COUNT
+  ====================================================== */
+
+  function updateCartCount() {
+
+    try {
+
+      const cart =
+        JSON.parse(
+          localStorage.getItem(
+            "pickdee_shop_cart"
+          )
+          ||
+          "[]"
+        );
+
+
+      const count =
+        Array.isArray(cart)
+          ?
+            cart.reduce(
+              function (sum,item) {
+
+                return (
+                  sum
+                  +
+                  Number(
+                    item?.quantity || 0
+                  )
+                );
+
+              },
+              0
+            )
+          :
+            0;
+
+
+      cartCount.textContent =
+        String(count);
+
+    }
+    catch (_) {
+
+      cartCount.textContent =
+        "0";
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     FORMAT MONEY
+  ====================================================== */
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+
+  /* =====================================================
+     IMAGE URL
+  ====================================================== */
+
+  function publicImageUrl(
+    storagePath
+  ) {
+
+    if (!storagePath) {
+      return "";
+    }
+
+
+    const {
+      data
+    } =
+      sb.storage
+        .from("shop-products")
+        .getPublicUrl(
+          storagePath
+        );
+
+
+    return (
+      data?.publicUrl || ""
+    );
+
+  }
+
+
+
+  /* =====================================================
+     CATEGORY
+  ====================================================== */
+
+  function renderCategories() {
+
+    const buttons =
+      categories
+        .map(
+          function (category) {
+
+            return `
+              <button
+                class="category-btn"
+                type="button"
+                data-category="${category.id}"
+              >
+                ${escapeHtml(category.name)}
+              </button>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    categoriesBox.innerHTML = `
+      <button
+        class="category-btn active"
+        type="button"
+        data-category=""
+      >
+        TẤT CẢ
+      </button>
+
+      ${buttons}
+    `;
+
+
+    categoriesBox
+      .querySelectorAll(
+        ".category-btn"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              selectedCategory =
+                button.dataset.category
+                || "";
+
+
+              categoriesBox
+                .querySelectorAll(
+                  ".category-btn"
+                )
+                .forEach(
+                  function (item) {
+
+                    item.classList.remove(
+                      "active"
+                    );
+
+                  }
+                );
+
+
+              button.classList.add(
+                "active"
+              );
+
+
+              renderProducts();
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+
+  /* =====================================================
+     ESCAPE HTML
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+
+  /* =====================================================
+     PRODUCT HELPERS
+  ====================================================== */
+
+  function getProductVariants(
+    productId
+  ) {
+
+    return variants
+      .filter(
+        function (variant) {
+
+          return (
+            String(
+              variant.product_id
+            )
+            ===
+            String(
+              productId
+            )
+          );
+
+        }
+      )
+      .sort(
+        function (a,b) {
+
+          return (
+            Number(a.sort_order || 0)
+            -
+            Number(b.sort_order || 0)
+          );
+
+        }
+      );
+
+  }
+
+
+  function getProductImage(
+    productId
+  ) {
+
+    const productImages =
+      images
+        .filter(
+          function (image) {
+
+            return (
+              String(
+                image.product_id
+              )
+              ===
+              String(
+                productId
+              )
+            );
+
+          }
+        )
+        .sort(
+          function (a,b) {
+
+            if (
+              Boolean(a.is_primary)
+              !==
+              Boolean(b.is_primary)
+            ) {
+
+              return (
+                a.is_primary
+                  ? -1
+                  : 1
+              );
+
+            }
+
+
+            return (
+              Number(a.sort_order || 0)
+              -
+              Number(b.sort_order || 0)
+            );
+
+          }
+        );
+
+
+    return (
+      productImages[0]
+      || null
+    );
+
+  }
+
+
+
+  /* =====================================================
+     RENDER PRODUCT
+  ====================================================== */
+
+  function renderProducts() {
+
+    const keyword =
+      searchInput.value
+        .trim()
+        .toLowerCase();
+
+
+    const filtered =
+      products.filter(
+        function (product) {
+
+          const matchesCategory =
+            !selectedCategory
+            ||
+            String(
+              product.category_id
+            )
+            ===
+            String(
+              selectedCategory
+            );
+
+
+          const text =
+            [
+              product.name,
+              product.brand,
+              product.short_description
+            ]
+              .join(" ")
+              .toLowerCase();
+
+
+          const matchesSearch =
+            !keyword
+            ||
+            text.includes(
+              keyword
+            );
+
+
+          return (
+            matchesCategory
+            &&
+            matchesSearch
+          );
+
+        }
+      );
+
+
+    resultCount.textContent =
+      `${filtered.length} sản phẩm`;
+
+
+    if (!filtered.length) {
+
+      grid.innerHTML = `
+        <div class="state-box">
+
+          <strong>
+            Chưa có sản phẩm phù hợp
+          </strong>
+
+          Thử tìm bằng từ khóa khác
+          hoặc chọn danh mục khác.
+
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    grid.innerHTML =
+      filtered
+        .map(
+          function (product) {
+
+            const productVariants =
+              getProductVariants(
+                product.id
+              );
+
+
+            const firstVariant =
+              productVariants[0]
+              || null;
+
+
+            const lowestPrice =
+              productVariants.length
+                ?
+                  Math.min(
+                    ...productVariants.map(
+                      function (item) {
+
+                        return Number(
+                          item.price || 0
+                        );
+
+                      }
+                    )
+                  )
+                :
+                  0;
+
+
+            const comparePrice =
+              firstVariant
+                ?.compare_at_price
+              || null;
+
+
+            const image =
+              getProductImage(
+                product.id
+              );
+
+
+            const imageUrl =
+              image
+                ?
+                  publicImageUrl(
+                    image.storage_path
+                  )
+                :
+                  "";
+
+
+            return `
+              <a
+                class="product-card"
+                href="./shop-product?id=${encodeURIComponent(product.id)}"
+              >
+
+                <div class="product-image">
+
+                  ${
+                    imageUrl
+                    ?
+                      `
+                        <img
+                          src="${escapeHtml(imageUrl)}"
+                          alt="${escapeHtml(
+                            image?.alt_text
+                            ||
+                            product.name
+                          )}"
+                          loading="lazy"
+                        >
+                      `
+                    :
+                      `
+                        <div class="product-placeholder">
+                          🏓
+                        </div>
+                      `
+                  }
+
+                </div>
+
+
+                <div class="product-body">
+
+                  <div class="product-brand">
+                    ${
+                      escapeHtml(
+                        product.brand || "PickDee"
+                      )
+                    }
+                  </div>
+
+
+                  <div class="product-name">
+                    ${escapeHtml(product.name)}
+                  </div>
+
+
+                  <div>
+
+                    <span class="product-price">
+                      ${
+                        lowestPrice
+                          ?
+                            money(lowestPrice)
+                          :
+                            "Liên hệ"
+                      }
+                    </span>
+
+
+                    ${
+                      comparePrice
+                      &&
+                      Number(comparePrice)
+                        >
+                      Number(lowestPrice)
+                      ?
+                        `
+                          <span class="product-compare-price">
+                            ${money(comparePrice)}
+                          </span>
+                        `
+                      :
+                        ""
+                    }
+
+                  </div>
+
+                </div>
+
+              </a>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+
+  /* =====================================================
+     LOAD DATA
+  ====================================================== */
+
+  async function loadShop() {
+
+    try {
+
+      const [
+        categoryResult,
+        productResult,
+        variantResult,
+        imageResult
+      ] =
+        await Promise.all([
+
+
+          sb
+            .from(
+              "shop_categories"
+            )
+            .select(
+              "id,name,slug,sort_order"
+            )
+            .eq(
+              "is_active",
+              true
+            )
+            .order(
+              "sort_order",
+              {
+                ascending:
+                  true
+              }
+            ),
+
+
+          sb
+            .from(
+              "shop_products"
+            )
+            .select(
+              "id,category_id,product_code,name,slug,brand,short_description,is_featured,created_at"
+            )
+            .eq(
+              "status",
+              "active"
+            )
+            .order(
+              "is_featured",
+              {
+                ascending:
+                  false
+              }
+            )
+            .order(
+              "created_at",
+              {
+                ascending:
+                  false
+              }
+            ),
+
+
+          sb
+            .from(
+              "shop_product_variants"
+            )
+            .select(
+              "id,product_id,sku,variant_name,price,compare_at_price,sort_order"
+            )
+            .eq(
+              "is_active",
+              true
+            ),
+
+
+          sb
+            .from(
+              "shop_product_images"
+            )
+            .select(
+              "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+            )
+            .order(
+              "sort_order",
+              {
+                ascending:
+                  true
+              }
+            )
+
+
+        ]);
+
+
+      const errors =
+        [
+          categoryResult.error,
+          productResult.error,
+          variantResult.error,
+          imageResult.error
+        ]
+          .filter(Boolean);
+
+
+      if (errors.length) {
+
+        console.error(
+          "SHOP LOAD ERROR:",
+          errors
+        );
+
+
+        throw new Error(
+          "Không tải được dữ liệu cửa hàng."
+        );
+
+      }
+
+
+      categories =
+        categoryResult.data || [];
+
+
+      products =
+        productResult.data || [];
+
+
+      variants =
+        variantResult.data || [];
+
+
+      images =
+        imageResult.data || [];
+
+
+      renderCategories();
+
+      renderProducts();
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "SHOP ERROR:",
+        error
+      );
+
+
+      grid.innerHTML = `
+        <div class="state-box">
+
+          <strong>
+            Chưa tải được PickDee Shop
+          </strong>
+
+          ${escapeHtml(
+            error?.message
+            ||
+            "Vui lòng thử lại sau."
+          )}
+
+        </div>
+      `;
+
+
+      resultCount.textContent =
+        "Không tải được dữ liệu";
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     EVENT
+  ====================================================== */
+
+  searchInput.addEventListener(
+    "input",
+    renderProducts
+  );
+
+
+  window.addEventListener(
+    "storage",
+    updateCartCount
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  updateCartCount();
+
+  loadShop();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
