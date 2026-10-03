@@ -2619,12 +2619,12 @@ https://pickdee.vn/`;
     );
 
 
-  observer.observe(
-    coachRows,
-    {
-      childList: true
-    }
-  );
+ observer.observe(
+  coachRows,
+  {
+    childList: true
+  }
+);
 
 
   /*
@@ -2652,6 +2652,392 @@ https://pickdee.vn/`;
 
 </script>
 
+<!-- =========================================================
+     PICKDEE - ADMIN COACH TELEGRAM GROUP STATUS
+========================================================= -->
+
+<script>
+
+(async function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+    return;
+  }
+
+
+  const groupStatusSb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  const coachRows =
+    document.getElementById(
+      "coachRows"
+    );
+
+
+  if (!coachRows) {
+    return;
+  }
+
+
+  let groupStatusByCoachCode =
+    new Map();
+
+
+  let renderTimer =
+    null;
+
+
+  function clean(value) {
+
+    return String(
+      value || ""
+    ).trim();
+
+  }
+
+
+  /* =====================================================
+     RENDER DÒNG "NHÓM COACH"
+  ====================================================== */
+
+  function renderGroupStatuses() {
+
+    const rows =
+      coachRows.querySelectorAll(
+        "tr"
+      );
+
+
+    rows.forEach(
+      function (row) {
+
+        const cells =
+          row.querySelectorAll(
+            "td"
+          );
+
+
+        if (
+          cells.length < 2
+        ) {
+          return;
+        }
+
+
+        const coachCode =
+          clean(
+            cells[1].textContent
+          );
+
+
+        if (!coachCode) {
+          return;
+        }
+
+
+        const accountCell =
+          cells[
+            cells.length - 1
+          ];
+
+
+        if (!accountCell) {
+          return;
+        }
+
+
+        let box =
+          accountCell.querySelector(
+            ".pickdee-coach-connectivity"
+          );
+
+
+        if (!box) {
+
+          box =
+            document.createElement(
+              "div"
+            );
+
+
+          box.className =
+            "pickdee-coach-connectivity";
+
+
+          accountCell.appendChild(
+            box
+          );
+
+        }
+
+
+        /*
+          Không tạo trùng dòng.
+        */
+
+        const oldLine =
+          box.querySelector(
+            ".pickdee-coach-group-status"
+          );
+
+
+        if (oldLine) {
+          oldLine.remove();
+        }
+
+
+        const status =
+          groupStatusByCoachCode.get(
+            coachCode
+          );
+
+
+        const line =
+          document.createElement(
+            "div"
+          );
+
+
+        line.className =
+          "pickdee-coach-connectivity-line pickdee-coach-group-status";
+
+
+        /*
+          CHƯA KẾT NỐI TELEGRAM
+        */
+
+        if (
+          !status
+          ||
+          status.connected !== true
+        ) {
+
+          line.textContent =
+            "Nhóm Coach: ⚪ Chưa kết nối Telegram";
+
+        }
+
+        /*
+          ĐÃ THỰC SỰ Ở TRONG GROUP
+        */
+
+        else if (
+          status.joined === true
+        ) {
+
+          line.textContent =
+            "Nhóm Coach: 🟢 Đã tham gia";
+
+        }
+
+        /*
+          TELEGRAM XÁC NHẬN KHÔNG Ở TRONG GROUP
+        */
+
+        else if (
+          status.joined === false
+        ) {
+
+          line.textContent =
+            "Nhóm Coach: 🟠 Chưa tham gia";
+
+        }
+
+        /*
+          TELEGRAM API KHÔNG TRẢ ĐƯỢC KẾT QUẢ
+        */
+
+        else {
+
+          line.textContent =
+            "Nhóm Coach: ⚪ Không kiểm tra được";
+
+        }
+
+
+        box.appendChild(
+          line
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     GỌI EDGE FUNCTION
+  ====================================================== */
+
+  async function loadGroupStatuses() {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await groupStatusSb
+          .functions
+          .invoke(
+            "coach-telegram-group-status",
+            {
+              body: {
+                mode:
+                  "admin_all"
+              }
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      if (
+        !data
+        ||
+        data.ok !== true
+        ||
+        !Array.isArray(
+          data.rows
+        )
+      ) {
+
+        throw new Error(
+          data?.error
+          ||
+          "Không lấy được trạng thái nhóm Coach."
+        );
+
+      }
+
+
+      groupStatusByCoachCode =
+        new Map();
+
+
+      data.rows.forEach(
+        function (item) {
+
+          const coachCode =
+            clean(
+              item.coach_code
+            );
+
+
+          if (coachCode) {
+
+            groupStatusByCoachCode.set(
+              coachCode,
+              item
+            );
+
+          }
+
+        }
+      );
+
+
+      renderGroupStatuses();
+
+    }
+    catch (error) {
+
+      console.error(
+        "ADMIN COACH GROUP STATUS:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     DANH SÁCH COACH RENDER LẠI
+     → GẮN LẠI DÒNG TRẠNG THÁI
+  ====================================================== */
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        clearTimeout(
+          renderTimer
+        );
+
+
+        renderTimer =
+          setTimeout(
+            renderGroupStatuses,
+            150
+          );
+
+      }
+    );
+
+
+observer.observe(
+  coachRows,
+  {
+    childList: true
+  }
+);
+
+
+  /* =====================================================
+     QUAY LẠI TAB → CHECK LẠI TELEGRAM THẬT
+  ====================================================== */
+
+  window.addEventListener(
+    "focus",
+    function () {
+
+      setTimeout(
+        loadGroupStatuses,
+        500
+      );
+
+    }
+  );
+
+
+  /*
+    Đợi danh sách Coach cũ render xong.
+  */
+
+  await new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        600
+      )
+  );
+
+
+  await loadGroupStatuses();
+
+
+})();
+
+</script>
+  
 </body>
 
 </html>
