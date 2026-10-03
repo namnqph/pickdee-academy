@@ -1,0 +1,1513 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Chi tiết phiếu nhập | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    a,
+    button {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 45px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0;
+
+      font-size:
+        clamp(27px,7vw,38px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .sub {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.46);
+
+      font-size: 10px;
+    }
+
+
+    /* =====================================================
+       STATUS
+    ====================================================== */
+
+    .top-row {
+      margin-bottom: 14px;
+
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      min-height: 25px;
+
+      padding:
+        0 9px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+    .badge.received {
+      background:
+        rgba(216,255,69,.09);
+
+      color: #d8ff45;
+    }
+
+    .badge.draft {
+      background:
+        rgba(255,190,70,.08);
+
+      color: #ffc85b;
+    }
+
+    .badge.cancelled {
+      background:
+        rgba(255,90,90,.08);
+
+      color: #ff9e9e;
+    }
+
+
+    /* =====================================================
+       SECTION
+    ====================================================== */
+
+    .section {
+      margin-bottom: 9px;
+
+      padding: 13px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .section-title {
+      margin-bottom: 10px;
+
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .rows {
+      display: grid;
+      gap: 7px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+
+      gap: 15px;
+    }
+
+    .label {
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 9px;
+      font-weight: 850;
+    }
+
+    .value {
+      max-width: 65%;
+
+      color:
+        rgba(255,255,255,.82);
+
+      text-align: right;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      overflow-wrap: anywhere;
+    }
+
+    .value.highlight {
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       ITEMS
+    ====================================================== */
+
+    .items {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      padding: 11px;
+
+      border-radius: 11px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      border:
+        1px solid rgba(255,255,255,.07);
+    }
+
+    .item-name {
+      font-size: 12px;
+      font-weight: 950;
+
+      line-height: 1.35;
+    }
+
+    .item-meta {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 8px;
+      font-weight: 850;
+    }
+
+    .item-grid {
+      margin-top: 9px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 6px;
+    }
+
+    .item-box {
+      padding: 8px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .item-box-label {
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .item-box-value {
+      margin-top: 3px;
+
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .item-total {
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       TOTAL
+    ====================================================== */
+
+    .grand-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding:
+        15px 13px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(216,255,69,.19);
+
+      background:
+        rgba(216,255,69,.045);
+    }
+
+    .grand-label {
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+    .grand-value {
+      color: #d8ff45;
+
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       NOTE
+    ====================================================== */
+
+    .note {
+      color:
+        rgba(255,255,255,.58);
+
+      font-size: 10px;
+
+      line-height: 1.5;
+
+      white-space: pre-wrap;
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        45px 18px;
+
+      text-align: center;
+
+      border-radius: 14px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.5;
+    }
+
+
+    @media(max-width:390px) {
+
+      .item-grid {
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .item-grid .item-box:last-child {
+        grid-column:
+          1 / -1;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-stock-receipts"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-stock-receipts"
+      class="back"
+    >
+      ← LỊCH SỬ
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main id="page">
+
+  <div class="state">
+    Đang tải phiếu nhập...
+  </div>
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const page =
+    document.getElementById(
+      "page"
+    );
+
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const receiptId =
+    Number(
+      params.get("id")
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showState(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "-";
+    }
+
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function statusLabel(status) {
+
+    const map = {
+
+      received:
+        "ĐÃ NHẬP",
+
+      draft:
+        "NHÁP",
+
+      cancelled:
+        "ĐÃ HỦY"
+
+    };
+
+
+    return (
+      map[status]
+      ||
+      status
+      ||
+      "-"
+    );
+
+  }
+
+
+  function showState(text) {
+
+    page.innerHTML = `
+      <div class="state">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền xem phiếu nhập."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadReceipt() {
+
+    if (
+      !Number.isInteger(
+        receiptId
+      )
+      ||
+      receiptId <= 0
+    ) {
+
+      throw new Error(
+        "Không có mã phiếu nhập hợp lệ."
+      );
+
+    }
+
+
+    await requireShopAccess();
+
+
+    /* -----------------------------------------------------
+       RECEIPT
+    ------------------------------------------------------ */
+
+    const {
+      data: receipt,
+      error: receiptError
+    } =
+      await sb
+        .from(
+          "shop_stock_receipts"
+        )
+        .select(
+          "id,receipt_code,supplier_id,status,total_cost,note,created_at,received_at,created_by"
+        )
+        .eq(
+          "id",
+          receiptId
+        )
+        .maybeSingle();
+
+
+    if (receiptError) {
+      throw receiptError;
+    }
+
+
+    if (!receipt) {
+
+      throw new Error(
+        "Không tìm thấy phiếu nhập."
+      );
+
+    }
+
+
+    /* -----------------------------------------------------
+       SUPPLIER
+    ------------------------------------------------------ */
+
+    let supplier = null;
+
+
+    if (receipt.supplier_id) {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "shop_suppliers"
+          )
+          .select(
+            "id,name,contact_name,phone,email,address"
+          )
+          .eq(
+            "id",
+            receipt.supplier_id
+          )
+          .maybeSingle();
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      supplier =
+        data || null;
+
+    }
+
+
+    /* -----------------------------------------------------
+       ITEMS
+    ------------------------------------------------------ */
+
+    const {
+      data: itemData,
+      error: itemError
+    } =
+      await sb
+        .from(
+          "shop_stock_receipt_items"
+        )
+        .select(
+          "id,variant_id,quantity,unit_cost,line_total"
+        )
+        .eq(
+          "receipt_id",
+          receipt.id
+        )
+        .order(
+          "id",
+          {
+            ascending:
+              true
+          }
+        );
+
+
+    if (itemError) {
+      throw itemError;
+    }
+
+
+    const items =
+      itemData || [];
+
+
+    const variantIds =
+      [
+        ...new Set(
+          items
+            .map(
+              item =>
+                Number(
+                  item.variant_id
+                )
+            )
+            .filter(
+              Boolean
+            )
+        )
+      ];
+
+
+    /* -----------------------------------------------------
+       VARIANTS
+    ------------------------------------------------------ */
+
+    let variants = [];
+
+
+    if (variantIds.length) {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,sku,variant_name"
+          )
+          .in(
+            "id",
+            variantIds
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      variants =
+        data || [];
+
+    }
+
+
+    const productIds =
+      [
+        ...new Set(
+          variants
+            .map(
+              item =>
+                Number(
+                  item.product_id
+                )
+            )
+            .filter(
+              Boolean
+            )
+        )
+      ];
+
+
+    /* -----------------------------------------------------
+       PRODUCTS
+    ------------------------------------------------------ */
+
+    let products = [];
+
+
+    if (productIds.length) {
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id,name,product_code,brand"
+          )
+          .in(
+            "id",
+            productIds
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      products =
+        data || [];
+
+    }
+
+
+    render(
+      receipt,
+      supplier,
+      items,
+      variants,
+      products
+    );
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render(
+    receipt,
+    supplier,
+    items,
+    variants,
+    products
+  ) {
+
+
+    function variantOf(id) {
+
+      return variants.find(
+        item =>
+          String(item.id)
+          ===
+          String(id)
+      );
+
+    }
+
+
+    function productOf(id) {
+
+      return products.find(
+        item =>
+          String(item.id)
+          ===
+          String(id)
+      );
+
+    }
+
+
+    const itemHtml =
+      items.length
+        ?
+          items
+            .map(
+              function (item) {
+
+                const variant =
+                  variantOf(
+                    item.variant_id
+                  );
+
+
+                const product =
+                  variant
+                    ?
+                      productOf(
+                        variant.product_id
+                      )
+                    :
+                      null;
+
+
+                const productName =
+                  product?.name
+                  ||
+                  "Sản phẩm";
+
+
+                const variantName =
+                  variant?.variant_name
+                  ||
+                  "";
+
+
+                const sku =
+                  variant?.sku
+                  ||
+                  "-";
+
+
+                const lineTotal =
+                  Number(
+                    item.line_total
+                    ??
+                    (
+                      Number(
+                        item.quantity || 0
+                      )
+                      *
+                      Number(
+                        item.unit_cost || 0
+                      )
+                    )
+                  );
+
+
+                return `
+
+                  <div class="item">
+
+                    <div class="item-name">
+                      ${escapeHtml(
+                        productName
+                      )}
+                    </div>
+
+                    <div class="item-meta">
+
+                      ${
+                        variantName
+                          ?
+                            `${escapeHtml(
+                              variantName
+                            )} • `
+                          :
+                            ""
+                      }
+
+                      ${escapeHtml(
+                        sku
+                      )}
+
+                    </div>
+
+
+                    <div class="item-grid">
+
+
+                      <div class="item-box">
+
+                        <div class="item-box-label">
+                          SỐ LƯỢNG
+                        </div>
+
+                        <div class="item-box-value">
+                          ${Number(
+                            item.quantity || 0
+                          )}
+                        </div>
+
+                      </div>
+
+
+                      <div class="item-box">
+
+                        <div class="item-box-label">
+                          GIÁ VỐN / ĐV
+                        </div>
+
+                        <div class="item-box-value">
+                          ${money(
+                            item.unit_cost
+                          )}
+                        </div>
+
+                      </div>
+
+
+                      <div class="item-box">
+
+                        <div class="item-box-label">
+                          THÀNH TIỀN
+                        </div>
+
+                        <div class="item-box-value item-total">
+                          ${money(
+                            lineTotal
+                          )}
+                        </div>
+
+                      </div>
+
+
+                    </div>
+
+                  </div>
+
+                `;
+
+              }
+            )
+            .join("")
+        :
+          `
+            <div class="state">
+              Phiếu chưa có sản phẩm.
+            </div>
+          `;
+
+
+    page.innerHTML = `
+
+
+      <div class="eyebrow">
+        PHIẾU NHẬP HÀNG
+      </div>
+
+
+      <div class="top-row">
+
+        <div>
+
+          <h1>
+            ${escapeHtml(
+              receipt.receipt_code
+              ||
+              `Phiếu #${receipt.id}`
+            )}
+          </h1>
+
+          <div class="sub">
+            Tạo lúc
+            ${escapeHtml(
+              formatTime(
+                receipt.created_at
+              )
+            )}
+          </div>
+
+        </div>
+
+
+        <div
+          class="badge ${escapeHtml(
+            receipt.status
+            ||
+            "draft"
+          )}"
+        >
+          ${escapeHtml(
+            statusLabel(
+              receipt.status
+            )
+          )}
+        </div>
+
+      </div>
+
+
+      <section class="section">
+
+        <div class="section-title">
+          Thông tin phiếu
+        </div>
+
+
+        <div class="rows">
+
+
+          <div class="row">
+
+            <div class="label">
+              MÃ PHIẾU
+            </div>
+
+            <div class="value highlight">
+              ${escapeHtml(
+                receipt.receipt_code
+                ||
+                "-"
+              )}
+            </div>
+
+          </div>
+
+
+          <div class="row">
+
+            <div class="label">
+              TRẠNG THÁI
+            </div>
+
+            <div class="value">
+              ${escapeHtml(
+                statusLabel(
+                  receipt.status
+                )
+              )}
+            </div>
+
+          </div>
+
+
+          <div class="row">
+
+            <div class="label">
+              NGÀY NHẬP KHO
+            </div>
+
+            <div class="value">
+              ${escapeHtml(
+                formatTime(
+                  receipt.received_at
+                )
+              )}
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+      <section class="section">
+
+        <div class="section-title">
+          Nhà cung cấp
+        </div>
+
+
+        ${
+          supplier
+            ?
+              `
+
+                <div class="rows">
+
+
+                  <div class="row">
+
+                    <div class="label">
+                      TÊN NCC
+                    </div>
+
+                    <div class="value">
+                      ${escapeHtml(
+                        supplier.name
+                        ||
+                        "-"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  ${
+                    supplier.contact_name
+                      ?
+                        `
+                          <div class="row">
+
+                            <div class="label">
+                              NGƯỜI LIÊN HỆ
+                            </div>
+
+                            <div class="value">
+                              ${escapeHtml(
+                                supplier.contact_name
+                              )}
+                            </div>
+
+                          </div>
+                        `
+                      :
+                        ""
+                  }
+
+
+                  ${
+                    supplier.phone
+                      ?
+                        `
+                          <div class="row">
+
+                            <div class="label">
+                              SỐ ĐIỆN THOẠI
+                            </div>
+
+                            <div class="value">
+                              ${escapeHtml(
+                                supplier.phone
+                              )}
+                            </div>
+
+                          </div>
+                        `
+                      :
+                        ""
+                  }
+
+
+                  ${
+                    supplier.address
+                      ?
+                        `
+                          <div class="row">
+
+                            <div class="label">
+                              ĐỊA CHỈ
+                            </div>
+
+                            <div class="value">
+                              ${escapeHtml(
+                                supplier.address
+                              )}
+                            </div>
+
+                          </div>
+                        `
+                      :
+                        ""
+                  }
+
+
+                </div>
+
+              `
+            :
+              `
+                <div class="note">
+                  Phiếu này không chọn nhà cung cấp.
+                </div>
+              `
+        }
+
+      </section>
+
+
+      <section class="section">
+
+        <div class="section-title">
+          Sản phẩm nhập
+        </div>
+
+        <div class="items">
+          ${itemHtml}
+        </div>
+
+      </section>
+
+
+      ${
+        receipt.note
+          ?
+            `
+
+              <section class="section">
+
+                <div class="section-title">
+                  Ghi chú
+                </div>
+
+                <div class="note">
+                  ${escapeHtml(
+                    receipt.note
+                  )}
+                </div>
+
+              </section>
+
+            `
+          :
+            ""
+      }
+
+
+      <div class="grand-total">
+
+        <div class="grand-label">
+          TỔNG GIÁ TRỊ PHIẾU
+        </div>
+
+        <div class="grand-value">
+          ${money(
+            receipt.total_cost
+          )}
+        </div>
+
+      </div>
+
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadReceipt();
+
+    }
+    catch (error) {
+
+      console.error(
+        "RECEIPT DETAIL ERROR:",
+        error
+      );
+
+
+      showState(
+        error?.message
+        ||
+        "Không tải được phiếu nhập."
+      );
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
