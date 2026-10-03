@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Nhà cung cấp | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    textarea,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding: 0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 45px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       BUTTON
+    ====================================================== */
+
+    .new-btn {
+      width: 100%;
+
+      min-height: 44px;
+
+      margin-bottom: 11px;
+
+      border: 0;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .form-card {
+      display: none;
+
+      margin-bottom: 11px;
+
+      padding: 14px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(216,255,69,.22);
+
+      background: #0d1d2f;
+    }
+
+    .form-card.show {
+      display: block;
+    }
+
+    .form-title {
+      margin-bottom: 11px;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 950;
+
+      letter-spacing: .05em;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+
+      min-height: 44px;
+
+      padding:
+        0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background: #10243a;
+      color: #fff;
+
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 68px;
+
+      padding:
+        10px 11px;
+
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color:
+        rgba(216,255,69,.65);
+    }
+
+    .two-cols {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 8px;
+    }
+
+    .switch-row {
+      min-height: 44px;
+
+      padding:
+        0 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .switch-row strong {
+      font-size: 10px;
+    }
+
+    .switch-row input {
+      width: 20px;
+      min-height: 20px;
+    }
+
+    .form-actions {
+      margin-top: 10px;
+
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 7px;
+    }
+
+    .cancel-btn,
+    .save-btn {
+      min-height: 43px;
+
+      border-radius: 10px;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.04);
+
+      color:
+        rgba(255,255,255,.7);
+    }
+
+    .save-btn {
+      border: 0;
+
+      background: #d8ff45;
+      color: #071523;
+    }
+
+    .save-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ====================================================== */
+
+    .search {
+      margin-bottom: 10px;
+    }
+
+
+    /* =====================================================
+       LIST
+    ====================================================== */
+
+    .supplier-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .supplier-card {
+      padding: 12px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .supplier-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+    .supplier-name {
+      font-size: 14px;
+      font-weight: 950;
+
+      line-height: 1.3;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      min-height: 22px;
+
+      padding:
+        0 8px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+    .badge.active {
+      background:
+        rgba(216,255,69,.09);
+
+      color: #d8ff45;
+    }
+
+    .badge.inactive {
+      background:
+        rgba(255,255,255,.06);
+
+      color:
+        rgba(255,255,255,.4);
+    }
+
+    .supplier-info {
+      margin-top: 8px;
+
+      display: grid;
+      gap: 4px;
+    }
+
+    .info-line {
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 10px;
+
+      line-height: 1.4;
+    }
+
+    .edit-btn {
+      width: 100%;
+
+      min-height: 36px;
+
+      margin-top: 9px;
+
+      border-radius: 9px;
+
+      border:
+        1px solid rgba(216,255,69,.2);
+
+      background:
+        rgba(216,255,69,.04);
+
+      color: #d8ff45;
+
+      font-size: 9px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       MESSAGE / EMPTY
+    ====================================================== */
+
+    .message {
+      display: none;
+
+      margin-bottom: 10px;
+
+      padding: 10px 11px;
+
+      border-radius: 10px;
+
+      font-size: 11px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.08);
+
+      border:
+        1px solid rgba(255,90,90,.24);
+
+      color: #ffb0b0;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(216,255,69,.07);
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      color: #d8ff45;
+    }
+
+    .state {
+      padding:
+        42px 18px;
+
+      text-align: center;
+
+      border-radius: 14px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+    }
+
+
+    @media(max-width:390px) {
+
+      .two-cols {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-suppliers"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Nhà cung cấp
+  </h1>
+
+  <p class="intro">
+    Lưu thông tin nguồn hàng để khi nhập kho chỉ cần chọn,
+    không phải nhập lại nhiều lần.
+  </p>
+
+
+  <button
+    id="newBtn"
+    class="new-btn"
+    type="button"
+  >
+    + THÊM NHÀ CUNG CẤP
+  </button>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <div
+    id="formCard"
+    class="form-card"
+  >
+
+    <div
+      id="formTitle"
+      class="form-title"
+    >
+      Thêm nhà cung cấp
+    </div>
+
+
+    <div class="form-grid">
+
+
+      <div class="field">
+
+        <label>
+          TÊN NHÀ CUNG CẤP *
+        </label>
+
+        <input
+          id="name"
+          type="text"
+          placeholder="Tên công ty / cửa hàng / cá nhân"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          NGƯỜI LIÊN HỆ
+        </label>
+
+        <input
+          id="contactName"
+          type="text"
+          placeholder="Tên người phụ trách"
+        >
+
+      </div>
+
+
+      <div class="two-cols">
+
+
+        <div class="field">
+
+          <label>
+            SỐ ĐIỆN THOẠI
+          </label>
+
+          <input
+            id="phone"
+            type="tel"
+            inputmode="tel"
+            placeholder="09xxxxxxxx"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            EMAIL
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            inputmode="email"
+            placeholder="email@example.com"
+          >
+
+        </div>
+
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          ĐỊA CHỈ
+        </label>
+
+        <textarea
+          id="address"
+          placeholder="Địa chỉ nhà cung cấp"
+        ></textarea>
+
+      </div>
+
+
+      <div class="switch-row">
+
+        <strong>
+          Đang hoạt động
+        </strong>
+
+        <input
+          id="isActive"
+          type="checkbox"
+          checked
+        >
+
+      </div>
+
+
+    </div>
+
+
+    <div class="form-actions">
+
+      <button
+        id="cancelBtn"
+        class="cancel-btn"
+        type="button"
+      >
+        HỦY
+      </button>
+
+      <button
+        id="saveBtn"
+        class="save-btn"
+        type="button"
+      >
+        LƯU
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="search">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm tên / SĐT / người liên hệ..."
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div
+    id="supplierList"
+    class="supplier-list"
+  >
+
+    <div class="state">
+      Đang tải nhà cung cấp...
+    </div>
+
+  </div>
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const listBox =
+    document.getElementById(
+      "supplierList"
+    );
+
+
+  const formCard =
+    document.getElementById(
+      "formCard"
+    );
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  let suppliers = [];
+
+  let editingId = null;
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function normalize(value) {
+
+    return String(
+      value || ""
+    )
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  function resetForm() {
+
+    editingId =
+      null;
+
+
+    document
+      .getElementById(
+        "formTitle"
+      )
+      .textContent =
+        "Thêm nhà cung cấp";
+
+
+    document
+      .getElementById(
+        "name"
+      )
+      .value =
+        "";
+
+
+    document
+      .getElementById(
+        "contactName"
+      )
+      .value =
+        "";
+
+
+    document
+      .getElementById(
+        "phone"
+      )
+      .value =
+        "";
+
+
+    document
+      .getElementById(
+        "email"
+      )
+      .value =
+        "";
+
+
+    document
+      .getElementById(
+        "address"
+      )
+      .value =
+        "";
+
+
+    document
+      .getElementById(
+        "isActive"
+      )
+      .checked =
+        true;
+
+  }
+
+
+  function closeForm() {
+
+    formCard.classList.remove(
+      "show"
+    );
+
+    resetForm();
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền quản lý nhà cung cấp."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadSuppliers() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_suppliers"
+        )
+        .select(
+          "id,name,contact_name,phone,email,address,is_active"
+        )
+        .order(
+          "name",
+          {
+            ascending:
+              true
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    suppliers =
+      data || [];
+
+
+    render();
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render() {
+
+    const keyword =
+      normalize(
+        document
+          .getElementById(
+            "searchInput"
+          )
+          .value
+      );
+
+
+    const filtered =
+      suppliers.filter(
+        function (supplier) {
+
+          const text =
+            normalize(
+              [
+                supplier.name,
+                supplier.contact_name,
+                supplier.phone,
+                supplier.email,
+                supplier.address
+              ].join(" ")
+            );
+
+
+          return (
+            !keyword
+            ||
+            text.includes(
+              keyword
+            )
+          );
+
+        }
+      );
+
+
+    if (!filtered.length) {
+
+      listBox.innerHTML =
+        `
+          <div class="state">
+            Chưa có nhà cung cấp.
+          </div>
+        `;
+
+      return;
+
+    }
+
+
+    listBox.innerHTML =
+      filtered
+        .map(
+          supplier => `
+
+            <div class="supplier-card">
+
+              <div class="supplier-top">
+
+                <div class="supplier-name">
+                  ${escapeHtml(
+                    supplier.name
+                  )}
+                </div>
+
+                <div
+                  class="badge ${
+                    supplier.is_active
+                      ?
+                        "active"
+                      :
+                        "inactive"
+                  }"
+                >
+                  ${
+                    supplier.is_active
+                      ?
+                        "ĐANG DÙNG"
+                      :
+                        "TẠM NGƯNG"
+                  }
+                </div>
+
+              </div>
+
+
+              <div class="supplier-info">
+
+                ${
+                  supplier.contact_name
+                  ?
+                    `
+                      <div class="info-line">
+                        👤 ${escapeHtml(
+                          supplier.contact_name
+                        )}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+
+                ${
+                  supplier.phone
+                  ?
+                    `
+                      <div class="info-line">
+                        ☎ ${escapeHtml(
+                          supplier.phone
+                        )}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+
+                ${
+                  supplier.email
+                  ?
+                    `
+                      <div class="info-line">
+                        ✉ ${escapeHtml(
+                          supplier.email
+                        )}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+
+                ${
+                  supplier.address
+                  ?
+                    `
+                      <div class="info-line">
+                        📍 ${escapeHtml(
+                          supplier.address
+                        )}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+              </div>
+
+
+              <button
+                type="button"
+                class="edit-btn"
+                data-edit="${supplier.id}"
+              >
+                SỬA THÔNG TIN
+              </button>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+
+    document
+      .querySelectorAll(
+        "[data-edit]"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              const supplier =
+                suppliers.find(
+                  item =>
+                    String(item.id)
+                    ===
+                    String(
+                      button.dataset.edit
+                    )
+                );
+
+
+              if (!supplier) {
+                return;
+              }
+
+
+              editingId =
+                supplier.id;
+
+
+              document
+                .getElementById(
+                  "formTitle"
+                )
+                .textContent =
+                  "Sửa nhà cung cấp";
+
+
+              document
+                .getElementById(
+                  "name"
+                )
+                .value =
+                  supplier.name
+                  ||
+                  "";
+
+
+              document
+                .getElementById(
+                  "contactName"
+                )
+                .value =
+                  supplier.contact_name
+                  ||
+                  "";
+
+
+              document
+                .getElementById(
+                  "phone"
+                )
+                .value =
+                  supplier.phone
+                  ||
+                  "";
+
+
+              document
+                .getElementById(
+                  "email"
+                )
+                .value =
+                  supplier.email
+                  ||
+                  "";
+
+
+              document
+                .getElementById(
+                  "address"
+                )
+                .value =
+                  supplier.address
+                  ||
+                  "";
+
+
+              document
+                .getElementById(
+                  "isActive"
+                )
+                .checked =
+                  supplier.is_active
+                  ===
+                  true;
+
+
+              formCard.classList.add(
+                "show"
+              );
+
+
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     SAVE
+  ====================================================== */
+
+  saveBtn.addEventListener(
+    "click",
+    async function () {
+
+      clearMessage();
+
+
+      const name =
+        document
+          .getElementById(
+            "name"
+          )
+          .value
+          .trim();
+
+
+      const contactName =
+        document
+          .getElementById(
+            "contactName"
+          )
+          .value
+          .trim();
+
+
+      const phone =
+        document
+          .getElementById(
+            "phone"
+          )
+          .value
+          .trim();
+
+
+      const email =
+        document
+          .getElementById(
+            "email"
+          )
+          .value
+          .trim();
+
+
+      const address =
+        document
+          .getElementById(
+            "address"
+          )
+          .value
+          .trim();
+
+
+      const isActive =
+        document
+          .getElementById(
+            "isActive"
+          )
+          .checked;
+
+
+      if (!name) {
+
+        showMessage(
+          "Nhập tên nhà cung cấp.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+
+      saveBtn.textContent =
+        "ĐANG LƯU...";
+
+
+      try {
+
+
+        const payload = {
+
+          name:
+            name,
+
+          contact_name:
+            contactName || null,
+
+          phone:
+            phone || null,
+
+          email:
+            email || null,
+
+          address:
+            address || null,
+
+          is_active:
+            isActive
+
+        };
+
+
+        let result;
+
+
+        if (editingId) {
+
+          result =
+            await sb
+              .from(
+                "shop_suppliers"
+              )
+              .update(
+                payload
+              )
+              .eq(
+                "id",
+                editingId
+              );
+
+        }
+        else {
+
+          result =
+            await sb
+              .from(
+                "shop_suppliers"
+              )
+              .insert(
+                payload
+              );
+
+        }
+
+
+        if (result.error) {
+          throw result.error;
+        }
+
+
+        showMessage(
+          editingId
+            ?
+              "✓ Đã cập nhật nhà cung cấp."
+            :
+              "✓ Đã thêm nhà cung cấp.",
+          "success"
+        );
+
+
+        closeForm();
+
+        await loadSuppliers();
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "SAVE SUPPLIER ERROR:",
+          error
+        );
+
+
+        showMessage(
+          error?.message
+          ||
+          "Không lưu được nhà cung cấp.",
+          "error"
+        );
+
+
+      }
+      finally {
+
+
+        saveBtn.disabled =
+          false;
+
+
+        saveBtn.textContent =
+          "LƯU";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  document
+    .getElementById(
+      "newBtn"
+    )
+    .addEventListener(
+      "click",
+      function () {
+
+        clearMessage();
+
+        resetForm();
+
+        formCard.classList.add(
+          "show"
+        );
+
+      }
+    );
+
+
+  document
+    .getElementById(
+      "cancelBtn"
+    )
+    .addEventListener(
+      "click",
+      closeForm
+    );
+
+
+  document
+    .getElementById(
+      "searchInput"
+    )
+    .addEventListener(
+      "input",
+      render
+    );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await requireShopAccess();
+
+      await loadSuppliers();
+
+    }
+    catch (error) {
+
+      console.error(
+        "SUPPLIER PAGE ERROR:",
+        error
+      );
+
+
+      listBox.innerHTML =
+        `
+          <div class="state">
+            ${escapeHtml(
+              error?.message
+              ||
+              "Không tải được nhà cung cấp."
+            )}
+          </div>
+        `;
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
