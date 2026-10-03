@@ -1,0 +1,2267 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>Chi tiết sản phẩm | PickDee Shop</title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background: #071523;
+      color: #ffffff;
+
+      padding-bottom:
+        calc(90px + env(safe-area-inset-bottom));
+    }
+
+    a {
+      color: inherit;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      min-height: 64px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(7,21,35,.95);
+
+      backdrop-filter:
+        blur(14px);
+    }
+
+
+    .header-inner {
+      width:
+        min(1080px, calc(100% - 24px));
+
+      min-height: 64px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+
+    .brand {
+      text-decoration: none;
+
+      font-size: 21px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .cart-link {
+      min-height: 39px;
+
+      padding:
+        0 11px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(216,255,69,.35);
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+
+    .cart-count {
+      min-width: 20px;
+      height: 20px;
+
+      margin-left: 6px;
+
+      padding:
+        0 5px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ====================================================== */
+
+    main {
+      width:
+        min(1080px, calc(100% - 24px));
+
+      margin:
+        14px auto 40px;
+    }
+
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+
+      min-height: 38px;
+
+      margin-bottom: 10px;
+
+      color:
+        rgba(255,255,255,.65);
+
+      text-decoration: none;
+
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+
+    .product-layout {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0,1fr)
+        minmax(0,.88fr);
+
+      gap: 26px;
+
+      align-items: start;
+    }
+
+
+    /* =====================================================
+       ẢNH
+    ====================================================== */
+
+    .gallery {
+      min-width: 0;
+    }
+
+
+    .main-image {
+      width: 100%;
+
+      height:
+        min(520px, 62vh);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      overflow: hidden;
+
+      border-radius: 20px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background:
+        #0d1d2f;
+    }
+
+
+    .main-image img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+
+      display: block;
+    }
+
+
+    .image-placeholder {
+      color:
+        rgba(255,255,255,.22);
+
+      text-align: center;
+
+      font-size: 54px;
+    }
+
+
+    .image-placeholder span {
+      display: block;
+
+      margin-top: 10px;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+
+    .thumbs {
+      display: flex;
+
+      gap: 8px;
+
+      margin-top: 9px;
+
+      overflow-x: auto;
+
+      scrollbar-width: none;
+    }
+
+
+    .thumbs::-webkit-scrollbar {
+      display: none;
+    }
+
+
+    .thumb {
+      flex: 0 0 60px;
+
+      width: 60px;
+      height: 60px;
+
+      padding: 3px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.11);
+
+      background:
+        #0d1d2f;
+
+      cursor: pointer;
+
+      overflow: hidden;
+    }
+
+
+    .thumb.active {
+      border-color:
+        #d8ff45;
+    }
+
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+    }
+
+
+    /* =====================================================
+       INFO
+    ====================================================== */
+
+    .info {
+      padding:
+        20px;
+
+      border-radius: 20px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background:
+        #0d1d2f;
+    }
+
+
+    .brand-name {
+      margin-bottom: 6px;
+
+      color:
+        #d8ff45;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      letter-spacing: .09em;
+
+      text-transform: uppercase;
+    }
+
+
+    h1 {
+      margin:
+        0 0 10px;
+
+      font-size:
+        clamp(25px,4vw,38px);
+
+      line-height: 1.08;
+
+      letter-spacing: -.035em;
+    }
+
+
+    .short-description {
+      margin:
+        0 0 16px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      font-size: 14px;
+
+      line-height: 1.55;
+    }
+
+
+    .price-line {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin:
+        6px 0 16px;
+    }
+
+
+    .price {
+      color:
+        #d8ff45;
+
+      font-size: 28px;
+      font-weight: 950;
+
+      letter-spacing: -.025em;
+    }
+
+
+    .compare-price {
+      color:
+        rgba(255,255,255,.35);
+
+      font-size: 14px;
+
+      text-decoration: line-through;
+    }
+
+
+    .trust {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 7px;
+
+      margin-bottom: 19px;
+    }
+
+
+    .trust span {
+      padding:
+        7px 9px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      color:
+        rgba(255,255,255,.75);
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+
+    /* =====================================================
+       VARIANT
+    ====================================================== */
+
+    .section-label {
+      margin-bottom: 8px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 11px;
+      font-weight: 900;
+
+      letter-spacing: .06em;
+    }
+
+
+    .variants {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin-bottom: 18px;
+    }
+
+
+    .variant-btn {
+      min-height: 40px;
+
+      padding:
+        0 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.13);
+
+      background:
+        rgba(255,255,255,.04);
+
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+
+    .variant-btn.active {
+      color: #071523;
+
+      background: #d8ff45;
+
+      border-color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       QUANTITY
+    ====================================================== */
+
+    .quantity-row {
+      display: flex;
+
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin:
+        5px 0 18px;
+    }
+
+
+    .quantity {
+      display: inline-grid;
+
+      grid-template-columns:
+        42px 48px 42px;
+
+      min-height: 42px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 11px;
+
+      overflow: hidden;
+    }
+
+
+    .quantity button {
+      border: 0;
+
+      background:
+        rgba(255,255,255,.05);
+
+      color: #ffffff;
+
+      font-size: 21px;
+
+      cursor: pointer;
+    }
+
+
+    .quantity span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       DESCRIPTION
+    ====================================================== */
+
+    .description {
+      margin-top: 18px;
+
+      padding-top: 17px;
+
+      border-top:
+        1px solid rgba(255,255,255,.08);
+    }
+
+
+    .description-title {
+      margin-bottom: 8px;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+
+    .description-text {
+      color:
+        rgba(255,255,255,.62);
+
+      font-size: 13px;
+
+      line-height: 1.65;
+
+      white-space: pre-line;
+    }
+
+
+    /* =====================================================
+       MOBILE BOTTOM BUY BAR
+    ====================================================== */
+
+    .buy-bar {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 100;
+
+      padding:
+        9px 12px
+        calc(9px + env(safe-area-inset-bottom));
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-top:
+        1px solid rgba(255,255,255,.10);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+
+    .buy-bar-inner {
+      width:
+        min(1080px,100%);
+
+      margin: auto;
+
+      display: grid;
+
+      grid-template-columns:
+        minmax(0,1fr)
+        minmax(180px,330px);
+
+      gap: 10px;
+
+      align-items: center;
+    }
+
+
+    .bottom-price-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 10px;
+
+      font-weight: 800;
+    }
+
+
+    .bottom-price {
+      margin-top: 2px;
+
+      color:
+        #d8ff45;
+
+      font-size: 19px;
+
+      font-weight: 950;
+    }
+
+
+    .add-cart {
+      min-height: 50px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      cursor: pointer;
+
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+
+    .add-cart:active {
+      transform:
+        scale(.985);
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        60px 20px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+
+    .state strong {
+      display: block;
+
+      margin-bottom: 8px;
+
+      color: #ffffff;
+
+      font-size: 19px;
+    }
+
+
+    /* =====================================================
+       TOAST
+    ====================================================== */
+
+    .toast {
+      position: fixed;
+
+      left: 50%;
+      bottom:
+        calc(84px + env(safe-area-inset-bottom));
+
+      z-index: 200;
+
+      transform:
+        translate(-50%,20px);
+
+      max-width:
+        calc(100% - 30px);
+
+      padding:
+        11px 16px;
+
+      border-radius: 999px;
+
+      background:
+        #ffffff;
+
+      color:
+        #071523;
+
+      font-size: 12px;
+      font-weight: 900;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition:
+        .2s ease;
+    }
+
+
+    .toast.show {
+      opacity: 1;
+
+      transform:
+        translate(-50%,0);
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media(max-width:720px) {
+
+      main {
+        margin-top: 8px;
+      }
+
+
+      .product-layout {
+        grid-template-columns:
+          1fr;
+
+        gap: 12px;
+      }
+
+
+      /*
+        QUAN TRỌNG:
+        Ảnh trên điện thoại KHÔNG chiếm quá nhiều màn hình.
+      */
+      .main-image {
+        height:
+          min(36vh,310px);
+
+        min-height:
+          230px;
+
+        border-radius: 16px;
+      }
+
+
+      .info {
+        padding:
+          16px;
+
+        border-radius: 16px;
+      }
+
+
+      h1 {
+        font-size:
+          25px;
+      }
+
+
+      .price {
+        font-size:
+          25px;
+      }
+
+
+      .thumb {
+        flex-basis: 54px;
+
+        width: 54px;
+        height: 54px;
+      }
+
+
+      .buy-bar-inner {
+        grid-template-columns:
+          .72fr 1.28fr;
+      }
+
+    }
+
+
+    @media(max-width:380px) {
+
+      .main-image {
+        height:
+          min(34vh,270px);
+
+        min-height:
+          210px;
+      }
+
+
+      .header-inner,
+      main {
+        width:
+          calc(100% - 18px);
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+
+    <a
+      class="cart-link"
+      href="./shop-cart"
+    >
+      🛒 GIỎ
+
+      <span
+        id="cartCount"
+        class="cart-count"
+      >
+        0
+      </span>
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+
+  <a
+    href="./shop"
+    class="back"
+  >
+    ← QUAY LẠI SHOP
+  </a>
+
+
+  <div
+    id="pageContent"
+  >
+
+    <div class="state">
+
+      <strong>
+        Đang tải sản phẩm...
+      </strong>
+
+      Vui lòng chờ trong giây lát.
+
+    </div>
+
+  </div>
+
+
+</main>
+
+
+
+<div
+  id="buyBar"
+  class="buy-bar"
+  style="display:none;"
+>
+
+  <div class="buy-bar-inner">
+
+    <div>
+
+      <div class="bottom-price-label">
+        GIÁ BÁN
+      </div>
+
+      <div
+        id="bottomPrice"
+        class="bottom-price"
+      >
+        -
+      </div>
+
+    </div>
+
+
+    <button
+      id="addCartBtn"
+      class="add-cart"
+      type="button"
+    >
+      THÊM VÀO GIỎ
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<div
+  id="toast"
+  class="toast"
+>
+  ✓ Đã thêm vào giỏ hàng
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const pageContent =
+    document.getElementById(
+      "pageContent"
+    );
+
+
+  const buyBar =
+    document.getElementById(
+      "buyBar"
+    );
+
+
+  const bottomPrice =
+    document.getElementById(
+      "bottomPrice"
+    );
+
+
+  const addCartBtn =
+    document.getElementById(
+      "addCartBtn"
+    );
+
+
+  const cartCount =
+    document.getElementById(
+      "cartCount"
+    );
+
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showError(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     STATE
+  ====================================================== */
+
+  let product = null;
+
+  let variants = [];
+
+  let images = [];
+
+  let selectedVariant = null;
+
+  let quantity = 1;
+
+
+
+  /* =====================================================
+     PARAM
+  ====================================================== */
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const productId =
+    params.get(
+      "id"
+    );
+
+
+  if (!productId) {
+
+    showError(
+      "Không tìm thấy sản phẩm."
+    );
+
+    return;
+
+  }
+
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function imageUrl(path) {
+
+    if (!path) {
+      return "";
+    }
+
+
+    const {
+      data
+    } =
+      sb.storage
+        .from(
+          "shop-products"
+        )
+        .getPublicUrl(
+          path
+        );
+
+
+    return (
+      data?.publicUrl || ""
+    );
+
+  }
+
+
+
+  /* =====================================================
+     CART COUNT
+  ====================================================== */
+
+  function readCart() {
+
+    try {
+
+      const cart =
+        JSON.parse(
+          localStorage.getItem(
+            "pickdee_shop_cart"
+          )
+          ||
+          "[]"
+        );
+
+
+      return Array.isArray(cart)
+        ?
+          cart
+        :
+          [];
+
+    }
+    catch (_) {
+
+      return [];
+
+    }
+
+  }
+
+
+  function updateCartCount() {
+
+    const cart =
+      readCart();
+
+
+    const count =
+      cart.reduce(
+        function (sum,item) {
+
+          return (
+            sum
+            +
+            Number(
+              item.quantity || 0
+            )
+          );
+
+        },
+        0
+      );
+
+
+    cartCount.textContent =
+      String(count);
+
+  }
+
+
+
+  /* =====================================================
+     TOAST
+  ====================================================== */
+
+  let toastTimer = null;
+
+
+  function showToast() {
+
+    clearTimeout(
+      toastTimer
+    );
+
+
+    toast.classList.add(
+      "show"
+    );
+
+
+    toastTimer =
+      setTimeout(
+        function () {
+
+          toast.classList.remove(
+            "show"
+          );
+
+        },
+        1800
+      );
+
+  }
+
+
+
+  /* =====================================================
+     ERROR
+  ====================================================== */
+
+  function showError(message) {
+
+    pageContent.innerHTML = `
+      <div class="state">
+
+        <strong>
+          Không mở được sản phẩm
+        </strong>
+
+        ${escapeHtml(message)}
+
+      </div>
+    `;
+
+
+    buyBar.style.display =
+      "none";
+
+  }
+
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function renderProduct() {
+
+    selectedVariant =
+      selectedVariant
+      ||
+      variants[0]
+      ||
+      null;
+
+
+    if (!selectedVariant) {
+
+      showError(
+        "Sản phẩm chưa có giá bán."
+      );
+
+      return;
+
+    }
+
+
+    const sortedImages =
+      [...images]
+        .sort(
+          function (a,b) {
+
+            if (
+              Boolean(a.is_primary)
+              !==
+              Boolean(b.is_primary)
+            ) {
+
+              return (
+                a.is_primary
+                  ? -1
+                  : 1
+              );
+
+            }
+
+
+            return (
+              Number(a.sort_order || 0)
+              -
+              Number(b.sort_order || 0)
+            );
+
+          }
+        );
+
+
+    const firstImage =
+      sortedImages[0]
+      || null;
+
+
+    const firstUrl =
+      firstImage
+        ?
+          imageUrl(
+            firstImage.storage_path
+          )
+        :
+          "";
+
+
+    const variantButtons =
+      variants
+        .map(
+          function (variant) {
+
+            return `
+              <button
+                class="variant-btn ${
+                  String(
+                    selectedVariant.id
+                  )
+                  ===
+                  String(
+                    variant.id
+                  )
+                    ?
+                      "active"
+                    :
+                      ""
+                }"
+                type="button"
+                data-variant-id="${variant.id}"
+              >
+                ${
+                  escapeHtml(
+                    variant.variant_name
+                    ||
+                    variant.option1_value
+                    ||
+                    "Mặc định"
+                  )
+                }
+              </button>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    const thumbnails =
+      sortedImages
+        .map(
+          function (image,index) {
+
+            const url =
+              imageUrl(
+                image.storage_path
+              );
+
+
+            return `
+              <button
+                type="button"
+                class="thumb ${
+                  index === 0
+                    ?
+                      "active"
+                    :
+                      ""
+                }"
+                data-image="${escapeHtml(url)}"
+              >
+
+                <img
+                  src="${escapeHtml(url)}"
+                  alt="${escapeHtml(
+                    image.alt_text
+                    ||
+                    product.name
+                  )}"
+                >
+
+              </button>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    pageContent.innerHTML = `
+
+      <div class="product-layout">
+
+
+        <div class="gallery">
+
+          <div
+            id="mainImage"
+            class="main-image"
+          >
+
+            ${
+              firstUrl
+              ?
+                `
+                  <img
+                    src="${escapeHtml(firstUrl)}"
+                    alt="${escapeHtml(product.name)}"
+                  >
+                `
+              :
+                `
+                  <div class="image-placeholder">
+
+                    🏓
+
+                    <span>
+                      Ảnh sản phẩm đang cập nhật
+                    </span>
+
+                  </div>
+                `
+            }
+
+          </div>
+
+
+          ${
+            thumbnails
+            ?
+              `
+                <div class="thumbs">
+                  ${thumbnails}
+                </div>
+              `
+            :
+              ""
+          }
+
+        </div>
+
+
+
+        <section class="info">
+
+
+          <div class="brand-name">
+            ${
+              escapeHtml(
+                product.brand
+                ||
+                "PICKDEE HÀNG TUYỂN"
+              )
+            }
+          </div>
+
+
+          <h1>
+            ${escapeHtml(product.name)}
+          </h1>
+
+
+          ${
+            product.short_description
+            ?
+              `
+                <p class="short-description">
+                  ${escapeHtml(
+                    product.short_description
+                  )}
+                </p>
+              `
+            :
+              ""
+          }
+
+
+          <div class="price-line">
+
+            <span
+              id="mainPrice"
+              class="price"
+            >
+              ${money(selectedVariant.price)}
+            </span>
+
+
+            <span
+              id="comparePrice"
+              class="compare-price"
+              style="${
+                selectedVariant.compare_at_price
+                &&
+                Number(
+                  selectedVariant.compare_at_price
+                )
+                  >
+                Number(
+                  selectedVariant.price
+                )
+                  ?
+                    ""
+                  :
+                    "display:none;"
+              }"
+            >
+              ${
+                selectedVariant.compare_at_price
+                  ?
+                    money(
+                      selectedVariant.compare_at_price
+                    )
+                  :
+                    ""
+              }
+            </span>
+
+          </div>
+
+
+          <div class="trust">
+
+            <span>
+              ✓ HÀNG TUYỂN
+            </span>
+
+            <span>
+              ✓ CHỌN LỌC KỸ
+            </span>
+
+            <span>
+              🚚 GIAO TOÀN QUỐC
+            </span>
+
+          </div>
+
+
+          ${
+            variants.length > 1
+            ?
+              `
+                <div class="section-label">
+                  LỰA CHỌN
+                </div>
+
+                <div
+                  id="variantList"
+                  class="variants"
+                >
+                  ${variantButtons}
+                </div>
+              `
+            :
+              ""
+          }
+
+
+          <div class="quantity-row">
+
+            <div class="section-label">
+              SỐ LƯỢNG
+            </div>
+
+
+            <div class="quantity">
+
+              <button
+                id="minusBtn"
+                type="button"
+              >
+                −
+              </button>
+
+              <span id="quantityValue">
+                1
+              </span>
+
+              <button
+                id="plusBtn"
+                type="button"
+              >
+                +
+              </button>
+
+            </div>
+
+          </div>
+
+
+          ${
+            product.description
+            ?
+              `
+                <div class="description">
+
+                  <div class="description-title">
+                    Thông tin sản phẩm
+                  </div>
+
+                  <div class="description-text">
+                    ${escapeHtml(
+                      product.description
+                    )}
+                  </div>
+
+                </div>
+              `
+            :
+              ""
+          }
+
+
+        </section>
+
+
+      </div>
+    `;
+
+
+    document.title =
+      `${product.name} | PickDee Shop`;
+
+
+    buyBar.style.display =
+      "block";
+
+
+    updateDisplayedPrice();
+
+    bindProductEvents();
+
+  }
+
+
+
+  /* =====================================================
+     PRICE
+  ====================================================== */
+
+  function updateDisplayedPrice() {
+
+    if (!selectedVariant) {
+      return;
+    }
+
+
+    const mainPrice =
+      document.getElementById(
+        "mainPrice"
+      );
+
+
+    const comparePrice =
+      document.getElementById(
+        "comparePrice"
+      );
+
+
+    if (mainPrice) {
+
+      mainPrice.textContent =
+        money(
+          selectedVariant.price
+        );
+
+    }
+
+
+    bottomPrice.textContent =
+      money(
+        selectedVariant.price
+      );
+
+
+    if (comparePrice) {
+
+      if (
+        selectedVariant.compare_at_price
+        &&
+        Number(
+          selectedVariant.compare_at_price
+        )
+          >
+        Number(
+          selectedVariant.price
+        )
+      ) {
+
+        comparePrice.style.display =
+          "";
+
+        comparePrice.textContent =
+          money(
+            selectedVariant.compare_at_price
+          );
+
+      }
+      else {
+
+        comparePrice.style.display =
+          "none";
+
+      }
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     EVENT
+  ====================================================== */
+
+  function bindProductEvents() {
+
+    const minus =
+      document.getElementById(
+        "minusBtn"
+      );
+
+
+    const plus =
+      document.getElementById(
+        "plusBtn"
+      );
+
+
+    const quantityValue =
+      document.getElementById(
+        "quantityValue"
+      );
+
+
+    minus?.addEventListener(
+      "click",
+      function () {
+
+        quantity =
+          Math.max(
+            1,
+            quantity - 1
+          );
+
+
+        quantityValue.textContent =
+          String(quantity);
+
+      }
+    );
+
+
+    plus?.addEventListener(
+      "click",
+      function () {
+
+        quantity =
+          Math.min(
+            99,
+            quantity + 1
+          );
+
+
+        quantityValue.textContent =
+          String(quantity);
+
+      }
+    );
+
+
+    document
+      .querySelectorAll(
+        ".variant-btn"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              const id =
+                button.dataset.variantId;
+
+
+              selectedVariant =
+                variants.find(
+                  function (variant) {
+
+                    return (
+                      String(
+                        variant.id
+                      )
+                      ===
+                      String(id)
+                    );
+
+                  }
+                )
+                ||
+                selectedVariant;
+
+
+              document
+                .querySelectorAll(
+                  ".variant-btn"
+                )
+                .forEach(
+                  function (item) {
+
+                    item.classList.remove(
+                      "active"
+                    );
+
+                  }
+                );
+
+
+              button.classList.add(
+                "active"
+              );
+
+
+              updateDisplayedPrice();
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".thumb"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              const url =
+                button.dataset.image;
+
+
+              const mainImage =
+                document.getElementById(
+                  "mainImage"
+                );
+
+
+              if (
+                url
+                &&
+                mainImage
+              ) {
+
+                mainImage.innerHTML = `
+                  <img
+                    src="${escapeHtml(url)}"
+                    alt="${escapeHtml(product.name)}"
+                  >
+                `;
+
+              }
+
+
+              document
+                .querySelectorAll(
+                  ".thumb"
+                )
+                .forEach(
+                  function (item) {
+
+                    item.classList.remove(
+                      "active"
+                    );
+
+                  }
+                );
+
+
+              button.classList.add(
+                "active"
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+
+  /* =====================================================
+     ADD CART
+  ====================================================== */
+
+  function addToCart() {
+
+    if (
+      !product
+      ||
+      !selectedVariant
+    ) {
+
+      return;
+
+    }
+
+
+    const cart =
+      readCart();
+
+
+    const existing =
+      cart.find(
+        function (item) {
+
+          return (
+            String(
+              item.variant_id
+            )
+            ===
+            String(
+              selectedVariant.id
+            )
+          );
+
+        }
+      );
+
+
+    const primaryImage =
+      [...images]
+        .sort(
+          function (a,b) {
+
+            return (
+              Number(
+                b.is_primary
+              )
+              -
+              Number(
+                a.is_primary
+              )
+            );
+
+          }
+        )[0]
+        ||
+        null;
+
+
+    const selectedImageUrl =
+      primaryImage
+        ?
+          imageUrl(
+            primaryImage.storage_path
+          )
+        :
+          "";
+
+
+    if (existing) {
+
+      existing.quantity =
+        Math.min(
+          99,
+          Number(
+            existing.quantity || 0
+          )
+          +
+          quantity
+        );
+
+    }
+    else {
+
+      cart.push({
+
+        product_id:
+          product.id,
+
+        variant_id:
+          selectedVariant.id,
+
+        product_name:
+          product.name,
+
+        variant_name:
+          selectedVariant.variant_name
+          ||
+          "",
+
+        price:
+          Number(
+            selectedVariant.price
+          ),
+
+        quantity:
+          quantity,
+
+        image_url:
+          selectedImageUrl
+
+      });
+
+    }
+
+
+    localStorage.setItem(
+      "pickdee_shop_cart",
+      JSON.stringify(cart)
+    );
+
+
+    updateCartCount();
+
+    showToast();
+
+  }
+
+
+
+  addCartBtn.addEventListener(
+    "click",
+    addToCart
+  );
+
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadProduct() {
+
+    try {
+
+
+      const [
+        productResult,
+        variantsResult,
+        imagesResult
+      ] =
+        await Promise.all([
+
+
+          sb
+            .from(
+              "shop_products"
+            )
+            .select(
+              "id,name,slug,brand,short_description,description,status"
+            )
+            .eq(
+              "id",
+              productId
+            )
+            .eq(
+              "status",
+              "active"
+            )
+            .single(),
+
+
+          sb
+            .from(
+              "shop_product_variants"
+            )
+            .select(
+              "id,product_id,sku,variant_name,option1_name,option1_value,option2_name,option2_value,price,compare_at_price,is_active,sort_order"
+            )
+            .eq(
+              "product_id",
+              productId
+            )
+            .eq(
+              "is_active",
+              true
+            )
+            .order(
+              "sort_order",
+              {
+                ascending:
+                  true
+              }
+            ),
+
+
+          sb
+            .from(
+              "shop_product_images"
+            )
+            .select(
+              "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+            )
+            .eq(
+              "product_id",
+              productId
+            )
+            .order(
+              "sort_order",
+              {
+                ascending:
+                  true
+              }
+            )
+
+
+        ]);
+
+
+      if (productResult.error) {
+
+        console.error(
+          productResult.error
+        );
+
+
+        throw new Error(
+          "Sản phẩm không tồn tại hoặc chưa được mở bán."
+        );
+
+      }
+
+
+      if (variantsResult.error) {
+
+        console.error(
+          variantsResult.error
+        );
+
+
+        throw new Error(
+          "Không tải được giá sản phẩm."
+        );
+
+      }
+
+
+      if (imagesResult.error) {
+
+        console.error(
+          imagesResult.error
+        );
+
+
+        throw new Error(
+          "Không tải được ảnh sản phẩm."
+        );
+
+      }
+
+
+      product =
+        productResult.data;
+
+
+      variants =
+        variantsResult.data
+        ||
+        [];
+
+
+      images =
+        imagesResult.data
+        ||
+        [];
+
+
+      renderProduct();
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "PRODUCT ERROR:",
+        error
+      );
+
+
+      showError(
+        error?.message
+        ||
+        "Không tải được sản phẩm."
+      );
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  updateCartCount();
+
+  loadProduct();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
