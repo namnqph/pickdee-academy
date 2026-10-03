@@ -677,7 +677,69 @@
 
   </div>
 
+<div
+  id="sourceFilters"
+  class="filters"
+  style="margin-top:-4px;"
+>
 
+  <button
+    class="filter-btn active"
+    data-source=""
+    type="button"
+  >
+    MỌI NGUỒN
+  </button>
+
+  <button
+    class="filter-btn"
+    data-source="website"
+    type="button"
+  >
+    WEBSITE
+  </button>
+
+  <button
+    class="filter-btn"
+    data-source="zalo"
+    type="button"
+  >
+    ZALO
+  </button>
+
+  <button
+    class="filter-btn"
+    data-source="tiktok"
+    type="button"
+  >
+    TIKTOK
+  </button>
+
+  <button
+    class="filter-btn"
+    data-source="facebook"
+    type="button"
+  >
+    FACEBOOK
+  </button>
+
+  <button
+    class="filter-btn"
+    data-source="phone"
+    type="button"
+  >
+    ĐIỆN THOẠI
+  </button>
+
+<button
+  class="filter-btn"
+  data-source="walk_in"
+  type="button"
+>
+  TRỰC TIẾP / VÃNG LAI
+</button>
+
+</div>
 
   <div
     id="orders"
@@ -1045,17 +1107,42 @@
 
   function renderOrders() {
 
-    const filtered =
-      selectedStatus
-        ?
-          allOrders.filter(
-            item =>
-              item.order_status
-              ===
-              selectedStatus
-          )
-        :
-          allOrders;
+  const selectedSource =
+  document.querySelector(
+    "#sourceFilters .filter-btn.active"
+  )?.dataset.source || "";
+
+
+const filtered =
+  allOrders.filter(
+    function (item) {
+
+      const statusOk =
+        !selectedStatus
+        ||
+        item.order_status === selectedStatus;
+
+
+      const sourceOk =
+        !selectedSource
+        ||
+        (
+          item.order_source
+          ||
+          "website"
+        )
+        ===
+        selectedSource;
+
+
+      return (
+        statusOk
+        &&
+        sourceOk
+      );
+
+    }
+  );
 
 
     if (!filtered.length) {
@@ -1115,7 +1202,7 @@
       tiktok: "TIKTOK",
       facebook: "FACEBOOK",
       phone: "ĐIỆN THOẠI",
-      walk_in: "KHÁCH TRỰC TIẾP",
+      walk_in: "KHÁCH TRỰC TIẾP / VÃNG LAI",
       other: "KHÁC"
     }[order.order_source]
     ||
@@ -1205,52 +1292,94 @@
 
 
 
-  /* =====================================================
-     FILTER
-  ====================================================== */
-
-  document
-    .querySelectorAll(
-      ".filter-btn"
-    )
-    .forEach(
-      function (button) {
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            selectedStatus =
-              button.dataset.status
-              ||
-              "";
+ /* =====================================================
+   FILTER
+====================================================== */
 
 
-            document
-              .querySelectorAll(
-                ".filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
+/* TRẠNG THÁI */
+
+document
+  .querySelectorAll(
+    "#filters .filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          selectedStatus =
+            button.dataset.status
+            ||
+            "";
 
 
-            button.classList.add(
-              "active"
+          document
+            .querySelectorAll(
+              "#filters .filter-btn"
+            )
+            .forEach(
+              item =>
+                item.classList.remove(
+                  "active"
+                )
             );
 
 
-            renderOrders();
+          button.classList.add(
+            "active"
+          );
 
-          }
-        );
 
-      }
-    );
+          renderOrders();
 
+        }
+      );
+
+    }
+  );
+
+
+
+/* NGUỒN ĐƠN */
+
+document
+  .querySelectorAll(
+    "#sourceFilters .filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          document
+            .querySelectorAll(
+              "#sourceFilters .filter-btn"
+            )
+            .forEach(
+              item =>
+                item.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          renderOrders();
+
+        }
+      );
+
+    }
+  );
 
 
   /* =====================================================
