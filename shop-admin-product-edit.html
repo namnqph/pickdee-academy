@@ -1566,55 +1566,76 @@
         </div>
 
 
-        <div class="grid-2">
+       <div class="grid-2">
+
+  <div class="field">
+
+    <label>
+      Giá bán lẻ
+    </label>
+
+    <input
+      id="priceInput"
+      type="number"
+      min="0"
+      step="1000"
+      inputmode="numeric"
+      value="${escapeHtml(
+        moneyInput(
+          variant.price
+        )
+      )}"
+    >
+
+  </div>
 
 
-          <div class="field">
+  <div class="field">
 
-            <label>
-              Giá bán
-            </label>
+    <label>
+      Giá bán sỉ
+    </label>
 
-            <input
-              id="priceInput"
-              type="number"
-              min="0"
-              step="1000"
-              inputmode="numeric"
-              value="${escapeHtml(
-                moneyInput(
-                  variant.price
-                )
-              )}"
-            >
+    <input
+      id="wholesalePriceInput"
+      type="number"
+      min="0"
+      step="1000"
+      inputmode="numeric"
+      placeholder="Để trống nếu chưa bán sỉ"
+      value="${escapeHtml(
+        moneyInput(
+          variant.wholesale_price
+        )
+      )}"
+    >
 
-          </div>
+  </div>
 
-
-          <div class="field">
-
-            <label>
-              Giá so sánh
-            </label>
-
-            <input
-              id="comparePriceInput"
-              type="number"
-              min="0"
-              step="1000"
-              inputmode="numeric"
-              placeholder="Để trống nếu không dùng"
-              value="${escapeHtml(
-                moneyInput(
-                  variant.compare_at_price
-                )
-              )}"
-            >
-
-          </div>
+</div>
 
 
-        </div>
+<div class="field">
+
+  <label>
+    Giá so sánh
+  </label>
+
+  <input
+    id="comparePriceInput"
+    type="number"
+    min="0"
+    step="1000"
+    inputmode="numeric"
+    placeholder="Để trống nếu không dùng"
+    value="${escapeHtml(
+      moneyInput(
+        variant.compare_at_price
+      )
+    )}"
+  >
+
+</div>
 
 
         <div class="field">
@@ -1767,7 +1788,7 @@
             "shop_product_variants"
           )
           .select(
-            "id,product_id,sku,variant_name,price,compare_at_price,is_active,sort_order"
+            "id,product_id,sku,variant_name,price,wholesale_price,compare_at_price,is_active,sort_order"
           )
           .eq(
             "product_id",
@@ -1993,84 +2014,116 @@
         .value;
 
 
-    const priceText =
-      document
-        .getElementById(
-          "priceInput"
-        )
-        .value;
+  const priceText =
+  document
+    .getElementById(
+      "priceInput"
+    )
+    .value;
 
 
-    const comparePriceText =
-      document
-        .getElementById(
-          "comparePriceInput"
-        )
-        .value;
+const wholesalePriceText =
+  document
+    .getElementById(
+      "wholesalePriceInput"
+    )
+    .value;
 
 
-    const variantActive =
-      document
-        .getElementById(
-          "variantActiveInput"
-        )
-        .checked;
+const comparePriceText =
+  document
+    .getElementById(
+      "comparePriceInput"
+    )
+    .value;
 
 
-    if (!name) {
-
-      showMessage(
-        "Anh cần nhập tên sản phẩm.",
-        "error"
-      );
-
-      return;
-
-    }
+const variantActive =
+  document
+    .getElementById(
+      "variantActiveInput"
+    )
+    .checked;
 
 
-    const price =
-      nullableNumber(
-        priceText
-      );
+if (!name) {
+
+  showMessage(
+    "Anh cần nhập tên sản phẩm.",
+    "error"
+  );
+
+  return;
+
+}
 
 
-    if (
-      price === null
-      ||
-      price < 0
-    ) {
-
-      showMessage(
-        "Giá bán không hợp lệ.",
-        "error"
-      );
-
-      return;
-
-    }
+const price =
+  nullableNumber(
+    priceText
+  );
 
 
-    const comparePrice =
-      nullableNumber(
-        comparePriceText
-      );
+if (
+  price === null
+  ||
+  price < 0
+) {
+
+  showMessage(
+    "Giá bán lẻ không hợp lệ.",
+    "error"
+  );
+
+  return;
+
+}
 
 
-    if (
-      comparePrice !== null
-      &&
-      comparePrice < 0
-    ) {
+const wholesalePrice =
+  nullableNumber(
+    wholesalePriceText
+  );
 
-      showMessage(
-        "Giá so sánh không hợp lệ.",
-        "error"
-      );
 
-      return;
+if (
+  wholesalePrice !== null
+  &&
+  wholesalePrice < 0
+) {
 
-    }
+  showMessage(
+    "Giá bán sỉ không hợp lệ.",
+    "error"
+  );
+
+  return;
+
+}
+
+
+const comparePrice =
+  nullableNumber(
+    comparePriceText
+  );
+
+
+if (
+  comparePrice !== null
+  &&
+  comparePrice < 0
+) {
+
+  showMessage(
+    "Giá so sánh không hợp lệ.",
+    "error"
+  );
+
+  return;
+
+}
+
+    
 
 
     const categoryId =
@@ -2097,56 +2150,59 @@
         data,
         error
       } =
-        await sb.rpc(
-          "shop_admin_update_product",
-          {
+       await sb.rpc(
+  "shop_admin_update_product_v2",
+  {
 
-            p_product_id:
-              product.id,
+    p_product_id:
+      product.id,
 
-            p_name:
-              name,
+    p_name:
+      name,
 
-            p_brand:
-              nullableText(
-                brand
-              ),
+    p_brand:
+      nullableText(
+        brand
+      ),
 
-            p_category_id:
-              categoryId,
+    p_category_id:
+      categoryId,
 
-            p_short_description:
-              nullableText(
-                shortDescription
-              ),
+    p_short_description:
+      nullableText(
+        shortDescription
+      ),
 
-            p_description:
-              nullableText(
-                description
-              ),
+    p_description:
+      nullableText(
+        description
+      ),
 
-            p_status:
-              status,
+    p_status:
+      status,
 
-            p_is_featured:
-              featured,
+    p_is_featured:
+      featured,
 
-            p_variant_id:
-              variant.id,
+    p_variant_id:
+      variant.id,
 
-            p_variant_name:
-              nullableText(
-                variantName
-              ),
+    p_variant_name:
+      nullableText(
+        variantName
+      ),
 
-            p_price:
-              price,
+    p_retail_price:
+      price,
 
-            p_compare_at_price:
-              comparePrice,
+    p_wholesale_price:
+      wholesalePrice,
 
-            p_variant_active:
-              variantActive
+    p_compare_at_price:
+      comparePrice,
+
+    p_variant_active:
+      variantActive
 
           }
         );
@@ -2212,11 +2268,14 @@
                   variantName
                 ),
 
-              price:
-                price,
+            price:
+  price,
 
-              compare_at_price:
-                comparePrice,
+wholesale_price:
+  wholesalePrice,
+
+compare_at_price:
+  comparePrice,
 
               is_active:
                 variantActive
