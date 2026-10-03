@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Thêm sản phẩm | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-bottom:
+        calc(90px + env(safe-area-inset-bottom));
+    }
+
+    button,
+    input,
+    textarea,
+    select,
+    a {
+      touch-action: manipulation;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+      padding: 0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 35px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #d8ff45;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .section {
+      margin-bottom: 10px;
+      padding: 14px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+    }
+
+    .section-title {
+      margin-bottom: 11px;
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: .05em;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 44px;
+
+      padding:
+        0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+      background: #10243a;
+      color: #fff;
+
+      font-family: inherit;
+
+      /*
+        16px tránh Safari iPhone tự zoom.
+      */
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 78px;
+      padding: 10px 11px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color:
+        rgba(216,255,69,.65);
+    }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr;
+      gap: 8px;
+    }
+
+    .switch-row {
+      min-height: 46px;
+
+      padding:
+        0 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      border:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .switch-text strong {
+      display: block;
+      font-size: 10px;
+    }
+
+    .switch-text span {
+      display: block;
+      margin-top: 2px;
+
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 8px;
+    }
+
+    .switch-row input {
+      width: 20px;
+      min-height: 20px;
+    }
+
+    .image-box {
+      min-height: 150px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 12px;
+
+      border:
+        1px dashed rgba(216,255,69,.25);
+
+      background:
+        rgba(255,255,255,.025);
+
+      overflow: hidden;
+    }
+
+    .image-box img {
+      display: none;
+
+      width: 100%;
+      max-height: 280px;
+
+      object-fit: contain;
+    }
+
+    .image-placeholder {
+      padding: 20px;
+
+      color:
+        rgba(255,255,255,.35);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      text-align: center;
+    }
+
+    .image-input {
+      margin-top: 8px;
+    }
+
+    .message {
+      display: none;
+
+      margin-top: 10px;
+      padding: 10px 11px;
+
+      border-radius: 10px;
+
+      font-size: 11px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.08);
+
+      border:
+        1px solid rgba(255,90,90,.24);
+
+      color: #ffb0b0;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(216,255,69,.07);
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      color: #d8ff45;
+    }
+
+    .bottom-bar {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 100;
+
+      padding:
+        7px 9px
+        calc(7px + env(safe-area-inset-bottom));
+
+      border-top:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(7,21,35,.98);
+
+      backdrop-filter:
+        blur(16px);
+    }
+
+    .bottom-inner {
+      width:
+        min(760px,100%);
+
+      margin: auto;
+    }
+
+    .save-btn {
+      width: 100%;
+      min-height: 50px;
+
+      border: 0;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 12px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .save-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    @media(max-width:390px) {
+
+      .two-cols {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-products"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Thêm sản phẩm
+  </h1>
+
+  <p class="intro">
+    Tạo sản phẩm mới để bán trên PickDee Shop.
+    Mã sản phẩm và SKU được hệ thống tự tạo.
+  </p>
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Thông tin sản phẩm
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field">
+
+        <label>
+          TÊN SẢN PHẨM *
+        </label>
+
+        <input
+          id="productName"
+          type="text"
+          placeholder="Ví dụ: Vợt Pickleball ..."
+        >
+
+      </div>
+
+
+      <div class="two-cols">
+
+        <div class="field">
+
+          <label>
+            THƯƠNG HIỆU
+          </label>
+
+          <input
+            id="brand"
+            type="text"
+            placeholder="Ví dụ: Joola"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            DANH MỤC *
+          </label>
+
+          <select id="categoryId">
+
+            <option value="">
+              Đang tải...
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          MÔ TẢ NGẮN
+        </label>
+
+        <textarea
+          id="shortDescription"
+          placeholder="Mô tả ngắn hiển thị ngoài Shop..."
+        ></textarea>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          MÔ TẢ CHI TIẾT
+        </label>
+
+        <textarea
+          id="description"
+          placeholder="Thông tin chi tiết sản phẩm..."
+        ></textarea>
+
+      </div>
+
+
+      <div class="switch-row">
+
+        <div class="switch-text">
+
+          <strong>
+            Đăng bán ngay
+          </strong>
+
+          <span>
+            Tắt nếu muốn lưu sản phẩm dạng nháp.
+          </span>
+
+        </div>
+
+        <input
+          id="activeProduct"
+          type="checkbox"
+          checked
+        >
+
+      </div>
+
+
+      <div class="switch-row">
+
+        <div class="switch-text">
+
+          <strong>
+            Sản phẩm nổi bật
+          </strong>
+
+          <span>
+            Dùng để ưu tiên ngoài trang Shop.
+          </span>
+
+        </div>
+
+        <input
+          id="featured"
+          type="checkbox"
+        >
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Giá & phiên bản
+    </div>
+
+    <div class="form-grid">
+
+      <div class="two-cols">
+
+        <div class="field">
+
+          <label>
+            TÊN PHIÊN BẢN
+          </label>
+
+          <input
+            id="variantName"
+            type="text"
+            value="Mặc định"
+            placeholder="Ví dụ: 1 quả / Màu xanh / 14mm"
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            GIÁ BÁN *
+          </label>
+
+          <input
+            id="price"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1000"
+            placeholder="85000"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          GIÁ SO SÁNH / GIÁ NIÊM YẾT
+        </label>
+
+        <input
+          id="comparePrice"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="1000"
+          placeholder="Để trống nếu không giảm giá"
+        >
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Ảnh sản phẩm
+    </div>
+
+
+    <div
+      id="imageBox"
+      class="image-box"
+    >
+
+      <div
+        id="imagePlaceholder"
+        class="image-placeholder"
+      >
+        Chọn 1 ảnh đại diện sản phẩm
+      </div>
+
+      <img
+        id="previewImage"
+        alt="Ảnh xem trước"
+      >
+
+    </div>
+
+
+    <input
+      id="imageInput"
+      class="image-input"
+      type="file"
+      accept="image/jpeg,image/png,image/webp,image/avif"
+    >
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </section>
+
+</main>
+
+
+
+<div class="bottom-bar">
+
+  <div class="bottom-inner">
+
+    <button
+      id="saveBtn"
+      class="save-btn"
+      type="button"
+    >
+      LƯU SẢN PHẨM
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const imageInput =
+    document.getElementById(
+      "imageInput"
+    );
+
+
+  const previewImage =
+    document.getElementById(
+      "previewImage"
+    );
+
+
+  const imagePlaceholder =
+    document.getElementById(
+      "imagePlaceholder"
+    );
+
+
+  let imageFile =
+    null;
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "error"
+    );
+
+    saveBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  function slugify(value) {
+
+    return String(
+      value || ""
+    )
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+      .replace(/đ/g,"d")
+      .replace(/Đ/g,"D")
+      .toLowerCase()
+      .trim()
+      .replace(
+        /[^a-z0-9]+/g,
+        "-"
+      )
+      .replace(
+        /^-+|-+$/g,
+        ""
+      );
+
+  }
+
+
+  function safeFilename(
+    name
+  ) {
+
+    const dot =
+      name.lastIndexOf(".");
+
+
+    const extension =
+      dot >= 0
+        ?
+          name
+            .slice(dot + 1)
+            .toLowerCase()
+        :
+          "webp";
+
+
+    const base =
+      dot >= 0
+        ?
+          name.slice(
+            0,
+            dot
+          )
+        :
+          name;
+
+
+    return (
+      slugify(base)
+      +
+      "-"
+      +
+      Date.now()
+      +
+      "."
+      +
+      extension
+    );
+
+  }
+
+
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền quản lý Shop."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+
+  async function loadCategories() {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_categories"
+        )
+        .select(
+          "id,name,is_active,sort_order"
+        )
+        .eq(
+          "is_active",
+          true
+        )
+        .order(
+          "sort_order",
+          {
+            ascending:
+              true
+          }
+        )
+        .order(
+          "name",
+          {
+            ascending:
+              true
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const select =
+      document.getElementById(
+        "categoryId"
+      );
+
+
+    if (!data?.length) {
+
+      select.innerHTML =
+        `
+          <option value="">
+            Chưa có danh mục
+          </option>
+        `;
+
+      return;
+
+    }
+
+
+    select.innerHTML =
+      `
+        <option value="">
+          Chọn danh mục
+        </option>
+      `
+      +
+      data
+        .map(
+          item => `
+            <option value="${item.id}">
+              ${item.name}
+            </option>
+          `
+        )
+        .join("");
+
+  }
+
+
+
+  imageInput.addEventListener(
+    "change",
+    function () {
+
+      const file =
+        imageInput.files?.[0];
+
+
+      imageFile =
+        file || null;
+
+
+      if (!file) {
+
+        previewImage.style.display =
+          "none";
+
+        imagePlaceholder.style.display =
+          "block";
+
+        return;
+
+      }
+
+
+      if (
+        file.size
+        >
+        10 * 1024 * 1024
+      ) {
+
+        imageInput.value =
+          "";
+
+        imageFile =
+          null;
+
+
+        showMessage(
+          "Ảnh tối đa 10MB.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      clearMessage();
+
+
+      const objectUrl =
+        URL.createObjectURL(
+          file
+        );
+
+
+      previewImage.src =
+        objectUrl;
+
+
+      previewImage.style.display =
+        "block";
+
+
+      imagePlaceholder.style.display =
+        "none";
+
+    }
+  );
+
+
+
+  async function createProduct() {
+
+    clearMessage();
+
+
+    const productName =
+      document
+        .getElementById(
+          "productName"
+        )
+        .value
+        .trim();
+
+
+    const brand =
+      document
+        .getElementById(
+          "brand"
+        )
+        .value
+        .trim();
+
+
+    const categoryId =
+      document
+        .getElementById(
+          "categoryId"
+        )
+        .value;
+
+
+    const shortDescription =
+      document
+        .getElementById(
+          "shortDescription"
+        )
+        .value
+        .trim();
+
+
+    const description =
+      document
+        .getElementById(
+          "description"
+        )
+        .value
+        .trim();
+
+
+    const variantName =
+      document
+        .getElementById(
+          "variantName"
+        )
+        .value
+        .trim()
+      ||
+      "Mặc định";
+
+
+    const price =
+      Number(
+        document
+          .getElementById(
+            "price"
+          )
+          .value
+      );
+
+
+    const comparePriceRaw =
+      document
+        .getElementById(
+          "comparePrice"
+        )
+        .value;
+
+
+    const activeProduct =
+      document
+        .getElementById(
+          "activeProduct"
+        )
+        .checked;
+
+
+    const featured =
+      document
+        .getElementById(
+          "featured"
+        )
+        .checked;
+
+
+    if (!productName) {
+
+      showMessage(
+        "Nhập tên sản phẩm.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (!categoryId) {
+
+      showMessage(
+        "Chọn danh mục sản phẩm.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !Number.isFinite(price)
+      ||
+      price <= 0
+    ) {
+
+      showMessage(
+        "Nhập giá bán hợp lệ.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    saveBtn.disabled =
+      true;
+
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    try {
+
+
+      let slug =
+        slugify(
+          productName
+        );
+
+
+      if (!slug) {
+
+        slug =
+          "san-pham";
+
+      }
+
+
+      const {
+        data: existing
+      } =
+        await sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id"
+          )
+          .eq(
+            "slug",
+            slug
+          )
+          .maybeSingle();
+
+
+      if (existing) {
+
+        slug =
+          `${slug}-${Date.now()}`;
+
+      }
+
+
+      const {
+        data: product,
+        error: productError
+      } =
+        await sb
+          .from(
+            "shop_products"
+          )
+          .insert({
+
+            category_id:
+              Number(
+                categoryId
+              ),
+
+            name:
+              productName,
+
+            slug:
+              slug,
+
+            brand:
+              brand || null,
+
+            short_description:
+              shortDescription
+              ||
+              null,
+
+            description:
+              description
+              ||
+              null,
+
+            status:
+              activeProduct
+                ?
+                  "active"
+                :
+                  "draft",
+
+            is_featured:
+              featured
+
+          })
+          .select(
+            "id,product_code,name,slug"
+          )
+          .single();
+
+
+      if (productError) {
+        throw productError;
+      }
+
+
+      const {
+        data: variant,
+        error: variantError
+      } =
+        await sb
+          .from(
+            "shop_product_variants"
+          )
+          .insert({
+
+            product_id:
+              product.id,
+
+            variant_name:
+              variantName,
+
+            price:
+              Math.round(
+                price
+              ),
+
+            compare_at_price:
+              comparePriceRaw
+                ?
+                  Math.round(
+                    Number(
+                      comparePriceRaw
+                    )
+                  )
+                :
+                  null,
+
+            is_active:
+              true,
+
+            sort_order:
+              0
+
+          })
+          .select(
+            "id,sku"
+          )
+          .single();
+
+
+      if (variantError) {
+        throw variantError;
+      }
+
+
+      if (imageFile) {
+
+
+        const path =
+          `products/${product.id}/${safeFilename(
+            imageFile.name
+          )}`;
+
+
+        const {
+          error: uploadError
+        } =
+          await sb.storage
+            .from(
+              "shop-products"
+            )
+            .upload(
+              path,
+              imageFile,
+              {
+                cacheControl:
+                  "3600",
+
+                upsert:
+                  false
+              }
+            );
+
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+
+        const {
+          error: imageError
+        } =
+          await sb
+            .from(
+              "shop_product_images"
+            )
+            .insert({
+
+              product_id:
+                product.id,
+
+              variant_id:
+                null,
+
+              storage_path:
+                path,
+
+              alt_text:
+                productName,
+
+              sort_order:
+                0,
+
+              is_primary:
+                true
+
+            });
+
+
+        if (imageError) {
+          throw imageError;
+        }
+
+      }
+
+
+      showMessage(
+        `✓ Đã tạo ${product.product_code || product.name}`,
+        "success"
+      );
+
+
+      setTimeout(
+        function () {
+
+          location.href =
+            "./shop-admin-products";
+
+        },
+        700
+      );
+
+
+    }
+    catch (error) {
+
+
+      console.error(
+        "CREATE SHOP PRODUCT ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không tạo được sản phẩm.",
+        "error"
+      );
+
+
+    }
+    finally {
+
+
+      saveBtn.disabled =
+        false;
+
+
+      saveBtn.textContent =
+        "LƯU SẢN PHẨM";
+
+    }
+
+  }
+
+
+
+  saveBtn.addEventListener(
+    "click",
+    createProduct
+  );
+
+
+
+  async function start() {
+
+    try {
+
+      await requireShopAccess();
+
+      await loadCategories();
+
+    }
+    catch (error) {
+
+      console.error(
+        "PRODUCT NEW START ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không tải được trang.",
+        "error"
+      );
+
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
