@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Lịch sử nhập hàng | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 45px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       ACTIONS
+    ====================================================== */
+
+    .actions {
+      display: grid;
+
+      grid-template-columns:
+        1.15fr .85fr;
+
+      gap: 7px;
+
+      margin-bottom: 11px;
+    }
+
+    .action-primary,
+    .action-secondary {
+      min-height: 44px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 11px;
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+    .action-primary {
+      background: #d8ff45;
+      color: #071523;
+    }
+
+    .action-secondary {
+      border:
+        1px solid rgba(216,255,69,.25);
+
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.035);
+    }
+
+
+    /* =====================================================
+       STATS
+    ====================================================== */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 7px;
+
+      margin-bottom: 10px;
+    }
+
+    .stat {
+      padding: 11px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .stat-label {
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+
+      color: #d8ff45;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       SEARCH + FILTER
+    ====================================================== */
+
+    .search {
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+
+      min-height: 44px;
+
+      padding:
+        0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background: #10243a;
+      color: #fff;
+
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color:
+        rgba(216,255,69,.65);
+    }
+
+    .filters {
+      display: flex;
+
+      gap: 6px;
+
+      overflow-x: auto;
+
+      padding-bottom: 7px;
+
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-btn {
+      flex: 0 0 auto;
+
+      min-height: 32px;
+
+      padding:
+        0 10px;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.03);
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 8px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      border-color:
+        rgba(216,255,69,.35);
+
+      background:
+        rgba(216,255,69,.08);
+
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       RECEIPTS
+    ====================================================== */
+
+    .receipt-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .receipt-card {
+      display: block;
+
+      padding: 12px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+
+      color: inherit;
+
+      text-decoration: none;
+    }
+
+    .receipt-card:active {
+      transform:
+        scale(.995);
+    }
+
+    .receipt-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+    .receipt-code {
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .receipt-date {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 9px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      min-height: 22px;
+
+      padding:
+        0 8px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+    .badge.received {
+      background:
+        rgba(216,255,69,.09);
+
+      color: #d8ff45;
+    }
+
+    .badge.draft {
+      background:
+        rgba(255,190,70,.08);
+
+      color: #ffc85b;
+    }
+
+    .badge.cancelled {
+      background:
+        rgba(255,90,90,.08);
+
+      color: #ff9e9e;
+    }
+
+    .receipt-info {
+      margin-top: 10px;
+
+      display: grid;
+      gap: 5px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+    .info-label {
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 9px;
+      font-weight: 850;
+    }
+
+    .info-value {
+      text-align: right;
+
+      color:
+        rgba(255,255,255,.78);
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .total {
+      color: #d8ff45;
+
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .note {
+      margin-top: 8px;
+
+      padding-top: 8px;
+
+      border-top:
+        1px solid rgba(255,255,255,.07);
+
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 9px;
+
+      line-height: 1.4;
+    }
+
+    .view-detail {
+      margin-top: 9px;
+
+      min-height: 31px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 8px;
+
+      border:
+        1px solid rgba(216,255,69,.16);
+
+      color: #d8ff45;
+
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        42px 18px;
+
+      text-align: center;
+
+      border-radius: 14px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.5;
+    }
+
+
+    @media(max-width:390px) {
+
+      .stats {
+        grid-template-columns:
+          1fr 1fr 1fr;
+      }
+
+      .actions {
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-stock-receipts"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Lịch sử nhập hàng
+  </h1>
+
+  <p class="intro">
+    Theo dõi toàn bộ phiếu nhập, nhà cung cấp và giá trị hàng đã nhập.
+  </p>
+
+
+  <div class="actions">
+
+    <a
+      href="./shop-admin-stock-receipt"
+      class="action-primary"
+    >
+      + NHẬP HÀNG
+    </a>
+
+    <a
+      href="./shop-admin-suppliers"
+      class="action-secondary"
+    >
+      NHÀ CUNG CẤP
+    </a>
+
+  </div>
+
+
+  <div class="stats">
+
+    <div class="stat">
+
+      <div class="stat-label">
+        TỔNG PHIẾU
+      </div>
+
+      <div
+        id="statTotal"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐÃ NHẬP
+      </div>
+
+      <div
+        id="statReceived"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        GIÁ TRỊ NHẬP
+      </div>
+
+      <div
+        id="statValue"
+        class="stat-value"
+      >
+        0đ
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="search">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm mã phiếu / nhà cung cấp / ghi chú..."
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div
+    id="filters"
+    class="filters"
+  >
+
+    <button
+      type="button"
+      class="filter-btn active"
+      data-status=""
+    >
+      TẤT CẢ
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-status="received"
+    >
+      ĐÃ NHẬP
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-status="draft"
+    >
+      NHÁP
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-status="cancelled"
+    >
+      ĐÃ HỦY
+    </button>
+
+  </div>
+
+
+  <div
+    id="receiptList"
+    class="receipt-list"
+  >
+
+    <div class="state">
+      Đang tải lịch sử nhập hàng...
+    </div>
+
+  </div>
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const receiptList =
+    document.getElementById(
+      "receiptList"
+    );
+
+
+  let receipts = [];
+
+  let suppliers = [];
+
+  let selectedStatus = "";
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showState(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function normalize(value) {
+
+    return String(
+      value || ""
+    )
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+
+  }
+
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "-";
+    }
+
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function supplierName(id) {
+
+    if (!id) {
+      return "Không chọn NCC";
+    }
+
+
+    const supplier =
+      suppliers.find(
+        item =>
+          String(item.id)
+          ===
+          String(id)
+      );
+
+
+    return (
+      supplier?.name
+      ||
+      "Nhà cung cấp"
+    );
+
+  }
+
+
+  function statusLabel(status) {
+
+    const map = {
+
+      received:
+        "ĐÃ NHẬP",
+
+      draft:
+        "NHÁP",
+
+      cancelled:
+        "ĐÃ HỦY"
+
+    };
+
+
+    return (
+      map[status]
+      ||
+      status
+      ||
+      "-"
+    );
+
+  }
+
+
+  function showState(text) {
+
+    receiptList.innerHTML = `
+      <div class="state">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền xem lịch sử nhập hàng."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     STATS
+  ====================================================== */
+
+  function updateStats() {
+
+    const received =
+      receipts.filter(
+        item =>
+          item.status
+          ===
+          "received"
+      );
+
+
+    const totalValue =
+      received.reduce(
+        (sum,item) =>
+          sum
+          +
+          Number(
+            item.total_cost || 0
+          ),
+        0
+      );
+
+
+    document
+      .getElementById(
+        "statTotal"
+      )
+      .textContent =
+        String(
+          receipts.length
+        );
+
+
+    document
+      .getElementById(
+        "statReceived"
+      )
+      .textContent =
+        String(
+          received.length
+        );
+
+
+    document
+      .getElementById(
+        "statValue"
+      )
+      .textContent =
+        money(
+          totalValue
+        );
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render() {
+
+    updateStats();
+
+
+    const keyword =
+      normalize(
+        document
+          .getElementById(
+            "searchInput"
+          )
+          .value
+      );
+
+
+    const filtered =
+      receipts.filter(
+        function (receipt) {
+
+          const statusOk =
+            !selectedStatus
+            ||
+            receipt.status
+            ===
+            selectedStatus;
+
+
+          const supplier =
+            supplierName(
+              receipt.supplier_id
+            );
+
+
+          const text =
+            normalize(
+              [
+                receipt.receipt_code,
+                supplier,
+                receipt.note
+              ].join(" ")
+            );
+
+
+          const searchOk =
+            !keyword
+            ||
+            text.includes(
+              keyword
+            );
+
+
+          return (
+            statusOk
+            &&
+            searchOk
+          );
+
+        }
+      );
+
+
+    if (!filtered.length) {
+
+      showState(
+        receipts.length
+          ?
+            "Không có phiếu nhập phù hợp."
+          :
+            "Chưa có phiếu nhập hàng."
+      );
+
+      return;
+
+    }
+
+
+    receiptList.innerHTML =
+      filtered
+        .map(
+          function (receipt) {
+
+            const dateValue =
+              receipt.received_at
+              ||
+              receipt.created_at;
+
+
+            return `
+
+              <a
+                href="./shop-admin-stock-receipt-detail?id=${receipt.id}"
+                class="receipt-card"
+              >
+
+                <div class="receipt-top">
+
+                  <div>
+
+                    <div class="receipt-code">
+                      ${escapeHtml(
+                        receipt.receipt_code
+                        ||
+                        `Phiếu #${receipt.id}`
+                      )}
+                    </div>
+
+                    <div class="receipt-date">
+                      ${escapeHtml(
+                        formatTime(
+                          dateValue
+                        )
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div
+                    class="badge ${escapeHtml(
+                      receipt.status
+                      ||
+                      "draft"
+                    )}"
+                  >
+                    ${escapeHtml(
+                      statusLabel(
+                        receipt.status
+                      )
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="receipt-info">
+
+
+                  <div class="info-row">
+
+                    <div class="info-label">
+                      NHÀ CUNG CẤP
+                    </div>
+
+                    <div class="info-value">
+                      ${escapeHtml(
+                        supplierName(
+                          receipt.supplier_id
+                        )
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div class="info-row">
+
+                    <div class="info-label">
+                      TỔNG GIÁ TRỊ
+                    </div>
+
+                    <div class="info-value total">
+                      ${money(
+                        receipt.total_cost
+                      )}
+                    </div>
+
+                  </div>
+
+
+                </div>
+
+
+                ${
+                  receipt.note
+                  ?
+                    `
+                      <div class="note">
+                        ${escapeHtml(
+                          receipt.note
+                        )}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+
+                <div class="view-detail">
+                  XEM CHI TIẾT →
+                </div>
+
+              </a>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+    await requireShopAccess();
+
+
+    const [
+      receiptResult,
+      supplierResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from(
+            "shop_stock_receipts"
+          )
+          .select(
+            "id,receipt_code,supplier_id,status,total_cost,note,received_at,created_at"
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                false
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_suppliers"
+          )
+          .select(
+            "id,name"
+          )
+          .order(
+            "name",
+            {
+              ascending:
+                true
+            }
+          )
+
+
+      ]);
+
+
+    if (receiptResult.error) {
+      throw receiptResult.error;
+    }
+
+
+    if (supplierResult.error) {
+      throw supplierResult.error;
+    }
+
+
+    receipts =
+      receiptResult.data || [];
+
+
+    suppliers =
+      supplierResult.data || [];
+
+
+    render();
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  document
+    .getElementById(
+      "searchInput"
+    )
+    .addEventListener(
+      "input",
+      render
+    );
+
+
+  document
+    .querySelectorAll(
+      "#filters .filter-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            selectedStatus =
+              button.dataset.status
+              ||
+              "";
+
+
+            document
+              .querySelectorAll(
+                "#filters .filter-btn"
+              )
+              .forEach(
+                item =>
+                  item.classList.remove(
+                    "active"
+                  )
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+
+            render();
+
+          }
+        );
+
+      }
+    );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "STOCK RECEIPT HISTORY ERROR:",
+        error
+      );
+
+
+      showState(
+        error?.message
+        ||
+        "Không tải được lịch sử nhập hàng."
+      );
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
