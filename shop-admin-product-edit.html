@@ -1,0 +1,2318 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Sửa sản phẩm | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-bottom: 95px;
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(16px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+
+      white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 30px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       PRODUCT OVERVIEW
+    ====================================================== */
+
+    .overview {
+      padding: 11px;
+
+      margin-bottom: 10px;
+
+      display: grid;
+
+      grid-template-columns:
+        72px minmax(0,1fr);
+
+      gap: 11px;
+
+      align-items: center;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .product-image {
+      width: 72px;
+      height: 72px;
+
+      border-radius: 11px;
+
+      overflow: hidden;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+    }
+
+    .no-image {
+      color:
+        rgba(255,255,255,.25);
+
+      font-size: 8px;
+      font-weight: 900;
+
+      text-align: center;
+    }
+
+    .overview-name {
+      font-size: 14px;
+      font-weight: 950;
+
+      line-height: 1.25;
+    }
+
+    .overview-meta {
+      margin-top: 5px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 5px;
+    }
+
+    .tag {
+      min-height: 21px;
+
+      padding:
+        0 7px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 7px;
+      font-weight: 950;
+    }
+
+    .tag.fixed {
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.07);
+    }
+
+
+    /* =====================================================
+       CARD
+    ====================================================== */
+
+    .card {
+      margin-bottom: 10px;
+
+      padding: 13px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .card-title {
+      margin-bottom: 11px;
+
+      font-size: 12px;
+      font-weight: 950;
+
+      letter-spacing: -.01em;
+    }
+
+    .card-subtitle {
+      margin:
+        -5px 0 11px;
+
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 9px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .field {
+      margin-bottom: 11px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+
+      margin-bottom: 5px;
+
+      color:
+        rgba(255,255,255,.58);
+
+      font-size: 8px;
+      font-weight: 950;
+
+      text-transform: uppercase;
+
+      letter-spacing: .03em;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 10px;
+
+      outline: none;
+
+      background: #10243a;
+
+      color: #fff;
+
+      font-family: inherit;
+
+      font-size: 16px;
+    }
+
+    input,
+    select {
+      min-height: 44px;
+
+      padding:
+        0 11px;
+    }
+
+    textarea {
+      min-height: 88px;
+
+      padding: 10px 11px;
+
+      resize: vertical;
+
+      line-height: 1.45;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color:
+        rgba(216,255,69,.6);
+    }
+
+    input:disabled {
+      opacity: .55;
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+    .grid-2 {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 8px;
+    }
+
+    .hint {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.32);
+
+      font-size: 8px;
+
+      line-height: 1.4;
+    }
+
+
+    /* =====================================================
+       CHECKBOX
+    ====================================================== */
+
+    .switch-row {
+      min-height: 46px;
+
+      padding:
+        0 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.03);
+    }
+
+    .switch-text {
+      min-width: 0;
+    }
+
+    .switch-title {
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .switch-desc {
+      margin-top: 2px;
+
+      color:
+        rgba(255,255,255,.35);
+
+      font-size: 8px;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+
+      flex: 0 0 auto;
+
+      accent-color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       NOTICE
+    ====================================================== */
+
+    .notice {
+      margin-top: 8px;
+
+      padding: 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(216,255,69,.14);
+
+      background:
+        rgba(216,255,69,.05);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 8px;
+
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        45px 18px;
+
+      text-align: center;
+
+      border-radius: 14px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 11px;
+
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message {
+      display: none;
+
+      margin-bottom: 10px;
+
+      padding: 10px;
+
+      border-radius: 10px;
+
+      font-size: 9px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
+
+    .message.success {
+      display: block;
+
+      border:
+        1px solid rgba(216,255,69,.25);
+
+      background:
+        rgba(216,255,69,.07);
+
+      color: #d8ff45;
+    }
+
+    .message.error {
+      display: block;
+
+      border:
+        1px solid rgba(255,100,100,.24);
+
+      background:
+        rgba(255,100,100,.07);
+
+      color: #ffaaaa;
+    }
+
+
+    /* =====================================================
+       STICKY SAVE
+    ====================================================== */
+
+    .sticky-save {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 70;
+
+      padding:
+        8px 9px calc(8px + env(safe-area-inset-bottom));
+
+      border-top:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(7,21,35,.97);
+
+      backdrop-filter:
+        blur(16px);
+    }
+
+    .sticky-inner {
+      width:
+        min(760px,100%);
+
+      margin: auto;
+    }
+
+    .save-btn {
+      width: 100%;
+
+      min-height: 48px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      background: #d8ff45;
+
+      color: #071523;
+
+      font-family: inherit;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .save-btn:disabled {
+      opacity: .45;
+
+      cursor: default;
+    }
+
+
+    @media(max-width:390px) {
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop-admin-products"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      class="back"
+      href="./shop-admin-products"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Sửa sản phẩm
+  </h1>
+
+  <p class="intro">
+    Chỉnh thông tin bán hàng. Mã sản phẩm, SKU và tồn kho được hệ thống bảo vệ.
+  </p>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+
+  <div id="pageBody">
+
+    <div class="state">
+      Đang tải sản phẩm...
+    </div>
+
+  </div>
+
+</main>
+
+
+
+<div class="sticky-save">
+
+  <div class="sticky-inner">
+
+    <button
+      id="saveBtn"
+      class="save-btn"
+      type="button"
+      disabled
+    >
+      LƯU THAY ĐỔI
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const pageBody =
+    document.getElementById(
+      "pageBody"
+    );
+
+
+  const saveBtn =
+    document.getElementById(
+      "saveBtn"
+    );
+
+
+  const messageBox =
+    document.getElementById(
+      "message"
+    );
+
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const productId =
+    Number(
+      params.get("id")
+    );
+
+
+  let product = null;
+
+  let variants = [];
+
+  let categories = [];
+
+  let images = [];
+
+  let selectedVariantId = null;
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showFatal(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function moneyInput(value) {
+
+    if (
+      value === null
+      ||
+      value === undefined
+    ) {
+
+      return "";
+
+    }
+
+
+    return String(
+      Number(value)
+    );
+
+  }
+
+
+  function nullableText(value) {
+
+    const text =
+      String(
+        value ?? ""
+      ).trim();
+
+
+    return (
+      text
+      ||
+      null
+    );
+
+  }
+
+
+  function nullableNumber(value) {
+
+    const text =
+      String(
+        value ?? ""
+      ).trim();
+
+
+    if (!text) {
+      return null;
+    }
+
+
+    const number =
+      Number(text);
+
+
+    if (
+      !Number.isFinite(number)
+    ) {
+      return null;
+    }
+
+
+    return Math.round(number);
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    messageBox.className =
+      `message ${type}`;
+
+
+    messageBox.textContent =
+      text;
+
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  function clearMessage() {
+
+    messageBox.className =
+      "message";
+
+
+    messageBox.textContent =
+      "";
+
+  }
+
+
+  function showFatal(text) {
+
+    pageBody.innerHTML = `
+      <div class="state">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+
+    saveBtn.disabled =
+      true;
+
+  }
+
+
+  function publicImageUrl(
+    storagePath
+  ) {
+
+    if (!storagePath) {
+      return "";
+    }
+
+
+    const {
+      data
+    } =
+      sb.storage
+        .from(
+          "shop-products"
+        )
+        .getPublicUrl(
+          storagePath
+        );
+
+
+    return (
+      data?.publicUrl
+      ||
+      ""
+    );
+
+  }
+
+
+  function primaryImage() {
+
+    return (
+      [...images]
+        .sort(
+          function (a,b) {
+
+            if (
+              Boolean(
+                a.is_primary
+              )
+              !==
+              Boolean(
+                b.is_primary
+              )
+            ) {
+
+              return (
+                a.is_primary
+                  ?
+                    -1
+                  :
+                    1
+              );
+
+            }
+
+
+            return (
+              Number(
+                a.sort_order || 0
+              )
+              -
+              Number(
+                b.sort_order || 0
+              )
+            );
+
+          }
+        )[0]
+      ||
+      null
+    );
+
+  }
+
+
+  function selectedVariant() {
+
+    return (
+      variants.find(
+        item =>
+          String(item.id)
+          ===
+          String(selectedVariantId)
+      )
+      ||
+      variants[0]
+      ||
+      null
+    );
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền sửa sản phẩm."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render() {
+
+    const variant =
+      selectedVariant();
+
+
+    if (
+      !product
+      ||
+      !variant
+    ) {
+
+      showFatal(
+        "Sản phẩm chưa có biến thể để chỉnh sửa."
+      );
+
+      return;
+
+    }
+
+
+    const image =
+      primaryImage();
+
+
+    const imageUrl =
+      image
+        ?
+          publicImageUrl(
+            image.storage_path
+          )
+        :
+          "";
+
+
+    const categoryOptions =
+      categories
+        .filter(
+          item =>
+            item.is_active === true
+            ||
+            String(item.id)
+            ===
+            String(product.category_id)
+        )
+        .map(
+          function (category) {
+
+            const selected =
+              String(category.id)
+              ===
+              String(product.category_id)
+                ?
+                  "selected"
+                :
+                  "";
+
+
+            return `
+              <option
+                value="${category.id}"
+                ${selected}
+              >
+                ${escapeHtml(
+                  category.name
+                )}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    const variantOptions =
+      variants
+        .map(
+          function (item) {
+
+            const selected =
+              String(item.id)
+              ===
+              String(variant.id)
+                ?
+                  "selected"
+                :
+                  "";
+
+
+            const name =
+              item.variant_name
+              ||
+              "Mặc định";
+
+
+            return `
+              <option
+                value="${item.id}"
+                ${selected}
+              >
+                ${escapeHtml(
+                  `${name} • ${item.sku || "-"}`
+                )}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    pageBody.innerHTML = `
+
+
+      <div class="overview">
+
+
+        <div class="product-image">
+
+          ${
+            imageUrl
+              ?
+                `
+                  <img
+                    src="${escapeHtml(
+                      imageUrl
+                    )}"
+                    alt="${escapeHtml(
+                      product.name
+                    )}"
+                  >
+                `
+              :
+                `
+                  <div class="no-image">
+                    CHƯA CÓ ẢNH
+                  </div>
+                `
+          }
+
+        </div>
+
+
+        <div>
+
+          <div class="overview-name">
+            ${escapeHtml(
+              product.name
+            )}
+          </div>
+
+
+          <div class="overview-meta">
+
+            <span class="tag fixed">
+              ${escapeHtml(
+                product.product_code
+                ||
+                "-"
+              )}
+            </span>
+
+            <span class="tag fixed">
+              ${escapeHtml(
+                variant.sku
+                ||
+                "-"
+              )}
+            </span>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+
+      <div class="card">
+
+        <div class="card-title">
+          Thông tin sản phẩm
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Tên sản phẩm
+          </label>
+
+          <input
+            id="nameInput"
+            type="text"
+            maxlength="160"
+            value="${escapeHtml(
+              product.name
+              ||
+              ""
+            )}"
+          >
+
+        </div>
+
+
+        <div class="grid-2">
+
+
+          <div class="field">
+
+            <label>
+              Thương hiệu
+            </label>
+
+            <input
+              id="brandInput"
+              type="text"
+              maxlength="100"
+              value="${escapeHtml(
+                product.brand
+                ||
+                ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Danh mục
+            </label>
+
+            <select id="categoryInput">
+
+              <option value="">
+                Không chọn danh mục
+              </option>
+
+              ${categoryOptions}
+
+            </select>
+
+          </div>
+
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Mô tả ngắn
+          </label>
+
+          <textarea
+            id="shortDescriptionInput"
+            maxlength="500"
+          >${escapeHtml(
+            product.short_description
+            ||
+            ""
+          )}</textarea>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Mô tả chi tiết
+          </label>
+
+          <textarea
+            id="descriptionInput"
+          >${escapeHtml(
+            product.description
+            ||
+            ""
+          )}</textarea>
+
+        </div>
+
+
+        <div class="grid-2">
+
+
+          <div class="field">
+
+            <label>
+              Trạng thái
+            </label>
+
+            <select id="statusInput">
+
+              <option
+                value="active"
+                ${
+                  product.status
+                  ===
+                  "active"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
+              >
+                Đang bán
+              </option>
+
+              <option
+                value="draft"
+                ${
+                  product.status
+                  ===
+                  "draft"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
+              >
+                Nháp / Ẩn
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Mã sản phẩm
+            </label>
+
+            <input
+              type="text"
+              disabled
+              value="${escapeHtml(
+                product.product_code
+                ||
+                ""
+              )}"
+            >
+
+            <div class="hint">
+              Hệ thống tự quản lý.
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+        <div class="field">
+
+          <div class="switch-row">
+
+            <div class="switch-text">
+
+              <div class="switch-title">
+                Sản phẩm nổi bật
+              </div>
+
+              <div class="switch-desc">
+                Ưu tiên hiển thị tại Shop.
+              </div>
+
+            </div>
+
+            <input
+              id="featuredInput"
+              class="check"
+              type="checkbox"
+              ${
+                product.is_featured
+                  ?
+                    "checked"
+                  :
+                    ""
+              }
+            >
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+
+      <div class="card">
+
+        <div class="card-title">
+          Giá & biến thể
+        </div>
+
+        <div class="card-subtitle">
+          Nếu sản phẩm có nhiều SKU, chọn SKU cần sửa bên dưới.
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Chọn biến thể / SKU
+          </label>
+
+          <select id="variantSelect">
+            ${variantOptions}
+          </select>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Tên biến thể
+          </label>
+
+          <input
+            id="variantNameInput"
+            type="text"
+            maxlength="120"
+            value="${escapeHtml(
+              variant.variant_name
+              ||
+              ""
+            )}"
+          >
+
+        </div>
+
+
+        <div class="grid-2">
+
+
+          <div class="field">
+
+            <label>
+              Giá bán
+            </label>
+
+            <input
+              id="priceInput"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              value="${escapeHtml(
+                moneyInput(
+                  variant.price
+                )
+              )}"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Giá so sánh
+            </label>
+
+            <input
+              id="comparePriceInput"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="Để trống nếu không dùng"
+              value="${escapeHtml(
+                moneyInput(
+                  variant.compare_at_price
+                )
+              )}"
+            >
+
+          </div>
+
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            SKU
+          </label>
+
+          <input
+            type="text"
+            disabled
+            value="${escapeHtml(
+              variant.sku
+              ||
+              ""
+            )}"
+          >
+
+          <div class="hint">
+            Không cho sửa thủ công để tránh lệch kho và đơn hàng.
+          </div>
+
+        </div>
+
+
+        <div class="field">
+
+          <div class="switch-row">
+
+            <div class="switch-text">
+
+              <div class="switch-title">
+                SKU đang bán
+              </div>
+
+              <div class="switch-desc">
+                Tắt để khách không chọn biến thể này.
+              </div>
+
+            </div>
+
+            <input
+              id="variantActiveInput"
+              class="check"
+              type="checkbox"
+              ${
+                variant.is_active
+                  ?
+                    "checked"
+                  :
+                    ""
+              }
+            >
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+
+      <div class="notice">
+
+        Ảnh sản phẩm hiện được giữ nguyên.
+        Phần thay / thêm / xóa ảnh sẽ được nối ở bước tiếp theo.
+        Trang này không thay đổi tồn kho, hàng đang giữ hoặc giá vốn.
+
+      </div>
+
+    `;
+
+
+    document
+      .getElementById(
+        "variantSelect"
+      )
+      .addEventListener(
+        "change",
+        function (event) {
+
+          selectedVariantId =
+            Number(
+              event.target.value
+            );
+
+
+          clearMessage();
+
+          render();
+
+        }
+      );
+
+
+    saveBtn.disabled =
+      false;
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+    if (
+      !Number.isInteger(productId)
+      ||
+      productId <= 0
+    ) {
+
+      throw new Error(
+        "Không có mã sản phẩm hợp lệ."
+      );
+
+    }
+
+
+    await requireShopAccess();
+
+
+    const [
+      productResult,
+      variantResult,
+      categoryResult,
+      imageResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,created_at,updated_at"
+          )
+          .eq(
+            "id",
+            productId
+          )
+          .maybeSingle(),
+
+
+        sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,sku,variant_name,price,compare_at_price,is_active,sort_order"
+          )
+          .eq(
+            "product_id",
+            productId
+          )
+          .order(
+            "sort_order",
+            {
+              ascending:
+                true
+            }
+          )
+          .order(
+            "id",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_categories"
+          )
+          .select(
+            "id,name,is_active,sort_order"
+          )
+          .order(
+            "sort_order",
+            {
+              ascending:
+                true
+            }
+          )
+          .order(
+            "name",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_product_images"
+          )
+          .select(
+            "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+          )
+          .eq(
+            "product_id",
+            productId
+          )
+          .order(
+            "sort_order",
+            {
+              ascending:
+                true
+            }
+          )
+
+
+      ]);
+
+
+    if (productResult.error) {
+      throw productResult.error;
+    }
+
+
+    if (variantResult.error) {
+      throw variantResult.error;
+    }
+
+
+    if (categoryResult.error) {
+      throw categoryResult.error;
+    }
+
+
+    if (imageResult.error) {
+      throw imageResult.error;
+    }
+
+
+    if (!productResult.data) {
+
+      throw new Error(
+        "Không tìm thấy sản phẩm."
+      );
+
+    }
+
+
+    if (
+      !variantResult.data
+      ||
+      !variantResult.data.length
+    ) {
+
+      throw new Error(
+        "Sản phẩm chưa có biến thể."
+      );
+
+    }
+
+
+    product =
+      productResult.data;
+
+
+    variants =
+      variantResult.data || [];
+
+
+    categories =
+      categoryResult.data || [];
+
+
+    images =
+      imageResult.data || [];
+
+
+    selectedVariantId =
+      variants[0].id;
+
+
+    render();
+
+  }
+
+
+  /* =====================================================
+     SAVE
+  ====================================================== */
+
+  async function saveProduct() {
+
+    clearMessage();
+
+
+    const variant =
+      selectedVariant();
+
+
+    if (!variant) {
+
+      showMessage(
+        "Không tìm thấy biến thể cần sửa.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const name =
+      document
+        .getElementById(
+          "nameInput"
+        )
+        .value
+        .trim();
+
+
+    const brand =
+      document
+        .getElementById(
+          "brandInput"
+        )
+        .value
+        .trim();
+
+
+    const categoryText =
+      document
+        .getElementById(
+          "categoryInput"
+        )
+        .value;
+
+
+    const shortDescription =
+      document
+        .getElementById(
+          "shortDescriptionInput"
+        )
+        .value;
+
+
+    const description =
+      document
+        .getElementById(
+          "descriptionInput"
+        )
+        .value;
+
+
+    const status =
+      document
+        .getElementById(
+          "statusInput"
+        )
+        .value;
+
+
+    const featured =
+      document
+        .getElementById(
+          "featuredInput"
+        )
+        .checked;
+
+
+    const variantName =
+      document
+        .getElementById(
+          "variantNameInput"
+        )
+        .value;
+
+
+    const priceText =
+      document
+        .getElementById(
+          "priceInput"
+        )
+        .value;
+
+
+    const comparePriceText =
+      document
+        .getElementById(
+          "comparePriceInput"
+        )
+        .value;
+
+
+    const variantActive =
+      document
+        .getElementById(
+          "variantActiveInput"
+        )
+        .checked;
+
+
+    if (!name) {
+
+      showMessage(
+        "Anh cần nhập tên sản phẩm.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const price =
+      nullableNumber(
+        priceText
+      );
+
+
+    if (
+      price === null
+      ||
+      price < 0
+    ) {
+
+      showMessage(
+        "Giá bán không hợp lệ.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const comparePrice =
+      nullableNumber(
+        comparePriceText
+      );
+
+
+    if (
+      comparePrice !== null
+      &&
+      comparePrice < 0
+    ) {
+
+      showMessage(
+        "Giá so sánh không hợp lệ.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const categoryId =
+      categoryText
+        ?
+          Number(
+            categoryText
+          )
+        :
+          null;
+
+
+    saveBtn.disabled =
+      true;
+
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "shop_admin_update_product",
+          {
+
+            p_product_id:
+              product.id,
+
+            p_name:
+              name,
+
+            p_brand:
+              nullableText(
+                brand
+              ),
+
+            p_category_id:
+              categoryId,
+
+            p_short_description:
+              nullableText(
+                shortDescription
+              ),
+
+            p_description:
+              nullableText(
+                description
+              ),
+
+            p_status:
+              status,
+
+            p_is_featured:
+              featured,
+
+            p_variant_id:
+              variant.id,
+
+            p_variant_name:
+              nullableText(
+                variantName
+              ),
+
+            p_price:
+              price,
+
+            p_compare_at_price:
+              comparePrice,
+
+            p_variant_active:
+              variantActive
+
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      product = {
+        ...product,
+
+        name:
+          name,
+
+        brand:
+          nullableText(
+            brand
+          ),
+
+        category_id:
+          categoryId,
+
+        short_description:
+          nullableText(
+            shortDescription
+          ),
+
+        description:
+          nullableText(
+            description
+          ),
+
+        status:
+          status,
+
+        is_featured:
+          featured
+      };
+
+
+      variants =
+        variants.map(
+          function (item) {
+
+            if (
+              String(item.id)
+              !==
+              String(variant.id)
+            ) {
+
+              return item;
+
+            }
+
+
+            return {
+              ...item,
+
+              variant_name:
+                nullableText(
+                  variantName
+                ),
+
+              price:
+                price,
+
+              compare_at_price:
+                comparePrice,
+
+              is_active:
+                variantActive
+            };
+
+          }
+        );
+
+
+      showMessage(
+        `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} / ${data?.sku || variant.sku || "SKU"}.`,
+        "success"
+      );
+
+
+      render();
+
+    }
+    catch (error) {
+
+      console.error(
+        "UPDATE PRODUCT ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không lưu được sản phẩm.",
+        "error"
+      );
+
+    }
+    finally {
+
+      saveBtn.disabled =
+        false;
+
+
+      saveBtn.textContent =
+        "LƯU THAY ĐỔI";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  saveBtn.addEventListener(
+    "click",
+    saveProduct
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "PRODUCT EDIT LOAD ERROR:",
+        error
+      );
+
+
+      showFatal(
+        error?.message
+        ||
+        "Không tải được sản phẩm."
+      );
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
