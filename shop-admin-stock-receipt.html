@@ -1,0 +1,2042 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Nhập hàng | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+
+      padding-bottom:
+        calc(95px + env(safe-area-inset-bottom));
+    }
+
+    button,
+    input,
+    textarea,
+    select,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(7,21,35,.97);
+
+      backdrop-filter: blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 35px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       SECTION
+    ====================================================== */
+
+    .section {
+      margin-bottom: 10px;
+
+      padding: 14px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+    }
+
+    .section-title {
+      margin-bottom: 11px;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .form-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 950;
+
+      letter-spacing: .05em;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+
+      min-height: 44px;
+
+      padding:
+        0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background: #10243a;
+
+      color: #fff;
+
+      font-family: inherit;
+
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 70px;
+
+      padding:
+        10px 11px;
+
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color:
+        rgba(216,255,69,.65);
+    }
+
+
+    /* =====================================================
+       ITEMS
+    ====================================================== */
+
+    .item-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item-row {
+      padding: 10px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .item-product {
+      margin-bottom: 8px;
+    }
+
+    .item-grid {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 7px;
+    }
+
+    .item-bottom {
+      margin-top: 8px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .line-total {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .remove-btn {
+      border: 0;
+
+      background: transparent;
+
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 9px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .stock-hint {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 8px;
+      font-weight: 850;
+    }
+
+    .add-item {
+      width: 100%;
+
+      min-height: 40px;
+
+      margin-top: 8px;
+
+      border-radius: 10px;
+
+      border:
+        1px dashed rgba(216,255,69,.28);
+
+      background:
+        rgba(216,255,69,.04);
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       TOTAL
+    ====================================================== */
+
+    .summary {
+      margin-top: 12px;
+
+      padding-top: 11px;
+
+      border-top:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      margin-bottom: 5px;
+    }
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.44);
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .summary-value {
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .summary-value.total {
+      color: #d8ff45;
+
+      font-size: 22px;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message {
+      display: none;
+
+      margin-top: 10px;
+
+      padding: 10px 11px;
+
+      border-radius: 10px;
+
+      font-size: 11px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.08);
+
+      border:
+        1px solid rgba(255,90,90,.24);
+
+      color: #ffb0b0;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(216,255,69,.07);
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       BOTTOM
+    ====================================================== */
+
+    .bottom-bar {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 100;
+
+      padding:
+        7px 9px
+        calc(7px + env(safe-area-inset-bottom));
+
+      border-top:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(7,21,35,.98);
+
+      backdrop-filter:
+        blur(16px);
+    }
+
+    .bottom-inner {
+      width:
+        min(760px,100%);
+
+      margin: auto;
+
+      display: grid;
+
+      grid-template-columns:
+        .72fr 1.28fr;
+
+      gap: 8px;
+
+      align-items: center;
+    }
+
+    .bottom-label {
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .bottom-total {
+      margin-top: 2px;
+
+      color: #d8ff45;
+
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .receive-btn {
+      min-height: 48px;
+
+      border: 0;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+
+      color: #071523;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .receive-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+
+    @media(max-width:390px) {
+
+      .item-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-products"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Nhập hàng
+  </h1>
+
+  <p class="intro">
+    Nhập số lượng và giá vốn thực tế.
+    Khi xác nhận, hệ thống tự cộng tồn và tính lại giá vốn bình quân.
+  </p>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Thông tin phiếu nhập
+    </div>
+
+    <div class="form-grid">
+
+      <div class="field">
+
+        <label>
+          NHÀ CUNG CẤP
+        </label>
+
+        <select id="supplierId">
+
+          <option value="">
+            Không chọn nhà cung cấp
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          GHI CHÚ
+        </label>
+
+        <textarea
+          id="note"
+          placeholder="Ví dụ: Nhập hàng đợt tháng 10..."
+        ></textarea>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Sản phẩm nhập
+    </div>
+
+
+    <div
+      id="itemList"
+      class="item-list"
+    ></div>
+
+
+    <button
+      id="addItemBtn"
+      type="button"
+      class="add-item"
+    >
+      + THÊM SẢN PHẨM
+    </button>
+
+
+    <div class="summary">
+
+      <div class="summary-row">
+
+        <div class="summary-label">
+          TỔNG SỐ LƯỢNG
+        </div>
+
+        <div
+          id="totalQty"
+          class="summary-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="summary-row">
+
+        <div class="summary-label">
+          TỔNG GIÁ VỐN
+        </div>
+
+        <div
+          id="totalCost"
+          class="summary-value total"
+        >
+          0đ
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </section>
+
+</main>
+
+
+
+<div class="bottom-bar">
+
+  <div class="bottom-inner">
+
+    <div>
+
+      <div class="bottom-label">
+        TỔNG NHẬP
+      </div>
+
+      <div
+        id="bottomTotal"
+        class="bottom-total"
+      >
+        0đ
+      </div>
+
+    </div>
+
+
+    <button
+      id="receiveBtn"
+      type="button"
+      class="receive-btn"
+    >
+      XÁC NHẬN NHẬP KHO
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const itemList =
+    document.getElementById(
+      "itemList"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const receiveBtn =
+    document.getElementById(
+      "receiveBtn"
+    );
+
+
+  let products = [];
+
+  let variants = [];
+
+  let inventory = [];
+
+  let lines = [];
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "error"
+    );
+
+    receiveBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền nhập hàng."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     INVENTORY
+  ====================================================== */
+
+  function inventoryOf(
+    variantId
+  ) {
+
+    return (
+      inventory.find(
+        item =>
+          String(
+            item.variant_id
+          )
+          ===
+          String(
+            variantId
+          )
+      )
+      ||
+      {
+        stock_on_hand:
+          0,
+
+        reserved_qty:
+          0,
+
+        average_cost:
+          0
+      }
+    );
+
+  }
+
+
+  function productOf(
+    productId
+  ) {
+
+    return products.find(
+      item =>
+        String(item.id)
+        ===
+        String(productId)
+    );
+
+  }
+
+
+  function variantLabel(
+    variant
+  ) {
+
+    const product =
+      productOf(
+        variant.product_id
+      );
+
+
+    const productName =
+      product?.name
+      ||
+      "Sản phẩm";
+
+
+    const variantName =
+      variant.variant_name
+      &&
+      variant.variant_name !== "Mặc định"
+        ?
+          ` • ${variant.variant_name}`
+        :
+          "";
+
+
+    return (
+      `${productName}${variantName} • ${variant.sku || "-"}`
+    );
+
+  }
+
+
+  function variantOptions(
+    selectedId
+  ) {
+
+    return variants
+      .map(
+        variant => `
+          <option
+            value="${variant.id}"
+            ${
+              String(
+                selectedId
+              )
+              ===
+              String(
+                variant.id
+              )
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            ${escapeHtml(
+              variantLabel(
+                variant
+              )
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  }
+
+
+  /* =====================================================
+     ITEMS
+  ====================================================== */
+
+  function addLine() {
+
+    if (!variants.length) {
+      return;
+    }
+
+
+    const first =
+      variants[0];
+
+
+    const inv =
+      inventoryOf(
+        first.id
+      );
+
+
+    lines.push({
+
+      variant_id:
+        first.id,
+
+      quantity:
+        1,
+
+      unit_cost:
+        Number(
+          inv.average_cost || 0
+        )
+
+    });
+
+
+    renderLines();
+
+  }
+
+
+  function renderLines() {
+
+    itemList.innerHTML =
+      lines
+        .map(
+          function (
+            line,
+            index
+          ) {
+
+            const variant =
+              variants.find(
+                item =>
+                  String(item.id)
+                  ===
+                  String(
+                    line.variant_id
+                  )
+              );
+
+
+            const inv =
+              inventoryOf(
+                line.variant_id
+              );
+
+
+            const lineTotal =
+              Number(
+                line.quantity || 0
+              )
+              *
+              Number(
+                line.unit_cost || 0
+              );
+
+
+            return `
+
+              <div
+                class="item-row"
+                data-index="${index}"
+              >
+
+                <div class="field item-product">
+
+                  <label>
+                    SẢN PHẨM / SKU
+                  </label>
+
+                  <select
+                    class="variant-select"
+                    data-index="${index}"
+                  >
+                    ${variantOptions(
+                      line.variant_id
+                    )}
+                  </select>
+
+                </div>
+
+
+                <div class="item-grid">
+
+
+                  <div class="field">
+
+                    <label>
+                      SỐ LƯỢNG *
+                    </label>
+
+                    <input
+                      class="quantity-input"
+                      data-index="${index}"
+                      type="number"
+                      inputmode="numeric"
+                      min="1"
+                      step="1"
+                      value="${Number(
+                        line.quantity || 1
+                      )}"
+                    >
+
+                  </div>
+
+
+                  <div class="field">
+
+                    <label>
+                      GIÁ VỐN / ĐƠN VỊ *
+                    </label>
+
+                    <input
+                      class="cost-input"
+                      data-index="${index}"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      step="1000"
+                      value="${Number(
+                        line.unit_cost || 0
+                      )}"
+                    >
+
+                  </div>
+
+
+                </div>
+
+
+                <div class="stock-hint">
+
+                  Tồn hiện tại:
+                  ${Number(
+                    inv.stock_on_hand || 0
+                  )}
+
+                  • Giá vốn bình quân hiện tại:
+                  ${money(
+                    inv.average_cost
+                  )}
+
+                </div>
+
+
+                <div class="item-bottom">
+
+                  <div class="line-total">
+                    ${money(
+                      lineTotal
+                    )}
+                  </div>
+
+
+                  ${
+                    lines.length > 1
+                    ?
+                      `
+                        <button
+                          type="button"
+                          class="remove-btn"
+                          data-remove="${index}"
+                        >
+                          XÓA
+                        </button>
+                      `
+                    :
+                      ""
+                  }
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    bindLineEvents();
+
+    updateSummary();
+
+  }
+
+
+  function bindLineEvents() {
+
+
+    document
+      .querySelectorAll(
+        ".variant-select"
+      )
+      .forEach(
+        function (select) {
+
+          select.addEventListener(
+            "change",
+            function () {
+
+              const index =
+                Number(
+                  select.dataset.index
+                );
+
+
+              const variantId =
+                Number(
+                  select.value
+                );
+
+
+              const inv =
+                inventoryOf(
+                  variantId
+                );
+
+
+              lines[index].variant_id =
+                variantId;
+
+
+              lines[index].unit_cost =
+                Number(
+                  inv.average_cost || 0
+                );
+
+
+              renderLines();
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".quantity-input"
+      )
+      .forEach(
+        function (input) {
+
+          input.addEventListener(
+            "input",
+            function () {
+
+              const index =
+                Number(
+                  input.dataset.index
+                );
+
+
+              lines[index].quantity =
+                Math.max(
+                  1,
+                  Math.floor(
+                    Number(
+                      input.value || 1
+                    )
+                  )
+                );
+
+
+              updateSummary();
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".cost-input"
+      )
+      .forEach(
+        function (input) {
+
+          input.addEventListener(
+            "input",
+            function () {
+
+              const index =
+                Number(
+                  input.dataset.index
+                );
+
+
+              lines[index].unit_cost =
+                Math.max(
+                  0,
+                  Math.round(
+                    Number(
+                      input.value || 0
+                    )
+                  )
+                );
+
+
+              updateSummary();
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        "[data-remove]"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              const index =
+                Number(
+                  button.dataset.remove
+                );
+
+
+              lines.splice(
+                index,
+                1
+              );
+
+
+              renderLines();
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  function updateSummary() {
+
+    const totalQty =
+      lines.reduce(
+        (
+          sum,
+          line
+        ) =>
+          sum
+          +
+          Number(
+            line.quantity || 0
+          ),
+        0
+      );
+
+
+    const totalCost =
+      lines.reduce(
+        (
+          sum,
+          line
+        ) =>
+          sum
+          +
+          (
+            Number(
+              line.quantity || 0
+            )
+            *
+            Number(
+              line.unit_cost || 0
+            )
+          ),
+        0
+      );
+
+
+    document
+      .getElementById(
+        "totalQty"
+      )
+      .textContent =
+        String(
+          totalQty
+        );
+
+
+    document
+      .getElementById(
+        "totalCost"
+      )
+      .textContent =
+        money(
+          totalCost
+        );
+
+
+    document
+      .getElementById(
+        "bottomTotal"
+      )
+      .textContent =
+        money(
+          totalCost
+        );
+
+
+    document
+      .querySelectorAll(
+        ".item-row"
+      )
+      .forEach(
+        function (
+          row
+        ) {
+
+          const index =
+            Number(
+              row.dataset.index
+            );
+
+
+          const total =
+            Number(
+              lines[index]?.quantity
+              ||
+              0
+            )
+            *
+            Number(
+              lines[index]?.unit_cost
+              ||
+              0
+            );
+
+
+          const box =
+            row.querySelector(
+              ".line-total"
+            );
+
+
+          if (box) {
+
+            box.textContent =
+              money(
+                total
+              );
+
+          }
+
+        }
+      );
+
+  }
+
+
+  document
+    .getElementById(
+      "addItemBtn"
+    )
+    .addEventListener(
+      "click",
+      addLine
+    );
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+    await requireShopAccess();
+
+
+    const [
+      supplierResult,
+      productResult,
+      variantResult,
+      inventoryResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from(
+            "shop_suppliers"
+          )
+          .select(
+            "id,name,is_active"
+          )
+          .eq(
+            "is_active",
+            true
+          )
+          .order(
+            "name",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id,name,status"
+          )
+          .eq(
+            "status",
+            "active"
+          )
+          .order(
+            "name",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,sku,variant_name,is_active,sort_order"
+          )
+          .eq(
+            "is_active",
+            true
+          )
+          .order(
+            "sort_order",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_inventory"
+          )
+          .select(
+            "variant_id,stock_on_hand,reserved_qty,average_cost"
+          )
+
+
+      ]);
+
+
+    if (supplierResult.error) {
+      throw supplierResult.error;
+    }
+
+
+    if (productResult.error) {
+      throw productResult.error;
+    }
+
+
+    if (variantResult.error) {
+      throw variantResult.error;
+    }
+
+
+    if (inventoryResult.error) {
+      throw inventoryResult.error;
+    }
+
+
+    products =
+      productResult.data || [];
+
+
+    const productIds =
+      new Set(
+        products.map(
+          item =>
+            String(item.id)
+        )
+      );
+
+
+    variants =
+      (variantResult.data || [])
+        .filter(
+          item =>
+            productIds.has(
+              String(
+                item.product_id
+              )
+            )
+        );
+
+
+    inventory =
+      inventoryResult.data || [];
+
+
+    const supplierSelect =
+      document.getElementById(
+        "supplierId"
+      );
+
+
+    supplierSelect.innerHTML =
+      `
+        <option value="">
+          Không chọn nhà cung cấp
+        </option>
+      `
+      +
+      (supplierResult.data || [])
+        .map(
+          item => `
+            <option value="${item.id}">
+              ${escapeHtml(
+                item.name
+              )}
+            </option>
+          `
+        )
+        .join("");
+
+
+    if (!variants.length) {
+
+      throw new Error(
+        "Chưa có SKU đang bán để nhập hàng."
+      );
+
+    }
+
+
+    lines = [];
+
+
+    addLine();
+
+  }
+
+
+  /* =====================================================
+     RECEIVE
+  ====================================================== */
+
+  receiveBtn.addEventListener(
+    "click",
+    async function () {
+
+      clearMessage();
+
+
+      if (!lines.length) {
+
+        showMessage(
+          "Phiếu nhập chưa có sản phẩm.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      for (
+        const line
+        of lines
+      ) {
+
+        if (
+          !line.variant_id
+        ) {
+
+          showMessage(
+            "Chọn đầy đủ sản phẩm.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !Number.isInteger(
+            Number(
+              line.quantity
+            )
+          )
+          ||
+          Number(
+            line.quantity
+          )
+          <= 0
+        ) {
+
+          showMessage(
+            "Số lượng nhập phải lớn hơn 0.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (
+          !Number.isFinite(
+            Number(
+              line.unit_cost
+            )
+          )
+          ||
+          Number(
+            line.unit_cost
+          )
+          < 0
+        ) {
+
+          showMessage(
+            "Giá vốn không hợp lệ.",
+            "error"
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      const supplierRaw =
+        document
+          .getElementById(
+            "supplierId"
+          )
+          .value;
+
+
+      const note =
+        document
+          .getElementById(
+            "note"
+          )
+          .value
+          .trim();
+
+
+      receiveBtn.disabled =
+        true;
+
+
+      receiveBtn.textContent =
+        "ĐANG NHẬP...";
+
+
+      try {
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_admin_receive_stock",
+            {
+
+              p_supplier_id:
+                supplierRaw
+                  ?
+                    Number(
+                      supplierRaw
+                    )
+                  :
+                    null,
+
+              p_note:
+                note || null,
+
+              p_items:
+                lines.map(
+                  line => ({
+
+                    variant_id:
+                      Number(
+                        line.variant_id
+                      ),
+
+                    quantity:
+                      Number(
+                        line.quantity
+                      ),
+
+                    unit_cost:
+                      Number(
+                        line.unit_cost
+                      )
+
+                  })
+                )
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        if (
+          !data?.success
+          ||
+          !data?.receipt_id
+        ) {
+
+          console.error(
+            "RECEIVE RESULT:",
+            data
+          );
+
+
+          throw new Error(
+            "Không xác nhận được phiếu nhập."
+          );
+
+        }
+
+
+        showMessage(
+          `✓ Đã nhập kho ${data.receipt_code || ""}`,
+          "success"
+        );
+
+
+        setTimeout(
+          function () {
+
+            location.href =
+              "./shop-admin-products";
+
+          },
+          800
+        );
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "RECEIVE STOCK ERROR:",
+          error
+        );
+
+
+        showMessage(
+          error?.message
+          ||
+          "Không nhập được hàng.",
+          "error"
+        );
+
+
+      }
+      finally {
+
+
+        receiveBtn.disabled =
+          false;
+
+
+        receiveBtn.textContent =
+          "XÁC NHẬN NHẬP KHO";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "STOCK RECEIPT START ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không tải được trang nhập hàng.",
+        "error"
+      );
+
+
+      receiveBtn.disabled =
+        true;
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
