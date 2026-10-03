@@ -988,76 +988,89 @@
 
   function updateStats() {
 
-    const totalIn =
-      movements
-        .filter(
-          item =>
+  const stockInTypes = [
+    "purchase",
+    "adjustment_in"
+  ];
+
+  const stockOutTypes = [
+    "sale",
+    "adjustment_out"
+  ];
+
+
+  const totalIn =
+    movements
+      .filter(
+        item =>
+          stockInTypes.includes(
+            item.movement_type
+          )
+      )
+      .reduce(
+        (sum,item) =>
+          sum
+          +
+          Math.abs(
             Number(
               item.quantity || 0
-            ) > 0
-        )
-        .reduce(
-          (sum,item) =>
-            sum
-            +
+            )
+          ),
+        0
+      );
+
+
+  const totalOut =
+    movements
+      .filter(
+        item =>
+          stockOutTypes.includes(
+            item.movement_type
+          )
+      )
+      .reduce(
+        (sum,item) =>
+          sum
+          +
+          Math.abs(
             Number(
               item.quantity || 0
-            ),
-          0
-        );
+            )
+          ),
+        0
+      );
 
 
-    const totalOut =
-      movements
-        .filter(
-          item =>
-            Number(
-              item.quantity || 0
-            ) < 0
-        )
-        .reduce(
-          (sum,item) =>
-            sum
-            +
-            Math.abs(
-              Number(
-                item.quantity || 0
-              )
-            ),
-          0
-        );
+  document
+    .getElementById(
+      "statMovements"
+    )
+    .textContent =
+      String(
+        movements.length
+      );
 
 
-    document
-      .getElementById(
-        "statMovements"
-      )
-      .textContent =
-        String(
-          movements.length
-        );
+  document
+    .getElementById(
+      "statIn"
+    )
+    .textContent =
+      String(
+        totalIn
+      );
 
 
-    document
-      .getElementById(
-        "statIn"
-      )
-      .textContent =
-        String(
-          totalIn
-        );
+  document
+    .getElementById(
+      "statOut"
+    )
+    .textContent =
+      String(
+        totalOut
+      );
 
-
-    document
-      .getElementById(
-        "statOut"
-      )
-      .textContent =
-        String(
-          totalOut
-        );
-
-  }
+}
 
 
   /* =====================================================
