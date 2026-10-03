@@ -1,0 +1,1897 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>Đặt hàng | PickDee Shop</title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background: #071523;
+      color: #ffffff;
+
+      padding-bottom:
+        calc(100px + env(safe-area-inset-bottom));
+    }
+
+
+    a {
+      color: inherit;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      backdrop-filter:
+        blur(15px);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+    }
+
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 22px));
+
+      min-height: 64px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+
+    .brand {
+      text-decoration: none;
+
+      font-size: 21px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .back {
+      min-height: 39px;
+
+      padding:
+        0 12px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      text-decoration: none;
+
+      color:
+        rgba(255,255,255,.74);
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 22px));
+
+      margin:
+        20px auto 40px;
+    }
+
+
+    .eyebrow {
+      margin-bottom: 7px;
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+
+    h1 {
+      margin:
+        0 0 6px;
+
+      font-size:
+        clamp(30px,7vw,44px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+
+    .intro {
+      margin:
+        0 0 20px;
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+
+    /* =====================================================
+       SECTION
+    ====================================================== */
+
+    .section {
+      margin-bottom: 13px;
+
+      padding: 17px;
+
+      border-radius: 17px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+    }
+
+
+    .section-title {
+      margin-bottom: 14px;
+
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+
+    .field label {
+      color:
+        rgba(255,255,255,.57);
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .055em;
+    }
+
+
+    .field input,
+    .field textarea {
+      width: 100%;
+
+      min-height: 48px;
+
+      padding:
+        0 13px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.045);
+
+      color: #ffffff;
+
+      font-family: inherit;
+
+      font-size: 15px;
+    }
+
+
+    .field textarea {
+      min-height: 82px;
+
+      padding:
+        12px 13px;
+
+      resize: vertical;
+    }
+
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color:
+        rgba(216,255,69,.65);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(216,255,69,.07);
+    }
+
+
+    .two-cols {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 10px;
+    }
+
+
+    /* =====================================================
+       PAYMENT
+    ====================================================== */
+
+    .payment-options {
+      display: grid;
+      gap: 8px;
+    }
+
+
+    .payment-option {
+      position: relative;
+
+      display: block;
+
+      cursor: pointer;
+    }
+
+
+    .payment-option input {
+      position: absolute;
+
+      opacity: 0;
+
+      pointer-events: none;
+    }
+
+
+    .payment-card {
+      min-height: 61px;
+
+      padding:
+        11px 13px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 11px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+
+    .payment-option input:checked
+    + .payment-card {
+      border-color:
+        #d8ff45;
+
+      background:
+        rgba(216,255,69,.07);
+    }
+
+
+    .payment-icon {
+      width: 38px;
+      height: 38px;
+
+      flex: 0 0 38px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      font-size: 20px;
+    }
+
+
+    .payment-name {
+      margin-bottom: 3px;
+
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+
+    .payment-desc {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 10px;
+
+      line-height: 1.4;
+    }
+
+
+    /* =====================================================
+       ORDER ITEMS
+    ====================================================== */
+
+    .order-items {
+      display: grid;
+      gap: 9px;
+    }
+
+
+    .order-item {
+      display: grid;
+
+      grid-template-columns:
+        58px minmax(0,1fr) auto;
+
+      gap: 10px;
+
+      align-items: center;
+    }
+
+
+    .order-image {
+      width: 58px;
+      height: 58px;
+
+      overflow: hidden;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: #14283d;
+    }
+
+
+    .order-image img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+    }
+
+
+    .order-name {
+      font-size: 12px;
+      font-weight: 900;
+
+      line-height: 1.35;
+    }
+
+
+    .order-variant {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 9px;
+    }
+
+
+    .order-qty {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 10px;
+    }
+
+
+    .order-price {
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 950;
+
+      white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       TOTAL
+    ====================================================== */
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-top: 10px;
+
+      color:
+        rgba(255,255,255,.53);
+
+      font-size: 11px;
+    }
+
+
+    .summary-row strong {
+      color: #ffffff;
+    }
+
+
+    .total {
+      margin-top: 13px;
+
+      padding-top: 13px;
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
+      border-top:
+        1px solid rgba(255,255,255,.09);
+    }
+
+
+    .total-label {
+      color:
+        rgba(255,255,255,.50);
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+
+    .total-price {
+      margin-top: 3px;
+
+      color: #d8ff45;
+
+      font-size: 25px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message {
+      display: none;
+
+      margin-top: 12px;
+
+      padding: 11px 13px;
+
+      border-radius: 11px;
+
+      font-size: 12px;
+      font-weight: 800;
+
+      line-height: 1.5;
+    }
+
+
+    .message.error {
+      display: block;
+
+      border:
+        1px solid rgba(255,110,110,.28);
+
+      background:
+        rgba(255,90,90,.08);
+
+      color: #ffb3b3;
+    }
+
+
+    .message.success {
+      display: block;
+
+      border:
+        1px solid rgba(216,255,69,.28);
+
+      background:
+        rgba(216,255,69,.07);
+
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       EMPTY
+    ====================================================== */
+
+    .empty {
+      padding:
+        50px 20px;
+
+      border-radius: 17px;
+
+      text-align: center;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+    }
+
+
+    .empty strong {
+      display: block;
+
+      margin-bottom: 7px;
+
+      font-size: 18px;
+    }
+
+
+    .empty p {
+      color:
+        rgba(255,255,255,.50);
+
+      font-size: 12px;
+    }
+
+
+    .empty a {
+      min-height: 44px;
+
+      margin-top: 10px;
+
+      padding:
+        0 16px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      text-decoration: none;
+
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       BOTTOM BAR
+    ====================================================== */
+
+    .bottom-bar {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 100;
+
+      padding:
+        9px 11px
+        calc(9px + env(safe-area-inset-bottom));
+
+      border-top:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(7,21,35,.98);
+
+      backdrop-filter:
+        blur(16px);
+    }
+
+
+    .bottom-inner {
+      width:
+        min(760px,100%);
+
+      margin: auto;
+
+      display: grid;
+
+      grid-template-columns:
+        .72fr 1.28fr;
+
+      gap: 10px;
+
+      align-items: center;
+    }
+
+
+    .bottom-label {
+      color:
+        rgba(255,255,255,.43);
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+
+    .bottom-total {
+      margin-top: 2px;
+
+      color: #d8ff45;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+
+    .submit-btn {
+      min-height: 51px;
+
+      border: 0;
+
+      border-radius: 12px;
+
+      cursor: pointer;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+
+    .submit-btn:disabled {
+      opacity: .58;
+      cursor: wait;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media(max-width:520px) {
+
+      .two-cols {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .section {
+        padding: 15px;
+      }
+
+
+      h1 {
+        font-size: 31px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+
+    <a
+      href="./shop-cart"
+      class="back"
+    >
+      ← GIỎ HÀNG
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+
+  <div id="checkoutContent">
+
+
+    <div class="eyebrow">
+      PICKDEE SHOP
+    </div>
+
+
+    <h1>
+      Đặt hàng
+    </h1>
+
+
+    <p class="intro">
+      Không cần tạo tài khoản.
+      Điền thông tin nhận hàng là có thể đặt mua.
+    </p>
+
+
+
+    <form
+      id="checkoutForm"
+    >
+
+
+      <!-- ===============================================
+           NGƯỜI NHẬN
+      ================================================ -->
+
+      <section class="section">
+
+        <div class="section-title">
+          Thông tin người nhận
+        </div>
+
+
+        <div class="form-grid">
+
+
+          <div class="field">
+
+            <label for="customerName">
+              HỌ VÀ TÊN *
+            </label>
+
+            <input
+              id="customerName"
+              type="text"
+              autocomplete="name"
+              placeholder="Tên người nhận"
+              required
+            >
+
+          </div>
+
+
+          <div class="two-cols">
+
+
+            <div class="field">
+
+              <label for="customerPhone">
+                SỐ ĐIỆN THOẠI *
+              </label>
+
+              <input
+                id="customerPhone"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="09xxxxxxxx"
+                required
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="customerEmail">
+                EMAIL
+              </label>
+
+              <input
+                id="customerEmail"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="Không bắt buộc"
+              >
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           ĐỊA CHỈ
+      ================================================ -->
+
+      <section class="section">
+
+        <div class="section-title">
+          Địa chỉ giao hàng
+        </div>
+
+
+        <div class="form-grid">
+
+
+          <div class="field">
+
+            <label for="addressLine">
+              SỐ NHÀ / ĐƯỜNG / THÔN / XÓM *
+            </label>
+
+            <input
+              id="addressLine"
+              type="text"
+              autocomplete="street-address"
+              placeholder="Nhập địa chỉ nhận hàng"
+              required
+            >
+
+          </div>
+
+
+          <div class="two-cols">
+
+
+            <div class="field">
+
+              <label for="ward">
+                PHƯỜNG / XÃ *
+              </label>
+
+              <input
+                id="ward"
+                type="text"
+                placeholder="Phường / xã"
+                required
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="province">
+                TỈNH / THÀNH *
+              </label>
+
+              <input
+                id="province"
+                type="text"
+                placeholder="Tỉnh / thành"
+                required
+              >
+
+            </div>
+
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="customerNote">
+              GHI CHÚ
+            </label>
+
+            <textarea
+              id="customerNote"
+              placeholder="Ví dụ: gọi trước khi giao..."
+            ></textarea>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           PAYMENT
+      ================================================ -->
+
+      <section class="section">
+
+        <div class="section-title">
+          Thanh toán
+        </div>
+
+
+        <div class="payment-options">
+
+
+          <label class="payment-option">
+
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cod"
+              checked
+            >
+
+            <div class="payment-card">
+
+              <div class="payment-icon">
+                💵
+              </div>
+
+              <div>
+
+                <div class="payment-name">
+                  Thanh toán khi nhận hàng
+                </div>
+
+                <div class="payment-desc">
+                  Nhận hàng rồi thanh toán.
+                </div>
+
+              </div>
+
+            </div>
+
+          </label>
+
+
+
+          <label class="payment-option">
+
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="bank_transfer"
+            >
+
+            <div class="payment-card">
+
+              <div class="payment-icon">
+                🏦
+              </div>
+
+              <div>
+
+                <div class="payment-name">
+                  Chuyển khoản
+                </div>
+
+                <div class="payment-desc">
+                  Đơn hàng sẽ được tạo trước,
+                  thông tin chuyển khoản hoàn thiện ở bước tiếp theo.
+                </div>
+
+              </div>
+
+            </div>
+
+          </label>
+
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           ORDER SUMMARY
+      ================================================ -->
+
+      <section class="section">
+
+        <div class="section-title">
+          Đơn hàng của bạn
+        </div>
+
+
+        <div
+          id="orderItems"
+          class="order-items"
+        ></div>
+
+
+        <div class="summary-row">
+
+          <span>
+            Tiền hàng
+          </span>
+
+          <strong id="subtotal">
+            0đ
+          </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+          <span>
+            Phí vận chuyển
+          </span>
+
+          <strong>
+            Xác nhận sau
+          </strong>
+
+        </div>
+
+
+        <div class="total">
+
+          <div>
+
+            <div class="total-label">
+              TẠM TÍNH
+            </div>
+
+            <div
+              id="totalPrice"
+              class="total-price"
+            >
+              0đ
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="message"
+          class="message"
+        ></div>
+
+      </section>
+
+
+    </form>
+
+
+  </div>
+
+
+</main>
+
+
+
+<div
+  id="bottomBar"
+  class="bottom-bar"
+>
+
+  <div class="bottom-inner">
+
+    <div>
+
+      <div class="bottom-label">
+        TẠM TÍNH
+      </div>
+
+      <div
+        id="bottomTotal"
+        class="bottom-total"
+      >
+        0đ
+      </div>
+
+    </div>
+
+
+    <button
+      id="submitBtn"
+      class="submit-btn"
+      type="submit"
+      form="checkoutForm"
+    >
+      ĐẶT HÀNG
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  const CART_KEY =
+    "pickdee_shop_cart";
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const checkoutForm =
+    document.getElementById(
+      "checkoutForm"
+    );
+
+
+  const orderItems =
+    document.getElementById(
+      "orderItems"
+    );
+
+
+  const subtotal =
+    document.getElementById(
+      "subtotal"
+    );
+
+
+  const totalPrice =
+    document.getElementById(
+      "totalPrice"
+    );
+
+
+  const bottomTotal =
+    document.getElementById(
+      "bottomTotal"
+    );
+
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const bottomBar =
+    document.getElementById(
+      "bottomBar"
+    );
+
+
+  const checkoutContent =
+    document.getElementById(
+      "checkoutContent"
+    );
+
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống đặt hàng.",
+      "error"
+    );
+
+    submitBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function readCart() {
+
+    try {
+
+      const data =
+        JSON.parse(
+          localStorage.getItem(
+            CART_KEY
+          )
+          ||
+          "[]"
+        );
+
+
+      return Array.isArray(data)
+        ?
+          data
+        :
+          [];
+
+    }
+    catch (_) {
+
+      return [];
+
+    }
+
+  }
+
+
+  function cartTotal(cart) {
+
+    return cart.reduce(
+      function (sum,item) {
+
+        return (
+          sum
+          +
+          (
+            Number(item.price || 0)
+            *
+            Number(item.quantity || 0)
+          )
+        );
+
+      },
+      0
+    );
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+
+  /* =====================================================
+     RENDER CART
+  ====================================================== */
+
+  const cart =
+    readCart();
+
+
+  if (!cart.length) {
+
+    bottomBar.style.display =
+      "none";
+
+
+    checkoutContent.innerHTML = `
+
+      <div class="empty">
+
+        <strong>
+          Chưa có sản phẩm để đặt hàng
+        </strong>
+
+        <p>
+          Quay lại PickDee Shop
+          và chọn sản phẩm trước nhé.
+        </p>
+
+        <a href="./shop">
+          XEM SẢN PHẨM
+        </a>
+
+      </div>
+    `;
+
+
+    return;
+
+  }
+
+
+  const displayTotal =
+    cartTotal(cart);
+
+
+  orderItems.innerHTML =
+    cart
+      .map(
+        function (item) {
+
+          return `
+
+            <div class="order-item">
+
+              <div class="order-image">
+
+                ${
+                  item.image_url
+                  ?
+                    `
+                      <img
+                        src="${escapeHtml(item.image_url)}"
+                        alt="${escapeHtml(item.product_name)}"
+                      >
+                    `
+                  :
+                    "🏓"
+                }
+
+              </div>
+
+
+              <div>
+
+                <div class="order-name">
+                  ${escapeHtml(item.product_name)}
+                </div>
+
+
+                ${
+                  item.variant_name
+                  ?
+                    `
+                      <div class="order-variant">
+                        ${escapeHtml(item.variant_name)}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+
+                <div class="order-qty">
+                  Số lượng:
+                  ${Number(item.quantity || 1)}
+                </div>
+
+              </div>
+
+
+              <div class="order-price">
+
+                ${
+                  money(
+                    Number(item.price || 0)
+                    *
+                    Number(item.quantity || 1)
+                  )
+                }
+
+              </div>
+
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  subtotal.textContent =
+    money(displayTotal);
+
+
+  totalPrice.textContent =
+    money(displayTotal);
+
+
+  bottomTotal.textContent =
+    money(displayTotal);
+
+
+
+  /* =====================================================
+     SUBMIT
+  ====================================================== */
+
+  checkoutForm.addEventListener(
+    "submit",
+    async function (event) {
+
+
+      event.preventDefault();
+
+
+      const customerName =
+        document
+          .getElementById(
+            "customerName"
+          )
+          .value
+          .trim();
+
+
+      const phone =
+        document
+          .getElementById(
+            "customerPhone"
+          )
+          .value
+          .trim();
+
+
+      const emailRaw =
+        document
+          .getElementById(
+            "customerEmail"
+          )
+          .value
+          .trim();
+
+
+      const addressLine =
+        document
+          .getElementById(
+            "addressLine"
+          )
+          .value
+          .trim();
+
+
+      const ward =
+        document
+          .getElementById(
+            "ward"
+          )
+          .value
+          .trim();
+
+
+      const province =
+        document
+          .getElementById(
+            "province"
+          )
+          .value
+          .trim();
+
+
+      const customerNote =
+        document
+          .getElementById(
+            "customerNote"
+          )
+          .value
+          .trim();
+
+
+      const paymentMethod =
+        document.querySelector(
+          'input[name="paymentMethod"]:checked'
+        )
+          ?.value
+        ||
+        "cod";
+
+
+      if (
+        !customerName
+        ||
+        !phone
+        ||
+        !addressLine
+        ||
+        !ward
+        ||
+        !province
+      ) {
+
+        showMessage(
+          "Vui lòng nhập đầy đủ thông tin bắt buộc.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const phoneDigits =
+        phone.replace(
+          /\D/g,
+          ""
+        );
+
+
+      if (
+        phoneDigits.length < 9
+        ||
+        phoneDigits.length > 12
+      ) {
+
+        showMessage(
+          "Số điện thoại chưa đúng.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const currentCart =
+        readCart();
+
+
+      if (!currentCart.length) {
+
+        showMessage(
+          "Giỏ hàng đang trống.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+
+      submitBtn.textContent =
+        "ĐANG TẠO ĐƠN...";
+
+
+      message.className =
+        "message";
+
+
+      message.textContent =
+        "";
+
+
+      try {
+
+
+        /*
+          CHỈ GỬI variant_id + quantity.
+          Giá bán sẽ được backend tự lấy lại từ database.
+        */
+
+        const rpcItems =
+          currentCart.map(
+            function (item) {
+
+              return {
+                variant_id:
+                  Number(
+                    item.variant_id
+                  ),
+
+                quantity:
+                  Number(
+                    item.quantity || 1
+                  )
+              };
+
+            }
+          );
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_create_guest_order",
+            {
+
+              p_customer_name:
+                customerName,
+
+              p_phone:
+                phone,
+
+              p_email:
+                emailRaw || null,
+
+              p_address_line:
+                addressLine,
+
+              p_ward:
+                ward,
+
+              p_province:
+                province,
+
+              p_payment_method:
+                paymentMethod,
+
+              p_customer_note:
+                customerNote || null,
+
+              p_items:
+                rpcItems
+
+            }
+          );
+
+
+        if (error) {
+
+          console.error(
+            "CHECKOUT RPC ERROR:",
+            error
+          );
+
+
+          throw error;
+
+        }
+
+
+        if (
+          !data?.success
+          ||
+          !data?.order_id
+        ) {
+
+          console.error(
+            "CHECKOUT RESULT:",
+            data
+          );
+
+
+          throw new Error(
+            "Không tạo được đơn hàng."
+          );
+
+        }
+
+
+        /*
+          Giữ thông tin đơn cuối
+          để trang thành công sử dụng sau này.
+        */
+
+        sessionStorage.setItem(
+          "pickdee_shop_last_order",
+          JSON.stringify(data)
+        );
+
+
+        localStorage.removeItem(
+          CART_KEY
+        );
+
+
+        showMessage(
+          `✓ Đặt hàng thành công. Mã đơn: ${data.order_code}`,
+          "success"
+        );
+
+
+        bottomBar.style.display =
+          "none";
+
+
+        checkoutContent.innerHTML = `
+
+          <div class="empty">
+
+            <div
+              style="
+                font-size:48px;
+                margin-bottom:14px;
+              "
+            >
+              ✅
+            </div>
+
+
+            <strong>
+              Đặt hàng thành công
+            </strong>
+
+
+            <p>
+              Mã đơn hàng của bạn:
+            </p>
+
+
+            <div
+              style="
+                margin:14px auto 7px;
+                color:#d8ff45;
+                font-size:24px;
+                font-weight:950;
+                letter-spacing:.03em;
+              "
+            >
+              ${escapeHtml(data.order_code)}
+            </div>
+
+
+            <p>
+              PickDee sẽ xử lý đơn hàng
+              theo thông tin anh/chị vừa cung cấp.
+            </p>
+
+
+            <a href="./shop">
+              TIẾP TỤC MUA SẮM
+            </a>
+
+          </div>
+        `;
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "CHECKOUT ERROR:",
+          error
+        );
+
+
+        let text =
+          String(
+            error?.message
+            ||
+            "Không thể tạo đơn hàng."
+          );
+
+
+        showMessage(
+          text,
+          "error"
+        );
+
+
+      }
+      finally {
+
+
+        submitBtn.disabled =
+          false;
+
+
+        submitBtn.textContent =
+          "ĐẶT HÀNG";
+
+
+      }
+
+
+    }
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
