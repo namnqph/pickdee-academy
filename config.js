@@ -294,8 +294,8 @@ const isCoachArea =
     const script =
       document.createElement("script");
 
-    script.src =
-  "/coach-telegram-gate.js?v=20260930-3";
+   script.src =
+  "/coach-telegram-gate.js?v=20261003-1";
 
     script.setAttribute(
       "data-pickdee-coach-gate",
