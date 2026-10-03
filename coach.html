@@ -12358,24 +12358,98 @@ else {
         }
 
 
-        const telegramUrl =
-          "https://t.me/PickDeeCoachBot?start="
-          +
-          encodeURIComponent(
-            String(
-              token
-            )
-          );
+       const telegramToken =
+  encodeURIComponent(
+    String(
+      token
+    )
+  );
 
 
-        /*
-          Dùng cùng tab để tránh trình duyệt
-          chặn popup sau khi chờ RPC.
-        */
+const telegramWebUrl =
+  "https://t.me/PickDeeCoachBot?start="
+  +
+  telegramToken;
+
+
+const telegramAppUrl =
+  "tg://resolve?domain=PickDeeCoachBot&start="
+  +
+  telegramToken;
+
+
+const isAndroid =
+  /Android/i.test(
+    navigator.userAgent
+  );
+
+
+if (
+  isAndroid
+) {
+
+  let openedTelegramApp =
+    false;
+
+
+  const handleVisibility =
+    function () {
+
+      if (
+        document.hidden
+      ) {
+
+        openedTelegramApp =
+          true;
+
+      }
+
+    };
+
+
+  document.addEventListener(
+    "visibilitychange",
+    handleVisibility
+  );
+
+
+  window.location.href =
+    telegramAppUrl;
+
+
+  setTimeout(
+    function () {
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
+
+      if (
+        !openedTelegramApp
+        &&
+        document.visibilityState
+        ===
+        "visible"
+      ) {
 
         window.location.href =
-          telegramUrl;
+          telegramWebUrl;
 
+      }
+
+    },
+    1300
+  );
+
+}
+else {
+
+  window.location.href =
+    telegramWebUrl;
+
+}
       }
       catch (error) {
 
