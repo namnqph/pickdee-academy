@@ -1,0 +1,1292 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>Quản lý Shop | PickDee</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    a,
+    button {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(1100px,calc(100% - 20px));
+
+      min-height: 64px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+    .brand {
+      text-decoration: none;
+
+      color: #fff;
+
+      font-size: 21px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 38px;
+
+      padding:
+        0 11px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(1100px,calc(100% - 20px));
+
+      margin:
+        20px auto 50px;
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 6px;
+
+      font-size:
+        clamp(30px,6vw,44px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 18px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 12px;
+    }
+
+
+    /* =====================================================
+       STATS
+    ====================================================== */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(4,minmax(0,1fr));
+
+      gap: 10px;
+
+      margin-bottom: 17px;
+    }
+
+    .stat {
+      padding: 14px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .stat-label {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .stat-value {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       FILTER
+    ====================================================== */
+
+    .filters {
+      display: flex;
+
+      gap: 7px;
+
+      margin-bottom: 14px;
+
+      overflow-x: auto;
+
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-btn {
+      flex: 0 0 auto;
+
+      min-height: 38px;
+
+      padding:
+        0 13px;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(255,255,255,.11);
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        rgba(255,255,255,.65);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: #d8ff45;
+      color: #071523;
+      border-color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       ORDERS
+    ====================================================== */
+
+    .orders {
+      display: grid;
+      gap: 10px;
+    }
+
+    .order-card {
+      padding: 14px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+
+      cursor: pointer;
+    }
+
+    .order-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+    .order-code {
+      color: #fff;
+
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .order-time {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 9px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      padding:
+        6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+    .badge.new {
+      background:
+        rgba(216,255,69,.10);
+
+      color: #d8ff45;
+    }
+
+    .badge.confirmed {
+      background:
+        rgba(90,180,255,.12);
+
+      color: #8ecbff;
+    }
+
+    .badge.packing {
+      background:
+        rgba(255,193,90,.12);
+
+      color: #ffd071;
+    }
+
+    .badge.shipping {
+      background:
+        rgba(175,120,255,.13);
+
+      color: #c9a6ff;
+    }
+
+    .badge.completed {
+      background:
+        rgba(80,220,140,.12);
+
+      color: #7be5a8;
+    }
+
+    .badge.cancelled {
+      background:
+        rgba(255,90,90,.11);
+
+      color: #ffaaaa;
+    }
+
+    .customer {
+      margin-top: 13px;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .phone {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 11px;
+    }
+
+    .order-bottom {
+      margin-top: 13px;
+
+      padding-top: 12px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      border-top:
+        1px solid rgba(255,255,255,.07);
+    }
+
+    .payment {
+      color:
+        rgba(255,255,255,.45);
+
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .amount {
+      color: #d8ff45;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        50px 20px;
+
+      text-align: center;
+
+      border-radius: 16px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 12px;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media(max-width:620px) {
+
+      main {
+        margin-top: 15px;
+      }
+
+      .stats {
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .order-card {
+        padding: 13px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop-admin"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      class="back"
+      href="./admin"
+    >
+      ← ADMIN
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+
+  <h1>
+    Đơn hàng
+  </h1>
+
+
+  <p class="intro">
+    Theo dõi và xử lý đơn PickDee Shop.
+  </p>
+
+
+
+  <div class="stats">
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐƠN MỚI
+      </div>
+
+      <div
+        id="statNew"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐANG XỬ LÝ
+      </div>
+
+      <div
+        id="statProcessing"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        ĐANG GIAO
+      </div>
+
+      <div
+        id="statShipping"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        HOÀN TẤT
+      </div>
+
+      <div
+        id="statCompleted"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div
+    id="filters"
+    class="filters"
+  >
+
+    <button
+      class="filter-btn active"
+      data-status=""
+      type="button"
+    >
+      TẤT CẢ
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="new"
+      type="button"
+    >
+      MỚI
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="confirmed"
+      type="button"
+    >
+      ĐÃ XÁC NHẬN
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="packing"
+      type="button"
+    >
+      ĐÓNG GÓI
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="shipping"
+      type="button"
+    >
+      ĐANG GIAO
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="completed"
+      type="button"
+    >
+      HOÀN TẤT
+    </button>
+
+    <button
+      class="filter-btn"
+      data-status="cancelled"
+      type="button"
+    >
+      ĐÃ HỦY
+    </button>
+
+  </div>
+
+
+
+  <div
+    id="orders"
+    class="orders"
+  >
+
+    <div class="state">
+      Đang tải đơn hàng...
+    </div>
+
+  </div>
+
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const ordersBox =
+    document.getElementById(
+      "orders"
+    );
+
+
+  let allOrders = [];
+
+  let selectedStatus = "";
+
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showState(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function money(value) {
+
+    return new Intl.NumberFormat(
+      "vi-VN"
+    ).format(
+      Number(value || 0)
+    )
+    + "đ";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "";
+    }
+
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function statusLabel(status) {
+
+    const map = {
+
+      new:
+        "ĐƠN MỚI",
+
+      confirmed:
+        "ĐÃ XÁC NHẬN",
+
+      packing:
+        "ĐANG ĐÓNG GÓI",
+
+      shipping:
+        "ĐANG GIAO",
+
+      completed:
+        "HOÀN TẤT",
+
+      cancelled:
+        "ĐÃ HỦY"
+
+    };
+
+
+    return (
+      map[status]
+      ||
+      status
+      ||
+      "-"
+    );
+
+  }
+
+
+  function paymentLabel(method) {
+
+    if (
+      method === "bank_transfer"
+    ) {
+
+      return "Chuyển khoản";
+
+    }
+
+
+    return "COD";
+
+  }
+
+
+  function showState(text) {
+
+    ordersBox.innerHTML = `
+      <div class="state">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+  }
+
+
+
+  /* =====================================================
+     AUTH + ROLE
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      window.location.href =
+        "./";
+
+      return null;
+
+    }
+
+
+    const {
+      data: roles,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      console.error(
+        "SHOP ROLE ERROR:",
+        error
+      );
+
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (roles || [])
+        .some(
+          function (item) {
+
+            return [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ]
+              .includes(
+                item.role
+              );
+
+          }
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản này chưa có quyền quản lý Shop."
+      );
+
+    }
+
+
+    return user;
+
+  }
+
+
+
+  /* =====================================================
+     STATS
+  ====================================================== */
+
+  function updateStats() {
+
+    document
+      .getElementById(
+        "statNew"
+      )
+      .textContent =
+        String(
+          allOrders.filter(
+            item =>
+              item.order_status
+              ===
+              "new"
+          ).length
+        );
+
+
+    document
+      .getElementById(
+        "statProcessing"
+      )
+      .textContent =
+        String(
+          allOrders.filter(
+            item =>
+              [
+                "confirmed",
+                "packing"
+              ]
+                .includes(
+                  item.order_status
+                )
+          ).length
+        );
+
+
+    document
+      .getElementById(
+        "statShipping"
+      )
+      .textContent =
+        String(
+          allOrders.filter(
+            item =>
+              item.order_status
+              ===
+              "shipping"
+          ).length
+        );
+
+
+    document
+      .getElementById(
+        "statCompleted"
+      )
+      .textContent =
+        String(
+          allOrders.filter(
+            item =>
+              item.order_status
+              ===
+              "completed"
+          ).length
+        );
+
+  }
+
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function renderOrders() {
+
+    const filtered =
+      selectedStatus
+        ?
+          allOrders.filter(
+            item =>
+              item.order_status
+              ===
+              selectedStatus
+          )
+        :
+          allOrders;
+
+
+    if (!filtered.length) {
+
+      showState(
+        "Chưa có đơn hàng ở trạng thái này."
+      );
+
+      return;
+
+    }
+
+
+    ordersBox.innerHTML =
+      filtered
+        .map(
+          function (order) {
+
+            return `
+
+              <div
+                class="order-card"
+                data-id="${order.id}"
+              >
+
+                <div class="order-top">
+
+                  <div>
+
+                    <div class="order-code">
+                      ${escapeHtml(order.order_code)}
+                    </div>
+
+                    <div class="order-time">
+                      ${formatTime(order.created_at)}
+                    </div>
+
+                  </div>
+
+
+                  <div
+                    class="badge ${escapeHtml(order.order_status)}"
+                  >
+                    ${escapeHtml(
+                      statusLabel(
+                        order.order_status
+                      )
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="customer">
+                  ${escapeHtml(order.customer_name)}
+                </div>
+
+
+                <div class="phone">
+                  ${escapeHtml(order.phone)}
+                </div>
+
+
+                <div class="order-bottom">
+
+                  <div class="payment">
+                    ${escapeHtml(
+                      paymentLabel(
+                        order.payment_method
+                      )
+                    )}
+                    •
+                    ${escapeHtml(
+                      order.payment_status
+                      ||
+                      "unpaid"
+                    )}
+                  </div>
+
+
+                  <div class="amount">
+                    ${money(order.total_amount)}
+                  </div>
+
+                </div>
+
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    document
+      .querySelectorAll(
+        ".order-card"
+      )
+      .forEach(
+        function (card) {
+
+          card.addEventListener(
+            "click",
+            function () {
+
+              window.location.href =
+                `./shop-admin-order?id=${encodeURIComponent(
+                  card.dataset.id
+                )}`;
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+
+  /* =====================================================
+     FILTER
+  ====================================================== */
+
+  document
+    .querySelectorAll(
+      ".filter-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            selectedStatus =
+              button.dataset.status
+              ||
+              "";
+
+
+            document
+              .querySelectorAll(
+                ".filter-btn"
+              )
+              .forEach(
+                item =>
+                  item.classList.remove(
+                    "active"
+                  )
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+
+            renderOrders();
+
+          }
+        );
+
+      }
+    );
+
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadOrders() {
+
+    try {
+
+      await requireShopAccess();
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from(
+            "shop_orders"
+          )
+          .select(
+            "id,order_code,customer_name,phone,order_status,payment_method,payment_status,total_amount,created_at"
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                false
+            }
+          );
+
+
+      if (error) {
+
+        console.error(
+          "SHOP ORDERS ERROR:",
+          error
+        );
+
+
+        throw error;
+
+      }
+
+
+      allOrders =
+        data || [];
+
+
+      updateStats();
+
+      renderOrders();
+
+
+    }
+    catch (error) {
+
+      console.error(
+        "SHOP ADMIN ERROR:",
+        error
+      );
+
+
+      showState(
+        error?.message
+        ||
+        "Không tải được đơn hàng."
+      );
+
+    }
+
+  }
+
+
+
+  loadOrders();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
