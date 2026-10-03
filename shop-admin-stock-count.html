@@ -1,0 +1,1632 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Kiểm kho | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+
+      padding-bottom:
+        calc(95px + env(safe-area-inset-bottom));
+    }
+
+    button,
+    input,
+    textarea,
+    select,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter: blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(760px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding: 0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(760px,calc(100% - 18px));
+
+      margin:
+        15px auto 35px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       SECTION
+    ====================================================== */
+
+    .section {
+      margin-bottom: 10px;
+
+      padding: 14px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+    }
+
+    .section-title {
+      margin-bottom: 11px;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field + .field {
+      margin-top: 10px;
+    }
+
+    .field label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 950;
+
+      letter-spacing: .05em;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+
+      min-height: 44px;
+
+      padding: 0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background: #10243a;
+
+      color: #fff;
+
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 72px;
+
+      padding: 10px 11px;
+
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color:
+        rgba(216,255,69,.65);
+    }
+
+
+    /* =====================================================
+       STOCK
+    ====================================================== */
+
+    .stock-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 7px;
+
+      margin-top: 12px;
+    }
+
+    .stock-box {
+      padding: 10px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      border:
+        1px solid rgba(255,255,255,.06);
+    }
+
+    .stock-label {
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .stock-value {
+      margin-top: 4px;
+
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .stock-value.available {
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       DIFFERENCE
+    ====================================================== */
+
+    .difference {
+      margin-top: 12px;
+
+      padding: 11px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.025);
+    }
+
+    .diff-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+    .diff-label {
+      color:
+        rgba(255,255,255,.46);
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .diff-value {
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .diff-value.plus {
+      color: #d8ff45;
+    }
+
+    .diff-value.minus {
+      color: #ff9e9e;
+    }
+
+    .diff-value.zero {
+      color:
+        rgba(255,255,255,.55);
+    }
+
+    .diff-note {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.35);
+
+      font-size: 8px;
+
+      line-height: 1.4;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message {
+      display: none;
+
+      margin-top: 10px;
+
+      padding: 10px 11px;
+
+      border-radius: 10px;
+
+      font-size: 11px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.08);
+
+      border:
+        1px solid rgba(255,90,90,.24);
+
+      color: #ffb0b0;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(216,255,69,.07);
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       BOTTOM
+    ====================================================== */
+
+    .bottom-bar {
+      position: fixed;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      z-index: 100;
+
+      padding:
+        7px 9px
+        calc(7px + env(safe-area-inset-bottom));
+
+      border-top:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(7,21,35,.98);
+
+      backdrop-filter: blur(16px);
+    }
+
+    .bottom-inner {
+      width:
+        min(760px,100%);
+
+      margin: auto;
+
+      display: grid;
+
+      grid-template-columns:
+        .75fr 1.25fr;
+
+      gap: 8px;
+
+      align-items: center;
+    }
+
+    .bottom-label {
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .bottom-value {
+      margin-top: 2px;
+
+      color: #d8ff45;
+
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .confirm-btn {
+      min-height: 48px;
+
+      border: 0;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+
+      color: #071523;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .confirm-btn:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+
+    @media(max-width:390px) {
+
+      .stock-grid {
+        gap: 5px;
+      }
+
+      .stock-box {
+        padding: 8px;
+      }
+
+      .stock-value {
+        font-size: 15px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-products"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Kiểm kho
+  </h1>
+
+  <p class="intro">
+    Chọn sản phẩm rồi nhập đúng số lượng anh/chị đếm thực tế.
+    Hệ thống tự tính chênh lệch và lưu lịch sử điều chỉnh.
+  </p>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Sản phẩm kiểm kho
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        SẢN PHẨM / SKU
+      </label>
+
+      <select id="variantId"></select>
+
+    </div>
+
+
+    <div class="stock-grid">
+
+
+      <div class="stock-box">
+
+        <div class="stock-label">
+          TỒN HỆ THỐNG
+        </div>
+
+        <div
+          id="systemStock"
+          class="stock-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="stock-box">
+
+        <div class="stock-label">
+          ĐANG GIỮ
+        </div>
+
+        <div
+          id="reservedQty"
+          class="stock-value"
+        >
+          0
+        </div>
+
+      </div>
+
+
+      <div class="stock-box">
+
+        <div class="stock-label">
+          CÓ THỂ BÁN
+        </div>
+
+        <div
+          id="availableQty"
+          class="stock-value available"
+        >
+          0
+        </div>
+
+      </div>
+
+
+    </div>
+
+  </section>
+
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Số lượng đếm thực tế
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        TỒN THỰC TẾ ĐÃ ĐẾM *
+      </label>
+
+      <input
+        id="actualStock"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        step="1"
+        placeholder="Nhập số lượng thực tế"
+      >
+
+    </div>
+
+
+    <div class="difference">
+
+      <div class="diff-row">
+
+        <div class="diff-label">
+          CHÊNH LỆCH
+        </div>
+
+        <div
+          id="differenceValue"
+          class="diff-value zero"
+        >
+          0
+        </div>
+
+      </div>
+
+      <div
+        id="differenceNote"
+        class="diff-note"
+      >
+        Nhập số lượng thực tế để hệ thống tự tính.
+      </div>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        GHI CHÚ
+      </label>
+
+      <textarea
+        id="note"
+        placeholder="Ví dụ: kiểm kho cuối ngày, thiếu 2 quả..."
+      ></textarea>
+
+    </div>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </section>
+
+</main>
+
+
+
+<div class="bottom-bar">
+
+  <div class="bottom-inner">
+
+    <div>
+
+      <div class="bottom-label">
+        TỒN SAU KIỂM
+      </div>
+
+      <div
+        id="bottomStock"
+        class="bottom-value"
+      >
+        -
+      </div>
+
+    </div>
+
+
+    <button
+      id="confirmBtn"
+      type="button"
+      class="confirm-btn"
+    >
+      XÁC NHẬN KIỂM KHO
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const variantSelect =
+    document.getElementById(
+      "variantId"
+    );
+
+
+  const actualInput =
+    document.getElementById(
+      "actualStock"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  const confirmBtn =
+    document.getElementById(
+      "confirmBtn"
+    );
+
+
+  let products = [];
+
+  let variants = [];
+
+  let inventory = [];
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "error"
+    );
+
+    confirmBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  function inventoryOf(
+    variantId
+  ) {
+
+    return (
+      inventory.find(
+        item =>
+          String(
+            item.variant_id
+          )
+          ===
+          String(
+            variantId
+          )
+      )
+      ||
+      {
+        stock_on_hand:
+          0,
+
+        reserved_qty:
+          0
+      }
+    );
+
+  }
+
+
+  function productOf(
+    productId
+  ) {
+
+    return products.find(
+      item =>
+        String(item.id)
+        ===
+        String(productId)
+    );
+
+  }
+
+
+  function selectedVariant() {
+
+    return variants.find(
+      item =>
+        String(item.id)
+        ===
+        String(
+          variantSelect.value
+        )
+    );
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền kiểm kho."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     DISPLAY
+  ====================================================== */
+
+  function updateDisplay() {
+
+    const variant =
+      selectedVariant();
+
+
+    if (!variant) {
+      return;
+    }
+
+
+    const inv =
+      inventoryOf(
+        variant.id
+      );
+
+
+    const systemStock =
+      Number(
+        inv.stock_on_hand || 0
+      );
+
+
+    const reserved =
+      Number(
+        inv.reserved_qty || 0
+      );
+
+
+    const available =
+      systemStock - reserved;
+
+
+    document
+      .getElementById(
+        "systemStock"
+      )
+      .textContent =
+        String(
+          systemStock
+        );
+
+
+    document
+      .getElementById(
+        "reservedQty"
+      )
+      .textContent =
+        String(
+          reserved
+        );
+
+
+    document
+      .getElementById(
+        "availableQty"
+      )
+      .textContent =
+        String(
+          available
+        );
+
+
+    const raw =
+      actualInput.value;
+
+
+    const diffValue =
+      document.getElementById(
+        "differenceValue"
+      );
+
+
+    const diffNote =
+      document.getElementById(
+        "differenceNote"
+      );
+
+
+    if (raw === "") {
+
+      diffValue.textContent =
+        "0";
+
+      diffValue.className =
+        "diff-value zero";
+
+
+      diffNote.textContent =
+        "Nhập số lượng thực tế để hệ thống tự tính.";
+
+
+      document
+        .getElementById(
+          "bottomStock"
+        )
+        .textContent =
+          "-";
+
+
+      return;
+
+    }
+
+
+    const actual =
+      Math.max(
+        0,
+        Math.floor(
+          Number(raw || 0)
+        )
+      );
+
+
+    const delta =
+      actual - systemStock;
+
+
+    document
+      .getElementById(
+        "bottomStock"
+      )
+      .textContent =
+        String(actual);
+
+
+    if (delta > 0) {
+
+      diffValue.textContent =
+        `+${delta}`;
+
+      diffValue.className =
+        "diff-value plus";
+
+
+      diffNote.textContent =
+        `Hệ thống sẽ tăng tồn từ ${systemStock} lên ${actual}.`;
+
+    }
+    else if (delta < 0) {
+
+      diffValue.textContent =
+        String(delta);
+
+      diffValue.className =
+        "diff-value minus";
+
+
+      diffNote.textContent =
+        `Hệ thống sẽ giảm tồn từ ${systemStock} xuống ${actual}.`;
+
+    }
+    else {
+
+      diffValue.textContent =
+        "0";
+
+      diffValue.className =
+        "diff-value zero";
+
+
+      diffNote.textContent =
+        "Tồn thực tế đang khớp với hệ thống.";
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+    await requireShopAccess();
+
+
+    const [
+      productResult,
+      variantResult,
+      inventoryResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id,name,status"
+          )
+          .eq(
+            "status",
+            "active"
+          )
+          .order(
+            "name",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,sku,variant_name,is_active,sort_order"
+          )
+          .eq(
+            "is_active",
+            true
+          )
+          .order(
+            "sort_order",
+            {
+              ascending:
+                true
+            }
+          ),
+
+
+        sb
+          .from(
+            "shop_inventory"
+          )
+          .select(
+            "variant_id,stock_on_hand,reserved_qty"
+          )
+
+
+      ]);
+
+
+    if (productResult.error) {
+      throw productResult.error;
+    }
+
+
+    if (variantResult.error) {
+      throw variantResult.error;
+    }
+
+
+    if (inventoryResult.error) {
+      throw inventoryResult.error;
+    }
+
+
+    products =
+      productResult.data || [];
+
+
+    const productIds =
+      new Set(
+        products.map(
+          item =>
+            String(item.id)
+        )
+      );
+
+
+    variants =
+      (variantResult.data || [])
+        .filter(
+          item =>
+            productIds.has(
+              String(
+                item.product_id
+              )
+            )
+        );
+
+
+    inventory =
+      inventoryResult.data || [];
+
+
+    if (!variants.length) {
+
+      throw new Error(
+        "Chưa có SKU đang bán để kiểm kho."
+      );
+
+    }
+
+
+    variantSelect.innerHTML =
+      variants
+        .map(
+          function (variant) {
+
+            const product =
+              productOf(
+                variant.product_id
+              );
+
+
+            const name =
+              product?.name
+              ||
+              "Sản phẩm";
+
+
+            const variantName =
+              variant.variant_name
+              &&
+              variant.variant_name !== "Mặc định"
+                ?
+                  ` • ${variant.variant_name}`
+                :
+                  "";
+
+
+            return `
+              <option value="${variant.id}">
+                ${escapeHtml(
+                  `${name}${variantName} • ${variant.sku || "-"}`
+                )}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    updateDisplay();
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  variantSelect.addEventListener(
+    "change",
+    function () {
+
+      actualInput.value =
+        "";
+
+      clearMessage();
+
+      updateDisplay();
+
+    }
+  );
+
+
+  actualInput.addEventListener(
+    "input",
+    function () {
+
+      clearMessage();
+
+      updateDisplay();
+
+    }
+  );
+
+
+  /* =====================================================
+     CONFIRM
+  ====================================================== */
+
+  confirmBtn.addEventListener(
+    "click",
+    async function () {
+
+      clearMessage();
+
+
+      const variant =
+        selectedVariant();
+
+
+      if (!variant) {
+
+        showMessage(
+          "Chọn sản phẩm cần kiểm kho.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (
+        actualInput.value === ""
+      ) {
+
+        showMessage(
+          "Nhập số lượng thực tế đã đếm.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const actual =
+        Number(
+          actualInput.value
+        );
+
+
+      if (
+        !Number.isInteger(actual)
+        ||
+        actual < 0
+      ) {
+
+        showMessage(
+          "Tồn thực tế phải là số nguyên từ 0 trở lên.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const note =
+        document
+          .getElementById(
+            "note"
+          )
+          .value
+          .trim();
+
+
+      confirmBtn.disabled =
+        true;
+
+
+      confirmBtn.textContent =
+        "ĐANG CẬP NHẬT...";
+
+
+      try {
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_admin_stock_count",
+            {
+
+              p_variant_id:
+                Number(
+                  variant.id
+                ),
+
+              p_actual_stock:
+                actual,
+
+              p_note:
+                note || null
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        if (!data?.success) {
+
+          throw new Error(
+            "Không cập nhật được kiểm kho."
+          );
+
+        }
+
+
+        if (data.changed === false) {
+
+          showMessage(
+            "✓ Tồn thực tế đang khớp với hệ thống.",
+            "success"
+          );
+
+        }
+        else {
+
+          const delta =
+            Number(
+              data.delta || 0
+            );
+
+
+          showMessage(
+            `✓ Đã cập nhật tồn kho. Chênh lệch ${delta > 0 ? "+" : ""}${delta}.`,
+            "success"
+          );
+
+        }
+
+
+        const inv =
+          inventoryOf(
+            variant.id
+          );
+
+
+        inv.stock_on_hand =
+          Number(
+            data.actual_stock
+          );
+
+
+        actualInput.value =
+          String(
+            data.actual_stock
+          );
+
+
+        updateDisplay();
+
+
+      }
+      catch (error) {
+
+
+        console.error(
+          "STOCK COUNT ERROR:",
+          error
+        );
+
+
+        showMessage(
+          error?.message
+          ||
+          "Không kiểm kho được.",
+          "error"
+        );
+
+
+      }
+      finally {
+
+
+        confirmBtn.disabled =
+          false;
+
+
+        confirmBtn.textContent =
+          "XÁC NHẬN KIỂM KHO";
+
+      }
+
+    }
+  );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "STOCK COUNT PAGE ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không tải được trang kiểm kho.",
+        "error"
+      );
+
+
+      confirmBtn.disabled =
+        true;
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
