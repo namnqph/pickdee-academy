@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#071523">
+
+  <title>Lịch sử kho | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #fff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    select,
+    a {
+      touch-action: manipulation;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+
+      background:
+        rgba(7,21,35,.97);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      backdrop-filter:
+        blur(15px);
+    }
+
+    .header-inner {
+      width:
+        min(800px,calc(100% - 18px));
+
+      min-height: 60px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+    .brand {
+      color: #fff;
+
+      text-decoration: none;
+
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 36px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration: none;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(800px,calc(100% - 18px));
+
+      margin:
+        15px auto 45px;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin:
+        0 0 5px;
+
+      font-size:
+        clamp(29px,7vw,40px);
+
+      line-height: 1;
+
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin:
+        0 0 14px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       STATS
+    ====================================================== */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,1fr);
+
+      gap: 7px;
+
+      margin-bottom: 10px;
+    }
+
+    .stat {
+      padding: 10px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .stat-label {
+      color:
+        rgba(255,255,255,.4);
+
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+
+      color: #d8ff45;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+
+    /* =====================================================
+       FILTERS
+    ====================================================== */
+
+    .toolbar {
+      display: grid;
+      gap: 7px;
+
+      margin-bottom: 9px;
+    }
+
+    input,
+    select {
+      width: 100%;
+
+      min-height: 44px;
+
+      padding:
+        0 11px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      outline: none;
+
+      background: #10243a;
+
+      color: #fff;
+
+      font-family: inherit;
+
+      font-size: 16px;
+    }
+
+    input:focus,
+    select:focus {
+      border-color:
+        rgba(216,255,69,.6);
+    }
+
+    .filters {
+      display: flex;
+
+      gap: 6px;
+
+      overflow-x: auto;
+
+      padding-bottom: 8px;
+
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-btn {
+      flex: 0 0 auto;
+
+      min-height: 32px;
+
+      padding:
+        0 10px;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.03);
+
+      color:
+        rgba(255,255,255,.5);
+
+      font-size: 8px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      border-color:
+        rgba(216,255,69,.35);
+
+      background:
+        rgba(216,255,69,.08);
+
+      color: #d8ff45;
+    }
+
+
+    /* =====================================================
+       LIST
+    ====================================================== */
+
+    .movement-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .movement {
+      padding: 12px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background: #0d1d2f;
+    }
+
+    .movement-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+    .product-name {
+      font-size: 12px;
+      font-weight: 950;
+
+      line-height: 1.35;
+    }
+
+    .sku {
+      margin-top: 3px;
+
+      color:
+        rgba(255,255,255,.38);
+
+      font-size: 8px;
+      font-weight: 850;
+    }
+
+    .quantity {
+      flex: 0 0 auto;
+
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .quantity.plus {
+      color: #d8ff45;
+    }
+
+    .quantity.minus {
+      color: #ff9e9e;
+    }
+
+    .movement-meta {
+      margin-top: 9px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 5px;
+    }
+
+    .tag {
+      min-height: 22px;
+
+      padding:
+        0 7px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.05);
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 7px;
+      font-weight: 950;
+    }
+
+    .tag.purchase,
+    .tag.adjustment_in {
+      background:
+        rgba(216,255,69,.08);
+
+      color: #d8ff45;
+    }
+
+    .tag.sale,
+    .tag.adjustment_out {
+      background:
+        rgba(255,90,90,.08);
+
+      color: #ffaaaa;
+    }
+
+    .tag.reserve {
+      background:
+        rgba(255,195,80,.08);
+
+      color: #ffd071;
+    }
+
+    .tag.release {
+      background:
+        rgba(100,190,255,.08);
+
+      color: #9ed4ff;
+    }
+
+    .note {
+      margin-top: 9px;
+
+      padding-top: 8px;
+
+      border-top:
+        1px solid rgba(255,255,255,.07);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+
+      line-height: 1.45;
+    }
+
+    .time {
+      margin-top: 8px;
+
+      color:
+        rgba(255,255,255,.30);
+
+      font-size: 8px;
+    }
+
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    .state {
+      padding:
+        45px 18px;
+
+      text-align: center;
+
+      border-radius: 14px;
+
+      border:
+        1px dashed rgba(255,255,255,.13);
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 11px;
+
+      line-height: 1.5;
+    }
+
+
+    @media(max-width:390px) {
+
+      .stat {
+        padding: 8px;
+      }
+
+      .stat-value {
+        font-size: 16px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      href="./shop-admin-stock-history"
+      class="brand"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      href="./shop-admin-products"
+      class="back"
+    >
+      ← SẢN PHẨM
+    </a>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Lịch sử kho
+  </h1>
+
+  <p class="intro">
+    Toàn bộ biến động tăng, giảm và giữ hàng của PickDee Shop.
+  </p>
+
+
+
+  <div class="stats">
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        BIẾN ĐỘNG
+      </div>
+
+      <div
+        id="statMovements"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        TỔNG TĂNG
+      </div>
+
+      <div
+        id="statIn"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div class="stat-label">
+        TỔNG GIẢM
+      </div>
+
+      <div
+        id="statOut"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+  <div class="toolbar">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm sản phẩm / SKU / ghi chú..."
+      autocomplete="off"
+    >
+
+
+    <select id="variantFilter">
+
+      <option value="">
+        Tất cả sản phẩm / SKU
+      </option>
+
+    </select>
+
+  </div>
+
+
+
+  <div
+    id="filters"
+    class="filters"
+  >
+
+    <button
+      type="button"
+      class="filter-btn active"
+      data-type=""
+    >
+      TẤT CẢ
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-type="purchase"
+    >
+      NHẬP HÀNG
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-type="sale"
+    >
+      BÁN HÀNG
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-type="reserve"
+    >
+      GIỮ HÀNG
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-type="release"
+    >
+      NHẢ GIỮ
+    </button>
+
+    <button
+      type="button"
+      class="filter-btn"
+      data-type="adjustment"
+    >
+      KIỂM KHO
+    </button>
+
+  </div>
+
+
+
+  <div
+    id="movementList"
+    class="movement-list"
+  >
+
+    <div class="state">
+      Đang tải lịch sử kho...
+    </div>
+
+  </div>
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const movementList =
+    document.getElementById(
+      "movementList"
+    );
+
+
+  const searchInput =
+    document.getElementById(
+      "searchInput"
+    );
+
+
+  const variantFilter =
+    document.getElementById(
+      "variantFilter"
+    );
+
+
+  let movements = [];
+
+  let variants = [];
+
+  let products = [];
+
+  let selectedType = "";
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showState(
+      "Không tải được hệ thống Shop."
+    );
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function normalize(value) {
+
+    return String(
+      value || ""
+    )
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) {
+      return "-";
+    }
+
+
+    try {
+
+      return new Intl.DateTimeFormat(
+        "vi-VN",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      ).format(
+        new Date(value)
+      );
+
+    }
+    catch (_) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function productOf(productId) {
+
+    return products.find(
+      item =>
+        String(item.id)
+        ===
+        String(productId)
+    );
+
+  }
+
+
+  function variantOf(variantId) {
+
+    return variants.find(
+      item =>
+        String(item.id)
+        ===
+        String(variantId)
+    );
+
+  }
+
+
+  function movementLabel(type) {
+
+    const map = {
+
+      purchase:
+        "NHẬP HÀNG",
+
+      reserve:
+        "GIỮ HÀNG",
+
+      release:
+        "NHẢ GIỮ",
+
+      sale:
+        "BÁN HÀNG",
+
+      adjustment_in:
+        "KIỂM KHO TĂNG",
+
+      adjustment_out:
+        "KIỂM KHO GIẢM"
+
+    };
+
+
+    return (
+      map[type]
+      ||
+      type
+      ||
+      "-"
+    );
+
+  }
+
+
+  function showState(text) {
+
+    movementList.innerHTML = `
+      <div class="state">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+  }
+
+
+  /* =====================================================
+     AUTH
+  ====================================================== */
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData?.session?.user;
+
+
+    if (!user) {
+
+      location.href =
+        "./";
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        "Không kiểm tra được quyền Shop."
+      );
+
+    }
+
+
+    const allowed =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            )
+        );
+
+
+    if (!allowed) {
+
+      throw new Error(
+        "Tài khoản chưa có quyền xem lịch sử kho."
+      );
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     STATS
+  ====================================================== */
+
+  function updateStats() {
+
+    const totalIn =
+      movements
+        .filter(
+          item =>
+            Number(
+              item.quantity || 0
+            ) > 0
+        )
+        .reduce(
+          (sum,item) =>
+            sum
+            +
+            Number(
+              item.quantity || 0
+            ),
+          0
+        );
+
+
+    const totalOut =
+      movements
+        .filter(
+          item =>
+            Number(
+              item.quantity || 0
+            ) < 0
+        )
+        .reduce(
+          (sum,item) =>
+            sum
+            +
+            Math.abs(
+              Number(
+                item.quantity || 0
+              )
+            ),
+          0
+        );
+
+
+    document
+      .getElementById(
+        "statMovements"
+      )
+      .textContent =
+        String(
+          movements.length
+        );
+
+
+    document
+      .getElementById(
+        "statIn"
+      )
+      .textContent =
+        String(
+          totalIn
+        );
+
+
+    document
+      .getElementById(
+        "statOut"
+      )
+      .textContent =
+        String(
+          totalOut
+        );
+
+  }
+
+
+  /* =====================================================
+     VARIANT FILTER
+  ====================================================== */
+
+  function buildVariantFilter() {
+
+    const options =
+      variants
+        .map(
+          function (variant) {
+
+            const product =
+              productOf(
+                variant.product_id
+              );
+
+
+            const productName =
+              product?.name
+              ||
+              "Sản phẩm";
+
+
+            const variantName =
+              variant.variant_name
+              &&
+              variant.variant_name !== "Mặc định"
+                ?
+                  ` • ${variant.variant_name}`
+                :
+                  "";
+
+
+            return `
+              <option value="${variant.id}">
+                ${escapeHtml(
+                  `${productName}${variantName} • ${variant.sku || "-"}`
+                )}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    variantFilter.innerHTML =
+      `
+        <option value="">
+          Tất cả sản phẩm / SKU
+        </option>
+      `
+      +
+      options;
+
+  }
+
+
+  /* =====================================================
+     RENDER
+  ====================================================== */
+
+  function render() {
+
+    updateStats();
+
+
+    const keyword =
+      normalize(
+        searchInput.value
+      );
+
+
+    const selectedVariant =
+      variantFilter.value;
+
+
+    const filtered =
+      movements.filter(
+        function (movement) {
+
+          const type =
+            movement.movement_type
+            ||
+            "";
+
+
+          let typeOk = true;
+
+
+          if (
+            selectedType
+            ===
+            "adjustment"
+          ) {
+
+            typeOk =
+              [
+                "adjustment_in",
+                "adjustment_out"
+              ].includes(type);
+
+          }
+          else if (selectedType) {
+
+            typeOk =
+              type
+              ===
+              selectedType;
+
+          }
+
+
+          const variantOk =
+            !selectedVariant
+            ||
+            String(
+              movement.variant_id
+            )
+            ===
+            String(
+              selectedVariant
+            );
+
+
+          const variant =
+            variantOf(
+              movement.variant_id
+            );
+
+
+          const product =
+            variant
+              ?
+                productOf(
+                  variant.product_id
+                )
+              :
+                null;
+
+
+          const text =
+            normalize(
+              [
+                product?.name,
+                variant?.sku,
+                variant?.variant_name,
+                movement.note,
+                movement.reference_type,
+                movement.reference_id
+              ].join(" ")
+            );
+
+
+          const searchOk =
+            !keyword
+            ||
+            text.includes(
+              keyword
+            );
+
+
+          return (
+            typeOk
+            &&
+            variantOk
+            &&
+            searchOk
+          );
+
+        }
+      );
+
+
+    if (!filtered.length) {
+
+      showState(
+        movements.length
+          ?
+            "Không có biến động kho phù hợp."
+          :
+            "Chưa có lịch sử biến động kho."
+      );
+
+      return;
+
+    }
+
+
+    movementList.innerHTML =
+      filtered
+        .map(
+          function (movement) {
+
+            const variant =
+              variantOf(
+                movement.variant_id
+              );
+
+
+            const product =
+              variant
+                ?
+                  productOf(
+                    variant.product_id
+                  )
+                :
+                  null;
+
+
+            const productName =
+              product?.name
+              ||
+              "Sản phẩm";
+
+
+            const sku =
+              variant?.sku
+              ||
+              "-";
+
+
+            const variantName =
+              variant?.variant_name
+              ||
+              "";
+
+
+            const quantity =
+              Number(
+                movement.quantity || 0
+              );
+
+
+            const quantityText =
+              quantity > 0
+                ?
+                  `+${quantity}`
+                :
+                  String(quantity);
+
+
+            const quantityClass =
+              quantity >= 0
+                ?
+                  "plus"
+                :
+                  "minus";
+
+
+            return `
+
+              <div class="movement">
+
+
+                <div class="movement-top">
+
+                  <div>
+
+                    <div class="product-name">
+                      ${escapeHtml(
+                        productName
+                      )}
+                    </div>
+
+
+                    <div class="sku">
+
+                      ${
+                        variantName
+                          ?
+                            `${escapeHtml(
+                              variantName
+                            )} • `
+                          :
+                            ""
+                      }
+
+                      ${escapeHtml(
+                        sku
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  <div
+                    class="quantity ${quantityClass}"
+                  >
+                    ${escapeHtml(
+                      quantityText
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div class="movement-meta">
+
+                  <span
+                    class="tag ${escapeHtml(
+                      movement.movement_type
+                      ||
+                      ""
+                    )}"
+                  >
+                    ${escapeHtml(
+                      movementLabel(
+                        movement.movement_type
+                      )
+                    )}
+                  </span>
+
+
+                  ${
+                    movement.reference_type
+                      ?
+                        `
+                          <span class="tag">
+                            ${escapeHtml(
+                              movement.reference_type
+                            )}
+                          </span>
+                        `
+                      :
+                        ""
+                  }
+
+
+                  ${
+                    movement.reference_id
+                    !==
+                    null
+                    &&
+                    movement.reference_id
+                    !==
+                    undefined
+                      ?
+                        `
+                          <span class="tag">
+                            #${escapeHtml(
+                              movement.reference_id
+                            )}
+                          </span>
+                        `
+                      :
+                        ""
+                  }
+
+                </div>
+
+
+                ${
+                  movement.note
+                    ?
+                      `
+                        <div class="note">
+                          ${escapeHtml(
+                            movement.note
+                          )}
+                        </div>
+                      `
+                    :
+                      ""
+                }
+
+
+                <div class="time">
+                  ${escapeHtml(
+                    formatTime(
+                      movement.created_at
+                    )
+                  )}
+                </div>
+
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  /* =====================================================
+     LOAD
+  ====================================================== */
+
+  async function loadData() {
+
+    await requireShopAccess();
+
+
+    const [
+      movementResult,
+      variantResult,
+      productResult
+    ] =
+      await Promise.all([
+
+
+        sb
+          .from(
+            "shop_stock_movements"
+          )
+          .select(
+            "id,variant_id,movement_type,quantity,reference_type,reference_id,note,created_by,created_at"
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                false
+            }
+          )
+          .limit(
+            500
+          ),
+
+
+        sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,sku,variant_name"
+          ),
+
+
+        sb
+          .from(
+            "shop_products"
+          )
+          .select(
+            "id,name,product_code,brand"
+          )
+
+
+      ]);
+
+
+    if (movementResult.error) {
+      throw movementResult.error;
+    }
+
+
+    if (variantResult.error) {
+      throw variantResult.error;
+    }
+
+
+    if (productResult.error) {
+      throw productResult.error;
+    }
+
+
+    movements =
+      movementResult.data || [];
+
+
+    variants =
+      variantResult.data || [];
+
+
+    products =
+      productResult.data || [];
+
+
+    buildVariantFilter();
+
+    render();
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  searchInput.addEventListener(
+    "input",
+    render
+  );
+
+
+  variantFilter.addEventListener(
+    "change",
+    render
+  );
+
+
+  document
+    .querySelectorAll(
+      "#filters .filter-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            selectedType =
+              button.dataset.type
+              ||
+              "";
+
+
+            document
+              .querySelectorAll(
+                "#filters .filter-btn"
+              )
+              .forEach(
+                item =>
+                  item.classList.remove(
+                    "active"
+                  )
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+
+            render();
+
+          }
+        );
+
+      }
+    );
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  async function start() {
+
+    try {
+
+      await loadData();
+
+    }
+    catch (error) {
+
+      console.error(
+        "STOCK HISTORY ERROR:",
+        error
+      );
+
+
+      showState(
+        error?.message
+        ||
+        "Không tải được lịch sử kho."
+      );
+
+    }
+
+  }
+
+
+  start();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
