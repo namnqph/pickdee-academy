@@ -1618,8 +1618,104 @@
 
   }
 
+function saveCart(cart) {
 
-  function cartTotal(cart) {
+  localStorage.setItem(
+    CART_KEY,
+    JSON.stringify(cart)
+  );
+
+}
+
+
+async function refreshCheckoutPrices(
+  cart
+) {
+
+  return await Promise.all(
+
+    cart.map(
+      async function (item) {
+
+        const quantity =
+          Math.max(
+            1,
+            Math.min(
+              9999,
+              Math.round(
+                Number(
+                  item.quantity || 1
+                )
+              )
+            )
+          );
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_price_quote",
+            {
+
+              p_variant_id:
+                Number(
+                  item.variant_id
+                ),
+
+              p_quantity:
+                quantity
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        return {
+
+          ...item,
+
+          quantity:
+            quantity,
+
+          price:
+            Number(
+              data?.unit_price
+              ??
+              item.price
+              ??
+              0
+            ),
+
+          retail_price:
+            Number(
+              data?.retail_price
+              ??
+              item.retail_price
+              ??
+              item.price
+              ??
+              0
+            ),
+
+          pricing_type:
+            data?.pricing_type
+            ||
+            "retail"
+
+        };
+
+      }
+    )
+
+  );
+
+}  function cartTotal(cart) {
 
     return cart.reduce(
       function (sum,item) {
@@ -1656,11 +1752,13 @@
 
 
 
-  /* =====================================================
-     RENDER CART
-  ====================================================== */
+/* =====================================================
+   RENDER CART
+====================================================== */
 
-  const cart =
+async function prepareCheckout() {
+
+  let cart =
     readCart();
 
 
@@ -1696,14 +1794,92 @@
   }
 
 
+  /*
+    Không cho đặt hàng trong lúc
+    đang xác minh lại giá với backend.
+  */
+
+  submitBtn.disabled =
+    true;
+
+
+  submitBtn.textContent =
+    "ĐANG KIỂM TRA GIÁ...";
+
+
+  try {
+
+    cart =
+      await refreshCheckoutPrices(
+        cart
+      );
+
+
+    saveCart(
+      cart
+    );
+
+  }
+  catch (error) {
+
+    console.error(
+      "CHECKOUT PRICE REFRESH ERROR:",
+      error
+    );
+
+
+    showMessage(
+      "Không kiểm tra được giá bán mới nhất. Vui lòng quay lại giỏ hàng và thử lại.",
+      "error"
+    );
+
+
+    bottomBar.style.display =
+      "none";
+
+
+    return;
+
+  }
+
+
   const displayTotal =
-    cartTotal(cart);
+    cartTotal(
+      cart
+    );
 
 
   orderItems.innerHTML =
     cart
       .map(
         function (item) {
+
+          const isWholesale =
+            item.pricing_type
+            ===
+            "wholesale"
+            &&
+            Number(
+              item.retail_price || 0
+            )
+              >
+            Number(
+              item.price || 0
+            );
+
+
+          const wholesaleText =
+            isWholesale
+              ?
+                `
+                  <div class="order-variant">
+                    GIÁ SỈ •
+                    ${money(item.price)}/sản phẩm
+                  </div>
+                `
+              :
+                "";
+
 
           return `
 
@@ -1713,15 +1889,15 @@
 
                 ${
                   item.image_url
-                  ?
-                    `
-                      <img
-                        src="${escapeHtml(item.image_url)}"
-                        alt="${escapeHtml(item.product_name)}"
-                      >
-                    `
-                  :
-                    "🏓"
+                    ?
+                      `
+                        <img
+                          src="${escapeHtml(item.image_url)}"
+                          alt="${escapeHtml(item.product_name)}"
+                        >
+                      `
+                    :
+                      "🏓"
                 }
 
               </div>
@@ -1736,15 +1912,18 @@
 
                 ${
                   item.variant_name
-                  ?
-                    `
-                      <div class="order-variant">
-                        ${escapeHtml(item.variant_name)}
-                      </div>
-                    `
-                  :
-                    ""
+                    ?
+                      `
+                        <div class="order-variant">
+                          ${escapeHtml(item.variant_name)}
+                        </div>
+                      `
+                    :
+                      ""
                 }
+
+
+                ${wholesaleText}
 
 
                 <div class="order-qty">
@@ -1776,16 +1955,34 @@
 
 
   subtotal.textContent =
-    money(displayTotal);
+    money(
+      displayTotal
+    );
 
 
   totalPrice.textContent =
-    money(displayTotal);
+    money(
+      displayTotal
+    );
 
 
   bottomTotal.textContent =
-    money(displayTotal);
+    money(
+      displayTotal
+    );
 
+
+  submitBtn.disabled =
+    false;
+
+
+  submitBtn.textContent =
+    "ĐẶT HÀNG";
+
+}
+
+
+prepareCheckout();
 
 
   /* =====================================================
