@@ -517,46 +517,103 @@
     }
 
 
-    .quantity {
-      display: inline-grid;
+   .quantity {
+  display: inline-grid;
 
-      grid-template-columns:
-        42px 48px 42px;
+  grid-template-columns:
+    42px 82px 42px;
 
-      min-height: 42px;
+  min-height: 42px;
 
-      border:
-        1px solid rgba(255,255,255,.12);
+  border:
+    1px solid rgba(255,255,255,.12);
 
-      border-radius: 11px;
+  border-radius: 11px;
 
-      overflow: hidden;
-    }
-
-
-    .quantity button {
-      border: 0;
-
-      background:
-        rgba(255,255,255,.05);
-
-      color: #ffffff;
-
-      font-size: 21px;
-
-      cursor: pointer;
-    }
+  overflow: hidden;
+}
 
 
-    .quantity span {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+.quantity button {
+  border: 0;
 
-      font-size: 14px;
-      font-weight: 950;
-    }
+  background:
+    rgba(255,255,255,.05);
 
+  color: #ffffff;
+
+  font-size: 21px;
+
+  cursor: pointer;
+}
+
+
+.quantity input {
+  width: 82px;
+  min-width: 0;
+  height: 42px;
+
+  padding: 0 6px;
+
+  border: 0;
+  border-left:
+    1px solid rgba(255,255,255,.08);
+  border-right:
+    1px solid rgba(255,255,255,.08);
+
+  border-radius: 0;
+
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  text-align: center;
+
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 950;
+
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+
+.quantity input::-webkit-inner-spin-button,
+.quantity input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+
+.wholesale-hint {
+  margin:
+    -7px 0 18px;
+
+  padding: 10px 11px;
+
+  border-radius: 11px;
+
+  border:
+    1px solid rgba(216,255,69,.18);
+
+  background:
+    rgba(216,255,69,.055);
+
+  color:
+    rgba(255,255,255,.72);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  line-height: 1.45;
+}
+
+
+.wholesale-hint strong {
+  color: #d8ff45;
+}
 
     /* =====================================================
        DESCRIPTION
@@ -1620,9 +1677,15 @@
                 −
               </button>
 
-              <span id="quantityValue">
-                1
-              </span>
+            <input
+  id="quantityInput"
+  type="number"
+  min="1"
+  max="9999"
+  step="1"
+  inputmode="numeric"
+  value="${quantity}"
+>
 
               <button
                 id="plusBtn"
@@ -1635,8 +1698,11 @@
 
           </div>
 
-
-          ${
+<div
+  id="wholesaleHint"
+  class="wholesale-hint"
+  style="display:none;"
+></div>          ${
             product.description
             ?
               `
@@ -1682,285 +1748,633 @@
 
 
 
-  /* =====================================================
-     PRICE
-  ====================================================== */
+ /* =====================================================
+   PRICE
+====================================================== */
 
-  function updateDisplayedPrice() {
+async function updateDisplayedPrice() {
 
-    if (!selectedVariant) {
-      return;
+  if (!selectedVariant) {
+    return;
+  }
+
+
+  const mainPrice =
+    document.getElementById(
+      "mainPrice"
+    );
+
+
+  const comparePrice =
+    document.getElementById(
+      "comparePrice"
+    );
+
+
+  const wholesaleHint =
+    document.getElementById(
+      "wholesaleHint"
+    );
+
+
+  const retailPrice =
+    Number(
+      selectedVariant.price || 0
+    );
+
+
+  const requestSeq =
+    (
+      updateDisplayedPrice._seq
+      ||
+      0
+    )
+    +
+    1;
+
+
+  updateDisplayedPrice._seq =
+    requestSeq;
+
+
+  let quote = null;
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "shop_price_quote",
+        {
+
+          p_variant_id:
+            Number(
+              selectedVariant.id
+            ),
+
+          p_quantity:
+            quantity
+
+        }
+      );
+
+
+    if (error) {
+      throw error;
     }
 
 
-    const mainPrice =
-      document.getElementById(
-        "mainPrice"
+    quote = data;
+
+  }
+  catch (error) {
+
+    console.error(
+      "PRICE QUOTE ERROR:",
+      error
+    );
+
+  }
+
+
+  if (
+    requestSeq
+    !==
+    updateDisplayedPrice._seq
+  ) {
+
+    return;
+
+  }
+
+
+  const unitPrice =
+    Number(
+      quote?.unit_price
+      ??
+      retailPrice
+    );
+
+
+  const subtotal =
+    Number(
+      quote?.subtotal
+      ??
+      (
+        unitPrice
+        *
+        quantity
+      )
+    );
+
+
+  if (mainPrice) {
+
+    mainPrice.textContent =
+      money(
+        unitPrice
       );
 
-
-    const comparePrice =
-      document.getElementById(
-        "comparePrice"
-      );
+  }
 
 
-    if (mainPrice) {
+  bottomPrice.textContent =
+    money(
+      subtotal
+    );
 
-      mainPrice.textContent =
+
+  /*
+    GIÁ GẠCH:
+    - Nếu đang đạt giá sỉ: gạch giá niêm yết.
+    - Nếu vẫn giá lẻ: dùng compare_at_price như cũ.
+  */
+
+  if (comparePrice) {
+
+    if (
+      quote?.pricing_type
+      ===
+      "wholesale"
+      &&
+      retailPrice > unitPrice
+    ) {
+
+      comparePrice.style.display =
+        "";
+
+
+      comparePrice.textContent =
         money(
-          selectedVariant.price
+          retailPrice
+        );
+
+    }
+    else if (
+      selectedVariant.compare_at_price
+      &&
+      Number(
+        selectedVariant.compare_at_price
+      )
+        >
+      retailPrice
+    ) {
+
+      comparePrice.style.display =
+        "";
+
+
+      comparePrice.textContent =
+        money(
+          selectedVariant.compare_at_price
+        );
+
+    }
+    else {
+
+      comparePrice.style.display =
+        "none";
+
+    }
+
+  }
+
+
+  /*
+    THÔNG BÁO GIÁ SỈ
+  */
+
+  if (!wholesaleHint) {
+    return;
+  }
+
+
+  const nextQty =
+    Number(
+      quote?.quantity_to_next_tier
+      ??
+      0
+    );
+
+
+  const nextPrice =
+    Number(
+      quote?.next_tier_price
+      ??
+      0
+    );
+
+
+  const savings =
+    Number(
+      quote?.savings
+      ??
+      0
+    );
+
+
+  if (
+    quote?.pricing_type
+    ===
+    "wholesale"
+  ) {
+
+    let html = `
+      <strong>
+        ✓ ĐÃ ĐẠT GIÁ SỈ
+      </strong>
+      • ${money(unitPrice)} / sản phẩm
+    `;
+
+
+    if (savings > 0) {
+
+      html += `
+        • Tiết kiệm
+        <strong>
+          ${money(savings)}
+        </strong>
+        so với giá niêm yết
+      `;
+
+    }
+
+
+    if (
+      nextQty > 0
+      &&
+      nextPrice > 0
+    ) {
+
+      html += `
+        <br>
+        Mua thêm
+        <strong>
+          ${nextQty}
+        </strong>
+        sản phẩm để đạt
+        <strong>
+          ${money(nextPrice)}
+        </strong>
+        / sản phẩm.
+      `;
+
+    }
+
+
+    wholesaleHint.innerHTML =
+      html;
+
+
+    wholesaleHint.style.display =
+      "";
+
+  }
+  else if (
+    nextQty > 0
+    &&
+    nextPrice > 0
+  ) {
+
+    wholesaleHint.innerHTML = `
+      Mua thêm
+      <strong>
+        ${nextQty}
+      </strong>
+      sản phẩm để đạt giá sỉ
+      <strong>
+        ${money(nextPrice)}
+      </strong>
+      / sản phẩm.
+    `;
+
+
+    wholesaleHint.style.display =
+      "";
+
+  }
+  else {
+
+    wholesaleHint.innerHTML =
+      "";
+
+
+    wholesaleHint.style.display =
+      "none";
+
+  }
+
+}
+
+
+
+/* =====================================================
+   EVENT
+====================================================== */
+
+function bindProductEvents() {
+
+  const minus =
+    document.getElementById(
+      "minusBtn"
+    );
+
+
+  const plus =
+    document.getElementById(
+      "plusBtn"
+    );
+
+
+  const quantityInput =
+    document.getElementById(
+      "quantityInput"
+    );
+
+
+  function syncQuantityInput() {
+
+    if (quantityInput) {
+
+      quantityInput.value =
+        String(
+          quantity
         );
 
     }
 
+  }
 
-    bottomPrice.textContent =
-      money(
-        selectedVariant.price
+
+  function setQuantity(
+    value
+  ) {
+
+    let next =
+      Number(
+        value
       );
 
 
-    if (comparePrice) {
+    if (
+      !Number.isFinite(next)
+    ) {
+
+      next = 1;
+
+    }
+
+
+    next =
+      Math.round(
+        next
+      );
+
+
+    quantity =
+      Math.max(
+        1,
+        Math.min(
+          9999,
+          next
+        )
+      );
+
+
+    syncQuantityInput();
+
+
+    updateDisplayedPrice();
+
+  }
+
+
+  minus?.addEventListener(
+    "click",
+    function () {
+
+      setQuantity(
+        quantity - 1
+      );
+
+    }
+  );
+
+
+  plus?.addEventListener(
+    "click",
+    function () {
+
+      setQuantity(
+        quantity + 1
+      );
+
+    }
+  );
+
+
+  quantityInput?.addEventListener(
+    "input",
+    function () {
+
+      const value =
+        Number(
+          quantityInput.value
+        );
+
 
       if (
-        selectedVariant.compare_at_price
+        Number.isInteger(value)
         &&
-        Number(
-          selectedVariant.compare_at_price
-        )
-          >
-        Number(
-          selectedVariant.price
-        )
+        value >= 1
+        &&
+        value <= 9999
       ) {
 
-        comparePrice.style.display =
-          "";
+        quantity =
+          value;
 
-        comparePrice.textContent =
-          money(
-            selectedVariant.compare_at_price
-          );
 
-      }
-      else {
-
-        comparePrice.style.display =
-          "none";
+        updateDisplayedPrice();
 
       }
 
     }
-
-  }
-
+  );
 
 
-  /* =====================================================
-     EVENT
-  ====================================================== */
+  quantityInput?.addEventListener(
+    "change",
+    function () {
 
-  function bindProductEvents() {
-
-    const minus =
-      document.getElementById(
-        "minusBtn"
+      setQuantity(
+        quantityInput.value
       );
 
-
-    const plus =
-      document.getElementById(
-        "plusBtn"
-      );
+    }
+  );
 
 
-    const quantityValue =
-      document.getElementById(
-        "quantityValue"
-      );
+  document
+    .querySelectorAll(
+      ".variant-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const id =
+              button.dataset.variantId;
 
 
-    minus?.addEventListener(
-      "click",
-      function () {
+            selectedVariant =
+              variants.find(
+                function (variant) {
 
-        quantity =
-          Math.max(
-            1,
-            quantity - 1
-          );
+                  return (
+                    String(
+                      variant.id
+                    )
+                    ===
+                    String(id)
+                  );
+
+                }
+              )
+              ||
+              selectedVariant;
 
 
-        quantityValue.textContent =
-          String(quantity);
+            document
+              .querySelectorAll(
+                ".variant-btn"
+              )
+              .forEach(
+                function (item) {
+
+                  item.classList.remove(
+                    "active"
+                  );
+
+                }
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+
+            updateDisplayedPrice();
+
+          }
+        );
 
       }
     );
 
 
-    plus?.addEventListener(
-      "click",
-      function () {
+  document
+    .querySelectorAll(
+      ".thumb"
+    )
+    .forEach(
+      function (button) {
 
-        quantity =
-          Math.min(
-            99,
-            quantity + 1
-          );
+        button.addEventListener(
+          "click",
+          function () {
+
+            const url =
+              button.dataset.image;
 
 
-        quantityValue.textContent =
-          String(quantity);
+            const mainImage =
+              document.getElementById(
+                "mainImage"
+              );
+
+
+            if (
+              url
+              &&
+              mainImage
+            ) {
+
+              mainImage.innerHTML = `
+                <img
+                  src="${escapeHtml(url)}"
+                  alt="${escapeHtml(product.name)}"
+                >
+              `;
+
+            }
+
+
+            document
+              .querySelectorAll(
+                ".thumb"
+              )
+              .forEach(
+                function (item) {
+
+                  item.classList.remove(
+                    "active"
+                  );
+
+                }
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+          }
+        );
 
       }
     );
 
-
-    document
-      .querySelectorAll(
-        ".variant-btn"
-      )
-      .forEach(
-        function (button) {
-
-          button.addEventListener(
-            "click",
-            function () {
-
-              const id =
-                button.dataset.variantId;
-
-
-              selectedVariant =
-                variants.find(
-                  function (variant) {
-
-                    return (
-                      String(
-                        variant.id
-                      )
-                      ===
-                      String(id)
-                    );
-
-                  }
-                )
-                ||
-                selectedVariant;
-
-
-              document
-                .querySelectorAll(
-                  ".variant-btn"
-                )
-                .forEach(
-                  function (item) {
-
-                    item.classList.remove(
-                      "active"
-                    );
-
-                  }
-                );
-
-
-              button.classList.add(
-                "active"
-              );
-
-
-              updateDisplayedPrice();
-
-            }
-          );
-
-        }
-      );
-
-
-    document
-      .querySelectorAll(
-        ".thumb"
-      )
-      .forEach(
-        function (button) {
-
-          button.addEventListener(
-            "click",
-            function () {
-
-              const url =
-                button.dataset.image;
-
-
-              const mainImage =
-                document.getElementById(
-                  "mainImage"
-                );
-
-
-              if (
-                url
-                &&
-                mainImage
-              ) {
-
-                mainImage.innerHTML = `
-                  <img
-                    src="${escapeHtml(url)}"
-                    alt="${escapeHtml(product.name)}"
-                  >
-                `;
-
-              }
-
-
-              document
-                .querySelectorAll(
-                  ".thumb"
-                )
-                .forEach(
-                  function (item) {
-
-                    item.classList.remove(
-                      "active"
-                    );
-
-                  }
-                );
-
-
-              button.classList.add(
-                "active"
-              );
-
-            }
-          );
-
-        }
-      );
-
-  }
-
+}
 
 
   /* =====================================================
      ADD CART
   ====================================================== */
 
-  function addToCart() {
+  async function addToCart() {
 
-    if (
-      !product
-      ||
-      !selectedVariant
-    ) {
+  if (
+    !product
+    ||
+    !selectedVariant
+  ) {
 
-      return;
+    return;
 
-    }
+  }
 
+
+  addCartBtn.disabled =
+    true;
+
+
+  const oldText =
+    addCartBtn.textContent;
+
+
+  addCartBtn.textContent =
+    "ĐANG THÊM...";
+
+
+  try {
 
     const cart =
       readCart();
@@ -1981,6 +2395,58 @@
           );
 
         }
+      );
+
+
+    const currentQty =
+      existing
+        ?
+          Number(
+            existing.quantity || 0
+          )
+        :
+          0;
+
+
+    const finalQuantity =
+      Math.min(
+        9999,
+        currentQty
+        +
+        quantity
+      );
+
+
+    const {
+      data: quote,
+      error: quoteError
+    } =
+      await sb.rpc(
+        "shop_price_quote",
+        {
+
+          p_variant_id:
+            Number(
+              selectedVariant.id
+            ),
+
+          p_quantity:
+            finalQuantity
+
+        }
+      );
+
+
+    if (quoteError) {
+      throw quoteError;
+    }
+
+
+    const effectivePrice =
+      Number(
+        quote?.unit_price
+        ??
+        selectedVariant.price
       );
 
 
@@ -2018,13 +2484,16 @@
     if (existing) {
 
       existing.quantity =
-        Math.min(
-          99,
-          Number(
-            existing.quantity || 0
-          )
-          +
-          quantity
+        finalQuantity;
+
+
+      existing.price =
+        effectivePrice;
+
+
+      existing.retail_price =
+        Number(
+          selectedVariant.price
         );
 
     }
@@ -2047,12 +2516,15 @@
           "",
 
         price:
+          effectivePrice,
+
+        retail_price:
           Number(
             selectedVariant.price
           ),
 
         quantity:
-          quantity,
+          finalQuantity,
 
         image_url:
           selectedImageUrl
@@ -2073,7 +2545,31 @@
     showToast();
 
   }
+  catch (error) {
 
+    console.error(
+      "ADD CART PRICE ERROR:",
+      error
+    );
+
+
+    alert(
+      "Chưa thêm được sản phẩm vào giỏ. Anh vui lòng thử lại."
+    );
+
+  }
+  finally {
+
+    addCartBtn.disabled =
+      false;
+
+
+    addCartBtn.textContent =
+      oldText;
+
+  }
+
+}
 
 
   addCartBtn.addEventListener(
