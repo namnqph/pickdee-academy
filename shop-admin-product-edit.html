@@ -760,7 +760,65 @@
       cursor: default;
     }
 
+    .danger-card {
+      margin-top: 10px;
 
+      padding: 12px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid rgba(255,100,100,.22);
+
+      background:
+        rgba(255,100,100,.055);
+    }
+
+    .danger-title {
+      color: #ffb0b0;
+
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .danger-desc {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .delete-draft-btn {
+      width: 100%;
+
+      min-height: 44px;
+
+      margin-top: 10px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(255,100,100,.28);
+
+      background:
+        rgba(255,100,100,.12);
+
+      color: #ffb0b0;
+
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+    .delete-draft-btn:disabled {
+      opacity: .45;
+      cursor: default;
+    }
     @media(max-width:390px) {
 
       .grid-2 {
@@ -1713,7 +1771,170 @@ function renderWholesaleTierRows(
   }
 
 
-  /* =====================================================
+
+
+  async function deleteDraftProduct() {
+
+    clearMessage();
+
+
+    if (!product?.id) {
+
+      showMessage(
+        "Không tìm thấy sản phẩm cần xóa.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (product.status !== "draft") {
+
+      showMessage(
+        "Chỉ được xóa sản phẩm đang ở trạng thái nháp.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const firstConfirm =
+      window.confirm(
+        "Anh chắc chắn muốn xóa sản phẩm nháp này?"
+      );
+
+
+    if (!firstConfirm) {
+      return;
+    }
+
+
+    const secondConfirm =
+      window.confirm(
+        "Xóa xong sẽ không khôi phục trên web. Anh xác nhận xóa?"
+      );
+
+
+    if (!secondConfirm) {
+      return;
+    }
+
+
+    const deleteBtn =
+      document.getElementById(
+        "deleteDraftProductBtn"
+      );
+
+
+    if (deleteBtn) {
+
+      deleteBtn.disabled =
+        true;
+
+
+      deleteBtn.textContent =
+        "ĐANG XÓA...";
+
+    }
+
+
+    saveBtn.disabled =
+      true;
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await sb.rpc(
+          "shop_admin_delete_draft_product",
+          {
+            p_product_id:
+              product.id
+          }
+        );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      if (
+        data
+        &&
+        data.success === false
+      ) {
+
+        throw new Error(
+          data.message
+          ||
+          "Không xóa được sản phẩm nháp."
+        );
+
+      }
+
+
+      showMessage(
+        "Đã xóa sản phẩm nháp.",
+        "success"
+      );
+
+
+      setTimeout(
+        function () {
+
+          location.href =
+            "./shop-admin-products";
+
+        },
+        700
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "DELETE DRAFT PRODUCT ERROR:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không xóa được sản phẩm nháp.",
+        "error"
+      );
+
+
+      if (deleteBtn) {
+
+        deleteBtn.disabled =
+          false;
+
+
+        deleteBtn.textContent =
+          "XÓA SẢN PHẨM NHÁP";
+
+      }
+
+
+      saveBtn.disabled =
+        false;
+
+    }
+
+  }
+
+
+   /* =====================================================
      RENDER
   ====================================================== */
 
@@ -2362,9 +2583,38 @@ function renderWholesaleTierRows(
             COPY LINK BÁN HÀNG
           </button>
 
-        </div>
+              </div>
 
       </div>
+
+
+      ${
+        product.status === "draft"
+          ?
+            `
+              <div class="danger-card">
+
+                <div class="danger-title">
+                  Xóa sản phẩm nháp
+                </div>
+
+                <div class="danger-desc">
+                  Chỉ dùng khi tạo nhầm sản phẩm nháp. Sản phẩm đang bán sẽ không hiện nút xóa để tránh xóa nhầm hàng thật.
+                </div>
+
+                <button
+                  id="deleteDraftProductBtn"
+                  class="delete-draft-btn"
+                  type="button"
+                >
+                  XÓA SẢN PHẨM NHÁP
+                </button>
+
+              </div>
+            `
+          :
+            ""
+      }
 
 
       <div class="notice">
@@ -2494,7 +2744,8 @@ if (imageFileInput) {
 }
 
 
-const copyProductLinkBtn =
+
+ const copyProductLinkBtn =
   document.getElementById(
     "copyProductLinkBtn"
   );
@@ -2542,6 +2793,24 @@ if (copyProductLinkBtn) {
   );
 
 }
+
+
+const deleteDraftProductBtn =
+  document.getElementById(
+    "deleteDraftProductBtn"
+  );
+
+
+if (deleteDraftProductBtn) {
+
+  deleteDraftProductBtn.addEventListener(
+    "click",
+    deleteDraftProduct
+  );
+
+}
+
+
 const addWholesaleTierBtn =
   document.getElementById(
     "addWholesaleTierBtn"
