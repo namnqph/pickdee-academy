@@ -431,7 +431,128 @@
       line-height: 1.4;
     }
 
+/* =====================================================
+   WHOLESALE TIERS
+====================================================== */
 
+.wholesale-box {
+  margin-top: 12px;
+  padding: 11px;
+
+  border-radius: 12px;
+
+  border:
+    1px solid rgba(216,255,69,.14);
+
+  background:
+    rgba(216,255,69,.035);
+}
+
+.wholesale-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 9px;
+
+  margin-bottom: 9px;
+}
+
+.wholesale-title {
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.wholesale-desc {
+  margin-top: 3px;
+
+  color:
+    rgba(255,255,255,.38);
+
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.wholesale-add {
+  flex: 0 0 auto;
+
+  min-height: 32px;
+
+  padding:
+    0 9px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid rgba(216,255,69,.25);
+
+  background:
+    rgba(216,255,69,.08);
+
+  color: #d8ff45;
+
+  font-family: inherit;
+
+  font-size: 8px;
+  font-weight: 950;
+
+  cursor: pointer;
+}
+
+.wholesale-tier-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,1.2fr)
+    36px;
+
+  gap: 6px;
+
+  align-items: end;
+
+  margin-top: 7px;
+}
+
+.wholesale-tier-row input {
+  min-width: 0;
+}
+
+.tier-remove {
+  width: 36px;
+  height: 44px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid rgba(255,100,100,.18);
+
+  background:
+    rgba(255,100,100,.06);
+
+  color: #ffaaaa;
+
+  font-size: 20px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.wholesale-empty {
+  padding: 12px 8px;
+
+  text-align: center;
+
+  border-radius: 9px;
+
+  border:
+    1px dashed rgba(255,255,255,.1);
+
+  color:
+    rgba(255,255,255,.35);
+
+  font-size: 8px;
+}
     /* =====================================================
        CHECKBOX
     ====================================================== */
@@ -779,7 +900,7 @@
   let categories = [];
 
   let images = [];
-
+let wholesaleTiers = [];
   let selectedVariantId = null;
 
 
@@ -1036,7 +1157,286 @@
     );
 
   }
+function newTierKey() {
 
+  return (
+    "tier-"
+    +
+    Date.now()
+    +
+    "-"
+    +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+
+}
+
+
+function currentWholesaleTiers(
+  variantId
+) {
+
+  return wholesaleTiers
+    .filter(
+      item =>
+        String(
+          item.variant_id
+        )
+        ===
+        String(
+          variantId
+        )
+    )
+    .sort(
+      function (a,b) {
+
+        const aValue =
+          Number(
+            a.min_quantity
+          );
+
+
+        const bValue =
+          Number(
+            b.min_quantity
+          );
+
+
+        if (
+          !Number.isFinite(aValue)
+        ) {
+          return 1;
+        }
+
+
+        if (
+          !Number.isFinite(bValue)
+        ) {
+          return -1;
+        }
+
+
+        return (
+          aValue
+          -
+          bValue
+        );
+
+      }
+    );
+
+}
+
+
+function renderWholesaleTierRows(
+  variantId
+) {
+
+  const box =
+    document.getElementById(
+      "wholesaleTierList"
+    );
+
+
+  if (!box) {
+    return;
+  }
+
+
+  const rows =
+    currentWholesaleTiers(
+      variantId
+    );
+
+
+  if (!rows.length) {
+
+    box.innerHTML = `
+      <div class="wholesale-empty">
+        Chưa thiết lập giá sỉ cho SKU này.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    rows
+      .map(
+        function (tier) {
+
+          return `
+
+            <div
+              class="wholesale-tier-row"
+              data-tier-key="${escapeHtml(
+                tier._key
+              )}"
+            >
+
+              <div>
+
+                <label>
+                  Từ số lượng
+                </label>
+
+                <input
+                  class="tier-min-input"
+                  type="number"
+                  min="2"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="VD: 10"
+                  value="${escapeHtml(
+                    tier.min_quantity
+                    ??
+                    ""
+                  )}"
+                >
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  Giá / đơn vị
+                </label>
+
+                <input
+                  class="tier-price-input"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  inputmode="numeric"
+                  placeholder="VD: 80000"
+                  value="${escapeHtml(
+                    tier.unit_price
+                    ??
+                    ""
+                  )}"
+                >
+
+              </div>
+
+
+              <button
+                type="button"
+                class="tier-remove"
+                data-tier-key="${escapeHtml(
+                  tier._key
+                )}"
+                aria-label="Xóa mức giá"
+              >
+                ×
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+  box
+    .querySelectorAll(
+      ".wholesale-tier-row"
+    )
+    .forEach(
+      function (row) {
+
+        const key =
+          row.dataset.tierKey;
+
+
+        const tier =
+          wholesaleTiers.find(
+            item =>
+              item._key === key
+          );
+
+
+        if (!tier) {
+          return;
+        }
+
+
+        const minInput =
+          row.querySelector(
+            ".tier-min-input"
+          );
+
+
+        const priceInput =
+          row.querySelector(
+            ".tier-price-input"
+          );
+
+
+        minInput.addEventListener(
+          "input",
+          function () {
+
+            tier.min_quantity =
+              minInput.value;
+
+          }
+        );
+
+
+        priceInput.addEventListener(
+          "input",
+          function () {
+
+            tier.unit_price =
+              priceInput.value;
+
+          }
+        );
+
+      }
+    );
+
+
+  box
+    .querySelectorAll(
+      ".tier-remove"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const key =
+              button.dataset.tierKey;
+
+
+            wholesaleTiers =
+              wholesaleTiers.filter(
+                item =>
+                  item._key !== key
+              );
+
+
+            renderWholesaleTierRows(
+              variantId
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
 
   /* =====================================================
      AUTH
@@ -1522,70 +1922,26 @@
 
 
 
-      <div class="card">
+     <div class="card">
 
-        <div class="card-title">
-          Giá & biến thể
-        </div>
+  <div class="card-title">
+    Giá & biến thể
+  </div>
 
-        <div class="card-subtitle">
-          Nếu sản phẩm có nhiều SKU, chọn SKU cần sửa bên dưới.
-        </div>
+  <div class="card-subtitle">
+    Giá niêm yết là giá bán lẻ. Giá sỉ được áp dụng tự động theo số lượng khách mua.
+  </div>
 
-
-        <div class="field">
-
-          <label>
-            Chọn biến thể / SKU
-          </label>
-
-          <select id="variantSelect">
-            ${variantOptions}
-          </select>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Tên biến thể
-          </label>
-
-          <input
-            id="variantNameInput"
-            type="text"
-            maxlength="120"
-            value="${escapeHtml(
-              variant.variant_name
-              ||
-              ""
-            )}"
-          >
-
-        </div>
-
-
-       <div class="grid-2">
 
   <div class="field">
 
     <label>
-      Giá bán lẻ
+      Chọn biến thể / SKU
     </label>
 
-    <input
-      id="priceInput"
-      type="number"
-      min="0"
-      step="1000"
-      inputmode="numeric"
-      value="${escapeHtml(
-        moneyInput(
-          variant.price
-        )
-      )}"
-    >
+    <select id="variantSelect">
+      ${variantOptions}
+    </select>
 
   </div>
 
@@ -1593,109 +1949,165 @@
   <div class="field">
 
     <label>
-      Giá bán sỉ
+      Tên biến thể
     </label>
 
     <input
-      id="wholesalePriceInput"
-      type="number"
-      min="0"
-      step="1000"
-      inputmode="numeric"
-      placeholder="Để trống nếu chưa bán sỉ"
+      id="variantNameInput"
+      type="text"
+      maxlength="120"
       value="${escapeHtml(
-        moneyInput(
-          variant.wholesale_price
-        )
+        variant.variant_name
+        ||
+        ""
       )}"
     >
 
   </div>
 
-</div>
+
+  <div class="grid-2">
 
 
-<div class="field">
+    <div class="field">
 
-  <label>
-    Giá so sánh
-  </label>
+      <label>
+        Giá niêm yết
+      </label>
 
-  <input
-    id="comparePriceInput"
-    type="number"
-    min="0"
-    step="1000"
-    inputmode="numeric"
-    placeholder="Để trống nếu không dùng"
-    value="${escapeHtml(
-      moneyInput(
-        variant.compare_at_price
-      )
-    )}"
-  >
+      <input
+        id="priceInput"
+        type="number"
+        min="0"
+        step="1000"
+        inputmode="numeric"
+        value="${escapeHtml(
+          moneyInput(
+            variant.price
+          )
+        )}"
+      >
 
-</div>
+    </div>
 
 
-        <div class="field">
+    <div class="field">
 
-          <label>
-            SKU
-          </label>
+      <label>
+        Giá so sánh
+      </label>
 
-          <input
-            type="text"
-            disabled
-            value="${escapeHtml(
-              variant.sku
-              ||
-              ""
-            )}"
-          >
+      <input
+        id="comparePriceInput"
+        type="number"
+        min="0"
+        step="1000"
+        inputmode="numeric"
+        placeholder="Để trống nếu không dùng"
+        value="${escapeHtml(
+          moneyInput(
+            variant.compare_at_price
+          )
+        )}"
+      >
 
-          <div class="hint">
-            Không cho sửa thủ công để tránh lệch kho và đơn hàng.
-          </div>
+    </div>
 
+
+  </div>
+
+
+  <div class="field">
+
+    <label>
+      SKU
+    </label>
+
+    <input
+      type="text"
+      disabled
+      value="${escapeHtml(
+        variant.sku
+        ||
+        ""
+      )}"
+    >
+
+    <div class="hint">
+      Không cho sửa thủ công để tránh lệch kho và đơn hàng.
+    </div>
+
+  </div>
+
+
+  <div class="field">
+
+    <div class="switch-row">
+
+      <div class="switch-text">
+
+        <div class="switch-title">
+          SKU đang bán
         </div>
 
-
-        <div class="field">
-
-          <div class="switch-row">
-
-            <div class="switch-text">
-
-              <div class="switch-title">
-                SKU đang bán
-              </div>
-
-              <div class="switch-desc">
-                Tắt để khách không chọn biến thể này.
-              </div>
-
-            </div>
-
-            <input
-              id="variantActiveInput"
-              class="check"
-              type="checkbox"
-              ${
-                variant.is_active
-                  ?
-                    "checked"
-                  :
-                    ""
-              }
-            >
-
-          </div>
-
+        <div class="switch-desc">
+          Tắt để khách không chọn biến thể này.
         </div>
-
 
       </div>
+
+      <input
+        id="variantActiveInput"
+        class="check"
+        type="checkbox"
+        ${
+          variant.is_active
+            ?
+              "checked"
+            :
+              ""
+        }
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="wholesale-box">
+
+    <div class="wholesale-head">
+
+      <div>
+
+        <div class="wholesale-title">
+          Bảng giá sỉ theo số lượng
+        </div>
+
+        <div class="wholesale-desc">
+          Web tự áp dụng mức giá tốt nhất khi khách đạt đủ số lượng.
+        </div>
+
+      </div>
+
+
+      <button
+        id="addWholesaleTierBtn"
+        class="wholesale-add"
+        type="button"
+      >
+        + THÊM MỨC
+      </button>
+
+    </div>
+
+
+    <div id="wholesaleTierList"></div>
+
+  </div>
+
+
+</div>
 
 
 
@@ -1731,7 +2143,52 @@
         }
       );
 
+const addWholesaleTierBtn =
+  document.getElementById(
+    "addWholesaleTierBtn"
+  );
 
+
+if (addWholesaleTierBtn) {
+
+  addWholesaleTierBtn
+    .addEventListener(
+      "click",
+      function () {
+
+        wholesaleTiers.push({
+
+          variant_id:
+            variant.id,
+
+          min_quantity:
+            "",
+
+          unit_price:
+            "",
+
+          is_active:
+            true,
+
+          _key:
+            newTierKey()
+
+        });
+
+
+        renderWholesaleTierRows(
+          variant.id
+        );
+
+      }
+    );
+
+}
+
+
+renderWholesaleTierRows(
+  variant.id
+);
     saveBtn.disabled =
       false;
 
@@ -1744,202 +2201,481 @@
 
   async function loadData() {
 
-    if (
-      !Number.isInteger(productId)
-      ||
-      productId <= 0
-    ) {
+  if (
+    !Number.isInteger(productId)
+    ||
+    productId <= 0
+  ) {
 
-      throw new Error(
-        "Không có mã sản phẩm hợp lệ."
-      );
-
-    }
-
-
-    await requireShopAccess();
-
-
-    const [
-      productResult,
-      variantResult,
-      categoryResult,
-      imageResult
-    ] =
-      await Promise.all([
-
-
-        sb
-          .from(
-            "shop_products"
-          )
-          .select(
-            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,created_at,updated_at"
-          )
-          .eq(
-            "id",
-            productId
-          )
-          .maybeSingle(),
-
-
-        sb
-          .from(
-            "shop_product_variants"
-          )
-          .select(
-            "id,product_id,sku,variant_name,price,wholesale_price,compare_at_price,is_active,sort_order"
-          )
-          .eq(
-            "product_id",
-            productId
-          )
-          .order(
-            "sort_order",
-            {
-              ascending:
-                true
-            }
-          )
-          .order(
-            "id",
-            {
-              ascending:
-                true
-            }
-          ),
-
-
-        sb
-          .from(
-            "shop_categories"
-          )
-          .select(
-            "id,name,is_active,sort_order"
-          )
-          .order(
-            "sort_order",
-            {
-              ascending:
-                true
-            }
-          )
-          .order(
-            "name",
-            {
-              ascending:
-                true
-            }
-          ),
-
-
-        sb
-          .from(
-            "shop_product_images"
-          )
-          .select(
-            "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
-          )
-          .eq(
-            "product_id",
-            productId
-          )
-          .order(
-            "sort_order",
-            {
-              ascending:
-                true
-            }
-          )
-
-
-      ]);
-
-
-    if (productResult.error) {
-      throw productResult.error;
-    }
-
-
-    if (variantResult.error) {
-      throw variantResult.error;
-    }
-
-
-    if (categoryResult.error) {
-      throw categoryResult.error;
-    }
-
-
-    if (imageResult.error) {
-      throw imageResult.error;
-    }
-
-
-    if (!productResult.data) {
-
-      throw new Error(
-        "Không tìm thấy sản phẩm."
-      );
-
-    }
-
-
-    if (
-      !variantResult.data
-      ||
-      !variantResult.data.length
-    ) {
-
-      throw new Error(
-        "Sản phẩm chưa có biến thể."
-      );
-
-    }
-
-
-    product =
-      productResult.data;
-
-
-    variants =
-      variantResult.data || [];
-
-
-    categories =
-      categoryResult.data || [];
-
-
-    images =
-      imageResult.data || [];
-
-
-    selectedVariantId =
-      variants[0].id;
-
-
-    render();
+    throw new Error(
+      "Không có mã sản phẩm hợp lệ."
+    );
 
   }
+
+
+  await requireShopAccess();
+
+
+  const [
+    productResult,
+    variantResult,
+    categoryResult,
+    imageResult
+  ] =
+    await Promise.all([
+
+
+      sb
+        .from(
+          "shop_products"
+        )
+        .select(
+          "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,created_at,updated_at"
+        )
+        .eq(
+          "id",
+          productId
+        )
+        .maybeSingle(),
+
+
+      sb
+        .from(
+          "shop_product_variants"
+        )
+        .select(
+          "id,product_id,sku,variant_name,price,compare_at_price,is_active,sort_order"
+        )
+        .eq(
+          "product_id",
+          productId
+        )
+        .order(
+          "sort_order",
+          {
+            ascending:
+              true
+          }
+        )
+        .order(
+          "id",
+          {
+            ascending:
+              true
+          }
+        ),
+
+
+      sb
+        .from(
+          "shop_categories"
+        )
+        .select(
+          "id,name,is_active,sort_order"
+        )
+        .order(
+          "sort_order",
+          {
+            ascending:
+              true
+          }
+        )
+        .order(
+          "name",
+          {
+            ascending:
+              true
+          }
+        ),
+
+
+      sb
+        .from(
+          "shop_product_images"
+        )
+        .select(
+          "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+        )
+        .eq(
+          "product_id",
+          productId
+        )
+        .order(
+          "sort_order",
+          {
+            ascending:
+              true
+          }
+        )
+
+
+    ]);
+
+
+  if (productResult.error) {
+    throw productResult.error;
+  }
+
+
+  if (variantResult.error) {
+    throw variantResult.error;
+  }
+
+
+  if (categoryResult.error) {
+    throw categoryResult.error;
+  }
+
+
+  if (imageResult.error) {
+    throw imageResult.error;
+  }
+
+
+  if (!productResult.data) {
+
+    throw new Error(
+      "Không tìm thấy sản phẩm."
+    );
+
+  }
+
+
+  if (
+    !variantResult.data
+    ||
+    !variantResult.data.length
+  ) {
+
+    throw new Error(
+      "Sản phẩm chưa có biến thể."
+    );
+
+  }
+
+
+  product =
+    productResult.data;
+
+
+  variants =
+    variantResult.data || [];
+
+
+  categories =
+    categoryResult.data || [];
+
+
+  images =
+    imageResult.data || [];
+
+
+  const variantIds =
+    variants.map(
+      item =>
+        item.id
+    );
+
+
+  let tierData = [];
+
+
+  if (variantIds.length) {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_variant_wholesale_tiers"
+        )
+        .select(
+          "id,variant_id,min_quantity,unit_price,is_active"
+        )
+        .in(
+          "variant_id",
+          variantIds
+        )
+        .eq(
+          "is_active",
+          true
+        )
+        .order(
+          "min_quantity",
+          {
+            ascending:
+              true
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    tierData =
+      data || [];
+
+  }
+
+
+  wholesaleTiers =
+    tierData.map(
+      item => ({
+        ...item,
+
+        _key:
+          `db-${item.id}`
+      })
+    );
+
+
+  selectedVariantId =
+    variants[0].id;
+
+
+  render();
+
+}
 
 
   /* =====================================================
      SAVE
   ====================================================== */
 
-  async function saveProduct() {
+ async function saveProduct() {
 
-    clearMessage();
-
-
-    const variant =
-      selectedVariant();
+  clearMessage();
 
 
-    if (!variant) {
+  const variant =
+    selectedVariant();
+
+
+  if (!variant) {
+
+    showMessage(
+      "Không tìm thấy biến thể cần sửa.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const name =
+    document
+      .getElementById(
+        "nameInput"
+      )
+      .value
+      .trim();
+
+
+  const brand =
+    document
+      .getElementById(
+        "brandInput"
+      )
+      .value
+      .trim();
+
+
+  const categoryText =
+    document
+      .getElementById(
+        "categoryInput"
+      )
+      .value;
+
+
+  const shortDescription =
+    document
+      .getElementById(
+        "shortDescriptionInput"
+      )
+      .value;
+
+
+  const description =
+    document
+      .getElementById(
+        "descriptionInput"
+      )
+      .value;
+
+
+  const status =
+    document
+      .getElementById(
+        "statusInput"
+      )
+      .value;
+
+
+  const featured =
+    document
+      .getElementById(
+        "featuredInput"
+      )
+      .checked;
+
+
+  const variantName =
+    document
+      .getElementById(
+        "variantNameInput"
+      )
+      .value;
+
+
+  const priceText =
+    document
+      .getElementById(
+        "priceInput"
+      )
+      .value;
+
+
+  const comparePriceText =
+    document
+      .getElementById(
+        "comparePriceInput"
+      )
+      .value;
+
+
+  const variantActive =
+    document
+      .getElementById(
+        "variantActiveInput"
+      )
+      .checked;
+
+
+  if (!name) {
+
+    showMessage(
+      "Anh cần nhập tên sản phẩm.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const price =
+    nullableNumber(
+      priceText
+    );
+
+
+  if (
+    price === null
+    ||
+    price < 0
+  ) {
+
+    showMessage(
+      "Giá niêm yết không hợp lệ.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const comparePrice =
+    nullableNumber(
+      comparePriceText
+    );
+
+
+  if (
+    comparePrice !== null
+    &&
+    comparePrice < 0
+  ) {
+
+    showMessage(
+      "Giá so sánh không hợp lệ.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const categoryId =
+    categoryText
+      ?
+        Number(
+          categoryText
+        )
+      :
+        null;
+
+
+  /* =====================================================
+     BẢNG GIÁ SỈ
+  ====================================================== */
+
+  const tierRows =
+    currentWholesaleTiers(
+      variant.id
+    );
+
+
+  const tiers = [];
+
+
+  for (
+    const tier
+    of tierRows
+  ) {
+
+    const minText =
+      String(
+        tier.min_quantity
+        ??
+        ""
+      ).trim();
+
+
+    const tierPriceText =
+      String(
+        tier.unit_price
+        ??
+        ""
+      ).trim();
+
+
+    if (
+      !minText
+      &&
+      !tierPriceText
+    ) {
+
+      continue;
+
+    }
+
+
+    if (
+      !minText
+      ||
+      !tierPriceText
+    ) {
 
       showMessage(
-        "Không tìm thấy biến thể cần sửa.",
+        "Mỗi mức giá sỉ phải có đủ số lượng tối thiểu và giá bán.",
         "error"
       );
 
@@ -1948,381 +2684,341 @@
     }
 
 
-    const name =
-      document
-        .getElementById(
-          "nameInput"
-        )
-        .value
-        .trim();
-
-
-    const brand =
-      document
-        .getElementById(
-          "brandInput"
-        )
-        .value
-        .trim();
-
-
-    const categoryText =
-      document
-        .getElementById(
-          "categoryInput"
-        )
-        .value;
-
-
-    const shortDescription =
-      document
-        .getElementById(
-          "shortDescriptionInput"
-        )
-        .value;
-
-
-    const description =
-      document
-        .getElementById(
-          "descriptionInput"
-        )
-        .value;
-
-
-    const status =
-      document
-        .getElementById(
-          "statusInput"
-        )
-        .value;
-
-
-    const featured =
-      document
-        .getElementById(
-          "featuredInput"
-        )
-        .checked;
-
-
-    const variantName =
-      document
-        .getElementById(
-          "variantNameInput"
-        )
-        .value;
-
-
-  const priceText =
-  document
-    .getElementById(
-      "priceInput"
-    )
-    .value;
-
-
-const wholesalePriceText =
-  document
-    .getElementById(
-      "wholesalePriceInput"
-    )
-    .value;
-
-
-const comparePriceText =
-  document
-    .getElementById(
-      "comparePriceInput"
-    )
-    .value;
-
-
-const variantActive =
-  document
-    .getElementById(
-      "variantActiveInput"
-    )
-    .checked;
-
-
-if (!name) {
-
-  showMessage(
-    "Anh cần nhập tên sản phẩm.",
-    "error"
-  );
-
-  return;
-
-}
-
-
-const price =
-  nullableNumber(
-    priceText
-  );
-
-
-if (
-  price === null
-  ||
-  price < 0
-) {
-
-  showMessage(
-    "Giá bán lẻ không hợp lệ.",
-    "error"
-  );
-
-  return;
-
-}
-
-
-const wholesalePrice =
-  nullableNumber(
-    wholesalePriceText
-  );
-
-
-if (
-  wholesalePrice !== null
-  &&
-  wholesalePrice < 0
-) {
-
-  showMessage(
-    "Giá bán sỉ không hợp lệ.",
-    "error"
-  );
-
-  return;
-
-}
-
-
-const comparePrice =
-  nullableNumber(
-    comparePriceText
-  );
-
-
-if (
-  comparePrice !== null
-  &&
-  comparePrice < 0
-) {
-
-  showMessage(
-    "Giá so sánh không hợp lệ.",
-    "error"
-  );
-
-  return;
-
-}
-
-    
-
-
-    const categoryId =
-      categoryText
-        ?
-          Number(
-            categoryText
-          )
-        :
-          null;
-
-
-    saveBtn.disabled =
-      true;
-
-
-    saveBtn.textContent =
-      "ĐANG LƯU...";
-
-
-    try {
-
-      const {
-        data,
-        error
-      } =
-       await sb.rpc(
-  "shop_admin_update_product_v2",
-  {
-
-    p_product_id:
-      product.id,
-
-    p_name:
-      name,
-
-    p_brand:
-      nullableText(
-        brand
-      ),
-
-    p_category_id:
-      categoryId,
-
-    p_short_description:
-      nullableText(
-        shortDescription
-      ),
-
-    p_description:
-      nullableText(
-        description
-      ),
-
-    p_status:
-      status,
-
-    p_is_featured:
-      featured,
-
-    p_variant_id:
-      variant.id,
-
-    p_variant_name:
-      nullableText(
-        variantName
-      ),
-
-    p_retail_price:
-      price,
-
-    p_wholesale_price:
-      wholesalePrice,
-
-    p_compare_at_price:
-      comparePrice,
-
-    p_variant_active:
-      variantActive
-
-          }
-        );
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      product = {
-        ...product,
-
-        name:
-          name,
-
-        brand:
-          nullableText(
-            brand
-          ),
-
-        category_id:
-          categoryId,
-
-        short_description:
-          nullableText(
-            shortDescription
-          ),
-
-        description:
-          nullableText(
-            description
-          ),
-
-        status:
-          status,
-
-        is_featured:
-          featured
-      };
-
-
-      variants =
-        variants.map(
-          function (item) {
-
-            if (
-              String(item.id)
-              !==
-              String(variant.id)
-            ) {
-
-              return item;
-
-            }
-
-
-            return {
-              ...item,
-
-              variant_name:
-                nullableText(
-                  variantName
-                ),
-
-            price:
-  price,
-
-wholesale_price:
-  wholesalePrice,
-
-compare_at_price:
-  comparePrice,
-
-              is_active:
-                variantActive
-            };
-
-          }
-        );
-
-
-      showMessage(
-        `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} / ${data?.sku || variant.sku || "SKU"}.`,
-        "success"
+    const minQuantity =
+      Number(
+        minText
       );
 
 
-      render();
-
-    }
-    catch (error) {
-
-      console.error(
-        "UPDATE PRODUCT ERROR:",
-        error
+    const unitPrice =
+      Number(
+        tierPriceText
       );
 
 
+    if (
+      !Number.isInteger(
+        minQuantity
+      )
+      ||
+      minQuantity < 2
+    ) {
+
       showMessage(
-        error?.message
-        ||
-        "Không lưu được sản phẩm.",
+        "Số lượng tối thiểu của giá sỉ phải từ 2 trở lên.",
         "error"
       );
 
+      return;
+
     }
-    finally {
-
-      saveBtn.disabled =
-        false;
 
 
-      saveBtn.textContent =
-        "LƯU THAY ĐỔI";
+    if (
+      !Number.isInteger(
+        unitPrice
+      )
+      ||
+      unitPrice < 0
+    ) {
+
+      showMessage(
+        "Giá sỉ không hợp lệ.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      unitPrice > price
+    ) {
+
+      showMessage(
+        "Giá sỉ không được cao hơn giá niêm yết.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    tiers.push({
+      min_quantity:
+        minQuantity,
+
+      unit_price:
+        unitPrice
+    });
+
+  }
+
+
+  tiers.sort(
+    (a,b) =>
+      a.min_quantity
+      -
+      b.min_quantity
+  );
+
+
+  for (
+    let i = 1;
+    i < tiers.length;
+    i++
+  ) {
+
+    if (
+      tiers[i].min_quantity
+      ===
+      tiers[i - 1].min_quantity
+    ) {
+
+      showMessage(
+        "Không được có hai mức giá sỉ cùng số lượng tối thiểu.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      tiers[i].unit_price
+      >
+      tiers[i - 1].unit_price
+    ) {
+
+      showMessage(
+        "Số lượng càng cao thì giá sỉ không được tăng lên.",
+        "error"
+      );
+
+      return;
 
     }
 
   }
 
+
+  saveBtn.disabled =
+    true;
+
+
+  saveBtn.textContent =
+    "ĐANG LƯU...";
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "shop_admin_update_product_v3",
+        {
+
+          p_product_id:
+            product.id,
+
+          p_name:
+            name,
+
+          p_brand:
+            nullableText(
+              brand
+            ),
+
+          p_category_id:
+            categoryId,
+
+          p_short_description:
+            nullableText(
+              shortDescription
+            ),
+
+          p_description:
+            nullableText(
+              description
+            ),
+
+          p_status:
+            status,
+
+          p_is_featured:
+            featured,
+
+          p_variant_id:
+            variant.id,
+
+          p_variant_name:
+            nullableText(
+              variantName
+            ),
+
+          p_retail_price:
+            price,
+
+          p_compare_at_price:
+            comparePrice,
+
+          p_variant_active:
+            variantActive,
+
+          p_tiers:
+            tiers
+
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    product = {
+      ...product,
+
+      name:
+        name,
+
+      brand:
+        nullableText(
+          brand
+        ),
+
+      category_id:
+        categoryId,
+
+      short_description:
+        nullableText(
+          shortDescription
+        ),
+
+      description:
+        nullableText(
+          description
+        ),
+
+      status:
+        status,
+
+      is_featured:
+        featured
+    };
+
+
+    variants =
+      variants.map(
+        function (item) {
+
+          if (
+            String(item.id)
+            !==
+            String(variant.id)
+          ) {
+
+            return item;
+
+          }
+
+
+          return {
+            ...item,
+
+            variant_name:
+              nullableText(
+                variantName
+              ),
+
+            price:
+              price,
+
+            compare_at_price:
+              comparePrice,
+
+            is_active:
+              variantActive
+          };
+
+        }
+      );
+
+
+    wholesaleTiers = [
+
+      ...wholesaleTiers.filter(
+        item =>
+          String(
+            item.variant_id
+          )
+          !==
+          String(
+            variant.id
+          )
+      ),
+
+      ...tiers.map(
+        item => ({
+          ...item,
+
+          variant_id:
+            variant.id,
+
+          is_active:
+            true,
+
+          _key:
+            newTierKey()
+        })
+      )
+
+    ];
+
+
+    showMessage(
+      `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${tiers.length} mức giá sỉ.`,
+      "success"
+    );
+
+
+    render();
+
+  }
+  catch (error) {
+
+    console.error(
+      "UPDATE PRODUCT ERROR:",
+      error
+    );
+
+
+    showMessage(
+      error?.message
+      ||
+      "Không lưu được sản phẩm.",
+      "error"
+    );
+
+  }
+  finally {
+
+    saveBtn.disabled =
+      false;
+
+
+    saveBtn.textContent =
+      "LƯU THAY ĐỔI";
+
+  }
+
+}
 
   /* =====================================================
      EVENTS
