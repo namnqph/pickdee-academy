@@ -312,7 +312,59 @@
       border-color:
         rgba(216,255,69,.55);
     }
+/* =====================================================
+   PRODUCT FILTERS
+====================================================== */
 
+.product-filters {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap: 6px;
+
+  margin:
+    0 0 11px;
+}
+
+
+.product-filter-btn {
+  min-height: 38px;
+
+  padding:
+    0 6px;
+
+  border-radius: 10px;
+
+  border:
+    1px solid rgba(255,255,255,.10);
+
+  background:
+    rgba(255,255,255,.035);
+
+  color:
+    rgba(255,255,255,.62);
+
+  font-family: inherit;
+
+  font-size: 8px;
+  font-weight: 950;
+
+  cursor: pointer;
+}
+
+
+.product-filter-btn.active {
+  border-color:
+    #d8ff45;
+
+  background:
+    rgba(216,255,69,.10);
+
+  color:
+    #d8ff45;
+}
 
     /* =====================================================
        PRODUCT LIST
@@ -744,7 +796,44 @@
     >
 
   </div>
+<div
+  id="productFilters"
+  class="product-filters"
+>
 
+  <button
+    type="button"
+    class="product-filter-btn active"
+    data-filter="all"
+  >
+    TẤT CẢ
+  </button>
+
+  <button
+    type="button"
+    class="product-filter-btn"
+    data-filter="active"
+  >
+    ĐANG BÁN
+  </button>
+
+  <button
+    type="button"
+    class="product-filter-btn"
+    data-filter="draft"
+  >
+    NHÁP
+  </button>
+
+  <button
+    type="button"
+    class="product-filter-btn"
+    data-filter="out"
+  >
+    HẾT HÀNG
+  </button>
+
+</div>
 
   <div
     id="productList"
@@ -789,7 +878,8 @@
   let inventory = [];
 
   let images = [];
-
+let selectedProductFilter =
+  "all";
 
 
   /* =====================================================
@@ -1241,7 +1331,39 @@
 
 }
 
+function availableOfProduct(
+  productId
+) {
 
+  return variantsOf(
+    productId
+  )
+    .reduce(
+      function (total,variant) {
+
+        const inv =
+          inventoryOf(
+            variant.id
+          );
+
+
+        return (
+          total
+          +
+          Number(
+            inv.stock_on_hand || 0
+          )
+          -
+          Number(
+            inv.reserved_qty || 0
+          )
+        );
+
+      },
+      0
+    );
+
+}
   /* =====================================================
      RENDER
   ====================================================== */
@@ -1278,13 +1400,73 @@
             );
 
 
-          return (
-            !keyword
-            ||
-            text.includes(
-              keyword
-            )
-          );
+         const productAvailable =
+  availableOfProduct(
+    product.id
+  );
+
+
+const matchesFilter =
+  selectedProductFilter
+  ===
+  "all"
+
+  ||
+
+  (
+    selectedProductFilter
+    ===
+    "active"
+    &&
+    product.status
+    ===
+    "active"
+  )
+
+  ||
+
+  (
+    selectedProductFilter
+    ===
+    "draft"
+    &&
+    product.status
+    ===
+    "draft"
+  )
+
+  ||
+
+  (
+    selectedProductFilter
+    ===
+    "out"
+    &&
+    product.status
+    ===
+    "active"
+    &&
+    productAvailable
+    <=
+    0
+  );
+
+
+const matchesSearch =
+  (
+    !keyword
+    ||
+    text.includes(
+      keyword
+    )
+  );
+
+
+return (
+  matchesFilter
+  &&
+  matchesSearch
+);
 
         }
       );
@@ -1801,8 +1983,50 @@ return `
     renderProducts
   );
 
+document
+  .querySelectorAll(
+    ".product-filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          selectedProductFilter =
+            button.dataset.filter
+            ||
+            "all";
 
 
+          document
+            .querySelectorAll(
+              ".product-filter-btn"
+            )
+            .forEach(
+              function (item) {
+
+                item.classList.remove(
+                  "active"
+                );
+
+              }
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          renderProducts();
+
+        }
+      );
+
+    }
+  );
   /* =====================================================
      LOAD
   ====================================================== */
