@@ -1196,63 +1196,77 @@
 
 
     const [
-      productResult,
-      variantResult,
-      inventoryResult
-    ] =
-      await Promise.all([
+  productResult,
+  variantResult,
+  inventoryResult,
+  bundleResult
+] =
+  await Promise.all([
 
 
-        sb
-          .from(
-            "shop_products"
-          )
-          .select(
-            "id,name,status"
-          )
-          .eq(
-            "status",
-            "active"
-          )
-          .order(
-            "name",
-            {
-              ascending:
-                true
-            }
-          ),
-
-
-        sb
-          .from(
-            "shop_product_variants"
-          )
-          .select(
-            "id,product_id,sku,variant_name,is_active,sort_order"
-          )
-          .eq(
-            "is_active",
+    sb
+      .from(
+        "shop_products"
+      )
+      .select(
+        "id,name,status"
+      )
+      .in(
+  "status",
+  [
+    "active",
+    "draft"
+  ]
+)
+      .order(
+        "name",
+        {
+          ascending:
             true
-          )
-          .order(
-            "sort_order",
-            {
-              ascending:
-                true
-            }
-          ),
+        }
+      ),
 
 
-        sb
-          .from(
-            "shop_inventory"
-          )
-          .select(
-            "variant_id,stock_on_hand,reserved_qty"
-          )
+    sb
+      .from(
+        "shop_product_variants"
+      )
+      .select(
+        "id,product_id,sku,variant_name,is_active,sort_order"
+      )
+      .eq(
+        "is_active",
+        true
+      )
+      .order(
+        "sort_order",
+        {
+          ascending:
+            true
+        }
+      ),
 
 
-      ]);
+    sb
+      .from(
+        "shop_inventory"
+      )
+      .select(
+        "variant_id,stock_on_hand,reserved_qty"
+      ),
+
+
+    sb
+      .rpc(
+        "shop_admin_bundle_variant_ids"
+      )
+
+
+  ]);
+
+
+  
+  
 
 
     if (productResult.error) {
@@ -1269,7 +1283,21 @@
       throw inventoryResult.error;
     }
 
+if (bundleResult.error) {
+  throw bundleResult.error;
+}
 
+
+const bundleVariantIds =
+  new Set(
+    (bundleResult.data || [])
+      .map(
+        item =>
+          String(
+            item.selling_variant_id
+          )
+      )
+  );
     products =
       productResult.data || [];
 
@@ -1284,15 +1312,21 @@
 
 
     variants =
-      (variantResult.data || [])
-        .filter(
-          item =>
-            productIds.has(
-              String(
-                item.product_id
-              )
-            )
-        );
+  (variantResult.data || [])
+    .filter(
+      item =>
+        productIds.has(
+          String(
+            item.product_id
+          )
+        )
+        &&
+        !bundleVariantIds.has(
+          String(
+            item.id
+          )
+        )
+    );
 
 
     inventory =
