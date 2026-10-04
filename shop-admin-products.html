@@ -873,11 +873,15 @@
 
   let products = [];
 
-  let variants = [];
+let variants = [];
 
-  let inventory = [];
+let inventory = [];
 
-  let images = [];
+let images = [];
+
+let bundleVariantIds =
+  new Set();
+
 let selectedProductFilter =
   "all";
 
@@ -1087,40 +1091,55 @@ let selectedProductFilter =
      DATA HELPERS
   ====================================================== */
 
-  function inventoryOf(
-    variantId
-  ) {
+ function inventoryOf(
+  variantId
+) {
 
-    return (
-      inventory.find(
-        item =>
-          String(
-            item.variant_id
-          )
-          ===
-          String(
-            variantId
-          )
-      )
-      ||
-      {
-        stock_on_hand:
-          0,
+  return (
+    inventory.find(
+      item =>
+        String(
+          item.variant_id
+        )
+        ===
+        String(
+          variantId
+        )
+    )
+    ||
+    {
+      stock_on_hand:
+        0,
 
-        reserved_qty:
-          0,
+      reserved_qty:
+        0,
 
-        reorder_level:
-          0,
+      reorder_level:
+        0,
 
-        average_cost:
-          0
-      }
-    );
+      average_cost:
+        0,
 
-  }
+      track_stock:
+        false,
 
+      tracking_started_at:
+        null
+    }
+  );
 
+}
+  function isBundleVariant(
+  variantId
+) {
+
+  return bundleVariantIds.has(
+    String(
+      variantId
+    )
+  );
+
+}
   function primaryImageOf(
     productId
   ) {
@@ -1266,39 +1285,52 @@ let selectedProductFilter =
     );
 
 
-  const lowCount =
-    activeVariants
-      .filter(
-        function (variant) {
+ const lowCount =
+  activeVariants
+    .filter(
+      function (variant) {
 
-          const inv =
-            inventoryOf(
-              variant.id
-            );
+        if (
+          isBundleVariant(
+            variant.id
+          )
+        ) {
+          return false;
+        }
 
-
-          const available =
-            Number(
-              inv.stock_on_hand || 0
-            )
-            -
-            Number(
-              inv.reserved_qty || 0
-            );
-
-
-          return (
-            available
-            <=
-            Number(
-              inv.reorder_level || 0
-            )
+        const inv =
+          inventoryOf(
+            variant.id
           );
 
+        if (
+          inv.track_stock
+          !==
+          true
+        ) {
+          return false;
         }
-      )
-      .length;
 
+        const available =
+          Number(
+            inv.stock_on_hand || 0
+          )
+          -
+          Number(
+            inv.reserved_qty || 0
+          );
+
+        return (
+          available
+          <=
+          Number(
+            inv.reorder_level || 0
+          )
+        );
+
+      }
+    )
+    .length;
 
   document
     .getElementById(
@@ -1338,6 +1370,21 @@ function availableOfProduct(
   return variantsOf(
     productId
   )
+    .filter(
+      function (variant) {
+
+        return (
+          variant.is_active
+          ===
+          true
+          &&
+          !isBundleVariant(
+            variant.id
+          )
+        );
+
+      }
+    )
     .reduce(
       function (total,variant) {
 
@@ -1345,7 +1392,6 @@ function availableOfProduct(
           inventoryOf(
             variant.id
           );
-
 
         return (
           total
@@ -1400,9 +1446,40 @@ function availableOfProduct(
             );
 
 
-         const productAvailable =
+        const productAvailable =
   availableOfProduct(
     product.id
+  );
+
+
+const activeProductVariants =
+  productVariants.filter(
+    function (item) {
+
+      return (
+        item.is_active
+        ===
+        true
+        &&
+        !isBundleVariant(
+          item.id
+        )
+      );
+
+    }
+  );
+
+
+const productTracksAllStock =
+  activeProductVariants.length > 0
+  &&
+  activeProductVariants.every(
+    item =>
+      inventoryOf(
+        item.id
+      ).track_stock
+      ===
+      true
   );
 
 
@@ -1446,10 +1523,13 @@ const matchesFilter =
     ===
     "active"
     &&
+    productTracksAllStock
+    &&
     productAvailable
     <=
     0
   );
+
 
 
 const matchesSearch =
@@ -1539,10 +1619,32 @@ const totals =
   productVariants.reduce(
     function (result,variant) {
 
+      if (
+        isBundleVariant(
+          variant.id
+        )
+      ) {
+        return result;
+      }
+
+
       const inv =
         inventoryOf(
           variant.id
         );
+
+
+      if (
+        inv.track_stock
+        !==
+        true
+      ) {
+
+        result.untracked += 1;
+
+        return result;
+
+      }
 
 
       const stock =
@@ -1556,6 +1658,8 @@ const totals =
           inv.reserved_qty || 0
         );
 
+
+      result.tracked += 1;
 
       result.stock +=
         stock;
@@ -1577,10 +1681,11 @@ const totals =
     {
       stock: 0,
       reserved: 0,
-      available: 0
+      available: 0,
+      tracked: 0,
+      untracked: 0
     }
   );
-
 
 const variantHtml =
   productVariants.length
@@ -1589,56 +1694,76 @@ const variantHtml =
         .map(
           function (variant) {
 
-            const inv =
-              inventoryOf(
-                variant.id
-              );
+         const inv =
+  inventoryOf(
+    variant.id
+  );
 
 
-            const stock =
-              Number(
-                inv.stock_on_hand || 0
-              );
+const isBundle =
+  isBundleVariant(
+    variant.id
+  );
 
 
-            const reserved =
-              Number(
-                inv.reserved_qty || 0
-              );
+const isTracked =
+  inv.track_stock
+  ===
+  true;
 
 
-            const available =
-              stock
-              -
-              reserved;
+const stock =
+  Number(
+    inv.stock_on_hand || 0
+  );
 
 
-            const reorder =
-              Number(
-                inv.reorder_level || 0
-              );
+const reserved =
+  Number(
+    inv.reserved_qty || 0
+  );
 
 
-            let stockClass =
-              "available";
+const available =
+  stock
+  -
+  reserved;
 
 
-            if (
-              available <= 0
-            ) {
+const reorder =
+  Number(
+    inv.reorder_level || 0
+  );
 
-              stockClass =
-                "out";
 
-            }
-            else if (
-              available <= reorder
-            ) {
+let stockClass =
+  "available";
 
-              stockClass =
-                "low";
 
-            }
+if (
+  !isBundle
+  &&
+  isTracked
+) {
+
+  if (
+    available <= 0
+  ) {
+
+    stockClass =
+      "out";
+
+  }
+  else if (
+    available <= reorder
+  ) {
+
+    stockClass =
+      "low";
+
+  }
+
+}
 
 
             return `
@@ -1678,61 +1803,94 @@ const variantHtml =
                 </div>
 
 
-                <div class="stock-grid">
+             ${
+  isBundle
+    ?
+      `
+        <div
+          class="tag active"
+          style="margin-top:8px;"
+        >
+          DÙNG TỒN SKU GỐC
+        </div>
 
-                  <div class="stock-item">
+        <div class="cost">
+          Tồn kho của SKU này được tính theo SKU gốc.
+        </div>
+      `
+    :
+  !isTracked
+    ?
+      `
+        <div
+          class="tag draft"
+          style="margin-top:8px;"
+        >
+          CHƯA THEO DÕI TỒN
+        </div>
 
-                    <div class="stock-label">
-                      TỒN THỰC
-                    </div>
+        <div class="cost">
+          Vẫn bán bình thường. Sau khi kiểm kho, hệ thống sẽ bắt đầu theo dõi tồn.
+        </div>
+      `
+    :
+      `
+        <div class="stock-grid">
 
-                    <div class="stock-value">
-                      ${stock}
-                    </div>
+          <div class="stock-item">
 
-                  </div>
+            <div class="stock-label">
+              TỒN THỰC
+            </div>
 
+            <div class="stock-value">
+              ${stock}
+            </div>
 
-                  <div class="stock-item">
-
-                    <div class="stock-label">
-                      ĐANG GIỮ
-                    </div>
-
-                    <div class="stock-value">
-                      ${reserved}
-                    </div>
-
-                  </div>
-
-
-                  <div class="stock-item">
-
-                    <div class="stock-label">
-                      CÓ THỂ BÁN
-                    </div>
-
-                    <div class="stock-value ${stockClass}">
-                      ${available}
-                    </div>
-
-                  </div>
-
-                </div>
+          </div>
 
 
-                <div class="cost">
-                  Giá vốn bình quân:
-                  ${money(
-                    inv.average_cost
-                  )}
-                  •
-                  Mức cảnh báo:
-                  ${Number(
-                    inv.reorder_level || 0
-                  )}
-                </div>
+          <div class="stock-item">
 
+            <div class="stock-label">
+              ĐANG GIỮ
+            </div>
+
+            <div class="stock-value">
+              ${reserved}
+            </div>
+
+          </div>
+
+
+          <div class="stock-item">
+
+            <div class="stock-label">
+              CÓ THỂ BÁN
+            </div>
+
+            <div class="stock-value ${stockClass}">
+              ${available}
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="cost">
+          Giá vốn bình quân:
+          ${money(
+            inv.average_cost
+          )}
+          •
+          Mức cảnh báo:
+          ${Number(
+            inv.reorder_level || 0
+          )}
+        </div>
+      `
+}
               </div>
             `;
 
@@ -1844,54 +2002,86 @@ return `
     </div>
 
 
-    <div class="stock-grid">
+   ${
+  totals.untracked > 0
+    ?
+      `
+        <div
+          class="stock-grid"
+          style="grid-template-columns:1fr;"
+        >
 
-      <div class="stock-item">
+          <div class="stock-item">
 
-        <div class="stock-label">
-          TỔNG TỒN
+            <div class="stock-label">
+              TỒN KHO
+            </div>
+
+            <div class="stock-value available">
+              ${
+                totals.tracked > 0
+                  ?
+                    `ĐANG THEO DÕI ${totals.tracked}/${totals.tracked + totals.untracked} SKU`
+                  :
+                    "CHƯA THEO DÕI TỒN"
+              }
+            </div>
+
+          </div>
+
         </div>
+      `
+    :
+      `
+        <div class="stock-grid">
 
-        <div class="stock-value">
-          ${totals.stock}
+          <div class="stock-item">
+
+            <div class="stock-label">
+              TỔNG TỒN
+            </div>
+
+            <div class="stock-value">
+              ${totals.stock}
+            </div>
+
+          </div>
+
+
+          <div class="stock-item">
+
+            <div class="stock-label">
+              ĐANG GIỮ
+            </div>
+
+            <div class="stock-value">
+              ${totals.reserved}
+            </div>
+
+          </div>
+
+
+          <div class="stock-item">
+
+            <div class="stock-label">
+              CÓ THỂ BÁN
+            </div>
+
+            <div class="stock-value ${
+              totals.available > 0
+                ?
+                  "available"
+                :
+                  "out"
+            }">
+              ${totals.available}
+            </div>
+
+          </div>
+
         </div>
-
-      </div>
-
-
-      <div class="stock-item">
-
-        <div class="stock-label">
-          ĐANG GIỮ
-        </div>
-
-        <div class="stock-value">
-          ${totals.reserved}
-        </div>
-
-      </div>
-
-
-      <div class="stock-item">
-
-        <div class="stock-label">
-          CÓ THỂ BÁN
-        </div>
-
-        <div class="stock-value ${
-          totals.available > 0
-            ?
-              "available"
-            :
-              "out"
-        }">
-          ${totals.available}
-        </div>
-
-      </div>
-
-    </div>
-
+      `
+}
 
     <div
       style="
@@ -2036,12 +2226,13 @@ document
     await requireShopAccess();
 
 
-    const [
-      productResult,
-      variantResult,
-      inventoryResult,
-      imageResult
-    ] =
+  const [
+  productResult,
+  variantResult,
+  inventoryResult,
+  imageResult,
+  bundleResult
+] =
       await Promise.all([
 
 
@@ -2082,11 +2273,10 @@ document
             "shop_inventory"
           )
           .select(
-            "variant_id,stock_on_hand,reserved_qty,reorder_level,average_cost"
-          ),
+  "variant_id,stock_on_hand,reserved_qty,reorder_level,average_cost,track_stock,tracking_started_at"
+),
 
-
-        sb
+                sb
           .from(
             "shop_product_images"
           )
@@ -2099,8 +2289,11 @@ document
               ascending:
                 true
             }
-          )
+          ),
 
+        sb.rpc(
+          "shop_admin_bundle_variant_ids"
+        )
 
       ]);
 
@@ -2123,7 +2316,9 @@ document
     if (imageResult.error) {
       throw imageResult.error;
     }
-
+if (bundleResult.error) {
+  throw bundleResult.error;
+}
 
     products =
       productResult.data || [];
@@ -2139,7 +2334,16 @@ document
 
     images =
       imageResult.data || [];
-
+bundleVariantIds =
+  new Set(
+    (bundleResult.data || [])
+      .map(
+        item =>
+          String(
+            item.selling_variant_id
+          )
+      )
+  );
 
     updateStats();
 
