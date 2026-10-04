@@ -1130,78 +1130,116 @@
 
   function updateStats() {
 
-    const activeVariants =
-      variants.filter(
-        item =>
-          item.is_active === true
-      );
-
-
-    const lowCount =
-      activeVariants
+  const activeProductIds =
+    new Set(
+      products
         .filter(
-          function (variant) {
-
-            const inv =
-              inventoryOf(
-                variant.id
-              );
-
-
-            const available =
-              Number(
-                inv.stock_on_hand || 0
-              )
-              -
-              Number(
-                inv.reserved_qty || 0
-              );
-
+          function (product) {
 
             return (
-              available
-              <=
-              Number(
-                inv.reorder_level || 0
-              )
+              product.status
+              ===
+              "active"
             );
 
           }
         )
-        .length;
+        .map(
+          function (product) {
+
+            return String(
+              product.id
+            );
+
+          }
+        )
+    );
 
 
-    document
-      .getElementById(
-        "statProducts"
-      )
-      .textContent =
-        String(
-          products.length
+  const activeVariants =
+    variants.filter(
+      function (variant) {
+
+        return (
+          variant.is_active
+          ===
+          true
+          &&
+          activeProductIds.has(
+            String(
+              variant.product_id
+            )
+          )
         );
 
+      }
+    );
 
-    document
-      .getElementById(
-        "statVariants"
+
+  const lowCount =
+    activeVariants
+      .filter(
+        function (variant) {
+
+          const inv =
+            inventoryOf(
+              variant.id
+            );
+
+
+          const available =
+            Number(
+              inv.stock_on_hand || 0
+            )
+            -
+            Number(
+              inv.reserved_qty || 0
+            );
+
+
+          return (
+            available
+            <=
+            Number(
+              inv.reorder_level || 0
+            )
+          );
+
+        }
       )
-      .textContent =
-        String(
-          activeVariants.length
-        );
+      .length;
 
 
-    document
-      .getElementById(
-        "statLow"
-      )
-      .textContent =
-        String(
-          lowCount
-        );
+  document
+    .getElementById(
+      "statProducts"
+    )
+    .textContent =
+      String(
+        products.length
+      );
 
-  }
 
+  document
+    .getElementById(
+      "statVariants"
+    )
+    .textContent =
+      String(
+        activeVariants.length
+      );
+
+
+  document
+    .getElementById(
+      "statLow"
+    )
+    .textContent =
+      String(
+        lowCount
+      );
+
+}
 
 
   /* =====================================================
@@ -1300,295 +1338,451 @@
                   "draft";
 
 
-            const statusText =
-              product.status
-              ===
-              "active"
-                ?
-                  "ĐANG BÁN"
-                :
-                  String(
-                    product.status
-                    ||
-                    "DRAFT"
-                  )
-                  .toUpperCase();
+const statusText =
+  product.status
+  ===
+  "active"
+    ?
+      "ĐANG BÁN"
+    :
+      String(
+        product.status
+        ||
+        "DRAFT"
+      )
+        .toUpperCase();
+
+
+const totals =
+  productVariants.reduce(
+    function (result,variant) {
+
+      const inv =
+        inventoryOf(
+          variant.id
+        );
+
+
+      const stock =
+        Number(
+          inv.stock_on_hand || 0
+        );
+
+
+      const reserved =
+        Number(
+          inv.reserved_qty || 0
+        );
+
+
+      result.stock +=
+        stock;
+
+
+      result.reserved +=
+        reserved;
+
+
+      result.available +=
+        stock
+        -
+        reserved;
+
+
+      return result;
+
+    },
+    {
+      stock: 0,
+      reserved: 0,
+      available: 0
+    }
+  );
+
+
+const variantHtml =
+  productVariants.length
+    ?
+      productVariants
+        .map(
+          function (variant) {
+
+            const inv =
+              inventoryOf(
+                variant.id
+              );
+
+
+            const stock =
+              Number(
+                inv.stock_on_hand || 0
+              );
+
+
+            const reserved =
+              Number(
+                inv.reserved_qty || 0
+              );
+
+
+            const available =
+              stock
+              -
+              reserved;
+
+
+            const reorder =
+              Number(
+                inv.reorder_level || 0
+              );
+
+
+            let stockClass =
+              "available";
+
+
+            if (
+              available <= 0
+            ) {
+
+              stockClass =
+                "out";
+
+            }
+            else if (
+              available <= reorder
+            ) {
+
+              stockClass =
+                "low";
+
+            }
 
 
             return `
 
-              <div class="product-card">
+              <div class="variant">
 
-
-                <div class="product-head">
-
-
-                  <div class="product-image">
-
-                    ${
-                      imageUrl
-                      ?
-                        `
-                          <img
-                            src="${escapeHtml(
-                              imageUrl
-                            )}"
-                            alt="${escapeHtml(
-                              image?.alt_text
-                              ||
-                              product.name
-                            )}"
-                            loading="lazy"
-                          >
-                        `
-                      :
-                        `
-                          <div class="no-image">
-                            CHƯA CÓ ẢNH
-                          </div>
-                        `
-                    }
-
-                  </div>
-
+                <div class="variant-top">
 
                   <div>
 
-                    <div class="product-name">
+                    <div class="variant-name">
                       ${escapeHtml(
-                        product.name
+                        variant.variant_name
+                        ||
+                        "Mặc định"
                       )}
                     </div>
 
-
-                    <div class="product-meta">
-
-                      <span
-                        class="tag ${statusClass}"
-                      >
-                        ${escapeHtml(
-                          statusText
-                        )}
-                      </span>
-
-
-                      ${
-                        product.product_code
-                        ?
-                          `
-                            <span class="tag">
-                              ${escapeHtml(
-                                product.product_code
-                              )}
-                            </span>
-                          `
-                        :
-                          ""
-                      }
-
-
-                      ${
-                        product.brand
-                        ?
-                          `
-                            <span class="tag">
-                              ${escapeHtml(
-                                product.brand
-                              )}
-                            </span>
-                          `
-                        :
-                          ""
-                      }
-
+                    <div class="sku">
+                      SKU:
+                      ${escapeHtml(
+                        variant.sku
+                        ||
+                        "-"
+                      )}
                     </div>
 
                   </div>
 
 
-                </div>
-
-
-                <div class="variant-list">
-
-                  ${
-                    productVariants.length
-                    ?
-                      productVariants
-                        .map(
-                          function (variant) {
-
-                            const inv =
-                              inventoryOf(
-                                variant.id
-                              );
-
-
-                            const stock =
-                              Number(
-                                inv.stock_on_hand || 0
-                              );
-
-
-                            const reserved =
-                              Number(
-                                inv.reserved_qty || 0
-                              );
-
-
-                            const available =
-                              stock
-                              -
-                              reserved;
-
-
-                            const reorder =
-                              Number(
-                                inv.reorder_level || 0
-                              );
-
-
-                            let stockClass =
-                              "available";
-
-
-                            if (
-                              available <= 0
-                            ) {
-
-                              stockClass =
-                                "out";
-
-                            }
-                            else if (
-                              available
-                              <=
-                              reorder
-                            ) {
-
-                              stockClass =
-                                "low";
-
-                            }
-
-
-                            return `
-
-                              <div class="variant">
-
-                                <div class="variant-top">
-
-                                  <div>
-
-                                    <div class="variant-name">
-                                      ${escapeHtml(
-                                        variant.variant_name
-                                        ||
-                                        "Mặc định"
-                                      )}
-                                    </div>
-
-                                    <div class="sku">
-                                      SKU:
-                                      ${escapeHtml(
-                                        variant.sku
-                                        ||
-                                        "-"
-                                      )}
-                                    </div>
-
-                                  </div>
-
-
-                                  <div class="price">
-                                    ${money(
-                                      variant.price
-                                    )}
-                                  </div>
-
-                                </div>
-
-
-                                <div class="stock-grid">
-
-
-                                  <div class="stock-item">
-
-                                    <div class="stock-label">
-                                      TỒN THỰC
-                                    </div>
-
-                                    <div class="stock-value">
-                                      ${stock}
-                                    </div>
-
-                                  </div>
-
-
-                                  <div class="stock-item">
-
-                                    <div class="stock-label">
-                                      ĐANG GIỮ
-                                    </div>
-
-                                    <div class="stock-value">
-                                      ${reserved}
-                                    </div>
-
-                                  </div>
-
-
-                                  <div class="stock-item">
-
-                                    <div class="stock-label">
-                                      CÓ THỂ BÁN
-                                    </div>
-
-                                    <div
-                                      class="stock-value ${stockClass}"
-                                    >
-                                      ${available}
-                                    </div>
-
-                                  </div>
-
-
-                                </div>
-
-
-                                <div class="cost">
-                                  Giá vốn bình quân:
-                                  ${money(
-                                    inv.average_cost
-                                  )}
-                                  •
-                                  Mức cảnh báo:
-                                  ${Number(
-                                    inv.reorder_level || 0
-                                  )}
-                                </div>
-
-                              </div>
-
-                            `;
-
-                          }
-                        )
-                        .join("")
-                    :
-                      `
-                        <div class="state">
-                          Sản phẩm chưa có biến thể.
-                        </div>
-                      `
-                  }
+                  <div class="price">
+                    ${money(
+                      variant.price
+                    )}
+                  </div>
 
                 </div>
 
+
+                <div class="stock-grid">
+
+                  <div class="stock-item">
+
+                    <div class="stock-label">
+                      TỒN THỰC
+                    </div>
+
+                    <div class="stock-value">
+                      ${stock}
+                    </div>
+
+                  </div>
+
+
+                  <div class="stock-item">
+
+                    <div class="stock-label">
+                      ĐANG GIỮ
+                    </div>
+
+                    <div class="stock-value">
+                      ${reserved}
+                    </div>
+
+                  </div>
+
+
+                  <div class="stock-item">
+
+                    <div class="stock-label">
+                      CÓ THỂ BÁN
+                    </div>
+
+                    <div class="stock-value ${stockClass}">
+                      ${available}
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                <div class="cost">
+                  Giá vốn bình quân:
+                  ${money(
+                    inv.average_cost
+                  )}
+                  •
+                  Mức cảnh báo:
+                  ${Number(
+                    inv.reorder_level || 0
+                  )}
+                </div>
 
               </div>
-
             `;
+
+          }
+        )
+        .join("")
+    :
+      `
+        <div class="state">
+          Sản phẩm chưa có biến thể.
+        </div>
+      `;
+
+
+return `
+
+  <div class="product-card">
+
+
+    <div class="product-head">
+
+
+      <div class="product-image">
+
+        ${
+          imageUrl
+            ?
+              `
+                <img
+                  src="${escapeHtml(
+                    imageUrl
+                  )}"
+                  alt="${escapeHtml(
+                    image?.alt_text
+                    ||
+                    product.name
+                  )}"
+                  loading="lazy"
+                >
+              `
+            :
+              `
+                <div class="no-image">
+                  CHƯA CÓ ẢNH
+                </div>
+              `
+        }
+
+      </div>
+
+
+      <div>
+
+        <div class="product-name">
+          ${escapeHtml(
+            product.name
+          )}
+        </div>
+
+
+        <div class="product-meta">
+
+          <span class="tag ${statusClass}">
+            ${escapeHtml(
+              statusText
+            )}
+          </span>
+
+
+          ${
+            product.product_code
+              ?
+                `
+                  <span class="tag">
+                    ${escapeHtml(
+                      product.product_code
+                    )}
+                  </span>
+                `
+              :
+                ""
+          }
+
+
+          ${
+            product.brand
+              ?
+                `
+                  <span class="tag">
+                    ${escapeHtml(
+                      product.brand
+                    )}
+                  </span>
+                `
+              :
+                ""
+          }
+
+
+          <span class="tag">
+            ${productVariants.length} SKU
+          </span>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="stock-grid">
+
+      <div class="stock-item">
+
+        <div class="stock-label">
+          TỔNG TỒN
+        </div>
+
+        <div class="stock-value">
+          ${totals.stock}
+        </div>
+
+      </div>
+
+
+      <div class="stock-item">
+
+        <div class="stock-label">
+          ĐANG GIỮ
+        </div>
+
+        <div class="stock-value">
+          ${totals.reserved}
+        </div>
+
+      </div>
+
+
+      <div class="stock-item">
+
+        <div class="stock-label">
+          CÓ THỂ BÁN
+        </div>
+
+        <div class="stock-value ${
+          totals.available > 0
+            ?
+              "available"
+            :
+              "out"
+        }">
+          ${totals.available}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr;
+        gap:7px;
+        margin-top:9px;
+      "
+    >
+
+      <a
+        href="./shop-admin-product-edit?id=${encodeURIComponent(
+          product.id
+        )}"
+        style="
+          min-height:38px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:9px;
+          border:1px solid rgba(216,255,69,.24);
+          background:rgba(216,255,69,.06);
+          color:#d8ff45;
+          text-decoration:none;
+          font-size:9px;
+          font-weight:950;
+        "
+      >
+        SỬA
+      </a>
+
+
+      <details>
+
+        <summary
+          style="
+            min-height:38px;
+            padding:0 10px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:9px;
+            border:1px solid rgba(255,255,255,.10);
+            background:rgba(255,255,255,.04);
+            color:#fff;
+            cursor:pointer;
+            list-style:none;
+            font-size:9px;
+            font-weight:950;
+          "
+        >
+          XEM ${productVariants.length} SKU
+        </summary>
+
+
+        <div
+          class="variant-list"
+          style="
+            margin-top:8px;
+            grid-column:1 / -1;
+          "
+        >
+          ${variantHtml}
+        </div>
+
+      </details>
+
+    </div>
+
+
+  </div>
+
+`;
 
           }
         )
