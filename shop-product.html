@@ -1251,33 +1251,44 @@
   }
 
 
-  function updateCartCount() {
+function updateCartCount() {
 
-    const cart =
-      readCart();
-
-
-    const count =
-      cart.reduce(
-        function (sum,item) {
-
-          return (
-            sum
-            +
-            Number(
-              item.quantity || 0
-            )
-          );
-
-        },
-        0
-      );
+  const cart =
+    readCart();
 
 
-    cartCount.textContent =
-      String(count);
+  const uniqueVariantIds =
+    new Set(
+      cart
+        .filter(
+          function (item) {
 
-  }
+            return (
+              item
+              &&
+              item.variant_id != null
+            );
+
+          }
+        )
+        .map(
+          function (item) {
+
+            return String(
+              item.variant_id
+            );
+
+          }
+        )
+    );
+
+
+  cartCount.textContent =
+    String(
+      uniqueVariantIds.size
+    );
+
+}
 
 
 
