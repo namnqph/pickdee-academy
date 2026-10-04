@@ -895,13 +895,17 @@
 
   let product = null;
 
-  let variants = [];
+let variants = [];
 
-  let categories = [];
+let categories = [];
 
-  let images = [];
+let images = [];
+
+let selectedImageFile = null;
+
 let wholesaleTiers = [];
-  let selectedVariantId = null;
+
+let selectedVariantId = null;
 
 
   /* =====================================================
@@ -1140,7 +1144,194 @@ let wholesaleTiers = [];
 
   }
 
+function productPublicUrl() {
 
+  if (!product?.id) {
+    return `${location.origin}/shop`;
+  }
+
+
+  return `${location.origin}/shop-product?id=${encodeURIComponent(
+    product.id
+  )}`;
+
+}
+
+
+function safeFileName(fileName) {
+
+  const cleaned =
+    String(
+      fileName || "product-image"
+    )
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9.]+/g,
+        "-"
+      )
+      .replace(
+        /^-+|-+$/g,
+        ""
+      )
+      .slice(
+        0,
+        90
+      );
+
+
+  return (
+    cleaned
+    ||
+    "product-image.jpg"
+  );
+
+}
+
+
+async function uploadSelectedImage() {
+
+  if (!selectedImageFile) {
+    return;
+  }
+
+
+  if (
+    !selectedImageFile.type
+    ||
+    !selectedImageFile.type.startsWith(
+      "image/"
+    )
+  ) {
+
+    throw new Error(
+      "File tải lên phải là ảnh."
+    );
+
+  }
+
+
+  if (
+    selectedImageFile.size
+    >
+    10 * 1024 * 1024
+  ) {
+
+    throw new Error(
+      "Ảnh tối đa 10MB."
+    );
+
+  }
+
+
+  const storagePath =
+    `products/${product.id}/${Date.now()}-${safeFileName(
+      selectedImageFile.name
+    )}`;
+
+
+  const uploadResult =
+    await sb.storage
+      .from(
+        "shop-products"
+      )
+      .upload(
+        storagePath,
+        selectedImageFile,
+        {
+          cacheControl:
+            "3600",
+
+          upsert:
+            false,
+
+          contentType:
+            selectedImageFile.type
+        }
+      );
+
+
+  if (uploadResult.error) {
+    throw uploadResult.error;
+  }
+
+
+  const primaryResult =
+    await sb
+      .from(
+        "shop_product_images"
+      )
+      .update({
+        is_primary:
+          false
+      })
+      .eq(
+        "product_id",
+        product.id
+      );
+
+
+  if (primaryResult.error) {
+    throw primaryResult.error;
+  }
+
+
+  const insertResult =
+    await sb
+      .from(
+        "shop_product_images"
+      )
+      .insert({
+        product_id:
+          product.id,
+
+        variant_id:
+          null,
+
+        storage_path:
+          storagePath,
+
+        alt_text:
+          product.name || null,
+
+        sort_order:
+          0,
+
+        is_primary:
+          true
+      })
+      .select(
+        "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+      )
+      .single();
+
+
+  if (insertResult.error) {
+    throw insertResult.error;
+  }
+
+
+  images =
+    [
+      insertResult.data,
+      ...images.map(
+        item => ({
+          ...item,
+          is_primary:
+            false
+        })
+      )
+    ];
+
+
+  selectedImageFile =
+    null;
+
+}
   function selectedVariant() {
 
     return (
@@ -2111,11 +2302,75 @@ function renderWholesaleTierRows(
 
 
 
+           <div class="card">
+
+        <div class="card-title">
+          Ảnh & link bán hàng
+        </div>
+
+        <div class="card-subtitle">
+          Chọn ảnh mới rồi bấm LƯU THAY ĐỔI. Ảnh mới sẽ thành ảnh chính ngoài trang khách mua.
+        </div>
+
+        <div class="field">
+
+          <label>
+            Ảnh sản phẩm mới
+          </label>
+
+          <input
+            id="imageFileInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/avif"
+          >
+
+          <div
+            id="imagePreview"
+            class="hint"
+          >
+            Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.
+          </div>
+
+        </div>
+
+
+        <div class="field">
+
+          <label>
+            Link gửi khách mua
+          </label>
+
+          <input
+            id="productPublicLink"
+            type="text"
+            readonly
+            value="${escapeHtml(
+              productPublicUrl()
+            )}"
+          >
+
+          <button
+            id="copyProductLinkBtn"
+            class="save-btn"
+            type="button"
+            style="
+              margin-top:8px;
+              min-height:40px;
+              border-radius:10px;
+            "
+          >
+            COPY LINK BÁN HÀNG
+          </button>
+
+        </div>
+
+      </div>
+
+
       <div class="notice">
 
-        Ảnh sản phẩm hiện được giữ nguyên.
-        Phần thay / thêm / xóa ảnh sẽ được nối ở bước tiếp theo.
-        Trang này không thay đổi tồn kho, hàng đang giữ hoặc giá vốn.
+        Trang này chỉ sửa thông tin bán hàng, ảnh và giá.
+        Không thay đổi tồn kho, hàng đang giữ hoặc giá vốn.
 
       </div>
 
@@ -2142,7 +2397,151 @@ function renderWholesaleTierRows(
 
         }
       );
+const imageFileInput =
+  document.getElementById(
+    "imageFileInput"
+  );
 
+
+const imagePreview =
+  document.getElementById(
+    "imagePreview"
+  );
+
+
+if (imageFileInput) {
+
+  imageFileInput.addEventListener(
+    "change",
+    function (event) {
+
+      const file =
+        event.target.files?.[0] || null;
+
+
+      selectedImageFile =
+        file;
+
+
+      if (!file) {
+
+        if (imagePreview) {
+          imagePreview.textContent =
+            "Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.";
+        }
+
+        return;
+
+      }
+
+
+      if (
+        !file.type
+        ||
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+
+        selectedImageFile =
+          null;
+
+        imageFileInput.value =
+          "";
+
+        if (imagePreview) {
+          imagePreview.textContent =
+            "File này không phải ảnh. Anh chọn lại ảnh sản phẩm.";
+        }
+
+        return;
+
+      }
+
+
+      if (
+        file.size
+        >
+        10 * 1024 * 1024
+      ) {
+
+        selectedImageFile =
+          null;
+
+        imageFileInput.value =
+          "";
+
+        if (imagePreview) {
+          imagePreview.textContent =
+            "Ảnh vượt quá 10MB. Anh chọn ảnh nhẹ hơn.";
+        }
+
+        return;
+
+      }
+
+
+      if (imagePreview) {
+
+        imagePreview.textContent =
+          `Đã chọn ảnh mới: ${file.name}`;
+
+      }
+
+    }
+  );
+
+}
+
+
+const copyProductLinkBtn =
+  document.getElementById(
+    "copyProductLinkBtn"
+  );
+
+
+if (copyProductLinkBtn) {
+
+  copyProductLinkBtn.addEventListener(
+    "click",
+    async function () {
+
+      const link =
+        productPublicUrl();
+
+
+      try {
+
+        await navigator.clipboard.writeText(
+          link
+        );
+
+
+        showMessage(
+          "Đã copy link bán hàng.",
+          "success"
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "COPY PRODUCT LINK ERROR:",
+          error
+        );
+
+
+        showMessage(
+          link,
+          "success"
+        );
+
+      }
+
+    }
+  );
+
+}
 const addWholesaleTierBtn =
   document.getElementById(
     "addWholesaleTierBtn"
@@ -2555,7 +2954,10 @@ renderWholesaleTierRows(
         "variantActiveInput"
       )
       .checked;
-
+const hasNewImage =
+  Boolean(
+    selectedImageFile
+  );
 
   if (!name) {
 
@@ -2982,13 +3384,20 @@ renderWholesaleTierRows(
     ];
 
 
-    showMessage(
-      `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${tiers.length} mức giá sỉ.`,
-      "success"
-    );
+   if (hasNewImage) {
+
+  await uploadSelectedImage();
+
+}
 
 
-    render();
+showMessage(
+  `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${tiers.length} mức giá sỉ${hasNewImage ? " • đã cập nhật ảnh chính" : ""}.`,
+  "success"
+);
+
+
+render();
 
   }
   catch (error) {
