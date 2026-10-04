@@ -1080,54 +1080,66 @@
      CART COUNT
   ====================================================== */
 
-  function updateCartCount() {
+ function updateCartCount() {
 
-    try {
+  try {
 
-      const cart =
-        JSON.parse(
-          localStorage.getItem(
-            "pickdee_shop_cart"
+    const cart =
+      JSON.parse(
+        localStorage.getItem(
+          "pickdee_shop_cart"
+        )
+        ||
+        "[]"
+      );
+
+
+    const uniqueVariantIds =
+      new Set(
+        (
+          Array.isArray(cart)
+            ?
+              cart
+            :
+              []
+        )
+          .filter(
+            function (item) {
+
+              return (
+                item
+                &&
+                item.variant_id != null
+              );
+
+            }
           )
-          ||
-          "[]"
-        );
+          .map(
+            function (item) {
+
+              return String(
+                item.variant_id
+              );
+
+            }
+          )
+      );
 
 
-      const count =
-        Array.isArray(cart)
-          ?
-            cart.reduce(
-              function (sum,item) {
+    cartCount.textContent =
+      String(
+        uniqueVariantIds.size
+      );
 
-                return (
-                  sum
-                  +
-                  Number(
-                    item?.quantity || 0
-                  )
-                );
+  }
+  catch (_) {
 
-              },
-              0
-            )
-          :
-            0;
-
-
-      cartCount.textContent =
-        String(count);
-
-    }
-    catch (_) {
-
-      cartCount.textContent =
-        "0";
-
-    }
+    cartCount.textContent =
+      "0";
 
   }
 
+}
 
 
   /* =====================================================
