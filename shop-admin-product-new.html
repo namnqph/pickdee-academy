@@ -361,7 +361,74 @@
 
       color: #d8ff45;
     }
+    .success-actions {
+      display: none;
 
+      margin-top: 10px;
+
+      grid-template-columns:
+        1fr;
+
+      gap: 8px;
+    }
+
+    .success-actions.show {
+      display: grid;
+    }
+
+    .success-action-btn {
+      min-height: 44px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      background:
+        rgba(216,255,69,.06);
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 950;
+
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .success-action-btn.primary {
+      border: 0;
+
+      background: #d8ff45;
+
+      color: #071523;
+    }
+
+    .success-note {
+      padding: 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,193,90,.18);
+
+      background:
+        rgba(255,193,90,.06);
+
+      color: #ffd071;
+
+      font-size: 10px;
+      font-weight: 850;
+
+      line-height: 1.45;
+    }
     .bottom-bar {
       position: fixed;
 
@@ -716,7 +783,10 @@
       id="message"
       class="message"
     ></div>
-
+    <div
+      id="successActions"
+      class="success-actions"
+    ></div>
   </section>
 
 </main>
@@ -760,7 +830,10 @@
     document.getElementById(
       "message"
     );
-
+  const successActions =
+    document.getElementById(
+      "successActions"
+    );
 
   const imageInput =
     document.getElementById(
@@ -836,7 +909,34 @@
       "";
 
   }
+  function escapeHtml(value) {
 
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function productPublicUrl(
+    productId
+  ) {
+
+    if (!productId) {
+      return `${location.origin}/shop`;
+    }
+
+
+    return `${location.origin}/shop-product?id=${encodeURIComponent(
+      productId
+    )}`;
+
+  }
 
   function slugify(value) {
 
@@ -1140,12 +1240,106 @@
     }
   );
 
+  successActions.addEventListener(
+    "click",
+    async function (event) {
 
+      const target =
+        event.target instanceof Element
+          ?
+            event.target
+          :
+            null;
+
+
+      const button =
+        target?.closest(
+          ".copy-created-product-link"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      const url =
+        button.dataset.url || "";
+
+
+      if (!url) {
+        return;
+      }
+
+
+      const oldText =
+        button.textContent;
+
+
+      try {
+
+        await navigator.clipboard.writeText(
+          url
+        );
+
+
+        button.textContent =
+          "ĐÃ COPY LINK";
+
+
+        setTimeout(
+          function () {
+
+            button.textContent =
+              oldText || "COPY LINK BÁN HÀNG";
+
+          },
+          1500
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "COPY CREATED PRODUCT LINK ERROR:",
+          error
+        );
+
+
+        button.textContent =
+          url;
+
+
+        setTimeout(
+          function () {
+
+            button.textContent =
+              oldText || "COPY LINK BÁN HÀNG";
+
+          },
+          2500
+        );
+
+      }
+
+    }
+  );
 
   async function createProduct() {
 
     clearMessage();
+    successActions.className =
+      "success-actions";
 
+    successActions.innerHTML =
+      "";
+
+
+    let createdOk =
+      false;
 
     const productName =
       document
@@ -1503,21 +1697,93 @@
       }
 
 
+         const publicUrl =
+        productPublicUrl(
+          product.id
+        );
+
+
+      createdOk =
+        true;
+
+
       showMessage(
         `✓ Đã tạo ${product.product_code || product.name}`,
         "success"
       );
 
 
-      setTimeout(
-        function () {
+      if (activeProduct) {
 
-          location.href =
-            "./shop-admin-products";
+        successActions.className =
+          "success-actions show";
 
-        },
-        700
-      );
+
+        successActions.innerHTML = `
+          <button
+            type="button"
+            class="success-action-btn primary copy-created-product-link"
+            data-url="${escapeHtml(publicUrl)}"
+          >
+            COPY LINK BÁN HÀNG
+          </button>
+
+          <a
+            class="success-action-btn"
+            href="${escapeHtml(publicUrl)}"
+            target="_blank"
+            rel="noopener"
+          >
+            XEM TRANG KHÁCH MUA
+          </a>
+
+          <a
+            class="success-action-btn"
+            href="./shop-admin-products"
+          >
+            VỀ DANH SÁCH SẢN PHẨM
+          </a>
+        `;
+
+      }
+      else {
+
+        successActions.className =
+          "success-actions show";
+
+
+        successActions.innerHTML = `
+          <div class="success-note">
+            Sản phẩm đang ở trạng thái NHÁP, chưa nên gửi link cho khách.
+            Khi sẵn sàng bán, anh vào Sửa sản phẩm và bật Đang bán.
+          </div>
+
+          <a
+            class="success-action-btn primary"
+            href="./shop-admin-product-edit?id=${encodeURIComponent(
+              product.id
+            )}"
+          >
+            MỞ TRANG SỬA SẢN PHẨM
+          </a>
+
+          <a
+            class="success-action-btn"
+            href="./shop-admin-products"
+          >
+            VỀ DANH SÁCH SẢN PHẨM
+          </a>
+        `;
+
+      }
+
+
+      saveBtn.disabled =
+        true;
+
+
+      saveBtn.textContent =
+        "ĐÃ LƯU SẢN PHẨM";
 
 
     }
@@ -1539,15 +1805,18 @@
 
 
     }
-    finally {
+      finally {
+
+      if (!createdOk) {
+
+        saveBtn.disabled =
+          false;
 
 
-      saveBtn.disabled =
-        false;
+        saveBtn.textContent =
+          "LƯU SẢN PHẨM";
 
-
-      saveBtn.textContent =
-        "LƯU SẢN PHẨM";
+      }
 
     }
 
