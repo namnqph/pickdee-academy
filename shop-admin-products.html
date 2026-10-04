@@ -592,7 +592,66 @@
 
       font-size: 8px;
     }
+    .product-actions {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 7px;
+      margin-top: 9px;
+    }
 
+    .product-actions > details {
+      grid-column: 1 / -1;
+    }
+
+    .product-action-link {
+      min-height: 38px;
+      padding: 0 8px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 9px;
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      background:
+        rgba(216,255,69,.06);
+
+      color: #d8ff45;
+
+      text-decoration: none;
+
+      font-family: inherit;
+      font-size: 9px;
+      font-weight: 950;
+
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .product-action-link.primary {
+      border-color: #d8ff45;
+      background: #d8ff45;
+      color: #071523;
+    }
+
+    .product-action-link.secondary {
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      background:
+        rgba(216,255,69,.06);
+
+      color: #d8ff45;
+    }
+
+    @media(max-width:520px) {
+      .product-actions {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* =====================================================
        STATE
@@ -1000,7 +1059,20 @@ let selectedProductFilter =
 
   }
 
+  function productPublicUrl(
+    productId
+  ) {
 
+    if (!productId) {
+      return `${location.origin}/shop`;
+    }
+
+
+    return `${location.origin}/shop-product?id=${encodeURIComponent(
+      productId
+    )}`;
+
+  }
 
   /* =====================================================
      AUTH + ROLE
@@ -2083,37 +2155,43 @@ return `
       `
 }
 
-    <div
-      style="
-        display:grid;
-        grid-template-columns:1fr;
-        gap:7px;
-        margin-top:9px;
-      "
-    >
+       <div class="product-actions">
 
       <a
+        class="product-action-link primary"
         href="./shop-admin-product-edit?id=${encodeURIComponent(
           product.id
         )}"
-        style="
-          min-height:38px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          border-radius:9px;
-          border:1px solid rgba(216,255,69,.24);
-          background:rgba(216,255,69,.06);
-          color:#d8ff45;
-          text-decoration:none;
-          font-size:9px;
-          font-weight:950;
-        "
       >
-        SỬA
+        SỬA SẢN PHẨM
       </a>
 
 
+      <a
+        class="product-action-link secondary"
+        href="${escapeHtml(
+          productPublicUrl(
+            product.id
+          )
+        )}"
+        target="_blank"
+        rel="noopener"
+      >
+        XEM TRANG KHÁCH MUA
+      </a>
+
+
+      <button
+        type="button"
+        class="product-action-link secondary copy-product-link-btn"
+        data-url="${escapeHtml(
+          productPublicUrl(
+            product.id
+          )
+        )}"
+      >
+        COPY LINK
+      </button>
       <details>
 
         <summary
@@ -2214,6 +2292,94 @@ document
 
         }
       );
+
+    }
+  );
+
+    productList.addEventListener(
+    "click",
+    async function (event) {
+
+      const target =
+        event.target instanceof Element
+          ?
+            event.target
+          :
+            null;
+
+
+      const button =
+        target?.closest(
+          ".copy-product-link-btn"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      const url =
+        button.dataset.url || "";
+
+
+      if (!url) {
+        return;
+      }
+
+
+      const oldText =
+        button.textContent;
+
+
+      try {
+
+        await navigator.clipboard.writeText(
+          url
+        );
+
+
+        button.textContent =
+          "ĐÃ COPY LINK";
+
+
+        setTimeout(
+          function () {
+
+            button.textContent =
+              oldText || "COPY LINK";
+
+          },
+          1500
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "COPY PRODUCT LINK ERROR:",
+          error
+        );
+
+
+        button.textContent =
+          url;
+
+
+        setTimeout(
+          function () {
+
+            button.textContent =
+              oldText || "COPY LINK";
+
+          },
+          2500
+        );
+
+      }
 
     }
   );
