@@ -17,7 +17,8 @@
 
   <title>Giỏ hàng | PickDee Shop</title>
 
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
   <style>
 
     * {
@@ -718,6 +719,10 @@
     "pickdee_shop_cart";
 
 
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
   const cartContent =
     document.getElementById(
       "cartContent"
@@ -733,6 +738,49 @@
   const checkoutTotal =
     document.getElementById(
       "checkoutTotal"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    cartContent.innerHTML = `
+      <div class="empty">
+
+        <div class="empty-icon">
+          ⚠️
+        </div>
+
+        <strong>
+          Không tải được giỏ hàng
+        </strong>
+
+        <p>
+          Không kết nối được hệ thống giá PickDee Shop.
+        </p>
+
+      </div>
+    `;
+
+
+    checkoutBar.style.display =
+      "none";
+
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
     );
 
 
@@ -809,6 +857,126 @@
 
 
   /* =====================================================
+     TÍNH LẠI GIÁ TỪ BACKEND
+  ====================================================== */
+
+  async function refreshCartPrices(
+    cart
+  ) {
+
+    const pricedCart =
+      await Promise.all(
+
+        cart.map(
+          async function (item) {
+
+            const quantity =
+              Math.max(
+                1,
+                Math.min(
+                  9999,
+                  Math.round(
+                    Number(
+                      item.quantity
+                      ||
+                      1
+                    )
+                  )
+                )
+              );
+
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "shop_price_quote",
+                {
+
+                  p_variant_id:
+                    Number(
+                      item.variant_id
+                    ),
+
+                  p_quantity:
+                    quantity
+
+                }
+              );
+
+
+            if (error) {
+              throw error;
+            }
+
+
+            const price =
+              Number(
+                data?.unit_price
+                ??
+                item.price
+                ??
+                0
+              );
+
+
+            const retailPrice =
+              Number(
+                data?.retail_price
+                ??
+                item.retail_price
+                ??
+                item.price
+                ??
+                0
+              );
+
+
+            return {
+
+              ...item,
+
+              quantity:
+                quantity,
+
+              price:
+                price,
+
+              retail_price:
+                retailPrice,
+
+              pricing_type:
+                data?.pricing_type
+                ||
+                "retail",
+
+              subtotal:
+                Number(
+                  data?.subtotal
+                  ??
+                  (
+                    price
+                    *
+                    quantity
+                  )
+                )
+
+            };
+
+          }
+        )
+
+      );
+
+
+    return pricedCart;
+
+  }
+
+
+
+  /* =====================================================
      TOTAL
   ====================================================== */
 
@@ -821,9 +989,13 @@
           sum
           +
           (
-            Number(item.price || 0)
+            Number(
+              item.price || 0
+            )
             *
-            Number(item.quantity || 0)
+            Number(
+              item.quantity || 0
+            )
           )
         );
 
@@ -839,9 +1011,9 @@
      RENDER
   ====================================================== */
 
-  function render() {
+  async function render() {
 
-    const cart =
+    let cart =
       readCart();
 
 
@@ -881,8 +1053,74 @@
     }
 
 
+    /*
+      Trong lúc kiểm tra lại giá,
+      chưa cho khách đi Checkout.
+    */
+
+    checkoutBar.style.display =
+      "none";
+
+
+    try {
+
+      cart =
+        await refreshCartPrices(
+          cart
+        );
+
+
+      saveCart(
+        cart
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "CART PRICE ERROR:",
+        error
+      );
+
+
+      cartContent.innerHTML = `
+
+        <div class="empty">
+
+          <div class="empty-icon">
+            ⚠️
+          </div>
+
+          <strong>
+            Chưa kiểm tra được giá
+          </strong>
+
+          <p>
+            Vui lòng tải lại trang để PickDee Shop
+            cập nhật giá bán mới nhất.
+          </p>
+
+          <a href="./shop-cart">
+            TẢI LẠI GIỎ HÀNG
+          </a>
+
+        </div>
+      `;
+
+
+      checkoutBar.style.display =
+        "none";
+
+
+      return;
+
+    }
+
+
     const total =
-      calculateTotal(cart);
+      calculateTotal(
+        cart
+      );
 
 
     const totalQuantity =
@@ -892,7 +1130,9 @@
           return (
             sum
             +
-            Number(item.quantity || 0)
+            Number(
+              item.quantity || 0
+            )
           );
 
         },
@@ -904,6 +1144,37 @@
       cart
         .map(
           function (item,index) {
+
+            const isWholesale =
+              item.pricing_type
+              ===
+              "wholesale"
+              &&
+              Number(
+                item.retail_price || 0
+              )
+                >
+              Number(
+                item.price || 0
+              );
+
+
+            const priceNote =
+              isWholesale
+                ?
+                  `
+                    <div class="variant-name">
+                      GIÁ SỈ • Niêm yết
+                      <s>
+                        ${money(
+                          item.retail_price
+                        )}
+                      </s>
+                    </div>
+                  `
+                :
+                  "";
+
 
             return `
 
@@ -918,19 +1189,23 @@
 
                   ${
                     item.image_url
-                    ?
-                      `
-                        <img
-                          src="${escapeHtml(item.image_url)}"
-                          alt="${escapeHtml(item.product_name)}"
-                        >
-                      `
-                    :
-                      `
-                        <div class="item-placeholder">
-                          🏓
-                        </div>
-                      `
+                      ?
+                        `
+                          <img
+                            src="${escapeHtml(
+                              item.image_url
+                            )}"
+                            alt="${escapeHtml(
+                              item.product_name
+                            )}"
+                          >
+                        `
+                      :
+                        `
+                          <div class="item-placeholder">
+                            🏓
+                          </div>
+                        `
                   }
 
                 </a>
@@ -939,26 +1214,35 @@
                 <div class="item-info">
 
                   <div class="item-name">
-                    ${escapeHtml(item.product_name)}
+                    ${escapeHtml(
+                      item.product_name
+                    )}
                   </div>
 
 
                   ${
                     item.variant_name
-                    ?
-                      `
-                        <div class="variant-name">
-                          ${escapeHtml(item.variant_name)}
-                        </div>
-                      `
-                    :
-                      ""
+                      ?
+                        `
+                          <div class="variant-name">
+                            ${escapeHtml(
+                              item.variant_name
+                            )}
+                          </div>
+                        `
+                      :
+                        ""
                   }
 
 
                   <div class="item-price">
-                    ${money(item.price)}
+                    ${money(
+                      item.price
+                    )}
                   </div>
+
+
+                  ${priceNote}
 
 
                   <div class="item-bottom">
@@ -974,7 +1258,9 @@
                       </button>
 
                       <span>
-                        ${Number(item.quantity || 1)}
+                        ${Number(
+                          item.quantity || 1
+                        )}
                       </span>
 
                       <button
@@ -1083,7 +1369,9 @@
 
 
     checkoutTotal.textContent =
-      money(total);
+      money(
+        total
+      );
 
 
     checkoutBar.style.display =
@@ -1111,7 +1399,11 @@
 
           button.addEventListener(
             "click",
-            function () {
+            async function () {
+
+              button.disabled =
+                true;
+
 
               const action =
                 button.dataset.action;
@@ -1132,7 +1424,12 @@
 
 
               if (!item) {
+
+                button.disabled =
+                  false;
+
                 return;
+
               }
 
 
@@ -1142,7 +1439,7 @@
 
                 item.quantity =
                   Math.min(
-                    99,
+                    9999,
                     Number(
                       item.quantity || 1
                     )
@@ -1182,9 +1479,12 @@
               }
 
 
-              saveCart(cart);
+              saveCart(
+                cart
+              );
 
-              render();
+
+              await render();
 
             }
           );
