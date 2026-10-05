@@ -851,6 +851,58 @@
     );
 
   }
+  function orderSourceLabel(source) {
+
+    const raw =
+      String(
+        source || ""
+      )
+        .trim();
+
+
+    const key =
+      raw.toLowerCase();
+
+
+    const map = {
+
+      zalo:
+        "ZALO",
+
+      tiktok:
+        "TIKTOK",
+
+      facebook:
+        "FACEBOOK",
+
+      phone:
+        "ĐIỆN THOẠI",
+
+      walk_in:
+        "KHÁCH TRỰC TIẾP",
+
+      other:
+        "KHÁC",
+
+      web:
+        "WEBSITE",
+
+      website:
+        "WEBSITE"
+
+    };
+
+
+    return (
+      map[key]
+      ||
+      raw
+      ||
+      "Chưa có"
+    );
+
+  }
+  
   function showState(text) {
 
     page.className =
@@ -943,7 +995,15 @@
         ]
       );
 
-
+    const orderSource =
+      valueFrom(
+        o,
+        [
+          "order_source",
+          "source",
+          "channel"
+        ]
+      );
     const itemHtml =
       currentItems
         .map(
@@ -1101,7 +1161,19 @@
             </div>
           </div>
 
+          <div class="info-row">
+            <div class="info-label">
+              NGUỒN ĐƠN
+            </div>
 
+            <div class="info-value">
+              ${escapeHtml(
+                orderSourceLabel(
+                  orderSource
+                )
+              )}
+            </div>
+          </div>
                  <div class="info-row">
             <div class="info-label">
               ĐIỆN THOẠI
