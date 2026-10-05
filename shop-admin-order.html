@@ -1004,6 +1004,13 @@
           "channel"
         ]
       );
+        const internalNote =
+      valueFrom(
+        o,
+        [
+          "internal_note"
+        ]
+      );
     const itemHtml =
       currentItems
         .map(
@@ -1314,7 +1321,51 @@
 
       </section>
 
+      <section class="section">
 
+        <div class="section-title">
+          Ghi chú nội bộ
+        </div>
+
+        <textarea
+          id="internalNoteInput"
+          placeholder="Ví dụ: khách hẹn gọi lại, đã nhắn Zalo, chờ chuyển khoản, đã gửi vận đơn..."
+          style="
+            width:100%;
+            min-height:95px;
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.10);
+            background:#071523;
+            color:#ffffff;
+            outline:none;
+            resize:vertical;
+            font-size:12px;
+            font-weight:750;
+            line-height:1.5;
+          "
+        >${escapeHtml(internalNote)}</textarea>
+
+        <button
+          id="saveInternalNoteBtn"
+          type="button"
+          class="action-btn action-primary"
+          style="
+            width:100%;
+            min-height:42px;
+            margin-top:10px;
+            font-size:10px;
+          "
+        >
+          LƯU GHI CHÚ
+        </button>
+
+        <div
+          id="internalNoteMessage"
+          class="message"
+        ></div>
+
+      </section>
 
       <section class="section">
 
@@ -1504,7 +1555,119 @@
       "Copy địa chỉ cũ:"
     );
 
+    const internalNoteInput =
+      document.getElementById(
+        "internalNoteInput"
+      );
 
+
+    const saveInternalNoteBtn =
+      document.getElementById(
+        "saveInternalNoteBtn"
+      );
+
+
+    const internalNoteMessage =
+      document.getElementById(
+        "internalNoteMessage"
+      );
+
+
+    if (
+      internalNoteInput
+      &&
+      saveInternalNoteBtn
+    ) {
+
+      saveInternalNoteBtn.addEventListener(
+        "click",
+        async function () {
+
+          saveInternalNoteBtn.disabled =
+            true;
+
+          try {
+
+            const noteValue =
+              internalNoteInput.value.trim();
+
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  {
+                    internal_note:
+                      noteValue
+                  }
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+
+            if (error) {
+
+              throw error;
+
+            }
+
+
+            currentOrder =
+              data;
+
+
+            if (internalNoteMessage) {
+
+              internalNoteMessage.className =
+                "message success";
+
+              internalNoteMessage.textContent =
+                "✓ Đã lưu ghi chú nội bộ.";
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "SAVE INTERNAL NOTE ERROR:",
+              error
+            );
+
+
+            if (internalNoteMessage) {
+
+              internalNoteMessage.className =
+                "message error";
+
+              internalNoteMessage.textContent =
+                error?.message
+                ||
+                "Không lưu được ghi chú nội bộ.";
+
+            }
+
+          }
+          finally {
+
+            saveInternalNoteBtn.disabled =
+              false;
+
+          }
+
+        }
+      );
+
+    }
     renderActions();
 
   }
