@@ -824,17 +824,17 @@
       </div>
 
 
-      <div class="field">
+           <div class="field">
 
         <label>
-          PHƯỜNG / XÃ *
+          TỈNH / THÀNH *
         </label>
 
-        <input
-          id="ward"
-          type="text"
-          placeholder="Phường / xã"
-        >
+        <select id="province">
+          <option value="">
+            Đang tải tỉnh/thành...
+          </option>
+        </select>
 
       </div>
 
@@ -842,14 +842,17 @@
       <div class="field">
 
         <label>
-          TỈNH / THÀNH *
+          PHƯỜNG / XÃ *
         </label>
 
-        <input
-          id="province"
-          type="text"
-          placeholder="Tỉnh / thành"
+        <select
+          id="ward"
+          disabled
         >
+          <option value="">
+            Chọn tỉnh/thành trước
+          </option>
+        </select>
 
       </div>
       <div class="field">
@@ -1063,7 +1066,17 @@
 
   let lines = [];
 
+  const ADDRESS_PROVINCE_URL =
+    "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json";
 
+
+  const ADDRESS_WARD_URL =
+    "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-ward.json";
+
+
+  let addressProvinces = [];
+
+  let addressWards = [];
 
   /* =====================================================
      SUPABASE
@@ -1182,7 +1195,222 @@
     return "";
 
   }
+  function addressName(item) {
 
+    return (
+      item?.name?.local
+      ||
+      item?.name
+      ||
+      ""
+    );
+
+  }
+
+
+  function fillProvinceOptions(
+    selectedName
+  ) {
+
+    const provinceSelect =
+      document.getElementById(
+        "province"
+      );
+
+
+    provinceSelect.innerHTML =
+      `
+        <option value="">
+          Chọn tỉnh/thành
+        </option>
+      `
+      +
+      addressProvinces
+        .map(
+          province => {
+
+            const name =
+              addressName(province);
+
+
+            return `
+
+              <option
+                value="${escapeHtml(name)}"
+                data-province-id="${escapeHtml(province.id)}"
+                ${
+                  name === selectedName
+                  ?
+                    "selected"
+                  :
+                    ""
+                }
+              >
+                ${escapeHtml(name)}
+              </option>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  function fillWardOptions(
+    provinceId,
+    selectedName
+  ) {
+
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
+
+
+    if (!provinceId) {
+
+      wardSelect.disabled =
+        true;
+
+
+      wardSelect.innerHTML =
+        `
+          <option value="">
+            Chọn tỉnh/thành trước
+          </option>
+        `;
+
+
+      return;
+
+    }
+
+
+    const wards =
+      addressWards
+        .filter(
+          ward =>
+            String(ward?.parent?.id)
+            ===
+            String(provinceId)
+        );
+
+
+    wardSelect.disabled =
+      false;
+
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          Chọn phường/xã
+        </option>
+      `
+      +
+      wards
+        .map(
+          ward => {
+
+            const name =
+              addressName(ward);
+
+
+            return `
+
+              <option
+                value="${escapeHtml(name)}"
+                ${
+                  name === selectedName
+                  ?
+                    "selected"
+                  :
+                    ""
+                }
+              >
+                ${escapeHtml(name)}
+              </option>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  async function loadAddressData() {
+
+    const [
+      provinceResult,
+      wardResult
+    ] =
+      await Promise.all([
+
+        fetch(
+          ADDRESS_PROVINCE_URL
+        ),
+
+        fetch(
+          ADDRESS_WARD_URL
+        )
+
+      ]);
+
+
+    if (
+      !provinceResult.ok
+      ||
+      !wardResult.ok
+    ) {
+
+      throw new Error(
+        "Không tải được danh sách tỉnh/phường."
+      );
+
+    }
+
+
+    addressProvinces =
+      await provinceResult.json();
+
+
+    addressWards =
+      await wardResult.json();
+
+
+    fillProvinceOptions(
+      ""
+    );
+
+
+    document
+      .getElementById(
+        "province"
+      )
+      .addEventListener(
+        "change",
+        function () {
+
+          const selectedOption =
+            this.options[
+              this.selectedIndex
+            ];
+
+
+          fillWardOptions(
+            selectedOption?.dataset?.provinceId
+            ||
+            "",
+            ""
+          );
+
+        }
+      );
+
+  }
 
 
   /* =====================================================
@@ -1796,33 +2024,50 @@
               );
 
 
-          document
-            .getElementById(
-              "ward"
-            )
-            .value =
-              valueFrom(
-                previous,
-                [
-                  "ward",
-                  "shipping_ward"
-                ]
-              );
+                 const previousWard =
+            valueFrom(
+              previous,
+              [
+                "ward",
+                "shipping_ward"
+              ]
+            );
 
 
-          document
-            .getElementById(
+          const previousProvince =
+            valueFrom(
+              previous,
+              [
+                "province",
+                "shipping_province",
+                "city"
+              ]
+            );
+
+
+          const provinceSelect =
+            document.getElementById(
               "province"
-            )
-            .value =
-              valueFrom(
-                previous,
-                [
-                  "province",
-                  "shipping_province",
-                  "city"
-                ]
-              );
+            );
+
+
+          provinceSelect.value =
+            previousProvince;
+
+
+          const selectedOption =
+            provinceSelect.options[
+              provinceSelect.selectedIndex
+            ];
+
+
+          fillWardOptions(
+            selectedOption?.dataset?.provinceId
+            ||
+            "",
+            previousWard
+          );
+            
 
 
           customerFound.style.display =
@@ -2288,7 +2533,9 @@
 
     try {
 
-      await requireShopAccess();
+            await requireShopAccess();
+
+      await loadAddressData();
 
       await loadCatalog();
 
