@@ -823,7 +823,34 @@
 
   }
 
+  function paymentStatusLabel(status) {
 
+    const map = {
+
+      paid:
+        "Đã thanh toán",
+
+      unpaid:
+        "Chưa thanh toán",
+
+      refunded:
+        "Đã hoàn tiền",
+
+      partial:
+        "Thanh toán một phần"
+
+    };
+
+
+    return (
+      map[status]
+      ||
+      status
+      ||
+      "Chưa thanh toán"
+    );
+
+  }
   function showState(text) {
 
     page.className =
@@ -1196,10 +1223,10 @@
             </div>
 
             <div class="info-value">
-              ${escapeHtml(
-                o.payment_status
-                ||
-                "unpaid"
+                          ${escapeHtml(
+                paymentStatusLabel(
+                  o.payment_status
+                )
               )}
             </div>
 
