@@ -236,8 +236,9 @@
     }
 
 
-    .field input,
-    .field textarea {
+        .field input,
+    .field textarea,
+    .field select {
       width: 100%;
 
       min-height: 48px;
@@ -273,8 +274,9 @@
     }
 
 
-    .field input:focus,
-    .field textarea:focus {
+       .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
       border-color:
         rgba(216,255,69,.65);
 
@@ -1196,23 +1198,7 @@
           </div>
 
 
-          <div class="two-cols">
-
-
-            <div class="field">
-
-              <label for="ward">
-                PHƯỜNG / XÃ *
-              </label>
-
-              <input
-                id="ward"
-                type="text"
-                placeholder="Phường / xã"
-                required
-              >
-
-            </div>
+                  <div class="two-cols">
 
 
             <div class="field">
@@ -1221,18 +1207,53 @@
                 TỈNH / THÀNH *
               </label>
 
-              <input
+              <select
                 id="province"
-                type="text"
-                placeholder="Tỉnh / thành"
                 required
               >
+                <option value="">
+                  Đang tải tỉnh/thành...
+                </option>
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="ward">
+                PHƯỜNG / XÃ *
+              </label>
+
+              <select
+                id="ward"
+                required
+                disabled
+              >
+                <option value="">
+                  Chọn tỉnh/thành trước
+                </option>
+              </select>
 
             </div>
 
 
           </div>
 
+
+          <div class="field">
+
+            <label for="legacyAddress">
+              ĐỊA CHỈ CŨ *
+            </label>
+
+            <textarea
+              id="legacyAddress"
+              placeholder="Nhập địa chỉ cũ trước sáp nhập: xã/phường cũ, quận/huyện cũ, tỉnh/thành cũ"
+              required
+            ></textarea>
+
+          </div>
 
           <div class="field">
 
@@ -1469,7 +1490,17 @@
 
   const cfg =
     window.PICKDEE_CONFIG || {};
+  const ADDRESS_PROVINCE_URL =
+    "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json";
 
+
+  const ADDRESS_WARD_URL =
+    "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-ward.json";
+
+
+  let addressProvinces = [];
+
+  let addressWards = [];
 
   const checkoutForm =
     document.getElementById(
@@ -1587,7 +1618,222 @@
       .replaceAll("'","&#039;");
 
   }
+  function addressName(item) {
 
+    return (
+      item?.name?.local
+      ||
+      item?.name
+      ||
+      ""
+    );
+
+  }
+
+
+  function fillProvinceOptions(
+    selectedName
+  ) {
+
+    const provinceSelect =
+      document.getElementById(
+        "province"
+      );
+
+
+    provinceSelect.innerHTML =
+      `
+        <option value="">
+          Chọn tỉnh/thành
+        </option>
+      `
+      +
+      addressProvinces
+        .map(
+          province => {
+
+            const name =
+              addressName(province);
+
+
+            return `
+
+              <option
+                value="${escapeHtml(name)}"
+                data-province-id="${escapeHtml(province.id)}"
+                ${
+                  name === selectedName
+                  ?
+                    "selected"
+                  :
+                    ""
+                }
+              >
+                ${escapeHtml(name)}
+              </option>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  function fillWardOptions(
+    provinceId,
+    selectedName
+  ) {
+
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
+
+
+    if (!provinceId) {
+
+      wardSelect.disabled =
+        true;
+
+
+      wardSelect.innerHTML =
+        `
+          <option value="">
+            Chọn tỉnh/thành trước
+          </option>
+        `;
+
+
+      return;
+
+    }
+
+
+    const wards =
+      addressWards
+        .filter(
+          ward =>
+            String(ward?.parent?.id)
+            ===
+            String(provinceId)
+        );
+
+
+    wardSelect.disabled =
+      false;
+
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          Chọn phường/xã
+        </option>
+      `
+      +
+      wards
+        .map(
+          ward => {
+
+            const name =
+              addressName(ward);
+
+
+            return `
+
+              <option
+                value="${escapeHtml(name)}"
+                ${
+                  name === selectedName
+                  ?
+                    "selected"
+                  :
+                    ""
+                }
+              >
+                ${escapeHtml(name)}
+              </option>
+
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  async function loadAddressData() {
+
+    const [
+      provinceResult,
+      wardResult
+    ] =
+      await Promise.all([
+
+        fetch(
+          ADDRESS_PROVINCE_URL
+        ),
+
+        fetch(
+          ADDRESS_WARD_URL
+        )
+
+      ]);
+
+
+    if (
+      !provinceResult.ok
+      ||
+      !wardResult.ok
+    ) {
+
+      throw new Error(
+        "Không tải được danh sách tỉnh/phường."
+      );
+
+    }
+
+
+    addressProvinces =
+      await provinceResult.json();
+
+
+    addressWards =
+      await wardResult.json();
+
+
+    fillProvinceOptions(
+      ""
+    );
+
+
+    document
+      .getElementById(
+        "province"
+      )
+      .addEventListener(
+        "change",
+        function () {
+
+          const selectedOption =
+            this.options[
+              this.selectedIndex
+            ];
+
+
+          fillWardOptions(
+            selectedOption?.dataset?.provinceId
+            ||
+            "",
+            ""
+          );
+
+        }
+      );
+
+  }
 
   function readCart() {
 
@@ -1982,8 +2228,40 @@ async function prepareCheckout() {
 }
 
 
-prepareCheckout();
+async function start() {
 
+  try {
+
+    await loadAddressData();
+
+    await prepareCheckout();
+
+  }
+  catch (error) {
+
+    console.error(
+      "CHECKOUT START ERROR:",
+      error
+    );
+
+
+    showMessage(
+      error?.message
+      ||
+      "Không tải được trang đặt hàng.",
+      "error"
+    );
+
+
+    submitBtn.disabled =
+      true;
+
+  }
+
+}
+
+
+start();
 
   /* =====================================================
      SUBMIT
@@ -2033,7 +2311,7 @@ prepareCheckout();
           .trim();
 
 
-      const ward =
+            const ward =
         document
           .getElementById(
             "ward"
@@ -2046,6 +2324,15 @@ prepareCheckout();
         document
           .getElementById(
             "province"
+          )
+          .value
+          .trim();
+
+
+      const legacyAddress =
+        document
+          .getElementById(
+            "legacyAddress"
           )
           .value
           .trim();
@@ -2069,7 +2356,7 @@ prepareCheckout();
         "cod";
 
 
-      if (
+            if (
         !customerName
         ||
         !phone
@@ -2079,6 +2366,8 @@ prepareCheckout();
         !ward
         ||
         !province
+        ||
+        !legacyAddress
       ) {
 
         showMessage(
@@ -2173,13 +2462,12 @@ prepareCheckout();
             }
           );
 
-
         const {
           data,
           error
         } =
           await sb.rpc(
-            "shop_create_guest_order",
+            "shop_create_guest_order_with_legacy",
             {
 
               p_customer_name:
@@ -2200,6 +2488,9 @@ prepareCheckout();
               p_province:
                 province,
 
+              p_legacy_address:
+                legacyAddress,
+
               p_payment_method:
                 paymentMethod,
 
@@ -2211,8 +2502,6 @@ prepareCheckout();
 
             }
           );
-
-
         if (error) {
 
           console.error(
