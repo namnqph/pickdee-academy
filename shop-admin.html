@@ -864,6 +864,46 @@
 
 </div>
   <div
+  class="stats"
+  style="
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    margin-top:2px;
+  "
+>
+
+  <div class="stat">
+
+    <div class="stat-label">
+      SỐ ĐƠN ĐANG HIỂN THỊ
+    </div>
+
+    <div
+      id="statFilteredOrders"
+      class="stat-value"
+    >
+      0
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div class="stat-label">
+      TỔNG TIỀN ĐANG HIỂN THỊ
+    </div>
+
+    <div
+      id="statFilteredTotal"
+      class="stat-value"
+    >
+      0đ
+    </div>
+
+  </div>
+
+</div>
+  <div
     id="orders"
     class="orders"
   >
@@ -1409,7 +1449,53 @@
       }
     );
 
+    const filteredTotal =
+      filtered.reduce(
+        function (sum, item) {
 
+          return (
+            sum
+            +
+            Number(
+              item.total_amount || 0
+            )
+          );
+
+        },
+        0
+      );
+
+
+    const statFilteredOrders =
+      document.getElementById(
+        "statFilteredOrders"
+      );
+
+
+    const statFilteredTotal =
+      document.getElementById(
+        "statFilteredTotal"
+      );
+
+
+    if (statFilteredOrders) {
+
+      statFilteredOrders.textContent =
+        String(
+          filtered.length
+        );
+
+    }
+
+
+    if (statFilteredTotal) {
+
+      statFilteredTotal.textContent =
+        money(
+          filteredTotal
+        );
+
+    }
     if (!filtered.length) {
 
       showState(
