@@ -928,7 +928,34 @@
 
   }
 
+  function paymentStatusLabel(status) {
 
+    const map = {
+
+      unpaid:
+        "Chưa thanh toán",
+
+      paid:
+        "Đã thanh toán",
+
+      refunded:
+        "Đã hoàn tiền",
+
+      partial:
+        "Thanh toán một phần"
+
+    };
+
+
+    return (
+      map[status]
+      ||
+      status
+      ||
+      "-"
+    );
+
+  }
   function showState(text) {
 
     ordersBox.innerHTML = `
@@ -1251,10 +1278,12 @@ const filtered =
                       )
                     )}
                     •
-                    ${escapeHtml(
-                      order.payment_status
-                      ||
-                      "unpaid"
+                                 ${escapeHtml(
+                      paymentStatusLabel(
+                        order.payment_status
+                        ||
+                        "unpaid"
+                      )
                     )}
                   </div>
 
