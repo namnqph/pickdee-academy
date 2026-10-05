@@ -965,7 +965,7 @@ let wholesaleTiers = [];
 
 let selectedVariantId = null;
 
-
+let canDeleteDraftProduct = false;
   /* =====================================================
      SUPABASE
   ====================================================== */
@@ -1756,7 +1756,17 @@ function renderWholesaleTierRows(
             )
         );
 
-
+    canDeleteDraftProduct =
+      (data || [])
+        .some(
+          item =>
+            [
+              "owner",
+              "shop_admin"
+            ].includes(
+              item.role
+            )
+        );
     if (!allowed) {
 
       throw new Error(
@@ -2620,7 +2630,7 @@ function renderWholesaleTierRows(
 
 
       ${
-        product.status === "draft"
+        product.status === "draft" && canDeleteDraftProduct
           ?
             `
               <div class="danger-card">
