@@ -962,7 +962,25 @@
         ></textarea>
 
       </div>
+      <div class="field">
 
+        <label>
+          TRẠNG THÁI THANH TOÁN
+        </label>
+
+        <select id="paymentStatus">
+
+          <option value="unpaid">
+            Chưa thanh toán
+          </option>
+
+          <option value="paid">
+            Đã thanh toán
+          </option>
+
+        </select>
+
+      </div>
     </div>
 
 
@@ -2310,7 +2328,12 @@
             "paymentMethod"
           )
           .value;
-
+      const paymentStatus =
+        document
+          .getElementById(
+            "paymentStatus"
+          )
+          .value;
 
       if (
         !phone
@@ -2445,8 +2468,8 @@
         }
 
 
-        const {
-          error: legacyError
+              const {
+          error: orderUpdateError
         } =
           await sb
             .from(
@@ -2454,7 +2477,10 @@
             )
             .update({
               legacy_address:
-                legacyAddress
+                legacyAddress,
+
+              payment_status:
+                paymentStatus
             })
             .eq(
               "id",
@@ -2462,12 +2488,11 @@
             );
 
 
-        if (legacyError) {
+        if (orderUpdateError) {
 
-          throw legacyError;
+          throw orderUpdateError;
 
         }
-
 
         showMessage(
           `✓ Đã tạo ${data.order_code}`,
