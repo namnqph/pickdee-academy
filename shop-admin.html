@@ -793,6 +793,63 @@
   </button>
 
 </div>
+
+<div
+  id="shippingStatusFilters"
+  class="filters"
+  style="margin-top:-4px;"
+>
+
+  <button
+    class="filter-btn active"
+    data-shipping-status=""
+    type="button"
+  >
+    MỌI VẬN CHUYỂN
+  </button>
+
+  <button
+    class="filter-btn"
+    data-shipping-status="not_shipped"
+    type="button"
+  >
+    CHƯA GỬI HÀNG
+  </button>
+
+  <button
+    class="filter-btn"
+    data-shipping-status="shipped"
+    type="button"
+  >
+    ĐÃ GỬI HÀNG
+  </button>
+
+  <button
+    class="filter-btn"
+    data-shipping-status="in_transit"
+    type="button"
+  >
+    ĐANG GIAO
+  </button>
+
+  <button
+    class="filter-btn"
+    data-shipping-status="delivered"
+    type="button"
+  >
+    ĐÃ GIAO
+  </button>
+
+  <button
+    class="filter-btn"
+    data-shipping-status="returned"
+    type="button"
+  >
+    HOÀN HÀNG
+  </button>
+
+</div>
+  
   <div
   id="paymentStatusFilters"
   class="filters"
@@ -1311,6 +1368,10 @@
     document.querySelector(
       "#paymentStatusFilters .filter-btn.active"
     )?.dataset.paymentStatus || "";
+    const selectedShippingStatus =
+  document.querySelector(
+    "#shippingStatusFilters .filter-btn.active"
+  )?.dataset.shippingStatus || "";
       const selectedDateRange =
     document.querySelector(
       "#dateRangeFilters .filter-btn.active"
@@ -1386,6 +1447,17 @@
           )
           ===
           selectedPaymentStatus;
+
+        const shippingStatusOk =
+  !selectedShippingStatus
+  ||
+  (
+    item.shipping_status
+    ||
+    "not_shipped"
+  )
+  ===
+  selectedShippingStatus;
                 const createdAt =
           item.created_at
           ?
@@ -1434,17 +1506,19 @@
           );
 
 
-                   return (
-          statusOk
-          &&
-          sourceOk
-          &&
-          paymentStatusOk
-          &&
-          dateRangeOk
-          &&
-          searchOk
-        );
+ return (
+  statusOk
+  &&
+  sourceOk
+  &&
+  paymentStatusOk
+  &&
+  shippingStatusOk
+  &&
+  dateRangeOk
+  &&
+  searchOk
+);
 
       }
     );
@@ -1779,6 +1853,41 @@ document
 
     }
   );
+  /* VẬN CHUYỂN */
+
+document
+  .querySelectorAll(
+    "#shippingStatusFilters .filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          document
+            .querySelectorAll(
+              "#shippingStatusFilters .filter-btn"
+            )
+            .forEach(
+              item =>
+                item.classList.remove(
+                  "active"
+                )
+            );
+
+          button.classList.add(
+            "active"
+          );
+
+          renderOrders();
+
+        }
+      );
+
+    }
+  );
   /* NGÀY ĐẶT */
 
 document
@@ -1929,6 +2038,27 @@ document
           ?.classList.add(
             "active"
           );
+        document
+  .querySelectorAll(
+    "#shippingStatusFilters .filter-btn"
+  )
+  .forEach(
+    function (item) {
+
+      item.classList.remove(
+        "active"
+      );
+
+    }
+  );
+
+document
+  .querySelector(
+    '#shippingStatusFilters .filter-btn[data-shipping-status=""]'
+  )
+  ?.classList.add(
+    "active"
+  );
                 document
           .querySelectorAll(
             "#dateRangeFilters .filter-btn"
@@ -1976,8 +2106,8 @@ document
           .from(
             "shop_orders"
           )
-          .select(
-  "id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,total_amount,created_at"
+         .select(
+  "id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,created_at"
 )
           .order(
             "created_at",
