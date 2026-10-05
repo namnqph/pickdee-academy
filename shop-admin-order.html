@@ -914,7 +914,14 @@
           "city"
         ]
       );
-
+    const fullAddress =
+      [
+        addressLine,
+        ward,
+        province
+      ]
+        .filter(Boolean)
+        .join(", ");
 
     const email =
       valueFrom(
@@ -1095,7 +1102,7 @@
           </div>
 
 
-          <div class="info-row">
+                 <div class="info-row">
             <div class="info-label">
               ĐIỆN THOẠI
             </div>
@@ -1107,6 +1114,22 @@
               >
                 ${escapeHtml(o.phone)}
               </a>
+
+              <br>
+
+              <button
+                id="copyPhoneBtn"
+                type="button"
+                class="action-btn action-secondary"
+                style="
+                  min-height:34px;
+                  margin-top:8px;
+                  padding:0 10px;
+                  font-size:10px;
+                "
+              >
+                COPY SĐT
+              </button>
             </div>
           </div>
 
@@ -1130,24 +1153,36 @@
           }
 
 
-          <div class="info-row">
+            <div class="info-row">
             <div class="info-label">
               ĐỊA CHỈ
             </div>
 
             <div class="info-value">
+              ${escapeHtml(fullAddress || "Chưa có")}
+
               ${
-                escapeHtml(
-                  [
-                    addressLine,
-                    ward,
-                    province
-                  ]
-                    .filter(Boolean)
-                    .join(", ")
-                  ||
-                  "Chưa có"
-                )
+                fullAddress
+                ?
+                  `
+                    <br>
+
+                    <button
+                      id="copyAddressBtn"
+                      type="button"
+                      class="action-btn action-secondary"
+                      style="
+                        min-height:34px;
+                        margin-top:8px;
+                        padding:0 10px;
+                        font-size:10px;
+                      "
+                    >
+                      COPY ĐỊA CHỈ
+                    </button>
+                  `
+                :
+                  ""
               }
             </div>
           </div>
@@ -1302,34 +1337,57 @@
     `;
 
 
-    const copyLegacyAddressBtn =
-      document.getElementById(
-        "copyLegacyAddressBtn"
-      );
+       function setupCopyButton(
+      buttonId,
+      value,
+      label,
+      promptTitle
+    ) {
+
+      const button =
+        document.getElementById(
+          buttonId
+        );
 
 
-    if (copyLegacyAddressBtn) {
+      const text =
+        String(
+          value || ""
+        )
+          .trim();
 
-      copyLegacyAddressBtn.addEventListener(
+
+      if (
+        !button
+        ||
+        !text
+      ) {
+
+        return;
+
+      }
+
+
+      button.addEventListener(
         "click",
         async function () {
 
           try {
 
             await navigator.clipboard.writeText(
-              legacyAddress
+              text
             );
 
 
-            copyLegacyAddressBtn.textContent =
+            button.textContent =
               "ĐÃ COPY";
 
 
             setTimeout(
               function () {
 
-                copyLegacyAddressBtn.textContent =
-                  "COPY ĐỊA CHỈ CŨ";
+                button.textContent =
+                  label;
 
               },
               1200
@@ -1339,8 +1397,8 @@
           catch (_) {
 
             window.prompt(
-              "Copy địa chỉ cũ:",
-              legacyAddress
+              promptTitle,
+              text
             );
 
           }
@@ -1349,6 +1407,30 @@
       );
 
     }
+
+
+    setupCopyButton(
+      "copyPhoneBtn",
+      o.phone,
+      "COPY SĐT",
+      "Copy số điện thoại:"
+    );
+
+
+    setupCopyButton(
+      "copyAddressBtn",
+      fullAddress,
+      "COPY ĐỊA CHỈ",
+      "Copy địa chỉ:"
+    );
+
+
+    setupCopyButton(
+      "copyLegacyAddressBtn",
+      legacyAddress,
+      "COPY ĐỊA CHỈ CŨ",
+      "Copy địa chỉ cũ:"
+    );
 
 
     renderActions();
