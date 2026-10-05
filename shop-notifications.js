@@ -123,7 +123,7 @@
         position:fixed;
 
         top:11px;
-        right:130px;
+        right:190px;
 
         z-index:99999;
 
