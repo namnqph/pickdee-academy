@@ -1826,6 +1826,68 @@
   ) {
 
 
+    /* =================================================
+       ƯU TIÊN QUYỀN PICKDEE SHOP
+    ================================================== */
+
+    const {
+      data: shopRoles,
+      error: shopRoleError
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          userId
+        )
+        .eq(
+          "is_active",
+          true
+        )
+        .in(
+          "role",
+          [
+            "owner",
+            "shop_admin",
+            "shop_staff"
+          ]
+        );
+
+
+    if (shopRoleError) {
+
+      console.error(
+        "SHOP ROLE CHECK ERROR:",
+        shopRoleError
+      );
+
+    }
+
+
+    if (
+      Array.isArray(shopRoles)
+      &&
+      shopRoles.length > 0
+    ) {
+
+      window.location.href =
+        "./shop-admin";
+
+
+      return;
+
+    }
+
+
+    /* =================================================
+       SAU ĐÓ MỚI ĐI THEO ROLE ACADEMY
+    ================================================== */
+
     const {
       data: profile,
       error
