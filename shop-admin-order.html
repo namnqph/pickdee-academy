@@ -1432,6 +1432,24 @@
     try {
 
 
+         const updateData = {
+        order_status:
+          nextStatus
+      };
+
+
+      if (
+        nextStatus === "completed"
+        &&
+        currentOrder.payment_method !== "bank_transfer"
+      ) {
+
+        updateData.payment_status =
+          "paid";
+
+      }
+
+
       const {
         data,
         error
@@ -1440,10 +1458,9 @@
           .from(
             "shop_orders"
           )
-          .update({
-            order_status:
-              nextStatus
-          })
+          .update(
+            updateData
+          )
           .eq(
             "id",
             currentOrder.id
