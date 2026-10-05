@@ -825,6 +825,45 @@
 
 </div>
   <div
+  id="dateRangeFilters"
+  class="filters"
+  style="margin-top:-4px;"
+>
+
+  <button
+    class="filter-btn active"
+    data-date-range=""
+    type="button"
+  >
+    MỌI NGÀY
+  </button>
+
+  <button
+    class="filter-btn"
+    data-date-range="today"
+    type="button"
+  >
+    HÔM NAY
+  </button>
+
+  <button
+    class="filter-btn"
+    data-date-range="7d"
+    type="button"
+  >
+    7 NGÀY
+  </button>
+
+  <button
+    class="filter-btn"
+    data-date-range="30d"
+    type="button"
+  >
+    30 NGÀY
+  </button>
+
+</div>
+  <div
     id="orders"
     class="orders"
   >
@@ -1232,6 +1271,38 @@
     document.querySelector(
       "#paymentStatusFilters .filter-btn.active"
     )?.dataset.paymentStatus || "";
+      const selectedDateRange =
+    document.querySelector(
+      "#dateRangeFilters .filter-btn.active"
+    )?.dataset.dateRange || "";
+
+
+  const now =
+    new Date();
+
+
+  const startOfToday =
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+
+  const sevenDaysAgo =
+    new Date(
+      now.getTime()
+      -
+      7 * 24 * 60 * 60 * 1000
+    );
+
+
+  const thirtyDaysAgo =
+    new Date(
+      now.getTime()
+      -
+      30 * 24 * 60 * 60 * 1000
+    );
   const searchKeyword =
     (
       document.getElementById("orderSearch")?.value
@@ -1275,6 +1346,36 @@
           )
           ===
           selectedPaymentStatus;
+                const createdAt =
+          item.created_at
+          ?
+            new Date(item.created_at)
+          :
+            null;
+
+
+        const dateRangeOk =
+          !selectedDateRange
+          ||
+          (
+            createdAt
+            &&
+            (
+              selectedDateRange === "today"
+              ?
+                createdAt >= startOfToday
+              :
+                selectedDateRange === "7d"
+                ?
+                  createdAt >= sevenDaysAgo
+                :
+                  selectedDateRange === "30d"
+                  ?
+                    createdAt >= thirtyDaysAgo
+                  :
+                    true
+            )
+          );
         const searchText =
           [
             item.order_code,
@@ -1293,12 +1394,14 @@
           );
 
 
-               return (
+                   return (
           statusOk
           &&
           sourceOk
           &&
           paymentStatusOk
+          &&
+          dateRangeOk
           &&
           searchOk
         );
@@ -1581,6 +1684,43 @@ document
 
     }
   );
+  /* NGÀY ĐẶT */
+
+document
+  .querySelectorAll(
+    "#dateRangeFilters .filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          document
+            .querySelectorAll(
+              "#dateRangeFilters .filter-btn"
+            )
+            .forEach(
+              item =>
+                item.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          renderOrders();
+
+        }
+      );
+
+    }
+  );
    const orderSearch =
     document.getElementById(
       "orderSearch"
@@ -1690,6 +1830,28 @@ document
         document
           .querySelector(
             '#paymentStatusFilters .filter-btn[data-payment-status=""]'
+          )
+          ?.classList.add(
+            "active"
+          );
+                document
+          .querySelectorAll(
+            "#dateRangeFilters .filter-btn"
+          )
+          .forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+        document
+          .querySelector(
+            '#dateRangeFilters .filter-btn[data-date-range=""]'
           )
           ?.classList.add(
             "active"
