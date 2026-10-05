@@ -852,7 +852,18 @@
         >
 
       </div>
+      <div class="field">
 
+        <label>
+          ĐỊA CHỈ CŨ *
+        </label>
+
+        <textarea
+          id="legacyAddress"
+          placeholder="Nhập địa chỉ cũ trước sáp nhập: xã/phường cũ, quận/huyện cũ, tỉnh/thành cũ"
+        ></textarea>
+
+      </div>
     </div>
 
   </section>
@@ -2021,10 +2032,19 @@
           .trim();
 
 
-      const province =
+            const province =
         document
           .getElementById(
             "province"
+          )
+          .value
+          .trim();
+
+
+      const legacyAddress =
+        document
+          .getElementById(
+            "legacyAddress"
           )
           .value
           .trim();
@@ -2057,10 +2077,12 @@
         !ward
         ||
         !province
+        ||
+        !legacyAddress
       ) {
 
         showMessage(
-          "Nhập đủ SĐT, tên và địa chỉ giao hàng.",
+          "Nhập đủ SĐT, tên, địa chỉ hiện tại và địa chỉ cũ.",
           "error"
         );
 
@@ -2174,6 +2196,30 @@
           throw new Error(
             "Không tạo được đơn hàng."
           );
+
+        }
+
+
+        const {
+          error: legacyError
+        } =
+          await sb
+            .from(
+              "shop_orders"
+            )
+            .update({
+              legacy_address:
+                legacyAddress
+            })
+            .eq(
+              "id",
+              data.order_id
+            );
+
+
+        if (legacyError) {
+
+          throw legacyError;
 
         }
 
