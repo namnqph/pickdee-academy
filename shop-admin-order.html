@@ -1926,56 +1926,141 @@
 
           try {
 
-            const shippingFeeValue =
-              Number(
-                shippingFeeInput.value || 0
-              );
+       const shippingFeeValue =
+  Number(
+    shippingFeeInput.value || 0
+  );
 
 
-            const {
-              data,
-              error
-            } =
-              await sb
-                .from(
-                  "shop_orders"
-                )
-                .update(
-                  {
-                    shipping_status:
-                      shippingStatusInput.value.trim(),
-
-                    shipping_provider:
-                      shippingProviderInput.value.trim(),
-
-                    tracking_code:
-                      trackingCodeInput.value.trim(),
-
-                    shipping_fee:
-                      shippingFeeValue,
-
-                    shipping_note:
-                      shippingNoteInput.value.trim()
-                  }
-                )
-                .eq(
-                  "id",
-                  currentOrder.id
-                )
-                .select("*")
-                .single();
+const shippingStatusValue =
+  shippingStatusInput.value.trim();
 
 
-            if (error) {
+const updateData = {
 
-              throw error;
+  shipping_status:
+    shippingStatusValue,
 
-            }
+  shipping_provider:
+    shippingProviderInput.value.trim(),
+
+  tracking_code:
+    trackingCodeInput.value.trim(),
+
+  shipping_fee:
+    shippingFeeValue,
+
+  shipping_note:
+    shippingNoteInput.value.trim()
+
+};
 
 
-            currentOrder =
-              data;
+/* =====================================================
+   ĐỒNG BỘ TRẠNG THÁI ĐƠN THEO VẬN CHUYỂN
+===================================================== */
 
+if (
+  currentOrder.order_status !== "cancelled"
+) {
+
+  if (
+    shippingStatusValue === "shipped"
+    ||
+    shippingStatusValue === "in_transit"
+  ) {
+
+    updateData.order_status =
+      "shipping";
+
+  }
+
+
+  if (
+    shippingStatusValue === "delivered"
+  ) {
+
+    updateData.order_status =
+      "completed";
+
+
+    /*
+      Giữ đúng logic hiện tại của Shop:
+      COD / không phải chuyển khoản
+      khi hoàn tất đơn => đã thanh toán
+    */
+
+    if (
+      currentOrder.payment_method
+      !==
+      "bank_transfer"
+    ) {
+
+      updateData.payment_status =
+        "paid";
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   LƯU SHOP ORDER
+===================================================== */
+
+const {
+  data,
+  error
+} =
+  await sb
+    .from(
+      "shop_orders"
+    )
+    .update(
+      updateData
+    )
+    .eq(
+      "id",
+      currentOrder.id
+    )
+    .select("*")
+    .single();
+
+
+if (error) {
+
+  throw error;
+
+}
+
+
+currentOrder =
+  data;
+
+
+/* CẬP NHẬT NGAY TRẠNG THÁI TRÊN MÀN HÌNH */
+
+const statusValue =
+  page.querySelector(
+    ".status-value"
+  );
+
+
+if (statusValue) {
+
+  statusValue.textContent =
+    statusLabel(
+      currentOrder.order_status
+    );
+
+}
+
+
+/* CẬP NHẬT THANH NÚT HÀNH ĐỘNG */
+
+renderActions();
 
             if (shippingMessage) {
 
