@@ -547,6 +547,9 @@
   <div
     style="
       margin:0 0 14px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:8px;
     "
   >
     <input
@@ -566,6 +569,25 @@
         font-weight:800;
       "
     >
+
+    <button
+      id="orderResetFilters"
+      type="button"
+      style="
+        min-height:44px;
+        padding:0 13px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.05);
+        color:rgba(255,255,255,.72);
+        font-size:10px;
+        font-weight:950;
+        cursor:pointer;
+        white-space:nowrap;
+      "
+    >
+      XÓA LỌC
+    </button>
   </div>
 
   <div class="stats">
@@ -1471,9 +1493,15 @@ document
     }
   );
 
-  const orderSearch =
+   const orderSearch =
     document.getElementById(
       "orderSearch"
+    );
+
+
+  const orderResetFilters =
+    document.getElementById(
+      "orderResetFilters"
     );
 
 
@@ -1482,6 +1510,80 @@ document
     orderSearch.addEventListener(
       "input",
       function () {
+
+        renderOrders();
+
+      }
+    );
+
+  }
+
+
+  if (orderResetFilters) {
+
+    orderResetFilters.addEventListener(
+      "click",
+      function () {
+
+        if (orderSearch) {
+
+          orderSearch.value =
+            "";
+
+        }
+
+
+        selectedStatus =
+          "";
+
+
+        document
+          .querySelectorAll(
+            "#filters .filter-btn"
+          )
+          .forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+        document
+          .querySelector(
+            '#filters .filter-btn[data-status=""]'
+          )
+          ?.classList.add(
+            "active"
+          );
+
+
+        document
+          .querySelectorAll(
+            "#sourceFilters .filter-btn"
+          )
+          .forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+        document
+          .querySelector(
+            '#sourceFilters .filter-btn[data-source=""]'
+          )
+          ?.classList.add(
+            "active"
+          );
+
 
         renderOrders();
 
