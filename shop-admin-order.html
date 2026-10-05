@@ -1456,7 +1456,18 @@
               font-weight:800;
             "
           >
-
+          <button
+            id="copyTrackingCodeBtn"
+            type="button"
+            class="action-btn action-secondary"
+            style="
+              width:100%;
+              min-height:36px;
+              font-size:10px;
+            "
+          >
+            COPY MÃ VẬN ĐƠN
+          </button>
           <input
             id="shippingFeeInput"
             type="number"
@@ -1968,7 +1979,72 @@
       );
 
     }
-    
+        const copyTrackingCodeBtn =
+      document.getElementById(
+        "copyTrackingCodeBtn"
+      );
+
+
+    if (
+      copyTrackingCodeBtn
+      &&
+      trackingCodeInput
+    ) {
+
+      copyTrackingCodeBtn.addEventListener(
+        "click",
+        async function () {
+
+          const trackingText =
+            trackingCodeInput.value.trim();
+
+
+          if (!trackingText) {
+
+            window.alert(
+              "Chưa có mã vận đơn để copy."
+            );
+
+            return;
+
+          }
+
+
+          try {
+
+            await navigator.clipboard.writeText(
+              trackingText
+            );
+
+
+            copyTrackingCodeBtn.textContent =
+              "ĐÃ COPY";
+
+
+            setTimeout(
+              function () {
+
+                copyTrackingCodeBtn.textContent =
+                  "COPY MÃ VẬN ĐƠN";
+
+              },
+              1200
+            );
+
+          }
+          catch (_) {
+
+            window.prompt(
+              "Copy mã vận đơn:",
+              trackingText
+            );
+
+          }
+
+        }
+      );
+
+    }
     renderActions();
 
   }
