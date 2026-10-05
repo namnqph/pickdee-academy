@@ -183,7 +183,196 @@
       font-size: 12px;
     }
 
+    /* =====================================================
+       SHOP NOTIFICATION BELL
+    ====================================================== */
 
+    .shop-notify-wrap {
+      position: relative;
+
+      display: inline-flex;
+
+      margin:
+        8px 0 14px 8px;
+
+      vertical-align: top;
+    }
+
+
+    .shop-notify-btn {
+      min-height: 42px;
+
+      padding:
+        0 13px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 7px;
+
+      border-radius: 11px;
+
+      border:
+        1px solid rgba(216,255,69,.38);
+
+      background:
+        rgba(216,255,69,.08);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      cursor: pointer;
+    }
+
+
+    .shop-notify-btn.has-items {
+      background: #d8ff45;
+      color: #071523;
+      border-color: #d8ff45;
+    }
+
+
+    .shop-notify-count {
+      min-width: 20px;
+      height: 20px;
+
+      padding:
+        0 6px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background: #ff4d4f;
+      color: #ffffff;
+
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+
+    .shop-notify-panel {
+      position: absolute;
+
+      top: 50px;
+      right: 0;
+
+      z-index: 90;
+
+      width:
+        min(360px,calc(100vw - 24px));
+
+      padding: 12px;
+
+      border-radius: 15px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      background: #0d1d2f;
+
+      box-shadow:
+        0 22px 60px rgba(0,0,0,.42);
+    }
+
+
+    .shop-notify-panel[hidden] {
+      display: none;
+    }
+
+
+    .shop-notify-title {
+      margin-bottom: 10px;
+
+      color: #d8ff45;
+
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+
+    .shop-notify-list {
+      display: grid;
+      gap: 8px;
+    }
+
+
+    .shop-notify-empty {
+      padding: 12px;
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.04);
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .shop-notify-item {
+      width: 100%;
+
+      padding:
+        11px 12px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.045);
+
+      color: #ffffff;
+
+      text-align: left;
+
+      cursor: pointer;
+    }
+
+
+    .shop-notify-item strong {
+      display: block;
+
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+
+    .shop-notify-item span {
+      display: block;
+
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.62);
+
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+
+    .shop-notify-item em {
+      display: block;
+
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 900;
+    }
+    
     /* =====================================================
        STATS
     ====================================================== */
@@ -538,7 +727,49 @@
 >
   + TẠO ĐƠN NHANH
 </a>
+<div class="shop-notify-wrap">
 
+  <button
+    id="shopNotifyBtn"
+    class="shop-notify-btn"
+    type="button"
+  >
+    🔔
+    <span>
+      ĐƠN MỚI
+    </span>
+
+    <strong
+      id="shopNotifyCount"
+      class="shop-notify-count"
+    >
+      0
+    </strong>
+  </button>
+
+
+  <div
+    id="shopNotifyPanel"
+    class="shop-notify-panel"
+    hidden
+  >
+
+    <div class="shop-notify-title">
+      Thông báo đơn mới
+    </div>
+
+    <div
+      id="shopNotifyList"
+      class="shop-notify-list"
+    >
+      <div class="shop-notify-empty">
+        Đang tải thông báo...
+      </div>
+    </div>
+
+  </div>
+
+</div>
   <p class="intro">
     Theo dõi và xử lý đơn PickDee Shop.
   </p>
@@ -931,7 +1162,230 @@
 
   }
 
+  let shopBellReady =
+    false;
 
+
+  function renderShopBell() {
+
+    const button =
+      document.getElementById(
+        "shopNotifyBtn"
+      );
+
+    const countBox =
+      document.getElementById(
+        "shopNotifyCount"
+      );
+
+    const list =
+      document.getElementById(
+        "shopNotifyList"
+      );
+
+
+    if (
+      !button
+      ||
+      !countBox
+      ||
+      !list
+    ) {
+
+      return;
+
+    }
+
+
+    const newOrders =
+      allOrders.filter(
+        function (order) {
+
+          return order.order_status ===
+            "new";
+
+        }
+      );
+
+
+    const count =
+      newOrders.length;
+
+
+    countBox.textContent =
+      count > 99
+      ?
+        "99+"
+      :
+        String(count);
+
+
+    countBox.style.display =
+      count > 0
+      ?
+        "inline-flex"
+      :
+        "none";
+
+
+    button.classList.toggle(
+      "has-items",
+      count > 0
+    );
+
+
+    if (!count) {
+
+      list.innerHTML =
+        `
+          <div class="shop-notify-empty">
+            Chưa có đơn mới cần xử lý.
+          </div>
+        `;
+
+      return;
+
+    }
+
+
+    list.innerHTML =
+      newOrders
+        .slice(0,10)
+        .map(
+          function (order) {
+
+            return `
+
+              <button
+                class="shop-notify-item"
+                type="button"
+                data-id="${escapeHtml(order.id)}"
+              >
+
+                <strong>
+                  ${escapeHtml(order.order_code)}
+                </strong>
+
+                <span>
+                  ${escapeHtml(order.customer_name)}
+                  •
+                  ${escapeHtml(order.phone)}
+                </span>
+
+                <em>
+                  ${formatTime(order.created_at)}
+                  •
+                  ${money(order.total_amount)}
+                </em>
+
+              </button>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    list
+      .querySelectorAll(
+        ".shop-notify-item"
+      )
+      .forEach(
+        function (item) {
+
+          item.addEventListener(
+            "click",
+            function () {
+
+              window.location.href =
+                `./shop-admin-order?id=${encodeURIComponent(
+                  item.dataset.id
+                )}`;
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  function setupShopBell() {
+
+    if (shopBellReady) {
+
+      return;
+
+    }
+
+
+    const wrap =
+      document.querySelector(
+        ".shop-notify-wrap"
+      );
+
+    const button =
+      document.getElementById(
+        "shopNotifyBtn"
+      );
+
+    const panel =
+      document.getElementById(
+        "shopNotifyPanel"
+      );
+
+
+    if (
+      !wrap
+      ||
+      !button
+      ||
+      !panel
+    ) {
+
+      return;
+
+    }
+
+
+    button.addEventListener(
+      "click",
+      function (event) {
+
+        event.stopPropagation();
+
+        panel.hidden =
+          !panel.hidden;
+
+      }
+    );
+
+
+    document.addEventListener(
+      "click",
+      function (event) {
+
+        if (
+          !wrap.contains(
+            event.target
+          )
+        ) {
+
+          panel.hidden =
+            true;
+
+        }
+
+      }
+    );
+
+
+    shopBellReady =
+      true;
+
+  }
 
   /* =====================================================
      AUTH + ROLE
@@ -1430,7 +1884,11 @@ document
         data || [];
 
 
-      updateStats();
+         updateStats();
+
+      setupShopBell();
+
+      renderShopBell();
 
       renderOrders();
 
