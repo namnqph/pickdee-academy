@@ -544,7 +544,29 @@
     Theo dõi và xử lý đơn PickDee Shop.
   </p>
 
-
+  <div
+    style="
+      margin:0 0 14px;
+    "
+  >
+    <input
+      id="orderSearch"
+      type="search"
+      placeholder="Tìm mã đơn, tên khách, số điện thoại..."
+      style="
+        width:100%;
+        min-height:44px;
+        padding:0 14px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,.10);
+        background:#0d1d2f;
+        color:#ffffff;
+        outline:none;
+        font-size:13px;
+        font-weight:800;
+      "
+    >
+  </div>
 
   <div class="stats">
 
@@ -1142,43 +1164,73 @@
   function renderOrders() {
 
   const selectedSource =
-  document.querySelector(
-    "#sourceFilters .filter-btn.active"
-  )?.dataset.source || "";
+    document.querySelector(
+      "#sourceFilters .filter-btn.active"
+    )?.dataset.source || "";
 
 
-const filtered =
-  allOrders.filter(
-    function (item) {
-
-      const statusOk =
-        selectedStatus
-        ?
-          item.order_status === selectedStatus
-        :
-          item.order_status !== "cancelled";
+  const searchKeyword =
+    (
+      document.getElementById("orderSearch")?.value
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
 
 
-      const sourceOk =
-        !selectedSource
-        ||
-        (
-          item.order_source
+  const filtered =
+    allOrders.filter(
+      function (item) {
+
+        const statusOk =
+          selectedStatus
+          ?
+            item.order_status === selectedStatus
+          :
+            item.order_status !== "cancelled";
+
+
+        const sourceOk =
+          !selectedSource
           ||
-          "website"
-        )
-        ===
-        selectedSource;
+          (
+            item.order_source
+            ||
+            "website"
+          )
+          ===
+          selectedSource;
 
 
-      return (
-        statusOk
-        &&
-        sourceOk
-      );
+        const searchText =
+          [
+            item.order_code,
+            item.customer_name,
+            item.phone
+          ]
+            .join(" ")
+            .toLowerCase();
 
-    }
-  );
+
+        const searchOk =
+          !searchKeyword
+          ||
+          searchText.includes(
+            searchKeyword
+          );
+
+
+        return (
+          statusOk
+          &&
+          sourceOk
+          &&
+          searchOk
+        );
+
+      }
+    );
 
 
     if (!filtered.length) {
@@ -1419,7 +1471,24 @@ document
     }
   );
 
+  const orderSearch =
+    document.getElementById(
+      "orderSearch"
+    );
 
+
+  if (orderSearch) {
+
+    orderSearch.addEventListener(
+      "input",
+      function () {
+
+        renderOrders();
+
+      }
+    );
+
+  }
   /* =====================================================
      LOAD
   ====================================================== */
