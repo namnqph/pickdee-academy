@@ -794,6 +794,37 @@
 
 </div>
   <div
+  id="paymentStatusFilters"
+  class="filters"
+  style="margin-top:-4px;"
+>
+
+  <button
+    class="filter-btn active"
+    data-payment-status=""
+    type="button"
+  >
+    MỌI THANH TOÁN
+  </button>
+
+  <button
+    class="filter-btn"
+    data-payment-status="unpaid"
+    type="button"
+  >
+    CHƯA THANH TOÁN
+  </button>
+
+  <button
+    class="filter-btn"
+    data-payment-status="paid"
+    type="button"
+  >
+    ĐÃ THANH TOÁN
+  </button>
+
+</div>
+  <div
     id="orders"
     class="orders"
   >
@@ -1197,7 +1228,10 @@
       "#sourceFilters .filter-btn.active"
     )?.dataset.source || "";
 
-
+  const selectedPaymentStatus =
+    document.querySelector(
+      "#paymentStatusFilters .filter-btn.active"
+    )?.dataset.paymentStatus || "";
   const searchKeyword =
     (
       document.getElementById("orderSearch")?.value
@@ -1231,7 +1265,16 @@
           ===
           selectedSource;
 
-
+        const paymentStatusOk =
+          !selectedPaymentStatus
+          ||
+          (
+            item.payment_status
+            ||
+            "unpaid"
+          )
+          ===
+          selectedPaymentStatus;
         const searchText =
           [
             item.order_code,
@@ -1250,10 +1293,12 @@
           );
 
 
-        return (
+               return (
           statusOk
           &&
           sourceOk
+          &&
+          paymentStatusOk
           &&
           searchOk
         );
@@ -1499,7 +1544,43 @@ document
 
     }
   );
+/* THANH TOÁN */
 
+document
+  .querySelectorAll(
+    "#paymentStatusFilters .filter-btn"
+  )
+  .forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          document
+            .querySelectorAll(
+              "#paymentStatusFilters .filter-btn"
+            )
+            .forEach(
+              item =>
+                item.classList.remove(
+                  "active"
+                )
+            );
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          renderOrders();
+
+        }
+      );
+
+    }
+  );
    const orderSearch =
     document.getElementById(
       "orderSearch"
@@ -1591,7 +1672,28 @@ document
             "active"
           );
 
+        document
+          .querySelectorAll(
+            "#paymentStatusFilters .filter-btn"
+          )
+          .forEach(
+            function (item) {
 
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+        document
+          .querySelector(
+            '#paymentStatusFilters .filter-btn[data-payment-status=""]'
+          )
+          ?.classList.add(
+            "active"
+          );
         renderOrders();
 
       }
