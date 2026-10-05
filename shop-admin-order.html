@@ -887,7 +887,13 @@
           "address"
         ]
       );
-
+    const legacyAddress =
+      valueFrom(
+        o,
+        [
+          "legacy_address"
+        ]
+      );
 
     const ward =
       valueFrom(
@@ -1145,7 +1151,39 @@
               }
             </div>
           </div>
+          ${
+            legacyAddress
+            ?
+              `
+                <div class="info-row">
+                  <div class="info-label">
+                    ĐỊA CHỈ CŨ
+                  </div>
 
+                  <div class="info-value">
+                    ${escapeHtml(legacyAddress)}
+
+                    <br>
+
+                    <button
+                      id="copyLegacyAddressBtn"
+                      type="button"
+                      class="action-btn action-secondary"
+                      style="
+                        min-height:34px;
+                        margin-top:8px;
+                        padding:0 10px;
+                        font-size:10px;
+                      "
+                    >
+                      COPY ĐỊA CHỈ CŨ
+                    </button>
+                  </div>
+                </div>
+              `
+            :
+              ""
+          }
 
           ${
             note
@@ -1262,6 +1300,55 @@
 
       </section>
     `;
+
+
+    const copyLegacyAddressBtn =
+      document.getElementById(
+        "copyLegacyAddressBtn"
+      );
+
+
+    if (copyLegacyAddressBtn) {
+
+      copyLegacyAddressBtn.addEventListener(
+        "click",
+        async function () {
+
+          try {
+
+            await navigator.clipboard.writeText(
+              legacyAddress
+            );
+
+
+            copyLegacyAddressBtn.textContent =
+              "ĐÃ COPY";
+
+
+            setTimeout(
+              function () {
+
+                copyLegacyAddressBtn.textContent =
+                  "COPY ĐỊA CHỈ CŨ";
+
+              },
+              1200
+            );
+
+          }
+          catch (_) {
+
+            window.prompt(
+              "Copy địa chỉ cũ:",
+              legacyAddress
+            );
+
+          }
+
+        }
+      );
+
+    }
 
 
     renderActions();
