@@ -1011,6 +1011,41 @@
           "internal_note"
         ]
       );
+
+        const shippingProvider =
+      valueFrom(
+        o,
+        [
+          "shipping_provider"
+        ]
+      );
+
+
+    const trackingCode =
+      valueFrom(
+        o,
+        [
+          "tracking_code"
+        ]
+      );
+
+
+    const shippingFee =
+      valueFrom(
+        o,
+        [
+          "shipping_fee"
+        ]
+      );
+
+
+    const shippingNote =
+      valueFrom(
+        o,
+        [
+          "shipping_note"
+        ]
+      );
     const itemHtml =
       currentItems
         .map(
@@ -1370,6 +1405,121 @@
       <section class="section">
 
         <div class="section-title">
+          Vận chuyển
+        </div>
+
+        <div
+          style="
+            display:grid;
+            gap:10px;
+          "
+        >
+          <select
+            id="shippingProviderInput"
+            style="
+              width:100%;
+              min-height:44px;
+              padding:0 12px;
+              border-radius:12px;
+              border:1px solid rgba(255,255,255,.10);
+              background:#071523;
+              color:#ffffff;
+              outline:none;
+              font-size:12px;
+              font-weight:800;
+            "
+          >
+            <option value="">Chọn đơn vị vận chuyển</option>
+            <option value="viettel_post" ${shippingProvider === "viettel_post" ? "selected" : ""}>Viettel Post</option>
+            <option value="ghn" ${shippingProvider === "ghn" ? "selected" : ""}>GHN</option>
+            <option value="ghtk" ${shippingProvider === "ghtk" ? "selected" : ""}>GHTK</option>
+            <option value="jnt" ${shippingProvider === "jnt" ? "selected" : ""}>J&T</option>
+            <option value="other" ${shippingProvider === "other" ? "selected" : ""}>Khác</option>
+          </select>
+
+          <input
+            id="trackingCodeInput"
+            type="text"
+            value="${escapeHtml(trackingCode)}"
+            placeholder="Mã vận đơn / mã tracking"
+            style="
+              width:100%;
+              min-height:44px;
+              padding:0 12px;
+              border-radius:12px;
+              border:1px solid rgba(255,255,255,.10);
+              background:#071523;
+              color:#ffffff;
+              outline:none;
+              font-size:12px;
+              font-weight:800;
+            "
+          >
+
+          <input
+            id="shippingFeeInput"
+            type="number"
+            min="0"
+            step="1000"
+            value="${escapeHtml(shippingFee || 0)}"
+            placeholder="Phí ship"
+            style="
+              width:100%;
+              min-height:44px;
+              padding:0 12px;
+              border-radius:12px;
+              border:1px solid rgba(255,255,255,.10);
+              background:#071523;
+              color:#ffffff;
+              outline:none;
+              font-size:12px;
+              font-weight:800;
+            "
+          >
+
+          <textarea
+            id="shippingNoteInput"
+            placeholder="Ghi chú vận chuyển: giờ giao, lưu ý đóng hàng, khách hẹn nhận..."
+            style="
+              width:100%;
+              min-height:80px;
+              padding:12px;
+              border-radius:12px;
+              border:1px solid rgba(255,255,255,.10);
+              background:#071523;
+              color:#ffffff;
+              outline:none;
+              resize:vertical;
+              font-size:12px;
+              font-weight:750;
+              line-height:1.5;
+            "
+          >${escapeHtml(shippingNote)}</textarea>
+
+          <button
+            id="saveShippingBtn"
+            type="button"
+            class="action-btn action-primary"
+            style="
+              width:100%;
+              min-height:42px;
+              font-size:10px;
+            "
+          >
+            LƯU VẬN CHUYỂN
+          </button>
+
+          <div
+            id="shippingMessage"
+            class="message"
+          ></div>
+        </div>
+
+      </section>
+
+      <section class="section">
+
+        <div class="section-title">
           Sản phẩm
         </div>
 
@@ -1668,6 +1818,156 @@
       );
 
     }
+
+    const shippingProviderInput =
+      document.getElementById(
+        "shippingProviderInput"
+      );
+
+
+    const trackingCodeInput =
+      document.getElementById(
+        "trackingCodeInput"
+      );
+
+
+    const shippingFeeInput =
+      document.getElementById(
+        "shippingFeeInput"
+      );
+
+
+    const shippingNoteInput =
+      document.getElementById(
+        "shippingNoteInput"
+      );
+
+
+    const saveShippingBtn =
+      document.getElementById(
+        "saveShippingBtn"
+      );
+
+
+    const shippingMessage =
+      document.getElementById(
+        "shippingMessage"
+      );
+
+
+    if (
+      saveShippingBtn
+      &&
+      shippingProviderInput
+      &&
+      trackingCodeInput
+      &&
+      shippingFeeInput
+      &&
+      shippingNoteInput
+    ) {
+
+      saveShippingBtn.addEventListener(
+        "click",
+        async function () {
+
+          saveShippingBtn.disabled =
+            true;
+
+          try {
+
+            const shippingFeeValue =
+              Number(
+                shippingFeeInput.value || 0
+              );
+
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  {
+                    shipping_provider:
+                      shippingProviderInput.value.trim(),
+
+                    tracking_code:
+                      trackingCodeInput.value.trim(),
+
+                    shipping_fee:
+                      shippingFeeValue,
+
+                    shipping_note:
+                      shippingNoteInput.value.trim()
+                  }
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+
+            if (error) {
+
+              throw error;
+
+            }
+
+
+            currentOrder =
+              data;
+
+
+            if (shippingMessage) {
+
+              shippingMessage.className =
+                "message success";
+
+              shippingMessage.textContent =
+                "✓ Đã lưu thông tin vận chuyển.";
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "SAVE SHIPPING ERROR:",
+              error
+            );
+
+
+            if (shippingMessage) {
+
+              shippingMessage.className =
+                "message error";
+
+              shippingMessage.textContent =
+                error?.message
+                ||
+                "Không lưu được thông tin vận chuyển.";
+
+            }
+
+          }
+          finally {
+
+            saveShippingBtn.disabled =
+              false;
+
+          }
+
+        }
+      );
+
+    }
+    
     renderActions();
 
   }
