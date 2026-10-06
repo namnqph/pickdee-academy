@@ -1357,409 +1357,680 @@ function updateCartCount() {
      RENDER
   ====================================================== */
 
-  function renderProduct() {
+ function renderProduct() {
 
-    selectedVariant =
-      selectedVariant
-      ||
-      variants[0]
-      ||
-      null;
+  selectedVariant =
+    selectedVariant
+    ||
+    variants[0]
+    ||
+    null;
 
 
-    if (!selectedVariant) {
+  if (!selectedVariant) {
 
-      showError(
-        "Sản phẩm chưa có giá bán."
+    showError(
+      "Sản phẩm chưa có giá bán."
+    );
+
+    return;
+
+  }
+
+
+  const sortedImages =
+    [...images]
+      .sort(
+        function (a,b) {
+
+          if (
+            Boolean(a.is_primary)
+            !==
+            Boolean(b.is_primary)
+          ) {
+
+            return (
+              a.is_primary
+                ? -1
+                : 1
+            );
+
+          }
+
+
+          return (
+            Number(a.sort_order || 0)
+            -
+            Number(b.sort_order || 0)
+          );
+
+        }
       );
 
-      return;
+
+  const firstImage =
+    sortedImages[0]
+    ||
+    null;
+
+
+  const firstUrl =
+    firstImage
+      ?
+        imageUrl(
+          firstImage.storage_path
+        )
+      :
+        "";
+
+
+  /*
+    =====================================================
+    PHÂN TÁCH OPTION
+    =====================================================
+  */
+
+  const option1Variant =
+    variants.find(
+      function (variant) {
+
+        return (
+          variant.option1_name
+          &&
+          variant.option1_value
+        );
+
+      }
+    )
+    ||
+    null;
+
+
+  const option2Variant =
+    variants.find(
+      function (variant) {
+
+        return (
+          variant.option2_name
+          &&
+          variant.option2_value
+        );
+
+      }
+    )
+    ||
+    null;
+
+
+  const option1Name =
+    option1Variant?.option1_name
+    ||
+    "";
+
+
+  const option2Name =
+    option2Variant?.option2_name
+    ||
+    "";
+
+
+  const option1Values =
+    [
+      ...new Set(
+        variants
+          .map(
+            function (variant) {
+
+              return (
+                variant.option1_value
+                ||
+                ""
+              );
+
+            }
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  const option2Values =
+    [
+      ...new Set(
+        variants
+          .map(
+            function (variant) {
+
+              return (
+                variant.option2_value
+                ||
+                ""
+              );
+
+            }
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  const hasStructuredOptions =
+    (
+      option1Values.length > 0
+      ||
+      option2Values.length > 0
+    );
+
+
+  /*
+    =====================================================
+    OPTION 1 BUTTONS
+    =====================================================
+  */
+
+  const option1Buttons =
+    option1Values
+      .map(
+        function (value) {
+
+          const active =
+            String(
+              selectedVariant?.option1_value
+              ||
+              ""
+            )
+            ===
+            String(value);
+
+
+          return `
+            <button
+              class="variant-btn option-btn ${
+                active
+                  ?
+                    "active"
+                  :
+                    ""
+              }"
+              type="button"
+              data-option-index="1"
+              data-option-value="${escapeHtml(value)}"
+            >
+              ${escapeHtml(value)}
+            </button>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  /*
+    =====================================================
+    OPTION 2 BUTTONS
+    =====================================================
+  */
+
+  const option2Buttons =
+    option2Values
+      .map(
+        function (value) {
+
+          const active =
+            String(
+              selectedVariant?.option2_value
+              ||
+              ""
+            )
+            ===
+            String(value);
+
+
+          return `
+            <button
+              class="variant-btn option-btn ${
+                active
+                  ?
+                    "active"
+                  :
+                    ""
+              }"
+              type="button"
+              data-option-index="2"
+              data-option-value="${escapeHtml(value)}"
+            >
+              ${escapeHtml(value)}
+            </button>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  /*
+    =====================================================
+    SẢN PHẨM CŨ KHÔNG CÓ OPTION1 / OPTION2
+    =====================================================
+  */
+
+  const legacyVariantButtons =
+    !hasStructuredOptions
+      ?
+        variants
+          .map(
+            function (variant) {
+
+              const active =
+                String(
+                  selectedVariant.id
+                )
+                ===
+                String(
+                  variant.id
+                );
+
+
+              return `
+                <button
+                  class="variant-btn legacy-variant-btn ${
+                    active
+                      ?
+                        "active"
+                      :
+                        ""
+                  }"
+                  type="button"
+                  data-variant-id="${variant.id}"
+                >
+                  ${
+                    escapeHtml(
+                      variant.variant_name
+                      ||
+                      "Mặc định"
+                    )
+                  }
+                </button>
+              `;
+
+            }
+          )
+          .join("")
+      :
+        "";
+
+
+  /*
+    =====================================================
+    HTML PHẦN LỰA CHỌN
+    =====================================================
+  */
+
+  let variantSelectionHtml =
+    "";
+
+
+  if (hasStructuredOptions) {
+
+    if (
+      option1Name
+      &&
+      option1Values.length
+    ) {
+
+      variantSelectionHtml += `
+        <div class="section-label">
+          ${escapeHtml(
+            String(option1Name)
+              .toUpperCase()
+          )}
+        </div>
+
+        <div class="variants">
+          ${option1Buttons}
+        </div>
+      `;
 
     }
 
 
-    const sortedImages =
-      [...images]
-        .sort(
-          function (a,b) {
+    if (
+      option2Name
+      &&
+      option2Values.length
+    ) {
 
-            if (
-              Boolean(a.is_primary)
-              !==
-              Boolean(b.is_primary)
-            ) {
+      variantSelectionHtml += `
+        <div class="section-label">
+          ${escapeHtml(
+            String(option2Name)
+              .toUpperCase()
+          )}
+        </div>
 
-              return (
-                a.is_primary
-                  ? -1
-                  : 1
-              );
+        <div class="variants">
+          ${option2Buttons}
+        </div>
+      `;
 
-            }
+    }
+
+  }
+  else if (
+    variants.length > 1
+  ) {
+
+    variantSelectionHtml = `
+      <div class="section-label">
+        LỰA CHỌN
+      </div>
+
+      <div class="variants">
+        ${legacyVariantButtons}
+      </div>
+    `;
+
+  }
 
 
-            return (
-              Number(a.sort_order || 0)
-              -
-              Number(b.sort_order || 0)
+  /*
+    =====================================================
+    THUMBNAILS
+    =====================================================
+  */
+
+  const thumbnails =
+    sortedImages
+      .map(
+        function (image,index) {
+
+          const url =
+            imageUrl(
+              image.storage_path
             );
 
-          }
-        );
 
+          return `
+            <button
+              type="button"
+              class="thumb ${
+                index === 0
+                  ?
+                    "active"
+                  :
+                    ""
+              }"
+              data-image="${escapeHtml(url)}"
+            >
 
-    const firstImage =
-      sortedImages[0]
-      || null;
-
-
-    const firstUrl =
-      firstImage
-        ?
-          imageUrl(
-            firstImage.storage_path
-          )
-        :
-          "";
-
-
-    const variantButtons =
-      variants
-        .map(
-          function (variant) {
-
-            return `
-              <button
-                class="variant-btn ${
-                  String(
-                    selectedVariant.id
-                  )
-                  ===
-                  String(
-                    variant.id
-                  )
-                    ?
-                      "active"
-                    :
-                      ""
-                }"
-                type="button"
-                data-variant-id="${variant.id}"
-              >
-                ${
-                  escapeHtml(
-                    variant.variant_name
-                    ||
-                    variant.option1_value
-                    ||
-                    "Mặc định"
-                  )
-                }
-              </button>
-            `;
-
-          }
-        )
-        .join("");
-
-
-    const thumbnails =
-      sortedImages
-        .map(
-          function (image,index) {
-
-            const url =
-              imageUrl(
-                image.storage_path
-              );
-
-
-            return `
-              <button
-                type="button"
-                class="thumb ${
-                  index === 0
-                    ?
-                      "active"
-                    :
-                      ""
-                }"
-                data-image="${escapeHtml(url)}"
+              <img
+                src="${escapeHtml(url)}"
+                alt="${escapeHtml(
+                  image.alt_text
+                  ||
+                  product.name
+                )}"
               >
 
-                <img
-                  src="${escapeHtml(url)}"
-                  alt="${escapeHtml(
-                    image.alt_text
-                    ||
-                    product.name
-                  )}"
-                >
+            </button>
+          `;
 
-              </button>
-            `;
-
-          }
-        )
-        .join("");
+        }
+      )
+      .join("");
 
 
-    pageContent.innerHTML = `
+  /*
+    =====================================================
+    RENDER PAGE
+    =====================================================
+  */
 
-      <div class="product-layout">
+  pageContent.innerHTML = `
+
+    <div class="product-layout">
 
 
-        <div class="gallery">
+      <div class="gallery">
 
-          <div
-            id="mainImage"
-            class="main-image"
-          >
-
-            ${
-              firstUrl
-              ?
-                `
-                  <img
-                    src="${escapeHtml(firstUrl)}"
-                    alt="${escapeHtml(product.name)}"
-                  >
-                `
-              :
-                `
-                  <div class="image-placeholder">
-
-                    🏓
-
-                    <span>
-                      Ảnh sản phẩm đang cập nhật
-                    </span>
-
-                  </div>
-                `
-            }
-
-          </div>
-
+        <div
+          id="mainImage"
+          class="main-image"
+        >
 
           ${
-            thumbnails
+            firstUrl
             ?
               `
-                <div class="thumbs">
-                  ${thumbnails}
-                </div>
+                <img
+                  src="${escapeHtml(firstUrl)}"
+                  alt="${escapeHtml(product.name)}"
+                >
               `
             :
-              ""
+              `
+                <div class="image-placeholder">
+
+                  🏓
+
+                  <span>
+                    Ảnh sản phẩm đang cập nhật
+                  </span>
+
+                </div>
+              `
           }
 
         </div>
 
 
-
-        <section class="info">
-
-
-          <div class="brand-name">
-            ${
-              escapeHtml(
-                product.brand
-                ||
-                "PICKDEE HÀNG TUYỂN"
-              )
-            }
-          </div>
-
-
-          <h1>
-            ${escapeHtml(product.name)}
-          </h1>
-
-
-          ${
-            product.short_description
-            ?
-              `
-                <p class="short-description">
-                  ${escapeHtml(
-                    product.short_description
-                  )}
-                </p>
-              `
-            :
-              ""
-          }
-
-
-          <div class="price-line">
-
-            <span
-              id="mainPrice"
-              class="price"
-            >
-              ${money(selectedVariant.price)}
-            </span>
-
-
-            <span
-              id="comparePrice"
-              class="compare-price"
-              style="${
-                selectedVariant.compare_at_price
-                &&
-                Number(
-                  selectedVariant.compare_at_price
-                )
-                  >
-                Number(
-                  selectedVariant.price
-                )
-                  ?
-                    ""
-                  :
-                    "display:none;"
-              }"
-            >
-              ${
-                selectedVariant.compare_at_price
-                  ?
-                    money(
-                      selectedVariant.compare_at_price
-                    )
-                  :
-                    ""
-              }
-            </span>
-
-          </div>
-
-
-          <div class="trust">
-
-            <span>
-              ✓ HÀNG TUYỂN
-            </span>
-
-            <span>
-              ✓ CHỌN LỌC KỸ
-            </span>
-
-            <span>
-              🚚 GIAO TOÀN QUỐC
-            </span>
-
-          </div>
-
-
-          ${
-            variants.length > 1
-            ?
-              `
-                <div class="section-label">
-                  LỰA CHỌN
-                </div>
-
-                <div
-                  id="variantList"
-                  class="variants"
-                >
-                  ${variantButtons}
-                </div>
-              `
-            :
-              ""
-          }
-
-
-          <div class="quantity-row">
-
-            <div class="section-label">
-              SỐ LƯỢNG
-            </div>
-
-
-            <div class="quantity">
-
-              <button
-                id="minusBtn"
-                type="button"
-              >
-                −
-              </button>
-
-            <input
-  id="quantityInput"
-  type="number"
-  min="1"
-  max="9999"
-  step="1"
-  inputmode="numeric"
-  value="${quantity}"
->
-
-              <button
-                id="plusBtn"
-                type="button"
-              >
-                +
-              </button>
-
-            </div>
-
-          </div>
-
-<div
-  id="wholesaleHint"
-  class="wholesale-hint"
-  style="display:none;"
-></div>          ${
-            product.description
-            ?
-              `
-                <div class="description">
-
-                  <div class="description-title">
-                    Thông tin sản phẩm
-                  </div>
-
-                  <div class="description-text">
-                    ${escapeHtml(
-                      product.description
-                    )}
-                  </div>
-
-                </div>
-              `
-            :
-              ""
-          }
-
-
-        </section>
-
+        ${
+          thumbnails
+          ?
+            `
+              <div class="thumbs">
+                ${thumbnails}
+              </div>
+            `
+          :
+            ""
+        }
 
       </div>
-    `;
-
-
-    document.title =
-      `${product.name} | PickDee Shop`;
-
-
-    buyBar.style.display =
-      "block";
-
-
-    updateDisplayedPrice();
-
-    bindProductEvents();
-
-  }
 
 
 
- /* =====================================================
+      <section class="info">
+
+
+        <div class="brand-name">
+          ${
+            escapeHtml(
+              product.brand
+              ||
+              "PICKDEE HÀNG TUYỂN"
+            )
+          }
+        </div>
+
+
+        <h1>
+          ${escapeHtml(product.name)}
+        </h1>
+
+
+        ${
+          product.short_description
+          ?
+            `
+              <p class="short-description">
+                ${escapeHtml(
+                  product.short_description
+                )}
+              </p>
+            `
+          :
+            ""
+        }
+
+
+        <div class="price-line">
+
+          <span
+            id="mainPrice"
+            class="price"
+          >
+            ${money(selectedVariant.price)}
+          </span>
+
+
+          <span
+            id="comparePrice"
+            class="compare-price"
+            style="${
+              selectedVariant.compare_at_price
+              &&
+              Number(
+                selectedVariant.compare_at_price
+              )
+              >
+              Number(
+                selectedVariant.price
+              )
+                ?
+                  ""
+                :
+                  "display:none;"
+            }"
+          >
+            ${
+              selectedVariant.compare_at_price
+                ?
+                  money(
+                    selectedVariant.compare_at_price
+                  )
+                :
+                  ""
+            }
+          </span>
+
+        </div>
+
+
+        <div class="trust">
+
+          <span>
+            ✓ HÀNG TUYỂN
+          </span>
+
+          <span>
+            ✓ CHỌN LỌC KỸ
+          </span>
+
+          <span>
+            🚚 GIAO TOÀN QUỐC
+          </span>
+
+        </div>
+
+
+        ${variantSelectionHtml}
+
+
+        <div class="quantity-row">
+
+          <div class="section-label">
+            SỐ LƯỢNG
+          </div>
+
+
+          <div class="quantity">
+
+            <button
+              id="minusBtn"
+              type="button"
+            >
+              −
+            </button>
+
+
+            <input
+              id="quantityInput"
+              type="number"
+              min="1"
+              max="9999"
+              step="1"
+              inputmode="numeric"
+              value="${quantity}"
+            >
+
+
+            <button
+              id="plusBtn"
+              type="button"
+            >
+              +
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="wholesaleHint"
+          class="wholesale-hint"
+          style="display:none;"
+        ></div>
+
+
+        ${
+          product.description
+          ?
+            `
+              <div class="description">
+
+                <div class="description-title">
+                  Thông tin sản phẩm
+                </div>
+
+                <div class="description-text">
+                  ${escapeHtml(
+                    product.description
+                  )}
+                </div>
+
+              </div>
+            `
+          :
+            ""
+        }
+
+
+      </section>
+
+
+    </div>
+  `;
+
+
+  document.title =
+    `${product.name} | PickDee Shop`;
+
+
+  buyBar.style.display =
+    "block";
+
+
+  updateDisplayedPrice();
+
+  bindProductEvents();
+
+}
+
+
+
+/* =====================================================
    PRICE
 ====================================================== */
 
@@ -1790,7 +2061,9 @@ async function updateDisplayedPrice() {
 
   const retailPrice =
     Number(
-      selectedVariant.price || 0
+      selectedVariant.price
+      ||
+      0
     );
 
 
@@ -1808,7 +2081,8 @@ async function updateDisplayedPrice() {
     requestSeq;
 
 
-  let quote = null;
+  let quote =
+    null;
 
 
   try {
@@ -1838,7 +2112,8 @@ async function updateDisplayedPrice() {
     }
 
 
-    quote = data;
+    quote =
+      data;
 
   }
   catch (error) {
@@ -1899,9 +2174,7 @@ async function updateDisplayedPrice() {
 
 
   /*
-    GIÁ GẠCH:
-    - Nếu đang đạt giá sỉ: gạch giá niêm yết.
-    - Nếu vẫn giá lẻ: dùng compare_at_price như cũ.
+    GIÁ GẠCH
   */
 
   if (comparePrice) {
@@ -1930,7 +2203,7 @@ async function updateDisplayedPrice() {
       Number(
         selectedVariant.compare_at_price
       )
-        >
+      >
       retailPrice
     ) {
 
@@ -1953,10 +2226,6 @@ async function updateDisplayedPrice() {
 
   }
 
-
-  /*
-    THÔNG BÁO GIÁ SỈ
-  */
 
   if (!wholesaleHint) {
     return;
@@ -2106,6 +2375,12 @@ function bindProductEvents() {
     );
 
 
+  /*
+    =====================================================
+    SỐ LƯỢNG
+    =====================================================
+  */
+
   function syncQuantityInput() {
 
     if (quantityInput) {
@@ -2120,29 +2395,24 @@ function bindProductEvents() {
   }
 
 
-  function setQuantity(
-    value
-  ) {
+  function setQuantity(value) {
 
     let next =
-      Number(
-        value
-      );
+      Number(value);
 
 
     if (
       !Number.isFinite(next)
     ) {
 
-      next = 1;
+      next =
+        1;
 
     }
 
 
     next =
-      Math.round(
-        next
-      );
+      Math.round(next);
 
 
     quantity =
@@ -2156,7 +2426,6 @@ function bindProductEvents() {
 
 
     syncQuantityInput();
-
 
     updateDisplayedPrice();
 
@@ -2229,9 +2498,321 @@ function bindProductEvents() {
   );
 
 
+  /*
+    =====================================================
+    ĐỒNG BỘ NÚT OPTION
+    =====================================================
+  */
+
+  function syncOptionButtons() {
+
+    document
+      .querySelectorAll(
+        '[data-option-index="1"]'
+      )
+      .forEach(
+        function (button) {
+
+          button.classList.toggle(
+            "active",
+            String(
+              button.dataset.optionValue
+              ||
+              ""
+            )
+            ===
+            String(
+              selectedVariant?.option1_value
+              ||
+              ""
+            )
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        '[data-option-index="2"]'
+      )
+      .forEach(
+        function (button) {
+
+          button.classList.toggle(
+            "active",
+            String(
+              button.dataset.optionValue
+              ||
+              ""
+            )
+            ===
+            String(
+              selectedVariant?.option2_value
+              ||
+              ""
+            )
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".legacy-variant-btn"
+      )
+      .forEach(
+        function (button) {
+
+          button.classList.toggle(
+            "active",
+            String(
+              button.dataset.variantId
+              ||
+              ""
+            )
+            ===
+            String(
+              selectedVariant?.id
+              ||
+              ""
+            )
+          );
+
+        }
+      );
+
+  }
+
+
+  /*
+    =====================================================
+    CHỌN OPTION 1 / MÀU
+    =====================================================
+  */
+
   document
     .querySelectorAll(
-      ".variant-btn"
+      '[data-option-index="1"]'
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const value =
+              button.dataset.optionValue
+              ||
+              "";
+
+
+            const currentOption2 =
+              selectedVariant?.option2_value
+              ||
+              "";
+
+
+            let nextVariant =
+              null;
+
+
+            if (currentOption2) {
+
+              nextVariant =
+                variants.find(
+                  function (variant) {
+
+                    return (
+                      String(
+                        variant.option1_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(value)
+                      &&
+                      String(
+                        variant.option2_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(currentOption2)
+                    );
+
+                  }
+                )
+                ||
+                null;
+
+            }
+
+
+            if (!nextVariant) {
+
+              nextVariant =
+                variants.find(
+                  function (variant) {
+
+                    return (
+                      String(
+                        variant.option1_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(value)
+                    );
+
+                  }
+                )
+                ||
+                null;
+
+            }
+
+
+            if (!nextVariant) {
+              return;
+            }
+
+
+            selectedVariant =
+              nextVariant;
+
+
+            syncOptionButtons();
+
+            updateDisplayedPrice();
+
+          }
+        );
+
+      }
+    );
+
+
+  /*
+    =====================================================
+    CHỌN OPTION 2 / SIZE
+    =====================================================
+  */
+
+  document
+    .querySelectorAll(
+      '[data-option-index="2"]'
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const value =
+              button.dataset.optionValue
+              ||
+              "";
+
+
+            const currentOption1 =
+              selectedVariant?.option1_value
+              ||
+              "";
+
+
+            let nextVariant =
+              null;
+
+
+            if (currentOption1) {
+
+              nextVariant =
+                variants.find(
+                  function (variant) {
+
+                    return (
+                      String(
+                        variant.option1_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(currentOption1)
+                      &&
+                      String(
+                        variant.option2_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(value)
+                    );
+
+                  }
+                )
+                ||
+                null;
+
+            }
+
+
+            if (!nextVariant) {
+
+              nextVariant =
+                variants.find(
+                  function (variant) {
+
+                    return (
+                      String(
+                        variant.option2_value
+                        ||
+                        ""
+                      )
+                      ===
+                      String(value)
+                    );
+
+                  }
+                )
+                ||
+                null;
+
+            }
+
+
+            if (!nextVariant) {
+              return;
+            }
+
+
+            selectedVariant =
+              nextVariant;
+
+
+            syncOptionButtons();
+
+            updateDisplayedPrice();
+
+          }
+        );
+
+      }
+    );
+
+
+  /*
+    =====================================================
+    VARIANT CŨ
+    =====================================================
+  */
+
+  document
+    .querySelectorAll(
+      ".legacy-variant-btn"
     )
     .forEach(
       function (button) {
@@ -2244,7 +2825,7 @@ function bindProductEvents() {
               button.dataset.variantId;
 
 
-            selectedVariant =
+            const nextVariant =
               variants.find(
                 function (variant) {
 
@@ -2259,28 +2840,19 @@ function bindProductEvents() {
                 }
               )
               ||
-              selectedVariant;
+              null;
 
 
-            document
-              .querySelectorAll(
-                ".variant-btn"
-              )
-              .forEach(
-                function (item) {
-
-                  item.classList.remove(
-                    "active"
-                  );
-
-                }
-              );
+            if (!nextVariant) {
+              return;
+            }
 
 
-            button.classList.add(
-              "active"
-            );
+            selectedVariant =
+              nextVariant;
 
+
+            syncOptionButtons();
 
             updateDisplayedPrice();
 
@@ -2290,6 +2862,12 @@ function bindProductEvents() {
       }
     );
 
+
+  /*
+    =====================================================
+    GALLERY
+    =====================================================
+  */
 
   document
     .querySelectorAll(
@@ -2354,7 +2932,6 @@ function bindProductEvents() {
     );
 
 }
-
 
   /* =====================================================
      ADD CART
