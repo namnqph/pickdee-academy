@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>Tra cứu đơn hàng | PickDee Shop</title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+
+      background:
+        #071523;
+
+      color:
+        #ffffff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust:
+        100%;
+
+      text-size-adjust:
+        100%;
+    }
+
+
+    body {
+      min-height:
+        100vh;
+    }
+
+
+    button,
+    input,
+    a {
+      font-family:
+        inherit;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(7,21,35,.96);
+    }
+
+
+    .header-inner {
+      width:
+        min(
+          760px,
+          calc(100% - 22px)
+        );
+
+      min-height:
+        64px;
+
+      margin:
+        auto;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        10px;
+    }
+
+
+    .brand {
+      color:
+        #ffffff;
+
+      text-decoration:
+        none;
+
+      font-size:
+        21px;
+
+      font-weight:
+        950;
+
+      letter-spacing:
+        -.04em;
+    }
+
+
+    .brand span {
+      color:
+        #d8ff45;
+    }
+
+
+    .shop-link {
+      min-height:
+        38px;
+
+      padding:
+        0 12px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      color:
+        rgba(255,255,255,.72);
+
+      text-decoration:
+        none;
+
+      font-size:
+        9px;
+
+      font-weight:
+        950;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(
+          560px,
+          calc(100% - 22px)
+        );
+
+      margin:
+        32px auto 55px;
+    }
+
+
+    .eyebrow {
+      margin-bottom:
+        7px;
+
+      color:
+        #d8ff45;
+
+      font-size:
+        10px;
+
+      font-weight:
+        950;
+
+      letter-spacing:
+        .1em;
+    }
+
+
+    h1 {
+      margin:
+        0;
+
+      font-size:
+        clamp(
+          31px,
+          8vw,
+          44px
+        );
+
+      line-height:
+        1;
+
+      letter-spacing:
+        -.045em;
+    }
+
+
+    .intro {
+      margin:
+        10px 0 20px;
+
+      color:
+        rgba(255,255,255,.53);
+
+      font-size:
+        11px;
+
+      line-height:
+        1.65;
+    }
+
+
+    /* =====================================================
+       CARD
+    ====================================================== */
+
+    .card {
+      padding:
+        18px;
+
+      border-radius:
+        17px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background:
+        #0d1d2f;
+    }
+
+
+    .helper {
+      margin-bottom:
+        17px;
+
+      padding:
+        12px 13px;
+
+      border-radius:
+        12px;
+
+      border:
+        1px solid rgba(216,255,69,.16);
+
+      background:
+        rgba(216,255,69,.045);
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size:
+        10px;
+
+      line-height:
+        1.6;
+    }
+
+
+    .helper strong {
+      color:
+        #d8ff45;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .field {
+      margin-bottom:
+        14px;
+    }
+
+
+    .label {
+      margin-bottom:
+        7px;
+
+      color:
+        rgba(255,255,255,.48);
+
+      font-size:
+        9px;
+
+      font-weight:
+        950;
+
+      letter-spacing:
+        .04em;
+
+      text-transform:
+        uppercase;
+    }
+
+
+    input {
+      width:
+        100%;
+
+      min-height:
+        48px;
+
+      padding:
+        0 13px;
+
+      border-radius:
+        12px;
+
+      border:
+        1px solid rgba(255,255,255,.11);
+
+      outline:
+        none;
+
+      background:
+        #071523;
+
+      color:
+        #ffffff;
+
+      font-size:
+        14px;
+
+      font-weight:
+        850;
+
+      transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
+    }
+
+
+    input::placeholder {
+      color:
+        rgba(255,255,255,.25);
+    }
+
+
+    input:focus {
+      border-color:
+        rgba(216,255,69,.65);
+
+      box-shadow:
+        0 0 0 4px
+        rgba(216,255,69,.06);
+    }
+
+
+    .order-code-input {
+      text-transform:
+        uppercase;
+    }
+
+
+    .submit-btn {
+      width:
+        100%;
+
+      min-height:
+        50px;
+
+      margin-top:
+        4px;
+
+      border:
+        0;
+
+      border-radius:
+        12px;
+
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+
+      font-size:
+        11px;
+
+      font-weight:
+        950;
+
+      cursor:
+        pointer;
+    }
+
+
+    .submit-btn:disabled {
+      opacity:
+        .55;
+
+      cursor:
+        wait;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+    ====================================================== */
+
+    .message {
+      display:
+        none;
+
+      margin-top:
+        13px;
+
+      padding:
+        11px 12px;
+
+      border-radius:
+        11px;
+
+      font-size:
+        10px;
+
+      font-weight:
+        800;
+
+      line-height:
+        1.5;
+    }
+
+
+    .message.error {
+      display:
+        block;
+
+      color:
+        #ffb0b0;
+
+      background:
+        rgba(255,80,80,.07);
+
+      border:
+        1px solid rgba(255,80,80,.2);
+    }
+
+
+    .message.success {
+      display:
+        block;
+
+      color:
+        #d8ff45;
+
+      background:
+        rgba(216,255,69,.06);
+
+      border:
+        1px solid rgba(216,255,69,.2);
+    }
+
+
+    /* =====================================================
+       NOTE
+    ====================================================== */
+
+    .note {
+      margin-top:
+        15px;
+
+      color:
+        rgba(255,255,255,.34);
+
+      font-size:
+        9px;
+
+      line-height:
+        1.55;
+
+      text-align:
+        center;
+    }
+
+
+    @media(max-width:520px) {
+
+      main {
+        margin-top:
+          23px;
+      }
+
+
+      .card {
+        padding:
+          15px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+
+    <a
+      class="shop-link"
+      href="./shop"
+    >
+      ← SHOP
+    </a>
+
+  </div>
+
+</header>
+
+
+<main>
+
+  <div class="eyebrow">
+    PICKDEE SHOP
+  </div>
+
+
+  <h1>
+    Tra cứu đơn hàng
+  </h1>
+
+
+  <p class="intro">
+    Nhập mã đơn hàng và số điện thoại đã dùng khi đặt hàng
+    để xem lại hành trình xử lý và thông tin vận chuyển.
+  </p>
+
+
+  <div class="card">
+
+    <div class="helper">
+      Mã đơn có dạng
+      <strong>PD-000027</strong>.
+      Anh/chị vui lòng nhập đúng số điện thoại
+      đã dùng khi đặt hàng.
+    </div>
+
+
+    <form id="lookupForm">
+
+      <div class="field">
+
+        <div class="label">
+          Mã đơn hàng
+        </div>
+
+        <input
+          id="orderCodeInput"
+          class="order-code-input"
+          type="text"
+          placeholder="Ví dụ: PD-000027"
+          autocomplete="off"
+          maxlength="30"
+          required
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <div class="label">
+          Số điện thoại đặt hàng
+        </div>
+
+        <input
+          id="phoneInput"
+          type="tel"
+          inputmode="tel"
+          placeholder="Ví dụ: 0900001811"
+          autocomplete="tel"
+          maxlength="20"
+          required
+        >
+
+      </div>
+
+
+      <button
+        id="submitBtn"
+        class="submit-btn"
+        type="submit"
+      >
+        TRA CỨU ĐƠN HÀNG
+      </button>
+
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </form>
+
+  </div>
+
+
+  <div class="note">
+    Thông tin tra cứu chỉ hiển thị khi mã đơn hàng
+    và số điện thoại khớp với đơn đã đặt tại PickDee Shop.
+  </div>
+
+</main>
+
+
+<script>
+
+(function () {
+
+
+  /* =====================================================
+     CONFIG
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const form =
+    document.getElementById(
+      "lookupForm"
+    );
+
+
+  const orderCodeInput =
+    document.getElementById(
+      "orderCodeInput"
+    );
+
+
+  const phoneInput =
+    document.getElementById(
+      "phoneInput"
+    );
+
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống PickDee Shop.",
+      "error"
+    );
+
+    submitBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =====================================================
+     PREFILL ORDER CODE
+     Có thể mở:
+     /shop-order-lookup?order=PD-000027
+  ====================================================== */
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const prefillOrder =
+    String(
+      params.get(
+        "order"
+      )
+      ||
+      ""
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if (prefillOrder) {
+
+    orderCodeInput.value =
+      prefillOrder;
+
+    phoneInput.focus();
+
+  }
+  else {
+
+    orderCodeInput.focus();
+
+  }
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    message.className =
+      `message ${type}`;
+
+    message.textContent =
+      text;
+
+  }
+
+
+  function clearMessage() {
+
+    message.className =
+      "message";
+
+    message.textContent =
+      "";
+
+  }
+
+
+  function normalizeOrderCode(
+    value
+  ) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .toUpperCase();
+
+  }
+
+
+  function normalizePhone(
+    value
+  ) {
+
+    return String(
+      value || ""
+    )
+      .replace(
+        /\D/g,
+        ""
+      );
+
+  }
+
+
+  /* =====================================================
+     ORDER CODE UX
+  ====================================================== */
+
+  orderCodeInput.addEventListener(
+    "input",
+    function () {
+
+      orderCodeInput.value =
+        orderCodeInput.value
+          .toUpperCase();
+
+    }
+  );
+
+
+  /* =====================================================
+     SUBMIT
+  ====================================================== */
+
+  form.addEventListener(
+    "submit",
+    async function (
+      event
+    ) {
+
+      event.preventDefault();
+
+      clearMessage();
+
+
+      const orderCode =
+        normalizeOrderCode(
+          orderCodeInput.value
+        );
+
+
+      const phone =
+        normalizePhone(
+          phoneInput.value
+        );
+
+
+      if (!orderCode) {
+
+        showMessage(
+          "Anh/chị vui lòng nhập mã đơn hàng.",
+          "error"
+        );
+
+        orderCodeInput.focus();
+
+        return;
+
+      }
+
+
+      if (
+        !phone
+        ||
+        phone.length < 9
+      ) {
+
+        showMessage(
+          "Anh/chị vui lòng nhập đúng số điện thoại đặt hàng.",
+          "error"
+        );
+
+        phoneInput.focus();
+
+        return;
+
+      }
+
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "ĐANG TRA CỨU...";
+
+
+      try {
+
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_public_find_tracking_v1",
+            {
+              p_order_code:
+                orderCode,
+
+              p_phone:
+                phone
+            }
+          );
+
+
+        if (error) {
+
+          console.error(
+            "ORDER LOOKUP RPC ERROR:",
+            error
+          );
+
+          throw error;
+
+        }
+
+
+        if (
+          !data
+          ||
+          data.success !== true
+          ||
+          !data.tracking_token
+        ) {
+
+          showMessage(
+            "Không tìm thấy đơn hàng phù hợp. Anh/chị vui lòng kiểm tra lại mã đơn và số điện thoại.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        const token =
+          String(
+            data.tracking_token
+          ).trim();
+
+
+        if (
+          token.length < 32
+        ) {
+
+          throw new Error(
+            "Tracking token không hợp lệ."
+          );
+
+        }
+
+
+        showMessage(
+          "✓ Đã tìm thấy đơn hàng. Đang mở hành trình đơn...",
+          "success"
+        );
+
+
+        window.location.href =
+          `./shop-track?token=${encodeURIComponent(
+            token
+          )}`;
+
+
+      }
+      catch (error) {
+
+        console.error(
+          "ORDER LOOKUP ERROR:",
+          error
+        );
+
+
+        showMessage(
+          "Không thể tra cứu đơn hàng lúc này. Anh/chị vui lòng thử lại.",
+          "error"
+        );
+
+      }
+      finally {
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "TRA CỨU ĐƠN HÀNG";
+
+      }
+
+    }
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
