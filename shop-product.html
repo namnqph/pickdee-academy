@@ -3322,7 +3322,131 @@ function bindProductEvents() {
 
 </script>
 
+<style>
+  #toast.pickdee-cart-toast {
+    pointer-events: auto;
+    cursor: pointer;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    white-space: nowrap;
+  }
+
+  #toast.pickdee-cart-toast .toast-cart-link {
+    color: #071523;
+
+    font-weight: 950;
+
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  #toast.pickdee-cart-toast:active {
+    transform:
+      translate(-50%,0)
+      scale(.98);
+  }
+
+  @media(max-width:420px) {
+
+    #toast.pickdee-cart-toast {
+      width:
+        calc(100% - 24px);
+
+      max-width: 390px;
+
+      padding:
+        13px 14px;
+
+      border-radius: 13px;
+
+      font-size: 11px;
+    }
+
+  }
+</style>
+
+
+<script>
+(function () {
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+  if (!toast) {
+    return;
+  }
+
+
+  toast.classList.add(
+    "pickdee-cart-toast"
+  );
+
+
+  toast.innerHTML = `
+    <span>
+      ✓ ĐÃ THÊM VÀO GIỎ
+    </span>
+
+    <span class="toast-cart-link">
+      XEM GIỎ →
+    </span>
+  `;
+
+
+  toast.setAttribute(
+    "role",
+    "button"
+  );
+
+
+  toast.setAttribute(
+    "tabindex",
+    "0"
+  );
+
+
+  function openCart() {
+
+    window.location.href =
+      "./shop-cart";
+
+  }
+
+
+  toast.addEventListener(
+    "click",
+    openCart
+  );
+
+
+  toast.addEventListener(
+    "keydown",
+    function (event) {
+
+      if (
+        event.key === "Enter"
+        ||
+        event.key === " "
+      ) {
+
+        event.preventDefault();
+
+        openCart();
+
+      }
+
+    }
+  );
+
+})();
+</script>
 </body>
 
 </html>
