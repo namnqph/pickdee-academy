@@ -1038,6 +1038,149 @@
   }
 
 
+  async function syncExistingShopPushSubscription() {
+
+    try {
+
+      if (
+        !client
+        ||
+        !("serviceWorker" in navigator)
+        ||
+        !("PushManager" in window)
+      ) {
+
+        return;
+
+      }
+
+
+      const {
+        data:
+          sessionData
+      } =
+        await client.auth.getSession();
+
+
+      if (
+        !sessionData?.session?.user
+      ) {
+
+        return;
+
+      }
+
+
+      const registration =
+        await navigator
+          .serviceWorker
+          .ready;
+
+
+      const subscription =
+        await registration
+          .pushManager
+          .getSubscription();
+
+
+      if (!subscription) {
+
+        console.warn(
+          "PickDee Shop Push: thiết bị này chưa có Push subscription."
+        );
+
+        return;
+
+      }
+
+
+      const json =
+        subscription.toJSON();
+
+
+      const endpoint =
+        subscription.endpoint;
+
+
+      const p256dh =
+        json?.keys?.p256dh
+        ||
+        "";
+
+
+      const authKey =
+        json?.keys?.auth
+        ||
+        "";
+
+
+      if (
+        !endpoint
+        ||
+        !p256dh
+        ||
+        !authKey
+      ) {
+
+        console.warn(
+          "PickDee Shop Push: subscription không đầy đủ."
+        );
+
+        return;
+
+      }
+
+
+      const {
+        error
+      } =
+        await client.rpc(
+          "register_shop_push_subscription",
+          {
+            p_endpoint:
+              endpoint,
+
+            p_p256dh:
+              p256dh,
+
+            p_auth_key:
+              authKey,
+
+            p_user_agent:
+              navigator.userAgent
+          }
+        );
+
+
+      if (error) {
+
+        console.warn(
+          "PickDee Shop Push register error:",
+          error
+        );
+
+        return;
+
+      }
+
+
+      console.log(
+        "PickDee Shop Push: đăng ký thiết bị thành công."
+      );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "PickDee Shop Push sync error:",
+        error
+      );
+
+    }
+
+  }
+
+
   async function init() {
 
     addStyles();
@@ -1089,6 +1232,8 @@
     }
 
 
+    await syncExistingShopPushSubscription();
+
     await loadUnreadCount();
 
 
@@ -1113,6 +1258,8 @@
       "focus",
       function () {
 
+        syncExistingShopPushSubscription();
+
         loadUnreadCount();
 
       }
@@ -1123,6 +1270,8 @@
 
       refresh:
         async function () {
+
+          await syncExistingShopPushSubscription();
 
           await loadUnreadCount();
 
@@ -1136,10 +1285,6 @@
         }
 
     };
-
-  }
-
-
   if (
     document.readyState
     ===
