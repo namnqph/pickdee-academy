@@ -1038,7 +1038,135 @@
   }
 
 
-  async function syncExistingShopPushSubscription() {
+  function urlBase64ToUint8Array(base64String) {
+
+    const padding =
+      "=".repeat(
+        (4 - base64String.length % 4) % 4
+      );
+
+
+    const base64 =
+      (
+        base64String
+        + padding
+      )
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+
+    const rawData =
+      window.atob(base64);
+
+
+    return Uint8Array.from(
+      [...rawData].map(
+        char =>
+          char.charCodeAt(0)
+      )
+    );
+
+  }
+
+
+  async function saveShopPushSubscription(
+    subscription
+  ) {
+
+    if (
+      !client
+      ||
+      !subscription
+    ) {
+
+      return false;
+
+    }
+
+
+    const json =
+      subscription.toJSON();
+
+
+    const endpoint =
+      subscription.endpoint;
+
+
+    const p256dh =
+      json?.keys?.p256dh
+      ||
+      "";
+
+
+    const authKey =
+      json?.keys?.auth
+      ||
+      "";
+
+
+    if (
+      !endpoint
+      ||
+      !p256dh
+      ||
+      !authKey
+    ) {
+
+      console.warn(
+        "PickDee Shop Push: subscription không đầy đủ."
+      );
+
+      return false;
+
+    }
+
+
+    const {
+      error
+    } =
+      await client.rpc(
+        "register_shop_push_subscription",
+        {
+          p_endpoint:
+            endpoint,
+
+          p_p256dh:
+            p256dh,
+
+          p_auth_key:
+            authKey,
+
+          p_user_agent:
+            navigator.userAgent
+        }
+      );
+
+
+    if (error) {
+
+      console.warn(
+        "PickDee Shop Push register error:",
+        error
+      );
+
+      return false;
+
+    }
+
+
+    console.log(
+      "PickDee Shop Push: thiết bị đã được đăng ký role shop."
+    );
+
+
+    return true;
+
+  }
+
+
+  async function ensureShopPushSubscription(
+    requestPermission = false
+  ) {
 
     try {
 
@@ -1048,9 +1176,11 @@
         !("serviceWorker" in navigator)
         ||
         !("PushManager" in window)
+        ||
+        !("Notification" in window)
       ) {
 
-        return;
+        return false;
 
       }
 
@@ -1066,18 +1196,78 @@
         !sessionData?.session?.user
       ) {
 
-        return;
+        return false;
 
       }
 
 
-      const registration =
+      let permission =
+        Notification.permission;
+
+
+      if (
+        permission === "default"
+        &&
+        requestPermission
+      ) {
+
+        permission =
+          await Notification
+            .requestPermission();
+
+      }
+
+
+      if (
+        permission !== "granted"
+      ) {
+
+        if (
+          permission === "denied"
+        ) {
+
+          console.warn(
+            "PickDee Shop Push: người dùng đã chặn quyền thông báo."
+          );
+
+        }
+
+        return false;
+
+      }
+
+
+      let registration =
         await navigator
           .serviceWorker
-          .ready;
+          .getRegistration();
 
 
-      const subscription =
+      if (!registration) {
+
+        try {
+
+          registration =
+            await navigator
+              .serviceWorker
+              .ready;
+
+        }
+        catch (error) {
+
+          console.warn(
+            "PickDee Shop Push: chưa có Service Worker.",
+            error
+          );
+
+          return false;
+
+        }
+
+      }
+
+
+      let subscription =
         await registration
           .pushManager
           .getSubscription();
@@ -1085,87 +1275,60 @@
 
       if (!subscription) {
 
-        console.warn(
-          "PickDee Shop Push: thiết bị này chưa có Push subscription."
-        );
-
-        return;
-
-      }
-
-
-      const json =
-        subscription.toJSON();
+        const vapidPublicKey =
+          String(
+            window.PICKDEE_CONFIG
+              ?.VAPID_PUBLIC_KEY
+            ||
+            ""
+          ).trim();
 
 
-      const endpoint =
-        subscription.endpoint;
+        if (!vapidPublicKey) {
+
+          console.warn(
+            "PickDee Shop Push: thiếu VAPID_PUBLIC_KEY."
+          );
+
+          return false;
+
+        }
 
 
-      const p256dh =
-        json?.keys?.p256dh
-        ||
-        "";
+        try {
 
+          subscription =
+            await registration
+              .pushManager
+              .subscribe(
+                {
+                  userVisibleOnly:
+                    true,
 
-      const authKey =
-        json?.keys?.auth
-        ||
-        "";
+                  applicationServerKey:
+                    urlBase64ToUint8Array(
+                      vapidPublicKey
+                    )
+                }
+              );
 
+        }
+        catch (error) {
 
-      if (
-        !endpoint
-        ||
-        !p256dh
-        ||
-        !authKey
-      ) {
+          console.warn(
+            "PickDee Shop Push: không tạo được Push subscription.",
+            error
+          );
 
-        console.warn(
-          "PickDee Shop Push: subscription không đầy đủ."
-        );
+          return false;
 
-        return;
-
-      }
-
-
-      const {
-        error
-      } =
-        await client.rpc(
-          "register_shop_push_subscription",
-          {
-            p_endpoint:
-              endpoint,
-
-            p_p256dh:
-              p256dh,
-
-            p_auth_key:
-              authKey,
-
-            p_user_agent:
-              navigator.userAgent
-          }
-        );
-
-
-      if (error) {
-
-        console.warn(
-          "PickDee Shop Push register error:",
-          error
-        );
-
-        return;
+        }
 
       }
 
 
-      console.log(
-        "PickDee Shop Push: đăng ký thiết bị thành công."
+      return await saveShopPushSubscription(
+        subscription
       );
 
     }
@@ -1176,7 +1339,49 @@
         error
       );
 
+      return false;
+
     }
+
+  }
+
+
+  function bindShopPushPermissionToBell() {
+
+    const bell =
+      document.getElementById(
+        "pickdeeShopNotificationBell"
+      );
+
+
+    if (
+      !bell
+      ||
+      bell.dataset
+        .shopPushBound
+        ===
+        "1"
+    ) {
+
+      return;
+
+    }
+
+
+    bell.dataset.shopPushBound =
+      "1";
+
+
+    bell.addEventListener(
+      "click",
+      async function () {
+
+        await ensureShopPushSubscription(
+          true
+        );
+
+      }
+    );
 
   }
 
@@ -1232,7 +1437,13 @@
     }
 
 
-    await syncExistingShopPushSubscription();
+    bindShopPushPermissionToBell();
+
+
+    await ensureShopPushSubscription(
+      false
+    );
+
 
     await loadUnreadCount();
 
@@ -1258,7 +1469,9 @@
       "focus",
       function () {
 
-        syncExistingShopPushSubscription();
+        ensureShopPushSubscription(
+          false
+        );
 
         loadUnreadCount();
 
@@ -1266,12 +1479,15 @@
     );
 
 
-       window.PickDeeShopNotifications = {
+    window.PickDeeShopNotifications = {
 
       refresh:
         async function () {
 
-          await syncExistingShopPushSubscription();
+          await ensureShopPushSubscription(
+            false
+          );
+
 
           await loadUnreadCount();
 
@@ -1281,6 +1497,15 @@
             await loadNotifications();
 
           }
+
+        },
+
+      enablePush:
+        async function () {
+
+          return await ensureShopPushSubscription(
+            true
+          );
 
         }
 
