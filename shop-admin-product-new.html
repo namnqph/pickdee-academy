@@ -323,7 +323,74 @@
     .image-input {
       margin-top: 8px;
     }
+.image-box.gallery-mode {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 8px;
+  padding: 8px;
+  align-items: stretch;
+  justify-content: stretch;
+}
 
+.image-preview-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+}
+
+.image-preview-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview-order {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: rgba(7,21,35,.88);
+  color: #fff;
+
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.image-preview-primary {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+
+  padding: 5px 7px;
+
+  border-radius: 999px;
+
+  background: #d8ff45;
+  color: #071523;
+
+  font-size: 8px;
+  font-weight: 950;
+}
+
+@media(max-width:390px) {
+  .image-box.gallery-mode {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
     .message {
       display: none;
 
@@ -756,27 +823,21 @@
       class="image-box"
     >
 
-      <div
-        id="imagePlaceholder"
-        class="image-placeholder"
-      >
-        Chọn 1 ảnh đại diện sản phẩm
-      </div>
-
-      <img
-        id="previewImage"
-        alt="Ảnh xem trước"
-      >
+      <div class="image-placeholder">
+  Chọn tối đa 12 ảnh sản phẩm<br>
+  Ảnh đầu tiên sẽ là ảnh đại diện
+</div>
 
     </div>
 
 
-    <input
-      id="imageInput"
-      class="image-input"
-      type="file"
-      accept="image/jpeg,image/png,image/webp,image/avif"
-    >
+   <input
+  id="imageInput"
+  class="image-input"
+  type="file"
+  accept="image/jpeg,image/png,image/webp,image/avif"
+  multiple
+>
 
 
     <div
@@ -835,27 +896,17 @@
       "successActions"
     );
 
-  const imageInput =
-    document.getElementById(
-      "imageInput"
-    );
+const imageInput =
+  document.getElementById(
+    "imageInput"
+  );
 
+const imageBox =
+  document.getElementById(
+    "imageBox"
+  );
 
-  const previewImage =
-    document.getElementById(
-      "previewImage"
-    );
-
-
-  const imagePlaceholder =
-    document.getElementById(
-      "imagePlaceholder"
-    );
-
-
-  let imageFile =
-    null;
-
+let imageFiles = [];
 
   if (
     !window.supabase
@@ -1169,77 +1220,173 @@
 
 
 
-  imageInput.addEventListener(
-    "change",
-    function () {
+ imageInput.addEventListener(
+  "change",
+  function () {
 
-      const file =
-        imageInput.files?.[0];
+    const files =
+      Array.from(
+        imageInput.files || []
+      );
 
+    if (!files.length) {
 
-      imageFile =
-        file || null;
+      imageFiles = [];
 
+      imageBox.classList.remove(
+        "gallery-mode"
+      );
 
-      if (!file) {
+      imageBox.innerHTML = `
+        <div class="image-placeholder">
+          Chọn tối đa 12 ảnh sản phẩm
+        </div>
+      `;
 
-        previewImage.style.display =
-          "none";
-
-        imagePlaceholder.style.display =
-          "block";
-
-        return;
-
-      }
-
-
-      if (
-        file.size
-        >
-        10 * 1024 * 1024
-      ) {
-
-        imageInput.value =
-          "";
-
-        imageFile =
-          null;
-
-
-        showMessage(
-          "Ảnh tối đa 10MB.",
-          "error"
-        );
-
-        return;
-
-      }
-
-
-      clearMessage();
-
-
-      const objectUrl =
-        URL.createObjectURL(
-          file
-        );
-
-
-      previewImage.src =
-        objectUrl;
-
-
-      previewImage.style.display =
-        "block";
-
-
-      imagePlaceholder.style.display =
-        "none";
-
+      return;
     }
-  );
 
+
+    if (files.length > 12) {
+
+      imageInput.value = "";
+      imageFiles = [];
+
+      imageBox.classList.remove(
+        "gallery-mode"
+      );
+
+      imageBox.innerHTML = `
+        <div class="image-placeholder">
+          Chọn tối đa 12 ảnh sản phẩm
+        </div>
+      `;
+
+      showMessage(
+        "Mỗi sản phẩm được chọn tối đa 12 ảnh.",
+        "error"
+      );
+
+      return;
+    }
+
+
+    const oversizedFile =
+      files.find(
+        file =>
+          file.size >
+          10 * 1024 * 1024
+      );
+
+
+    if (oversizedFile) {
+
+      imageInput.value = "";
+      imageFiles = [];
+
+      imageBox.classList.remove(
+        "gallery-mode"
+      );
+
+      imageBox.innerHTML = `
+        <div class="image-placeholder">
+          Chọn tối đa 12 ảnh sản phẩm
+        </div>
+      `;
+
+      showMessage(
+        `Ảnh "${oversizedFile.name}" vượt quá 10MB.`,
+        "error"
+      );
+
+      return;
+    }
+
+
+    imageFiles = files;
+
+    clearMessage();
+
+    imageBox.classList.add(
+      "gallery-mode"
+    );
+
+
+    imageBox.innerHTML =
+      imageFiles
+        .map(
+          (file,index) => `
+            <div class="image-preview-item">
+
+              <img
+                data-preview-index="${index}"
+                alt="${escapeHtml(file.name)}"
+              >
+
+              ${
+                index === 0
+                  ?
+                    `
+                      <div class="image-preview-primary">
+                        ẢNH ĐẠI DIỆN
+                      </div>
+                    `
+                  :
+                    ""
+              }
+
+              <div class="image-preview-order">
+                ${index + 1}
+              </div>
+
+            </div>
+          `
+        )
+        .join("");
+
+
+    imageFiles.forEach(
+      function (file,index) {
+
+        const img =
+          imageBox.querySelector(
+            `[data-preview-index="${index}"]`
+          );
+
+        if (!img) {
+          return;
+        }
+
+
+        const objectUrl =
+          URL.createObjectURL(
+            file
+          );
+
+
+        img.src =
+          objectUrl;
+
+
+        img.addEventListener(
+          "load",
+          function () {
+
+            URL.revokeObjectURL(
+              objectUrl
+            );
+
+          },
+          {
+            once: true
+          }
+        );
+
+      }
+    );
+
+  }
+);
   successActions.addEventListener(
     "click",
     async function (event) {
@@ -1626,76 +1773,98 @@
       }
 
 
-      if (imageFile) {
+     if (imageFiles.length) {
+
+  const imageRows = [];
 
 
-        const path =
-          `products/${product.id}/${safeFilename(
-            imageFile.name
-          )}`;
+  for (
+    let index = 0;
+    index < imageFiles.length;
+    index++
+  ) {
+
+    const file =
+      imageFiles[index];
 
 
-        const {
-          error: uploadError
-        } =
-          await sb.storage
-            .from(
-              "shop-products"
-            )
-            .upload(
-              path,
-              imageFile,
-              {
-                cacheControl:
-                  "3600",
-
-                upsert:
-                  false
-              }
-            );
+    const path =
+      `products/${product.id}/${index + 1}-${safeFilename(
+        file.name
+      )}`;
 
 
-        if (uploadError) {
-          throw uploadError;
-        }
+    const {
+      error: uploadError
+    } =
+      await sb.storage
+        .from(
+          "shop-products"
+        )
+        .upload(
+          path,
+          file,
+          {
+            cacheControl:
+              "3600",
+
+            upsert:
+              false
+          }
+        );
 
 
-        const {
-          error: imageError
-        } =
-          await sb
-            .from(
-              "shop_product_images"
-            )
-            .insert({
-
-              product_id:
-                product.id,
-
-              variant_id:
-                null,
-
-              storage_path:
-                path,
-
-              alt_text:
-                productName,
-
-              sort_order:
-                0,
-
-              is_primary:
-                true
-
-            });
+    if (uploadError) {
+      throw uploadError;
+    }
 
 
-        if (imageError) {
-          throw imageError;
-        }
+    imageRows.push({
 
-      }
+      product_id:
+        product.id,
 
+      variant_id:
+        null,
+
+      storage_path:
+        path,
+
+      alt_text:
+        index === 0
+          ?
+            productName
+          :
+            `${productName} - ảnh ${index + 1}`,
+
+      sort_order:
+        index,
+
+      is_primary:
+        index === 0
+
+    });
+
+  }
+
+
+  const {
+    error: imageError
+  } =
+    await sb
+      .from(
+        "shop_product_images"
+      )
+      .insert(
+        imageRows
+      );
+
+
+  if (imageError) {
+    throw imageError;
+  }
+
+}
 
          const publicUrl =
         productPublicUrl(
