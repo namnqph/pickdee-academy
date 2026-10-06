@@ -1412,110 +1412,372 @@
 
       </section>
 
-      <section class="section">
+           <section class="section">
 
         <div class="section-title">
           Vận chuyển
         </div>
 
-        <div
-          style="
-            display:grid;
-            gap:10px;
-          "
-        >
-                  <select
-            id="shippingStatusInput"
-            style="
-              width:100%;
-              min-height:44px;
-              padding:0 12px;
-              border-radius:12px;
-              border:1px solid rgba(255,255,255,.10);
-              background:#071523;
-              color:#ffffff;
-              outline:none;
-              font-size:12px;
-              font-weight:800;
-            "
-          >
-      <option value="not_shipped" ${shippingStatus === "not_shipped" ? "selected" : ""}>Chưa gửi hàng</option>
-<option value="shipped" ${shippingStatus === "shipped" ? "selected" : ""}>Đã giao cho đơn vị vận chuyển</option>
-          </select>
-          <select
-            id="shippingProviderInput"
-            style="
-              width:100%;
-              min-height:44px;
-              padding:0 12px;
-              border-radius:12px;
-              border:1px solid rgba(255,255,255,.10);
-              background:#071523;
-              color:#ffffff;
-              outline:none;
-              font-size:12px;
-              font-weight:800;
-            "
-          >
-            <option value="">Chọn đơn vị vận chuyển</option>
-            <option value="viettel_post" ${shippingProvider === "viettel_post" ? "selected" : ""}>Viettel Post</option>
-            <option value="ghn" ${shippingProvider === "ghn" ? "selected" : ""}>GHN</option>
-            <option value="ghtk" ${shippingProvider === "ghtk" ? "selected" : ""}>GHTK</option>
-            <option value="jnt" ${shippingProvider === "jnt" ? "selected" : ""}>J&T</option>
-            <option value="spx" ${shippingProvider === "spx" ? "selected" : ""}>SPX Shopee Express</option>
-            <option value="other" ${shippingProvider === "other" ? "selected" : ""}>Khác</option>
-          </select>
+        <div style="display:grid;gap:10px;">
 
-          <input
-            id="trackingCodeInput"
-            type="text"
-            value="${escapeHtml(trackingCode)}"
-            placeholder="Mã vận đơn / mã tracking"
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              TRẠNG THÁI VẬN CHUYỂN
+            </div>
+
+            <select
+              id="shippingStatusInput"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+              <option
+                value="not_shipped"
+                ${shippingStatus === "not_shipped" ? "selected" : ""}
+              >
+                Chưa gửi hàng
+              </option>
+
+              <option
+                value="shipped"
+                ${shippingStatus === "shipped" ? "selected" : ""}
+              >
+                Đã giao cho đơn vị vận chuyển
+              </option>
+            </select>
+          </div>
+
+
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              ĐƠN VỊ VẬN CHUYỂN
+            </div>
+
+            <select
+              id="shippingProviderInput"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+              <option value="">
+                Chọn đơn vị vận chuyển
+              </option>
+
+              <option
+                value="spx"
+                ${shippingProvider === "spx" ? "selected" : ""}
+              >
+                SPX Shopee Express
+              </option>
+
+              <option
+                value="viettel_post"
+                ${shippingProvider === "viettel_post" ? "selected" : ""}
+              >
+                Viettel Post
+              </option>
+
+              <option
+                value="ghn"
+                ${shippingProvider === "ghn" ? "selected" : ""}
+              >
+                GHN
+              </option>
+
+              <option
+                value="ghtk"
+                ${shippingProvider === "ghtk" ? "selected" : ""}
+              >
+                GHTK
+              </option>
+
+              <option
+                value="jnt"
+                ${shippingProvider === "jnt" ? "selected" : ""}
+              >
+                J&T
+              </option>
+
+              <option
+                value="other"
+                ${shippingProvider === "other" ? "selected" : ""}
+              >
+                Đơn vị khác
+              </option>
+            </select>
+          </div>
+
+
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              MÃ VẬN ĐƠN
+            </div>
+
+            <input
+              id="trackingCodeInput"
+              type="text"
+              value="${escapeHtml(trackingCode)}"
+              placeholder="Mã vận đơn / mã tracking"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+
+            <button
+              id="copyTrackingCodeBtn"
+              type="button"
+              class="action-btn action-secondary"
+              style="
+                width:100%;
+                min-height:36px;
+                margin-top:7px;
+                font-size:10px;
+              "
+            >
+              COPY MÃ VẬN ĐƠN
+            </button>
+          </div>
+
+
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              PHÍ ĐVVC THỰC TẾ / PICKDEE TRẢ
+            </div>
+
+            <input
+              id="shippingCarrierCostInput"
+              type="number"
+              min="0"
+              step="1000"
+              value="${escapeHtml(o.shipping_carrier_cost ?? 0)}"
+              placeholder="Ví dụ: 15000"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+
+            <div
+              style="
+                margin-top:6px;
+                color:rgba(255,255,255,.40);
+                font-size:9px;
+                line-height:1.5;
+              "
+            >
+              SPX của PickDee mặc định 15.000đ. Nếu đơn đặc biệt
+              có phí thực tế khác, có thể sửa trực tiếp tại đây.
+            </div>
+          </div>
+
+
+          <div
+            id="shippingPricingSummary"
             style="
-              width:100%;
-              min-height:44px;
-              padding:0 12px;
+              padding:13px;
               border-radius:12px;
-              border:1px solid rgba(255,255,255,.10);
-              background:#071523;
-              color:#ffffff;
-              outline:none;
-              font-size:12px;
-              font-weight:800;
+              border:1px solid rgba(216,255,69,.18);
+              background:rgba(216,255,69,.045);
+              display:grid;
+              gap:8px;
             "
           >
-          <button
-            id="copyTrackingCodeBtn"
-            type="button"
-            class="action-btn action-secondary"
-            style="
-              width:100%;
-              min-height:36px;
-              font-size:10px;
-            "
-          >
-            COPY MÃ VẬN ĐƠN
-          </button>
-          <input
-            id="shippingFeeInput"
-            type="number"
-            min="0"
-            step="1000"
-            value="${escapeHtml(shippingFee || 0)}"
-            placeholder="Phí ship"
-            style="
-              width:100%;
-              min-height:44px;
-              padding:0 12px;
-              border-radius:12px;
-              border:1px solid rgba(255,255,255,.10);
-              background:#071523;
-              color:#ffffff;
-              outline:none;
-              font-size:12px;
-              font-weight:800;
-            "
-          >
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                gap:12px;
+              "
+            >
+              <span class="info-label">
+                PHÍ ĐVVC
+              </span>
+
+              <strong id="shippingCarrierCostText">
+                ${money(o.shipping_carrier_cost || 0)}
+              </strong>
+            </div>
+
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                gap:12px;
+              "
+            >
+              <span class="info-label">
+                PICKDEE HỖ TRỢ
+              </span>
+
+              <strong
+                id="shippingDiscountText"
+                style="color:#d8ff45;"
+              >
+                -${money(o.shipping_discount || 0)}
+              </strong>
+            </div>
+
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                gap:12px;
+                padding-top:8px;
+                border-top:1px solid rgba(255,255,255,.08);
+              "
+            >
+              <span class="info-label">
+                PHÍ KHÁCH TRẢ
+              </span>
+
+              <strong
+                id="shippingFeeText"
+                style="color:#d8ff45;font-size:15px;"
+              >
+                ${money(shippingFee || 0)}
+              </strong>
+            </div>
+
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                gap:12px;
+              "
+            >
+              <span class="info-label">
+                TỔNG KHÁCH THANH TOÁN
+              </span>
+
+              <strong id="shippingCustomerTotalText">
+                ${money(
+                  Number(o.total_amount || 0)
+                  +
+                  Number(shippingFee || 0)
+                )}
+              </strong>
+            </div>
+
+
+            <div
+              id="shippingPolicyReasonText"
+              style="
+                margin-top:2px;
+                color:rgba(255,255,255,.48);
+                font-size:9px;
+                line-height:1.5;
+              "
+            >
+              Chọn đơn vị vận chuyển để hệ thống gợi ý phí.
+            </div>
+
+          </div>
+
+
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              PHÍ VẬN CHUYỂN KHÁCH TRẢ
+            </div>
+
+            <input
+              id="shippingFeeInput"
+              type="number"
+              min="0"
+              step="1000"
+              value="${escapeHtml(shippingFee || 0)}"
+              placeholder="Phí khách phải trả"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+
+            <div
+              style="
+                margin-top:6px;
+                color:rgba(255,255,255,.40);
+                font-size:9px;
+                line-height:1.5;
+              "
+            >
+              SPX sẽ được hệ thống tự gợi ý. Anh/chị vẫn có thể
+              sửa tay nếu có chương trình đặc biệt.
+            </div>
+          </div>
+
+
+          <div>
+            <div class="info-label" style="margin-bottom:6px;">
+              LÝ DO ĐIỀU CHỈNH PHÍ
+            </div>
+
+            <input
+              id="shippingOverrideReasonInput"
+              type="text"
+              value="${escapeHtml(o.shipping_override_reason || "")}"
+              placeholder="Ví dụ: Event freeship, hỗ trợ khách, đơn đặc biệt..."
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+          </div>
+
 
           <textarea
             id="shippingNoteInput"
@@ -1530,11 +1792,12 @@
               color:#ffffff;
               outline:none;
               resize:vertical;
-              font-size:12px;
+              font-size:16px;
               font-weight:750;
               line-height:1.5;
             "
           >${escapeHtml(shippingNote)}</textarea>
+
 
           <button
             id="saveShippingBtn"
@@ -1542,21 +1805,22 @@
             class="action-btn action-primary"
             style="
               width:100%;
-              min-height:42px;
+              min-height:44px;
               font-size:10px;
             "
           >
             LƯU VẬN CHUYỂN
           </button>
 
+
           <div
             id="shippingMessage"
             class="message"
           ></div>
+
         </div>
 
       </section>
-
       <section class="section">
 
         <div class="section-title">
@@ -1876,9 +2140,21 @@
       );
 
 
+    const shippingCarrierCostInput =
+      document.getElementById(
+        "shippingCarrierCostInput"
+      );
+
+
     const shippingFeeInput =
       document.getElementById(
         "shippingFeeInput"
+      );
+
+
+    const shippingOverrideReasonInput =
+      document.getElementById(
+        "shippingOverrideReasonInput"
       );
 
 
@@ -1900,6 +2176,548 @@
       );
 
 
+    const shippingCarrierCostText =
+      document.getElementById(
+        "shippingCarrierCostText"
+      );
+
+
+    const shippingDiscountText =
+      document.getElementById(
+        "shippingDiscountText"
+      );
+
+
+    const shippingFeeText =
+      document.getElementById(
+        "shippingFeeText"
+      );
+
+
+    const shippingCustomerTotalText =
+      document.getElementById(
+        "shippingCustomerTotalText"
+      );
+
+
+    const shippingPolicyReasonText =
+      document.getElementById(
+        "shippingPolicyReasonText"
+      );
+
+
+    const SPX_BASE_FEE =
+      15000;
+
+
+    const FREE_SHIPPING_THRESHOLD =
+      300000;
+
+
+    /*
+      Nhận diện bóng Pickleball.
+
+      Các sản phẩm bóng hiện tại của PickDee:
+      - LT48
+      - PPA Life Time
+      - TONIKER NEXUS
+      - Toniker Mate Pro
+
+      Ngoài ra sản phẩm bắt đầu bằng "Bóng "
+      cũng được xem là bóng Pickleball.
+    */
+    function orderHasPickleballBall() {
+
+      const knownBallKeys =
+        [
+          "lt48",
+          "ppa life time",
+          "toniker nexus",
+          "toniker mate pro"
+        ];
+
+
+      return currentItems.some(
+        function (item) {
+
+          const name =
+            String(
+              item.product_name || ""
+            )
+              .trim()
+              .toLocaleLowerCase(
+                "vi-VN"
+              );
+
+
+          if (
+            name.startsWith(
+              "bóng "
+            )
+          ) {
+
+            return true;
+
+          }
+
+
+          return knownBallKeys.some(
+            function (key) {
+
+              return name.includes(
+                key
+              );
+
+            }
+          );
+
+        }
+      );
+
+    }
+
+
+    const hasPickleballBall =
+      orderHasPickleballBall();
+
+
+    const merchandiseTotal =
+      Number(
+        currentOrder.total_amount || 0
+      );
+
+
+    let shippingFeeManuallyEdited =
+      String(
+        currentOrder.shipping_pricing_mode
+        ||
+        ""
+      )
+      ===
+      "manual_override";
+
+
+    function shippingRecommendation() {
+
+      const provider =
+        shippingProviderInput
+          ?.value
+          ?.trim()
+        ||
+        "";
+
+
+      let carrierCost =
+        Math.max(
+          0,
+          Number(
+            shippingCarrierCostInput
+              ?.value
+            ||
+            0
+          )
+        );
+
+
+      if (
+        provider === "spx"
+        &&
+        carrierCost <= 0
+      ) {
+
+        carrierCost =
+          SPX_BASE_FEE;
+
+      }
+
+
+      let suggestedFee =
+        carrierCost;
+
+
+      let reason =
+        "Nhập phí theo quy định của đơn vị vận chuyển.";
+
+
+      if (
+        provider === "spx"
+      ) {
+
+        if (
+          merchandiseTotal
+            >=
+          FREE_SHIPPING_THRESHOLD
+          &&
+          !hasPickleballBall
+        ) {
+
+          suggestedFee =
+            0;
+
+
+          reason =
+            "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
+
+        }
+        else if (
+          hasPickleballBall
+        ) {
+
+          suggestedFee =
+            carrierCost;
+
+
+          reason =
+            "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
+
+        }
+        else {
+
+          suggestedFee =
+            carrierCost;
+
+
+          reason =
+            "Đơn dưới 300.000đ: khách thanh toán phí vận chuyển.";
+
+        }
+
+      }
+      else if (
+        !provider
+      ) {
+
+        reason =
+          "Chọn đơn vị vận chuyển để hệ thống gợi ý phí.";
+
+      }
+
+
+      return {
+        provider,
+        carrierCost,
+        suggestedFee,
+        reason
+      };
+
+    }
+
+
+    function updateShippingPricingSummary() {
+
+      if (
+        !shippingCarrierCostInput
+        ||
+        !shippingFeeInput
+      ) {
+
+        return;
+
+      }
+
+
+      const recommendation =
+        shippingRecommendation();
+
+
+      const actualCarrierCost =
+        recommendation.carrierCost;
+
+
+      const actualCustomerFee =
+        Math.max(
+          0,
+          Number(
+            shippingFeeInput.value || 0
+          )
+        );
+
+
+      const actualDiscount =
+        Math.max(
+          0,
+          actualCarrierCost
+          -
+          actualCustomerFee
+        );
+
+
+      const totalCustomerPays =
+        merchandiseTotal
+        +
+        actualCustomerFee;
+
+
+      if (
+        shippingCarrierCostText
+      ) {
+
+        shippingCarrierCostText.textContent =
+          money(
+            actualCarrierCost
+          );
+
+      }
+
+
+      if (
+        shippingDiscountText
+      ) {
+
+        shippingDiscountText.textContent =
+          "-"
+          +
+          money(
+            actualDiscount
+          );
+
+      }
+
+
+      if (
+        shippingFeeText
+      ) {
+
+        shippingFeeText.textContent =
+          money(
+            actualCustomerFee
+          );
+
+      }
+
+
+      if (
+        shippingCustomerTotalText
+      ) {
+
+        shippingCustomerTotalText.textContent =
+          money(
+            totalCustomerPays
+          );
+
+      }
+
+
+      const isOverride =
+        recommendation.provider
+        &&
+        Math.round(
+          actualCustomerFee
+        )
+        !==
+        Math.round(
+          recommendation.suggestedFee
+        );
+
+
+      if (
+        shippingPolicyReasonText
+      ) {
+
+        shippingPolicyReasonText.textContent =
+          isOverride
+            ?
+              "⚠ Phí khách trả đang được chỉnh thủ công. Khi lưu cần ghi lý do điều chỉnh."
+            :
+              recommendation.reason;
+
+      }
+
+    }
+
+
+    function applyAutomaticShippingPricing(
+      force
+    ) {
+
+      if (
+        !shippingProviderInput
+        ||
+        !shippingCarrierCostInput
+        ||
+        !shippingFeeInput
+      ) {
+
+        return;
+
+      }
+
+
+      const provider =
+        shippingProviderInput.value.trim();
+
+
+      if (
+        provider === "spx"
+      ) {
+
+        if (
+          force
+          ||
+          Number(
+            shippingCarrierCostInput.value
+            ||
+            0
+          )
+          <=
+          0
+        ) {
+
+          shippingCarrierCostInput.value =
+            String(
+              SPX_BASE_FEE
+            );
+
+        }
+
+      }
+
+
+      const recommendation =
+        shippingRecommendation();
+
+
+      if (
+        provider
+        &&
+        (
+          force
+          ||
+          !shippingFeeManuallyEdited
+        )
+      ) {
+
+        shippingFeeInput.value =
+          String(
+            recommendation.suggestedFee
+          );
+
+      }
+
+
+      updateShippingPricingSummary();
+
+    }
+
+
+    if (
+      shippingProviderInput
+    ) {
+
+      shippingProviderInput.addEventListener(
+        "change",
+        function () {
+
+          shippingFeeManuallyEdited =
+            false;
+
+
+          if (
+            shippingOverrideReasonInput
+          ) {
+
+            shippingOverrideReasonInput.value =
+              "";
+
+          }
+
+
+          if (
+            shippingProviderInput.value
+            ===
+            "spx"
+          ) {
+
+            shippingCarrierCostInput.value =
+              String(
+                SPX_BASE_FEE
+              );
+
+          }
+          else {
+
+            shippingCarrierCostInput.value =
+              "0";
+
+            shippingFeeInput.value =
+              "0";
+
+          }
+
+
+          applyAutomaticShippingPricing(
+            true
+          );
+
+        }
+      );
+
+    }
+
+
+    if (
+      shippingCarrierCostInput
+    ) {
+
+      shippingCarrierCostInput.addEventListener(
+        "input",
+        function () {
+
+          if (
+            !shippingFeeManuallyEdited
+          ) {
+
+            const recommendation =
+              shippingRecommendation();
+
+
+            shippingFeeInput.value =
+              String(
+                recommendation.suggestedFee
+              );
+
+          }
+
+
+          updateShippingPricingSummary();
+
+        }
+      );
+
+    }
+
+
+    if (
+      shippingFeeInput
+    ) {
+
+      shippingFeeInput.addEventListener(
+        "input",
+        function () {
+
+          shippingFeeManuallyEdited =
+            true;
+
+
+          updateShippingPricingSummary();
+
+        }
+      );
+
+    }
+
+
+    /*
+      Khởi tạo lần đầu.
+
+      Nếu đơn SPX cũ chưa có shipping_carrier_cost,
+      hệ thống tự hiển thị 15.000đ.
+    */
+    applyAutomaticShippingPricing(
+      false
+    );
+
+
     if (
       saveShippingBtn
       &&
@@ -1909,7 +2727,11 @@
       &&
       trackingCodeInput
       &&
+      shippingCarrierCostInput
+      &&
       shippingFeeInput
+      &&
+      shippingOverrideReasonInput
       &&
       shippingNoteInput
     ) {
@@ -1921,135 +2743,296 @@
           saveShippingBtn.disabled =
             true;
 
+
           try {
 
-       const shippingFeeValue =
-  Number(
-    shippingFeeInput.value || 0
-  );
+            const shippingStatusValue =
+              shippingStatusInput
+                .value
+                .trim();
 
 
-const shippingStatusValue =
-  shippingStatusInput.value.trim();
+            const shippingProviderValue =
+              shippingProviderInput
+                .value
+                .trim();
 
 
-const updateData = {
-
-  shipping_status:
-    shippingStatusValue,
-
-  shipping_provider:
-    shippingProviderInput.value.trim(),
-
-  tracking_code:
-    trackingCodeInput.value.trim(),
-
-  shipping_fee:
-    shippingFeeValue,
-
-  shipping_note:
-    shippingNoteInput.value.trim()
-
-};
+            const trackingCodeValue =
+              trackingCodeInput
+                .value
+                .trim();
 
 
-/* =====================================================
-   ĐỒNG BỘ TRẠNG THÁI ĐƠN THEO VẬN CHUYỂN
-   CHỈ CHO PHÉP TIẾN VỀ PHÍA TRƯỚC
-===================================================== */
+            let shippingCarrierCostValue =
+              Math.max(
+                0,
+                Number(
+                  shippingCarrierCostInput
+                    .value
+                  ||
+                  0
+                )
+              );
 
 
-/*
-  Nếu đơn đã HOÀN TẤT,
-  không cho đưa vận chuyển quay lại
-  Chưa gửi / Đã gửi / Đang giao.
-*/
-if (
-  currentOrder.order_status !== "cancelled"
-) {
+            if (
+              shippingProviderValue
+              ===
+              "spx"
+              &&
+              shippingCarrierCostValue
+              <=
+              0
+            ) {
 
-  if (
-    shippingStatusValue === "shipped"
-    ||
-    shippingStatusValue === "in_transit"
-    ||
-    shippingStatusValue === "delivered"
-  ) {
-
-    /*
-      Quy trình PickDee kết thúc
-      khi đơn đã bàn giao cho ĐVVC.
-
-      Các trạng thái vận chuyển sau đó
-      không tự chuyển đơn sang completed
-      và không tự đánh dấu COD đã thanh toán.
-    */
-
-    updateData.order_status =
-      "shipping";
-
-  }
-
-}
-
-/* =====================================================
-   LƯU SHOP ORDER
-===================================================== */
-
-const {
-  data,
-  error
-} =
-  await sb
-    .from(
-      "shop_orders"
-    )
-    .update(
-      updateData
-    )
-    .eq(
-      "id",
-      currentOrder.id
-    )
-    .select("*")
-    .single();
+              shippingCarrierCostValue =
+                SPX_BASE_FEE;
 
 
-if (error) {
+              shippingCarrierCostInput.value =
+                String(
+                  SPX_BASE_FEE
+                );
 
-  throw error;
-
-}
-
-
-currentOrder =
-  data;
+            }
 
 
-/* RENDER LẠI TOÀN BỘ THÔNG TIN SAU KHI LƯU
-   để trạng thái đơn + thanh toán + vận chuyển
-   đều cập nhật ngay trên màn hình
-*/
-
-render();
-
-
-const refreshedShippingMessage =
-  document.getElementById(
-    "shippingMessage"
-  );
+            const shippingFeeValue =
+              Math.max(
+                0,
+                Number(
+                  shippingFeeInput.value
+                  ||
+                  0
+                )
+              );
 
 
-if (refreshedShippingMessage) {
+            const overrideReason =
+              shippingOverrideReasonInput
+                .value
+                .trim();
 
-  refreshedShippingMessage.className =
-    "message success";
 
-  refreshedShippingMessage.textContent =
-    "✓ Đã lưu thông tin vận chuyển.";
+            const recommendation =
+              shippingRecommendation();
 
-}
-         
+
+            const isManualOverride =
+              Boolean(
+                shippingProviderValue
+              )
+              &&
+              Math.round(
+                shippingFeeValue
+              )
+              !==
+              Math.round(
+                recommendation.suggestedFee
+              );
+
+
+            if (
+              isManualOverride
+              &&
+              !overrideReason
+            ) {
+
+              throw new Error(
+                "Anh/chị đang điều chỉnh phí ship khác mức hệ thống gợi ý. Vui lòng nhập lý do điều chỉnh."
+              );
+
+            }
+
+
+            if (
+              shippingStatusValue
+              ===
+              "shipped"
+              &&
+              !shippingProviderValue
+            ) {
+
+              throw new Error(
+                "Vui lòng chọn đơn vị vận chuyển trước khi đánh dấu đã giao ĐVVC."
+              );
+
+            }
+
+
+            if (
+              shippingStatusValue
+              ===
+              "shipped"
+              &&
+              !trackingCodeValue
+            ) {
+
+              throw new Error(
+                "Vui lòng nhập mã vận đơn trước khi đánh dấu đã giao ĐVVC."
+              );
+
+            }
+
+
+            const shippingDiscountValue =
+              Math.max(
+                0,
+                shippingCarrierCostValue
+                -
+                shippingFeeValue
+              );
+
+
+            let pricingMode =
+              null;
+
+
+            if (
+              shippingProviderValue
+            ) {
+
+              if (
+                isManualOverride
+              ) {
+
+                pricingMode =
+                  "manual_override";
+
+              }
+              else if (
+                shippingProviderValue
+                ===
+                "spx"
+              ) {
+
+                pricingMode =
+                  "spx_auto";
+
+              }
+              else {
+
+                pricingMode =
+                  "manual_carrier";
+
+              }
+
+            }
+
+
+            const updateData = {
+
+              shipping_status:
+                shippingStatusValue,
+
+              shipping_provider:
+                shippingProviderValue,
+
+              tracking_code:
+                trackingCodeValue,
+
+              shipping_carrier_cost:
+                shippingCarrierCostValue,
+
+              shipping_discount:
+                shippingDiscountValue,
+
+              shipping_fee:
+                shippingFeeValue,
+
+              shipping_pricing_mode:
+                pricingMode,
+
+              shipping_override_reason:
+                isManualOverride
+                  ?
+                    overrideReason
+                  :
+                    null,
+
+              shipping_note:
+                shippingNoteInput
+                  .value
+                  .trim()
+
+            };
+
+
+            /*
+              Quy trình PickDee kết thúc
+              khi bàn giao cho ĐVVC.
+
+              Không tự completed.
+              Không tự đánh dấu COD đã thanh toán.
+            */
+            if (
+              currentOrder.order_status
+              !==
+              "cancelled"
+              &&
+              shippingStatusValue
+              ===
+              "shipped"
+            ) {
+
+              updateData.order_status =
+                "shipping";
+
+            }
+
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  updateData
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+
+            if (error) {
+
+              throw error;
+
+            }
+
+
+            currentOrder =
+              data;
+
+
+            render();
+
+
+            const refreshedShippingMessage =
+              document.getElementById(
+                "shippingMessage"
+              );
+
+
+            if (
+              refreshedShippingMessage
+            ) {
+
+              refreshedShippingMessage.className =
+                "message success";
+
+
+              refreshedShippingMessage.textContent =
+                "✓ Đã lưu thông tin vận chuyển.";
+
+            }
 
           }
           catch (error) {
@@ -2060,10 +3043,13 @@ if (refreshedShippingMessage) {
             );
 
 
-            if (shippingMessage) {
+            if (
+              shippingMessage
+            ) {
 
               shippingMessage.className =
                 "message error";
+
 
               shippingMessage.textContent =
                 error?.message
@@ -2084,7 +3070,6 @@ if (refreshedShippingMessage) {
       );
 
     }
-
 
     const copyTrackingCodeBtn =
       document.getElementById(
