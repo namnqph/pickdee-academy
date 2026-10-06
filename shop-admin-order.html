@@ -788,8 +788,8 @@
       packing:
         "ĐANG ĐÓNG GÓI",
 
-      shipping:
-        "ĐANG GIAO",
+    shipping:
+  "ĐÃ GIAO ĐVVC",
 
       completed:
         "HOÀN TẤT",
@@ -1439,11 +1439,8 @@
               font-weight:800;
             "
           >
-                 <option value="not_shipped" ${shippingStatus === "not_shipped" ? "selected" : ""}>Chưa gửi hàng</option>
-            <option value="shipped" ${shippingStatus === "shipped" ? "selected" : ""}>Đã gửi hàng</option>
-            <option value="in_transit" ${shippingStatus === "in_transit" ? "selected" : ""}>Đang giao</option>
-            <option value="delivered" ${shippingStatus === "delivered" ? "selected" : ""}>Giao thành công</option>
-            <option value="returned" ${shippingStatus === "returned" ? "selected" : ""}>Hoàn hàng</option>
+      <option value="not_shipped" ${shippingStatus === "not_shipped" ? "selected" : ""}>Chưa gửi hàng</option>
+<option value="shipped" ${shippingStatus === "shipped" ? "selected" : ""}>Đã giao cho đơn vị vận chuyển</option>
           </select>
           <select
             id="shippingProviderInput"
@@ -1968,84 +1965,32 @@ const updateData = {
   Chưa gửi / Đã gửi / Đang giao.
 */
 if (
-  currentOrder.order_status === "completed"
-  &&
-  (
-    shippingStatusValue === "not_shipped"
-    ||
-    shippingStatusValue === "shipped"
-    ||
-    shippingStatusValue === "in_transit"
-  )
+  currentOrder.order_status !== "cancelled"
 ) {
 
-  throw new Error(
-    "Đơn đã hoàn tất. Không thể đưa trạng thái vận chuyển quay lại trước Giao thành công."
-  );
-
-}
-
-
-/*
-  Đơn đang ĐÓNG GÓI
-  + đã giao cho ĐVVC / đang giao
-  => chuyển đơn sang ĐANG GIAO.
-*/
-if (
-  currentOrder.order_status === "packing"
-  &&
-  (
-    shippingStatusValue === "shipped"
-    ||
-    shippingStatusValue === "in_transit"
-  )
-) {
-
-  updateData.order_status =
-    "shipping";
-
-}
-
-
-/*
-  Đơn đang ĐANG GIAO
-  + giao thành công
-  => hoàn tất đơn.
-*/
-if (
-  currentOrder.order_status === "shipping"
-  &&
-  shippingStatusValue === "delivered"
-) {
-
-  updateData.order_status =
-    "completed";
-
-
-  /*
-    COD / không phải chuyển khoản:
-    giao thành công => đã thanh toán.
-  */
   if (
-    currentOrder.payment_method
-    !==
-    "bank_transfer"
+    shippingStatusValue === "shipped"
+    ||
+    shippingStatusValue === "in_transit"
+    ||
+    shippingStatusValue === "delivered"
   ) {
 
-    updateData.payment_status =
-      "paid";
+    /*
+      Quy trình PickDee kết thúc
+      khi đơn đã bàn giao cho ĐVVC.
+
+      Các trạng thái vận chuyển sau đó
+      không tự chuyển đơn sang completed
+      và không tự đánh dấu COD đã thanh toán.
+    */
+
+    updateData.order_status =
+      "shipping";
 
   }
 
 }
-
-
-/*
-  returned = Hoàn hàng
-  hiện CHƯA tự hủy đơn.
-  Mình sẽ xử lý riêng luồng hoàn hàng
-  và nhập lại kho ở bước sau.
-*/
 
 /* =====================================================
    LƯU SHOP ORDER
@@ -2219,150 +2164,155 @@ if (refreshedShippingMessage) {
      ACTIONS
   ====================================================== */
 
-  function renderActions() {
+ function renderActions() {
 
-    const status =
-      currentOrder.order_status;
-
-
-    let html = "";
+  const status =
+    currentOrder.order_status;
 
 
-    if (
-      status === "new"
-    ) {
-
-      html = `
-
-        <button
-          class="action-btn action-danger"
-          data-status="cancelled"
-        >
-          HỦY ĐƠN
-        </button>
-
-        <button
-          class="action-btn action-primary"
-          data-status="confirmed"
-        >
-          XÁC NHẬN ĐƠN
-        </button>
-      `;
-
-    }
+  let html = "";
 
 
-    if (
-      status === "confirmed"
-    ) {
+  /* =====================================================
+     ĐƠN MỚI
+  ====================================================== */
 
-      html = `
+  if (
+    status === "new"
+  ) {
 
-        <button
-          class="action-btn action-danger"
-          data-status="cancelled"
-        >
-          HỦY ĐƠN
-        </button>
+    html = `
 
-        <button
-          class="action-btn action-primary"
-          data-status="packing"
-        >
-          BẮT ĐẦU ĐÓNG GÓI
-        </button>
-      `;
+      <button
+        class="action-btn action-danger"
+        data-status="cancelled"
+      >
+        HỦY ĐƠN
+      </button>
 
-    }
+      <button
+        class="action-btn action-primary"
+        data-status="confirmed"
+      >
+        XÁC NHẬN ĐƠN
+      </button>
 
-
-    if (
-      status === "packing"
-    ) {
-
-      html = `
-
-        <button
-          class="action-btn action-danger"
-          data-status="cancelled"
-        >
-          HỦY ĐƠN
-        </button>
-
-        <button
-          class="action-btn action-primary"
-          data-status="shipping"
-        >
-          ĐÃ GIAO ĐVVC
-        </button>
-      `;
-
-    }
-
-
-    if (
-      status === "shipping"
-    ) {
-
-      html = `
-
-        <button
-          class="action-btn action-primary"
-          data-status="completed"
-          style="grid-column:1 / -1;"
-        >
-          HOÀN TẤT ĐƠN
-        </button>
-      `;
-
-    }
-
-
-    if (
-      status === "completed"
-      ||
-      status === "cancelled"
-    ) {
-
-      actionBar.style.display =
-        "none";
-
-      return;
-
-    }
-
-
-    actions.innerHTML =
-      html;
-
-
-    actionBar.style.display =
-      "block";
-
-
-    actions
-      .querySelectorAll(
-        "[data-status]"
-      )
-      .forEach(
-        function (button) {
-
-          button.addEventListener(
-            "click",
-            function () {
-
-              changeStatus(
-                button.dataset.status
-              );
-
-            }
-          );
-
-        }
-      );
+    `;
 
   }
 
+
+  /* =====================================================
+     ĐÃ XÁC NHẬN
+  ====================================================== */
+
+  if (
+    status === "confirmed"
+  ) {
+
+    html = `
+
+      <button
+        class="action-btn action-danger"
+        data-status="cancelled"
+      >
+        HỦY ĐƠN
+      </button>
+
+      <button
+        class="action-btn action-primary"
+        data-status="packing"
+      >
+        BẮT ĐẦU ĐÓNG GÓI
+      </button>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     ĐANG ĐÓNG GÓI
+
+     Không còn nút ĐÃ GIAO ĐVVC.
+     Khi thực tế bàn giao hàng:
+     chọn Đã gửi hàng + hãng vận chuyển + mã vận đơn
+     rồi bấm LƯU VẬN CHUYỂN.
+  ====================================================== */
+
+  if (
+    status === "packing"
+  ) {
+
+    html = `
+
+      <button
+        class="action-btn action-danger"
+        data-status="cancelled"
+        style="grid-column:1 / -1;"
+      >
+        HỦY ĐƠN
+      </button>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     ĐÃ GIAO ĐVVC = KẾT THÚC QUY TRÌNH PICKDEE
+
+     Không còn:
+     - ĐÃ GIAO ĐVVC
+     - HOÀN TẤT ĐƠN
+  ====================================================== */
+
+  if (
+    status === "shipping"
+    ||
+    status === "completed"
+    ||
+    status === "cancelled"
+  ) {
+
+    actionBar.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  actions.innerHTML =
+    html;
+
+
+  actionBar.style.display =
+    "block";
+
+
+  actions
+    .querySelectorAll(
+      "[data-status]"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            changeStatus(
+              button.dataset.status
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
 
 
   /* =====================================================
