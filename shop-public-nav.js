@@ -470,13 +470,13 @@
      CURRENT PAGE
   ====================================================== */
 
-  const path =
-    window.location.pathname
-      .toLowerCase()
-      .replace(
-        /\\/+$/,
-        ""
-      );
+ const path =
+  window.location.pathname
+    .toLowerCase()
+    .replace(
+      /\/+$/,
+      ""
+    );
 
 
   const lookupActive =
