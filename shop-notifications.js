@@ -1348,19 +1348,18 @@
 
   function bindShopPushPermissionToBell() {
 
-    const bell =
+    const panel =
       document.getElementById(
-        "pickdeeShopNotificationBell"
+        "pickdeeShopNotificationPanel"
       );
 
 
     if (
-      !bell
+      !panel
       ||
-      bell.dataset
-        .shopPushBound
-        ===
-        "1"
+      document.getElementById(
+        "pickdeeShopPushBox"
+      )
     ) {
 
       return;
@@ -1368,24 +1367,483 @@
     }
 
 
-    bell.dataset.shopPushBound =
-      "1";
+    if (
+      !document.getElementById(
+        "pickdee-shop-push-ui-style"
+      )
+    ) {
+
+      const style =
+        document.createElement(
+          "style"
+        );
 
 
-    bell.addEventListener(
+      style.id =
+        "pickdee-shop-push-ui-style";
+
+
+      style.textContent = `
+
+        .pdsn-push-box {
+
+          padding:12px 15px;
+
+          border-bottom:
+            1px solid rgba(255,255,255,.08);
+
+          background:
+            rgba(255,255,255,.025);
+
+        }
+
+
+        .pdsn-push-btn {
+
+          width:100%;
+
+          min-height:38px;
+
+          padding:9px 12px;
+
+          border:
+            1px solid #d8ff45;
+
+          border-radius:10px;
+
+          background:#d8ff45;
+
+          color:#071523;
+
+          font-size:10px;
+          font-weight:950;
+
+          cursor:pointer;
+
+          transition:
+            .18s ease;
+
+        }
+
+
+        .pdsn-push-btn:hover {
+
+          transform:
+            translateY(-1px);
+
+        }
+
+
+        .pdsn-push-btn.is-enabled {
+
+          border-color:
+            rgba(91,226,155,.45);
+
+          background:
+            rgba(91,226,155,.12);
+
+          color:#5be29b;
+
+          cursor:default;
+
+        }
+
+
+        .pdsn-push-btn.is-blocked {
+
+          border-color:
+            rgba(255,92,105,.4);
+
+          background:
+            rgba(255,92,105,.10);
+
+          color:#ff8d96;
+
+          cursor:default;
+
+        }
+
+
+        .pdsn-push-btn.is-checking {
+
+          border-color:
+            rgba(255,255,255,.12);
+
+          background:
+            rgba(255,255,255,.06);
+
+          color:
+            rgba(255,255,255,.65);
+
+          cursor:wait;
+
+        }
+
+
+        .pdsn-push-hint {
+
+          margin-top:7px;
+
+          color:
+            rgba(255,255,255,.46);
+
+          font-size:9px;
+
+          line-height:1.45;
+
+          text-align:center;
+
+        }
+
+      `;
+
+
+      document.head.appendChild(
+        style
+      );
+
+    }
+
+
+    const box =
+      document.createElement(
+        "div"
+      );
+
+
+    box.id =
+      "pickdeeShopPushBox";
+
+
+    box.className =
+      "pdsn-push-box";
+
+
+    box.innerHTML = `
+
+      <button
+        id="pickdeeShopPushButton"
+        class="pdsn-push-btn is-checking"
+        type="button"
+      >
+        ĐANG KIỂM TRA THÔNG BÁO...
+      </button>
+
+      <div
+        id="pickdeeShopPushHint"
+        class="pdsn-push-hint"
+      ></div>
+
+    `;
+
+
+    const list =
+      document.getElementById(
+        "pickdeeShopNotificationList"
+      );
+
+
+    if (list) {
+
+      panel.insertBefore(
+        box,
+        list
+      );
+
+    }
+    else {
+
+      panel.appendChild(
+        box
+      );
+
+    }
+
+
+    const button =
+      document.getElementById(
+        "pickdeeShopPushButton"
+      );
+
+
+    const hint =
+      document.getElementById(
+        "pickdeeShopPushHint"
+      );
+
+
+    async function refreshPushButton() {
+
+      if (!button) {
+
+        return;
+
+      }
+
+
+      button.className =
+        "pdsn-push-btn is-checking";
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "ĐANG KIỂM TRA THÔNG BÁO...";
+
+
+      if (hint) {
+
+        hint.textContent =
+          "";
+
+      }
+
+
+      if (
+        !("Notification" in window)
+        ||
+        !("serviceWorker" in navigator)
+        ||
+        !("PushManager" in window)
+      ) {
+
+        button.className =
+          "pdsn-push-btn is-blocked";
+
+
+        button.textContent =
+          "THIẾT BỊ KHÔNG HỖ TRỢ PUSH";
+
+
+        button.disabled =
+          true;
+
+
+        if (hint) {
+
+          hint.textContent =
+            "Thiết bị hoặc trình duyệt này chưa hỗ trợ Web Push.";
+
+        }
+
+
+        return;
+
+      }
+
+
+      const permission =
+        Notification.permission;
+
+
+      if (
+        permission === "denied"
+      ) {
+
+        button.className =
+          "pdsn-push-btn is-blocked";
+
+
+        button.textContent =
+          "THÔNG BÁO ĐANG BỊ CHẶN";
+
+
+        button.disabled =
+          true;
+
+
+        if (hint) {
+
+          hint.textContent =
+            "Hãy bật lại quyền Thông báo cho PickDee trong Cài đặt của điện thoại.";
+
+        }
+
+
+        return;
+
+      }
+
+
+      let registration =
+        null;
+
+
+      try {
+
+        registration =
+          await navigator
+            .serviceWorker
+            .getRegistration();
+
+      }
+      catch (error) {
+
+        console.warn(
+          "PickDee Shop Push registration check:",
+          error
+        );
+
+      }
+
+
+      let subscription =
+        null;
+
+
+      if (registration) {
+
+        try {
+
+          subscription =
+            await registration
+              .pushManager
+              .getSubscription();
+
+        }
+        catch (error) {
+
+          console.warn(
+            "PickDee Shop Push subscription check:",
+            error
+          );
+
+        }
+
+      }
+
+
+      if (
+        permission === "granted"
+        &&
+        subscription
+      ) {
+
+        button.className =
+          "pdsn-push-btn is-enabled";
+
+
+        button.textContent =
+          "✓ THÔNG BÁO ĐÃ BẬT";
+
+
+        button.disabled =
+          true;
+
+
+        if (hint) {
+
+          hint.textContent =
+            "Thiết bị này đang nhận thông báo PickDee Shop.";
+
+        }
+
+
+        return;
+
+      }
+
+
+      button.className =
+        "pdsn-push-btn";
+
+
+      button.textContent =
+        "BẬT THÔNG BÁO";
+
+
+      button.disabled =
+        false;
+
+
+      if (hint) {
+
+        hint.textContent =
+          permission === "granted"
+          ?
+            "Nhấn để hoàn tất đăng ký Push cho thiết bị này."
+          :
+            "Nhấn một lần để nhận thông báo đơn hàng mới.";
+
+      }
+
+    }
+
+
+    button?.addEventListener(
       "click",
-      async function () {
+      async function (event) {
+
+        event.stopPropagation();
+
+
+        if (
+          Notification.permission
+          ===
+          "denied"
+        ) {
+
+          await refreshPushButton();
+
+          return;
+
+        }
+
+
+        button.disabled =
+          true;
+
+
+        button.className =
+          "pdsn-push-btn is-checking";
+
+
+        button.textContent =
+          "ĐANG BẬT THÔNG BÁO...";
+
+
+        if (hint) {
+
+          hint.textContent =
+            "";
+
+        }
+
 
         await ensureShopPushSubscription(
           true
         );
 
+
+        await refreshPushButton();
+
       }
     );
 
+
+    refreshPushButton();
+
+
+    setTimeout(
+      refreshPushButton,
+      800
+    );
+
+
+    setTimeout(
+      refreshPushButton,
+      2500
+    );
+
+
+    window.addEventListener(
+      "focus",
+      refreshPushButton
+    );
+
   }
-
-
   async function init() {
 
     addStyles();
