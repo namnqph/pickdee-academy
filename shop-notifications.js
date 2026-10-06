@@ -1266,7 +1266,7 @@
     );
 
 
-    window.PickDeeShopNotifications = {
+       window.PickDeeShopNotifications = {
 
       refresh:
         async function () {
@@ -1285,6 +1285,10 @@
         }
 
     };
+
+  }
+
+
   if (
     document.readyState
     ===
