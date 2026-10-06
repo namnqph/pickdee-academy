@@ -2008,34 +2008,35 @@ async function prepareCheckout() {
 
   if (!cart.length) {
 
-    bottomBar.style.display =
-      "none";
+  bottomBar.style.display =
+    "none";
 
 
-    checkoutContent.innerHTML = `
+  checkoutContent.innerHTML = `
 
-      <div class="empty">
+    <div class="empty">
 
-        <strong>
-          Chưa có sản phẩm để đặt hàng
-        </strong>
+      <strong>
+        Chưa có sản phẩm để đặt hàng
+      </strong>
 
-        <p>
-          Quay lại PickDee Shop
-          và chọn sản phẩm trước nhé.
-        </p>
+      <p>
+        Quay lại PickDee Shop
+        và chọn sản phẩm trước nhé.
+      </p>
 
-        <a href="./shop">
-          XEM SẢN PHẨM
-        </a>
+      <a href="./shop">
+        XEM SẢN PHẨM
+      </a>
 
-      </div>
-    `;
+    </div>
+
+  `;
 
 
-    return;
+  return;
 
-  }
+}
 
 
   /*
@@ -2576,90 +2577,258 @@ start();
               "";
 
 
-        checkoutContent.innerHTML = `
+     checkoutContent.innerHTML = `
 
-          <div class="empty">
+  <div class="empty">
 
-            <div
-              style="
-                font-size:48px;
-                margin-bottom:14px;
-              "
-            >
-              ✅
-            </div>
-
-
-            <strong>
-              Đặt hàng thành công
-            </strong>
+    <div
+      style="
+        font-size:48px;
+        margin-bottom:14px;
+      "
+    >
+      ✅
+    </div>
 
 
-            <p>
-              Mã đơn hàng của bạn:
-            </p>
+    <strong>
+      Đặt hàng thành công
+    </strong>
 
 
-            <div
-              style="
-                margin:14px auto 7px;
-                color:#d8ff45;
-                font-size:24px;
-                font-weight:950;
-                letter-spacing:.03em;
-              "
-            >
-              ${escapeHtml(
-                data.order_code
-              )}
-            </div>
+    <p>
+      Mã đơn hàng của bạn:
+    </p>
 
 
-            <p>
-              PickDee sẽ xử lý đơn hàng
-              theo thông tin anh/chị vừa cung cấp.
-            </p>
+    <div
+      style="
+        margin:14px auto 7px;
+        color:#d8ff45;
+        font-size:24px;
+        font-weight:950;
+        letter-spacing:.03em;
+      "
+    >
+      ${escapeHtml(
+        data.order_code
+      )}
+    </div>
 
 
-            ${
-              trackingUrl
-                ?
-                  `
-                    <a
-                      href="${escapeHtml(
-                        trackingUrl
-                      )}"
-                      style="
-                        width:100%;
-                        max-width:320px;
-                        margin-top:14px;
-                      "
-                    >
-                      THEO DÕI ĐƠN HÀNG
-                    </a>
-                  `
-                :
-                  ""
-            }
+    <button
+      id="copyOrderCodeBtn"
+      type="button"
+      style="
+        min-height:42px;
+        margin-top:5px;
+        padding:0 16px;
+
+        border-radius:10px;
+
+        border:
+          1px solid rgba(216,255,69,.28);
+
+        background:
+          rgba(216,255,69,.07);
+
+        color:#d8ff45;
+
+        font-size:10px;
+        font-weight:950;
+
+        cursor:pointer;
+      "
+    >
+      📋 COPY MÃ ĐƠN
+    </button>
 
 
+    <p
+      style="
+        max-width:340px;
+        margin:15px auto 0;
+        line-height:1.55;
+      "
+    >
+      PickDee đã nhận đơn hàng của anh/chị.
+      Hãy giữ lại mã đơn này để tra cứu khi cần.
+    </p>
+
+
+    <p
+      style="
+        max-width:340px;
+        margin:7px auto 0;
+        color:rgba(255,255,255,.42);
+        font-size:10px;
+        line-height:1.55;
+      "
+    >
+      Sau này anh/chị có thể vào mục
+      <strong style="color:#ffffff;">
+        TRA CỨU ĐƠN
+      </strong>
+      và dùng mã đơn + số điện thoại đặt hàng.
+    </p>
+
+
+    ${
+      trackingUrl
+        ?
+          `
             <a
-              href="./shop"
+              href="${escapeHtml(
+                trackingUrl
+              )}"
               style="
                 width:100%;
                 max-width:320px;
-                margin-top:8px;
-                background:rgba(255,255,255,.06);
-                color:#ffffff;
-                border:1px solid rgba(255,255,255,.12);
+                margin-top:16px;
               "
             >
-              TIẾP TỤC MUA SẮM
+              THEO DÕI ĐƠN HÀNG
             </a>
+          `
+        :
+          ""
+    }
 
-          </div>
 
-        `;
+    <a
+      href="./shop-order-lookup"
+      style="
+        width:100%;
+        max-width:320px;
+        margin-top:8px;
+
+        background:
+          rgba(216,255,69,.07);
+
+        color:#d8ff45;
+
+        border:
+          1px solid rgba(216,255,69,.22);
+      "
+    >
+      TRA CỨU ĐƠN HÀNG
+    </a>
+
+
+    <a
+      href="./shop"
+      style="
+        width:100%;
+        max-width:320px;
+        margin-top:8px;
+
+        background:
+          rgba(255,255,255,.06);
+
+        color:#ffffff;
+
+        border:
+          1px solid rgba(255,255,255,.12);
+      "
+    >
+      TIẾP TỤC MUA SẮM
+    </a>
+
+  </div>
+
+`;
+
+
+const copyOrderCodeBtn =
+  document.getElementById(
+    "copyOrderCodeBtn"
+  );
+
+
+copyOrderCodeBtn?.addEventListener(
+  "click",
+  async function () {
+
+    const orderCode =
+      String(
+        data?.order_code
+        ||
+        ""
+      ).trim();
+
+
+    if (!orderCode) {
+      return;
+    }
+
+
+    const oldText =
+      copyOrderCodeBtn.textContent;
+
+
+    try {
+
+      await navigator.clipboard.writeText(
+        orderCode
+      );
+
+    }
+    catch (_) {
+
+      const temp =
+        document.createElement(
+          "textarea"
+        );
+
+
+      temp.value =
+        orderCode;
+
+
+      temp.style.position =
+        "fixed";
+
+
+      temp.style.opacity =
+        "0";
+
+
+      document.body.appendChild(
+        temp
+      );
+
+
+      temp.focus();
+
+      temp.select();
+
+
+      document.execCommand(
+        "copy"
+      );
+
+
+      temp.remove();
+
+    }
+
+
+    copyOrderCodeBtn.textContent =
+      "✓ ĐÃ COPY MÃ ĐƠN";
+
+
+    window.setTimeout(
+      function () {
+
+        copyOrderCodeBtn.textContent =
+          oldText;
+
+      },
+      1600
+    );
+
+  }
+);
 
       }
       catch (error) {
