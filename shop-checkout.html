@@ -2563,6 +2563,24 @@ start();
           "none";
 
 
+               const trackingToken =
+          String(
+            data?.public_tracking_token
+            ||
+            ""
+          ).trim();
+
+
+        const trackingUrl =
+          trackingToken
+            ?
+              `./shop-track?token=${encodeURIComponent(
+                trackingToken
+              )}`
+            :
+              "";
+
+
         checkoutContent.innerHTML = `
 
           <div class="empty">
@@ -2596,7 +2614,9 @@ start();
                 letter-spacing:.03em;
               "
             >
-              ${escapeHtml(data.order_code)}
+              ${escapeHtml(
+                data.order_code
+              )}
             </div>
 
 
@@ -2606,13 +2626,45 @@ start();
             </p>
 
 
-            <a href="./shop">
+            ${
+              trackingUrl
+                ?
+                  `
+                    <a
+                      href="${escapeHtml(
+                        trackingUrl
+                      )}"
+                      style="
+                        width:100%;
+                        max-width:320px;
+                        margin-top:14px;
+                      "
+                    >
+                      THEO DÕI ĐƠN HÀNG
+                    </a>
+                  `
+                :
+                  ""
+            }
+
+
+            <a
+              href="./shop"
+              style="
+                width:100%;
+                max-width:320px;
+                margin-top:8px;
+                background:rgba(255,255,255,.06);
+                color:#ffffff;
+                border:1px solid rgba(255,255,255,.12);
+              "
+            >
               TIẾP TỤC MUA SẮM
             </a>
 
           </div>
-        `;
 
+        `;
 
       }
       catch (error) {
