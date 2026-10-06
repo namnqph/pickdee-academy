@@ -804,7 +804,97 @@
         >
 
       </div>
+<div class="switch-row">
 
+  <div class="switch-text">
+
+    <strong>
+      Sản phẩm có lựa chọn
+    </strong>
+
+    <span>
+      Ví dụ: Màu, Size, Loại...
+    </span>
+
+  </div>
+
+  <input
+    id="hasOptions"
+    type="checkbox"
+  >
+
+</div>
+
+
+<div
+  id="variantOptionsBox"
+  style="display:none;"
+>
+
+  <div class="form-grid">
+
+    <div class="field">
+
+      <label>
+        TÊN LỰA CHỌN 1
+      </label>
+
+      <input
+        id="option1Name"
+        type="text"
+        placeholder="Ví dụ: Màu"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        CÁC GIÁ TRỊ LỰA CHỌN 1
+      </label>
+
+      <input
+        id="option1Values"
+        type="text"
+        placeholder="Ví dụ: Đen, Trắng, Xanh, Hồng"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        TÊN LỰA CHỌN 2
+      </label>
+
+      <input
+        id="option2Name"
+        type="text"
+        placeholder="Ví dụ: Size"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        CÁC GIÁ TRỊ LỰA CHỌN 2
+      </label>
+
+      <input
+        id="option2Values"
+        type="text"
+        placeholder="Ví dụ: S, M, L"
+      >
+
+    </div>
+
+  </div>
+
+</div>
     </div>
 
   </section>
@@ -907,7 +997,28 @@ const imageBox =
   );
 
 let imageFiles = [];
+const hasOptions =
+  document.getElementById(
+    "hasOptions"
+  );
 
+const variantOptionsBox =
+  document.getElementById(
+    "variantOptionsBox"
+  );
+
+
+hasOptions.addEventListener(
+  "change",
+  function () {
+
+    variantOptionsBox.style.display =
+      hasOptions.checked
+        ? "block"
+        : "none";
+
+  }
+);
   if (
     !window.supabase
     ||
@@ -1559,7 +1670,111 @@ let imageFiles = [];
           "comparePrice"
         )
         .value;
+const hasOptionsValue =
+  hasOptions.checked;
 
+
+const option1Name =
+  document
+    .getElementById(
+      "option1Name"
+    )
+    .value
+    .trim();
+
+
+const option1Values =
+  [
+    ...new Set(
+      document
+        .getElementById(
+          "option1Values"
+        )
+        .value
+        .split(",")
+        .map(
+          value =>
+            value.trim()
+        )
+        .filter(Boolean)
+    )
+  ];
+
+
+const option2Name =
+  document
+    .getElementById(
+      "option2Name"
+    )
+    .value
+    .trim();
+
+
+const option2Values =
+  [
+    ...new Set(
+      document
+        .getElementById(
+          "option2Values"
+        )
+        .value
+        .split(",")
+        .map(
+          value =>
+            value.trim()
+        )
+        .filter(Boolean)
+    )
+  ];
+
+
+if (hasOptionsValue) {
+
+  if (
+    !option1Name
+    ||
+    !option1Values.length
+  ) {
+
+    showMessage(
+      "Nhập tên và ít nhất 1 giá trị cho Lựa chọn 1.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  if (
+    option2Name
+    &&
+    !option2Values.length
+  ) {
+
+    showMessage(
+      "Đã nhập tên Lựa chọn 2 thì phải có ít nhất 1 giá trị.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  if (
+    !option2Name
+    &&
+    option2Values.length
+  ) {
+
+    showMessage(
+      "Đã nhập giá trị Lựa chọn 2 thì phải nhập tên lựa chọn.",
+      "error"
+    );
+
+    return;
+  }
+
+}
 
     const activeProduct =
       document
@@ -1723,55 +1938,199 @@ let imageFiles = [];
       }
 
 
-      const {
-        data: variant,
-        error: variantError
-      } =
-        await sb
-          .from(
-            "shop_product_variants"
-          )
-          .insert({
+    const variantRows = [];
 
-            product_id:
-              product.id,
 
-            variant_name:
-              variantName,
+if (hasOptionsValue) {
 
-            price:
-              Math.round(
-                price
-              ),
+  let sortOrder = 0;
 
-            compare_at_price:
-              comparePriceRaw
-                ?
-                  Math.round(
-                    Number(
-                      comparePriceRaw
+
+  if (
+    option2Name
+    &&
+    option2Values.length
+  ) {
+
+    option1Values.forEach(
+      function (option1Value) {
+
+        option2Values.forEach(
+          function (option2Value) {
+
+            variantRows.push({
+
+              product_id:
+                product.id,
+
+              variant_name:
+                `${option1Value} / ${option2Value}`,
+
+              option1_name:
+                option1Name,
+
+              option1_value:
+                option1Value,
+
+              option2_name:
+                option2Name,
+
+              option2_value:
+                option2Value,
+
+              price:
+                Math.round(
+                  price
+                ),
+
+              compare_at_price:
+                comparePriceRaw
+                  ?
+                    Math.round(
+                      Number(
+                        comparePriceRaw
+                      )
                     )
-                  )
-                :
-                  null,
+                  :
+                    null,
 
-            is_active:
-              true,
+              is_active:
+                true,
 
-            sort_order:
-              0
+              sort_order:
+                sortOrder
 
-          })
-          .select(
-            "id,sku"
-          )
-          .single();
+            });
 
 
-      if (variantError) {
-        throw variantError;
+            sortOrder++;
+
+          }
+        );
+
       }
+    );
 
+  }
+  else {
+
+    option1Values.forEach(
+      function (option1Value,index) {
+
+        variantRows.push({
+
+          product_id:
+            product.id,
+
+          variant_name:
+            option1Value,
+
+          option1_name:
+            option1Name,
+
+          option1_value:
+            option1Value,
+
+          option2_name:
+            null,
+
+          option2_value:
+            null,
+
+          price:
+            Math.round(
+              price
+            ),
+
+          compare_at_price:
+            comparePriceRaw
+              ?
+                Math.round(
+                  Number(
+                    comparePriceRaw
+                  )
+                )
+              :
+                null,
+
+          is_active:
+            true,
+
+          sort_order:
+            index
+
+        });
+
+      }
+    );
+
+  }
+
+}
+else {
+
+  variantRows.push({
+
+    product_id:
+      product.id,
+
+    variant_name:
+      variantName,
+
+    option1_name:
+      null,
+
+    option1_value:
+      null,
+
+    option2_name:
+      null,
+
+    option2_value:
+      null,
+
+    price:
+      Math.round(
+        price
+      ),
+
+    compare_at_price:
+      comparePriceRaw
+        ?
+          Math.round(
+            Number(
+              comparePriceRaw
+            )
+          )
+        :
+          null,
+
+    is_active:
+      true,
+
+    sort_order:
+      0
+
+  });
+
+}
+
+
+const {
+  error: variantError
+} =
+  await sb
+    .from(
+      "shop_product_variants"
+    )
+    .insert(
+      variantRows
+    );
+
+
+if (variantError) {
+  throw variantError;
+}
 
      if (imageFiles.length) {
 
