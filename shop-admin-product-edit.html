@@ -1,56 +1,41 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
-
   <meta charset="utf-8">
-
   <meta
     name="viewport"
     content="width=device-width,initial-scale=1,viewport-fit=cover"
   >
-
   <meta name="theme-color" content="#071523">
-
   <title>Sửa sản phẩm | PickDee Shop</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js"></script>
-
   <style>
-
     * {
       box-sizing: border-box;
     }
-
     html,
     body {
       margin: 0;
       width: 100%;
       max-width: 100%;
       overflow-x: hidden;
-
       background: #071523;
       color: #fff;
-
       font-family:
         Inter,
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
-
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
-
       touch-action: manipulation;
     }
-
     body {
       min-height: 100vh;
       padding-bottom: 95px;
     }
-
     button,
     input,
     select,
@@ -58,845 +43,555 @@
     a {
       touch-action: manipulation;
     }
-
-
     /* =====================================================
        HEADER
     ====================================================== */
-
     .header {
       position: sticky;
       top: 0;
       z-index: 60;
-
       background:
         rgba(7,21,35,.97);
-
       border-bottom:
         1px solid rgba(255,255,255,.08);
-
       backdrop-filter:
         blur(16px);
     }
-
     .header-inner {
       width:
         min(760px,calc(100% - 18px));
-
       min-height: 60px;
-
       margin: auto;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       gap: 8px;
     }
-
     .brand {
       color: #fff;
-
       text-decoration: none;
-
       font-size: 20px;
       font-weight: 950;
-
       letter-spacing: -.04em;
     }
-
     .brand span {
       color: #d8ff45;
     }
-
     .back {
       min-height: 36px;
-
       padding:
         0 10px;
-
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
       border-radius: 10px;
-
       border:
         1px solid rgba(255,255,255,.12);
-
       color:
         rgba(255,255,255,.72);
-
       text-decoration: none;
-
       font-size: 9px;
       font-weight: 950;
-
       white-space: nowrap;
     }
-
-
     /* =====================================================
        MAIN
     ====================================================== */
-
     main {
       width:
         min(760px,calc(100% - 18px));
-
       margin:
         15px auto 30px;
     }
-
     .eyebrow {
       margin-bottom: 5px;
-
       color: #d8ff45;
-
       font-size: 10px;
       font-weight: 950;
-
       letter-spacing: .1em;
     }
-
     h1 {
       margin:
         0 0 5px;
-
       font-size:
         clamp(29px,7vw,40px);
-
       line-height: 1;
-
       letter-spacing: -.045em;
     }
-
     .intro {
       margin:
         0 0 14px;
-
       color:
         rgba(255,255,255,.48);
-
       font-size: 11px;
-
       line-height: 1.45;
     }
-
-
     /* =====================================================
        PRODUCT OVERVIEW
     ====================================================== */
-
     .overview {
       padding: 11px;
-
       margin-bottom: 10px;
-
       display: grid;
-
       grid-template-columns:
         72px minmax(0,1fr);
-
       gap: 11px;
-
       align-items: center;
-
       border-radius: 14px;
-
       border:
         1px solid rgba(255,255,255,.08);
-
       background: #0d1d2f;
     }
-
     .product-image {
       width: 72px;
       height: 72px;
-
       border-radius: 11px;
-
       overflow: hidden;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       border:
         1px solid rgba(255,255,255,.08);
-
       background:
         rgba(255,255,255,.04);
     }
-
     .product-image img {
       width: 100%;
       height: 100%;
-
       object-fit: cover;
     }
-
     .no-image {
       color:
         rgba(255,255,255,.25);
-
       font-size: 8px;
       font-weight: 900;
-
       text-align: center;
     }
-
     .overview-name {
       font-size: 14px;
       font-weight: 950;
-
       line-height: 1.25;
     }
-
     .overview-meta {
       margin-top: 5px;
-
       display: flex;
       flex-wrap: wrap;
-
       gap: 5px;
     }
-
     .tag {
       min-height: 21px;
-
       padding:
         0 7px;
-
       display: inline-flex;
       align-items: center;
-
       border-radius: 999px;
-
       background:
         rgba(255,255,255,.055);
-
       color:
         rgba(255,255,255,.55);
-
       font-size: 7px;
       font-weight: 950;
     }
-
     .tag.fixed {
       color: #d8ff45;
-
       background:
         rgba(216,255,69,.07);
     }
-
-
     /* =====================================================
        CARD
     ====================================================== */
-
     .card {
       margin-bottom: 10px;
-
       padding: 13px;
-
       border-radius: 15px;
-
       border:
         1px solid rgba(255,255,255,.08);
-
       background: #0d1d2f;
     }
-
     .card-title {
       margin-bottom: 11px;
-
       font-size: 12px;
       font-weight: 950;
-
       letter-spacing: -.01em;
     }
-
     .card-subtitle {
       margin:
         -5px 0 11px;
-
       color:
         rgba(255,255,255,.4);
-
       font-size: 9px;
-
       line-height: 1.45;
     }
-
-
     /* =====================================================
        FORM
     ====================================================== */
-
     .field {
       margin-bottom: 11px;
     }
-
     .field:last-child {
       margin-bottom: 0;
     }
-
     label {
       display: block;
-
       margin-bottom: 5px;
-
       color:
         rgba(255,255,255,.58);
-
       font-size: 8px;
       font-weight: 950;
-
       text-transform: uppercase;
-
       letter-spacing: .03em;
     }
-
     input,
     select,
     textarea {
       width: 100%;
-
       border:
         1px solid rgba(255,255,255,.12);
-
       border-radius: 10px;
-
       outline: none;
-
       background: #10243a;
-
       color: #fff;
-
       font-family: inherit;
-
       font-size: 16px;
     }
-
     input,
     select {
       min-height: 44px;
-
       padding:
         0 11px;
     }
-
     textarea {
       min-height: 88px;
-
       padding: 10px 11px;
-
       resize: vertical;
-
       line-height: 1.45;
     }
-
     input:focus,
     select:focus,
     textarea:focus {
       border-color:
         rgba(216,255,69,.6);
     }
-
     input:disabled {
       opacity: .55;
-
       color:
         rgba(255,255,255,.55);
     }
-
     .grid-2 {
       display: grid;
-
       grid-template-columns:
         1fr 1fr;
-
       gap: 8px;
     }
-
     .hint {
       margin-top: 5px;
-
       color:
         rgba(255,255,255,.32);
-
       font-size: 8px;
-
       line-height: 1.4;
     }
-
 /* =====================================================
    WHOLESALE TIERS
 ====================================================== */
-
 .wholesale-box {
   margin-top: 12px;
   padding: 11px;
-
   border-radius: 12px;
-
   border:
     1px solid rgba(216,255,69,.14);
-
   background:
     rgba(216,255,69,.035);
 }
-
 .wholesale-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   gap: 9px;
-
   margin-bottom: 9px;
 }
-
 .wholesale-title {
   font-size: 10px;
   font-weight: 950;
 }
-
 .wholesale-desc {
   margin-top: 3px;
-
   color:
     rgba(255,255,255,.38);
-
   font-size: 8px;
   line-height: 1.4;
 }
-
 .wholesale-add {
   flex: 0 0 auto;
-
   min-height: 32px;
-
   padding:
     0 9px;
-
   border-radius: 9px;
-
   border:
     1px solid rgba(216,255,69,.25);
-
   background:
     rgba(216,255,69,.08);
-
   color: #d8ff45;
-
   font-family: inherit;
-
   font-size: 8px;
   font-weight: 950;
-
   cursor: pointer;
 }
-
 .wholesale-tier-row {
   display: grid;
-
   grid-template-columns:
     minmax(0,1fr)
     minmax(0,1.2fr)
     36px;
-
   gap: 6px;
-
   align-items: end;
-
   margin-top: 7px;
 }
-
 .wholesale-tier-row input {
   min-width: 0;
 }
-
 .tier-remove {
   width: 36px;
   height: 44px;
-
   border-radius: 9px;
-
   border:
     1px solid rgba(255,100,100,.18);
-
   background:
     rgba(255,100,100,.06);
-
   color: #ffaaaa;
-
   font-size: 20px;
   font-weight: 700;
-
   cursor: pointer;
 }
-
 .wholesale-empty {
   padding: 12px 8px;
-
   text-align: center;
-
   border-radius: 9px;
-
   border:
     1px dashed rgba(255,255,255,.1);
-
   color:
     rgba(255,255,255,.35);
-
   font-size: 8px;
 }
     /* =====================================================
        CHECKBOX
     ====================================================== */
-
     .switch-row {
       min-height: 46px;
-
       padding:
         0 10px;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       gap: 10px;
-
       border-radius: 10px;
-
       border:
         1px solid rgba(255,255,255,.08);
-
       background:
         rgba(255,255,255,.03);
     }
-
     .switch-text {
       min-width: 0;
     }
-
     .switch-title {
       font-size: 10px;
       font-weight: 950;
     }
-
     .switch-desc {
       margin-top: 2px;
-
       color:
         rgba(255,255,255,.35);
-
       font-size: 8px;
     }
-
     .check {
       width: 22px;
       height: 22px;
-
       flex: 0 0 auto;
-
       accent-color: #d8ff45;
     }
-
-
     /* =====================================================
        NOTICE
     ====================================================== */
-
     .notice {
       margin-top: 8px;
-
       padding: 10px;
-
       border-radius: 10px;
-
       border:
         1px solid rgba(216,255,69,.14);
-
       background:
         rgba(216,255,69,.05);
-
       color:
         rgba(255,255,255,.48);
-
       font-size: 8px;
-
       line-height: 1.5;
     }
-
-
     /* =====================================================
        STATE
     ====================================================== */
-
     .state {
       padding:
         45px 18px;
-
       text-align: center;
-
       border-radius: 14px;
-
       border:
         1px dashed rgba(255,255,255,.13);
-
       color:
         rgba(255,255,255,.5);
-
       font-size: 11px;
-
       line-height: 1.5;
     }
-
-
     /* =====================================================
        MESSAGE
     ====================================================== */
-
     .message {
       display: none;
-
       margin-bottom: 10px;
-
       padding: 10px;
-
       border-radius: 10px;
-
       font-size: 9px;
       font-weight: 850;
-
       line-height: 1.45;
     }
-
     .message.success {
       display: block;
-
       border:
         1px solid rgba(216,255,69,.25);
-
       background:
         rgba(216,255,69,.07);
-
       color: #d8ff45;
     }
-
     .message.error {
       display: block;
-
       border:
         1px solid rgba(255,100,100,.24);
-
       background:
         rgba(255,100,100,.07);
-
       color: #ffaaaa;
     }
-
-
     /* =====================================================
        STICKY SAVE
     ====================================================== */
-
     .sticky-save {
       position: fixed;
-
       left: 0;
       right: 0;
       bottom: 0;
-
       z-index: 70;
-
       padding:
         8px 9px calc(8px + env(safe-area-inset-bottom));
-
       border-top:
         1px solid rgba(255,255,255,.08);
-
       background:
         rgba(7,21,35,.97);
-
       backdrop-filter:
         blur(16px);
     }
-
     .sticky-inner {
       width:
         min(760px,100%);
-
       margin: auto;
     }
-
     .save-btn {
       width: 100%;
-
       min-height: 48px;
-
       border: 0;
-
       border-radius: 12px;
-
       background: #d8ff45;
-
       color: #071523;
-
       font-family: inherit;
-
       font-size: 11px;
       font-weight: 950;
-
       cursor: pointer;
     }
-
     .save-btn:disabled {
       opacity: .45;
-
       cursor: default;
     }
-
     .danger-card {
       margin-top: 10px;
-
       padding: 12px;
-
       border-radius: 14px;
-
       border:
         1px solid rgba(255,100,100,.22);
-
       background:
         rgba(255,100,100,.055);
     }
-
     .danger-title {
       color: #ffb0b0;
-
       font-size: 11px;
       font-weight: 950;
     }
-
     .danger-desc {
       margin-top: 5px;
-
       color:
         rgba(255,255,255,.48);
-
       font-size: 9px;
       line-height: 1.45;
     }
-
     .delete-draft-btn {
       width: 100%;
-
       min-height: 44px;
-
       margin-top: 10px;
-
       border-radius: 11px;
-
       border:
         1px solid rgba(255,100,100,.28);
-
       background:
         rgba(255,100,100,.12);
-
       color: #ffb0b0;
-
       font-family: inherit;
       font-size: 10px;
       font-weight: 950;
-
       cursor: pointer;
     }
-
     .delete-draft-btn:disabled {
       opacity: .45;
       cursor: default;
     }
     @media(max-width:390px) {
-
       .grid-2 {
         grid-template-columns: 1fr;
       }
-
     }
-
   </style>
-
 </head>
-
-
-
 <body>
-
-
 <header class="header">
-
   <div class="header-inner">
-
     <a
       class="brand"
       href="./shop-admin-products"
     >
       PickDee<span>Shop</span>
     </a>
-
     <a
       class="back"
       href="./shop-admin-products"
     >
       ← SẢN PHẨM
     </a>
-
   </div>
-
 </header>
-
-
-
 <main>
-
   <div class="eyebrow">
     SHOP ADMIN
   </div>
-
   <h1>
     Sửa sản phẩm
   </h1>
-
   <p class="intro">
     Chỉnh thông tin bán hàng. Mã sản phẩm, SKU và tồn kho được hệ thống bảo vệ.
   </p>
-
-
   <div
     id="message"
     class="message"
   ></div>
-
-
   <div id="pageBody">
-
     <div class="state">
       Đang tải sản phẩm...
     </div>
-
   </div>
-
 </main>
-
-
-
 <div class="sticky-save">
-
   <div class="sticky-inner">
-
     <button
       id="saveBtn"
       class="save-btn"
@@ -905,71 +600,43 @@
     >
       LƯU THAY ĐỔI
     </button>
-
   </div>
-
 </div>
-
-
-
 <script>
-
 (function () {
-
-
   const cfg =
     window.PICKDEE_CONFIG || {};
-
-
   const pageBody =
     document.getElementById(
       "pageBody"
     );
-
-
   const saveBtn =
     document.getElementById(
       "saveBtn"
     );
-
-
   const messageBox =
     document.getElementById(
       "message"
     );
-
-
   const params =
     new URLSearchParams(
       location.search
     );
-
-
   const productId =
     Number(
       params.get("id")
     );
-
-
   let product = null;
-
 let variants = [];
-
 let categories = [];
-
 let images = [];
-
 let selectedImageFile = null;
-
 let wholesaleTiers = [];
-
 let selectedVariantId = null;
-
 let canDeleteDraftProduct = false;
   /* =====================================================
      SUPABASE
   ====================================================== */
-
   if (
     !window.supabase
     ||
@@ -977,29 +644,20 @@ let canDeleteDraftProduct = false;
     ||
     !cfg.SUPABASE_PUBLISHABLE_KEY
   ) {
-
     showFatal(
       "Không tải được hệ thống Shop."
     );
-
     return;
-
   }
-
-
   const sb =
     window.supabase.createClient(
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
-
-
   /* =====================================================
      HELPERS
   ====================================================== */
-
   function escapeHtml(value) {
-
     return String(
       value ?? ""
     )
@@ -1008,133 +666,81 @@ let canDeleteDraftProduct = false;
       .replaceAll(">","&gt;")
       .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
-
   }
-
-
   function moneyInput(value) {
-
     if (
       value === null
       ||
       value === undefined
     ) {
-
       return "";
-
     }
-
-
     return String(
       Number(value)
     );
-
   }
-
-
   function nullableText(value) {
-
     const text =
       String(
         value ?? ""
       ).trim();
-
-
     return (
       text
       ||
       null
     );
-
   }
-
-
   function nullableNumber(value) {
-
     const text =
       String(
         value ?? ""
       ).trim();
-
-
     if (!text) {
       return null;
     }
-
-
     const number =
       Number(text);
-
-
     if (
       !Number.isFinite(number)
     ) {
       return null;
     }
-
-
     return Math.round(number);
-
   }
-
-
   function showMessage(
     text,
     type
   ) {
-
     messageBox.className =
       `message ${type}`;
-
-
     messageBox.textContent =
       text;
-
-
     window.scrollTo({
       top: 0,
       behavior: "smooth"
     });
-
   }
-
-
   function clearMessage() {
-
     messageBox.className =
       "message";
-
-
     messageBox.textContent =
       "";
-
   }
-
-
   function showFatal(text) {
-
     pageBody.innerHTML = `
       <div class="state">
         ${escapeHtml(text)}
       </div>
     `;
-
-
     saveBtn.disabled =
       true;
-
   }
-
-
   function publicImageUrl(
     storagePath
   ) {
-
     if (!storagePath) {
       return "";
     }
-
-
     const {
       data
     } =
@@ -1145,24 +751,17 @@ let canDeleteDraftProduct = false;
         .getPublicUrl(
           storagePath
         );
-
-
     return (
       data?.publicUrl
       ||
       ""
     );
-
   }
-
-
   function primaryImage() {
-
     return (
       [...images]
         .sort(
           function (a,b) {
-
             if (
               Boolean(
                 a.is_primary
@@ -1172,7 +771,6 @@ let canDeleteDraftProduct = false;
                 b.is_primary
               )
             ) {
-
               return (
                 a.is_primary
                   ?
@@ -1180,10 +778,7 @@ let canDeleteDraftProduct = false;
                   :
                     1
               );
-
             }
-
-
             return (
               Number(
                 a.sort_order || 0
@@ -1193,31 +788,21 @@ let canDeleteDraftProduct = false;
                 b.sort_order || 0
               )
             );
-
           }
         )[0]
       ||
       null
     );
-
   }
-
 function productPublicUrl() {
-
   if (!product?.id) {
     return `${location.origin}/shop`;
   }
-
-
   return `${location.origin}/shop-product?id=${encodeURIComponent(
     product.id
   )}`;
-
 }
-
-
 function safeFileName(fileName) {
-
   const cleaned =
     String(
       fileName || "product-image"
@@ -1240,24 +825,16 @@ function safeFileName(fileName) {
         0,
         90
       );
-
-
   return (
     cleaned
     ||
     "product-image.jpg"
   );
-
 }
-
-
 async function uploadSelectedImage() {
-
   if (!selectedImageFile) {
     return;
   }
-
-
   if (
     !selectedImageFile.type
     ||
@@ -1265,33 +842,23 @@ async function uploadSelectedImage() {
       "image/"
     )
   ) {
-
     throw new Error(
       "File tải lên phải là ảnh."
     );
-
   }
-
-
   if (
     selectedImageFile.size
     >
     10 * 1024 * 1024
   ) {
-
     throw new Error(
       "Ảnh tối đa 10MB."
     );
-
   }
-
-
   const storagePath =
     `products/${product.id}/${Date.now()}-${safeFileName(
       selectedImageFile.name
     )}`;
-
-
   const uploadResult =
     await sb.storage
       .from(
@@ -1303,21 +870,15 @@ async function uploadSelectedImage() {
         {
           cacheControl:
             "3600",
-
           upsert:
             false,
-
           contentType:
             selectedImageFile.type
         }
       );
-
-
   if (uploadResult.error) {
     throw uploadResult.error;
   }
-
-
   const primaryResult =
     await sb
       .from(
@@ -1331,13 +892,9 @@ async function uploadSelectedImage() {
         "product_id",
         product.id
       );
-
-
   if (primaryResult.error) {
     throw primaryResult.error;
   }
-
-
   const insertResult =
     await sb
       .from(
@@ -1346,19 +903,14 @@ async function uploadSelectedImage() {
       .insert({
         product_id:
           product.id,
-
         variant_id:
           null,
-
         storage_path:
           storagePath,
-
         alt_text:
           product.name || null,
-
         sort_order:
           0,
-
         is_primary:
           true
       })
@@ -1366,13 +918,9 @@ async function uploadSelectedImage() {
         "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
       )
       .single();
-
-
   if (insertResult.error) {
     throw insertResult.error;
   }
-
-
   images =
     [
       insertResult.data,
@@ -1384,14 +932,10 @@ async function uploadSelectedImage() {
         })
       )
     ];
-
-
   selectedImageFile =
     null;
-
 }
   function selectedVariant() {
-
     return (
       variants.find(
         item =>
@@ -1404,10 +948,8 @@ async function uploadSelectedImage() {
       ||
       null
     );
-
   }
 function newTierKey() {
-
   return (
     "tier-"
     +
@@ -1419,14 +961,10 @@ function newTierKey() {
       .toString(36)
       .slice(2)
   );
-
 }
-
-
 function currentWholesaleTiers(
   variantId
 ) {
-
   return wholesaleTiers
     .filter(
       item =>
@@ -1440,99 +978,69 @@ function currentWholesaleTiers(
     )
     .sort(
       function (a,b) {
-
         const aValue =
           Number(
             a.min_quantity
           );
-
-
         const bValue =
           Number(
             b.min_quantity
           );
-
-
         if (
           !Number.isFinite(aValue)
         ) {
           return 1;
         }
-
-
         if (
           !Number.isFinite(bValue)
         ) {
           return -1;
         }
-
-
         return (
           aValue
           -
           bValue
         );
-
       }
     );
-
 }
-
-
 function renderWholesaleTierRows(
   variantId
 ) {
-
   const box =
     document.getElementById(
       "wholesaleTierList"
     );
-
-
   if (!box) {
     return;
   }
-
-
   const rows =
     currentWholesaleTiers(
       variantId
     );
-
-
   if (!rows.length) {
-
     box.innerHTML = `
       <div class="wholesale-empty">
         Chưa thiết lập giá sỉ cho SKU này.
       </div>
     `;
-
     return;
-
   }
-
-
   box.innerHTML =
     rows
       .map(
         function (tier) {
-
           return `
-
             <div
               class="wholesale-tier-row"
               data-tier-key="${escapeHtml(
                 tier._key
               )}"
             >
-
               <div>
-
                 <label>
                   Từ số lượng
                 </label>
-
                 <input
                   class="tier-min-input"
                   type="number"
@@ -1546,16 +1054,11 @@ function renderWholesaleTierRows(
                     ""
                   )}"
                 >
-
               </div>
-
-
               <div>
-
                 <label>
                   Giá / đơn vị
                 </label>
-
                 <input
                   class="tier-price-input"
                   type="number"
@@ -1569,10 +1072,7 @@ function renderWholesaleTierRows(
                     ""
                   )}"
                 >
-
               </div>
-
-
               <button
                 type="button"
                 class="tier-remove"
@@ -1583,136 +1083,90 @@ function renderWholesaleTierRows(
               >
                 ×
               </button>
-
             </div>
-
           `;
-
         }
       )
       .join("");
-
-
   box
     .querySelectorAll(
       ".wholesale-tier-row"
     )
     .forEach(
       function (row) {
-
         const key =
           row.dataset.tierKey;
-
-
         const tier =
           wholesaleTiers.find(
             item =>
               item._key === key
           );
-
-
         if (!tier) {
           return;
         }
-
-
         const minInput =
           row.querySelector(
             ".tier-min-input"
           );
-
-
         const priceInput =
           row.querySelector(
             ".tier-price-input"
           );
-
-
         minInput.addEventListener(
           "input",
           function () {
-
             tier.min_quantity =
               minInput.value;
-
           }
         );
-
-
         priceInput.addEventListener(
           "input",
           function () {
-
             tier.unit_price =
               priceInput.value;
-
           }
         );
-
       }
     );
-
-
   box
     .querySelectorAll(
       ".tier-remove"
     )
     .forEach(
       function (button) {
-
         button.addEventListener(
           "click",
           function () {
-
             const key =
               button.dataset.tierKey;
-
-
             wholesaleTiers =
               wholesaleTiers.filter(
                 item =>
                   item._key !== key
               );
-
-
             renderWholesaleTierRows(
               variantId
             );
-
           }
         );
-
       }
     );
-
 }
-
   /* =====================================================
      AUTH
   ====================================================== */
-
   async function requireShopAccess() {
-
     const {
       data: sessionData
     } =
       await sb.auth.getSession();
-
-
     const user =
       sessionData?.session?.user;
-
-
     if (!user) {
-
       location.href =
         "./";
-
       return false;
-
     }
-
-
     const {
       data,
       error
@@ -1732,17 +1186,11 @@ function renderWholesaleTierRows(
           "is_active",
           true
         );
-
-
     if (error) {
-
       throw new Error(
         "Không kiểm tra được quyền Shop."
       );
-
     }
-
-
     const allowed =
       (data || [])
         .some(
@@ -1755,7 +1203,6 @@ function renderWholesaleTierRows(
               item.role
             )
         );
-
     canDeleteDraftProduct =
       (data || [])
         .some(
@@ -1768,96 +1215,55 @@ function renderWholesaleTierRows(
             )
         );
     if (!allowed) {
-
       throw new Error(
         "Tài khoản chưa có quyền sửa sản phẩm."
       );
-
     }
-
-
     return true;
-
   }
-
-
-
-
   async function deleteDraftProduct() {
-
     clearMessage();
-
-
     if (!product?.id) {
-
       showMessage(
         "Không tìm thấy sản phẩm cần xóa.",
         "error"
       );
-
       return;
-
     }
-
-
     if (product.status !== "draft") {
-
       showMessage(
         "Chỉ được xóa sản phẩm đang ở trạng thái nháp.",
         "error"
       );
-
       return;
-
     }
-
-
     const firstConfirm =
       window.confirm(
         "Anh chắc chắn muốn xóa sản phẩm nháp này?"
       );
-
-
     if (!firstConfirm) {
       return;
     }
-
-
     const secondConfirm =
       window.confirm(
         "Xóa xong sẽ không khôi phục trên web. Anh xác nhận xóa?"
       );
-
-
     if (!secondConfirm) {
       return;
     }
-
-
     const deleteBtn =
       document.getElementById(
         "deleteDraftProductBtn"
       );
-
-
     if (deleteBtn) {
-
       deleteBtn.disabled =
         true;
-
-
       deleteBtn.textContent =
         "ĐANG XÓA...";
-
     }
-
-
     saveBtn.disabled =
       true;
-
-
     try {
-
       const {
         data,
         error
@@ -1869,110 +1275,71 @@ function renderWholesaleTierRows(
               product.id
           }
         );
-
-
       if (error) {
         throw error;
       }
-
-
       if (
         data
         &&
         data.success === false
       ) {
-
         throw new Error(
           data.message
           ||
           "Không xóa được sản phẩm nháp."
         );
-
       }
-
-
       showMessage(
         "Đã xóa sản phẩm nháp.",
         "success"
       );
-
-
       setTimeout(
         function () {
-
           location.href =
             "./shop-admin-products";
-
         },
         700
       );
-
     }
     catch (error) {
-
       console.error(
         "DELETE DRAFT PRODUCT ERROR:",
         error
       );
-
-
       showMessage(
         error?.message
         ||
         "Không xóa được sản phẩm nháp.",
         "error"
       );
-
-
       if (deleteBtn) {
-
         deleteBtn.disabled =
           false;
-
-
         deleteBtn.textContent =
           "XÓA SẢN PHẨM NHÁP";
-
       }
-
-
       saveBtn.disabled =
         false;
-
     }
-
   }
-
-
    /* =====================================================
      RENDER
   ====================================================== */
-
   function render() {
-
     const variant =
       selectedVariant();
-
-
     if (
       !product
       ||
       !variant
     ) {
-
       showFatal(
         "Sản phẩm chưa có biến thể để chỉnh sửa."
       );
-
       return;
-
     }
-
-
     const image =
       primaryImage();
-
-
     const imageUrl =
       image
         ?
@@ -1981,8 +1348,6 @@ function renderWholesaleTierRows(
           )
         :
           "";
-
-
     const categoryOptions =
       categories
         .filter(
@@ -1995,7 +1360,6 @@ function renderWholesaleTierRows(
         )
         .map(
           function (category) {
-
             const selected =
               String(category.id)
               ===
@@ -2004,8 +1368,6 @@ function renderWholesaleTierRows(
                   "selected"
                 :
                   "";
-
-
             return `
               <option
                 value="${category.id}"
@@ -2016,17 +1378,13 @@ function renderWholesaleTierRows(
                 )}
               </option>
             `;
-
           }
         )
         .join("");
-
-
     const variantOptions =
       variants
         .map(
           function (item) {
-
             const selected =
               String(item.id)
               ===
@@ -2035,14 +1393,10 @@ function renderWholesaleTierRows(
                   "selected"
                 :
                   "";
-
-
             const name =
               item.variant_name
               ||
               "Mặc định";
-
-
             return `
               <option
                 value="${item.id}"
@@ -2053,20 +1407,12 @@ function renderWholesaleTierRows(
                 )}
               </option>
             `;
-
           }
         )
         .join("");
-
-
     pageBody.innerHTML = `
-
-
       <div class="overview">
-
-
         <div class="product-image">
-
           ${
             imageUrl
               ?
@@ -2087,21 +1433,14 @@ function renderWholesaleTierRows(
                   </div>
                 `
           }
-
         </div>
-
-
         <div>
-
           <div class="overview-name">
             ${escapeHtml(
               product.name
             )}
           </div>
-
-
           <div class="overview-meta">
-
             <span class="tag fixed">
               ${escapeHtml(
                 product.product_code
@@ -2109,7 +1448,6 @@ function renderWholesaleTierRows(
                 "-"
               )}
             </span>
-
             <span class="tag fixed">
               ${escapeHtml(
                 variant.sku
@@ -2117,29 +1455,17 @@ function renderWholesaleTierRows(
                 "-"
               )}
             </span>
-
           </div>
-
         </div>
-
-
       </div>
-
-
-
       <div class="card">
-
         <div class="card-title">
           Thông tin sản phẩm
         </div>
-
-
         <div class="field">
-
           <label>
             Tên sản phẩm
           </label>
-
           <input
             id="nameInput"
             type="text"
@@ -2150,19 +1476,12 @@ function renderWholesaleTierRows(
               ""
             )}"
           >
-
         </div>
-
-
         <div class="grid-2">
-
-
           <div class="field">
-
             <label>
               Thương hiệu
             </label>
-
             <input
               id="brandInput"
               type="text"
@@ -2173,38 +1492,23 @@ function renderWholesaleTierRows(
                 ""
               )}"
             >
-
           </div>
-
-
           <div class="field">
-
             <label>
               Danh mục
             </label>
-
             <select id="categoryInput">
-
               <option value="">
                 Không chọn danh mục
               </option>
-
               ${categoryOptions}
-
             </select>
-
           </div>
-
-
         </div>
-
-
         <div class="field">
-
           <label>
             Mô tả ngắn
           </label>
-
           <textarea
             id="shortDescriptionInput"
             maxlength="500"
@@ -2213,16 +1517,11 @@ function renderWholesaleTierRows(
             ||
             ""
           )}</textarea>
-
         </div>
-
-
         <div class="field">
-
           <label>
             Mô tả chi tiết
           </label>
-
           <textarea
             id="descriptionInput"
           >${escapeHtml(
@@ -2230,21 +1529,13 @@ function renderWholesaleTierRows(
             ||
             ""
           )}</textarea>
-
         </div>
-
-
-             <div class="grid-2">
-
-
+        <div class="grid-2">
           <div class="field">
-
             <label>
               Trạng thái bán hàng
             </label>
-
             <select id="statusInput">
-
               <option
                 value="active"
                 ${
@@ -2259,7 +1550,6 @@ function renderWholesaleTierRows(
               >
                 Đang bán công khai
               </option>
-
               <option
                 value="draft"
                 ${
@@ -2274,22 +1564,15 @@ function renderWholesaleTierRows(
               >
                 Nháp / Ẩn khỏi khách
               </option>
-
             </select>
-
             <div class="hint">
               Chọn “Nháp / Ẩn khỏi khách” để tạm dừng bán mà không xóa sản phẩm. Ảnh, giá, SKU và lịch sử đơn hàng vẫn được giữ nguyên.
             </div>
-
           </div>
-
-
           <div class="field">
-
             <label>
               Mã sản phẩm
             </label>
-
             <input
               type="text"
               disabled
@@ -2299,33 +1582,21 @@ function renderWholesaleTierRows(
                 ""
               )}"
             >
-
             <div class="hint">
               Hệ thống tự quản lý.
             </div>
-
           </div>
-
-
         </div>
-
-
         <div class="field">
-
           <div class="switch-row">
-
             <div class="switch-text">
-
               <div class="switch-title">
                 Sản phẩm nổi bật
               </div>
-
               <div class="switch-desc">
                 Ưu tiên hiển thị tại Shop.
               </div>
-
             </div>
-
             <input
               id="featuredInput"
               class="check"
@@ -2338,247 +1609,243 @@ function renderWholesaleTierRows(
                     ""
               }
             >
-
           </div>
-
         </div>
-
-
       </div>
-
-
-
-     <div class="card">
-
-  <div class="card-title">
-    Giá & biến thể
-  </div>
-
-  <div class="card-subtitle">
-    Giá niêm yết là giá bán lẻ. Giá sỉ được áp dụng tự động theo số lượng khách mua.
-  </div>
-
-
-  <div class="field">
-
-    <label>
-      Chọn biến thể / SKU
-    </label>
-
-    <select id="variantSelect">
-      ${variantOptions}
-    </select>
-
-  </div>
-
-
-  <div class="field">
-
-    <label>
-      Tên biến thể
-    </label>
-
-    <input
-      id="variantNameInput"
-      type="text"
-      maxlength="120"
-      value="${escapeHtml(
-        variant.variant_name
-        ||
-        ""
-      )}"
-    >
-
-  </div>
-
-
-  <div class="grid-2">
-
-
-    <div class="field">
-
-      <label>
-        Giá niêm yết
-      </label>
-
-      <input
-        id="priceInput"
-        type="number"
-        min="0"
-        step="1000"
-        inputmode="numeric"
-        value="${escapeHtml(
-          moneyInput(
-            variant.price
-          )
-        )}"
-      >
-
-    </div>
-
-
-    <div class="field">
-
-      <label>
-        Giá so sánh
-      </label>
-
-      <input
-        id="comparePriceInput"
-        type="number"
-        min="0"
-        step="1000"
-        inputmode="numeric"
-        placeholder="Để trống nếu không dùng"
-        value="${escapeHtml(
-          moneyInput(
-            variant.compare_at_price
-          )
-        )}"
-      >
-
-    </div>
-
-
-  </div>
-
-
-  <div class="field">
-
-    <label>
-      SKU
-    </label>
-
-    <input
-      type="text"
-      disabled
-      value="${escapeHtml(
-        variant.sku
-        ||
-        ""
-      )}"
-    >
-
-    <div class="hint">
-      Không cho sửa thủ công để tránh lệch kho và đơn hàng.
-    </div>
-
-  </div>
-
-
-  <div class="field">
-
-    <div class="switch-row">
-
-      <div class="switch-text">
-
-        <div class="switch-title">
-          SKU đang bán
+      <div class="card">
+        <div class="card-title">
+          Giá & biến thể
         </div>
-
-        <div class="switch-desc">
-          Tắt để khách không chọn biến thể này.
+        <div class="card-subtitle">
+          Chọn từng SKU để sửa Màu, Size, giá bán và trạng thái riêng. SKU được giữ nguyên để không ảnh hưởng tồn kho và đơn hàng cũ.
         </div>
-
-      </div>
-
-      <input
-        id="variantActiveInput"
-        class="check"
-        type="checkbox"
-        ${
-          variant.is_active
-            ?
-              "checked"
-            :
+        <div class="field">
+          <label>
+            Chọn biến thể / SKU
+          </label>
+          <select id="variantSelect">
+            ${variantOptions}
+          </select>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>
+              Tên lựa chọn 1
+            </label>
+            <input
+              id="option1NameInput"
+              type="text"
+              maxlength="80"
+              placeholder="Ví dụ: Màu"
+              value="${escapeHtml(
+                variant.option1_name
+                ||
+                ""
+              )}"
+            >
+          </div>
+          <div class="field">
+            <label>
+              Giá trị lựa chọn 1
+            </label>
+            <input
+              id="option1ValueInput"
+              type="text"
+              maxlength="120"
+              placeholder="Ví dụ: Đen"
+              value="${escapeHtml(
+                variant.option1_value
+                ||
+                ""
+              )}"
+            >
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>
+              Tên lựa chọn 2
+            </label>
+            <input
+              id="option2NameInput"
+              type="text"
+              maxlength="80"
+              placeholder="Ví dụ: Size"
+              value="${escapeHtml(
+                variant.option2_name
+                ||
+                ""
+              )}"
+            >
+          </div>
+          <div class="field">
+            <label>
+              Giá trị lựa chọn 2
+            </label>
+            <input
+              id="option2ValueInput"
+              type="text"
+              maxlength="120"
+              placeholder="Ví dụ: L"
+              value="${escapeHtml(
+                variant.option2_value
+                ||
+                ""
+              )}"
+            >
+          </div>
+        </div>
+        <div class="hint" style="margin-bottom:11px;">
+          Ví dụ Màu = Đen và Size = L thì hệ thống tự lưu tên biến thể là “Đen / L”. Lựa chọn 2 có thể để trống nếu sản phẩm chỉ có một lựa chọn.
+        </div>
+        <div class="field">
+          <label>
+            Tên biến thể
+          </label>
+          <input
+            id="variantNameInput"
+            type="text"
+            maxlength="120"
+            value="${escapeHtml(
+              variant.variant_name
+              ||
               ""
-        }
-      >
-
-    </div>
-
-  </div>
-
-
-  <div class="wholesale-box">
-
-    <div class="wholesale-head">
-
-      <div>
-
-        <div class="wholesale-title">
-          Bảng giá sỉ theo số lượng
+            )}"
+          >
+          <div class="hint">
+            Nếu SKU có Màu/Size, tên này sẽ được hệ thống tự tạo lại khi lưu. Với sản phẩm cũ không có lựa chọn, anh vẫn có thể sửa tên tại đây.
+          </div>
         </div>
-
-        <div class="wholesale-desc">
-          Web tự áp dụng mức giá tốt nhất khi khách đạt đủ số lượng.
+        <div class="grid-2">
+          <div class="field">
+            <label>
+              Giá niêm yết
+            </label>
+            <input
+              id="priceInput"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              value="${escapeHtml(
+                moneyInput(
+                  variant.price
+                )
+              )}"
+            >
+          </div>
+          <div class="field">
+            <label>
+              Giá so sánh
+            </label>
+            <input
+              id="comparePriceInput"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="Để trống nếu không dùng"
+              value="${escapeHtml(
+                moneyInput(
+                  variant.compare_at_price
+                )
+              )}"
+            >
+          </div>
         </div>
-
+        <div class="field">
+          <label>
+            SKU
+          </label>
+          <input
+            type="text"
+            disabled
+            value="${escapeHtml(
+              variant.sku
+              ||
+              ""
+            )}"
+          >
+          <div class="hint">
+            Không cho sửa thủ công để tránh lệch kho và đơn hàng.
+          </div>
+        </div>
+        <div class="field">
+          <div class="switch-row">
+            <div class="switch-text">
+              <div class="switch-title">
+                SKU đang bán
+              </div>
+              <div class="switch-desc">
+                Tắt để khách không chọn biến thể này.
+              </div>
+            </div>
+            <input
+              id="variantActiveInput"
+              class="check"
+              type="checkbox"
+              ${
+                variant.is_active
+                  ?
+                    "checked"
+                  :
+                    ""
+              }
+            >
+          </div>
+        </div>
+        <div class="wholesale-box">
+          <div class="wholesale-head">
+            <div>
+              <div class="wholesale-title">
+                Bảng giá sỉ theo số lượng
+              </div>
+              <div class="wholesale-desc">
+                Web tự áp dụng mức giá tốt nhất khi khách đạt đủ số lượng.
+              </div>
+            </div>
+            <button
+              id="addWholesaleTierBtn"
+              class="wholesale-add"
+              type="button"
+            >
+              + THÊM MỨC
+            </button>
+          </div>
+          <div id="wholesaleTierList"></div>
+        </div>
       </div>
-
-
-      <button
-        id="addWholesaleTierBtn"
-        class="wholesale-add"
-        type="button"
-      >
-        + THÊM MỨC
-      </button>
-
-    </div>
-
-
-    <div id="wholesaleTierList"></div>
-
-  </div>
-
-
-</div>
-
-
-
-           <div class="card">
-
+      <div class="card">
         <div class="card-title">
           Ảnh & link bán hàng
         </div>
-
         <div class="card-subtitle">
           Chọn ảnh mới rồi bấm LƯU THAY ĐỔI. Ảnh mới sẽ thành ảnh chính ngoài trang khách mua.
         </div>
-
         <div class="field">
-
           <label>
             Ảnh sản phẩm mới
           </label>
-
           <input
             id="imageFileInput"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/avif"
           >
-
           <div
             id="imagePreview"
             class="hint"
           >
             Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.
           </div>
-
         </div>
-
-
-              ${
+        ${
           product.status === "active"
             ?
               `
                 <div class="field">
-
                   <label>
                     Link gửi khách mua
                   </label>
-
                   <input
                     id="productPublicLink"
                     type="text"
@@ -2587,7 +1854,6 @@ function renderWholesaleTierRows(
                       productPublicUrl()
                     )}"
                   >
-
                   <button
                     id="copyProductLinkBtn"
                     class="save-btn"
@@ -2600,49 +1866,38 @@ function renderWholesaleTierRows(
                   >
                     COPY LINK BÁN HÀNG
                   </button>
-
                 </div>
               `
             :
               `
                 <div class="field">
-
                   <label>
                     Link gửi khách mua
                   </label>
-
                   <input
                     type="text"
                     readonly
                     disabled
                     value="Sản phẩm nháp chưa mở link bán hàng"
                   >
-
                   <div class="hint">
                     Chuyển trạng thái sang Đang bán công khai rồi lưu, hệ thống mới hiện link gửi khách.
                   </div>
-
                 </div>
               `
         }
-
       </div>
-
-
       ${
         product.status === "draft" && canDeleteDraftProduct
           ?
             `
               <div class="danger-card">
-
                 <div class="danger-title">
                   Xóa sản phẩm nháp
                 </div>
-
                 <div class="danger-desc">
                   Chỉ dùng khi tạo nhầm sản phẩm nháp. Sản phẩm đang bán sẽ không hiện nút xóa để tránh xóa nhầm hàng thật.
                 </div>
-
                 <button
                   id="deleteDraftProductBtn"
                   class="delete-draft-btn"
@@ -2650,24 +1905,16 @@ function renderWholesaleTierRows(
                 >
                   XÓA SẢN PHẨM NHÁP
                 </button>
-
               </div>
             `
           :
             ""
       }
-
-
       <div class="notice">
-
         Trang này chỉ sửa thông tin bán hàng, ảnh và giá.
         Không thay đổi tồn kho, hàng đang giữ hoặc giá vốn.
-
       </div>
-
     `;
-
-
     document
       .getElementById(
         "variantSelect"
@@ -2675,57 +1922,39 @@ function renderWholesaleTierRows(
       .addEventListener(
         "change",
         function (event) {
-
           selectedVariantId =
             Number(
               event.target.value
             );
-
-
+          selectedImageFile =
+            null;
           clearMessage();
-
           render();
-
         }
       );
 const imageFileInput =
   document.getElementById(
     "imageFileInput"
   );
-
-
 const imagePreview =
   document.getElementById(
     "imagePreview"
   );
-
-
 if (imageFileInput) {
-
   imageFileInput.addEventListener(
     "change",
     function (event) {
-
       const file =
         event.target.files?.[0] || null;
-
-
       selectedImageFile =
         file;
-
-
       if (!file) {
-
         if (imagePreview) {
           imagePreview.textContent =
             "Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.";
         }
-
         return;
-
       }
-
-
       if (
         !file.type
         ||
@@ -2733,199 +1962,187 @@ if (imageFileInput) {
           "image/"
         )
       ) {
-
         selectedImageFile =
           null;
-
         imageFileInput.value =
           "";
-
         if (imagePreview) {
           imagePreview.textContent =
             "File này không phải ảnh. Anh chọn lại ảnh sản phẩm.";
         }
-
         return;
-
       }
-
-
       if (
         file.size
         >
         10 * 1024 * 1024
       ) {
-
         selectedImageFile =
           null;
-
         imageFileInput.value =
           "";
-
         if (imagePreview) {
           imagePreview.textContent =
             "Ảnh vượt quá 10MB. Anh chọn ảnh nhẹ hơn.";
         }
-
         return;
-
       }
-
-
       if (imagePreview) {
-
         imagePreview.textContent =
           `Đã chọn ảnh mới: ${file.name}`;
-
       }
-
     }
   );
-
 }
-
-
-
- const copyProductLinkBtn =
+const option1NameInput =
+  document.getElementById(
+    "option1NameInput"
+  );
+const option1ValueInput =
+  document.getElementById(
+    "option1ValueInput"
+  );
+const option2NameInput =
+  document.getElementById(
+    "option2NameInput"
+  );
+const option2ValueInput =
+  document.getElementById(
+    "option2ValueInput"
+  );
+const variantNameInput =
+  document.getElementById(
+    "variantNameInput"
+  );
+function syncVariantNamePreview() {
+  if (!variantNameInput) {
+    return;
+  }
+  const option1Value =
+    String(
+      option1ValueInput?.value
+      ||
+      ""
+    ).trim();
+  const option2Value =
+    String(
+      option2ValueInput?.value
+      ||
+      ""
+    ).trim();
+  if (option1Value) {
+    variantNameInput.value =
+      option2Value
+        ?
+          `${option1Value} / ${option2Value}`
+        :
+          option1Value;
+  }
+}
+[
+  option1NameInput,
+  option1ValueInput,
+  option2NameInput,
+  option2ValueInput
+]
+  .filter(Boolean)
+  .forEach(
+    function (input) {
+      input.addEventListener(
+        "input",
+        syncVariantNamePreview
+      );
+    }
+  );
+const copyProductLinkBtn =
   document.getElementById(
     "copyProductLinkBtn"
   );
-
-
 if (copyProductLinkBtn) {
-
   copyProductLinkBtn.addEventListener(
     "click",
     async function () {
-
       const link =
         productPublicUrl();
-
-
       try {
-
         await navigator.clipboard.writeText(
           link
         );
-
-
         showMessage(
           "Đã copy link bán hàng.",
           "success"
         );
-
       }
       catch (error) {
-
         console.error(
           "COPY PRODUCT LINK ERROR:",
           error
         );
-
-
         showMessage(
           link,
           "success"
         );
-
       }
-
     }
   );
-
 }
-
-
 const deleteDraftProductBtn =
   document.getElementById(
     "deleteDraftProductBtn"
   );
-
-
 if (deleteDraftProductBtn) {
-
   deleteDraftProductBtn.addEventListener(
     "click",
     deleteDraftProduct
   );
-
 }
-
-
 const addWholesaleTierBtn =
   document.getElementById(
     "addWholesaleTierBtn"
   );
-
-
 if (addWholesaleTierBtn) {
-
   addWholesaleTierBtn
     .addEventListener(
       "click",
       function () {
-
         wholesaleTiers.push({
-
           variant_id:
             variant.id,
-
           min_quantity:
             "",
-
           unit_price:
             "",
-
           is_active:
             true,
-
           _key:
             newTierKey()
-
         });
-
-
         renderWholesaleTierRows(
           variant.id
         );
-
       }
     );
-
 }
-
-
 renderWholesaleTierRows(
   variant.id
 );
     saveBtn.disabled =
       false;
-
   }
-
-
   /* =====================================================
      LOAD
   ====================================================== */
-
   async function loadData() {
-
   if (
     !Number.isInteger(productId)
     ||
     productId <= 0
   ) {
-
     throw new Error(
       "Không có mã sản phẩm hợp lệ."
     );
-
   }
-
-
   await requireShopAccess();
-
-
   const [
     productResult,
     variantResult,
@@ -2933,8 +2150,6 @@ renderWholesaleTierRows(
     imageResult
   ] =
     await Promise.all([
-
-
       sb
         .from(
           "shop_products"
@@ -2947,14 +2162,12 @@ renderWholesaleTierRows(
           productId
         )
         .maybeSingle(),
-
-
       sb
         .from(
           "shop_product_variants"
         )
         .select(
-          "id,product_id,sku,variant_name,price,compare_at_price,is_active,sort_order"
+          "id,product_id,sku,variant_name,option1_name,option1_value,option2_name,option2_value,price,compare_at_price,is_active,sort_order"
         )
         .eq(
           "product_id",
@@ -2974,8 +2187,6 @@ renderWholesaleTierRows(
               true
           }
         ),
-
-
       sb
         .from(
           "shop_categories"
@@ -2997,8 +2208,6 @@ renderWholesaleTierRows(
               true
           }
         ),
-
-
       sb
         .from(
           "shop_product_images"
@@ -3017,81 +2226,48 @@ renderWholesaleTierRows(
               true
           }
         )
-
-
     ]);
-
-
   if (productResult.error) {
     throw productResult.error;
   }
-
-
   if (variantResult.error) {
     throw variantResult.error;
   }
-
-
   if (categoryResult.error) {
     throw categoryResult.error;
   }
-
-
   if (imageResult.error) {
     throw imageResult.error;
   }
-
-
   if (!productResult.data) {
-
     throw new Error(
       "Không tìm thấy sản phẩm."
     );
-
   }
-
-
   if (
     !variantResult.data
     ||
     !variantResult.data.length
   ) {
-
     throw new Error(
       "Sản phẩm chưa có biến thể."
     );
-
   }
-
-
   product =
     productResult.data;
-
-
   variants =
     variantResult.data || [];
-
-
   categories =
     categoryResult.data || [];
-
-
   images =
     imageResult.data || [];
-
-
   const variantIds =
     variants.map(
       item =>
         item.id
     );
-
-
   let tierData = [];
-
-
   if (variantIds.length) {
-
     const {
       data,
       error
@@ -3118,64 +2294,38 @@ renderWholesaleTierRows(
               true
           }
         );
-
-
     if (error) {
       throw error;
     }
-
-
     tierData =
       data || [];
-
   }
-
-
   wholesaleTiers =
     tierData.map(
       item => ({
         ...item,
-
         _key:
           `db-${item.id}`
       })
     );
-
-
   selectedVariantId =
     variants[0].id;
-
-
   render();
-
 }
-
-
   /* =====================================================
      SAVE
   ====================================================== */
-
  async function saveProduct() {
-
   clearMessage();
-
-
   const variant =
     selectedVariant();
-
-
   if (!variant) {
-
     showMessage(
       "Không tìm thấy biến thể cần sửa.",
       "error"
     );
-
     return;
-
   }
-
-
   const name =
     document
       .getElementById(
@@ -3183,8 +2333,6 @@ renderWholesaleTierRows(
       )
       .value
       .trim();
-
-
   const brand =
     document
       .getElementById(
@@ -3192,72 +2340,86 @@ renderWholesaleTierRows(
       )
       .value
       .trim();
-
-
   const categoryText =
     document
       .getElementById(
         "categoryInput"
       )
       .value;
-
-
   const shortDescription =
     document
       .getElementById(
         "shortDescriptionInput"
       )
       .value;
-
-
   const description =
     document
       .getElementById(
         "descriptionInput"
       )
       .value;
-
-
   const status =
     document
       .getElementById(
         "statusInput"
       )
       .value;
-
-
   const featured =
     document
       .getElementById(
         "featuredInput"
       )
       .checked;
-
-
   const variantName =
     document
       .getElementById(
         "variantNameInput"
       )
       .value;
-
-
+  const option1Name =
+    nullableText(
+      document
+        .getElementById(
+          "option1NameInput"
+        )
+        .value
+    );
+  const option1Value =
+    nullableText(
+      document
+        .getElementById(
+          "option1ValueInput"
+        )
+        .value
+    );
+  const option2Name =
+    nullableText(
+      document
+        .getElementById(
+          "option2NameInput"
+        )
+        .value
+    );
+  const option2Value =
+    nullableText(
+      document
+        .getElementById(
+          "option2ValueInput"
+        )
+        .value
+    );
   const priceText =
     document
       .getElementById(
         "priceInput"
       )
       .value;
-
-
   const comparePriceText =
     document
       .getElementById(
         "comparePriceInput"
       )
       .value;
-
-
   const variantActive =
     document
       .getElementById(
@@ -3268,63 +2430,104 @@ const hasNewImage =
   Boolean(
     selectedImageFile
   );
-
   if (!name) {
-
     showMessage(
       "Anh cần nhập tên sản phẩm.",
       "error"
     );
-
     return;
-
   }
-
-
+  if (
+    (
+      option1Name
+      &&
+      !option1Value
+    )
+    ||
+    (
+      !option1Name
+      &&
+      option1Value
+    )
+  ) {
+    showMessage(
+      "Lựa chọn 1 phải có đủ tên và giá trị.",
+      "error"
+    );
+    return;
+  }
+  if (
+    (
+      option2Name
+      &&
+      !option2Value
+    )
+    ||
+    (
+      !option2Name
+      &&
+      option2Value
+    )
+  ) {
+    showMessage(
+      "Lựa chọn 2 phải có đủ tên và giá trị.",
+      "error"
+    );
+    return;
+  }
+  if (
+    option2Name
+    &&
+    !option1Name
+  ) {
+    showMessage(
+      "Phải có Lựa chọn 1 trước khi dùng Lựa chọn 2.",
+      "error"
+    );
+    return;
+  }
+  let finalVariantName =
+    nullableText(
+      variantName
+    );
+  if (option1Value) {
+    finalVariantName =
+      option2Value
+        ?
+          `${option1Value} / ${option2Value}`
+        :
+          option1Value;
+  }
   const price =
     nullableNumber(
       priceText
     );
-
-
   if (
     price === null
     ||
     price < 0
   ) {
-
     showMessage(
       "Giá niêm yết không hợp lệ.",
       "error"
     );
-
     return;
-
   }
-
-
   const comparePrice =
     nullableNumber(
       comparePriceText
     );
-
-
   if (
     comparePrice !== null
     &&
     comparePrice < 0
   ) {
-
     showMessage(
       "Giá so sánh không hợp lệ.",
       "error"
     );
-
     return;
-
   }
-
-
   const categoryId =
     categoryText
       ?
@@ -3333,81 +2536,56 @@ const hasNewImage =
         )
       :
         null;
-
-
   /* =====================================================
      BẢNG GIÁ SỈ
   ====================================================== */
-
   const tierRows =
     currentWholesaleTiers(
       variant.id
     );
-
-
   const tiers = [];
-
-
   for (
     const tier
     of tierRows
   ) {
-
     const minText =
       String(
         tier.min_quantity
         ??
         ""
       ).trim();
-
-
     const tierPriceText =
       String(
         tier.unit_price
         ??
         ""
       ).trim();
-
-
     if (
       !minText
       &&
       !tierPriceText
     ) {
-
       continue;
-
     }
-
-
     if (
       !minText
       ||
       !tierPriceText
     ) {
-
       showMessage(
         "Mỗi mức giá sỉ phải có đủ số lượng tối thiểu và giá bán.",
         "error"
       );
-
       return;
-
     }
-
-
     const minQuantity =
       Number(
         minText
       );
-
-
     const unitPrice =
       Number(
         tierPriceText
       );
-
-
     if (
       !Number.isInteger(
         minQuantity
@@ -3415,17 +2593,12 @@ const hasNewImage =
       ||
       minQuantity < 2
     ) {
-
       showMessage(
         "Số lượng tối thiểu của giá sỉ phải từ 2 trở lên.",
         "error"
       );
-
       return;
-
     }
-
-
     if (
       !Number.isInteger(
         unitPrice
@@ -3433,238 +2606,176 @@ const hasNewImage =
       ||
       unitPrice < 0
     ) {
-
       showMessage(
         "Giá sỉ không hợp lệ.",
         "error"
       );
-
       return;
-
     }
-
-
     if (
       unitPrice > price
     ) {
-
       showMessage(
         "Giá sỉ không được cao hơn giá niêm yết.",
         "error"
       );
-
       return;
-
     }
-
-
     tiers.push({
       min_quantity:
         minQuantity,
-
       unit_price:
         unitPrice
     });
-
   }
-
-
   tiers.sort(
     (a,b) =>
       a.min_quantity
       -
       b.min_quantity
   );
-
-
   for (
     let i = 1;
     i < tiers.length;
     i++
   ) {
-
     if (
       tiers[i].min_quantity
       ===
       tiers[i - 1].min_quantity
     ) {
-
       showMessage(
         "Không được có hai mức giá sỉ cùng số lượng tối thiểu.",
         "error"
       );
-
       return;
-
     }
-
-
     if (
       tiers[i].unit_price
       >
       tiers[i - 1].unit_price
     ) {
-
       showMessage(
         "Số lượng càng cao thì giá sỉ không được tăng lên.",
         "error"
       );
-
       return;
-
     }
-
   }
-
-
   saveBtn.disabled =
     true;
-
-
   saveBtn.textContent =
     "ĐANG LƯU...";
-
-
   try {
-
     const {
       data,
       error
     } =
       await sb.rpc(
-        "shop_admin_update_product_v3",
+        "shop_admin_update_product_v4",
         {
-
           p_product_id:
             product.id,
-
           p_name:
             name,
-
           p_brand:
             nullableText(
               brand
             ),
-
           p_category_id:
             categoryId,
-
           p_short_description:
             nullableText(
               shortDescription
             ),
-
           p_description:
             nullableText(
               description
             ),
-
           p_status:
             status,
-
           p_is_featured:
             featured,
-
           p_variant_id:
             variant.id,
-
           p_variant_name:
-            nullableText(
-              variantName
-            ),
-
+            finalVariantName,
           p_retail_price:
             price,
-
           p_compare_at_price:
             comparePrice,
-
           p_variant_active:
             variantActive,
-
+          p_option1_name:
+            option1Name,
+          p_option1_value:
+            option1Value,
+          p_option2_name:
+            option2Name,
+          p_option2_value:
+            option2Value,
           p_tiers:
             tiers
-
         }
       );
-
-
     if (error) {
       throw error;
     }
-
-
     product = {
       ...product,
-
       name:
         name,
-
       brand:
         nullableText(
           brand
         ),
-
       category_id:
         categoryId,
-
       short_description:
         nullableText(
           shortDescription
         ),
-
       description:
         nullableText(
           description
         ),
-
       status:
         status,
-
       is_featured:
         featured
     };
-
-
     variants =
       variants.map(
         function (item) {
-
           if (
             String(item.id)
             !==
             String(variant.id)
           ) {
-
             return item;
-
           }
-
-
           return {
             ...item,
-
             variant_name:
-              nullableText(
-                variantName
-              ),
-
+              finalVariantName,
+            option1_name:
+              option1Name,
+            option1_value:
+              option1Value,
+            option2_name:
+              option2Name,
+            option2_value:
+              option2Value,
             price:
               price,
-
             compare_at_price:
               comparePrice,
-
             is_active:
               variantActive
           };
-
         }
       );
-
-
     wholesaleTiers = [
-
       ...wholesaleTiers.filter(
         item =>
           String(
@@ -3675,118 +2786,75 @@ const hasNewImage =
             variant.id
           )
       ),
-
       ...tiers.map(
         item => ({
           ...item,
-
           variant_id:
             variant.id,
-
           is_active:
             true,
-
           _key:
             newTierKey()
         })
       )
-
     ];
-
-
    if (hasNewImage) {
-
   await uploadSelectedImage();
-
 }
-
-
 showMessage(
-  `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${tiers.length} mức giá sỉ${hasNewImage ? " • đã cập nhật ảnh chính" : ""}.`,
+  `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${finalVariantName || variant.sku || "SKU"} • ${tiers.length} mức giá sỉ${hasNewImage ? " • đã cập nhật ảnh chính" : ""}.`,
   "success"
 );
-
-
 render();
-
   }
   catch (error) {
-
     console.error(
-      "UPDATE PRODUCT ERROR:",
+      "UPDATE PRODUCT V4 ERROR:",
       error
     );
-
-
     showMessage(
       error?.message
       ||
       "Không lưu được sản phẩm.",
       "error"
     );
-
   }
   finally {
-
     saveBtn.disabled =
       false;
-
-
     saveBtn.textContent =
       "LƯU THAY ĐỔI";
-
   }
-
 }
-
   /* =====================================================
      EVENTS
   ====================================================== */
-
   saveBtn.addEventListener(
     "click",
     saveProduct
   );
-
-
   /* =====================================================
      START
   ====================================================== */
-
   async function start() {
-
     try {
-
       await loadData();
-
     }
     catch (error) {
-
       console.error(
         "PRODUCT EDIT LOAD ERROR:",
         error
       );
-
-
       showFatal(
         error?.message
         ||
         "Không tải được sản phẩm."
       );
-
     }
-
   }
-
-
   start();
-
-
 })();
-
 </script>
-
 <script src="/shop-notifications.js?v=20261006-2"></script>
 </body>
-
 </html>
