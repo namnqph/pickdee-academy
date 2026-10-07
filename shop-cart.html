@@ -1066,12 +1066,46 @@
       );
 
 
+    /*
+      Bóng Pickleball là hàng cồng kềnh.
+      Không tự báo 15.000đ và không tự freeship.
+      Phí vận chuyển sẽ được PickDee xác nhận theo kiện thực tế.
+    */
+    if (
+      hasPickleballBall
+    ) {
+
+      return {
+
+        merchandiseTotal,
+
+        hasPickleballBall:
+          true,
+
+        freeShipping:
+          false,
+
+        shippingPending:
+          true,
+
+        shippingFee:
+          0,
+
+        customerTotal:
+          merchandiseTotal,
+
+        reason:
+          "Đơn có bóng Pickleball là hàng cồng kềnh. PickDee sẽ xác nhận phí giao hàng theo kiện thực tế trước khi gửi."
+
+      };
+
+    }
+
+
     const freeShipping =
       merchandiseTotal
         >=
-      FREE_SHIPPING_THRESHOLD
-      &&
-      !hasPickleballBall;
+      FREE_SHIPPING_THRESHOLD;
 
 
     const shippingFee =
@@ -1082,35 +1116,25 @@
           SPX_BASE_FEE;
 
 
-    let reason =
-      "Đơn dưới 300.000đ: phí giao hàng SPX 15.000đ.";
-
-
-    if (
-      hasPickleballBall
-    ) {
-
-      reason =
-        "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
-
-    }
-    else if (
+    const reason =
       freeShipping
-    ) {
-
-      reason =
-        "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
-
-    }
+        ?
+          "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship."
+        :
+          "Đơn dưới 300.000đ: phí giao hàng SPX 15.000đ.";
 
 
     return {
 
       merchandiseTotal,
 
-      hasPickleballBall,
+      hasPickleballBall:
+        false,
 
       freeShipping,
+
+      shippingPending:
+        false,
 
       shippingFee,
 
@@ -1475,10 +1499,24 @@
             Phí giao hàng
           </span>
 
-          <strong>
-            ${money(
-              shipping.shippingFee
-            )}
+          <strong
+            style="${
+              shipping.shippingPending
+                ?
+                  "color:#d8ff45;"
+                :
+                  ""
+            }"
+          >
+            ${
+              shipping.shippingPending
+                ?
+                  "Xác nhận theo kiện"
+                :
+                  money(
+                    shipping.shippingFee
+                  )
+            }
           </strong>
 
         </div>
@@ -1524,14 +1562,43 @@
           <div>
 
             <div class="total-label">
-              TỔNG THANH TOÁN
+              ${
+                shipping.shippingPending
+                  ?
+                    "TẠM TÍNH TIỀN HÀNG"
+                  :
+                    "TỔNG THANH TOÁN"
+              }
             </div>
 
             <div class="total-price">
               ${money(
-                shipping.customerTotal
+                shipping.shippingPending
+                  ?
+                    shipping.merchandiseTotal
+                  :
+                    shipping.customerTotal
               )}
             </div>
+
+            ${
+              shipping.shippingPending
+                ?
+                  `
+                    <div
+                      style="
+                        margin-top:4px;
+                        color:rgba(255,255,255,.42);
+                        font-size:9px;
+                        line-height:1.45;
+                      "
+                    >
+                      Chưa gồm phí giao hàng cồng kềnh
+                    </div>
+                  `
+                :
+                  ""
+            }
 
           </div>
 
@@ -1541,9 +1608,33 @@
     `;
 
 
+    const checkoutLabel =
+      checkoutBar.querySelector(
+        ".checkout-label"
+      );
+
+
+    if (
+      checkoutLabel
+    ) {
+
+      checkoutLabel.textContent =
+        shipping.shippingPending
+          ?
+            "TẠM TÍNH • CHƯA GỒM SHIP"
+          :
+            "TỔNG THANH TOÁN";
+
+    }
+
+
     checkoutTotal.textContent =
       money(
-        shipping.customerTotal
+        shipping.shippingPending
+          ?
+            shipping.merchandiseTotal
+          :
+            shipping.customerTotal
       );
 
 
