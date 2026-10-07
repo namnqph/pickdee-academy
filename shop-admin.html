@@ -1506,6 +1506,45 @@ style="margin-top:12px"
 >
 
 <label>
+NHÀ CUNG CẤP
+</label>
+
+<select
+id="receivingSupplier"
+class="input"
+>
+
+<option value="">
+Không chọn nhà cung cấp
+</option>
+
+</select>
+
+<div class="muted">
+Chọn nhà cung cấp của phiếu nhập này.
+Nếu chưa có, có thể
+<a
+href="./shop-admin-suppliers"
+style="
+color:#d8ff45;
+text-decoration:none;
+font-weight:900
+"
+>
+thêm nhà cung cấp
+</a>
+trước.
+</div>
+
+</div>
+
+
+<div
+class="field"
+style="margin-top:12px"
+>
+
+<label>
 GHI CHÚ PHIẾU NHẬP
 </label>
 
@@ -1516,7 +1555,6 @@ placeholder="Ví dụ: Nhập lô phụ kiện tháng 10"
 >
 
 </div>
-
 
 <div class="summary">
 
@@ -1692,7 +1730,11 @@ let receipts=[];
 
 let receiptItems=[];
 
+let suppliers=[];
+
 let inventoryLoaded=false;
+
+let suppliersLoaded=false;
 
 let historyLoaded=false;
 
@@ -4445,7 +4487,239 @@ e.message
 
 }
 
+/* =====================================================
+SUPPLIERS
+===================================================== */
 
+function supplierLabel(
+supplier
+){
+
+if(
+!supplier
+){
+return "";
+}
+
+
+return String(
+supplier.name
+||
+supplier.supplier_name
+||
+supplier.company_name
+||
+supplier.display_name
+||
+supplier.code
+||
+`NCC #${supplier.id}`
+)
+.trim();
+
+}
+
+
+function supplierById(
+id
+){
+
+return suppliers.find(
+supplier=>
+Number(
+supplier.id
+)
+===
+Number(
+id
+)
+);
+
+}
+
+
+function renderSupplierSelect(){
+
+const select=
+$("receivingSupplier");
+
+
+if(
+!select
+){
+return;
+}
+
+
+const current=
+select.value;
+
+
+const activeSuppliers=
+suppliers
+.filter(
+supplier=>
+supplier.is_active
+!==
+false
+)
+.sort(
+(
+a,
+b
+)=>
+supplierLabel(
+a
+)
+.localeCompare(
+supplierLabel(
+b
+),
+"vi"
+)
+);
+
+
+select.innerHTML=
+`
+<option value="">
+Không chọn nhà cung cấp
+</option>
+`
++
+activeSuppliers
+.map(
+supplier=>
+`
+<option value="${esc(
+supplier.id
+)}">
+${esc(
+supplierLabel(
+supplier
+)
+)}
+</option>
+`
+)
+.join(
+""
+);
+
+
+if(
+current
+&&
+activeSuppliers.some(
+supplier=>
+String(
+supplier.id
+)
+===
+String(
+current
+)
+)
+){
+
+select.value=
+current;
+
+}
+
+}
+
+
+async function loadSuppliers(
+force=false
+){
+
+if(
+suppliersLoaded
+&&
+!force
+){
+
+renderSupplierSelect();
+
+return;
+
+}
+
+
+try{
+
+await auth();
+
+
+const {
+data,
+error
+}=
+await sb
+.from(
+"shop_suppliers"
+)
+.select(
+"*"
+)
+.order(
+"id",
+{
+ascending:true
+}
+);
+
+
+if(
+error
+){
+throw error;
+}
+
+
+suppliers=
+data
+||
+[];
+
+
+suppliersLoaded=
+true;
+
+
+renderSupplierSelect();
+
+
+if(
+historyLoaded
+){
+renderHistory();
+}
+
+}
+catch(e){
+
+suppliersLoaded=
+false;
+
+suppliers=[];
+
+
+renderSupplierSelect();
+
+
+msg(
+"receivingMessage",
+e.message
+||
+"Không tải được danh sách nhà cung cấp.",
+"err"
+);
+
+}
+
+}
 /* =====================================================
 RECEIVING
 ===================================================== */
@@ -5156,14 +5430,68 @@ x.unit_cost,
 );
 
 
+const supplierRaw=
+$("receivingSupplier")
+?.value
+?.trim()
+||
+"";
+
+
+const supplierId=
+supplierRaw
+?
+Number(
+supplierRaw
+)
+:
+null;
+
+
+if(
+supplierRaw
+&&
+!Number.isFinite(
+supplierId
+)
+){
+
+return msg(
+"receivingMessage",
+"Nhà cung cấp đã chọn không hợp lệ.",
+"err"
+);
+
+}
+
+
+const selectedSupplier=
+supplierId
+?
+supplierById(
+supplierId
+)
+:
+null;
+
+
+const supplierText=
+selectedSupplier
+?
+supplierLabel(
+selectedSupplier
+)
+:
+"Không chọn nhà cung cấp";
+
+
 if(
 !confirm(
-`Xác nhận nhập ${qty} đơn vị / ${items.length} SKU?\n\nTổng giá trị: ${money(total)}`
+`Xác nhận nhập ${qty} đơn vị / ${items.length} SKU?\n\nNhà cung cấp: ${supplierText}\nTổng giá trị: ${money(total)}`
 )
 ){
 return;
 }
-
 
 submitting=
 true;
@@ -5187,7 +5515,7 @@ await sb.rpc(
 "shop_admin_receive_stock",
 {
 p_supplier_id:
-null,
+supplierId,
 
 p_note:
 $("receivingNote")
@@ -5225,6 +5553,11 @@ receiptLines=[];
 
 
 $("receivingNote")
+.value=
+"";
+
+
+$("receivingSupplier")
 .value=
 "";
 
@@ -5508,6 +5841,24 @@ r.created_at
 
 <br>
 
+NCC: ${esc(
+r.supplier_id
+?
+(
+supplierLabel(
+supplierById(
+r.supplier_id
+)
+)
+||
+`NCC #${r.supplier_id}`
+)
+:
+"Không chọn"
+)}
+
+<br>
+
 ${items.length} SKU
 
 •
@@ -5540,7 +5891,29 @@ r.total_cost
 
 ${detail}
 
+<div class="history-note">
 
+<strong>
+Nhà cung cấp:
+</strong>
+
+${esc(
+r.supplier_id
+?
+(
+supplierLabel(
+supplierById(
+r.supplier_id
+)
+)
+||
+`NCC #${r.supplier_id}`
+)
+:
+"Không chọn nhà cung cấp"
+)}
+
+</div>
 <div class="history-note">
 
 <strong>
@@ -5601,8 +5974,11 @@ $("historyList")
 try{
 
 await auth();
-
-
+if(
+!suppliersLoaded
+){
+await loadSuppliers();
+}
 const {
 data,
 error
@@ -5612,7 +5988,7 @@ await sb
 "shop_stock_receipts"
 )
 .select(
-"id,receipt_code,status,total_cost,note,created_at"
+"id,receipt_code,supplier_id,status,total_cost,note,created_at"
 )
 .order(
 "created_at",
