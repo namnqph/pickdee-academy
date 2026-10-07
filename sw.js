@@ -1,116 +1,187 @@
 /* =========================================================
    PICKDEE SERVICE WORKER - CLEAN NETWORK MODE
-   2026-09-21
+   2026-10-07
 
    Mục tiêu:
    - Xóa toàn bộ cache Service Worker cũ
    - Không chặn navigation
-   - Không trả response redirect từ cache
+   - Không cache HTML / navigation
    - Website luôn tải trực tiếp từ network
+   - Giữ Web Push Notification
+   - Chặn URL notification bị ghép sai
 ========================================================= */
 
 const PICKDEE_SW_VERSION =
-"pickdee-push-20260922-1";
+  "pickdee-push-20261007-1";
 
+
+/* =========================================================
+   INSTALL
+========================================================= */
 
 self.addEventListener(
   "install",
   function (event) {
 
-    self.skipWaiting();
-
-  }
-);
-
-
-self.addEventListener(
-  "activate",
-  function (event) {
-
     event.waitUntil(
-      (async function () {
-
-        try {
-
-          const cacheNames =
-            await caches.keys();
-
-
-          await Promise.all(
-            cacheNames.map(
-              function (cacheName) {
-
-                return caches.delete(
-                  cacheName
-                );
-
-              }
-            )
-          );
-
-
-          await self.clients.claim();
-
-
-          const clients =
-            await self.clients.matchAll(
-              {
-                type: "window",
-                includeUncontrolled: true
-              }
-            );
-
-
-          clients.forEach(
-            function (client) {
-
-              client.postMessage(
-                {
-                  type:
-                    "PICKDEE_SW_CLEAN",
-                  version:
-                    PICKDEE_SW_VERSION
-                }
-              );
-
-            }
-          );
-
-        }
-        catch (error) {
-
-          console.error(
-            "PickDee SW activate:",
-            error
-          );
-
-        }
-
-      })()
+      self.skipWaiting()
     );
 
   }
 );
 
 
-/*
-  QUAN TRỌNG:
+/* =========================================================
+   ACTIVATE
+   - Xóa cache cũ
+   - Nhận quyền điều khiển client mới ngay
+========================================================= */
 
-  CỐ Ý KHÔNG CÓ:
-  self.addEventListener("fetch", ...)
+self.addEventListener(
+  "activate",
+  function (event) {
 
-  → Service Worker không còn chặn request.
-  → /, /student, /coach, /admin...
-    đều đi trực tiếp ra network.
-  → Không còn lỗi redirected response
-    do Service Worker.
-*/
+    event.waitUntil(
+      (
+        async function () {
+
+          try {
+
+            const cacheNames =
+              await caches.keys();
+
+
+            await Promise.all(
+              cacheNames.map(
+                function (cacheName) {
+
+                  return caches.delete(
+                    cacheName
+                  );
+
+                }
+              )
+            );
+
+
+            await self.clients.claim();
+
+
+            const windowClients =
+              await self.clients.matchAll(
+                {
+                  type: "window",
+                  includeUncontrolled: true
+                }
+              );
+
+
+            windowClients.forEach(
+              function (client) {
+
+                try {
+
+                  client.postMessage(
+                    {
+                      type:
+                        "PICKDEE_SW_CLEAN",
+
+                      version:
+                        PICKDEE_SW_VERSION
+                    }
+                  );
+
+                }
+                catch (_) {
+
+                  /*
+                    Không để lỗi postMessage
+                    ảnh hưởng activate.
+                  */
+
+                }
+
+              }
+            );
+
+          }
+          catch (error) {
+
+            console.error(
+              "PickDee SW activate:",
+              error
+            );
+
+          }
+
+        }
+      )()
+    );
+
+  }
+);
+
+
+/* =========================================================
+   QUAN TRỌNG
+
+   CỐ Ý KHÔNG CÓ:
+
+   self.addEventListener(
+     "fetch",
+     ...
+   );
+
+   Service Worker này:
+
+   - KHÔNG intercept navigation
+   - KHÔNG cache HTML
+   - KHÔNG cache redirect
+   - KHÔNG rewrite URL
+   - KHÔNG thay đổi request
+
+   Các trang như:
+
+   /
+   /home
+   /academy
+   /academy.html
+   /student
+   /coach
+   /admin
+   /shop
+   /shop-admin
+
+   đều đi trực tiếp ra network.
+========================================================= */
+
+
 /* =========================================================
    PICKDEE WEB PUSH
-   - Nhận Push Notification
-   - Bấm notification sẽ mở đúng trang PickDee
-   - KHÔNG thêm fetch handler
 ========================================================= */
+
+
+/*
+  Chuẩn hóa URL dùng cho notification.
+
+  Chấp nhận:
+
+  /
+  /academy
+  /academy.html
+  /coach
+  https://pickdee.vn/academy
+
+  Không chấp nhận URL domain khác.
+
+  Đồng thời xử lý trường hợp lỗi kiểu:
+
+  /academyhttps://pickdee.vn/academy
+
+  để tránh tạo ra URL:
+
+  https://pickdee.vn/academyhttps://pickdee.vn/academy
+*/
 
 function pickdeeSafeUrl(
   value
@@ -118,12 +189,94 @@ function pickdeeSafeUrl(
 
   try {
 
+    let raw =
+      String(
+        value || "/"
+      )
+        .trim();
+
+
+    if (
+      !raw
+    ) {
+
+      raw = "/";
+
+    }
+
+
+
+    /*
+      ======================================================
+      SỬA URL BỊ GHÉP SAI
+      ======================================================
+
+      Ví dụ:
+
+      /academyhttps://pickdee.vn/academy
+
+      Nếu có https:// hoặc http:// nằm giữa chuỗi,
+      lấy phần absolute URL phía sau ra kiểm tra lại.
+    */
+
+    const httpsIndex =
+      raw.indexOf(
+        "https://"
+      );
+
+
+    const httpIndex =
+      raw.indexOf(
+        "http://"
+      );
+
+
+    let embeddedIndex =
+      -1;
+
+
+    if (
+      httpsIndex > 0
+    ) {
+
+      embeddedIndex =
+        httpsIndex;
+
+    }
+    else if (
+      httpIndex > 0
+    ) {
+
+      embeddedIndex =
+        httpIndex;
+
+    }
+
+
+    if (
+      embeddedIndex > 0
+    ) {
+
+      raw =
+        raw.slice(
+          embeddedIndex
+        );
+
+    }
+
+
+
     const url =
       new URL(
-        value || "/",
+        raw,
         self.location.origin
       );
 
+
+
+    /*
+      Chỉ cho phép URL cùng origin PickDee.
+    */
 
     if (
       url.origin
@@ -140,10 +293,37 @@ function pickdeeSafeUrl(
     }
 
 
+
+    /*
+      Không cho javascript:, data:, blob:...
+    */
+
+    if (
+      url.protocol !== "https:"
+      &&
+      url.protocol !== "http:"
+    ) {
+
+      return (
+        self.location.origin
+        +
+        "/"
+      );
+
+    }
+
+
+
     return url.href;
 
   }
   catch (error) {
+
+    console.warn(
+      "PickDee safe URL:",
+      error
+    );
+
 
     return (
       self.location.origin
@@ -156,11 +336,16 @@ function pickdeeSafeUrl(
 }
 
 
+/* =========================================================
+   PUSH
+========================================================= */
+
 self.addEventListener(
   "push",
   function (event) {
 
-    let payload = {};
+    let payload =
+      {};
 
 
     try {
@@ -168,29 +353,33 @@ self.addEventListener(
       payload =
         event.data
           ?
-          event.data.json()
+            event.data.json()
           :
-          {};
+            {};
 
     }
     catch (error) {
 
       payload = {
+
         body:
           event.data
             ?
-            event.data.text()
+              event.data.text()
             :
-            ""
+              ""
+
       };
 
     }
+
 
 
     const title =
       payload.title
       ||
       "PickDee Academy";
+
 
 
     const targetUrl =
@@ -201,6 +390,7 @@ self.addEventListener(
       );
 
 
+
     const options = {
 
       body:
@@ -208,26 +398,37 @@ self.addEventListener(
         ||
         "Bạn có thông báo mới từ PickDee.",
 
+
       icon:
         "/icon-192.png",
 
+
       badge:
         "/icon-192.png",
+
 
       tag:
         payload.tag
         ||
         "pickdee-notification",
 
+
       renotify:
         true,
 
+
       data: {
+
         url:
-          targetUrl
+          targetUrl,
+
+        swVersion:
+          PICKDEE_SW_VERSION
+
       }
 
     };
+
 
 
     event.waitUntil(
@@ -242,11 +443,16 @@ self.addEventListener(
 );
 
 
+/* =========================================================
+   NOTIFICATION CLICK
+========================================================= */
+
 self.addEventListener(
   "notificationclick",
   function (event) {
 
     event.notification.close();
+
 
 
     const targetUrl =
@@ -259,13 +465,15 @@ self.addEventListener(
       );
 
 
+
     event.waitUntil(
       (
         async function () {
 
-          const windowClients =
-            await self.clients
-              .matchAll(
+          try {
+
+            const windowClients =
+              await self.clients.matchAll(
                 {
                   type: "window",
                   includeUncontrolled: true
@@ -273,24 +481,37 @@ self.addEventListener(
               );
 
 
-          for (
-            const client
-            of windowClients
-          ) {
 
-            try {
+            /*
+              Nếu PickDee đang mở sẵn,
+              dùng tab PickDee hiện tại.
+            */
 
-              const currentUrl =
-                new URL(
-                  client.url
-                );
+            for (
+              const client
+              of windowClients
+            ) {
+
+              try {
+
+                const currentUrl =
+                  new URL(
+                    client.url
+                  );
 
 
-              if (
-                currentUrl.origin
-                ===
-                self.location.origin
-              ) {
+
+                if (
+                  currentUrl.origin
+                  !==
+                  self.location.origin
+                ) {
+
+                  continue;
+
+                }
+
+
 
                 if (
                   "navigate"
@@ -305,27 +526,59 @@ self.addEventListener(
                 }
 
 
-                return client.focus();
+
+                if (
+                  "focus"
+                  in
+                  client
+                ) {
+
+                  return client.focus();
+
+                }
+
+
+
+                return;
+
+              }
+              catch (error) {
+
+                console.warn(
+                  "PickDee notification client:",
+                  error
+                );
 
               }
 
             }
-            catch (error) {
 
-              console.warn(
-                "PickDee notification client:",
-                error
+
+
+            /*
+              Không có tab PickDee đang mở:
+              mở cửa sổ mới.
+            */
+
+            if (
+              self.clients.openWindow
+            ) {
+
+              return self.clients.openWindow(
+                targetUrl
               );
 
             }
 
           }
+          catch (error) {
 
-
-          return self.clients
-            .openWindow(
-              targetUrl
+            console.error(
+              "PickDee notification click:",
+              error
             );
+
+          }
 
         }
       )()
