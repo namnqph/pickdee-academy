@@ -702,6 +702,14 @@
     "pickdee_shop_cart";
 
 
+  const SPX_BASE_FEE =
+    15000;
+
+
+  const FREE_SHIPPING_THRESHOLD =
+    300000;
+
+
   const cfg =
     window.PICKDEE_CONFIG || {};
 
@@ -989,6 +997,135 @@
   }
 
 
+  function cartHasPickleballBall(
+    cart
+  ) {
+
+    const knownBallKeys =
+      [
+        "lt48",
+        "ppa life time",
+        "toniker nexus",
+        "toniker mate pro"
+      ];
+
+
+    return cart.some(
+      function (item) {
+
+        const name =
+          String(
+            item.product_name || ""
+          )
+            .trim()
+            .toLocaleLowerCase(
+              "vi-VN"
+            );
+
+
+        if (
+          name.startsWith(
+            "bóng "
+          )
+        ) {
+
+          return true;
+
+        }
+
+
+        return knownBallKeys.some(
+          function (key) {
+
+            return name.includes(
+              key
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  function shippingQuote(
+    cart
+  ) {
+
+    const merchandiseTotal =
+      calculateTotal(
+        cart
+      );
+
+
+    const hasPickleballBall =
+      cartHasPickleballBall(
+        cart
+      );
+
+
+    const freeShipping =
+      merchandiseTotal
+        >=
+      FREE_SHIPPING_THRESHOLD
+      &&
+      !hasPickleballBall;
+
+
+    const shippingFee =
+      freeShipping
+        ?
+          0
+        :
+          SPX_BASE_FEE;
+
+
+    let reason =
+      "Đơn dưới 300.000đ: phí giao hàng SPX 15.000đ.";
+
+
+    if (
+      hasPickleballBall
+    ) {
+
+      reason =
+        "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
+
+    }
+    else if (
+      freeShipping
+    ) {
+
+      reason =
+        "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
+
+    }
+
+
+    return {
+
+      merchandiseTotal,
+
+      hasPickleballBall,
+
+      freeShipping,
+
+      shippingFee,
+
+      customerTotal:
+        merchandiseTotal
+        +
+        shippingFee,
+
+      reason
+
+    };
+
+  }
+
+
 
   /* =====================================================
      RENDER
@@ -1100,10 +1237,14 @@
     }
 
 
-    const total =
-      calculateTotal(
+    const shipping =
+      shippingQuote(
         cart
       );
+
+
+    const total =
+      shipping.merchandiseTotal;
 
 
     const totalQuantity =
@@ -1335,9 +1476,46 @@
           </span>
 
           <strong>
-            Tính ở bước tiếp theo
+            ${money(
+              shipping.shippingFee
+            )}
           </strong>
 
+        </div>
+
+
+        ${
+          shipping.freeShipping
+            ?
+              `
+                <div class="summary-row">
+
+                  <span>
+                    Ưu đãi vận chuyển
+                  </span>
+
+                  <strong style="color:#d8ff45;">
+                    ✓ FREESHIP PICKDEE
+                  </strong>
+
+                </div>
+              `
+            :
+              ""
+        }
+
+
+        <div
+          style="
+            margin-top:2px;
+            color:rgba(255,255,255,.40);
+            font-size:10px;
+            line-height:1.5;
+          "
+        >
+          ${escapeHtml(
+            shipping.reason
+          )}
         </div>
 
 
@@ -1346,11 +1524,13 @@
           <div>
 
             <div class="total-label">
-              TẠM TÍNH
+              TỔNG THANH TOÁN
             </div>
 
             <div class="total-price">
-              ${money(total)}
+              ${money(
+                shipping.customerTotal
+              )}
             </div>
 
           </div>
@@ -1363,7 +1543,7 @@
 
     checkoutTotal.textContent =
       money(
-        total
+        shipping.customerTotal
       );
 
 
