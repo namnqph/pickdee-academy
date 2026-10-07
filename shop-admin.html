@@ -1,1880 +1,1975 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
-  <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,viewport-fit=cover"
-  >
-
-  <meta
-    name="theme-color"
-    content="#071523"
-  >
-
-  <title>Quản lý Shop | PickDee</title>
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
-
-  <script src="./config.js"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-      background: #071523;
-      color: #fff;
-
-      font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-      touch-action: manipulation;
-    }
-
-    body {
-      min-height: 100vh;
-    }
-
-    a,
-    button {
-      touch-action: manipulation;
-    }
-
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-
-      background:
-        rgba(7,21,35,.97);
-
-      border-bottom:
-        1px solid rgba(255,255,255,.08);
-
-      backdrop-filter:
-        blur(15px);
-    }
-
-    .header-inner {
-      width:
-        min(1100px,calc(100% - 20px));
-
-      min-height: 64px;
-      margin: auto;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 10px;
-    }
-
-    .brand {
-      text-decoration: none;
-      color: #fff;
-
-      font-size: 21px;
-      font-weight: 950;
-
-      letter-spacing: -.04em;
-    }
-
-    .brand span {
-      color: #d8ff45;
-    }
-
-    .back {
-      min-height: 38px;
-
-      padding:
-        0 11px;
-
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,.12);
-
-      color:
-        rgba(255,255,255,.72);
-
-      text-decoration: none;
-
-      font-size: 10px;
-      font-weight: 900;
-
-      white-space: nowrap;
-    }
-
-    main {
-      width:
-        min(1100px,calc(100% - 20px));
-
-      margin:
-        20px auto 50px;
-    }
-
-    .eyebrow {
-      margin-bottom: 6px;
-      color: #d8ff45;
-
-      font-size: 11px;
-      font-weight: 950;
-
-      letter-spacing: .1em;
-    }
-
-    h1 {
-      margin:
-        0 0 6px;
-
-      font-size:
-        clamp(30px,6vw,44px);
-
-      line-height: 1;
-      letter-spacing: -.045em;
-    }
-
-    .intro {
-      margin:
-        0 0 18px;
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 12px;
-    }
-
-    .stats {
-      display: grid;
-
-      grid-template-columns:
-        repeat(4,minmax(0,1fr));
-
-      gap: 10px;
-      margin-bottom: 17px;
-    }
-
-    .stat {
-      padding: 14px;
-
-      border-radius: 14px;
-
-      border:
-        1px solid rgba(255,255,255,.08);
-
-      background: #0d1d2f;
-    }
-
-    .stat-label {
-      color:
-        rgba(255,255,255,.45);
-
-      font-size: 9px;
-      font-weight: 900;
-    }
-
-    .stat-value {
-      margin-top: 5px;
-      color: #d8ff45;
-
-      font-size: 22px;
-      font-weight: 950;
-    }
-
-    .filters {
-      display: flex;
-      gap: 7px;
-
-      margin-bottom: 14px;
-
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .filters::-webkit-scrollbar {
-      display: none;
-    }
-
-    .filter-btn {
-      flex: 0 0 auto;
-
-      min-height: 38px;
-
-      padding:
-        0 13px;
-
-      border-radius: 999px;
-
-      border:
-        1px solid rgba(255,255,255,.11);
-
-      background:
-        rgba(255,255,255,.035);
-
-      color:
-        rgba(255,255,255,.65);
-
-      font-size: 10px;
-      font-weight: 900;
-
-      cursor: pointer;
-    }
-
-    .filter-btn.active {
-      background: #d8ff45;
-      color: #071523;
-      border-color: #d8ff45;
-    }
-
-    .orders {
-      display: grid;
-      gap: 10px;
-    }
-
-    .order-card {
-      padding: 14px;
-
-      border-radius: 16px;
-
-      border:
-        1px solid rgba(255,255,255,.09);
-
-      background: #0d1d2f;
-
-      cursor: pointer;
-    }
-
-    .order-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-
-      gap: 12px;
-    }
-
-    .order-code {
-      color: #fff;
-
-      font-size: 15px;
-      font-weight: 950;
-    }
-
-    .order-time {
-      margin-top: 4px;
-
-      color:
-        rgba(255,255,255,.38);
-
-      font-size: 9px;
-    }
-
-    .badge {
-      flex: 0 0 auto;
-
-      padding:
-        6px 9px;
-
-      border-radius: 999px;
-
-      font-size: 9px;
-      font-weight: 950;
-    }
-
-    .badge.new {
-      background:
-        rgba(216,255,69,.10);
-
-      color: #d8ff45;
-    }
-
-    .badge.confirmed {
-      background:
-        rgba(90,180,255,.12);
-
-      color: #8ecbff;
-    }
-
-    .badge.packing {
-      background:
-        rgba(255,193,90,.12);
-
-      color: #ffd071;
-    }
-
-    .badge.shipping {
-      background:
-        rgba(175,120,255,.13);
-
-      color: #c9a6ff;
-    }
-
-    .badge.completed {
-      background:
-        rgba(80,220,140,.12);
-
-      color: #7be5a8;
-    }
-
-    .badge.cancelled {
-      background:
-        rgba(255,90,90,.11);
-
-      color: #ffaaaa;
-    }
-
-    .customer {
-      margin-top: 13px;
-
-      font-size: 13px;
-      font-weight: 900;
-    }
-
-    .phone {
-      margin-top: 3px;
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 11px;
-    }
-
-    .order-bottom {
-      margin-top: 13px;
-      padding-top: 12px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 12px;
-
-      border-top:
-        1px solid rgba(255,255,255,.07);
-    }
-
-    .payment {
-      color:
-        rgba(255,255,255,.45);
-
-      font-size: 10px;
-      font-weight: 850;
-    }
-
-    .amount {
-      color: #d8ff45;
-
-      font-size: 18px;
-      font-weight: 950;
-    }
-
-    .state {
-      padding:
-        50px 20px;
-
-      text-align: center;
-
-      border-radius: 16px;
-
-      border:
-        1px dashed rgba(255,255,255,.13);
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 12px;
-    }
-
-    .admin-mode-switch {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 8px;
-
-      margin-bottom: 18px;
-      padding: 5px;
-
-      border:
-        1px solid rgba(255,255,255,.08);
-
-      border-radius: 14px;
-
-      background:
-        rgba(255,255,255,.025);
-    }
-
-    .admin-mode-btn {
-      min-height: 42px;
-
-      border: 0;
-      border-radius: 10px;
-
-      background: transparent;
-
-      color:
-        rgba(255,255,255,.58);
-
-      font-family: inherit;
-
-      font-size: 10px;
-      font-weight: 950;
-
-      cursor: pointer;
-    }
-
-    .admin-mode-btn.active {
-      background: #d8ff45;
-      color: #071523;
-    }
-
-    .admin-view[hidden] {
-      display: none !important;
-    }
-
-    .inventory-toolbar {
-      display: grid;
-
-      grid-template-columns:
-        minmax(0,1fr) auto;
-
-      gap: 8px;
-
-      margin-bottom: 12px;
-    }
-
-    .inventory-search,
-    .inventory-input {
-      width: 100%;
-      min-height: 44px;
-
-      padding:
-        0 12px;
-
-      border-radius: 11px;
-
-      border:
-        1px solid rgba(255,255,255,.11);
-
-      outline: none;
-
-      background: #0d1d2f;
-      color: #fff;
-
-      font-family: inherit;
-
-      font-size: 14px;
-      font-weight: 800;
-    }
-
-    .inventory-input:focus,
-    .inventory-search:focus {
-      border-color:
-        rgba(216,255,69,.62);
-
-      box-shadow:
-        0 0 0 3px
-        rgba(216,255,69,.06);
-    }
-
-    .inventory-small-btn {
-      min-height: 44px;
-
-      padding:
-        0 13px;
-
-      border-radius: 11px;
-
-      border:
-        1px solid rgba(255,255,255,.11);
-
-      background:
-        rgba(255,255,255,.05);
-
-      color:
-        rgba(255,255,255,.74);
-
-      font-family: inherit;
-
-      font-size: 10px;
-      font-weight: 950;
-
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .inventory-summary-note {
-      margin:
-        -5px 0 13px;
-
-      color:
-        rgba(255,255,255,.42);
-
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    .inventory-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .inventory-card {
-      padding: 14px;
-
-      border-radius: 16px;
-
-      border:
-        1px solid rgba(255,255,255,.09);
-
-      background: #0d1d2f;
-    }
-
-    .inventory-card.is-untracked {
-      border-color:
-        rgba(255,193,90,.18);
-    }
-
-    .inventory-card.is-bundle {
-      border-color:
-        rgba(90,180,255,.18);
-    }
-
-    .inventory-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-
-      gap: 12px;
-    }
-
-    .inventory-name {
-      min-width: 0;
-
-      color: #fff;
-
-      font-size: 13px;
-      font-weight: 950;
-
-      line-height: 1.35;
-    }
-
-    .inventory-variant {
-      margin-top: 3px;
-
-      color:
-        rgba(255,255,255,.48);
-
-      font-size: 10px;
-
-      line-height: 1.4;
-    }
-
-    .inventory-sku {
-      margin-top: 5px;
-
-      color: #d8ff45;
-
-      font-size: 9px;
-      font-weight: 950;
-
-      letter-spacing: .04em;
-    }
-
-    .inventory-badge {
-      flex: 0 0 auto;
-
-      min-height: 25px;
-
-      padding:
-        0 9px;
-
-      display: inline-flex;
-      align-items: center;
-
-      border-radius: 999px;
-
-      font-size: 8px;
-      font-weight: 950;
-
-      white-space: nowrap;
-    }
-
-    .inventory-badge.tracked {
-      background:
-        rgba(80,220,140,.12);
-
-      color: #7be5a8;
-    }
-
-    .inventory-badge.untracked {
-      background:
-        rgba(255,193,90,.12);
-
-      color: #ffd071;
-    }
-
-    .inventory-badge.bundle {
-      background:
-        rgba(90,180,255,.12);
-
-      color: #8ecbff;
-    }
-
-    .inventory-metrics {
-      display: grid;
-
-      grid-template-columns:
-        repeat(4,minmax(0,1fr));
-
-      gap: 7px;
-
-      margin-top: 12px;
-    }
-
-    .inventory-metric {
-      min-width: 0;
-
-      padding: 9px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,.07);
-
-      background:
-        rgba(255,255,255,.025);
-    }
-
-    .inventory-metric-label {
-      color:
-        rgba(255,255,255,.36);
-
-      font-size: 7px;
-      font-weight: 950;
-
-      line-height: 1.3;
-    }
-
-    .inventory-metric-value {
-      margin-top: 4px;
-
-      color: #fff;
-
-      font-size: 13px;
-      font-weight: 950;
-
-      overflow-wrap: anywhere;
-    }
-
-    .inventory-metric-value.highlight {
-      color: #d8ff45;
-    }
-
-    .inventory-bundle-note {
-      margin-top: 11px;
-
-      padding:
-        10px 11px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(90,180,255,.12);
-
-      background:
-        rgba(90,180,255,.045);
-
-      color:
-        rgba(255,255,255,.62);
-
-      font-size: 10px;
-
-      line-height: 1.5;
-    }
-
-    .inventory-init-box {
-      margin-top: 12px;
-      padding-top: 12px;
-
-      border-top:
-        1px solid rgba(255,255,255,.07);
-    }
-
-    .inventory-check {
-      min-height: 34px;
-
-      display: inline-flex;
-      align-items: center;
-
-      gap: 8px;
-
-      color: #ffd071;
-
-      font-size: 9px;
-      font-weight: 950;
-
-      cursor: pointer;
-    }
-
-    .inventory-check input {
-      width: 18px;
-      height: 18px;
-
-      accent-color: #d8ff45;
-    }
-
-    .inventory-form-grid {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 8px;
-
-      margin-top: 9px;
-    }
-
-    .inventory-field {
-      display: grid;
-      gap: 5px;
-    }
-
-    .inventory-field.full {
-      grid-column:
-        1 / -1;
-    }
-
-    .inventory-field label {
-      color:
-        rgba(255,255,255,.42);
-
-      font-size: 8px;
-      font-weight: 950;
-    }
-
-    .inventory-actions {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 8px;
-
-      margin-top: 12px;
-    }
-
-    .inventory-action-btn {
-      min-height: 42px;
-
-      padding:
-        0 10px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(216,255,69,.20);
-
-      background:
-        rgba(216,255,69,.06);
-
-      color: #d8ff45;
-
-      font-family: inherit;
-
-      font-size: 9px;
-      font-weight: 950;
-
-      cursor: pointer;
-    }
-
-    .inventory-action-btn.primary {
-      border-color: #d8ff45;
-      background: #d8ff45;
-      color: #071523;
-    }
-
-    .inventory-action-btn.secondary {
-      border-color:
-        rgba(255,255,255,.11);
-
-      background:
-        rgba(255,255,255,.05);
-
-      color:
-        rgba(255,255,255,.76);
-    }
-
-    .inventory-action-btn:disabled {
-      opacity: .48;
-      cursor: wait;
-    }
-
-    .inventory-inline-form {
-      display: none;
-
-      margin-top: 11px;
-
-      padding: 12px;
-
-      border-radius: 12px;
-
-      border:
-        1px solid rgba(216,255,69,.16);
-
-      background:
-        rgba(216,255,69,.035);
-    }
-
-    .inventory-inline-form.open {
-      display: block;
-    }
-
-    .inventory-inline-title {
-      color: #d8ff45;
-
-      font-size: 10px;
-      font-weight: 950;
-    }
-
-    .inventory-inline-note {
-      margin-top: 4px;
-
-      color:
-        rgba(255,255,255,.42);
-
-      font-size: 9px;
-
-      line-height: 1.45;
-    }
-
-    .inventory-message {
-      display: none;
-
-      margin-bottom: 12px;
-
-      padding:
-        11px 12px;
-
-      border-radius: 11px;
-
-      font-size: 10px;
-      font-weight: 900;
-
-      line-height: 1.5;
-    }
-
-    .inventory-message.success {
-      display: block;
-
-      border:
-        1px solid rgba(216,255,69,.24);
-
-      background:
-        rgba(216,255,69,.07);
-
-      color: #d8ff45;
-    }
-
-    .inventory-message.error {
-      display: block;
-
-      border:
-        1px solid rgba(255,90,90,.24);
-
-      background:
-        rgba(255,90,90,.07);
-
-      color: #ffb3b3;
-    }
-
-    .inventory-init-bar {
-      position: sticky;
-      bottom: 8px;
-
-      z-index: 20;
-
-      margin-top: 14px;
-
-      padding: 9px;
-
-      display: grid;
-
-      grid-template-columns:
-        minmax(0,1fr) auto;
-
-      gap: 9px;
-
-      align-items: center;
-
-      border-radius: 13px;
-
-      border:
-        1px solid rgba(216,255,69,.22);
-
-      background:
-        rgba(7,21,35,.96);
-
-      backdrop-filter:
-        blur(12px);
-
-      box-shadow:
-        0 10px 30px
-        rgba(0,0,0,.25);
-    }
-
-    .inventory-init-count {
-      min-width: 0;
-
-      color:
-        rgba(255,255,255,.62);
-
-      font-size: 9px;
-      font-weight: 900;
-
-      line-height: 1.4;
-    }
-
-    .inventory-init-count strong {
-      color: #d8ff45;
-    }
-
-    .inventory-init-submit {
-      min-height: 42px;
-
-      padding:
-        0 14px;
-
-      border: 0;
-      border-radius: 10px;
-
-      background: #d8ff45;
-      color: #071523;
-
-      font-family: inherit;
-
-      font-size: 9px;
-      font-weight: 950;
-
-      cursor: pointer;
-
-      white-space: nowrap;
-    }
-
-    .inventory-init-submit:disabled {
-      opacity: .45;
-      cursor: wait;
-    }
-
-    @media(max-width:620px) {
-      main {
-        margin-top: 15px;
-      }
-
-      .stats {
-        grid-template-columns:
-          repeat(2,minmax(0,1fr));
-      }
-
-      h1 {
-        font-size: 31px;
-      }
-
-      .order-card {
-        padding: 13px;
-      }
-
-      .inventory-metrics {
-        grid-template-columns:
-          repeat(2,minmax(0,1fr));
-      }
-
-      .inventory-form-grid {
-        grid-template-columns:
-          1fr 1fr;
-      }
-
-      .inventory-input,
-      .inventory-search {
-        font-size: 16px;
-      }
-
-      .inventory-init-bar {
-        bottom:
-          calc(
-            8px
-            +
-            env(safe-area-inset-bottom)
-          );
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+<meta
+name="theme-color"
+content="#071523"
+>
+<title>Quản lý Shop | PickDee</title>
+<script
+src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+<script src="./config.js"></script>
+<style>
+* {
+box-sizing: border-box;
+}
+html,
+body {
+margin: 0;
+width: 100%;
+max-width: 100%;
+overflow-x: hidden;
+background: #071523;
+color: #fff;
+font-family:
+Inter,
+-apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+sans-serif;
+-webkit-text-size-adjust: 100%;
+text-size-adjust: 100%;
+touch-action: manipulation;
+}
+body {
+min-height: 100vh;
+}
+a,
+button {
+touch-action: manipulation;
+}
+.header {
+position: sticky;
+top: 0;
+z-index: 50;
+background:
+rgba(7,21,35,.97);
+border-bottom:
+1px solid rgba(255,255,255,.08);
+backdrop-filter:
+blur(15px);
+}
+.header-inner {
+width:
+min(1100px,calc(100% - 20px));
+min-height: 64px;
+margin: auto;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+}
+.brand {
+text-decoration: none;
+color: #fff;
+font-size: 21px;
+font-weight: 950;
+letter-spacing: -.04em;
+}
+.brand span {
+color: #d8ff45;
+}
+.back {
+min-height: 38px;
+padding:
+0 11px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+border-radius: 10px;
+border:
+1px solid rgba(255,255,255,.12);
+color:
+rgba(255,255,255,.72);
+text-decoration: none;
+font-size: 10px;
+font-weight: 900;
+white-space: nowrap;
+}
+main {
+width:
+min(1100px,calc(100% - 20px));
+margin:
+20px auto 50px;
+}
+.eyebrow {
+margin-bottom: 6px;
+color: #d8ff45;
+font-size: 11px;
+font-weight: 950;
+letter-spacing: .1em;
+}
+h1 {
+margin:
+0 0 6px;
+font-size:
+clamp(30px,6vw,44px);
+line-height: 1;
+letter-spacing: -.045em;
+}
+.intro {
+margin:
+0 0 18px;
+color:
+rgba(255,255,255,.5);
+font-size: 12px;
+}
+.stats {
+display: grid;
+grid-template-columns:
+repeat(4,minmax(0,1fr));
+gap: 10px;
+margin-bottom: 17px;
+}
+.stat {
+padding: 14px;
+border-radius: 14px;
+border:
+1px solid rgba(255,255,255,.08);
+background: #0d1d2f;
+}
+.stat-label {
+color:
+rgba(255,255,255,.45);
+font-size: 9px;
+font-weight: 900;
+}
+.stat-value {
+margin-top: 5px;
+color: #d8ff45;
+font-size: 22px;
+font-weight: 950;
+}
+.filters {
+display: flex;
+gap: 7px;
+margin-bottom: 14px;
+overflow-x: auto;
+scrollbar-width: none;
+}
+.filters::-webkit-scrollbar {
+display: none;
+}
+.filter-btn {
+flex: 0 0 auto;
+min-height: 38px;
+padding:
+0 13px;
+border-radius: 999px;
+border:
+1px solid rgba(255,255,255,.11);
+background:
+rgba(255,255,255,.035);
+color:
+rgba(255,255,255,.65);
+font-size: 10px;
+font-weight: 900;
+cursor: pointer;
+}
+.filter-btn.active {
+background: #d8ff45;
+color: #071523;
+border-color: #d8ff45;
+}
+.orders {
+display: grid;
+gap: 10px;
+}
+.order-card {
+padding: 14px;
+border-radius: 16px;
+border:
+1px solid rgba(255,255,255,.09);
+background: #0d1d2f;
+cursor: pointer;
+}
+.order-top {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 12px;
+}
+.order-code {
+color: #fff;
+font-size: 15px;
+font-weight: 950;
+}
+.order-time {
+margin-top: 4px;
+color:
+rgba(255,255,255,.38);
+font-size: 9px;
+}
+.badge {
+flex: 0 0 auto;
+padding:
+6px 9px;
+border-radius: 999px;
+font-size: 9px;
+font-weight: 950;
+}
+.badge.new {
+background:
+rgba(216,255,69,.10);
+color: #d8ff45;
+}
+.badge.confirmed {
+background:
+rgba(90,180,255,.12);
+color: #8ecbff;
+}
+.badge.packing {
+background:
+rgba(255,193,90,.12);
+color: #ffd071;
+}
+.badge.shipping {
+background:
+rgba(175,120,255,.13);
+color: #c9a6ff;
+}
+.badge.completed {
+background:
+rgba(80,220,140,.12);
+color: #7be5a8;
+}
+.badge.cancelled {
+background:
+rgba(255,90,90,.11);
+color: #ffaaaa;
+}
+.customer {
+margin-top: 13px;
+font-size: 13px;
+font-weight: 900;
+}
+.phone {
+margin-top: 3px;
+color:
+rgba(255,255,255,.5);
+font-size: 11px;
+}
+.order-bottom {
+margin-top: 13px;
+padding-top: 12px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+border-top:
+1px solid rgba(255,255,255,.07);
+}
+.payment {
+color:
+rgba(255,255,255,.45);
+font-size: 10px;
+font-weight: 850;
+}
+.amount {
+color: #d8ff45;
+font-size: 18px;
+font-weight: 950;
+}
+.state {
+padding:
+50px 20px;
+text-align: center;
+border-radius: 16px;
+border:
+1px dashed rgba(255,255,255,.13);
+color:
+rgba(255,255,255,.5);
+font-size: 12px;
+}
+.admin-mode-switch {
+display: grid;
+grid-template-columns:
+repeat(3,minmax(0,1fr));
+gap: 8px;
+margin-bottom: 18px;
+padding: 5px;
+border:
+1px solid rgba(255,255,255,.08);
+border-radius: 14px;
+background:
+rgba(255,255,255,.025);
+}
+.admin-mode-btn {
+min-height: 42px;
+border: 0;
+border-radius: 10px;
+background: transparent;
+color:
+rgba(255,255,255,.58);
+font-family: inherit;
+font-size: 10px;
+font-weight: 950;
+cursor: pointer;
+}
+.admin-mode-btn.active {
+background: #d8ff45;
+color: #071523;
+}
+.admin-view[hidden] {
+display: none !important;
+}
+.inventory-toolbar {
+display: grid;
+grid-template-columns:
+minmax(0,1fr) auto;
+gap: 8px;
+margin-bottom: 12px;
+}
+.inventory-search,
+.inventory-input {
+width: 100%;
+min-height: 44px;
+padding:
+0 12px;
+border-radius: 11px;
+border:
+1px solid rgba(255,255,255,.11);
+outline: none;
+background: #0d1d2f;
+color: #fff;
+font-family: inherit;
+font-size: 14px;
+font-weight: 800;
+}
+.inventory-input:focus,
+.inventory-search:focus {
+border-color:
+rgba(216,255,69,.62);
+box-shadow:
+0 0 0 3px
+rgba(216,255,69,.06);
+}
+.inventory-small-btn {
+min-height: 44px;
+padding:
+0 13px;
+border-radius: 11px;
+border:
+1px solid rgba(255,255,255,.11);
+background:
+rgba(255,255,255,.05);
+color:
+rgba(255,255,255,.74);
+font-family: inherit;
+font-size: 10px;
+font-weight: 950;
+cursor: pointer;
+white-space: nowrap;
+}
+.inventory-summary-note {
+margin:
+-5px 0 13px;
+color:
+rgba(255,255,255,.42);
+font-size: 10px;
+line-height: 1.5;
+}
+.inventory-list {
+display: grid;
+gap: 10px;
+}
+.inventory-card {
+padding: 14px;
+border-radius: 16px;
+border:
+1px solid rgba(255,255,255,.09);
+background: #0d1d2f;
+}
+.inventory-card.is-untracked {
+border-color:
+rgba(255,193,90,.18);
+}
+.inventory-card.is-bundle {
+border-color:
+rgba(90,180,255,.18);
+}
+.inventory-card-top {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 12px;
+}
+.inventory-name {
+min-width: 0;
+color: #fff;
+font-size: 13px;
+font-weight: 950;
+line-height: 1.35;
+}
+.inventory-variant {
+margin-top: 3px;
+color:
+rgba(255,255,255,.48);
+font-size: 10px;
+line-height: 1.4;
+}
+.inventory-sku {
+margin-top: 5px;
+color: #d8ff45;
+font-size: 9px;
+font-weight: 950;
+letter-spacing: .04em;
+}
+.inventory-badge {
+flex: 0 0 auto;
+min-height: 25px;
+padding:
+0 9px;
+display: inline-flex;
+align-items: center;
+border-radius: 999px;
+font-size: 8px;
+font-weight: 950;
+white-space: nowrap;
+}
+.inventory-badge.tracked {
+background:
+rgba(80,220,140,.12);
+color: #7be5a8;
+}
+.inventory-badge.untracked {
+background:
+rgba(255,193,90,.12);
+color: #ffd071;
+}
+.inventory-badge.bundle {
+background:
+rgba(90,180,255,.12);
+color: #8ecbff;
+}
+.inventory-metrics {
+display: grid;
+grid-template-columns:
+repeat(4,minmax(0,1fr));
+gap: 7px;
+margin-top: 12px;
+}
+.inventory-metric {
+min-width: 0;
+padding: 9px;
+border-radius: 10px;
+border:
+1px solid rgba(255,255,255,.07);
+background:
+rgba(255,255,255,.025);
+}
+.inventory-metric-label {
+color:
+rgba(255,255,255,.36);
+font-size: 7px;
+font-weight: 950;
+line-height: 1.3;
+}
+.inventory-metric-value {
+margin-top: 4px;
+color: #fff;
+font-size: 13px;
+font-weight: 950;
+overflow-wrap: anywhere;
+}
+.inventory-metric-value.highlight {
+color: #d8ff45;
+}
+.inventory-bundle-note {
+margin-top: 11px;
+padding:
+10px 11px;
+border-radius: 10px;
+border:
+1px solid rgba(90,180,255,.12);
+background:
+rgba(90,180,255,.045);
+color:
+rgba(255,255,255,.62);
+font-size: 10px;
+line-height: 1.5;
+}
+.inventory-init-box {
+margin-top: 12px;
+padding-top: 12px;
+border-top:
+1px solid rgba(255,255,255,.07);
+}
+.inventory-check {
+min-height: 34px;
+display: inline-flex;
+align-items: center;
+gap: 8px;
+color: #ffd071;
+font-size: 9px;
+font-weight: 950;
+cursor: pointer;
+}
+.inventory-check input {
+width: 18px;
+height: 18px;
+accent-color: #d8ff45;
+}
+.inventory-form-grid {
+display: grid;
+grid-template-columns:
+1fr 1fr;
+gap: 8px;
+margin-top: 9px;
+}
+.inventory-field {
+display: grid;
+gap: 5px;
+}
+.inventory-field.full {
+grid-column:
+1 / -1;
+}
+.inventory-field label {
+color:
+rgba(255,255,255,.42);
+font-size: 8px;
+font-weight: 950;
+}
+.inventory-actions {
+display: grid;
+grid-template-columns:
+1fr 1fr;
+gap: 8px;
+margin-top: 12px;
+}
+.inventory-action-btn {
+min-height: 42px;
+padding:
+0 10px;
+border-radius: 10px;
+border:
+1px solid rgba(216,255,69,.20);
+background:
+rgba(216,255,69,.06);
+color: #d8ff45;
+font-family: inherit;
+font-size: 9px;
+font-weight: 950;
+cursor: pointer;
+}
+.inventory-action-btn.primary {
+border-color: #d8ff45;
+background: #d8ff45;
+color: #071523;
+}
+.inventory-action-btn.secondary {
+border-color:
+rgba(255,255,255,.11);
+background:
+rgba(255,255,255,.05);
+color:
+rgba(255,255,255,.76);
+}
+.inventory-action-btn:disabled {
+opacity: .48;
+cursor: wait;
+}
+.inventory-inline-form {
+display: none;
+margin-top: 11px;
+padding: 12px;
+border-radius: 12px;
+border:
+1px solid rgba(216,255,69,.16);
+background:
+rgba(216,255,69,.035);
+}
+.inventory-inline-form.open {
+display: block;
+}
+.inventory-inline-title {
+color: #d8ff45;
+font-size: 10px;
+font-weight: 950;
+}
+.inventory-inline-note {
+margin-top: 4px;
+color:
+rgba(255,255,255,.42);
+font-size: 9px;
+line-height: 1.45;
+}
+.inventory-message {
+display: none;
+margin-bottom: 12px;
+padding:
+11px 12px;
+border-radius: 11px;
+font-size: 10px;
+font-weight: 900;
+line-height: 1.5;
+}
+.inventory-message.success {
+display: block;
+border:
+1px solid rgba(216,255,69,.24);
+background:
+rgba(216,255,69,.07);
+color: #d8ff45;
+}
+.inventory-message.error {
+display: block;
+border:
+1px solid rgba(255,90,90,.24);
+background:
+rgba(255,90,90,.07);
+color: #ffb3b3;
+}
+.inventory-init-bar {
+position: sticky;
+bottom: 8px;
+z-index: 20;
+margin-top: 14px;
+padding: 9px;
+display: grid;
+grid-template-columns:
+minmax(0,1fr) auto;
+gap: 9px;
+align-items: center;
+border-radius: 13px;
+border:
+1px solid rgba(216,255,69,.22);
+background:
+rgba(7,21,35,.96);
+backdrop-filter:
+blur(12px);
+box-shadow:
+0 10px 30px
+rgba(0,0,0,.25);
+}
+.inventory-init-count {
+min-width: 0;
+color:
+rgba(255,255,255,.62);
+font-size: 9px;
+font-weight: 900;
+line-height: 1.4;
+}
+.inventory-init-count strong {
+color: #d8ff45;
+}
+.inventory-init-submit {
+min-height: 42px;
+padding:
+0 14px;
+border: 0;
+border-radius: 10px;
+background: #d8ff45;
+color: #071523;
+font-family: inherit;
+font-size: 9px;
+font-weight: 950;
+cursor: pointer;
+white-space: nowrap;
+}
+.inventory-init-submit:disabled {
+opacity: .45;
+cursor: wait;
+}
+
+/* =====================================================
+NHẬP HÀNG
+====================================================== */
+
+.receiving-grid {
+display: grid;
+grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr);
+gap: 12px;
+align-items: start;
+}
+.receiving-panel {
+min-width: 0;
+padding: 14px;
+border-radius: 16px;
+border: 1px solid rgba(255,255,255,.09);
+background: #0d1d2f;
+}
+.receiving-panel.sticky {
+position: sticky;
+top: 84px;
+}
+.receiving-panel-title {
+color: #fff;
+font-size: 13px;
+font-weight: 950;
+line-height: 1.35;
+}
+.receiving-panel-note {
+margin-top: 5px;
+color: rgba(255,255,255,.43);
+font-size: 9px;
+line-height: 1.5;
+}
+.receiving-search {
+width: 100%;
+min-height: 44px;
+margin-top: 12px;
+padding: 0 12px;
+border-radius: 11px;
+border: 1px solid rgba(255,255,255,.11);
+outline: none;
+background: rgba(255,255,255,.035);
+color: #fff;
+font-family: inherit;
+font-size: 14px;
+font-weight: 800;
+}
+.receiving-search:focus {
+border-color: rgba(216,255,69,.62);
+box-shadow: 0 0 0 3px rgba(216,255,69,.06);
+}
+.receiving-catalog-list,
+.receiving-lines {
+display: grid;
+gap: 8px;
+margin-top: 10px;
+}
+.receiving-sku-row {
+min-width: 0;
+padding: 11px;
+display: grid;
+grid-template-columns: minmax(0,1fr) auto;
+gap: 10px;
+align-items: center;
+border-radius: 12px;
+border: 1px solid rgba(255,255,255,.07);
+background: rgba(255,255,255,.025);
+}
+.receiving-sku-name {
+min-width: 0;
+color: #fff;
+font-size: 11px;
+font-weight: 950;
+line-height: 1.35;
+}
+.receiving-sku-meta {
+margin-top: 4px;
+color: rgba(255,255,255,.42);
+font-size: 8px;
+line-height: 1.45;
+overflow-wrap: anywhere;
+}
+.receiving-sku-meta strong {
+color: #d8ff45;
+font-weight: 950;
+}
+.receiving-add-btn {
+min-height: 36px;
+padding: 0 11px;
+border: 0;
+border-radius: 9px;
+background: #d8ff45;
+color: #071523;
+font-family: inherit;
+font-size: 8px;
+font-weight: 950;
+cursor: pointer;
+white-space: nowrap;
+}
+.receiving-add-btn.added {
+border: 1px solid rgba(255,255,255,.10);
+background: rgba(255,255,255,.05);
+color: rgba(255,255,255,.5);
+}
+.receiving-line {
+padding: 11px;
+border-radius: 12px;
+border: 1px solid rgba(216,255,69,.13);
+background: rgba(216,255,69,.025);
+}
+.receiving-line-head {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 10px;
+}
+.receiving-line-name {
+min-width: 0;
+color: #fff;
+font-size: 11px;
+font-weight: 950;
+line-height: 1.35;
+}
+.receiving-line-meta {
+margin-top: 4px;
+color: rgba(255,255,255,.4);
+font-size: 8px;
+line-height: 1.45;
+}
+.receiving-remove-btn {
+flex: 0 0 auto;
+width: 32px;
+height: 32px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+border-radius: 9px;
+border: 1px solid rgba(255,90,90,.18);
+background: rgba(255,90,90,.06);
+color: #ffaaaa;
+font-family: inherit;
+font-size: 14px;
+font-weight: 950;
+cursor: pointer;
+}
+.receiving-line-fields {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+margin-top: 10px;
+}
+.receiving-line-total {
+margin-top: 8px;
+padding-top: 8px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+border-top: 1px solid rgba(255,255,255,.06);
+color: rgba(255,255,255,.42);
+font-size: 8px;
+font-weight: 900;
+}
+.receiving-line-total strong {
+color: #d8ff45;
+font-size: 12px;
+font-weight: 950;
+}
+.receiving-empty {
+margin-top: 10px;
+padding: 24px 14px;
+text-align: center;
+border-radius: 12px;
+border: 1px dashed rgba(255,255,255,.10);
+color: rgba(255,255,255,.42);
+font-size: 9px;
+line-height: 1.55;
+}
+.receiving-note-field {
+margin-top: 12px;
+}
+.receiving-note-field label {
+display: block;
+margin-bottom: 5px;
+color: rgba(255,255,255,.42);
+font-size: 8px;
+font-weight: 950;
+}
+.receiving-summary {
+margin-top: 12px;
+padding: 11px;
+display: grid;
+gap: 8px;
+border-radius: 12px;
+border: 1px solid rgba(255,255,255,.07);
+background: rgba(255,255,255,.025);
+}
+.receiving-summary-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+color: rgba(255,255,255,.48);
+font-size: 9px;
+font-weight: 900;
+}
+.receiving-summary-row strong {
+color: #fff;
+font-size: 11px;
+font-weight: 950;
+}
+.receiving-summary-row.total {
+padding-top: 8px;
+border-top: 1px solid rgba(255,255,255,.07);
+}
+.receiving-summary-row.total strong {
+color: #d8ff45;
+font-size: 17px;
+}
+.receiving-submit {
+width: 100%;
+min-height: 48px;
+margin-top: 12px;
+border: 0;
+border-radius: 11px;
+background: #d8ff45;
+color: #071523;
+font-family: inherit;
+font-size: 10px;
+font-weight: 950;
+cursor: pointer;
+}
+.receiving-submit:disabled {
+opacity: .45;
+cursor: wait;
+}
+.receiving-last-receipt {
+display: none;
+margin-bottom: 12px;
+padding: 11px 12px;
+border-radius: 11px;
+border: 1px solid rgba(80,220,140,.20);
+background: rgba(80,220,140,.06);
+color: #7be5a8;
+font-size: 10px;
+font-weight: 900;
+line-height: 1.55;
+}
+.receiving-last-receipt.show {
+display: block;
+}
+
+@media(max-width:620px) {
+main {
+margin-top: 15px;
+}
+.stats {
+grid-template-columns:
+repeat(2,minmax(0,1fr));
+}
+h1 {
+font-size: 31px;
+}
+.order-card {
+padding: 13px;
+}
+.inventory-metrics {
+grid-template-columns:
+repeat(2,minmax(0,1fr));
+}
+.inventory-form-grid {
+grid-template-columns:
+1fr 1fr;
+}
+.inventory-input,
+.inventory-search {
+font-size: 16px;
+}
+.inventory-init-bar {
+bottom:
+calc(
+8px
++
+env(safe-area-inset-bottom)
+);
+}
+.receiving-grid {
+grid-template-columns: 1fr;
+}
+.receiving-panel.sticky {
+position: static;
+}
+.receiving-search {
+font-size: 16px;
+}
+.receiving-line-fields {
+grid-template-columns: 1fr 1fr;
+}
+}
+</style>
 </head>
 
 <body>
 
 <header class="header">
 
-  <div class="header-inner">
+<div class="header-inner">
 
-    <a
-      class="brand"
-      href="./shop-admin"
-    >
-      PickDee<span>Shop</span>
-    </a>
+<a
+class="brand"
+href="./shop-admin"
+>
+PickDee<span>Shop</span>
+</a>
 
-    <div
-      style="
-        display:flex;
-        align-items:center;
-        gap:7px;
-      "
-    >
+<div
+style="
+display:flex;
+align-items:center;
+gap:7px;
+"
+>
 
-      <a
-        class="back"
-        href="./admin"
-      >
-        ← ADMIN
-      </a>
+<a
+class="back"
+href="./admin"
+>
+← ADMIN
+</a>
 
-      <button
-        id="logoutButton"
-        type="button"
-        class="back"
-        style="
-          background:transparent;
-          cursor:pointer;
-        "
-      >
-        ĐĂNG XUẤT
-      </button>
+<button
+id="logoutButton"
+type="button"
+class="back"
+style="
+background:transparent;
+cursor:pointer;
+"
+>
+ĐĂNG XUẤT
+</button>
 
-    </div>
+</div>
 
-  </div>
+</div>
 
 </header>
 
 
 <main>
 
-  <div class="admin-mode-switch">
-
-    <button
-      id="showOrdersView"
-      type="button"
-      class="admin-mode-btn active"
-    >
-      📦 ĐƠN HÀNG
-    </button>
-
-    <button
-      id="showInventoryView"
-      type="button"
-      class="admin-mode-btn"
-    >
-      🧮 KHO HÀNG
-    </button>
-
-  </div>
-
-
-  <!-- =====================================================
-       ĐƠN HÀNG
-  ====================================================== -->
-
-  <section
-    id="ordersView"
-    class="admin-view"
-  >
-
-    <div class="eyebrow">
-      SHOP ADMIN
-    </div>
-
-    <h1>
-      Đơn hàng
-    </h1>
-
-    <a
-      href="./shop-admin-create-order"
-      style="
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        min-height:42px;
-        margin:8px 0 14px;
-        padding:0 14px;
-        border-radius:11px;
-        background:#d8ff45;
-        color:#071523;
-        text-decoration:none;
-        font-size:11px;
-        font-weight:950;
-        touch-action:manipulation;
-      "
-    >
-      + TẠO ĐƠN NHANH
-    </a>
-
-    <p class="intro">
-      Theo dõi và xử lý đơn PickDee Shop.
-    </p>
-
-
-    <div
-      style="
-        margin:0 0 14px;
-        display:grid;
-        grid-template-columns:minmax(0,1fr) auto;
-        gap:8px;
-      "
-    >
-
-      <input
-        id="orderSearch"
-        type="search"
-        placeholder="Tìm mã đơn, tên khách, số điện thoại..."
-        style="
-          width:100%;
-          min-height:44px;
-          padding:0 14px;
-          border-radius:12px;
-          border:1px solid rgba(255,255,255,.10);
-          background:#0d1d2f;
-          color:#ffffff;
-          outline:none;
-          font-size:13px;
-          font-weight:800;
-        "
-      >
-
-      <button
-        id="orderResetFilters"
-        type="button"
-        style="
-          min-height:44px;
-          padding:0 13px;
-          border-radius:12px;
-          border:1px solid rgba(255,255,255,.12);
-          background:rgba(255,255,255,.05);
-          color:rgba(255,255,255,.72);
-          font-size:10px;
-          font-weight:950;
-          cursor:pointer;
-          white-space:nowrap;
-        "
-      >
-        XÓA LỌC
-      </button>
+<div class="admin-mode-switch">
+
+<button
+id="showOrdersView"
+type="button"
+class="admin-mode-btn active"
+>
+📦 ĐƠN HÀNG
+</button>
+
+<button
+id="showInventoryView"
+type="button"
+class="admin-mode-btn"
+>
+🧮 KHO HÀNG
+</button>
+
+<button
+id="showReceivingView"
+type="button"
+class="admin-mode-btn"
+>
+🚚 NHẬP HÀNG
+</button>
+
+</div>
+
+
+<!-- =====================================================
+ĐƠN HÀNG
+====================================================== -->
+
+<section
+id="ordersView"
+class="admin-view"
+>
+
+<div class="eyebrow">
+SHOP ADMIN
+</div>
+
+<h1>
+Đơn hàng
+</h1>
+
+<a
+href="./shop-admin-create-order"
+style="
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:42px;
+margin:8px 0 14px;
+padding:0 14px;
+border-radius:11px;
+background:#d8ff45;
+color:#071523;
+text-decoration:none;
+font-size:11px;
+font-weight:950;
+touch-action:manipulation;
+"
+>
++ TẠO ĐƠN NHANH
+</a>
+
+<p class="intro">
+Theo dõi và xử lý đơn PickDee Shop.
+</p>
+
+<div
+style="
+margin:0 0 14px;
+display:grid;
+grid-template-columns:minmax(0,1fr) auto;
+gap:8px;
+"
+>
+
+<input
+id="orderSearch"
+type="search"
+placeholder="Tìm mã đơn, tên khách, số điện thoại..."
+style="
+width:100%;
+min-height:44px;
+padding:0 14px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.10);
+background:#0d1d2f;
+color:#ffffff;
+outline:none;
+font-size:13px;
+font-weight:800;
+"
+>
+
+<button
+id="orderResetFilters"
+type="button"
+style="
+min-height:44px;
+padding:0 13px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.12);
+background:rgba(255,255,255,.05);
+color:rgba(255,255,255,.72);
+font-size:10px;
+font-weight:950;
+cursor:pointer;
+white-space:nowrap;
+"
+>
+XÓA LỌC
+</button>
 
-    </div>
+</div>
+
 
-
-    <div class="stats">
-
-      <div class="stat">
-
-        <div class="stat-label">
-          ĐƠN MỚI
-        </div>
-
-        <div
-          id="statNew"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          ĐANG XỬ LÝ
-        </div>
-
-        <div
-          id="statProcessing"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          ĐANG VẬN CHUYỂN
-        </div>
-
-        <div
-          id="statShipping"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          HOÀN TẤT
-        </div>
-
-        <div
-          id="statCompleted"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- TRẠNG THÁI ĐƠN -->
-
-    <div
-      id="filters"
-      class="filters"
-    >
-
-      <button
-        class="filter-btn active"
-        data-status=""
-        type="button"
-      >
-        TẤT CẢ
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="new"
-        type="button"
-      >
-        MỚI
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="confirmed"
-        type="button"
-      >
-        ĐÃ XÁC NHẬN
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="packing"
-        type="button"
-      >
-        ĐÓNG GÓI
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="shipping"
-        type="button"
-      >
-        ĐANG GIAO
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="completed"
-        type="button"
-      >
-        HOÀN TẤT
-      </button>
-
-      <button
-        class="filter-btn"
-        data-status="cancelled"
-        type="button"
-      >
-        ĐÃ HỦY
-      </button>
-
-    </div>
-
-
-    <!-- VẬN CHUYỂN -->
-
-    <div
-      id="shippingStatusFilters"
-      class="filters"
-      style="margin-top:-4px;"
-    >
-
-      <button
-        class="filter-btn active"
-        data-shipping-status=""
-        type="button"
-      >
-        MỌI VẬN CHUYỂN
-      </button>
-
-      <button
-        class="filter-btn"
-        data-shipping-status="not_shipped"
-        type="button"
-      >
-        CHƯA GỬI HÀNG
-      </button>
-
-      <button
-        class="filter-btn"
-        data-shipping-status="shipped"
-        type="button"
-      >
-        ĐÃ GỬI HÀNG
-      </button>
-
-      <button
-        class="filter-btn"
-        data-shipping-status="in_transit"
-        type="button"
-      >
-        ĐANG GIAO
-      </button>
-
-      <button
-        class="filter-btn"
-        data-shipping-status="delivered"
-        type="button"
-      >
-        ĐÃ GIAO
-      </button>
-
-      <button
-        class="filter-btn"
-        data-shipping-status="returned"
-        type="button"
-      >
-        HOÀN HÀNG
-      </button>
-
-    </div>
-
-
-    <!-- NGÀY -->
-
-    <div
-      id="dateRangeFilters"
-      class="filters"
-      style="margin-top:-4px;"
-    >
-
-      <button
-        class="filter-btn active"
-        data-date-range=""
-        type="button"
-      >
-        MỌI NGÀY
-      </button>
-
-      <button
-        class="filter-btn"
-        data-date-range="today"
-        type="button"
-      >
-        HÔM NAY
-      </button>
-
-      <button
-        class="filter-btn"
-        data-date-range="7d"
-        type="button"
-      >
-        7 NGÀY
-      </button>
-
-      <button
-        class="filter-btn"
-        data-date-range="30d"
-        type="button"
-      >
-        30 NGÀY
-      </button>
-
-    </div>
-
-
-    <details
-      style="
-        margin:-4px 0 14px;
-        padding:0;
-      "
-    >
-
-      <summary
-        style="
-          width:max-content;
-          min-height:38px;
-          padding:0 14px;
-          display:flex;
-          align-items:center;
-          gap:7px;
-          border-radius:999px;
-          border:1px solid rgba(255,255,255,.11);
-          background:rgba(255,255,255,.035);
-          color:rgba(255,255,255,.68);
-          font-size:10px;
-          font-weight:950;
-          cursor:pointer;
-          list-style:none;
-          user-select:none;
-        "
-      >
-        + BỘ LỌC THÊM
-      </summary>
-
-
-      <div
-        style="
-          margin-top:12px;
-          padding:12px 12px 1px;
-          border-radius:14px;
-          border:1px solid rgba(255,255,255,.08);
-          background:rgba(255,255,255,.025);
-        "
-      >
-
-        <div
-          style="
-            margin:0 0 7px;
-            color:rgba(255,255,255,.38);
-            font-size:9px;
-            font-weight:950;
-          "
-        >
-          NGUỒN ĐƠN
-        </div>
-
-
-        <div
-          id="sourceFilters"
-          class="filters"
-        >
-
-          <button
-            class="filter-btn active"
-            data-source=""
-            type="button"
-          >
-            MỌI NGUỒN
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="website"
-            type="button"
-          >
-            WEBSITE
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="zalo"
-            type="button"
-          >
-            ZALO
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="tiktok"
-            type="button"
-          >
-            TIKTOK
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="facebook"
-            type="button"
-          >
-            FACEBOOK
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="phone"
-            type="button"
-          >
-            ĐIỆN THOẠI
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="walk_in"
-            type="button"
-          >
-            TRỰC TIẾP / VÃNG LAI
-          </button>
-
-          <button
-            class="filter-btn"
-            data-source="other"
-            type="button"
-          >
-            KHÁC
-          </button>
-
-        </div>
-
-
-        <div
-          style="
-            margin:2px 0 7px;
-            color:rgba(255,255,255,.38);
-            font-size:9px;
-            font-weight:950;
-          "
-        >
-          THANH TOÁN
-        </div>
-
-
-        <div
-          id="paymentStatusFilters"
-          class="filters"
-        >
-
-          <button
-            class="filter-btn active"
-            data-payment-status=""
-            type="button"
-          >
-            MỌI THANH TOÁN
-          </button>
-
-          <button
-            class="filter-btn"
-            data-payment-status="unpaid"
-            type="button"
-          >
-            CHƯA THANH TOÁN
-          </button>
-
-          <button
-            class="filter-btn"
-            data-payment-status="paid"
-            type="button"
-          >
-            ĐÃ THANH TOÁN
-          </button>
-
-        </div>
-
-      </div>
-
-    </details>
-
-
-    <div
-      class="stats"
-      style="
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        margin-top:2px;
-      "
-    >
-
-      <div class="stat">
-
-        <div class="stat-label">
-          SỐ ĐƠN ĐANG HIỂN THỊ
-        </div>
-
-        <div
-          id="statFilteredOrders"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          TỔNG TIỀN TÍNH DOANH THU
-        </div>
-
-        <div
-          id="statFilteredTotal"
-          class="stat-value"
-        >
-          0đ
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div
-      id="orders"
-      class="orders"
-    >
-
-      <div class="state">
-        Đang tải đơn hàng...
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       KHO HÀNG
-  ====================================================== -->
-
-  <section
-    id="inventoryView"
-    class="admin-view"
-    hidden
-  >
-
-    <div class="eyebrow">
-      SHOP ADMIN
-    </div>
-
-    <h1>
-      Kho hàng
-    </h1>
-
-    <p class="intro">
-      Khởi tạo tồn đầu kỳ, nhập thêm hàng và kiểm kho trực tiếp trên điện thoại.
-    </p>
-
-
-    <div
-      id="inventoryMessage"
-      class="inventory-message"
-    ></div>
-
-
-    <div
-      class="stats"
-      id="inventoryStats"
-      style="margin-bottom:12px;"
-    >
-
-      <div class="stat">
-
-        <div class="stat-label">
-          SKU ĐANG THEO DÕI
-        </div>
-
-        <div
-          id="inventoryTrackedCount"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          TỒN KHẢ DỤNG
-        </div>
-
-        <div
-          id="inventoryAvailableTotal"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          ĐANG GIỮ CHO ĐƠN
-        </div>
-
-        <div
-          id="inventoryReservedTotal"
-          class="stat-value"
-        >
-          0
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-label">
-          GIÁ TRỊ TỒN
-        </div>
-
-        <div
-          id="inventoryValueTotal"
-          class="stat-value"
-          style="font-size:17px;"
-        >
-          0đ
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div
-      id="inventorySummaryNote"
-      class="inventory-summary-note"
-    >
-      Đang tải dữ liệu kho...
-    </div>
-
-
-    <div class="inventory-toolbar">
-
-      <input
-        id="inventorySearch"
-        class="inventory-search"
-        type="search"
-        placeholder="Tìm sản phẩm, SKU, biến thể..."
-      >
-
-      <button
-        id="inventoryReload"
-        type="button"
-        class="inventory-small-btn"
-      >
-        ↻ TẢI LẠI
-      </button>
-
-    </div>
-
-
-    <div
-      id="inventoryFilters"
-      class="filters"
-      style="margin-bottom:12px;"
-    >
-
-      <button
-        type="button"
-        class="filter-btn active"
-        data-inventory-filter=""
-      >
-        TẤT CẢ
-      </button>
-
-      <button
-        type="button"
-        class="filter-btn"
-        data-inventory-filter="untracked"
-      >
-        CHƯA KHỞI TẠO
-      </button>
-
-      <button
-        type="button"
-        class="filter-btn"
-        data-inventory-filter="tracked"
-      >
-        ĐANG THEO DÕI
-      </button>
-
-      <button
-        type="button"
-        class="filter-btn"
-        data-inventory-filter="low"
-      >
-        SẮP HẾT
-      </button>
-
-      <button
-        type="button"
-        class="filter-btn"
-        data-inventory-filter="bundle"
-      >
-        SKU GÓI
-      </button>
-
-    </div>
-
-
-    <div
-      id="inventoryList"
-      class="inventory-list"
-    >
-
-      <div class="state">
-        Chọn tab Kho hàng để tải dữ liệu.
-      </div>
-
-    </div>
-
-
-    <div
-      id="inventoryInitBar"
-      class="inventory-init-bar"
-      style="display:none;"
-    >
-
-      <div class="inventory-init-count">
-        Đã chọn
-        <strong id="inventoryInitSelectedCount">
-          0
-        </strong>
-        SKU chưa khởi tạo.
-      </div>
-
-      <button
-        id="inventoryInitializeSelected"
-        type="button"
-        class="inventory-init-submit"
-        disabled
-      >
-        KHỞI TẠO KHO
-      </button>
-
-    </div>
-
-  </section>
+<div class="stats">
+
+<div class="stat">
+
+<div class="stat-label">
+ĐƠN MỚI
+</div>
+
+<div
+id="statNew"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+ĐANG XỬ LÝ
+</div>
+
+<div
+id="statProcessing"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+ĐANG VẬN CHUYỂN
+</div>
+
+<div
+id="statShipping"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+HOÀN TẤT
+</div>
+
+<div
+id="statCompleted"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+</div>
+
+
+<!-- TRẠNG THÁI ĐƠN -->
+
+<div
+id="filters"
+class="filters"
+>
+
+<button
+class="filter-btn active"
+data-status=""
+type="button"
+>
+TẤT CẢ
+</button>
+
+<button
+class="filter-btn"
+data-status="new"
+type="button"
+>
+MỚI
+</button>
+
+<button
+class="filter-btn"
+data-status="confirmed"
+type="button"
+>
+ĐÃ XÁC NHẬN
+</button>
+
+<button
+class="filter-btn"
+data-status="packing"
+type="button"
+>
+ĐÓNG GÓI
+</button>
+
+<button
+class="filter-btn"
+data-status="shipping"
+type="button"
+>
+ĐANG GIAO
+</button>
+
+<button
+class="filter-btn"
+data-status="completed"
+type="button"
+>
+HOÀN TẤT
+</button>
+
+<button
+class="filter-btn"
+data-status="cancelled"
+type="button"
+>
+ĐÃ HỦY
+</button>
+
+</div>
+
+
+<!-- VẬN CHUYỂN -->
+
+<div
+id="shippingStatusFilters"
+class="filters"
+style="margin-top:-4px;"
+>
+
+<button
+class="filter-btn active"
+data-shipping-status=""
+type="button"
+>
+MỌI VẬN CHUYỂN
+</button>
+
+<button
+class="filter-btn"
+data-shipping-status="not_shipped"
+type="button"
+>
+CHƯA GỬI HÀNG
+</button>
+
+<button
+class="filter-btn"
+data-shipping-status="shipped"
+type="button"
+>
+ĐÃ GỬI HÀNG
+</button>
+
+<button
+class="filter-btn"
+data-shipping-status="in_transit"
+type="button"
+>
+ĐANG GIAO
+</button>
+
+<button
+class="filter-btn"
+data-shipping-status="delivered"
+type="button"
+>
+ĐÃ GIAO
+</button>
+
+<button
+class="filter-btn"
+data-shipping-status="returned"
+type="button"
+>
+HOÀN HÀNG
+</button>
+
+</div>
+
+
+<!-- NGÀY -->
+
+<div
+id="dateRangeFilters"
+class="filters"
+style="margin-top:-4px;"
+>
+
+<button
+class="filter-btn active"
+data-date-range=""
+type="button"
+>
+MỌI NGÀY
+</button>
+
+<button
+class="filter-btn"
+data-date-range="today"
+type="button"
+>
+HÔM NAY
+</button>
+
+<button
+class="filter-btn"
+data-date-range="7d"
+type="button"
+>
+7 NGÀY
+</button>
+
+<button
+class="filter-btn"
+data-date-range="30d"
+type="button"
+>
+30 NGÀY
+</button>
+
+</div>
+
+
+<details
+style="
+margin:-4px 0 14px;
+padding:0;
+"
+>
+
+<summary
+style="
+width:max-content;
+min-height:38px;
+padding:0 14px;
+display:flex;
+align-items:center;
+gap:7px;
+border-radius:999px;
+border:1px solid rgba(255,255,255,.11);
+background:rgba(255,255,255,.035);
+color:rgba(255,255,255,.68);
+font-size:10px;
+font-weight:950;
+cursor:pointer;
+list-style:none;
+user-select:none;
+"
+>
++ BỘ LỌC THÊM
+</summary>
+
+
+<div
+style="
+margin-top:12px;
+padding:12px 12px 1px;
+border-radius:14px;
+border:1px solid rgba(255,255,255,.08);
+background:rgba(255,255,255,.025);
+"
+>
+
+<div
+style="
+margin:0 0 7px;
+color:rgba(255,255,255,.38);
+font-size:9px;
+font-weight:950;
+"
+>
+NGUỒN ĐƠN
+</div>
+
+
+<div
+id="sourceFilters"
+class="filters"
+>
+
+<button
+class="filter-btn active"
+data-source=""
+type="button"
+>
+MỌI NGUỒN
+</button>
+
+<button
+class="filter-btn"
+data-source="website"
+type="button"
+>
+WEBSITE
+</button>
+
+<button
+class="filter-btn"
+data-source="zalo"
+type="button"
+>
+ZALO
+</button>
+
+<button
+class="filter-btn"
+data-source="tiktok"
+type="button"
+>
+TIKTOK
+</button>
+
+<button
+class="filter-btn"
+data-source="facebook"
+type="button"
+>
+FACEBOOK
+</button>
+
+<button
+class="filter-btn"
+data-source="phone"
+type="button"
+>
+ĐIỆN THOẠI
+</button>
+
+<button
+class="filter-btn"
+data-source="walk_in"
+type="button"
+>
+TRỰC TIẾP / VÃNG LAI
+</button>
+
+<button
+class="filter-btn"
+data-source="other"
+type="button"
+>
+KHÁC
+</button>
+
+</div>
+
+
+<div
+style="
+margin:2px 0 7px;
+color:rgba(255,255,255,.38);
+font-size:9px;
+font-weight:950;
+"
+>
+THANH TOÁN
+</div>
+
+
+<div
+id="paymentStatusFilters"
+class="filters"
+>
+
+<button
+class="filter-btn active"
+data-payment-status=""
+type="button"
+>
+MỌI THANH TOÁN
+</button>
+
+<button
+class="filter-btn"
+data-payment-status="unpaid"
+type="button"
+>
+CHƯA THANH TOÁN
+</button>
+
+<button
+class="filter-btn"
+data-payment-status="paid"
+type="button"
+>
+ĐÃ THANH TOÁN
+</button>
+
+</div>
+
+</div>
+
+</details>
+
+
+<div
+class="stats"
+style="
+grid-template-columns:repeat(2,minmax(0,1fr));
+margin-top:2px;
+"
+>
+
+<div class="stat">
+
+<div class="stat-label">
+SỐ ĐƠN ĐANG HIỂN THỊ
+</div>
+
+<div
+id="statFilteredOrders"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+TỔNG TIỀN TÍNH DOANH THU
+</div>
+
+<div
+id="statFilteredTotal"
+class="stat-value"
+>
+0đ
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="orders"
+class="orders"
+>
+
+<div class="state">
+Đang tải đơn hàng...
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+KHO HÀNG
+====================================================== -->
+
+<section
+id="inventoryView"
+class="admin-view"
+hidden
+>
+
+<div class="eyebrow">
+SHOP ADMIN
+</div>
+
+<h1>
+Kho hàng
+</h1>
+
+<p class="intro">
+Khởi tạo tồn đầu kỳ, nhập thêm hàng và kiểm kho trực tiếp trên điện thoại.
+</p>
+
+
+<div
+id="inventoryMessage"
+class="inventory-message"
+></div>
+
+
+<div
+class="stats"
+id="inventoryStats"
+style="margin-bottom:12px;"
+>
+
+<div class="stat">
+
+<div class="stat-label">
+SKU ĐANG THEO DÕI
+</div>
+
+<div
+id="inventoryTrackedCount"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+TỒN KHẢ DỤNG
+</div>
+
+<div
+id="inventoryAvailableTotal"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+ĐANG GIỮ CHO ĐƠN
+</div>
+
+<div
+id="inventoryReservedTotal"
+class="stat-value"
+>
+0
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+GIÁ TRỊ TỒN
+</div>
+
+<div
+id="inventoryValueTotal"
+class="stat-value"
+style="font-size:17px;"
+>
+0đ
+</div>
+
+</div>
+
+</div>
+
+
+<div
+id="inventorySummaryNote"
+class="inventory-summary-note"
+>
+Đang tải dữ liệu kho...
+</div>
+
+
+<div class="inventory-toolbar">
+
+<input
+id="inventorySearch"
+class="inventory-search"
+type="search"
+placeholder="Tìm sản phẩm, SKU, biến thể..."
+>
+
+<button
+id="inventoryReload"
+type="button"
+class="inventory-small-btn"
+>
+↻ TẢI LẠI
+</button>
+
+</div>
+
+
+<div
+id="inventoryFilters"
+class="filters"
+style="margin-bottom:12px;"
+>
+
+<button
+type="button"
+class="filter-btn active"
+data-inventory-filter=""
+>
+TẤT CẢ
+</button>
+
+<button
+type="button"
+class="filter-btn"
+data-inventory-filter="untracked"
+>
+CHƯA KHỞI TẠO
+</button>
+
+<button
+type="button"
+class="filter-btn"
+data-inventory-filter="tracked"
+>
+ĐANG THEO DÕI
+</button>
+
+<button
+type="button"
+class="filter-btn"
+data-inventory-filter="low"
+>
+SẮP HẾT
+</button>
+
+<button
+type="button"
+class="filter-btn"
+data-inventory-filter="bundle"
+>
+SKU GÓI
+</button>
+
+</div>
+
+
+<div
+id="inventoryList"
+class="inventory-list"
+>
+
+<div class="state">
+Chọn tab Kho hàng để tải dữ liệu.
+</div>
+
+</div>
+
+
+<div
+id="inventoryInitBar"
+class="inventory-init-bar"
+style="display:none;"
+>
+
+<div class="inventory-init-count">
+Đã chọn
+<strong id="inventoryInitSelectedCount">
+0
+</strong>
+SKU chưa khởi tạo.
+</div>
+
+<button
+id="inventoryInitializeSelected"
+type="button"
+class="inventory-init-submit"
+disabled
+>
+KHỞI TẠO KHO
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+NHẬP HÀNG
+====================================================== -->
+
+<section
+id="receivingView"
+class="admin-view"
+hidden
+>
+
+<div class="eyebrow">
+SHOP ADMIN
+</div>
+
+<h1>
+Nhập hàng
+</h1>
+
+<p class="intro">
+Tạo một phiếu nhập nhiều SKU. Sau khi xác nhận, hệ thống tự cộng tồn và tính lại giá vốn bình quân.
+</p>
+
+
+<div
+id="receivingMessage"
+class="inventory-message"
+></div>
+
+
+<div
+id="receivingLastReceipt"
+class="receiving-last-receipt"
+></div>
+
+
+<div class="receiving-grid">
+
+<section class="receiving-panel">
+
+<div class="receiving-panel-title">
+1. Chọn SKU cần nhập
+</div>
+
+<div class="receiving-panel-note">
+Chỉ hiển thị SKU vật lý đã khởi tạo quản lý tồn. SKU mới chưa khởi tạo hãy vào tab KHO HÀNG trước. SKU gói dùng chung tồn với SKU gốc nên không nhập trực tiếp.
+</div>
+
+
+<input
+id="receivingSearch"
+class="receiving-search"
+type="search"
+placeholder="Tìm tên sản phẩm, SKU, biến thể..."
+>
+
+
+<div
+id="receivingCatalog"
+class="receiving-catalog-list"
+>
+
+<div class="receiving-empty">
+Đang tải danh sách SKU...
+</div>
+
+</div>
+
+</section>
+
+
+<section class="receiving-panel sticky">
+
+<div class="receiving-panel-title">
+2. Phiếu nhập
+</div>
+
+<div class="receiving-panel-note">
+Có thể nhập nhiều SKU trong cùng một phiếu. Giá vốn là giá nhập thực tế cho 1 đơn vị SKU.
+</div>
+
+
+<div
+id="receivingLines"
+class="receiving-lines"
+></div>
+
+
+<div class="receiving-note-field">
+
+<label for="receivingNote">
+GHI CHÚ PHIẾU NHẬP
+</label>
+
+<input
+id="receivingNote"
+class="inventory-input"
+type="text"
+placeholder="Ví dụ: Nhập lô phụ kiện tháng 10"
+>
+
+</div>
+
+
+<div class="receiving-summary">
+
+<div class="receiving-summary-row">
+<span>SỐ SKU</span>
+<strong id="receivingSkuCount">0</strong>
+</div>
+
+<div class="receiving-summary-row">
+<span>TỔNG SỐ LƯỢNG</span>
+<strong id="receivingQtyTotal">0</strong>
+</div>
+
+<div class="receiving-summary-row total">
+<span>TỔNG GIÁ TRỊ NHẬP</span>
+<strong id="receivingCostTotal">0đ</strong>
+</div>
+
+</div>
+
+
+<button
+id="receivingSubmit"
+type="button"
+class="receiving-submit"
+disabled
+>
+XÁC NHẬN NHẬP HÀNG
+</button>
+
+</section>
+
+</div>
+
+</section>
 
 </main>
 
@@ -1883,4085 +1978,5486 @@
 
 (function () {
 
-  const cfg =
-    window.PICKDEE_CONFIG || {};
+const cfg =
+window.PICKDEE_CONFIG || {};
 
 
-  const ordersBox =
-    document.getElementById(
-      "orders"
-    );
+const ordersBox =
+document.getElementById(
+"orders"
+);
 
 
-  let allOrders = [];
+let allOrders = [];
 
-  let selectedStatus = "";
+let selectedStatus = "";
 
-  let allInventory = [];
+let allInventory = [];
 
-  let inventoryLoaded = false;
+let inventoryLoaded = false;
 
-  let selectedInventoryFilter = "";
+let selectedInventoryFilter = "";
 
+let receivingLines = [];
 
-  /* =====================================================
-     SUPABASE
-  ====================================================== */
+let receivingSubmitting = false;
 
-  if (
-    !window.supabase
-    ||
-    !cfg.SUPABASE_URL
-    ||
-    !cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
 
-    showState(
-      "Không tải được hệ thống Shop."
-    );
+/* =====================================================
+SUPABASE
+====================================================== */
 
-    return;
+if (
+!window.supabase
+||
+!cfg.SUPABASE_URL
+||
+!cfg.SUPABASE_PUBLISHABLE_KEY
+) {
 
-  }
+showState(
+"Không tải được hệ thống Shop."
+);
 
+return;
 
-  const sb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
+}
 
 
-  window.supabaseClient = sb;
-  window.sb = sb;
+const sb =
+window.supabase.createClient(
+cfg.SUPABASE_URL,
+cfg.SUPABASE_PUBLISHABLE_KEY
+);
 
 
-  /* =====================================================
-     HELPERS
-  ====================================================== */
+window.supabaseClient = sb;
+window.sb = sb;
 
-  function money(value) {
 
-    return new Intl.NumberFormat(
-      "vi-VN"
-    ).format(
-      Number(
-        value || 0
-      )
-    )
-    +
-    "đ";
+/* =====================================================
+HELPERS
+====================================================== */
 
-  }
+function money(value) {
 
+return new Intl.NumberFormat(
+"vi-VN"
+).format(
+Number(
+value || 0
+)
+)
++
+"đ";
 
-  function escapeHtml(value) {
+}
 
-    return String(
-      value ?? ""
-    )
-      .replaceAll(
-        "&",
-        "&amp;"
-      )
-      .replaceAll(
-        "<",
-        "&lt;"
-      )
-      .replaceAll(
-        ">",
-        "&gt;"
-      )
-      .replaceAll(
-        '"',
-        "&quot;"
-      )
-      .replaceAll(
-        "'",
-        "&#039;"
-      );
 
-  }
+function escapeHtml(value) {
 
+return String(
+value ?? ""
+)
+.replaceAll(
+"&",
+"&amp;"
+)
+.replaceAll(
+"<",
+"&lt;"
+)
+.replaceAll(
+">",
+"&gt;"
+)
+.replaceAll(
+'"',
+"&quot;"
+)
+.replaceAll(
+"'",
+"&#039;"
+);
 
-  function formatTime(value) {
+}
 
-    if (
-      !value
-    ) {
 
-      return "";
+function formatTime(value) {
 
-    }
+if (
+!value
+) {
 
+return "";
 
-    try {
+}
 
-      return new Intl.DateTimeFormat(
-        "vi-VN",
-        {
-          day:
-            "2-digit",
 
-          month:
-            "2-digit",
+try {
 
-          year:
-            "numeric",
+return new Intl.DateTimeFormat(
+"vi-VN",
+{
+day:
+"2-digit",
 
-          hour:
-            "2-digit",
+month:
+"2-digit",
 
-          minute:
-            "2-digit"
-        }
-      ).format(
-        new Date(
-          value
-        )
-      );
+year:
+"numeric",
 
-    }
-    catch (_) {
+hour:
+"2-digit",
 
-      return value;
+minute:
+"2-digit"
+}
+).format(
+new Date(
+value
+)
+);
 
-    }
+}
+catch (_) {
 
-  }
+return value;
 
+}
 
-  function statusLabel(status) {
+}
 
-    const map = {
 
-      new:
-        "ĐƠN MỚI",
+function statusLabel(status) {
 
-      confirmed:
-        "ĐÃ XÁC NHẬN",
+const map = {
 
-      packing:
-        "ĐANG ĐÓNG GÓI",
+new:
+"ĐƠN MỚI",
 
-      shipping:
-        "ĐANG GIAO",
+confirmed:
+"ĐÃ XÁC NHẬN",
 
-      completed:
-        "HOÀN TẤT",
+packing:
+"ĐANG ĐÓNG GÓI",
 
-      cancelled:
-        "ĐÃ HỦY"
+shipping:
+"ĐANG GIAO",
 
-    };
+completed:
+"HOÀN TẤT",
 
+cancelled:
+"ĐÃ HỦY"
 
-    return (
-      map[status]
-      ||
-      status
-      ||
-      "-"
-    );
+};
 
-  }
 
+return (
+map[status]
+||
+status
+||
+"-"
+);
 
-  function paymentLabel(method) {
+}
 
-    if (
-      method ===
-      "bank_transfer"
-    ) {
 
-      return "Chuyển khoản";
+function paymentLabel(method) {
 
-    }
+if (
+method ===
+"bank_transfer"
+) {
 
+return "Chuyển khoản";
 
-    return "COD";
+}
 
-  }
 
+return "COD";
 
-  function paymentStatusLabel(status) {
+}
 
-    const map = {
 
-      unpaid:
-        "Chưa thanh toán",
+function paymentStatusLabel(status) {
 
-      paid:
-        "Đã thanh toán",
+const map = {
 
-      refunded:
-        "Đã hoàn tiền",
+unpaid:
+"Chưa thanh toán",
 
-      partial:
-        "Thanh toán một phần"
+paid:
+"Đã thanh toán",
 
-    };
+refunded:
+"Đã hoàn tiền",
 
+partial:
+"Thanh toán một phần"
 
-    return (
-      map[status]
-      ||
-      status
-      ||
-      "-"
-    );
+};
 
-  }
 
+return (
+map[status]
+||
+status
+||
+"-"
+);
 
-  function showState(text) {
+}
 
-    ordersBox.innerHTML = `
-      <div class="state">
-        ${escapeHtml(text)}
-      </div>
-    `;
 
-  }
+function showState(text) {
 
+ordersBox.innerHTML = `
+<div class="state">
+${escapeHtml(text)}
+</div>
+`;
 
-  /* =====================================================
-     AUTH + ROLE
-  ====================================================== */
+}
 
-  async function requireShopAccess() {
 
-    const {
-      data:
-        sessionData
-    } =
-      await sb.auth.getSession();
+/* =====================================================
+AUTH + ROLE
+====================================================== */
 
+async function requireShopAccess() {
 
-    const user =
-      sessionData
-        ?.session
-        ?.user;
+const {
+data:
+sessionData
+} =
+await sb.auth.getSession();
 
 
-    if (
-      !user
-    ) {
+const user =
+sessionData
+?.session
+?.user;
 
-      window.location.href =
-        "./login";
 
-      return null;
+if (
+!user
+) {
 
-    }
+window.location.href =
+"./login";
 
+return null;
 
-    const {
-      data:
-        roles,
-      error
-    } =
-      await sb
-        .from(
-          "shop_user_roles"
-        )
-        .select(
-          "role,is_active"
-        )
-        .eq(
-          "user_id",
-          user.id
-        )
-        .eq(
-          "is_active",
-          true
-        );
+}
 
 
-    if (
-      error
-    ) {
+const {
+data:
+roles,
+error
+} =
+await sb
+.from(
+"shop_user_roles"
+)
+.select(
+"role,is_active"
+)
+.eq(
+"user_id",
+user.id
+)
+.eq(
+"is_active",
+true
+);
 
-      console.error(
-        "SHOP ROLE ERROR:",
-        error
-      );
 
+if (
+error
+) {
 
-      throw new Error(
-        "Không kiểm tra được quyền Shop."
-      );
+console.error(
+"SHOP ROLE ERROR:",
+error
+);
 
-    }
 
+throw new Error(
+"Không kiểm tra được quyền Shop."
+);
 
-    const allowed =
-      (roles || [])
-        .some(
-          function (item) {
+}
 
-            return [
-              "owner",
-              "shop_admin",
-              "shop_staff"
-            ]
-              .includes(
-                item.role
-              );
 
-          }
-        );
+const allowed =
+(roles || [])
+.some(
+function (item) {
 
+return [
+"owner",
+"shop_admin",
+"shop_staff"
+]
+.includes(
+item.role
+);
 
-    if (
-      !allowed
-    ) {
+}
+);
 
-      throw new Error(
-        "Tài khoản này chưa có quyền quản lý Shop."
-      );
 
-    }
+if (
+!allowed
+) {
 
+throw new Error(
+"Tài khoản này chưa có quyền quản lý Shop."
+);
 
-    return user;
+}
 
-  }
 
+return user;
 
-  /* =====================================================
-     LOGOUT
-  ====================================================== */
+}
 
-  document
-    .getElementById(
-      "logoutButton"
-    )
-    ?.addEventListener(
-      "click",
-      async function () {
 
-        try {
+/* =====================================================
+LOGOUT
+====================================================== */
 
-          await sb.auth.signOut();
+document
+.getElementById(
+"logoutButton"
+)
+?.addEventListener(
+"click",
+async function () {
 
-        }
-        finally {
+try {
 
-          window.location.href =
-            "./";
+await sb.auth.signOut();
 
-        }
+}
+finally {
 
-      }
-    );
+window.location.href =
+"./";
 
+}
 
-  /* =====================================================
-     ORDER STATS
-  ====================================================== */
+}
+);
 
-  function updateStats() {
 
-    document
-      .getElementById(
-        "statNew"
-      )
-      .textContent =
-        String(
-          allOrders.filter(
-            item =>
-              item.order_status
-              ===
-              "new"
-          ).length
-        );
+/* =====================================================
+ORDER STATS
+====================================================== */
 
+function updateStats() {
 
-    document
-      .getElementById(
-        "statProcessing"
-      )
-      .textContent =
-        String(
-          allOrders.filter(
-            item =>
-              [
-                "confirmed",
-                "packing"
-              ]
-                .includes(
-                  item.order_status
-                )
-          ).length
-        );
+document
+.getElementById(
+"statNew"
+)
+.textContent =
+String(
+allOrders.filter(
+item =>
+item.order_status
+===
+"new"
+).length
+);
 
 
-    document
-      .getElementById(
-        "statShipping"
-      )
-      .textContent =
-        String(
-          allOrders.filter(
-            item =>
-              (
-                item.shipping_status
-                ||
-                "not_shipped"
-              )
-              ===
-              "in_transit"
-          ).length
-        );
+document
+.getElementById(
+"statProcessing"
+)
+.textContent =
+String(
+allOrders.filter(
+item =>
+[
+"confirmed",
+"packing"
+]
+.includes(
+item.order_status
+)
+).length
+);
 
 
-    document
-      .getElementById(
-        "statCompleted"
-      )
-      .textContent =
-        String(
-          allOrders.filter(
-            item =>
-              item.order_status
-              ===
-              "completed"
-          ).length
-        );
+document
+.getElementById(
+"statShipping"
+)
+.textContent =
+String(
+allOrders.filter(
+item =>
+(
+item.shipping_status
+||
+"not_shipped"
+)
+===
+"in_transit"
+).length
+);
 
-  }
 
+document
+.getElementById(
+"statCompleted"
+)
+.textContent =
+String(
+allOrders.filter(
+item =>
+item.order_status
+===
+"completed"
+).length
+);
 
-  /* =====================================================
-     ORDER RENDER
-  ====================================================== */
+}
 
-  function renderOrders() {
 
-    const selectedSource =
-      document.querySelector(
-        "#sourceFilters .filter-btn.active"
-      )
-        ?.dataset
-        ?.source
-      ||
-      "";
+/* =====================================================
+ORDER RENDER
+====================================================== */
 
+function renderOrders() {
 
-    const selectedPaymentStatus =
-      document.querySelector(
-        "#paymentStatusFilters .filter-btn.active"
-      )
-        ?.dataset
-        ?.paymentStatus
-      ||
-      "";
+const selectedSource =
+document.querySelector(
+"#sourceFilters .filter-btn.active"
+)
+?.dataset
+?.source
+||
+"";
 
 
-    const selectedShippingStatus =
-      document.querySelector(
-        "#shippingStatusFilters .filter-btn.active"
-      )
-        ?.dataset
-        ?.shippingStatus
-      ||
-      "";
+const selectedPaymentStatus =
+document.querySelector(
+"#paymentStatusFilters .filter-btn.active"
+)
+?.dataset
+?.paymentStatus
+||
+"";
 
 
-    const selectedDateRange =
-      document.querySelector(
-        "#dateRangeFilters .filter-btn.active"
-      )
-        ?.dataset
-        ?.dateRange
-      ||
-      "";
+const selectedShippingStatus =
+document.querySelector(
+"#shippingStatusFilters .filter-btn.active"
+)
+?.dataset
+?.shippingStatus
+||
+"";
 
 
-    const now =
-      new Date();
+const selectedDateRange =
+document.querySelector(
+"#dateRangeFilters .filter-btn.active"
+)
+?.dataset
+?.dateRange
+||
+"";
 
 
-    const startOfToday =
-      new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      );
+const now =
+new Date();
 
 
-    const sevenDaysAgo =
-      new Date(
-        now.getTime()
-        -
-        7
-        *
-        24
-        *
-        60
-        *
-        60
-        *
-        1000
-      );
+const startOfToday =
+new Date(
+now.getFullYear(),
+now.getMonth(),
+now.getDate()
+);
 
 
-    const thirtyDaysAgo =
-      new Date(
-        now.getTime()
-        -
-        30
-        *
-        24
-        *
-        60
-        *
-        60
-        *
-        1000
-      );
-
-
-    const searchKeyword =
-      (
-        document
-          .getElementById(
-            "orderSearch"
-          )
-          ?.value
-        ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
-
-
-    const filtered =
-      allOrders.filter(
-        function (item) {
-
-          const statusOk =
-            selectedStatus
-              ?
-                item.order_status
-                ===
-                selectedStatus
-              :
-                item.order_status
-                !==
-                "cancelled";
-
-
-          const sourceOk =
-            !selectedSource
-            ||
-            (
-              item.order_source
-              ||
-              "website"
-            )
-            ===
-            selectedSource;
-
-
-          const paymentStatusOk =
-            !selectedPaymentStatus
-            ||
-            (
-              item.payment_status
-              ||
-              "unpaid"
-            )
-            ===
-            selectedPaymentStatus;
-
-
-          const shippingStatusOk =
-            !selectedShippingStatus
-            ||
-            (
-              item.shipping_status
-              ||
-              "not_shipped"
-            )
-            ===
-            selectedShippingStatus;
-
-
-          const createdAt =
-            item.created_at
-              ?
-                new Date(
-                  item.created_at
-                )
-              :
-                null;
-
-
-          const dateRangeOk =
-            !selectedDateRange
-            ||
-            (
-              createdAt
-              &&
-              (
-                selectedDateRange
-                ===
-                "today"
-                  ?
-                    createdAt
-                    >=
-                    startOfToday
-                  :
-                    selectedDateRange
-                    ===
-                    "7d"
-                      ?
-                        createdAt
-                        >=
-                        sevenDaysAgo
-                      :
-                        selectedDateRange
-                        ===
-                        "30d"
-                          ?
-                            createdAt
-                            >=
-                            thirtyDaysAgo
-                          :
-                            true
-              )
-            );
-
-
-          const searchText =
-            [
-              item.order_code,
-              item.customer_name,
-              item.phone
-            ]
-              .join(
-                " "
-              )
-              .toLowerCase();
-
-
-          const searchOk =
-            !searchKeyword
-            ||
-            searchText.includes(
-              searchKeyword
-            );
-
-
-          return (
-            statusOk
-            &&
-            sourceOk
-            &&
-            paymentStatusOk
-            &&
-            shippingStatusOk
-            &&
-            dateRangeOk
-            &&
-            searchOk
-          );
-
-        }
-      );
+const sevenDaysAgo =
+new Date(
+now.getTime()
+-
+7
+*
+24
+*
+60
+*
+60
+*
+1000
+);
 
-
-    const filteredTotal =
-      filtered.reduce(
-        function (
-          sum,
-          item
-        ) {
 
-          if (
-            item.order_status
-            ===
-            "cancelled"
-          ) {
-
-            return sum;
-
-          }
+const thirtyDaysAgo =
+new Date(
+now.getTime()
+-
+30
+*
+24
+*
+60
+*
+60
+*
+1000
+);
 
 
-          return (
-            sum
-            +
-            Number(
-              item.total_amount
-              ||
-              0
-            )
-          );
+const searchKeyword =
+(
+document
+.getElementById(
+"orderSearch"
+)
+?.value
+||
+""
+)
+.trim()
+.toLowerCase();
+
+
+const filtered =
+allOrders.filter(
+function (item) {
+
+const statusOk =
+selectedStatus
+?
+item.order_status
+===
+selectedStatus
+:
+item.order_status
+!==
+"cancelled";
+
+
+const sourceOk =
+!selectedSource
+||
+(
+item.order_source
+||
+"website"
+)
+===
+selectedSource;
+
+
+const paymentStatusOk =
+!selectedPaymentStatus
+||
+(
+item.payment_status
+||
+"unpaid"
+)
+===
+selectedPaymentStatus;
+
+
+const shippingStatusOk =
+!selectedShippingStatus
+||
+(
+item.shipping_status
+||
+"not_shipped"
+)
+===
+selectedShippingStatus;
+
+
+const createdAt =
+item.created_at
+?
+new Date(
+item.created_at
+)
+:
+null;
+
+
+const dateRangeOk =
+!selectedDateRange
+||
+(
+createdAt
+&&
+(
+selectedDateRange
+===
+"today"
+?
+createdAt
+>=
+startOfToday
+:
+selectedDateRange
+===
+"7d"
+?
+createdAt
+>=
+sevenDaysAgo
+:
+selectedDateRange
+===
+"30d"
+?
+createdAt
+>=
+thirtyDaysAgo
+:
+true
+)
+);
+
+
+const searchText =
+[
+item.order_code,
+item.customer_name,
+item.phone
+]
+.join(
+" "
+)
+.toLowerCase();
+
+
+const searchOk =
+!searchKeyword
+||
+searchText.includes(
+searchKeyword
+);
+
 
-        },
-        0
-      );
+return (
+statusOk
+&&
+sourceOk
+&&
+paymentStatusOk
+&&
+shippingStatusOk
+&&
+dateRangeOk
+&&
+searchOk
+);
 
+}
+);
 
-    const statFilteredOrders =
-      document.getElementById(
-        "statFilteredOrders"
-      );
 
+const filteredTotal =
+filtered.reduce(
+function (
+sum,
+item
+) {
 
-    const statFilteredTotal =
-      document.getElementById(
-        "statFilteredTotal"
-      );
-
+if (
+item.order_status
+===
+"cancelled"
+) {
 
-    if (
-      statFilteredOrders
-    ) {
+return sum;
 
-      statFilteredOrders.textContent =
-        String(
-          filtered.length
-        );
+}
 
-    }
 
+return (
+sum
++
+Number(
+item.total_amount
+||
+0
+)
+);
 
-    if (
-      statFilteredTotal
-    ) {
+},
+0
+);
 
-      statFilteredTotal.textContent =
-        money(
-          filteredTotal
-        );
 
-    }
+const statFilteredOrders =
+document.getElementById(
+"statFilteredOrders"
+);
 
 
-    if (
-      !filtered.length
-    ) {
+const statFilteredTotal =
+document.getElementById(
+"statFilteredTotal"
+);
 
-      showState(
-        "Chưa có đơn hàng ở trạng thái này."
-      );
 
-      return;
+if (
+statFilteredOrders
+) {
 
-    }
+statFilteredOrders.textContent =
+String(
+filtered.length
+);
 
+}
 
-    ordersBox.innerHTML =
-      filtered
-        .map(
-          function (order) {
 
-            const sourceLabel =
-              {
-                website:
-                  "WEBSITE",
+if (
+statFilteredTotal
+) {
 
-                zalo:
-                  "ZALO",
+statFilteredTotal.textContent =
+money(
+filteredTotal
+);
 
-                tiktok:
-                  "TIKTOK",
+}
 
-                facebook:
-                  "FACEBOOK",
 
-                phone:
-                  "ĐIỆN THOẠI",
+if (
+!filtered.length
+) {
 
-                walk_in:
-                  "KHÁCH TRỰC TIẾP / VÃNG LAI",
+showState(
+"Chưa có đơn hàng ở trạng thái này."
+);
 
-                other:
-                  "KHÁC"
-              }[
-                order.order_source
-              ]
-              ||
-              "WEBSITE";
+return;
 
+}
 
-            const shippingStatus =
-              order.shipping_status
-              ||
-              "not_shipped";
 
+ordersBox.innerHTML =
+filtered
+.map(
+function (order) {
 
-            const shippingLabel =
-              {
-                not_shipped:
-                  "CHƯA GỬI",
+const sourceLabel =
+{
+website:
+"WEBSITE",
 
-                shipped:
-                  "ĐÃ GỬI",
-
-                in_transit:
-                  "ĐANG GIAO",
-
-                delivered:
-                  "ĐÃ GIAO",
-
-                returned:
-                  "HOÀN HÀNG"
-              }[
-                shippingStatus
-              ]
-              ||
-              "CHƯA GỬI";
-
-
-            const shippingBackground =
-              {
-                not_shipped:
-                  "rgba(255,255,255,.06)",
-
-                shipped:
-                  "rgba(90,180,255,.12)",
-
-                in_transit:
-                  "rgba(175,120,255,.13)",
-
-                delivered:
-                  "rgba(80,220,140,.12)",
-
-                returned:
-                  "rgba(255,90,90,.11)"
-              }[
-                shippingStatus
-              ]
-              ||
-              "rgba(255,255,255,.06)";
-
-
-            const shippingColor =
-              {
-                not_shipped:
-                  "rgba(255,255,255,.62)",
-
-                shipped:
-                  "#8ecbff",
-
-                in_transit:
-                  "#c9a6ff",
-
-                delivered:
-                  "#7be5a8",
-
-                returned:
-                  "#ffaaaa"
-              }[
-                shippingStatus
-              ]
-              ||
-              "rgba(255,255,255,.62)";
-
-
-            return `
-
-              <div
-                class="order-card"
-                data-id="${order.id}"
-              >
-
-                <div class="order-top">
-
-                  <div>
-
-                    <div class="order-code">
-                      ${escapeHtml(
-                        order.order_code
-                      )}
-                    </div>
-
-                    <div class="order-time">
-                      ${formatTime(
-                        order.created_at
-                      )}
-                    </div>
-
-
-                    <div
-                      style="
-                        display:inline-flex;
-                        align-items:center;
-                        min-height:22px;
-                        margin-top:6px;
-                        padding:0 8px;
-                        border-radius:999px;
-                        background:rgba(255,255,255,.06);
-                        border:1px solid rgba(255,255,255,.09);
-                        color:rgba(255,255,255,.62);
-                        font-size:8px;
-                        font-weight:950;
-                        letter-spacing:.04em;
-                      "
-                    >
-                      ${escapeHtml(
-                        sourceLabel
-                      )}
-                    </div>
-
-
-                    <div
-                      style="
-                        display:inline-flex;
-                        align-items:center;
-                        min-height:22px;
-                        margin-top:6px;
-                        margin-left:4px;
-                        padding:0 8px;
-                        border-radius:999px;
-                        background:${shippingBackground};
-                        border:1px solid rgba(255,255,255,.09);
-                        color:${shippingColor};
-                        font-size:8px;
-                        font-weight:950;
-                        letter-spacing:.04em;
-                      "
-                    >
-                      VC · ${escapeHtml(
-                        shippingLabel
-                      )}
-                    </div>
-
-                  </div>
-
-
-                  <div
-                    class="badge ${escapeHtml(
-                      order.order_status
-                    )}"
-                  >
-                    ${escapeHtml(
-                      statusLabel(
-                        order.order_status
-                      )
-                    )}
-                  </div>
-
-                </div>
-
-
-                <div class="customer">
-                  ${escapeHtml(
-                    order.customer_name
-                  )}
-                </div>
-
-
-                <div class="phone">
-                  ${escapeHtml(
-                    order.phone
-                  )}
-                </div>
-
-
-                <div class="order-bottom">
-
-                  <div class="payment">
-
-                    ${escapeHtml(
-                      paymentLabel(
-                        order.payment_method
-                      )
-                    )}
-
-                    •
-
-                    ${escapeHtml(
-                      paymentStatusLabel(
-                        order.payment_status
-                        ||
-                        "unpaid"
-                      )
-                    )}
-
-                  </div>
-
-
-                  <div class="amount">
-                    ${money(
-                      order.total_amount
-                    )}
-                  </div>
-
-                </div>
-
-              </div>
-            `;
-
-          }
-        )
-        .join(
-          ""
-        );
-
-
-    document
-      .querySelectorAll(
-        ".order-card"
-      )
-      .forEach(
-        function (card) {
-
-          card.addEventListener(
-            "click",
-            function () {
+zalo:
+"ZALO",
 
-              window.location.href =
-                `./shop-admin-order?id=${encodeURIComponent(
-                  card.dataset.id
-                )}`;
-
-            }
-          );
-
-        }
-      );
-
-  }
-
-
-  /* =====================================================
-     ORDER FILTER EVENTS
-  ====================================================== */
-
-  document
-    .querySelectorAll(
-      "#filters .filter-btn"
-    )
-    .forEach(
-      function (button) {
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            selectedStatus =
-              button.dataset.status
-              ||
-              "";
-
+tiktok:
+"TIKTOK",
 
-            document
-              .querySelectorAll(
-                "#filters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
-
+facebook:
+"FACEBOOK",
 
-            button.classList.add(
-              "active"
-            );
-
-
-            renderOrders();
-
-          }
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      "#sourceFilters .filter-btn"
-    )
-    .forEach(
-      function (button) {
+phone:
+"ĐIỆN THOẠI",
 
-        button.addEventListener(
-          "click",
-          function () {
+walk_in:
+"KHÁCH TRỰC TIẾP / VÃNG LAI",
 
-            document
-              .querySelectorAll(
-                "#sourceFilters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
+other:
+"KHÁC"
+}[
+order.order_source
+]
+||
+"WEBSITE";
 
 
-            button.classList.add(
-              "active"
-            );
+const shippingStatus =
+order.shipping_status
+||
+"not_shipped";
 
-
-            renderOrders();
-
-          }
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      "#paymentStatusFilters .filter-btn"
-    )
-    .forEach(
-      function (button) {
 
-        button.addEventListener(
-          "click",
-          function () {
+const shippingLabel =
+{
+not_shipped:
+"CHƯA GỬI",
 
-            document
-              .querySelectorAll(
-                "#paymentStatusFilters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
+shipped:
+"ĐÃ GỬI",
 
+in_transit:
+"ĐANG GIAO",
+
+delivered:
+"ĐÃ GIAO",
+
+returned:
+"HOÀN HÀNG"
+}[
+shippingStatus
+]
+||
+"CHƯA GỬI";
+
+
+const shippingBackground =
+{
+not_shipped:
+"rgba(255,255,255,.06)",
+
+shipped:
+"rgba(90,180,255,.12)",
+
+in_transit:
+"rgba(175,120,255,.13)",
+
+delivered:
+"rgba(80,220,140,.12)",
+
+returned:
+"rgba(255,90,90,.11)"
+}[
+shippingStatus
+]
+||
+"rgba(255,255,255,.06)";
+
+
+const shippingColor =
+{
+not_shipped:
+"rgba(255,255,255,.62)",
+
+shipped:
+"#8ecbff",
+
+in_transit:
+"#c9a6ff",
+
+delivered:
+"#7be5a8",
+
+returned:
+"#ffaaaa"
+}[
+shippingStatus
+]
+||
+"rgba(255,255,255,.62)";
+
+
+return `
+
+<div
+class="order-card"
+data-id="${order.id}"
+>
+
+<div class="order-top">
+
+<div>
+
+<div class="order-code">
+${escapeHtml(
+order.order_code
+)}
+</div>
+
+<div class="order-time">
+${formatTime(
+order.created_at
+)}
+</div>
+
+
+<div
+style="
+display:inline-flex;
+align-items:center;
+min-height:22px;
+margin-top:6px;
+padding:0 8px;
+border-radius:999px;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.09);
+color:rgba(255,255,255,.62);
+font-size:8px;
+font-weight:950;
+letter-spacing:.04em;
+"
+>
+${escapeHtml(
+sourceLabel
+)}
+</div>
+
+
+<div
+style="
+display:inline-flex;
+align-items:center;
+min-height:22px;
+margin-top:6px;
+margin-left:4px;
+padding:0 8px;
+border-radius:999px;
+background:${shippingBackground};
+border:1px solid rgba(255,255,255,.09);
+color:${shippingColor};
+font-size:8px;
+font-weight:950;
+letter-spacing:.04em;
+"
+>
+VC · ${escapeHtml(
+shippingLabel
+)}
+</div>
+
+</div>
+
+
+<div
+class="badge ${escapeHtml(
+order.order_status
+)}"
+>
+${escapeHtml(
+statusLabel(
+order.order_status
+)
+)}
+</div>
+
+</div>
+
+
+<div class="customer">
+${escapeHtml(
+order.customer_name
+)}
+</div>
+
+
+<div class="phone">
+${escapeHtml(
+order.phone
+)}
+</div>
+
+
+<div class="order-bottom">
+
+<div class="payment">
+
+${escapeHtml(
+paymentLabel(
+order.payment_method
+)
+)}
+
+•
+
+${escapeHtml(
+paymentStatusLabel(
+order.payment_status
+||
+"unpaid"
+)
+)}
+
+</div>
+
+
+<div class="amount">
+${money(
+order.total_amount
+)}
+</div>
+
+</div>
+
+</div>
+`;
+
+}
+)
+.join(
+""
+);
+
+
+document
+.querySelectorAll(
+".order-card"
+)
+.forEach(
+function (card) {
 
-            button.classList.add(
-              "active"
-            );
+card.addEventListener(
+"click",
+function () {
 
+window.location.href =
+`./shop-admin-order?id=${encodeURIComponent(
+card.dataset.id
+)}`;
+
+}
+);
 
-            renderOrders();
+}
+);
 
-          }
-        );
+}
+
+
+/* =====================================================
+ORDER FILTER EVENTS
+====================================================== */
+
+document
+.querySelectorAll(
+"#filters .filter-btn"
+)
+.forEach(
+function (button) {
+
+button.addEventListener(
+"click",
+function () {
 
-      }
-    );
+selectedStatus =
+button.dataset.status
+||
+"";
 
 
-  document
-    .querySelectorAll(
-      "#shippingStatusFilters .filter-btn"
-    )
-    .forEach(
-      function (button) {
+document
+.querySelectorAll(
+"#filters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
-        button.addEventListener(
-          "click",
-          function () {
 
-            document
-              .querySelectorAll(
-                "#shippingStatusFilters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
+button.classList.add(
+"active"
+);
 
 
-            button.classList.add(
-              "active"
-            );
+renderOrders();
+
+}
+);
+
+}
+);
 
+
+document
+.querySelectorAll(
+"#sourceFilters .filter-btn"
+)
+.forEach(
+function (button) {
 
-            renderOrders();
+button.addEventListener(
+"click",
+function () {
 
-          }
-        );
+document
+.querySelectorAll(
+"#sourceFilters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
-      }
-    );
 
+button.classList.add(
+"active"
+);
 
-  document
-    .querySelectorAll(
-      "#dateRangeFilters .filter-btn"
-    )
-    .forEach(
-      function (button) {
 
-        button.addEventListener(
-          "click",
-          function () {
+renderOrders();
 
-            document
-              .querySelectorAll(
-                "#dateRangeFilters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
-
+}
+);
+
+}
+);
 
-            button.classList.add(
-              "active"
-            );
 
+document
+.querySelectorAll(
+"#paymentStatusFilters .filter-btn"
+)
+.forEach(
+function (button) {
 
-            renderOrders();
-
-          }
-        );
-
-      }
-    );
+button.addEventListener(
+"click",
+function () {
 
+document
+.querySelectorAll(
+"#paymentStatusFilters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
-  const orderSearch =
-    document.getElementById(
-      "orderSearch"
-    );
 
+button.classList.add(
+"active"
+);
 
-  const orderResetFilters =
-    document.getElementById(
-      "orderResetFilters"
-    );
 
+renderOrders();
 
-  if (
-    orderSearch
-  ) {
+}
+);
 
-    orderSearch.addEventListener(
-      "input",
-      renderOrders
-    );
+}
+);
 
-  }
 
+document
+.querySelectorAll(
+"#shippingStatusFilters .filter-btn"
+)
+.forEach(
+function (button) {
 
-  if (
-    orderResetFilters
-  ) {
+button.addEventListener(
+"click",
+function () {
 
-    orderResetFilters.addEventListener(
-      "click",
-      function () {
+document
+.querySelectorAll(
+"#shippingStatusFilters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
-        orderSearch.value =
-          "";
 
+button.classList.add(
+"active"
+);
 
-        selectedStatus =
-          "";
 
+renderOrders();
 
-        [
-          [
-            "#filters",
-            "data-status"
-          ],
-          [
-            "#sourceFilters",
-            "data-source"
-          ],
-          [
-            "#paymentStatusFilters",
-            "data-payment-status"
-          ],
-          [
-            "#shippingStatusFilters",
-            "data-shipping-status"
-          ],
-          [
-            "#dateRangeFilters",
-            "data-date-range"
-          ]
-        ]
-          .forEach(
-            function (
-              config
-            ) {
+}
+);
 
-              const selector =
-                config[0];
+}
+);
 
-              const attribute =
-                config[1];
 
+document
+.querySelectorAll(
+"#dateRangeFilters .filter-btn"
+)
+.forEach(
+function (button) {
 
-              document
-                .querySelectorAll(
-                  `${selector} .filter-btn`
-                )
-                .forEach(
-                  item =>
-                    item.classList.remove(
-                      "active"
-                    )
-                );
+button.addEventListener(
+"click",
+function () {
 
+document
+.querySelectorAll(
+"#dateRangeFilters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
-              document
-                .querySelector(
-                  `${selector} .filter-btn[${attribute}=""]`
-                )
-                ?.classList
-                .add(
-                  "active"
-                );
 
-            }
-          );
+button.classList.add(
+"active"
+);
 
 
-        renderOrders();
+renderOrders();
 
-      }
-    );
+}
+);
 
-  }
+}
+);
 
 
-  /* =====================================================
-     ADMIN MODE
-  ====================================================== */
+const orderSearch =
+document.getElementById(
+"orderSearch"
+);
 
-  function activateAdminView(
-    viewName,
-    updateHash = true
-  ) {
 
-    const ordersView =
-      document.getElementById(
-        "ordersView"
-      );
+const orderResetFilters =
+document.getElementById(
+"orderResetFilters"
+);
 
 
-    const inventoryView =
-      document.getElementById(
-        "inventoryView"
-      );
+if (
+orderSearch
+) {
 
+orderSearch.addEventListener(
+"input",
+renderOrders
+);
 
-    const ordersButton =
-      document.getElementById(
-        "showOrdersView"
-      );
+}
 
 
-    const inventoryButton =
-      document.getElementById(
-        "showInventoryView"
-      );
+if (
+orderResetFilters
+) {
 
+orderResetFilters.addEventListener(
+"click",
+function () {
 
-    const showInventory =
-      viewName
-      ===
-      "inventory";
+orderSearch.value =
+"";
 
 
-    ordersView.hidden =
-      showInventory;
+selectedStatus =
+"";
 
 
-    inventoryView.hidden =
-      !showInventory;
+[
+[
+"#filters",
+"data-status"
+],
+[
+"#sourceFilters",
+"data-source"
+],
+[
+"#paymentStatusFilters",
+"data-payment-status"
+],
+[
+"#shippingStatusFilters",
+"data-shipping-status"
+],
+[
+"#dateRangeFilters",
+"data-date-range"
+]
+]
+.forEach(
+function (
+config
+) {
 
+const selector =
+config[0];
 
-    ordersButton.classList.toggle(
-      "active",
-      !showInventory
-    );
+const attribute =
+config[1];
 
 
-    inventoryButton.classList.toggle(
-      "active",
-      showInventory
-    );
+document
+.querySelectorAll(
+`${selector} .filter-btn`
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
 
 
-    if (
-      updateHash
-    ) {
+document
+.querySelector(
+`${selector} .filter-btn[${attribute}=""]`
+)
+?.classList
+.add(
+"active"
+);
 
-      if (
-        showInventory
-      ) {
+}
+);
 
-        history.replaceState(
-          null,
-          "",
-          `${location.pathname}${location.search}#warehouse`
-        );
 
-      }
-      else {
+renderOrders();
 
-        history.replaceState(
-          null,
-          "",
-          `${location.pathname}${location.search}`
-        );
+}
+);
 
-      }
+}
 
-    }
 
+/* =====================================================
+ADMIN MODE
+====================================================== */
 
-    if (
-      showInventory
-      &&
-      !inventoryLoaded
-    ) {
+function activateAdminView(
+viewName,
+updateHash = true
+) {
 
-      loadInventory();
+const ordersView =
+document.getElementById(
+"ordersView"
+);
 
-    }
 
-  }
+const inventoryView =
+document.getElementById(
+"inventoryView"
+);
 
 
-  /* =====================================================
-     INVENTORY HELPERS
-  ====================================================== */
+const receivingView =
+document.getElementById(
+"receivingView"
+);
 
-  function showInventoryState(text) {
 
-    const inventoryList =
-      document.getElementById(
-        "inventoryList"
-      );
+const ordersButton =
+document.getElementById(
+"showOrdersView"
+);
 
 
-    inventoryList.innerHTML = `
-      <div class="state">
-        ${escapeHtml(text)}
-      </div>
-    `;
+const inventoryButton =
+document.getElementById(
+"showInventoryView"
+);
 
-  }
 
+const receivingButton =
+document.getElementById(
+"showReceivingView"
+);
 
-  function showInventoryMessage(
-    text,
-    type
-  ) {
 
-    const box =
-      document.getElementById(
-        "inventoryMessage"
-      );
+const showInventory =
+viewName
+===
+"inventory";
 
 
-    if (
-      !box
-    ) {
+const showReceiving =
+viewName
+===
+"receiving";
 
-      return;
 
-    }
+const showOrders =
+!showInventory
+&&
+!showReceiving;
 
 
-    if (
-      !text
-    ) {
+ordersView.hidden =
+!showOrders;
 
-      box.className =
-        "inventory-message";
 
-      box.textContent =
-        "";
+inventoryView.hidden =
+!showInventory;
 
-      return;
 
-    }
+receivingView.hidden =
+!showReceiving;
 
 
-    box.className =
-      `inventory-message ${type || "success"}`;
+ordersButton.classList.toggle(
+"active",
+showOrders
+);
 
 
-    box.textContent =
-      text;
+inventoryButton.classList.toggle(
+"active",
+showInventory
+);
 
-  }
 
+receivingButton.classList.toggle(
+"active",
+showReceiving
+);
 
-  function inventoryAvailable(item) {
 
-    return (
-      Number(
-        item.stock_on_hand
-        ||
-        0
-      )
-      -
-      Number(
-        item.reserved_qty
-        ||
-        0
-      )
-    );
+if (
+updateHash
+) {
 
-  }
+let hash =
+"";
 
 
-  function inventoryItemById(
-    variantId
-  ) {
+if (
+showInventory
+) {
 
-    return (
-      allInventory.find(
-        item =>
-          Number(
-            item.variant_id
-          )
-          ===
-          Number(
-            variantId
-          )
-      )
-      ||
-      null
-    );
+hash =
+"#warehouse";
 
-  }
+}
+else if (
+showReceiving
+) {
 
+hash =
+"#receiving";
 
-  function inventoryBundleAvailable(
-    item
-  ) {
+}
 
-    if (
-      !item.is_bundle
-      ||
-      !item.stock_variant_id
-      ||
-      Number(
-        item.stock_multiplier
-        ||
-        0
-      )
-      <=
-      0
-    ) {
 
-      return 0;
+history.replaceState(
+null,
+"",
+`${location.pathname}${location.search}${hash}`
+);
 
-    }
+}
 
 
-    const base =
-      inventoryItemById(
-        item.stock_variant_id
-      );
+if (
+(
+showInventory
+||
+showReceiving
+)
+&&
+!inventoryLoaded
+) {
 
+loadInventory();
 
-    if (
-      !base
-      ||
-      !base.track_stock
-    ) {
+}
+else if (
+showReceiving
+) {
 
-      return 0;
+renderReceivingCatalog();
 
-    }
+renderReceivingLines();
 
+}
 
-    return Math.max(
-      0,
-      Math.floor(
-        inventoryAvailable(
-          base
-        )
-        /
-        Number(
-          item.stock_multiplier
-        )
-      )
-    );
+}
 
-  }
 
+/* =====================================================
+INVENTORY HELPERS
+====================================================== */
 
-  function updateInventoryStats() {
+function showInventoryState(text) {
 
-    const physical =
-      allInventory.filter(
-        item =>
-          !item.is_bundle
-      );
+const inventoryList =
+document.getElementById(
+"inventoryList"
+);
 
 
-    const tracked =
-      physical.filter(
-        item =>
-          item.track_stock
-      );
+inventoryList.innerHTML = `
+<div class="state">
+${escapeHtml(text)}
+</div>
+`;
 
+}
 
-    const trackedCount =
-      tracked.length;
 
+function showInventoryMessage(
+text,
+type
+) {
 
-    const availableTotal =
-      tracked.reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum
-          +
-          Math.max(
-            0,
-            inventoryAvailable(
-              item
-            )
-          ),
-        0
-      );
+const box =
+document.getElementById(
+"inventoryMessage"
+);
 
 
-    const reservedTotal =
-      tracked.reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum
-          +
-          Number(
-            item.reserved_qty
-            ||
-            0
-          ),
-        0
-      );
+if (
+!box
+) {
 
+return;
 
-    const inventoryValue =
-      tracked.reduce(
-        (
-          sum,
-          item
-        ) =>
-          sum
-          +
-          (
-            Number(
-              item.stock_on_hand
-              ||
-              0
-            )
-            *
-            Number(
-              item.average_cost
-              ||
-              0
-            )
-          ),
-        0
-      );
+}
 
 
-    const untrackedCount =
-      physical.filter(
-        item =>
-          !item.track_stock
-      ).length;
+if (
+!text
+) {
 
+box.className =
+"inventory-message";
 
-    document
-      .getElementById(
-        "inventoryTrackedCount"
-      )
-      .textContent =
-        String(
-          trackedCount
-        );
+box.textContent =
+"";
 
+return;
 
-    document
-      .getElementById(
-        "inventoryAvailableTotal"
-      )
-      .textContent =
-        String(
-          availableTotal
-        );
+}
 
 
-    document
-      .getElementById(
-        "inventoryReservedTotal"
-      )
-      .textContent =
-        String(
-          reservedTotal
-        );
+box.className =
+`inventory-message ${type || "success"}`;
 
+box.textContent =
+text;
 
-    document
-      .getElementById(
-        "inventoryValueTotal"
-      )
-      .textContent =
-        money(
-          inventoryValue
-        );
+}
 
 
-    document
-      .getElementById(
-        "inventorySummaryNote"
-      )
-      .textContent =
-        (
-          `${untrackedCount} SKU vật lý chưa khởi tạo tồn kho. `
-          +
-          `Giá trị tồn = tồn thực tế × giá vốn bình quân. `
-          +
-          `SKU gói dùng chung tồn với SKU gốc nên không kiểm kho trực tiếp.`
-        );
+function inventoryAvailable(item) {
 
-  }
+return (
+Number(
+item.stock_on_hand
+||
+0
+)
+-
+Number(
+item.reserved_qty
+||
+0
+)
+);
 
+}
 
-  function updateInitializeBar() {
 
-    const checked =
-      Array.from(
-        document.querySelectorAll(
-          ".inventory-init-check:checked"
-        )
-      );
+function inventoryItemById(
+variantId
+) {
 
+return (
+allInventory.find(
+item =>
+Number(
+item.variant_id
+)
+===
+Number(
+variantId
+)
+)
+||
+null
+);
 
-    const bar =
-      document.getElementById(
-        "inventoryInitBar"
-      );
+}
 
 
-    const count =
-      document.getElementById(
-        "inventoryInitSelectedCount"
-      );
+function inventoryBundleAvailable(
+item
+) {
 
+if (
+!item.is_bundle
+||
+!item.stock_variant_id
+||
+Number(
+item.stock_multiplier
+||
+0
+)
+<=
+0
+) {
 
-    const submit =
-      document.getElementById(
-        "inventoryInitializeSelected"
-      );
+return 0;
 
+}
 
-    count.textContent =
-      String(
-        checked.length
-      );
 
+const base =
+inventoryItemById(
+item.stock_variant_id
+);
 
-    submit.disabled =
-      checked.length
-      ===
-      0;
 
+if (
+!base
+||
+!base.track_stock
+) {
 
-    bar.style.display =
-      checked.length
-      >
-      0
-        ?
-          "grid"
-        :
-          "none";
+return 0;
 
-  }
+}
 
 
-  /* =====================================================
-     INVENTORY RENDER
-  ====================================================== */
+return Math.max(
+0,
+Math.floor(
+inventoryAvailable(
+base
+)
+/
+Number(
+item.stock_multiplier
+)
+)
+);
 
-  function renderInventory() {
+}
 
-    const list =
-      document.getElementById(
-        "inventoryList"
-      );
 
+function updateInventoryStats() {
 
-    const keyword =
-      (
-        document
-          .getElementById(
-            "inventorySearch"
-          )
-          ?.value
-        ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
+const physical =
+allInventory.filter(
+item =>
+!item.is_bundle
+);
 
 
-    const filtered =
-      allInventory.filter(
-        function (item) {
+const tracked =
+physical.filter(
+item =>
+item.track_stock
+);
 
-          const searchText =
-            [
-              item.product_name,
-              item.variant_name,
-              item.sku
-            ]
-              .join(
-                " "
-              )
-              .toLowerCase();
 
+const trackedCount =
+tracked.length;
 
-          const searchOk =
-            !keyword
-            ||
-            searchText.includes(
-              keyword
-            );
 
+const availableTotal =
+tracked.reduce(
+(
+sum,
+item
+) =>
+sum
++
+Math.max(
+0,
+inventoryAvailable(
+item
+)
+),
+0
+);
 
-          let filterOk =
-            true;
 
+const reservedTotal =
+tracked.reduce(
+(
+sum,
+item
+) =>
+sum
++
+Number(
+item.reserved_qty
+||
+0
+),
+0
+);
 
-          if (
-            selectedInventoryFilter
-            ===
-            "untracked"
-          ) {
 
-            filterOk =
-              !item.is_bundle
-              &&
-              !item.track_stock;
+const inventoryValue =
+tracked.reduce(
+(
+sum,
+item
+) =>
+sum
++
+(
+Number(
+item.stock_on_hand
+||
+0
+)
+*
+Number(
+item.average_cost
+||
+0
+)
+),
+0
+);
 
-          }
-          else if (
-            selectedInventoryFilter
-            ===
-            "tracked"
-          ) {
 
-            filterOk =
-              !item.is_bundle
-              &&
-              item.track_stock;
+const untrackedCount =
+physical.filter(
+item =>
+!item.track_stock
+).length;
 
-          }
-          else if (
-            selectedInventoryFilter
-            ===
-            "low"
-          ) {
 
-            filterOk =
-              !item.is_bundle
-              &&
-              item.track_stock
-              &&
-              inventoryAvailable(
-                item
-              )
-              <=
-              Number(
-                item.reorder_level
-                ||
-                0
-              );
+document
+.getElementById(
+"inventoryTrackedCount"
+)
+.textContent =
+String(
+trackedCount
+);
 
-          }
-          else if (
-            selectedInventoryFilter
-            ===
-            "bundle"
-          ) {
 
-            filterOk =
-              item.is_bundle;
+document
+.getElementById(
+"inventoryAvailableTotal"
+)
+.textContent =
+String(
+availableTotal
+);
 
-          }
 
+document
+.getElementById(
+"inventoryReservedTotal"
+)
+.textContent =
+String(
+reservedTotal
+);
 
-          return (
-            searchOk
-            &&
-            filterOk
-          );
 
-        }
-      );
+document
+.getElementById(
+"inventoryValueTotal"
+)
+.textContent =
+money(
+inventoryValue
+);
 
 
-    if (
-      !filtered.length
-    ) {
+document
+.getElementById(
+"inventorySummaryNote"
+)
+.textContent =
+(
+`${untrackedCount} SKU vật lý chưa khởi tạo tồn kho. `
++
+`Giá trị tồn = tồn thực tế × giá vốn bình quân. `
++
+`SKU gói dùng chung tồn với SKU gốc nên không kiểm kho trực tiếp.`
+);
 
-      showInventoryState(
-        "Không có SKU phù hợp bộ lọc."
-      );
+}
 
 
-      updateInitializeBar();
+function updateInitializeBar() {
 
-      return;
+const checked =
+Array.from(
+document.querySelectorAll(
+".inventory-init-check:checked"
+)
+);
 
-    }
 
+const bar =
+document.getElementById(
+"inventoryInitBar"
+);
 
-    list.innerHTML =
-      filtered
-        .map(
-          function (item) {
 
-            const available =
-              Math.max(
-                0,
-                inventoryAvailable(
-                  item
-                )
-              );
+const count =
+document.getElementById(
+"inventoryInitSelectedCount"
+);
 
 
-            const base =
-              item.is_bundle
-                ?
-                  inventoryItemById(
-                    item.stock_variant_id
-                  )
-                :
-                  null;
+const submit =
+document.getElementById(
+"inventoryInitializeSelected"
+);
 
 
-            const bundleAvailable =
-              item.is_bundle
-                ?
-                  inventoryBundleAvailable(
-                    item
-                  )
-                :
-                  0;
+count.textContent =
+String(
+checked.length
+);
 
 
-            const badge =
-              item.is_bundle
-                ?
-                  `
-                    <span class="inventory-badge bundle">
-                      SKU GÓI
-                    </span>
-                  `
-                :
-                  item.track_stock
-                    ?
-                      `
-                        <span class="inventory-badge tracked">
-                          ĐANG THEO DÕI
-                        </span>
-                      `
-                    :
-                      `
-                        <span class="inventory-badge untracked">
-                          CHƯA KHỞI TẠO
-                        </span>
-                      `;
+submit.disabled =
+checked.length
+===
+0;
 
 
-            const metrics =
-              item.is_bundle
-                ?
-                  `
-                    <div class="inventory-metrics">
+bar.style.display =
+checked.length
+>
+0
+?
+"grid"
+:
+"none";
 
-                      <div class="inventory-metric">
+}
 
-                        <div class="inventory-metric-label">
-                          TỒN GÓI KHẢ DỤNG
-                        </div>
 
-                        <div class="inventory-metric-value highlight">
-                          ${bundleAvailable}
-                        </div>
+/* =====================================================
+INVENTORY RENDER
+====================================================== */
 
-                      </div>
+function renderInventory() {
 
+const list =
+document.getElementById(
+"inventoryList"
+);
 
-                      <div class="inventory-metric">
 
-                        <div class="inventory-metric-label">
-                          HỆ SỐ QUY ĐỔI
-                        </div>
+const keyword =
+(
+document
+.getElementById(
+"inventorySearch"
+)
+?.value
+||
+""
+)
+.trim()
+.toLowerCase();
 
-                        <div class="inventory-metric-value">
-                          ×${Number(
-                            item.stock_multiplier
-                            ||
-                            0
-                          )}
-                        </div>
 
-                      </div>
+const filtered =
+allInventory.filter(
+function (item) {
 
+const searchText =
+[
+item.product_name,
+item.variant_name,
+item.sku
+]
+.join(
+" "
+)
+.toLowerCase();
 
-                      <div class="inventory-metric">
 
-                        <div class="inventory-metric-label">
-                          SKU GỐC
-                        </div>
+const searchOk =
+!keyword
+||
+searchText.includes(
+keyword
+);
 
-                        <div class="inventory-metric-value">
-                          ${escapeHtml(
-                            base?.sku
-                            ||
-                            "-"
-                          )}
-                        </div>
 
-                      </div>
+let filterOk =
+true;
 
 
-                      <div class="inventory-metric">
+if (
+selectedInventoryFilter
+===
+"untracked"
+) {
 
-                        <div class="inventory-metric-label">
-                          TỒN GỐC KHẢ DỤNG
-                        </div>
+filterOk =
+!item.is_bundle
+&&
+!item.track_stock;
 
-                        <div class="inventory-metric-value">
-                          ${
-                            base?.track_stock
-                              ?
-                                Math.max(
-                                  0,
-                                  inventoryAvailable(
-                                    base
-                                  )
-                                )
-                              :
-                                "-"
-                          }
-                        </div>
+}
+else if (
+selectedInventoryFilter
+===
+"tracked"
+) {
 
-                      </div>
+filterOk =
+!item.is_bundle
+&&
+item.track_stock;
 
-                    </div>
-                  `
-                :
-                  `
-                    <div class="inventory-metrics">
+}
+else if (
+selectedInventoryFilter
+===
+"low"
+) {
 
-                      <div class="inventory-metric">
+filterOk =
+!item.is_bundle
+&&
+item.track_stock
+&&
+inventoryAvailable(
+item
+)
+<=
+Number(
+item.reorder_level
+||
+0
+);
 
-                        <div class="inventory-metric-label">
-                          TỒN THỰC TẾ
-                        </div>
-
-                        <div class="inventory-metric-value">
-                          ${Number(
-                            item.stock_on_hand
-                            ||
-                            0
-                          )}
-                        </div>
-
-                      </div>
-
-
-                      <div class="inventory-metric">
-
-                        <div class="inventory-metric-label">
-                          ĐANG GIỮ
-                        </div>
-
-                        <div class="inventory-metric-value">
-                          ${Number(
-                            item.reserved_qty
-                            ||
-                            0
-                          )}
-                        </div>
-
-                      </div>
-
-
-                      <div class="inventory-metric">
-
-                        <div class="inventory-metric-label">
-                          KHẢ DỤNG
-                        </div>
-
-                        <div class="inventory-metric-value highlight">
-                          ${
-                            item.track_stock
-                              ?
-                                available
-                              :
-                                "-"
-                          }
-                        </div>
+}
+else if (
+selectedInventoryFilter
+===
+"bundle"
+) {
 
-                      </div>
+filterOk =
+item.is_bundle;
 
-
-                      <div class="inventory-metric">
-
-                        <div class="inventory-metric-label">
-                          GIÁ VỐN BÌNH QUÂN
-                        </div>
-
-                        <div class="inventory-metric-value">
-                          ${
-                            item.track_stock
-                              ?
-                                money(
-                                  item.average_cost
-                                )
-                              :
-                                "-"
-                          }
-                        </div>
+}
 
-                      </div>
-
-                    </div>
-                  `;
-
-
-            const operationArea =
-              item.is_bundle
-                ?
-                  `
-                    <div class="inventory-bundle-note">
-                      SKU này bán theo gói và dùng tồn của
-                      <strong>
-                        ${escapeHtml(
-                          base?.sku
-                          ||
-                          "SKU gốc"
-                        )}
-                      </strong>.
-                      Không nhập hàng hoặc kiểm kho trực tiếp tại SKU gói.
-                    </div>
-                  `
-                :
-                  item.track_stock
-                    ?
-                      `
-                        <div class="inventory-actions">
-
-                          <button
-                            type="button"
-                            class="inventory-action-btn primary"
-                            data-inventory-action="receive"
-                            data-variant-id="${item.variant_id}"
-                          >
-                            + NHẬP THÊM
-                          </button>
-
-                          <button
-                            type="button"
-                            class="inventory-action-btn"
-                            data-inventory-action="count"
-                            data-variant-id="${item.variant_id}"
-                          >
-                            KIỂM KHO
-                          </button>
-
-                        </div>
-
-                        <div
-                          id="inventoryForm-${item.variant_id}"
-                          class="inventory-inline-form"
-                        ></div>
-                      `
-                    :
-                      `
-                        <div class="inventory-init-box">
-
-                          <label class="inventory-check">
-
-                            <input
-                              type="checkbox"
-                              class="inventory-init-check"
-                              data-variant-id="${item.variant_id}"
-                            >
 
-                            CHỌN KHỞI TẠO SKU NÀY
-
-                          </label>
+return (
+searchOk
+&&
+filterOk
+);
 
-
-                          <div class="inventory-form-grid">
-
-                            <div class="inventory-field">
-
-                              <label>
-                                TỒN THỰC TẾ
-                              </label>
+}
+);
 
-                              <input
-                                type="number"
-                                inputmode="numeric"
-                                min="0"
-                                step="1"
-                                value="0"
-                                class="inventory-input"
-                                data-init-stock="${item.variant_id}"
-                              >
 
-                            </div>
+if (
+!filtered.length
+) {
 
+showInventoryState(
+"Không có SKU phù hợp bộ lọc."
+);
 
-                            <div class="inventory-field">
 
-                              <label>
-                                GIÁ VỐN / ĐƠN VỊ
-                              </label>
+updateInitializeBar();
 
-                              <input
-                                type="number"
-                                inputmode="numeric"
-                                min="0"
-                                step="1"
-                                placeholder="Ví dụ 55000"
-                                class="inventory-input"
-                                data-init-cost="${item.variant_id}"
-                              >
+return;
 
-                            </div>
+}
 
-                          </div>
 
-                        </div>
-                      `;
+list.innerHTML =
+filtered
+.map(
+function (item) {
 
+const available =
+Math.max(
+0,
+inventoryAvailable(
+item
+)
+);
 
-            return `
-              <article
-                class="inventory-card ${
-                  item.is_bundle
-                    ?
-                      "is-bundle"
-                    :
-                      item.track_stock
-                        ?
-                          ""
-                        :
-                          "is-untracked"
-                }"
-              >
 
-                <div class="inventory-card-top">
+const base =
+item.is_bundle
+?
+inventoryItemById(
+item.stock_variant_id
+)
+:
+null;
 
-                  <div style="min-width:0;">
 
-                    <div class="inventory-name">
-                      ${escapeHtml(
-                        item.product_name
-                      )}
-                    </div>
+const bundleAvailable =
+item.is_bundle
+?
+inventoryBundleAvailable(
+item
+)
+:
+0;
 
-                    <div class="inventory-variant">
-                      ${escapeHtml(
-                        item.variant_name
-                        ||
-                        "Mặc định"
-                      )}
-                    </div>
 
-                    <div class="inventory-sku">
-                      ${escapeHtml(
-                        item.sku
-                      )}
-                    </div>
+const badge =
+item.is_bundle
+?
+`
+<span class="inventory-badge bundle">
+SKU GÓI
+</span>
+`
+:
+item.track_stock
+?
+`
+<span class="inventory-badge tracked">
+ĐANG THEO DÕI
+</span>
+`
+:
+`
+<span class="inventory-badge untracked">
+CHƯA KHỞI TẠO
+</span>
+`;
 
-                  </div>
 
-                  ${badge}
+const metrics =
+item.is_bundle
+?
+`
+<div class="inventory-metrics">
 
-                </div>
+<div class="inventory-metric">
 
-                ${metrics}
+<div class="inventory-metric-label">
+TỒN GÓI KHẢ DỤNG
+</div>
 
-                ${operationArea}
+<div class="inventory-metric-value highlight">
+${bundleAvailable}
+</div>
 
-              </article>
-            `;
+</div>
 
-          }
-        )
-        .join(
-          ""
-        );
 
+<div class="inventory-metric">
 
-    updateInitializeBar();
+<div class="inventory-metric-label">
+HỆ SỐ QUY ĐỔI
+</div>
 
-  }
+<div class="inventory-metric-value">
+×${Number(
+item.stock_multiplier
+||
+0
+)}
+</div>
 
+</div>
 
-  /* =====================================================
-     INVENTORY INLINE FORMS
-  ====================================================== */
 
-  function openInventoryForm(
-    variantId,
-    mode
-  ) {
+<div class="inventory-metric">
 
-    const item =
-      inventoryItemById(
-        variantId
-      );
+<div class="inventory-metric-label">
+SKU GỐC
+</div>
 
+<div class="inventory-metric-value">
+${escapeHtml(
+base?.sku
+||
+"-"
+)}
+</div>
 
-    const box =
-      document.getElementById(
-        `inventoryForm-${variantId}`
-      );
+</div>
 
 
-    if (
-      !item
-      ||
-      !box
-    ) {
+<div class="inventory-metric">
 
-      return;
+<div class="inventory-metric-label">
+TỒN GỐC KHẢ DỤNG
+</div>
 
-    }
+<div class="inventory-metric-value">
+${
+base?.track_stock
+?
+Math.max(
+0,
+inventoryAvailable(
+base
+)
+)
+:
+"-"
+}
+</div>
 
+</div>
 
-    if (
-      mode
-      ===
-      "receive"
-    ) {
+</div>
+`
+:
+`
+<div class="inventory-metrics">
 
-      box.innerHTML = `
+<div class="inventory-metric">
 
-        <div class="inventory-inline-title">
-          NHẬP THÊM HÀNG
-        </div>
+<div class="inventory-metric-label">
+TỒN THỰC TẾ
+</div>
 
+<div class="inventory-metric-value">
+${Number(
+item.stock_on_hand
+||
+0
+)}
+</div>
 
-        <div class="inventory-inline-note">
-          Tồn hiện tại
-          ${Number(
-            item.stock_on_hand
-            ||
-            0
-          )}.
-          Giá vốn mới sẽ được hệ thống tính bình quân sau khi nhập.
-        </div>
+</div>
 
 
-        <div class="inventory-form-grid">
+<div class="inventory-metric">
 
-          <div class="inventory-field">
+<div class="inventory-metric-label">
+ĐANG GIỮ
+</div>
 
-            <label>
-              SỐ LƯỢNG NHẬP
-            </label>
+<div class="inventory-metric-value">
+${Number(
+item.reserved_qty
+||
+0
+)}
+</div>
 
-            <input
-              id="receiveQty-${variantId}"
-              type="number"
-              inputmode="numeric"
-              min="1"
-              step="1"
-              class="inventory-input"
-              placeholder="0"
-            >
+</div>
 
-          </div>
 
+<div class="inventory-metric">
 
-          <div class="inventory-field">
+<div class="inventory-metric-label">
+KHẢ DỤNG
+</div>
 
-            <label>
-              GIÁ VỐN / ĐƠN VỊ
-            </label>
+<div class="inventory-metric-value highlight">
+${
+item.track_stock
+?
+available
+:
+"-"
+}
+</div>
 
-            <input
-              id="receiveCost-${variantId}"
-              type="number"
-              inputmode="numeric"
-              min="0"
-              step="1"
-              class="inventory-input"
-              placeholder="0"
-            >
+</div>
 
-          </div>
 
+<div class="inventory-metric">
 
-          <div class="inventory-field full">
+<div class="inventory-metric-label">
+GIÁ VỐN BÌNH QUÂN
+</div>
 
-            <label>
-              GHI CHÚ
-            </label>
+<div class="inventory-metric-value">
+${
+item.track_stock
+?
+money(
+item.average_cost
+)
+:
+"-"
+}
+</div>
 
-            <input
-              id="receiveNote-${variantId}"
-              type="text"
-              class="inventory-input"
-              placeholder="Ví dụ: Nhập lô tháng 10"
-            >
+</div>
 
-          </div>
+</div>
+`;
 
-        </div>
 
+const operationArea =
+item.is_bundle
+?
+`
+<div class="inventory-bundle-note">
+SKU này bán theo gói và dùng tồn của
+<strong>
+${escapeHtml(
+base?.sku
+||
+"SKU gốc"
+)}
+</strong>.
+Không nhập hàng hoặc kiểm kho trực tiếp tại SKU gói.
+</div>
+`
+:
+item.track_stock
+?
+`
+<div class="inventory-actions">
 
-        <div class="inventory-actions">
+<button
+type="button"
+class="inventory-action-btn primary"
+data-inventory-action="receive"
+data-variant-id="${item.variant_id}"
+>
++ NHẬP THÊM
+</button>
 
-          <button
-            type="button"
-            class="inventory-action-btn primary"
-            data-inventory-action="submit-receive"
-            data-variant-id="${variantId}"
-          >
-            XÁC NHẬN NHẬP
-          </button>
+<button
+type="button"
+class="inventory-action-btn"
+data-inventory-action="count"
+data-variant-id="${item.variant_id}"
+>
+KIỂM KHO
+</button>
 
+</div>
 
-          <button
-            type="button"
-            class="inventory-action-btn secondary"
-            data-inventory-action="cancel-form"
-            data-variant-id="${variantId}"
-          >
-            HỦY
-          </button>
+<div
+id="inventoryForm-${item.variant_id}"
+class="inventory-inline-form"
+></div>
+`
+:
+`
+<div class="inventory-init-box">
 
-        </div>
-      `;
+<label class="inventory-check">
 
-    }
-    else {
+<input
+type="checkbox"
+class="inventory-init-check"
+data-variant-id="${item.variant_id}"
+>
 
-      box.innerHTML = `
+CHỌN KHỞI TẠO SKU NÀY
 
-        <div class="inventory-inline-title">
-          KIỂM KHO THỰC TẾ
-        </div>
+</label>
 
 
-        <div class="inventory-inline-note">
+<div class="inventory-form-grid">
 
-          Hệ thống đang ghi nhận
-          ${Number(
-            item.stock_on_hand
-            ||
-            0
-          )};
+<div class="inventory-field">
 
-          đang giữ cho đơn
-          ${Number(
-            item.reserved_qty
-            ||
-            0
-          )}.
+<label>
+TỒN THỰC TẾ
+</label>
 
-          Tồn thực tế không được nhỏ hơn số đang giữ.
+<input
+type="number"
+inputmode="numeric"
+min="0"
+step="1"
+value="0"
+class="inventory-input"
+data-init-stock="${item.variant_id}"
+>
 
-        </div>
+</div>
 
 
-        <div class="inventory-form-grid">
+<div class="inventory-field">
 
-          <div class="inventory-field">
+<label>
+GIÁ VỐN / ĐƠN VỊ
+</label>
 
-            <label>
-              TỒN THỰC TẾ
-            </label>
+<input
+type="number"
+inputmode="numeric"
+min="0"
+step="1"
+placeholder="Ví dụ 55000"
+class="inventory-input"
+data-init-cost="${item.variant_id}"
+>
 
-            <input
-              id="countStock-${variantId}"
-              type="number"
-              inputmode="numeric"
-              min="${Number(
-                item.reserved_qty
-                ||
-                0
-              )}"
-              step="1"
-              value="${Number(
-                item.stock_on_hand
-                ||
-                0
-              )}"
-              class="inventory-input"
-            >
+</div>
 
-          </div>
+</div>
 
+</div>
+`;
 
-          <div class="inventory-field">
 
-            <label>
-              GIÁ VỐN HIỆN TẠI
-            </label>
+return `
+<article
+class="inventory-card ${
+item.is_bundle
+?
+"is-bundle"
+:
+item.track_stock
+?
+""
+:
+"is-untracked"
+}"
+>
 
-            <input
-              type="text"
-              value="${escapeHtml(
-                money(
-                  item.average_cost
-                )
-              )}"
-              class="inventory-input"
-              disabled
-            >
+<div class="inventory-card-top">
 
-          </div>
+<div style="min-width:0;">
 
+<div class="inventory-name">
+${escapeHtml(
+item.product_name
+)}
+</div>
 
-          <div class="inventory-field full">
+<div class="inventory-variant">
+${escapeHtml(
+item.variant_name
+||
+"Mặc định"
+)}
+</div>
 
-            <label>
-              GHI CHÚ
-            </label>
+<div class="inventory-sku">
+${escapeHtml(
+item.sku
+)}
+</div>
 
-            <input
-              id="countNote-${variantId}"
-              type="text"
-              class="inventory-input"
-              placeholder="Ví dụ: Kiểm kho cuối ngày"
-            >
+</div>
 
-          </div>
+${badge}
 
-        </div>
+</div>
 
+${metrics}
 
-        <div class="inventory-actions">
+${operationArea}
 
-          <button
-            type="button"
-            class="inventory-action-btn primary"
-            data-inventory-action="submit-count"
-            data-variant-id="${variantId}"
-          >
-            LƯU KIỂM KHO
-          </button>
+</article>
+`;
 
+}
+)
+.join(
+""
+);
 
-          <button
-            type="button"
-            class="inventory-action-btn secondary"
-            data-inventory-action="cancel-form"
-            data-variant-id="${variantId}"
-          >
-            HỦY
-          </button>
 
-        </div>
-      `;
+updateInitializeBar();
 
-    }
+}
 
 
-    box.classList.add(
-      "open"
-    );
+/* =====================================================
+INVENTORY INLINE FORMS
+====================================================== */
 
+function openInventoryForm(
+variantId,
+mode
+) {
 
-    box
-      .querySelector(
-        "input:not([disabled])"
-      )
-      ?.focus();
+const item =
+inventoryItemById(
+variantId
+);
 
-  }
 
+const box =
+document.getElementById(
+`inventoryForm-${variantId}`
+);
 
-  /* =====================================================
-     KHỞI TẠO KHO
-  ====================================================== */
 
-  async function initializeSelectedInventory() {
+if (
+!item
+||
+!box
+) {
 
-    const checked =
-      Array.from(
-        document.querySelectorAll(
-          ".inventory-init-check:checked"
-        )
-      );
+return;
 
+}
 
-    if (
-      !checked.length
-    ) {
 
-      return;
+if (
+mode
+===
+"receive"
+) {
 
-    }
+box.innerHTML = `
 
+<div class="inventory-inline-title">
+NHẬP THÊM HÀNG
+</div>
 
-    const items = [];
 
+<div class="inventory-inline-note">
+Tồn hiện tại
+${Number(
+item.stock_on_hand
+||
+0
+)}.
+Giá vốn mới sẽ được hệ thống tính bình quân sau khi nhập.
+</div>
 
-    for (
-      const checkbox
-      of checked
-    ) {
 
-      const variantId =
-        Number(
-          checkbox.dataset.variantId
-        );
+<div class="inventory-form-grid">
 
+<div class="inventory-field">
 
-      const stockInput =
-        document.querySelector(
-          `[data-init-stock="${variantId}"]`
-        );
+<label>
+SỐ LƯỢNG NHẬP
+</label>
 
+<input
+id="receiveQty-${variantId}"
+type="number"
+inputmode="numeric"
+min="1"
+step="1"
+class="inventory-input"
+placeholder="0"
+>
 
-      const costInput =
-        document.querySelector(
-          `[data-init-cost="${variantId}"]`
-        );
+</div>
 
 
-      const stockRaw =
-        String(
-          stockInput?.value
-          ??
-          ""
-        ).trim();
+<div class="inventory-field">
 
+<label>
+GIÁ VỐN / ĐƠN VỊ
+</label>
 
-      const costRaw =
-        String(
-          costInput?.value
-          ??
-          ""
-        ).trim();
+<input
+id="receiveCost-${variantId}"
+type="number"
+inputmode="numeric"
+min="0"
+step="1"
+class="inventory-input"
+placeholder="0"
+>
 
+</div>
 
-      const actualStock =
-        Number(
-          stockRaw
-        );
 
+<div class="inventory-field full">
 
-      if (
-        stockRaw
-        ===
-        ""
-        ||
-        !Number.isInteger(
-          actualStock
-        )
-        ||
-        actualStock
-        <
-        0
-      ) {
+<label>
+GHI CHÚ
+</label>
 
-        showInventoryMessage(
-          "Tồn thực tế phải là số nguyên từ 0 trở lên.",
-          "error"
-        );
+<input
+id="receiveNote-${variantId}"
+type="text"
+class="inventory-input"
+placeholder="Ví dụ: Nhập lô tháng 10"
+>
 
+</div>
 
-        stockInput?.focus();
+</div>
 
-        return;
 
-      }
+<div class="inventory-actions">
 
+<button
+type="button"
+class="inventory-action-btn primary"
+data-inventory-action="submit-receive"
+data-variant-id="${variantId}"
+>
+XÁC NHẬN NHẬP
+</button>
 
-      if (
-        actualStock
-        >
-        0
-        &&
-        costRaw
-        ===
-        ""
-      ) {
 
-        showInventoryMessage(
-          "SKU có tồn phải nhập giá vốn.",
-          "error"
-        );
+<button
+type="button"
+class="inventory-action-btn secondary"
+data-inventory-action="cancel-form"
+data-variant-id="${variantId}"
+>
+HỦY
+</button>
 
+</div>
+`;
 
-        costInput?.focus();
+}
+else {
 
-        return;
+box.innerHTML = `
 
-      }
+<div class="inventory-inline-title">
+KIỂM KHO THỰC TẾ
+</div>
 
 
-      const unitCost =
-        costRaw
-        ===
-        ""
-          ?
-            0
-          :
-            Number(
-              costRaw
-            );
+<div class="inventory-inline-note">
 
+Hệ thống đang ghi nhận
+${Number(
+item.stock_on_hand
+||
+0
+)};
 
-      if (
-        !Number.isFinite(
-          unitCost
-        )
-        ||
-        unitCost
-        <
-        0
-      ) {
+đang giữ cho đơn
+${Number(
+item.reserved_qty
+||
+0
+)}.
 
-        showInventoryMessage(
-          "Giá vốn không hợp lệ.",
-          "error"
-        );
+Tồn thực tế không được nhỏ hơn số đang giữ.
 
+</div>
 
-        costInput?.focus();
 
-        return;
+<div class="inventory-form-grid">
 
-      }
+<div class="inventory-field">
 
+<label>
+TỒN THỰC TẾ
+</label>
 
-      items.push({
-        variant_id:
-          variantId,
+<input
+id="countStock-${variantId}"
+type="number"
+inputmode="numeric"
+min="${Number(
+item.reserved_qty
+||
+0
+)}"
+step="1"
+value="${Number(
+item.stock_on_hand
+||
+0
+)}"
+class="inventory-input"
+>
 
-        actual_stock:
-          actualStock,
+</div>
 
-        unit_cost:
-          Math.round(
-            unitCost
-          )
-      });
 
-    }
+<div class="inventory-field">
 
+<label>
+GIÁ VỐN HIỆN TẠI
+</label>
 
-    const ok =
-      window.confirm(
-        `Khởi tạo kho cho ${items.length} SKU đã chọn?\n\n`
-        +
-        "Sau bước này các SKU sẽ bắt đầu kiểm soát tồn khi khách đặt hàng."
-      );
+<input
+type="text"
+value="${escapeHtml(
+money(
+item.average_cost
+)
+)}"
+class="inventory-input"
+disabled
+>
 
+</div>
 
-    if (
-      !ok
-    ) {
 
-      return;
+<div class="inventory-field full">
 
-    }
+<label>
+GHI CHÚ
+</label>
 
+<input
+id="countNote-${variantId}"
+type="text"
+class="inventory-input"
+placeholder="Ví dụ: Kiểm kho cuối ngày"
+>
 
-    const button =
-      document.getElementById(
-        "inventoryInitializeSelected"
-      );
+</div>
 
+</div>
 
-    button.disabled =
-      true;
 
+<div class="inventory-actions">
 
-    button.textContent =
-      "ĐANG KHỞI TẠO...";
+<button
+type="button"
+class="inventory-action-btn primary"
+data-inventory-action="submit-count"
+data-variant-id="${variantId}"
+>
+LƯU KIỂM KHO
+</button>
 
 
-    showInventoryMessage(
-      "",
-      ""
-    );
+<button
+type="button"
+class="inventory-action-btn secondary"
+data-inventory-action="cancel-form"
+data-variant-id="${variantId}"
+>
+HỦY
+</button>
 
+</div>
+`;
 
-    try {
+}
 
-      const {
-        data,
-        error
-      } =
-        await sb.rpc(
-          "shop_admin_initialize_inventory",
-          {
-            p_items:
-              items,
 
-            p_note:
-              "Khởi tạo tồn kho đầu kỳ từ Shop Admin"
-          }
-        );
+box.classList.add(
+"open"
+);
 
 
-      if (
-        error
-      ) {
+box
+.querySelector(
+"input:not([disabled])"
+)
+?.focus();
 
-        throw error;
+}
 
-      }
 
+/* =====================================================
+KHỞI TẠO KHO
+====================================================== */
 
-      showInventoryMessage(
-        `✓ Đã khởi tạo ${Number(
-          data?.initialized_count
-          ||
-          items.length
-        )} SKU.`,
-        "success"
-      );
+async function initializeSelectedInventory() {
 
+const checked =
+Array.from(
+document.querySelectorAll(
+".inventory-init-check:checked"
+)
+);
 
-      await loadInventory(
-        true
-      );
 
-    }
-    catch (error) {
+if (
+!checked.length
+) {
 
-      console.error(
-        "INITIALIZE INVENTORY ERROR:",
-        error
-      );
+return;
 
+}
 
-      showInventoryMessage(
-        error?.message
-        ||
-        "Không khởi tạo được kho.",
-        "error"
-      );
 
-    }
-    finally {
+const items = [];
 
-      button.disabled =
-        false;
 
+for (
+const checkbox
+of checked
+) {
 
-      button.textContent =
-        "KHỞI TẠO KHO";
+const variantId =
+Number(
+checkbox.dataset.variantId
+);
 
 
-      updateInitializeBar();
+const stockInput =
+document.querySelector(
+`[data-init-stock="${variantId}"]`
+);
 
-    }
 
-  }
+const costInput =
+document.querySelector(
+`[data-init-cost="${variantId}"]`
+);
 
 
-  /* =====================================================
-     NHẬP THÊM
-  ====================================================== */
+const stockRaw =
+String(
+stockInput?.value
+??
+""
+).trim();
 
-  async function receiveInventory(
-    variantId
-  ) {
 
-    const item =
-      inventoryItemById(
-        variantId
-      );
+const costRaw =
+String(
+costInput?.value
+??
+""
+).trim();
 
 
-    const qtyInput =
-      document.getElementById(
-        `receiveQty-${variantId}`
-      );
+const actualStock =
+Number(
+stockRaw
+);
 
 
-    const costInput =
-      document.getElementById(
-        `receiveCost-${variantId}`
-      );
+if (
+stockRaw
+===
+""
+||
+!Number.isInteger(
+actualStock
+)
+||
+actualStock
+<
+0
+) {
 
+showInventoryMessage(
+"Tồn thực tế phải là số nguyên từ 0 trở lên.",
+"error"
+);
 
-    const noteInput =
-      document.getElementById(
-        `receiveNote-${variantId}`
-      );
 
+stockInput?.focus();
 
-    const quantity =
-      Number(
-        qtyInput?.value
-      );
+return;
 
+}
 
-    const unitCost =
-      Number(
-        costInput?.value
-      );
 
+if (
+actualStock
+>
+0
+&&
+costRaw
+===
+""
+) {
 
-    if (
-      !Number.isInteger(
-        quantity
-      )
-      ||
-      quantity
-      <=
-      0
-    ) {
+showInventoryMessage(
+"SKU có tồn phải nhập giá vốn.",
+"error"
+);
 
-      showInventoryMessage(
-        "Số lượng nhập phải là số nguyên lớn hơn 0.",
-        "error"
-      );
 
+costInput?.focus();
 
-      qtyInput?.focus();
+return;
 
-      return;
+}
 
-    }
 
+const unitCost =
+costRaw
+===
+""
+?
+0
+:
+Number(
+costRaw
+);
 
-    if (
-      String(
-        costInput?.value
-        ??
-        ""
-      ).trim()
-      ===
-      ""
-      ||
-      !Number.isFinite(
-        unitCost
-      )
-      ||
-      unitCost
-      <
-      0
-    ) {
 
-      showInventoryMessage(
-        "Vui lòng nhập giá vốn hợp lệ.",
-        "error"
-      );
+if (
+!Number.isFinite(
+unitCost
+)
+||
+unitCost
+<
+0
+) {
 
+showInventoryMessage(
+"Giá vốn không hợp lệ.",
+"error"
+);
 
-      costInput?.focus();
 
-      return;
+costInput?.focus();
 
-    }
+return;
 
+}
 
-    const ok =
-      window.confirm(
-        `Nhập thêm ${quantity} đơn vị cho ${item?.sku || "SKU này"}?`
-      );
 
+items.push({
+variant_id:
+variantId,
 
-    if (
-      !ok
-    ) {
+actual_stock:
+actualStock,
 
-      return;
+unit_cost:
+Math.round(
+unitCost
+)
+});
 
-    }
+}
 
 
-    showInventoryMessage(
-      "",
-      ""
-    );
+const ok =
+window.confirm(
+`Khởi tạo kho cho ${items.length} SKU đã chọn?\n\n`
++
+"Sau bước này các SKU sẽ bắt đầu kiểm soát tồn khi khách đặt hàng."
+);
 
 
-    try {
+if (
+!ok
+) {
 
-      const {
-        data,
-        error
-      } =
-        await sb.rpc(
-          "shop_admin_receive_stock",
-          {
-            p_supplier_id:
-              null,
+return;
 
-            p_note:
-              (
-                noteInput
-                  ?.value
-                  ?.trim()
-                ||
-                `Nhập thêm hàng ${item?.sku || variantId}`
-              ),
+}
 
-            p_items:
-              [
-                {
-                  variant_id:
-                    Number(
-                      variantId
-                    ),
 
-                  quantity:
-                    quantity,
+const button =
+document.getElementById(
+"inventoryInitializeSelected"
+);
 
-                  unit_cost:
-                    Math.round(
-                      unitCost
-                    )
-                }
-              ]
-          }
-        );
 
+button.disabled =
+true;
 
-      if (
-        error
-      ) {
 
-        throw error;
+button.textContent =
+"ĐANG KHỞI TẠO...";
 
-      }
 
+showInventoryMessage(
+"",
+""
+);
 
-      const receiptCode =
-        data?.receipt_code
-        ||
-        data?.code
-        ||
-        "";
 
+try {
 
-      showInventoryMessage(
-        receiptCode
-          ?
-            `✓ Đã nhập kho. Phiếu ${receiptCode}`
-          :
-            "✓ Đã nhập thêm hàng.",
-        "success"
-      );
+const {
+data,
+error
+} =
+await sb.rpc(
+"shop_admin_initialize_inventory",
+{
+p_items:
+items,
 
+p_note:
+"Khởi tạo tồn kho đầu kỳ từ Shop Admin"
+}
+);
 
-      await loadInventory(
-        true
-      );
 
-    }
-    catch (error) {
+if (
+error
+) {
 
-      console.error(
-        "RECEIVE STOCK ERROR:",
-        error
-      );
+throw error;
 
+}
 
-      showInventoryMessage(
-        error?.message
-        ||
-        "Không nhập thêm được hàng.",
-        "error"
-      );
 
-    }
+showInventoryMessage(
+`✓ Đã khởi tạo ${Number(
+data?.initialized_count
+||
+items.length
+)} SKU.`,
+"success"
+);
 
-  }
 
+await loadInventory(
+true
+);
 
-  /* =====================================================
-     KIỂM KHO
-  ====================================================== */
+}
+catch (error) {
 
-  async function countInventory(
-    variantId
-  ) {
+console.error(
+"INITIALIZE INVENTORY ERROR:",
+error
+);
 
-    const item =
-      inventoryItemById(
-        variantId
-      );
 
+showInventoryMessage(
+error?.message
+||
+"Không khởi tạo được kho.",
+"error"
+);
 
-    const stockInput =
-      document.getElementById(
-        `countStock-${variantId}`
-      );
+}
+finally {
 
+button.disabled =
+false;
 
-    const noteInput =
-      document.getElementById(
-        `countNote-${variantId}`
-      );
 
+button.textContent =
+"KHỞI TẠO KHO";
 
-    const stockRaw =
-      String(
-        stockInput?.value
-        ??
-        ""
-      ).trim();
 
+updateInitializeBar();
 
-    const actualStock =
-      Number(
-        stockRaw
-      );
+}
 
+}
 
-    if (
-      stockRaw
-      ===
-      ""
-      ||
-      !Number.isInteger(
-        actualStock
-      )
-      ||
-      actualStock
-      <
-      0
-    ) {
 
-      showInventoryMessage(
-        "Tồn thực tế phải là số nguyên từ 0 trở lên.",
-        "error"
-      );
+/* =====================================================
+NHẬP THÊM
+====================================================== */
 
+async function receiveInventory(
+variantId
+) {
 
-      stockInput?.focus();
+const item =
+inventoryItemById(
+variantId
+);
 
-      return;
 
-    }
+const qtyInput =
+document.getElementById(
+`receiveQty-${variantId}`
+);
 
 
-    if (
-      actualStock
-      <
-      Number(
-        item?.reserved_qty
-        ||
-        0
-      )
-    ) {
+const costInput =
+document.getElementById(
+`receiveCost-${variantId}`
+);
 
-      showInventoryMessage(
-        `Tồn thực tế không được nhỏ hơn ${Number(
-          item?.reserved_qty
-          ||
-          0
-        )} sản phẩm đang giữ cho đơn.`,
-        "error"
-      );
 
+const noteInput =
+document.getElementById(
+`receiveNote-${variantId}`
+);
 
-      stockInput?.focus();
 
-      return;
+const quantity =
+Number(
+qtyInput?.value
+);
 
-    }
 
+const unitCost =
+Number(
+costInput?.value
+);
 
-    const ok =
-      window.confirm(
-        `Lưu kiểm kho ${item?.sku || "SKU này"}: ${actualStock} đơn vị?`
-      );
 
+if (
+!Number.isInteger(
+quantity
+)
+||
+quantity
+<=
+0
+) {
 
-    if (
-      !ok
-    ) {
+showInventoryMessage(
+"Số lượng nhập phải là số nguyên lớn hơn 0.",
+"error"
+);
 
-      return;
 
-    }
+qtyInput?.focus();
 
+return;
 
-    showInventoryMessage(
-      "",
-      ""
-    );
+}
 
 
-    try {
+if (
+String(
+costInput?.value
+??
+""
+).trim()
+===
+""
+||
+!Number.isFinite(
+unitCost
+)
+||
+unitCost
+<
+0
+) {
 
-      const {
-        data,
-        error
-      } =
-        await sb.rpc(
-          "shop_admin_stock_count",
-          {
-            p_variant_id:
-              Number(
-                variantId
-              ),
+showInventoryMessage(
+"Vui lòng nhập giá vốn hợp lệ.",
+"error"
+);
 
-            p_actual_stock:
-              actualStock,
 
-            p_note:
-              noteInput
-                ?.value
-                ?.trim()
-              ||
-              null
-          }
-        );
+costInput?.focus();
 
+return;
 
-      if (
-        error
-      ) {
+}
 
-        throw error;
 
-      }
+const ok =
+window.confirm(
+`Nhập thêm ${quantity} đơn vị cho ${item?.sku || "SKU này"}?`
+);
 
 
-      const delta =
-        Number(
-          data?.delta
-          ||
-          0
-        );
+if (
+!ok
+) {
 
+return;
 
-      showInventoryMessage(
-        delta
-        ===
-        0
-          ?
-            "✓ Kiểm kho khớp với hệ thống."
-          :
-            `✓ Đã cập nhật kiểm kho. Chênh lệch ${delta > 0 ? "+" : ""}${delta}.`,
-        "success"
-      );
+}
 
 
-      await loadInventory(
-        true
-      );
+showInventoryMessage(
+"",
+""
+);
 
-    }
-    catch (error) {
 
-      console.error(
-        "COUNT STOCK ERROR:",
-        error
-      );
+try {
 
+const {
+data,
+error
+} =
+await sb.rpc(
+"shop_admin_receive_stock",
+{
+p_supplier_id:
+null,
 
-      showInventoryMessage(
-        error?.message
-        ||
-        "Không lưu được kết quả kiểm kho.",
-        "error"
-      );
+p_note:
+(
+noteInput
+?.value
+?.trim()
+||
+`Nhập thêm hàng ${item?.sku || variantId}`
+),
 
-    }
+p_items:
+[
+{
+variant_id:
+Number(
+variantId
+),
 
-  }
+quantity:
+quantity,
 
+unit_cost:
+Math.round(
+unitCost
+)
+}
+]
+}
+);
 
-  /* =====================================================
-     INVENTORY LOAD
-  ====================================================== */
 
-  async function loadInventory(
-    preserveMessage = false
-  ) {
+if (
+error
+) {
 
-    if (
-      !preserveMessage
-    ) {
+throw error;
 
-      showInventoryMessage(
-        "",
-        ""
-      );
+}
 
-    }
 
+const receiptCode =
+data?.receipt_code
+||
+data?.code
+||
+"";
 
-    showInventoryState(
-      "Đang tải dữ liệu kho..."
-    );
 
+showInventoryMessage(
+receiptCode
+?
+`✓ Đã nhập kho. Phiếu ${receiptCode}`
+:
+"✓ Đã nhập thêm hàng.",
+"success"
+);
 
-    try {
 
-      await requireShopAccess();
+await loadInventory(
+true
+);
 
+}
+catch (error) {
 
-      const [
-        productResult,
-        variantResult,
-        inventoryResult,
-        mapResult
-      ] =
-        await Promise.all([
+console.error(
+"RECEIVE STOCK ERROR:",
+error
+);
 
-          sb
-            .from(
-              "shop_products"
-            )
-            .select(
-              "id,name,status"
-            ),
 
-          sb
-            .from(
-              "shop_product_variants"
-            )
-            .select(
-              "id,product_id,sku,variant_name,price,is_active,sort_order"
-            )
-            .eq(
-              "is_active",
-              true
-            )
-            .order(
-              "product_id",
-              {
-                ascending:
-                  true
-              }
-            )
-            .order(
-              "sort_order",
-              {
-                ascending:
-                  true
-              }
-            ),
+showInventoryMessage(
+error?.message
+||
+"Không nhập thêm được hàng.",
+"error"
+);
 
-          sb
-            .from(
-              "shop_inventory"
-            )
-            .select(
-              "variant_id,stock_on_hand,reserved_qty,reorder_level,average_cost,track_stock,tracking_started_at"
-            ),
+}
 
-          sb
-            .from(
-              "shop_variant_stock_map"
-            )
-            .select(
-              "selling_variant_id,stock_variant_id,stock_multiplier"
-            )
+}
 
-        ]);
 
+/* =====================================================
+KIỂM KHO
+====================================================== */
 
-      if (
-        productResult.error
-      ) {
+async function countInventory(
+variantId
+) {
 
-        throw productResult.error;
+const item =
+inventoryItemById(
+variantId
+);
 
-      }
 
+const stockInput =
+document.getElementById(
+`countStock-${variantId}`
+);
 
-      if (
-        variantResult.error
-      ) {
 
-        throw variantResult.error;
+const noteInput =
+document.getElementById(
+`countNote-${variantId}`
+);
 
-      }
 
+const stockRaw =
+String(
+stockInput?.value
+??
+""
+).trim();
 
-      if (
-        inventoryResult.error
-      ) {
 
-        throw inventoryResult.error;
+const actualStock =
+Number(
+stockRaw
+);
 
-      }
 
+if (
+stockRaw
+===
+""
+||
+!Number.isInteger(
+actualStock
+)
+||
+actualStock
+<
+0
+) {
 
-      if (
-        mapResult.error
-      ) {
+showInventoryMessage(
+"Tồn thực tế phải là số nguyên từ 0 trở lên.",
+"error"
+);
 
-        throw mapResult.error;
 
-      }
+stockInput?.focus();
 
+return;
 
-      const productMap =
-        new Map(
-          (
-            productResult.data
-            ||
-            []
-          )
-            .map(
-              item =>
-                [
-                  Number(
-                    item.id
-                  ),
-                  item
-                ]
-            )
-        );
+}
 
 
-      const inventoryMap =
-        new Map(
-          (
-            inventoryResult.data
-            ||
-            []
-          )
-            .map(
-              item =>
-                [
-                  Number(
-                    item.variant_id
-                  ),
-                  item
-                ]
-            )
-        );
+if (
+actualStock
+<
+Number(
+item?.reserved_qty
+||
+0
+)
+) {
 
+showInventoryMessage(
+`Tồn thực tế không được nhỏ hơn ${Number(
+item?.reserved_qty
+||
+0
+)} sản phẩm đang giữ cho đơn.`,
+"error"
+);
 
-      const bundleMap =
-        new Map(
-          (
-            mapResult.data
-            ||
-            []
-          )
-            .map(
-              item =>
-                [
-                  Number(
-                    item.selling_variant_id
-                  ),
-                  item
-                ]
-            )
-        );
 
+stockInput?.focus();
 
-      allInventory =
-        (
-          variantResult.data
-          ||
-          []
-        )
-          .map(
-            function (variant) {
+return;
 
-              const product =
-                productMap.get(
-                  Number(
-                    variant.product_id
-                  )
-                )
-                ||
-                {};
+}
 
 
-              const inventory =
-                inventoryMap.get(
-                  Number(
-                    variant.id
-                  )
-                )
-                ||
-                {};
+const ok =
+window.confirm(
+`Lưu kiểm kho ${item?.sku || "SKU này"}: ${actualStock} đơn vị?`
+);
 
 
-              const bundle =
-                bundleMap.get(
-                  Number(
-                    variant.id
-                  )
-                )
-                ||
-                null;
+if (
+!ok
+) {
 
+return;
 
-              return {
+}
 
-                variant_id:
-                  Number(
-                    variant.id
-                  ),
 
-                product_id:
-                  Number(
-                    variant.product_id
-                  ),
+showInventoryMessage(
+"",
+""
+);
 
-                product_name:
-                  product.name
-                  ||
-                  "Sản phẩm",
 
-                product_status:
-                  product.status
-                  ||
-                  "",
+try {
 
-                sku:
-                  variant.sku
-                  ||
-                  "",
+const {
+data,
+error
+} =
+await sb.rpc(
+"shop_admin_stock_count",
+{
+p_variant_id:
+Number(
+variantId
+),
 
-                variant_name:
-                  variant.variant_name
-                  ||
-                  "Mặc định",
+p_actual_stock:
+actualStock,
 
-                price:
-                  Number(
-                    variant.price
-                    ||
-                    0
-                  ),
+p_note:
+noteInput
+?.value
+?.trim()
+||
+null
+}
+);
 
-                stock_on_hand:
-                  Number(
-                    inventory.stock_on_hand
-                    ||
-                    0
-                  ),
 
-                reserved_qty:
-                  Number(
-                    inventory.reserved_qty
-                    ||
-                    0
-                  ),
+if (
+error
+) {
 
-                reorder_level:
-                  Number(
-                    inventory.reorder_level
-                    ||
-                    0
-                  ),
+throw error;
 
-                average_cost:
-                  Number(
-                    inventory.average_cost
-                    ||
-                    0
-                  ),
+}
 
-                track_stock:
-                  Boolean(
-                    inventory.track_stock
-                  ),
 
-                tracking_started_at:
-                  inventory.tracking_started_at
-                  ||
-                  null,
+const delta =
+Number(
+data?.delta
+||
+0
+);
 
-                is_bundle:
-                  Boolean(
-                    bundle
-                  ),
 
-                stock_variant_id:
-                  bundle
-                    ?
-                      Number(
-                        bundle.stock_variant_id
-                      )
-                    :
-                      null,
+showInventoryMessage(
+delta
+===
+0
+?
+"✓ Kiểm kho khớp với hệ thống."
+:
+`✓ Đã cập nhật kiểm kho. Chênh lệch ${delta > 0 ? "+" : ""}${delta}.`,
+"success"
+);
 
-                stock_multiplier:
-                  bundle
-                    ?
-                      Number(
-                        bundle.stock_multiplier
-                        ||
-                        0
-                      )
-                    :
-                      null
 
-              };
+await loadInventory(
+true
+);
 
-            }
-          )
-          .sort(
-            function (
-              a,
-              b
-            ) {
+}
+catch (error) {
 
-              return (
-                a.product_name.localeCompare(
-                  b.product_name,
-                  "vi"
-                )
-                ||
-                a.variant_name.localeCompare(
-                  b.variant_name,
-                  "vi"
-                )
-              );
+console.error(
+"COUNT STOCK ERROR:",
+error
+);
 
-            }
-          );
 
+showInventoryMessage(
+error?.message
+||
+"Không lưu được kết quả kiểm kho.",
+"error"
+);
 
-      inventoryLoaded =
-        true;
+}
 
+}
 
-      updateInventoryStats();
 
+/* =====================================================
+INVENTORY LOAD
+====================================================== */
 
-      renderInventory();
+async function loadInventory(
+preserveMessage = false
+) {
 
-    }
-    catch (error) {
+if (
+!preserveMessage
+) {
 
-      console.error(
-        "INVENTORY LOAD ERROR:",
-        error
-      );
+showInventoryMessage(
+"",
+""
+);
 
+}
 
-      showInventoryState(
-        error?.message
-        ||
-        "Không tải được dữ liệu kho."
-      );
 
+showInventoryState(
+"Đang tải dữ liệu kho..."
+);
 
-      showInventoryMessage(
-        "Không đọc được dữ liệu kho. Nếu lỗi quyền truy cập xuất hiện, gửi ảnh lỗi để kiểm tra RLS.",
-        "error"
-      );
 
-    }
+try {
 
-  }
+await requireShopAccess();
 
 
-  /* =====================================================
-     INVENTORY EVENTS
-  ====================================================== */
+const [
+productResult,
+variantResult,
+inventoryResult,
+mapResult
+] =
+await Promise.all([
 
-  document
-    .getElementById(
-      "showOrdersView"
-    )
-    ?.addEventListener(
-      "click",
-      function () {
+sb
+.from(
+"shop_products"
+)
+.select(
+"id,name,status"
+),
 
-        activateAdminView(
-          "orders"
-        );
+sb
+.from(
+"shop_product_variants"
+)
+.select(
+"id,product_id,sku,variant_name,price,is_active,sort_order"
+)
+.eq(
+"is_active",
+true
+)
+.order(
+"product_id",
+{
+ascending:
+true
+}
+)
+.order(
+"sort_order",
+{
+ascending:
+true
+}
+),
 
-      }
-    );
+sb
+.from(
+"shop_inventory"
+)
+.select(
+"variant_id,stock_on_hand,reserved_qty,reorder_level,average_cost,track_stock,tracking_started_at"
+),
 
+sb
+.from(
+"shop_variant_stock_map"
+)
+.select(
+"selling_variant_id,stock_variant_id,stock_multiplier"
+)
 
-  document
-    .getElementById(
-      "showInventoryView"
-    )
-    ?.addEventListener(
-      "click",
-      function () {
+]);
 
-        activateAdminView(
-          "inventory"
-        );
 
-      }
-    );
+if (
+productResult.error
+) {
 
+throw productResult.error;
 
-  document
-    .getElementById(
-      "inventorySearch"
-    )
-    ?.addEventListener(
-      "input",
-      function () {
+}
 
-        renderInventory();
 
-      }
-    );
+if (
+variantResult.error
+) {
 
+throw variantResult.error;
 
-  document
-    .getElementById(
-      "inventoryReload"
-    )
-    ?.addEventListener(
-      "click",
-      function () {
+}
 
-        loadInventory();
 
-      }
-    );
+if (
+inventoryResult.error
+) {
 
+throw inventoryResult.error;
 
-  document
-    .querySelectorAll(
-      "#inventoryFilters .filter-btn"
-    )
-    .forEach(
-      function (button) {
+}
 
-        button.addEventListener(
-          "click",
-          function () {
 
-            document
-              .querySelectorAll(
-                "#inventoryFilters .filter-btn"
-              )
-              .forEach(
-                item =>
-                  item.classList.remove(
-                    "active"
-                  )
-              );
+if (
+mapResult.error
+) {
 
+throw mapResult.error;
 
-            button.classList.add(
-              "active"
-            );
+}
 
 
-            selectedInventoryFilter =
-              button.dataset.inventoryFilter
-              ||
-              "";
+const productMap =
+new Map(
+(
+productResult.data
+||
+[]
+)
+.map(
+item =>
+[
+Number(
+item.id
+),
+item
+]
+)
+);
 
 
-            renderInventory();
+const inventoryMap =
+new Map(
+(
+inventoryResult.data
+||
+[]
+)
+.map(
+item =>
+[
+Number(
+item.variant_id
+),
+item
+]
+)
+);
 
-          }
-        );
 
-      }
-    );
+const bundleMap =
+new Map(
+(
+mapResult.data
+||
+[]
+)
+.map(
+item =>
+[
+Number(
+item.selling_variant_id
+),
+item
+]
+)
+);
 
 
-  document
-    .getElementById(
-      "inventoryList"
-    )
-    ?.addEventListener(
-      "change",
-      function (event) {
+allInventory =
+(
+variantResult.data
+||
+[]
+)
+.map(
+function (variant) {
 
-        if (
-          event.target
-            ?.classList
-            ?.contains(
-              "inventory-init-check"
-            )
-        ) {
+const product =
+productMap.get(
+Number(
+variant.product_id
+)
+)
+||
+{};
 
-          updateInitializeBar();
 
-        }
+const inventory =
+inventoryMap.get(
+Number(
+variant.id
+)
+)
+||
+{};
 
-      }
-    );
 
+const bundle =
+bundleMap.get(
+Number(
+variant.id
+)
+)
+||
+null;
 
-  document
-    .getElementById(
-      "inventoryList"
-    )
-    ?.addEventListener(
-      "click",
-      async function (event) {
 
-        const button =
-          event.target.closest(
-            "[data-inventory-action]"
-          );
+return {
 
+variant_id:
+Number(
+variant.id
+),
 
-        if (
-          !button
-        ) {
+product_id:
+Number(
+variant.product_id
+),
 
-          return;
+product_name:
+product.name
+||
+"Sản phẩm",
 
-        }
+product_status:
+product.status
+||
+"",
 
+sku:
+variant.sku
+||
+"",
 
-        const action =
-          button.dataset.inventoryAction;
+variant_name:
+variant.variant_name
+||
+"Mặc định",
 
+price:
+Number(
+variant.price
+||
+0
+),
 
-        const variantId =
-          Number(
-            button.dataset.variantId
-          );
+stock_on_hand:
+Number(
+inventory.stock_on_hand
+||
+0
+),
 
+reserved_qty:
+Number(
+inventory.reserved_qty
+||
+0
+),
 
-        if (
-          action
-          ===
-          "receive"
-        ) {
+reorder_level:
+Number(
+inventory.reorder_level
+||
+0
+),
 
-          openInventoryForm(
-            variantId,
-            "receive"
-          );
+average_cost:
+Number(
+inventory.average_cost
+||
+0
+),
 
-          return;
+track_stock:
+Boolean(
+inventory.track_stock
+),
 
-        }
+tracking_started_at:
+inventory.tracking_started_at
+||
+null,
 
+is_bundle:
+Boolean(
+bundle
+),
 
-        if (
-          action
-          ===
-          "count"
-        ) {
+stock_variant_id:
+bundle
+?
+Number(
+bundle.stock_variant_id
+)
+:
+null,
 
-          openInventoryForm(
-            variantId,
-            "count"
-          );
+stock_multiplier:
+bundle
+?
+Number(
+bundle.stock_multiplier
+||
+0
+)
+:
+null
 
-          return;
+};
 
-        }
+}
+)
+.sort(
+function (
+a,
+b
+) {
 
+return (
+a.product_name.localeCompare(
+b.product_name,
+"vi"
+)
+||
+a.variant_name.localeCompare(
+b.variant_name,
+"vi"
+)
+);
 
-        if (
-          action
-          ===
-          "cancel-form"
-        ) {
+}
+);
 
-          document
-            .getElementById(
-              `inventoryForm-${variantId}`
-            )
-            ?.classList
-            .remove(
-              "open"
-            );
 
-          return;
+inventoryLoaded =
+true;
 
-        }
 
+updateInventoryStats();
 
-        if (
-          action
-          ===
-          "submit-receive"
-        ) {
 
-          button.disabled =
-            true;
+renderInventory();
 
 
-          try {
+renderReceivingCatalog();
 
-            await receiveInventory(
-              variantId
-            );
 
-          }
-          finally {
+renderReceivingLines();
 
-            button.disabled =
-              false;
+}
+catch (error) {
 
-          }
+console.error(
+"INVENTORY LOAD ERROR:",
+error
+);
 
 
-          return;
+showInventoryState(
+error?.message
+||
+"Không tải được dữ liệu kho."
+);
 
-        }
 
+showInventoryMessage(
+"Không đọc được dữ liệu kho. Nếu lỗi quyền truy cập xuất hiện, gửi ảnh lỗi để kiểm tra RLS.",
+"error"
+);
 
-        if (
-          action
-          ===
-          "submit-count"
-        ) {
 
-          button.disabled =
-            true;
+showReceivingMessage(
+error?.message
+||
+"Không đọc được dữ liệu kho để nhập hàng.",
+"error"
+);
 
+}
 
-          try {
+}
 
-            await countInventory(
-              variantId
-            );
 
-          }
-          finally {
+/* =====================================================
+NHẬP HÀNG
+====================================================== */
 
-            button.disabled =
-              false;
+function showReceivingMessage(
+text,
+type
+) {
 
-          }
+const box =
+document.getElementById(
+"receivingMessage"
+);
 
-        }
 
-      }
-    );
+if (
+!box
+) {
 
+return;
 
-  document
-    .getElementById(
-      "inventoryInitializeSelected"
-    )
-    ?.addEventListener(
-      "click",
-      initializeSelectedInventory
-    );
+}
 
 
-  /* =====================================================
-     LOAD ORDERS
-  ====================================================== */
+if (
+!text
+) {
 
-  async function loadOrders() {
+box.className =
+"inventory-message";
 
-    try {
+box.textContent =
+"";
 
-      await requireShopAccess();
+return;
 
+}
 
-      const {
-        data,
-        error
-      } =
-        await sb
-          .from(
-            "shop_orders"
-          )
-          .select(
-            "id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,created_at"
-          )
-          .order(
-            "created_at",
-            {
-              ascending:
-                false
-            }
-          );
 
+box.className =
+`inventory-message ${type || "success"}`;
 
-      if (
-        error
-      ) {
+box.textContent =
+text;
 
-        console.error(
-          "SHOP ORDERS ERROR:",
-          error
-        );
+}
 
 
-        throw error;
+function receivingTrackedItems() {
 
-      }
+return allInventory.filter(
+function (item) {
 
+return (
+!item.is_bundle
+&&
+item.track_stock
+);
 
-      allOrders =
-        data
-        ||
-        [];
+}
+);
 
+}
 
-      updateStats();
 
+function receivingLineByVariantId(
+variantId
+) {
 
-      renderOrders();
+return receivingLines.find(
+item =>
+Number(
+item.variant_id
+)
+===
+Number(
+variantId
+)
+)
+||
+null;
 
-    }
-    catch (error) {
+}
 
-      console.error(
-        "SHOP ADMIN ERROR:",
-        error
-      );
 
+function renderReceivingCatalog() {
 
-      showState(
-        error?.message
-        ||
-        "Không tải được đơn hàng."
-      );
+const box =
+document.getElementById(
+"receivingCatalog"
+);
 
-    }
 
-  }
+if (
+!box
+) {
 
+return;
 
-  /* =====================================================
-     START
-  ====================================================== */
+}
 
-  loadOrders();
 
+if (
+!inventoryLoaded
+) {
 
-  activateAdminView(
-    location.hash
-    ===
-    "#warehouse"
-      ?
-        "inventory"
-      :
-        "orders",
-    false
-  );
+box.innerHTML = `
+<div class="receiving-empty">
+Đang tải danh sách SKU...
+</div>
+`;
+
+return;
+
+}
+
+
+const keyword =
+(
+document
+.getElementById(
+"receivingSearch"
+)
+?.value
+||
+""
+)
+.trim()
+.toLowerCase();
+
+
+const items =
+receivingTrackedItems()
+.filter(
+function (item) {
+
+if (
+!keyword
+) {
+
+return true;
+
+}
+
+
+const text =
+[
+item.product_name,
+item.variant_name,
+item.sku
+]
+.join(
+" "
+)
+.toLowerCase();
+
+
+return text.includes(
+keyword
+);
+
+}
+);
+
+
+if (
+!items.length
+) {
+
+box.innerHTML = `
+<div class="receiving-empty">
+${
+keyword
+?
+"Không tìm thấy SKU phù hợp."
+:
+"Chưa có SKU vật lý đã khởi tạo kho. Hãy vào tab KHO HÀNG để khởi tạo tồn đầu kỳ trước."
+}
+</div>
+`;
+
+return;
+
+}
+
+
+box.innerHTML =
+items
+.map(
+function (item) {
+
+const added =
+Boolean(
+receivingLineByVariantId(
+item.variant_id
+)
+);
+
+
+return `
+<div class="receiving-sku-row">
+
+<div style="min-width:0;">
+
+<div class="receiving-sku-name">
+${escapeHtml(
+item.product_name
+)}
+</div>
+
+<div class="receiving-sku-meta">
+
+${escapeHtml(
+item.variant_name
+||
+"Mặc định"
+)}
+
+•
+
+<strong>
+${escapeHtml(
+item.sku
+)}
+</strong>
+
+<br>
+
+Tồn ${Number(
+item.stock_on_hand
+||
+0
+)}
+
+• Giá vốn bình quân ${money(
+item.average_cost
+)}
+
+</div>
+
+</div>
+
+
+<button
+type="button"
+class="receiving-add-btn ${added ? "added" : ""}"
+data-receiving-add="${item.variant_id}"
+>
+${added ? "ĐÃ THÊM" : "+ THÊM"}
+</button>
+
+</div>
+`;
+
+}
+)
+.join(
+""
+);
+
+}
+
+
+function updateReceivingSummary() {
+
+const skuCount =
+receivingLines.length;
+
+
+const qtyTotal =
+receivingLines.reduce(
+function (
+sum,
+item
+) {
+
+const quantity =
+Number(
+item.quantity
+||
+0
+);
+
+
+return (
+sum
++
+(
+Number.isFinite(
+quantity
+)
+?
+quantity
+:
+0
+)
+);
+
+},
+0
+);
+
+
+const costTotal =
+receivingLines.reduce(
+function (
+sum,
+item
+) {
+
+const quantity =
+Number(
+item.quantity
+||
+0
+);
+
+
+const unitCost =
+Number(
+item.unit_cost
+||
+0
+);
+
+
+if (
+!Number.isFinite(
+quantity
+)
+||
+!Number.isFinite(
+unitCost
+)
+) {
+
+return sum;
+
+}
+
+
+return (
+sum
++
+quantity
+*
+unitCost
+);
+
+},
+0
+);
+
+
+document
+.getElementById(
+"receivingSkuCount"
+)
+.textContent =
+String(
+skuCount
+);
+
+
+document
+.getElementById(
+"receivingQtyTotal"
+)
+.textContent =
+String(
+qtyTotal
+);
+
+
+document
+.getElementById(
+"receivingCostTotal"
+)
+.textContent =
+money(
+costTotal
+);
+
+
+const submit =
+document.getElementById(
+"receivingSubmit"
+);
+
+
+if (
+submit
+) {
+
+submit.disabled =
+receivingSubmitting
+||
+receivingLines.length
+===
+0;
+
+}
+
+}
+
+
+function renderReceivingLines() {
+
+const box =
+document.getElementById(
+"receivingLines"
+);
+
+
+if (
+!box
+) {
+
+return;
+
+}
+
+
+if (
+!receivingLines.length
+) {
+
+box.innerHTML = `
+<div class="receiving-empty">
+Chưa có SKU trong phiếu.<br>
+Chọn sản phẩm ở cột bên trái và bấm + THÊM.
+</div>
+`;
+
+
+updateReceivingSummary();
+
+return;
+
+}
+
+
+box.innerHTML =
+receivingLines
+.map(
+function (line) {
+
+const item =
+inventoryItemById(
+line.variant_id
+);
+
+
+if (
+!item
+) {
+
+return "";
+
+}
+
+
+const quantity =
+Number(
+line.quantity
+||
+0
+);
+
+
+const unitCost =
+Number(
+line.unit_cost
+||
+0
+);
+
+
+const lineTotal =
+(
+Number.isFinite(
+quantity
+)
+&&
+Number.isFinite(
+unitCost
+)
+)
+?
+quantity
+*
+unitCost
+:
+0;
+
+
+return `
+<div
+class="receiving-line"
+data-receiving-line="${item.variant_id}"
+>
+
+<div class="receiving-line-head">
+
+<div style="min-width:0;">
+
+<div class="receiving-line-name">
+${escapeHtml(
+item.product_name
+)}
+</div>
+
+<div class="receiving-line-meta">
+
+${escapeHtml(
+item.variant_name
+||
+"Mặc định"
+)}
+
+• ${escapeHtml(
+item.sku
+)}
+
+<br>
+
+Tồn hiện tại ${Number(
+item.stock_on_hand
+||
+0
+)}
+
+• Giá vốn hiện tại ${money(
+item.average_cost
+)}
+
+</div>
+
+</div>
+
+
+<button
+type="button"
+class="receiving-remove-btn"
+data-receiving-remove="${item.variant_id}"
+aria-label="Xóa SKU khỏi phiếu"
+>
+×
+</button>
+
+</div>
+
+
+<div class="receiving-line-fields">
+
+<div class="inventory-field">
+
+<label>
+SỐ LƯỢNG NHẬP
+</label>
+
+<input
+type="number"
+inputmode="numeric"
+min="1"
+step="1"
+class="inventory-input"
+value="${escapeHtml(
+line.quantity
+)}"
+data-receiving-qty="${item.variant_id}"
+>
+
+</div>
+
+
+<div class="inventory-field">
+
+<label>
+GIÁ VỐN / ĐƠN VỊ
+</label>
+
+<input
+type="number"
+inputmode="numeric"
+min="0"
+step="1"
+class="inventory-input"
+value="${escapeHtml(
+line.unit_cost
+)}"
+placeholder="Ví dụ 79000"
+data-receiving-cost="${item.variant_id}"
+>
+
+</div>
+
+</div>
+
+
+<div class="receiving-line-total">
+
+<span>
+THÀNH TIỀN
+</span>
+
+<strong>
+${money(
+lineTotal
+)}
+</strong>
+
+</div>
+
+</div>
+`;
+
+}
+)
+.join(
+""
+);
+
+
+updateReceivingSummary();
+
+}
+
+
+function addReceivingLine(
+variantId
+) {
+
+const item =
+inventoryItemById(
+variantId
+);
+
+
+if (
+!item
+||
+item.is_bundle
+||
+!item.track_stock
+) {
+
+showReceivingMessage(
+"SKU này chưa sẵn sàng để nhập thêm. Hãy khởi tạo kho cho SKU vật lý trước.",
+"error"
+);
+
+return;
+
+}
+
+
+if (
+receivingLineByVariantId(
+variantId
+)
+) {
+
+document
+.querySelector(
+`[data-receiving-line="${variantId}"]`
+)
+?.scrollIntoView({
+behavior:
+"smooth",
+block:
+"center"
+});
+
+return;
+
+}
+
+
+receivingLines.push({
+
+variant_id:
+Number(
+variantId
+),
+
+quantity:
+1,
+
+unit_cost:
+item.average_cost
+?
+String(
+item.average_cost
+)
+:
+""
+
+});
+
+
+showReceivingMessage(
+"",
+""
+);
+
+
+renderReceivingCatalog();
+
+
+renderReceivingLines();
+
+
+setTimeout(
+function () {
+
+document
+.querySelector(
+`[data-receiving-qty="${variantId}"]`
+)
+?.focus();
+
+},
+0
+);
+
+}
+
+
+function removeReceivingLine(
+variantId
+) {
+
+receivingLines =
+receivingLines.filter(
+item =>
+Number(
+item.variant_id
+)
+!==
+Number(
+variantId
+)
+);
+
+
+renderReceivingCatalog();
+
+
+renderReceivingLines();
+
+}
+
+
+async function submitReceiving() {
+
+if (
+receivingSubmitting
+||
+!receivingLines.length
+) {
+
+return;
+
+}
+
+
+const rpcItems = [];
+
+
+for (
+const line
+of receivingLines
+) {
+
+const item =
+inventoryItemById(
+line.variant_id
+);
+
+
+if (
+!item
+||
+item.is_bundle
+||
+!item.track_stock
+) {
+
+showReceivingMessage(
+"Có SKU không còn hợp lệ để nhập hàng. Hãy tải lại dữ liệu kho.",
+"error"
+);
+
+return;
+
+}
+
+
+const quantity =
+Number(
+line.quantity
+);
+
+
+const unitCost =
+Number(
+line.unit_cost
+);
+
+
+if (
+!Number.isInteger(
+quantity
+)
+||
+quantity
+<=
+0
+) {
+
+showReceivingMessage(
+`Số lượng nhập của ${item.sku} phải là số nguyên lớn hơn 0.`,
+"error"
+);
+
+
+document
+.querySelector(
+`[data-receiving-qty="${item.variant_id}"]`
+)
+?.focus();
+
+return;
+
+}
+
+
+if (
+String(
+line.unit_cost
+??
+""
+).trim()
+===
+""
+||
+!Number.isFinite(
+unitCost
+)
+||
+unitCost
+<
+0
+) {
+
+showReceivingMessage(
+`Giá vốn của ${item.sku} chưa hợp lệ.`,
+"error"
+);
+
+
+document
+.querySelector(
+`[data-receiving-cost="${item.variant_id}"]`
+)
+?.focus();
+
+return;
+
+}
+
+
+rpcItems.push({
+
+variant_id:
+Number(
+item.variant_id
+),
+
+quantity:
+quantity,
+
+unit_cost:
+Math.round(
+unitCost
+)
+
+});
+
+}
+
+
+const totalQty =
+rpcItems.reduce(
+(
+sum,
+item
+) =>
+sum
++
+item.quantity,
+0
+);
+
+
+const totalCost =
+rpcItems.reduce(
+(
+sum,
+item
+) =>
+sum
++
+item.quantity
+*
+item.unit_cost,
+0
+);
+
+
+const ok =
+window.confirm(
+`Xác nhận nhập ${totalQty} đơn vị của ${rpcItems.length} SKU?\n\nTổng giá trị nhập: ${money(totalCost)}`
+);
+
+
+if (
+!ok
+) {
+
+return;
+
+}
+
+
+receivingSubmitting =
+true;
+
+
+updateReceivingSummary();
+
+
+const submit =
+document.getElementById(
+"receivingSubmit"
+);
+
+
+if (
+submit
+) {
+
+submit.textContent =
+"ĐANG NHẬP HÀNG...";
+
+}
+
+
+showReceivingMessage(
+"",
+""
+);
+
+
+try {
+
+const note =
+document
+.getElementById(
+"receivingNote"
+)
+?.value
+?.trim()
+||
+null;
+
+
+const {
+data,
+error
+} =
+await sb.rpc(
+"shop_admin_receive_stock",
+{
+p_supplier_id:
+null,
+
+p_note:
+note,
+
+p_items:
+rpcItems
+}
+);
+
+
+if (
+error
+) {
+
+throw error;
+
+}
+
+
+const receiptCode =
+data?.receipt_code
+||
+"Phiếu nhập";
+
+
+const lastReceipt =
+document.getElementById(
+"receivingLastReceipt"
+);
+
+
+if (
+lastReceipt
+) {
+
+lastReceipt.textContent =
+`✓ ${receiptCode} đã nhận ${totalQty} đơn vị / ${rpcItems.length} SKU. Tổng giá trị ${money(totalCost)}. Tồn kho và giá vốn bình quân đã được cập nhật.`;
+
+
+lastReceipt.classList.add(
+"show"
+);
+
+}
+
+
+showReceivingMessage(
+`✓ Đã nhập hàng thành công. Mã phiếu: ${receiptCode}`,
+"success"
+);
+
+
+receivingLines = [];
+
+
+const noteInput =
+document.getElementById(
+"receivingNote"
+);
+
+
+if (
+noteInput
+) {
+
+noteInput.value =
+"";
+
+}
+
+
+await loadInventory(
+true
+);
+
+}
+catch (error) {
+
+console.error(
+"RECEIVING ERROR:",
+error
+);
+
+
+showReceivingMessage(
+error?.message
+||
+"Không tạo được phiếu nhập hàng.",
+"error"
+);
+
+}
+finally {
+
+receivingSubmitting =
+false;
+
+
+if (
+submit
+) {
+
+submit.textContent =
+"XÁC NHẬN NHẬP HÀNG";
+
+}
+
+
+updateReceivingSummary();
+
+}
+
+}
+
+
+/* =====================================================
+INVENTORY EVENTS
+====================================================== */
+
+document
+.getElementById(
+"showOrdersView"
+)
+?.addEventListener(
+"click",
+function () {
+
+activateAdminView(
+"orders"
+);
+
+}
+);
+
+
+document
+.getElementById(
+"showInventoryView"
+)
+?.addEventListener(
+"click",
+function () {
+
+activateAdminView(
+"inventory"
+);
+
+}
+);
+
+
+document
+.getElementById(
+"showReceivingView"
+)
+?.addEventListener(
+"click",
+function () {
+
+activateAdminView(
+"receiving"
+);
+
+}
+);
+
+
+document
+.getElementById(
+"inventorySearch"
+)
+?.addEventListener(
+"input",
+function () {
+
+renderInventory();
+
+}
+);
+
+
+document
+.getElementById(
+"inventoryReload"
+)
+?.addEventListener(
+"click",
+function () {
+
+loadInventory();
+
+}
+);
+
+
+document
+.querySelectorAll(
+"#inventoryFilters .filter-btn"
+)
+.forEach(
+function (button) {
+
+button.addEventListener(
+"click",
+function () {
+
+document
+.querySelectorAll(
+"#inventoryFilters .filter-btn"
+)
+.forEach(
+item =>
+item.classList.remove(
+"active"
+)
+);
+
+
+button.classList.add(
+"active"
+);
+
+
+selectedInventoryFilter =
+button.dataset.inventoryFilter
+||
+"";
+
+
+renderInventory();
+
+}
+);
+
+}
+);
+
+
+document
+.getElementById(
+"inventoryList"
+)
+?.addEventListener(
+"change",
+function (event) {
+
+if (
+event.target
+?.classList
+?.contains(
+"inventory-init-check"
+)
+) {
+
+updateInitializeBar();
+
+}
+
+}
+);
+
+
+document
+.getElementById(
+"inventoryList"
+)
+?.addEventListener(
+"click",
+async function (event) {
+
+const button =
+event.target.closest(
+"[data-inventory-action]"
+);
+
+
+if (
+!button
+) {
+
+return;
+
+}
+
+
+const action =
+button.dataset.inventoryAction;
+
+
+const variantId =
+Number(
+button.dataset.variantId
+);
+
+
+if (
+action
+===
+"receive"
+) {
+
+openInventoryForm(
+variantId,
+"receive"
+);
+
+return;
+
+}
+
+
+if (
+action
+===
+"count"
+) {
+
+openInventoryForm(
+variantId,
+"count"
+);
+
+return;
+
+}
+
+
+if (
+action
+===
+"cancel-form"
+) {
+
+document
+.getElementById(
+`inventoryForm-${variantId}`
+)
+?.classList
+.remove(
+"open"
+);
+
+return;
+
+}
+
+
+if (
+action
+===
+"submit-receive"
+) {
+
+button.disabled =
+true;
+
+
+try {
+
+await receiveInventory(
+variantId
+);
+
+}
+finally {
+
+button.disabled =
+false;
+
+}
+
+
+return;
+
+}
+
+
+if (
+action
+===
+"submit-count"
+) {
+
+button.disabled =
+true;
+
+
+try {
+
+await countInventory(
+variantId
+);
+
+}
+finally {
+
+button.disabled =
+false;
+
+}
+
+}
+
+}
+);
+
+
+document
+.getElementById(
+"inventoryInitializeSelected"
+)
+?.addEventListener(
+"click",
+initializeSelectedInventory
+);
+
+
+/* =====================================================
+RECEIVING EVENTS
+====================================================== */
+
+document
+.getElementById(
+"receivingSearch"
+)
+?.addEventListener(
+"input",
+renderReceivingCatalog
+);
+
+
+document
+.getElementById(
+"receivingCatalog"
+)
+?.addEventListener(
+"click",
+function (event) {
+
+const button =
+event.target.closest(
+"[data-receiving-add]"
+);
+
+
+if (
+!button
+) {
+
+return;
+
+}
+
+
+addReceivingLine(
+Number(
+button.dataset.receivingAdd
+)
+);
+
+}
+);
+
+
+document
+.getElementById(
+"receivingLines"
+)
+?.addEventListener(
+"click",
+function (event) {
+
+const button =
+event.target.closest(
+"[data-receiving-remove]"
+);
+
+
+if (
+!button
+) {
+
+return;
+
+}
+
+
+removeReceivingLine(
+Number(
+button.dataset.receivingRemove
+)
+);
+
+}
+);
+
+
+document
+.getElementById(
+"receivingLines"
+)
+?.addEventListener(
+"input",
+function (event) {
+
+const qtyVariantId =
+event.target
+?.dataset
+?.receivingQty;
+
+
+const costVariantId =
+event.target
+?.dataset
+?.receivingCost;
+
+
+const variantId =
+qtyVariantId
+||
+costVariantId;
+
+
+if (
+!variantId
+) {
+
+return;
+
+}
+
+
+const line =
+receivingLineByVariantId(
+Number(
+variantId
+)
+);
+
+
+if (
+!line
+) {
+
+return;
+
+}
+
+
+if (
+qtyVariantId
+) {
+
+line.quantity =
+event.target.value;
+
+}
+
+
+if (
+costVariantId
+) {
+
+line.unit_cost =
+event.target.value;
+
+}
+
+
+const lineBox =
+event.target.closest(
+".receiving-line"
+);
+
+
+if (
+lineBox
+) {
+
+const totalBox =
+lineBox.querySelector(
+".receiving-line-total strong"
+);
+
+
+if (
+totalBox
+) {
+
+totalBox.textContent =
+money(
+Number(
+line.quantity
+||
+0
+)
+*
+Number(
+line.unit_cost
+||
+0
+)
+);
+
+}
+
+}
+
+
+updateReceivingSummary();
+
+}
+);
+
+
+document
+.getElementById(
+"receivingSubmit"
+)
+?.addEventListener(
+"click",
+submitReceiving
+);
+
+
+/* =====================================================
+LOAD ORDERS
+====================================================== */
+
+async function loadOrders() {
+
+try {
+
+await requireShopAccess();
+
+
+const {
+data,
+error
+} =
+await sb
+.from(
+"shop_orders"
+)
+.select(
+"id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,created_at"
+)
+.order(
+"created_at",
+{
+ascending:
+false
+}
+);
+
+
+if (
+error
+) {
+
+console.error(
+"SHOP ORDERS ERROR:",
+error
+);
+
+
+throw error;
+
+}
+
+
+allOrders =
+data
+||
+[];
+
+
+updateStats();
+
+
+renderOrders();
+
+}
+catch (error) {
+
+console.error(
+"SHOP ADMIN ERROR:",
+error
+);
+
+
+showState(
+error?.message
+||
+"Không tải được đơn hàng."
+);
+
+}
+
+}
+
+
+/* =====================================================
+START
+====================================================== */
+
+loadOrders();
+
+
+activateAdminView(
+location.hash
+===
+"#warehouse"
+?
+"inventory"
+:
+location.hash
+===
+"#receiving"
+?
+"receiving"
+:
+"orders",
+false
+);
 
 })();
 
 </script>
 
-
 <script src="/shop-notifications.js?v=20261006-2"></script>
 
 </body>
-
 </html>
