@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
+
   <meta charset="utf-8">
 
   <meta
@@ -15,11 +17,13 @@
 
   <title>Đăng nhập | PickDee</title>
 
+
   <style>
 
     * {
       box-sizing: border-box;
     }
+
 
     body {
       margin: 0;
@@ -49,6 +53,7 @@
         sans-serif;
     }
 
+
     .login-card {
       width: 100%;
 
@@ -67,6 +72,7 @@
         18px;
     }
 
+
     .brand {
       color:
         #b9ff18;
@@ -78,6 +84,7 @@
         12px;
     }
 
+
     h1 {
       margin:
         0 0 8px;
@@ -85,6 +92,7 @@
       font-size:
         32px;
     }
+
 
     .sub {
       margin:
@@ -97,9 +105,9 @@
         1.5;
     }
 
+
     label {
-      display:
-        block;
+      display: block;
 
       margin:
         16px 0 7px;
@@ -107,6 +115,7 @@
       font-weight:
         700;
     }
+
 
     input {
       width:
@@ -134,6 +143,7 @@
         16px;
     }
 
+
     input:focus {
       outline:
         2px solid rgba(185,255,24,.35);
@@ -142,9 +152,9 @@
         #b9ff18;
     }
 
+
     .forgot {
-      display:
-        block;
+      display: block;
 
       width:
         fit-content;
@@ -165,10 +175,6 @@
         800;
     }
 
-    .forgot:hover {
-      text-decoration:
-        underline;
-    }
 
     button {
       width:
@@ -199,6 +205,7 @@
         pointer;
     }
 
+
     button:disabled {
       opacity:
         .55;
@@ -206,6 +213,7 @@
       cursor:
         wait;
     }
+
 
     #message {
       min-height:
@@ -218,15 +226,21 @@
         #ffb4b4;
 
       line-height:
-        1.4;
+        1.45;
 
       font-size:
         14px;
     }
 
+
+    #message.ok {
+      color:
+        #b9ff18;
+    }
+
+
     .back {
-      display:
-        block;
+      display: block;
 
       margin-top:
         18px;
@@ -242,30 +256,39 @@
     }
 
   </style>
+
 </head>
+
 
 <body>
 
+
   <div class="login-card">
+
 
     <div class="brand">
       PICKDEE
     </div>
 
+
     <h1>
       Đăng nhập
     </h1>
+
 
     <p class="sub">
       Học viên, Coach, Admin và quản trị PickDee Shop
       sử dụng chung tài khoản PickDee.
     </p>
 
+
     <form id="loginForm">
+
 
       <label for="email">
         Email
       </label>
+
 
       <input
         id="email"
@@ -274,9 +297,11 @@
         required
       >
 
+
       <label for="password">
         Mật khẩu
       </label>
+
 
       <input
         id="password"
@@ -285,12 +310,14 @@
         required
       >
 
+
       <a
         class="forgot"
         href="/forgot-password"
       >
         QUÊN MẬT KHẨU?
       </a>
+
 
       <button
         id="loginBtn"
@@ -299,9 +326,12 @@
         ĐĂNG NHẬP
       </button>
 
+
     </form>
 
+
     <div id="message"></div>
+
 
     <a
       class="back"
@@ -310,6 +340,7 @@
       ← Quay lại PickDee
     </a>
 
+
   </div>
 
 
@@ -317,9 +348,591 @@
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
   ></script>
 
+
   <script src="/config.js"></script>
 
-  <script src="/login.js?v=20261007-1"></script>
+
+  <script>
+
+  (function () {
+
+
+    const config =
+      window.PICKDEE_CONFIG
+      ||
+      {};
+
+
+    const form =
+      document.getElementById(
+        "loginForm"
+      );
+
+
+    const message =
+      document.getElementById(
+        "message"
+      );
+
+
+    const loginBtn =
+      document.getElementById(
+        "loginBtn"
+      );
+
+
+    function setMessage(
+      text,
+      ok
+    ) {
+
+      message.textContent =
+        text;
+
+
+      message.className =
+        ok
+          ?
+            "ok"
+          :
+            "";
+
+    }
+
+
+    if (
+      !window.supabase
+      ||
+      !config.SUPABASE_URL
+      ||
+      !config.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      setMessage(
+        "Không tải được hệ thống đăng nhập PickDee.",
+        false
+      );
+
+
+      loginBtn.disabled =
+        true;
+
+
+      return;
+
+    }
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        config.SUPABASE_URL,
+        config.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    function normalizeRole(
+      value
+    ) {
+
+      return String(
+        value
+        ||
+        ""
+      )
+        .trim()
+        .toLocaleLowerCase(
+          "vi-VN"
+        );
+
+    }
+
+
+    function getNextPath() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+
+      return String(
+        params.get("next")
+        ||
+        ""
+      )
+        .trim();
+
+    }
+
+
+    function safeShopNext(
+      next
+    ) {
+
+      return (
+        next === "/shop-admin"
+        ||
+        next.startsWith(
+          "/shop-admin?"
+        )
+        ||
+        next.startsWith(
+          "/shop-admin-"
+        )
+      );
+
+    }
+
+
+    function safeCoachNext(
+      next
+    ) {
+
+      return (
+        next === "/coach-opportunity"
+        ||
+        next.startsWith(
+          "/coach-opportunity?"
+        )
+      );
+
+    }
+
+
+    async function getShopRoles(
+      userId
+    ) {
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient
+            .from(
+              "shop_user_roles"
+            )
+            .select(
+              "role,is_active"
+            )
+            .eq(
+              "user_id",
+              userId
+            )
+            .eq(
+              "is_active",
+              true
+            );
+
+
+        if (
+          error
+        ) {
+
+          console.warn(
+            "SHOP ROLE ERROR:",
+            error
+          );
+
+
+          return [];
+
+        }
+
+
+        return (
+          data
+          ||
+          []
+        )
+          .map(
+            function (item) {
+
+              return normalizeRole(
+                item?.role
+              );
+
+            }
+          );
+
+      }
+      catch (error) {
+
+        console.warn(
+          "SHOP ROLE CHECK ERROR:",
+          error
+        );
+
+
+        return [];
+
+      }
+
+    }
+
+
+    async function getProfile(
+      userId
+    ) {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient
+          .from(
+            "profiles"
+          )
+          .select(
+            "email,full_name,role"
+          )
+          .eq(
+            "id",
+            userId
+          )
+          .maybeSingle();
+
+
+      return {
+        profile:
+          data || null,
+
+        error
+      };
+
+    }
+
+
+    async function redirectUser(
+      user
+    ) {
+
+      if (
+        !user?.id
+      ) {
+
+        throw new Error(
+          "Không lấy được thông tin tài khoản."
+        );
+
+      }
+
+
+      const next =
+        getNextPath();
+
+
+      const shopRoles =
+        await getShopRoles(
+          user.id
+        );
+
+
+      const hasShopAccess =
+        [
+          "owner",
+          "shop_admin",
+          "shop_staff"
+        ]
+          .some(
+            function (role) {
+
+              return shopRoles.includes(
+                role
+              );
+
+            }
+          );
+
+
+      if (
+        hasShopAccess
+        &&
+        safeShopNext(
+          next
+        )
+      ) {
+
+        window.location.replace(
+          next
+        );
+
+
+        return;
+
+      }
+
+
+      const {
+        profile,
+        error:
+          profileError
+      } =
+        await getProfile(
+          user.id
+        );
+
+
+      const role =
+        normalizeRole(
+          profile?.role
+        );
+
+
+      if (
+        role === "coach"
+        &&
+        safeCoachNext(
+          next
+        )
+      ) {
+
+        window.location.replace(
+          next
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        hasShopAccess
+      ) {
+
+        window.location.replace(
+          "/shop-admin"
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        profileError
+        ||
+        !profile
+      ) {
+
+        const accountType =
+          String(
+            user
+              ?.user_metadata
+              ?.account_type
+            ||
+            ""
+          )
+            .trim();
+
+
+        if (
+          accountType
+          ===
+          "coach_application"
+        ) {
+
+          throw new Error(
+            "Hồ sơ Coach của bạn đang chờ Admin duyệt."
+          );
+
+        }
+
+
+        throw new Error(
+          "Không đọc được hồ sơ tài khoản."
+        );
+
+      }
+
+
+      if (
+        role === "admin"
+      ) {
+
+        window.location.replace(
+          "/admin"
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        role === "coach"
+      ) {
+
+        window.location.replace(
+          "/coach"
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        role === "student"
+        ||
+        role === "hocvien"
+        ||
+        role === "học viên"
+      ) {
+
+        window.location.replace(
+          "/student"
+        );
+
+
+        return;
+
+      }
+
+
+      throw new Error(
+        "Tài khoản chưa được phân quyền."
+      );
+
+    }
+
+
+    form.addEventListener(
+      "submit",
+      async function (event) {
+
+
+        event.preventDefault();
+
+
+        loginBtn.disabled =
+          true;
+
+
+        loginBtn.textContent =
+          "ĐANG ĐĂNG NHẬP...";
+
+
+        setMessage(
+          "Đang đăng nhập...",
+          false
+        );
+
+
+        try {
+
+
+          const email =
+            document
+              .getElementById(
+                "email"
+              )
+              .value
+              .trim();
+
+
+          const password =
+            document
+              .getElementById(
+                "password"
+              )
+              .value;
+
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient
+              .auth
+              .signInWithPassword(
+                {
+                  email,
+                  password
+                }
+              );
+
+
+          if (
+            error
+          ) {
+
+            console.error(
+              "LOGIN ERROR:",
+              error
+            );
+
+
+            throw new Error(
+              "Email hoặc mật khẩu chưa đúng."
+            );
+
+          }
+
+
+          if (
+            !data?.user
+          ) {
+
+            throw new Error(
+              "Không lấy được thông tin tài khoản."
+            );
+
+          }
+
+
+          setMessage(
+            "✓ Đăng nhập thành công. Đang mở tài khoản...",
+            true
+          );
+
+
+          await redirectUser(
+            data.user
+          );
+
+        }
+        catch (error) {
+
+
+          console.error(
+            "PICKDEE LOGIN ERROR:",
+            error
+          );
+
+
+          setMessage(
+            error?.message
+            ||
+            "Không đăng nhập được.",
+            false
+          );
+
+
+          loginBtn.disabled =
+            false;
+
+
+          loginBtn.textContent =
+            "ĐĂNG NHẬP";
+
+        }
+
+
+      }
+    );
+
+
+  })();
+
+  </script>
+
 
 </body>
+
 </html>
