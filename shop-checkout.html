@@ -1461,7 +1461,7 @@
                 line-height:1.45;
               "
             >
-              Chưa gồm phí vận chuyển hàng cồng kềnh
+              Phí thực tế có thể cao hơn do kiện bóng cồng kềnh
             </div>
 
           </div>
@@ -2142,8 +2142,12 @@
 
     /*
       Bóng Pickleball là hàng cồng kềnh.
-      Không báo cứng 15.000đ và không tự freeship.
-      Phí vận chuyển sẽ được PickDee xác nhận theo kiện thực tế.
+
+      Mức ship cơ bản của PickDee vẫn là 15.000đ,
+      nhưng phí thực tế có thể cao hơn theo kích thước kiện.
+
+      15.000đ ở đây CHỈ là mức ước tính hiển thị cho khách.
+      Backend vẫn chờ Admin xác nhận cước thực tế.
     */
     if (
       hasPickleballBall
@@ -2158,11 +2162,13 @@
         shippingPending:
           true,
         shippingFee:
-          0,
+          SPX_BASE_FEE,
         customerTotal:
-          merchandiseTotal,
+          merchandiseTotal
+          +
+          SPX_BASE_FEE,
         reason:
-          "Đơn có bóng Pickleball là hàng cồng kềnh. PickDee sẽ xác nhận phí vận chuyển theo kiện thực tế trước khi gửi."
+          "Bóng Pickleball là hàng cồng kềnh. Phí giao hàng ước tính từ 15.000đ và có thể cao hơn theo kích thước kiện thực tế. PickDee sẽ xác nhận trước khi gửi hàng."
       };
 
     }
@@ -2439,7 +2445,9 @@
     shippingFeeDisplay.textContent =
       shipping.shippingPending
         ?
-          "Xác nhận theo kiện"
+          "Từ " + money(
+            shipping.shippingFee
+          )
         :
           money(
             shipping.shippingFee
@@ -2483,7 +2491,7 @@
       totalLabel.textContent =
         shipping.shippingPending
           ?
-            "TẠM TÍNH TIỀN HÀNG"
+            "TẠM TÍNH TỪ"
           :
             "TỔNG THANH TOÁN";
 
@@ -2506,11 +2514,7 @@
 
     totalPrice.textContent =
       money(
-        shipping.shippingPending
-          ?
-            shipping.merchandiseTotal
-          :
-            shipping.customerTotal
+        shipping.customerTotal
       );
 
 
@@ -2527,7 +2531,7 @@
       bottomLabel.textContent =
         shipping.shippingPending
           ?
-            "TẠM TÍNH • CHƯA GỒM SHIP"
+            "TẠM TÍNH TỪ • SHIP CÓ THỂ CAO HƠN"
           :
             "TỔNG THANH TOÁN";
 
@@ -2536,11 +2540,7 @@
 
     bottomTotal.textContent =
       money(
-        shipping.shippingPending
-          ?
-            shipping.merchandiseTotal
-          :
-            shipping.customerTotal
+        shipping.customerTotal
       );
 
 
@@ -2950,6 +2950,28 @@
           );
 
 
+        /*
+          Với đơn bóng cồng kềnh, backend chưa chốt phí thật.
+          Ở màn hình thành công chỉ hiển thị mức ước tính từ 15.000đ.
+        */
+        const successEstimatedShippingFee =
+          successShippingPending
+            ?
+              SPX_BASE_FEE
+            :
+              successShippingFee;
+
+
+        const successEstimatedCustomerTotal =
+          successShippingPending
+            ?
+              successMerchandiseTotal
+              +
+              SPX_BASE_FEE
+            :
+              successCustomerTotal;
+
+
         checkoutContent.innerHTML = `
 
           <div class="empty">
@@ -3075,7 +3097,9 @@
                   ${
                     successShippingPending
                       ?
-                        "Xác nhận theo kiện"
+                        "Từ " + money(
+                          successEstimatedShippingFee
+                        )
                       :
                         money(
                           successShippingFee
@@ -3124,8 +3148,9 @@
                           line-height:1.5;
                         "
                       >
-                        Đơn có bóng Pickleball là hàng cồng kềnh.
-                        PickDee sẽ xác nhận phí vận chuyển trước khi gửi hàng.
+                        Bóng Pickleball là hàng cồng kềnh.
+                        Phí giao hàng ước tính từ 15.000đ và có thể cao hơn theo kích thước kiện.
+                        PickDee sẽ xác nhận phí chính xác trước khi gửi hàng.
                       </div>
                     `
                   :
@@ -3148,7 +3173,7 @@
                   ${
                     successShippingPending
                       ?
-                        "TẠM TÍNH TIỀN HÀNG"
+                        "TẠM TÍNH TỪ"
                       :
                         "TỔNG THANH TOÁN"
                   }
@@ -3161,11 +3186,7 @@
                   "
                 >
                   ${money(
-                    successShippingPending
-                      ?
-                        successMerchandiseTotal
-                      :
-                        successCustomerTotal
+                    successEstimatedCustomerTotal
                   )}
                 </strong>
               </div>
@@ -3184,7 +3205,7 @@
                           text-align:right;
                         "
                       >
-                        Chưa gồm phí vận chuyển hàng cồng kềnh
+                        Phí thực tế có thể cao hơn do kiện bóng cồng kềnh
                       </div>
                     `
                   :
