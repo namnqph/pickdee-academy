@@ -1451,6 +1451,19 @@
               0đ
             </div>
 
+            <div
+              id="shippingPendingNote"
+              style="
+                display:none;
+                margin-top:4px;
+                color:rgba(255,255,255,.42);
+                font-size:9px;
+                line-height:1.45;
+              "
+            >
+              Chưa gồm phí vận chuyển hàng cồng kềnh
+            </div>
+
           </div>
 
         </div>
@@ -1585,6 +1598,12 @@
   const totalPrice =
     document.getElementById(
       "totalPrice"
+    );
+
+
+  const shippingPendingNote =
+    document.getElementById(
+      "shippingPendingNote"
     );
 
 
@@ -2121,12 +2140,38 @@
       );
 
 
+    /*
+      Bóng Pickleball là hàng cồng kềnh.
+      Không báo cứng 15.000đ và không tự freeship.
+      Phí vận chuyển sẽ được PickDee xác nhận theo kiện thực tế.
+    */
+    if (
+      hasPickleballBall
+    ) {
+
+      return {
+        merchandiseTotal,
+        hasPickleballBall:
+          true,
+        freeShipping:
+          false,
+        shippingPending:
+          true,
+        shippingFee:
+          0,
+        customerTotal:
+          merchandiseTotal,
+        reason:
+          "Đơn có bóng Pickleball là hàng cồng kềnh. PickDee sẽ xác nhận phí vận chuyển theo kiện thực tế trước khi gửi."
+      };
+
+    }
+
+
     const freeShipping =
       merchandiseTotal
         >=
-      FREE_SHIPPING_THRESHOLD
-      &&
-      !hasPickleballBall;
+      FREE_SHIPPING_THRESHOLD;
 
 
     const shippingFee =
@@ -2137,32 +2182,21 @@
           SPX_BASE_FEE;
 
 
-    let reason =
-      "Đơn dưới 300.000đ: phí vận chuyển SPX 15.000đ.";
-
-
-    if (
-      hasPickleballBall
-    ) {
-
-      reason =
-        "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
-
-    }
-    else if (
+    const reason =
       freeShipping
-    ) {
-
-      reason =
-        "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
-
-    }
+        ?
+          "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship."
+        :
+          "Đơn dưới 300.000đ: phí vận chuyển SPX 15.000đ.";
 
 
     return {
       merchandiseTotal,
-      hasPickleballBall,
+      hasPickleballBall:
+        false,
       freeShipping,
+      shippingPending:
+        false,
       shippingFee,
       customerTotal:
         merchandiseTotal
@@ -2403,9 +2437,21 @@
 
 
     shippingFeeDisplay.textContent =
-      money(
-        shipping.shippingFee
-      );
+      shipping.shippingPending
+        ?
+          "Xác nhận theo kiện"
+        :
+          money(
+            shipping.shippingFee
+          );
+
+
+    shippingFeeDisplay.style.color =
+      shipping.shippingPending
+        ?
+          "#d8ff45"
+        :
+          "";
 
 
     freeShippingRow.style.display =
@@ -2424,15 +2470,77 @@
       shipping.reason;
 
 
+    const totalLabel =
+      document.querySelector(
+        ".total-label"
+      );
+
+
+    if (
+      totalLabel
+    ) {
+
+      totalLabel.textContent =
+        shipping.shippingPending
+          ?
+            "TẠM TÍNH TIỀN HÀNG"
+          :
+            "TỔNG THANH TOÁN";
+
+    }
+
+
+    if (
+      shippingPendingNote
+    ) {
+
+      shippingPendingNote.style.display =
+        shipping.shippingPending
+          ?
+            "block"
+          :
+            "none";
+
+    }
+
+
     totalPrice.textContent =
       money(
-        shipping.customerTotal
+        shipping.shippingPending
+          ?
+            shipping.merchandiseTotal
+          :
+            shipping.customerTotal
       );
+
+
+    const bottomLabel =
+      bottomBar.querySelector(
+        ".bottom-label"
+      );
+
+
+    if (
+      bottomLabel
+    ) {
+
+      bottomLabel.textContent =
+        shipping.shippingPending
+          ?
+            "TẠM TÍNH • CHƯA GỒM SHIP"
+          :
+            "TỔNG THANH TOÁN";
+
+    }
 
 
     bottomTotal.textContent =
       money(
-        shipping.customerTotal
+        shipping.shippingPending
+          ?
+            shipping.merchandiseTotal
+          :
+            shipping.customerTotal
       );
 
 
@@ -2836,6 +2944,12 @@
           );
 
 
+        const successShippingPending =
+          Boolean(
+            data?.shipping_pending_confirmation
+          );
+
+
         checkoutContent.innerHTML = `
 
           <div class="empty">
@@ -2949,10 +3063,24 @@
                   Phí vận chuyển
                 </span>
 
-                <strong>
-                  ${money(
-                    successShippingFee
-                  )}
+                <strong
+                  style="${
+                    successShippingPending
+                      ?
+                        "color:#d8ff45;"
+                      :
+                        ""
+                  }"
+                >
+                  ${
+                    successShippingPending
+                      ?
+                        "Xác nhận theo kiện"
+                      :
+                        money(
+                          successShippingFee
+                        )
+                  }
                 </strong>
               </div>
 
@@ -2984,6 +3112,27 @@
               }
 
 
+              ${
+                successShippingPending
+                  ?
+                    `
+                      <div
+                        style="
+                          margin-top:8px;
+                          color:rgba(255,255,255,.45);
+                          font-size:10px;
+                          line-height:1.5;
+                        "
+                      >
+                        Đơn có bóng Pickleball là hàng cồng kềnh.
+                        PickDee sẽ xác nhận phí vận chuyển trước khi gửi hàng.
+                      </div>
+                    `
+                  :
+                    ""
+              }
+
+
               <div
                 style="
                   display:flex;
@@ -2996,7 +3145,13 @@
                 "
               >
                 <span style="font-weight:900;">
-                  TỔNG THANH TOÁN
+                  ${
+                    successShippingPending
+                      ?
+                        "TẠM TÍNH TIỀN HÀNG"
+                      :
+                        "TỔNG THANH TOÁN"
+                  }
                 </span>
 
                 <strong
@@ -3006,10 +3161,35 @@
                   "
                 >
                   ${money(
-                    successCustomerTotal
+                    successShippingPending
+                      ?
+                        successMerchandiseTotal
+                      :
+                        successCustomerTotal
                   )}
                 </strong>
               </div>
+
+
+              ${
+                successShippingPending
+                  ?
+                    `
+                      <div
+                        style="
+                          margin-top:5px;
+                          color:rgba(255,255,255,.42);
+                          font-size:9px;
+                          line-height:1.45;
+                          text-align:right;
+                        "
+                      >
+                        Chưa gồm phí vận chuyển hàng cồng kềnh
+                      </div>
+                    `
+                  :
+                    ""
+              }
 
             </div>
 
