@@ -907,6 +907,63 @@
   }
 
 
+  function itemsHavePickleballBall(
+    items
+  ) {
+
+    const knownBallKeys =
+      [
+        "lt48",
+        "ppa life time",
+        "toniker nexus",
+        "toniker mate pro"
+      ];
+
+
+    return (
+      Array.isArray(items)
+      &&
+      items.some(
+        function (item) {
+
+          const name =
+            String(
+              item?.product_name || ""
+            )
+              .trim()
+              .toLocaleLowerCase(
+                "vi-VN"
+              );
+
+
+          if (
+            name.startsWith(
+              "bóng "
+            )
+          ) {
+
+            return true;
+
+          }
+
+
+          return knownBallKeys.some(
+            function (key) {
+
+              return name.includes(
+                key
+              );
+
+            }
+          );
+
+        }
+      )
+    );
+
+  }
+
+
   function showState(text) {
 
     page.className =
@@ -1073,6 +1130,26 @@
       "not_shipped";
 
 
+    const hasPickleballBall =
+      itemsHavePickleballBall(
+        currentItems
+      );
+
+
+    const shippingPending =
+      hasPickleballBall
+      &&
+      Number(
+        o.shipping_carrier_cost || 0
+      ) <= 0
+      &&
+      Number(
+        shippingFee || 0
+      ) <= 0
+      &&
+      o.order_status !== "shipping";
+
+
     const itemHtml =
       currentItems
         .map(
@@ -1205,8 +1282,17 @@
 
         <div style="text-align:right;">
 
-          <div class="status-label">
-            KHÁCH THANH TOÁN
+          <div
+            id="orderCustomerTotalLabel"
+            class="status-label"
+          >
+            ${
+              shippingPending
+                ?
+                  "TẠM TÍNH TIỀN HÀNG"
+                :
+                  "KHÁCH THANH TOÁN"
+            }
           </div>
 
           <div
@@ -1215,10 +1301,35 @@
             style="margin-top:4px;"
           >
             ${money(
-              Number(o.total_amount || 0)
-              +
-              Number(shippingFee || 0)
+              shippingPending
+                ?
+                  Number(o.total_amount || 0)
+                :
+                  (
+                    Number(o.total_amount || 0)
+                    +
+                    Number(shippingFee || 0)
+                  )
             )}
+          </div>
+
+          <div
+            id="orderShippingPendingNote"
+            style="
+              ${
+                shippingPending
+                  ?
+                    ""
+                  :
+                    "display:none;"
+              }
+              margin-top:4px;
+              color:rgba(255,255,255,.42);
+              font-size:9px;
+              line-height:1.35;
+            "
+          >
+            Chưa gồm phí vận chuyển hàng cồng kềnh
           </div>
 
         </div>
@@ -1774,9 +1885,13 @@
                 line-height:1.5;
               "
             >
-              SPX của PickDee mặc định 15.000đ.
-              Nếu đơn đặc biệt có phí thực tế khác,
-              có thể sửa trực tiếp tại đây.
+              ${
+                hasPickleballBall
+                  ?
+                    "Đơn có bóng Pickleball / hàng cồng kềnh: nhập cước thực tế theo kiện hàng."
+                  :
+                    "SPX của PickDee mặc định 15.000đ. Nếu đơn đặc biệt có phí thực tế khác, có thể sửa trực tiếp tại đây."
+              }
             </div>
 
           </div>
@@ -1877,9 +1992,15 @@
                   font-size:15px;
                 "
               >
-                ${money(
-                  shippingFee || 0
-                )}
+                ${
+                  shippingPending
+                    ?
+                      "CHỜ XÁC NHẬN"
+                    :
+                      money(
+                        shippingFee || 0
+                      )
+                }
               </strong>
 
             </div>
@@ -1894,21 +2015,38 @@
               "
             >
 
-              <span class="info-label">
-                KHÁCH THANH TOÁN
+              <span
+                id="shippingCustomerTotalLabel"
+                class="info-label"
+              >
+                ${
+                  shippingPending
+                    ?
+                      "TẠM TÍNH TIỀN HÀNG"
+                    :
+                      "KHÁCH THANH TOÁN"
+                }
               </span>
 
               <strong
                 id="shippingCustomerTotalText"
               >
                 ${money(
-                  Number(
-                    o.total_amount || 0
-                  )
-                  +
-                  Number(
-                    shippingFee || 0
-                  )
+                  shippingPending
+                    ?
+                      Number(
+                        o.total_amount || 0
+                      )
+                    :
+                      (
+                        Number(
+                          o.total_amount || 0
+                        )
+                        +
+                        Number(
+                          shippingFee || 0
+                        )
+                      )
                 )}
               </strong>
 
@@ -1925,8 +2063,13 @@
                 line-height:1.5;
               "
             >
-              Chọn đơn vị vận chuyển
-              để hệ thống gợi ý phí.
+              ${
+                shippingPending
+                  ?
+                    "Đơn có bóng Pickleball / hàng cồng kềnh: chờ nhập cước vận chuyển thực tế."
+                  :
+                    "Chọn đơn vị vận chuyển để hệ thống gợi ý phí."
+              }
             </div>
 
           </div>
@@ -2159,9 +2302,15 @@
               id="paymentShippingFeeText"
               class="info-value"
             >
-              ${money(
-                shippingFee || 0
-              )}
+              ${
+                shippingPending
+                  ?
+                    "CHỜ XÁC NHẬN"
+                  :
+                    money(
+                      shippingFee || 0
+                    )
+              }
             </div>
 
           </div>
@@ -2177,8 +2326,17 @@
             "
           >
 
-            <div class="info-label">
-              KHÁCH THANH TOÁN
+            <div
+              id="paymentCustomerTotalLabel"
+              class="info-label"
+            >
+              ${
+                shippingPending
+                  ?
+                    "TẠM TÍNH TIỀN HÀNG"
+                  :
+                    "KHÁCH THANH TOÁN"
+              }
             </div>
 
             <div
@@ -2191,13 +2349,21 @@
               "
             >
               ${money(
-                Number(
-                  o.total_amount || 0
-                )
-                +
-                Number(
-                  shippingFee || 0
-                )
+                shippingPending
+                  ?
+                    Number(
+                      o.total_amount || 0
+                    )
+                  :
+                    (
+                      Number(
+                        o.total_amount || 0
+                      )
+                      +
+                      Number(
+                        shippingFee || 0
+                      )
+                    )
               )}
             </div>
 
@@ -2525,15 +2691,39 @@
       );
 
 
+    const orderCustomerTotalLabel =
+      document.getElementById(
+        "orderCustomerTotalLabel"
+      );
+
+
     const orderCustomerTotalTop =
       document.getElementById(
         "orderCustomerTotalTop"
       );
 
 
+    const orderShippingPendingNote =
+      document.getElementById(
+        "orderShippingPendingNote"
+      );
+
+
+    const shippingCustomerTotalLabel =
+      document.getElementById(
+        "shippingCustomerTotalLabel"
+      );
+
+
     const paymentShippingFeeText =
       document.getElementById(
         "paymentShippingFeeText"
+      );
+
+
+    const paymentCustomerTotalLabel =
+      document.getElementById(
+        "paymentCustomerTotalLabel"
       );
 
 
@@ -2554,71 +2744,9 @@
 
 
     /*
-      Nhận diện bóng Pickleball.
-
-      Các sản phẩm bóng hiện tại của PickDee:
-      - LT48
-      - PPA Life Time
-      - TONIKER NEXUS
-      - Toniker Mate Pro
-
-      Ngoài ra sản phẩm bắt đầu bằng "Bóng "
-      cũng được xem là bóng Pickleball.
+      hasPickleballBall đã được xác định từ currentItems
+      trước khi render giao diện.
     */
-    function orderHasPickleballBall() {
-
-      const knownBallKeys =
-        [
-          "lt48",
-          "ppa life time",
-          "toniker nexus",
-          "toniker mate pro"
-        ];
-
-
-      return currentItems.some(
-        function (item) {
-
-          const name =
-            String(
-              item.product_name || ""
-            )
-              .trim()
-              .toLocaleLowerCase(
-                "vi-VN"
-              );
-
-
-          if (
-            name.startsWith(
-              "bóng "
-            )
-          ) {
-
-            return true;
-
-          }
-
-
-          return knownBallKeys.some(
-            function (key) {
-
-              return name.includes(
-                key
-              );
-
-            }
-          );
-
-        }
-      );
-
-    }
-
-
-
-    const hasPickleballBall =
-      orderHasPickleballBall();
 
 
     const merchandiseTotal =
@@ -2660,8 +2788,15 @@
         );
 
 
+      /*
+        Phụ kiện thường dùng mức SPX mặc định 15.000đ.
+        Đơn có bóng Pickleball là hàng cồng kềnh nên
+        KHÔNG tự gán 15.000đ khi chưa có cước thực tế.
+      */
       if (
         provider === "spx"
+        &&
+        !hasPickleballBall
         &&
         carrierCost <= 0
       ) {
@@ -2685,22 +2820,6 @@
       ) {
 
         if (
-          merchandiseTotal
-            >=
-          FREE_SHIPPING_THRESHOLD
-          &&
-          !hasPickleballBall
-        ) {
-
-          suggestedFee =
-            0;
-
-
-          reason =
-            "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
-
-        }
-        else if (
           hasPickleballBall
         ) {
 
@@ -2709,7 +2828,25 @@
 
 
           reason =
-            "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
+            carrierCost > 0
+              ?
+                "Đơn có bóng Pickleball / hàng cồng kềnh: phí khách trả mặc định theo cước thực tế. Có thể chỉnh nếu PickDee hỗ trợ một phần."
+              :
+                "Đơn có bóng Pickleball / hàng cồng kềnh: nhập cước vận chuyển thực tế trước khi xác nhận phí khách trả.";
+
+        }
+        else if (
+          merchandiseTotal
+            >=
+          FREE_SHIPPING_THRESHOLD
+        ) {
+
+          suggestedFee =
+            0;
+
+
+          reason =
+            "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
 
         }
         else {
@@ -2784,6 +2921,16 @@
         );
 
 
+      const isShippingPending =
+        hasPickleballBall
+        &&
+        actualCarrierCost <= 0
+        &&
+        actualCustomerFee <= 0
+        &&
+        currentOrder.order_status !== "shipping";
+
+
       const totalCustomerPays =
         merchandiseTotal
         +
@@ -2795,9 +2942,13 @@
       ) {
 
         shippingCarrierCostText.textContent =
-          money(
-            actualCarrierCost
-          );
+          isShippingPending
+            ?
+              "CHỜ NHẬP CƯỚC"
+            :
+              money(
+                actualCarrierCost
+              );
 
       }
 
@@ -2807,15 +2958,21 @@
       ) {
 
         shippingDiscountText.textContent =
-          actualDiscount > 0
+          isShippingPending
             ?
-              "-"
-              +
-              money(
-                actualDiscount
-              )
+              "—"
             :
-              money(0);
+              (
+                actualDiscount > 0
+                  ?
+                    "-"
+                    +
+                    money(
+                      actualDiscount
+                    )
+                  :
+                    money(0)
+              );
 
       }
 
@@ -2825,9 +2982,27 @@
       ) {
 
         shippingFeeText.textContent =
-          money(
-            actualCustomerFee
-          );
+          isShippingPending
+            ?
+              "CHỜ XÁC NHẬN"
+            :
+              money(
+                actualCustomerFee
+              );
+
+      }
+
+
+      if (
+        shippingCustomerTotalLabel
+      ) {
+
+        shippingCustomerTotalLabel.textContent =
+          isShippingPending
+            ?
+              "TẠM TÍNH TIỀN HÀNG"
+            :
+              "KHÁCH THANH TOÁN";
 
       }
 
@@ -2838,8 +3013,26 @@
 
         shippingCustomerTotalText.textContent =
           money(
-            totalCustomerPays
+            isShippingPending
+              ?
+                merchandiseTotal
+              :
+                totalCustomerPays
           );
+
+      }
+
+
+      if (
+        orderCustomerTotalLabel
+      ) {
+
+        orderCustomerTotalLabel.textContent =
+          isShippingPending
+            ?
+              "TẠM TÍNH TIỀN HÀNG"
+            :
+              "KHÁCH THANH TOÁN";
 
       }
 
@@ -2850,8 +3043,26 @@
 
         orderCustomerTotalTop.textContent =
           money(
-            totalCustomerPays
+            isShippingPending
+              ?
+                merchandiseTotal
+              :
+                totalCustomerPays
           );
+
+      }
+
+
+      if (
+        orderShippingPendingNote
+      ) {
+
+        orderShippingPendingNote.style.display =
+          isShippingPending
+            ?
+              "block"
+            :
+              "none";
 
       }
 
@@ -2861,9 +3072,27 @@
       ) {
 
         paymentShippingFeeText.textContent =
-          money(
-            actualCustomerFee
-          );
+          isShippingPending
+            ?
+              "CHỜ XÁC NHẬN"
+            :
+              money(
+                actualCustomerFee
+              );
+
+      }
+
+
+      if (
+        paymentCustomerTotalLabel
+      ) {
+
+        paymentCustomerTotalLabel.textContent =
+          isShippingPending
+            ?
+              "TẠM TÍNH TIỀN HÀNG"
+            :
+              "KHÁCH THANH TOÁN";
 
       }
 
@@ -2874,13 +3103,19 @@
 
         paymentCustomerTotalText.textContent =
           money(
-            totalCustomerPays
+            isShippingPending
+              ?
+                merchandiseTotal
+              :
+                totalCustomerPays
           );
 
       }
 
 
       const isOverride =
+        !isShippingPending
+        &&
         recommendation.provider
         &&
         Math.round(
@@ -2934,6 +3169,8 @@
 
       if (
         provider === "spx"
+        &&
+        !hasPickleballBall
       ) {
 
         if (
@@ -3015,9 +3252,17 @@
           ) {
 
             shippingCarrierCostInput.value =
-              String(
-                SPX_BASE_FEE
-              );
+              hasPickleballBall
+                ?
+                  "0"
+                :
+                  String(
+                    SPX_BASE_FEE
+                  );
+
+
+            shippingFeeInput.value =
+              "0";
 
           }
           else {
@@ -3100,8 +3345,9 @@
     /*
       Khởi tạo lần đầu.
 
-      Nếu đơn SPX cũ chưa có shipping_carrier_cost,
-      hệ thống tự hiển thị 15.000đ.
+      - Phụ kiện thường SPX chưa có cước: gợi ý 15.000đ.
+      - Đơn có bóng Pickleball / hàng cồng kềnh:
+        không tự gán 15.000đ, chờ nhập cước thực tế.
     */
     applyAutomaticShippingPricing(
       false
@@ -3171,6 +3417,8 @@
               shippingProviderValue
               ===
               "spx"
+              &&
+              !hasPickleballBall
               &&
               shippingCarrierCostValue
               <=
@@ -3267,6 +3515,23 @@
             }
 
 
+            if (
+              shippingStatusValue
+              ===
+              "shipped"
+              &&
+              hasPickleballBall
+              &&
+              shippingCarrierCostValue <= 0
+            ) {
+
+              throw new Error(
+                "Đơn có bóng Pickleball / hàng cồng kềnh. Vui lòng nhập cước vận chuyển thực tế trước khi giao ĐVVC."
+              );
+
+            }
+
+
             const shippingDiscountValue =
               Math.max(
                 0,
@@ -3296,6 +3561,8 @@
                 shippingProviderValue
                 ===
                 "spx"
+                &&
+                !hasPickleballBall
               ) {
 
                 pricingMode =
