@@ -236,7 +236,7 @@
     }
 
 
-        .field input,
+    .field input,
     .field textarea,
     .field select {
       width: 100%;
@@ -277,7 +277,8 @@
       background: #ffffff;
       color: #071523;
     }
-       .field input:focus,
+
+    .field input:focus,
     .field textarea:focus,
     .field select:focus {
       border-color:
@@ -749,6 +750,8 @@
       }
 
     }
+
+
 /* =====================================================
    PICKDEE SHOP - MOBILE COMPACT
    Tối ưu sử dụng chủ yếu trên điện thoại
@@ -860,6 +863,7 @@
   }
 
 }
+
 
 /* =====================================================
    PICKDEE SHOP - IPHONE FIX
@@ -1185,7 +1189,7 @@
           </div>
 
 
-                  <div class="two-cols">
+          <div class="two-cols">
 
 
             <div class="field">
@@ -1228,31 +1232,33 @@
           </div>
 
 
-       <div class="field">
+          <div class="field">
 
-  <label for="legacyAddress">
-    ĐỊA CHỈ TRƯỚC SÁP NHẬP *
-  </label>
+            <label for="legacyAddress">
+              ĐỊA CHỈ TRƯỚC SÁP NHẬP *
+            </label>
 
-  <textarea
-    id="legacyAddress"
-    placeholder="Ví dụ: xã/phường cũ, quận/huyện cũ, tỉnh/thành cũ"
-    required
-  ></textarea>
+            <textarea
+              id="legacyAddress"
+              placeholder="Ví dụ: xã/phường cũ, quận/huyện cũ, tỉnh/thành cũ"
+              required
+            ></textarea>
 
-  <div
-    style="
-      margin-top:-1px;
-      color:rgba(255,255,255,.42);
-      font-size:10px;
-      line-height:1.5;
-    "
-  >
-    Dùng để đối chiếu với đơn vị vận chuyển khi cần.
-    Nếu địa phương của anh/chị không thay đổi, nhập lại địa chỉ đang sử dụng.
-  </div>
+            <div
+              style="
+                margin-top:-1px;
+                color:rgba(255,255,255,.42);
+                font-size:10px;
+                line-height:1.5;
+              "
+            >
+              Dùng để đối chiếu với đơn vị vận chuyển khi cần.
+              Nếu địa phương của anh/chị không thay đổi, nhập lại địa chỉ đang sử dụng.
+            </div>
 
-</div>
+          </div>
+
+
           <div class="field">
 
             <label for="customerNote">
@@ -1394,11 +1400,40 @@
             Phí vận chuyển
           </span>
 
-          <strong>
-            Xác nhận sau
+          <strong id="shippingFeeDisplay">
+            0đ
           </strong>
 
         </div>
+
+
+        <div
+          id="freeShippingRow"
+          class="summary-row"
+          style="display:none;"
+        >
+
+          <span>
+            Ưu đãi vận chuyển
+          </span>
+
+          <strong style="color:#d8ff45;">
+            ✓ FREESHIP PICKDEE
+          </strong>
+
+        </div>
+
+
+        <div
+          id="shippingPolicyText"
+          style="
+            display:none;
+            margin-top:8px;
+            color:rgba(255,255,255,.42);
+            font-size:10px;
+            line-height:1.5;
+          "
+        ></div>
 
 
         <div class="total">
@@ -1406,7 +1441,7 @@
           <div>
 
             <div class="total-label">
-              TẠM TÍNH
+              TỔNG THANH TOÁN
             </div>
 
             <div
@@ -1449,7 +1484,7 @@
     <div>
 
       <div class="bottom-label">
-        TẠM TÍNH
+        TỔNG THANH TOÁN
       </div>
 
       <div
@@ -1486,8 +1521,18 @@
     "pickdee_shop_cart";
 
 
+  const SPX_BASE_FEE =
+    15000;
+
+
+  const FREE_SHIPPING_THRESHOLD =
+    300000;
+
+
   const cfg =
     window.PICKDEE_CONFIG || {};
+
+
   const ADDRESS_PROVINCE_URL =
     "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json";
 
@@ -1499,6 +1544,7 @@
   let addressProvinces = [];
 
   let addressWards = [];
+
 
   const checkoutForm =
     document.getElementById(
@@ -1515,6 +1561,24 @@
   const subtotal =
     document.getElementById(
       "subtotal"
+    );
+
+
+  const shippingFeeDisplay =
+    document.getElementById(
+      "shippingFeeDisplay"
+    );
+
+
+  const freeShippingRow =
+    document.getElementById(
+      "freeShippingRow"
+    );
+
+
+  const shippingPolicyText =
+    document.getElementById(
+      "shippingPolicyText"
     );
 
 
@@ -1616,6 +1680,8 @@
       .replaceAll("'","&#039;");
 
   }
+
+
   function addressName(item) {
 
     return (
@@ -1833,6 +1899,7 @@
 
   }
 
+
   function readCart() {
 
     try {
@@ -1862,104 +1929,108 @@
 
   }
 
-function saveCart(cart) {
 
-  localStorage.setItem(
-    CART_KEY,
-    JSON.stringify(cart)
-  );
+  function saveCart(cart) {
 
-}
+    localStorage.setItem(
+      CART_KEY,
+      JSON.stringify(cart)
+    );
+
+  }
 
 
-async function refreshCheckoutPrices(
-  cart
-) {
+  async function refreshCheckoutPrices(
+    cart
+  ) {
 
-  return await Promise.all(
+    return await Promise.all(
 
-    cart.map(
-      async function (item) {
+      cart.map(
+        async function (item) {
 
-        const quantity =
-          Math.max(
-            1,
-            Math.min(
-              9999,
-              Math.round(
-                Number(
-                  item.quantity || 1
+          const quantity =
+            Math.max(
+              1,
+              Math.min(
+                9999,
+                Math.round(
+                  Number(
+                    item.quantity || 1
+                  )
                 )
               )
-            )
-          );
+            );
 
 
-        const {
-          data,
-          error
-        } =
-          await sb.rpc(
-            "shop_price_quote",
-            {
+          const {
+            data,
+            error
+          } =
+            await sb.rpc(
+              "shop_price_quote",
+              {
 
-              p_variant_id:
-                Number(
-                  item.variant_id
-                ),
+                p_variant_id:
+                  Number(
+                    item.variant_id
+                  ),
 
-              p_quantity:
-                quantity
+                p_quantity:
+                  quantity
 
-            }
-          );
+              }
+            );
 
 
-        if (error) {
-          throw error;
+          if (error) {
+            throw error;
+          }
+
+
+          return {
+
+            ...item,
+
+            quantity:
+              quantity,
+
+            price:
+              Number(
+                data?.unit_price
+                ??
+                item.price
+                ??
+                0
+              ),
+
+            retail_price:
+              Number(
+                data?.retail_price
+                ??
+                item.retail_price
+                ??
+                item.price
+                ??
+                0
+              ),
+
+            pricing_type:
+              data?.pricing_type
+              ||
+              "retail"
+
+          };
+
         }
+      )
+
+    );
+
+  }
 
 
-        return {
-
-          ...item,
-
-          quantity:
-            quantity,
-
-          price:
-            Number(
-              data?.unit_price
-              ??
-              item.price
-              ??
-              0
-            ),
-
-          retail_price:
-            Number(
-              data?.retail_price
-              ??
-              item.retail_price
-              ??
-              item.price
-              ??
-              0
-            ),
-
-          pricing_type:
-            data?.pricing_type
-            ||
-            "retail"
-
-        };
-
-      }
-    )
-
-  );
-
-}  function cartTotal(cart) {
+  function cartTotal(cart) {
 
     return cart.reduce(
       function (sum,item) {
@@ -1981,6 +2052,128 @@ async function refreshCheckoutPrices(
   }
 
 
+  function cartHasPickleballBall(
+    cart
+  ) {
+
+    const knownBallKeys =
+      [
+        "lt48",
+        "ppa life time",
+        "toniker nexus",
+        "toniker mate pro"
+      ];
+
+
+    return cart.some(
+      function (item) {
+
+        const name =
+          String(
+            item.product_name || ""
+          )
+            .trim()
+            .toLocaleLowerCase(
+              "vi-VN"
+            );
+
+
+        if (
+          name.startsWith(
+            "bóng "
+          )
+        ) {
+
+          return true;
+
+        }
+
+
+        return knownBallKeys.some(
+          function (key) {
+
+            return name.includes(
+              key
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  function shippingQuote(
+    cart
+  ) {
+
+    const merchandiseTotal =
+      cartTotal(
+        cart
+      );
+
+
+    const hasPickleballBall =
+      cartHasPickleballBall(
+        cart
+      );
+
+
+    const freeShipping =
+      merchandiseTotal
+        >=
+      FREE_SHIPPING_THRESHOLD
+      &&
+      !hasPickleballBall;
+
+
+    const shippingFee =
+      freeShipping
+        ?
+          0
+        :
+          SPX_BASE_FEE;
+
+
+    let reason =
+      "Đơn dưới 300.000đ: phí vận chuyển SPX 15.000đ.";
+
+
+    if (
+      hasPickleballBall
+    ) {
+
+      reason =
+        "Đơn có bóng Pickleball: không áp dụng freeship mặc định.";
+
+    }
+    else if (
+      freeShipping
+    ) {
+
+      reason =
+        "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
+
+    }
+
+
+    return {
+      merchandiseTotal,
+      hasPickleballBall,
+      freeShipping,
+      shippingFee,
+      customerTotal:
+        merchandiseTotal
+        +
+        shippingFee,
+      reason
+    };
+
+  }
+
+
   function showMessage(
     text,
     type
@@ -1996,271 +2189,299 @@ async function refreshCheckoutPrices(
 
 
 
-/* =====================================================
-   RENDER CART
-====================================================== */
+  /* =====================================================
+     RENDER CART
+  ====================================================== */
 
-async function prepareCheckout() {
+  async function prepareCheckout() {
 
-  let cart =
-    readCart();
+    let cart =
+      readCart();
 
 
-  if (!cart.length) {
+    if (!cart.length) {
 
-  bottomBar.style.display =
-    "none";
+      bottomBar.style.display =
+        "none";
 
 
-  checkoutContent.innerHTML = `
+      checkoutContent.innerHTML = `
 
-    <div class="empty">
+        <div class="empty">
 
-      <strong>
-        Chưa có sản phẩm để đặt hàng
-      </strong>
+          <strong>
+            Chưa có sản phẩm để đặt hàng
+          </strong>
 
-      <p>
-        Quay lại PickDee Shop
-        và chọn sản phẩm trước nhé.
-      </p>
+          <p>
+            Quay lại PickDee Shop
+            và chọn sản phẩm trước nhé.
+          </p>
 
-      <a href="./shop">
-        XEM SẢN PHẨM
-      </a>
+          <a href="./shop">
+            XEM SẢN PHẨM
+          </a>
 
-    </div>
+        </div>
 
-  `;
+      `;
 
 
-  return;
+      return;
 
-}
+    }
 
 
-  /*
-    Không cho đặt hàng trong lúc
-    đang xác minh lại giá với backend.
-  */
-
-  submitBtn.disabled =
-    true;
-
-
-  submitBtn.textContent =
-    "ĐANG KIỂM TRA GIÁ...";
-
-
-  try {
-
-    cart =
-      await refreshCheckoutPrices(
-        cart
-      );
-
-
-    saveCart(
-      cart
-    );
-
-  }
-  catch (error) {
-
-    console.error(
-      "CHECKOUT PRICE REFRESH ERROR:",
-      error
-    );
-
-
-    showMessage(
-      "Không kiểm tra được giá bán mới nhất. Vui lòng quay lại giỏ hàng và thử lại.",
-      "error"
-    );
-
-
-    bottomBar.style.display =
-      "none";
-
-
-    return;
-
-  }
-
-
-  const displayTotal =
-    cartTotal(
-      cart
-    );
-
-
-  orderItems.innerHTML =
-    cart
-      .map(
-        function (item) {
-
-          const isWholesale =
-            item.pricing_type
-            ===
-            "wholesale"
-            &&
-            Number(
-              item.retail_price || 0
-            )
-              >
-            Number(
-              item.price || 0
-            );
-
-
-          const wholesaleText =
-            isWholesale
-              ?
-                `
-                  <div class="order-variant">
-                    GIÁ SỈ •
-                    ${money(item.price)}/sản phẩm
-                  </div>
-                `
-              :
-                "";
-
-
-          return `
-
-            <div class="order-item">
-
-              <div class="order-image">
-
-                ${
-                  item.image_url
-                    ?
-                      `
-                        <img
-                          src="${escapeHtml(item.image_url)}"
-                          alt="${escapeHtml(item.product_name)}"
-                        >
-                      `
-                    :
-                      "🏓"
-                }
-
-              </div>
-
-
-              <div>
-
-                <div class="order-name">
-                  ${escapeHtml(item.product_name)}
-                </div>
-
-
-                ${
-                  item.variant_name
-                    ?
-                      `
-                        <div class="order-variant">
-                          ${escapeHtml(item.variant_name)}
-                        </div>
-                      `
-                    :
-                      ""
-                }
-
-
-                ${wholesaleText}
-
-
-                <div class="order-qty">
-                  Số lượng:
-                  ${Number(item.quantity || 1)}
-                </div>
-
-              </div>
-
-
-              <div class="order-price">
-
-                ${
-                  money(
-                    Number(item.price || 0)
-                    *
-                    Number(item.quantity || 1)
-                  )
-                }
-
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join("");
-
-
-  subtotal.textContent =
-    money(
-      displayTotal
-    );
-
-
-  totalPrice.textContent =
-    money(
-      displayTotal
-    );
-
-
-  bottomTotal.textContent =
-    money(
-      displayTotal
-    );
-
-
-  submitBtn.disabled =
-    false;
-
-
-  submitBtn.textContent =
-    "ĐẶT HÀNG";
-
-}
-
-
-async function start() {
-
-  try {
-
-    await loadAddressData();
-
-    await prepareCheckout();
-
-  }
-  catch (error) {
-
-    console.error(
-      "CHECKOUT START ERROR:",
-      error
-    );
-
-
-    showMessage(
-      error?.message
-      ||
-      "Không tải được trang đặt hàng.",
-      "error"
-    );
-
+    /*
+      Không cho đặt hàng trong lúc
+      đang xác minh lại giá với backend.
+    */
 
     submitBtn.disabled =
       true;
 
+
+    submitBtn.textContent =
+      "ĐANG KIỂM TRA GIÁ...";
+
+
+    try {
+
+      cart =
+        await refreshCheckoutPrices(
+          cart
+        );
+
+
+      saveCart(
+        cart
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "CHECKOUT PRICE REFRESH ERROR:",
+        error
+      );
+
+
+      showMessage(
+        "Không kiểm tra được giá bán mới nhất. Vui lòng quay lại giỏ hàng và thử lại.",
+        "error"
+      );
+
+
+      bottomBar.style.display =
+        "none";
+
+
+      return;
+
+    }
+
+
+    const shipping =
+      shippingQuote(
+        cart
+      );
+
+
+    const displayTotal =
+      shipping.merchandiseTotal;
+
+
+    orderItems.innerHTML =
+      cart
+        .map(
+          function (item) {
+
+            const isWholesale =
+              item.pricing_type
+              ===
+              "wholesale"
+              &&
+              Number(
+                item.retail_price || 0
+              )
+                >
+              Number(
+                item.price || 0
+              );
+
+
+            const wholesaleText =
+              isWholesale
+                ?
+                  `
+                    <div class="order-variant">
+                      GIÁ SỈ •
+                      ${money(item.price)}/sản phẩm
+                    </div>
+                  `
+                :
+                  "";
+
+
+            return `
+
+              <div class="order-item">
+
+                <div class="order-image">
+
+                  ${
+                    item.image_url
+                      ?
+                        `
+                          <img
+                            src="${escapeHtml(item.image_url)}"
+                            alt="${escapeHtml(item.product_name)}"
+                          >
+                        `
+                      :
+                        "🏓"
+                  }
+
+                </div>
+
+
+                <div>
+
+                  <div class="order-name">
+                    ${escapeHtml(item.product_name)}
+                  </div>
+
+
+                  ${
+                    item.variant_name
+                      ?
+                        `
+                          <div class="order-variant">
+                            ${escapeHtml(item.variant_name)}
+                          </div>
+                        `
+                      :
+                        ""
+                  }
+
+
+                  ${wholesaleText}
+
+
+                  <div class="order-qty">
+                    Số lượng:
+                    ${Number(item.quantity || 1)}
+                  </div>
+
+                </div>
+
+
+                <div class="order-price">
+
+                  ${
+                    money(
+                      Number(item.price || 0)
+                      *
+                      Number(item.quantity || 1)
+                    )
+                  }
+
+                </div>
+
+              </div>
+            `;
+
+          }
+        )
+        .join("");
+
+
+    subtotal.textContent =
+      money(
+        displayTotal
+      );
+
+
+    shippingFeeDisplay.textContent =
+      money(
+        shipping.shippingFee
+      );
+
+
+    freeShippingRow.style.display =
+      shipping.freeShipping
+        ?
+          "flex"
+        :
+          "none";
+
+
+    shippingPolicyText.style.display =
+      "block";
+
+
+    shippingPolicyText.textContent =
+      shipping.reason;
+
+
+    totalPrice.textContent =
+      money(
+        shipping.customerTotal
+      );
+
+
+    bottomTotal.textContent =
+      money(
+        shipping.customerTotal
+      );
+
+
+    submitBtn.disabled =
+      false;
+
+
+    submitBtn.textContent =
+      "ĐẶT HÀNG";
+
   }
 
-}
+
+  async function start() {
+
+    try {
+
+      await loadAddressData();
+
+      await prepareCheckout();
+
+    }
+    catch (error) {
+
+      console.error(
+        "CHECKOUT START ERROR:",
+        error
+      );
 
 
-start();
+      showMessage(
+        error?.message
+        ||
+        "Không tải được trang đặt hàng.",
+        "error"
+      );
+
+
+      submitBtn.disabled =
+        true;
+
+    }
+
+  }
+
+
+  start();
+
+
 
   /* =====================================================
      SUBMIT
@@ -2310,7 +2531,7 @@ start();
           .trim();
 
 
-            const ward =
+      const ward =
         document
           .getElementById(
             "ward"
@@ -2355,7 +2576,7 @@ start();
         "cod";
 
 
-            if (
+      if (
         !customerName
         ||
         !phone
@@ -2439,7 +2660,8 @@ start();
 
         /*
           CHỈ GỬI variant_id + quantity.
-          Giá bán sẽ được backend tự lấy lại từ database.
+          Giá bán + phí ship đều do backend
+          xác minh và lưu.
         */
 
         const rpcItems =
@@ -2461,12 +2683,13 @@ start();
             }
           );
 
+
         const {
           data,
           error
         } =
           await sb.rpc(
-            "shop_create_guest_order_with_legacy",
+            "shop_create_guest_order_with_shipping_v1",
             {
 
               p_customer_name:
@@ -2501,6 +2724,8 @@ start();
 
             }
           );
+
+
         if (error) {
 
           console.error(
@@ -2559,7 +2784,7 @@ start();
           "none";
 
 
-               const trackingToken =
+        const trackingToken =
           String(
             data?.public_tracking_token
             ||
@@ -2577,258 +2802,403 @@ start();
               "";
 
 
-     checkoutContent.innerHTML = `
-
-  <div class="empty">
-
-    <div
-      style="
-        font-size:48px;
-        margin-bottom:14px;
-      "
-    >
-      ✅
-    </div>
+        const successMerchandiseTotal =
+          Number(
+            data?.merchandise_total
+            ??
+            0
+          );
 
 
-    <strong>
-      Đặt hàng thành công
-    </strong>
+        const successShippingFee =
+          Number(
+            data?.shipping_fee
+            ??
+            0
+          );
 
 
-    <p>
-      Mã đơn hàng của bạn:
-    </p>
+        const successCustomerTotal =
+          Number(
+            data?.customer_total
+            ??
+            (
+              successMerchandiseTotal
+              +
+              successShippingFee
+            )
+          );
 
 
-    <div
-      style="
-        margin:14px auto 7px;
-        color:#d8ff45;
-        font-size:24px;
-        font-weight:950;
-        letter-spacing:.03em;
-      "
-    >
-      ${escapeHtml(
-        data.order_code
-      )}
-    </div>
+        const successFreeShipping =
+          Boolean(
+            data?.free_shipping
+          );
 
 
-    <button
-      id="copyOrderCodeBtn"
-      type="button"
-      style="
-        min-height:42px;
-        margin-top:5px;
-        padding:0 16px;
+        checkoutContent.innerHTML = `
 
-        border-radius:10px;
+          <div class="empty">
 
-        border:
-          1px solid rgba(216,255,69,.28);
-
-        background:
-          rgba(216,255,69,.07);
-
-        color:#d8ff45;
-
-        font-size:10px;
-        font-weight:950;
-
-        cursor:pointer;
-      "
-    >
-      📋 COPY MÃ ĐƠN
-    </button>
+            <div
+              style="
+                font-size:48px;
+                margin-bottom:14px;
+              "
+            >
+              ✅
+            </div>
 
 
-    <p
-      style="
-        max-width:340px;
-        margin:15px auto 0;
-        line-height:1.55;
-      "
-    >
-      PickDee đã nhận đơn hàng của anh/chị.
-      Hãy giữ lại mã đơn này để tra cứu khi cần.
-    </p>
+            <strong>
+              Đặt hàng thành công
+            </strong>
 
 
-    <p
-      style="
-        max-width:340px;
-        margin:7px auto 0;
-        color:rgba(255,255,255,.42);
-        font-size:10px;
-        line-height:1.55;
-      "
-    >
-      Sau này anh/chị có thể vào mục
-      <strong style="color:#ffffff;">
-        TRA CỨU ĐƠN
-      </strong>
-      và dùng mã đơn + số điện thoại đặt hàng.
-    </p>
+            <p>
+              Mã đơn hàng của bạn:
+            </p>
 
 
-    ${
-      trackingUrl
-        ?
-          `
+            <div
+              style="
+                margin:14px auto 7px;
+                color:#d8ff45;
+                font-size:24px;
+                font-weight:950;
+                letter-spacing:.03em;
+              "
+            >
+              ${escapeHtml(
+                data.order_code
+              )}
+            </div>
+
+
+            <button
+              id="copyOrderCodeBtn"
+              type="button"
+              style="
+                min-height:42px;
+                margin-top:5px;
+                padding:0 16px;
+
+                border-radius:10px;
+
+                border:
+                  1px solid rgba(216,255,69,.28);
+
+                background:
+                  rgba(216,255,69,.07);
+
+                color:#d8ff45;
+
+                font-size:10px;
+                font-weight:950;
+
+                cursor:pointer;
+              "
+            >
+              📋 COPY MÃ ĐƠN
+            </button>
+
+
+            <div
+              style="
+                width:100%;
+                max-width:340px;
+                margin:16px auto 0;
+                padding:13px;
+                border-radius:12px;
+                border:1px solid rgba(216,255,69,.18);
+                background:rgba(216,255,69,.045);
+                text-align:left;
+              "
+            >
+
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:12px;
+                  font-size:11px;
+                "
+              >
+                <span style="color:rgba(255,255,255,.50);">
+                  Tiền hàng
+                </span>
+
+                <strong>
+                  ${money(
+                    successMerchandiseTotal
+                  )}
+                </strong>
+              </div>
+
+
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:12px;
+                  margin-top:8px;
+                  font-size:11px;
+                "
+              >
+                <span style="color:rgba(255,255,255,.50);">
+                  Phí vận chuyển
+                </span>
+
+                <strong>
+                  ${money(
+                    successShippingFee
+                  )}
+                </strong>
+              </div>
+
+
+              ${
+                successFreeShipping
+                  ?
+                    `
+                      <div
+                        style="
+                          display:flex;
+                          justify-content:space-between;
+                          gap:12px;
+                          margin-top:8px;
+                          font-size:11px;
+                        "
+                      >
+                        <span style="color:rgba(255,255,255,.50);">
+                          Ưu đãi
+                        </span>
+
+                        <strong style="color:#d8ff45;">
+                          ✓ FREESHIP PICKDEE
+                        </strong>
+                      </div>
+                    `
+                  :
+                    ""
+              }
+
+
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:12px;
+                  margin-top:10px;
+                  padding-top:10px;
+                  border-top:1px solid rgba(255,255,255,.08);
+                  font-size:12px;
+                "
+              >
+                <span style="font-weight:900;">
+                  TỔNG THANH TOÁN
+                </span>
+
+                <strong
+                  style="
+                    color:#d8ff45;
+                    font-size:17px;
+                  "
+                >
+                  ${money(
+                    successCustomerTotal
+                  )}
+                </strong>
+              </div>
+
+            </div>
+
+
+            <p
+              style="
+                max-width:340px;
+                margin:15px auto 0;
+                line-height:1.55;
+              "
+            >
+              PickDee đã nhận đơn hàng của anh/chị.
+              Hãy giữ lại mã đơn này để tra cứu khi cần.
+            </p>
+
+
+            <p
+              style="
+                max-width:340px;
+                margin:7px auto 0;
+                color:rgba(255,255,255,.42);
+                font-size:10px;
+                line-height:1.55;
+              "
+            >
+              Sau này anh/chị có thể vào mục
+              <strong style="color:#ffffff;">
+                TRA CỨU ĐƠN
+              </strong>
+              và dùng mã đơn + số điện thoại đặt hàng.
+            </p>
+
+
+            ${
+              trackingUrl
+                ?
+                  `
+                    <a
+                      href="${escapeHtml(
+                        trackingUrl
+                      )}"
+                      style="
+                        width:100%;
+                        max-width:320px;
+                        margin-top:16px;
+                      "
+                    >
+                      THEO DÕI ĐƠN HÀNG
+                    </a>
+                  `
+                :
+                  ""
+            }
+
+
             <a
-              href="${escapeHtml(
-                trackingUrl
-              )}"
+              href="./shop-order-lookup"
               style="
                 width:100%;
                 max-width:320px;
-                margin-top:16px;
+                margin-top:8px;
+
+                background:
+                  rgba(216,255,69,.07);
+
+                color:#d8ff45;
+
+                border:
+                  1px solid rgba(216,255,69,.22);
               "
             >
-              THEO DÕI ĐƠN HÀNG
+              TRA CỨU ĐƠN HÀNG
             </a>
-          `
-        :
-          ""
-    }
 
 
-    <a
-      href="./shop-order-lookup"
-      style="
-        width:100%;
-        max-width:320px;
-        margin-top:8px;
+            <a
+              href="./shop"
+              style="
+                width:100%;
+                max-width:320px;
+                margin-top:8px;
 
-        background:
-          rgba(216,255,69,.07);
+                background:
+                  rgba(255,255,255,.06);
 
-        color:#d8ff45;
+                color:#ffffff;
 
-        border:
-          1px solid rgba(216,255,69,.22);
-      "
-    >
-      TRA CỨU ĐƠN HÀNG
-    </a>
+                border:
+                  1px solid rgba(255,255,255,.12);
+              "
+            >
+              TIẾP TỤC MUA SẮM
+            </a>
 
+          </div>
 
-    <a
-      href="./shop"
-      style="
-        width:100%;
-        max-width:320px;
-        margin-top:8px;
-
-        background:
-          rgba(255,255,255,.06);
-
-        color:#ffffff;
-
-        border:
-          1px solid rgba(255,255,255,.12);
-      "
-    >
-      TIẾP TỤC MUA SẮM
-    </a>
-
-  </div>
-
-`;
+        `;
 
 
-const copyOrderCodeBtn =
-  document.getElementById(
-    "copyOrderCodeBtn"
-  );
+        const copyOrderCodeBtn =
+          document.getElementById(
+            "copyOrderCodeBtn"
+          );
 
 
-copyOrderCodeBtn?.addEventListener(
-  "click",
-  async function () {
+        copyOrderCodeBtn?.addEventListener(
+          "click",
+          async function () {
 
-    const orderCode =
-      String(
-        data?.order_code
-        ||
-        ""
-      ).trim();
-
-
-    if (!orderCode) {
-      return;
-    }
+            const orderCode =
+              String(
+                data?.order_code
+                ||
+                ""
+              ).trim();
 
 
-    const oldText =
-      copyOrderCodeBtn.textContent;
+            if (!orderCode) {
+              return;
+            }
 
 
-    try {
+            const oldText =
+              copyOrderCodeBtn.textContent;
 
-      await navigator.clipboard.writeText(
-        orderCode
-      );
 
-    }
-    catch (_) {
+            try {
 
-      const temp =
-        document.createElement(
-          "textarea"
+              await navigator.clipboard.writeText(
+                orderCode
+              );
+
+            }
+            catch (_) {
+
+              const temp =
+                document.createElement(
+                  "textarea"
+                );
+
+
+              temp.value =
+                orderCode;
+
+
+              temp.style.position =
+                "fixed";
+
+
+              temp.style.opacity =
+                "0";
+
+
+              document.body.appendChild(
+                temp
+              );
+
+
+              temp.focus();
+
+              temp.select();
+
+
+              document.execCommand(
+                "copy"
+              );
+
+
+              temp.remove();
+
+            }
+
+
+            copyOrderCodeBtn.textContent =
+              "✓ ĐÃ COPY MÃ ĐƠN";
+
+
+            window.setTimeout(
+              function () {
+
+                copyOrderCodeBtn.textContent =
+                  oldText;
+
+              },
+              1600
+            );
+
+          }
         );
-
-
-      temp.value =
-        orderCode;
-
-
-      temp.style.position =
-        "fixed";
-
-
-      temp.style.opacity =
-        "0";
-
-
-      document.body.appendChild(
-        temp
-      );
-
-
-      temp.focus();
-
-      temp.select();
-
-
-      document.execCommand(
-        "copy"
-      );
-
-
-      temp.remove();
-
-    }
-
-
-    copyOrderCodeBtn.textContent =
-      "✓ ĐÃ COPY MÃ ĐƠN";
-
-
-    window.setTimeout(
-      function () {
-
-        copyOrderCodeBtn.textContent =
-          oldText;
-
-      },
-      1600
-    );
-
-  }
-);
 
       }
       catch (error) {
@@ -2840,7 +3210,7 @@ copyOrderCodeBtn?.addEventListener(
         );
 
 
-        let text =
+        const text =
           String(
             error?.message
             ||
