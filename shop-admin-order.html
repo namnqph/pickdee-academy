@@ -788,8 +788,8 @@
       packing:
         "ĐANG ĐÓNG GÓI",
 
-    shipping:
-  "ĐÃ GIAO ĐVVC",
+      shipping:
+        "ĐÃ GIAO ĐVVC",
 
       completed:
         "HOÀN TẤT",
@@ -823,6 +823,7 @@
 
   }
 
+
   function paymentStatusLabel(status) {
 
     const map = {
@@ -851,6 +852,8 @@
     );
 
   }
+
+
   function orderSourceLabel(source) {
 
     const raw =
@@ -902,7 +905,8 @@
     );
 
   }
-  
+
+
   function showState(text) {
 
     page.className =
@@ -939,6 +943,8 @@
           "address"
         ]
       );
+
+
     const legacyAddress =
       valueFrom(
         o,
@@ -946,6 +952,7 @@
           "legacy_address"
         ]
       );
+
 
     const ward =
       valueFrom(
@@ -966,6 +973,8 @@
           "city"
         ]
       );
+
+
     const fullAddress =
       [
         addressLine,
@@ -974,6 +983,7 @@
       ]
         .filter(Boolean)
         .join(", ");
+
 
     const email =
       valueFrom(
@@ -995,6 +1005,7 @@
         ]
       );
 
+
     const orderSource =
       valueFrom(
         o,
@@ -1004,7 +1015,9 @@
           "channel"
         ]
       );
-        const internalNote =
+
+
+    const internalNote =
       valueFrom(
         o,
         [
@@ -1012,7 +1025,8 @@
         ]
       );
 
-        const shippingProvider =
+
+    const shippingProvider =
       valueFrom(
         o,
         [
@@ -1047,7 +1061,8 @@
         ]
       );
 
-       const shippingStatus =
+
+    const shippingStatus =
       valueFrom(
         o,
         [
@@ -1056,6 +1071,8 @@
       )
       ||
       "not_shipped";
+
+
     const itemHtml =
       currentItems
         .map(
@@ -1186,8 +1203,24 @@
         </div>
 
 
-        <div class="amount">
-          ${money(o.total_amount)}
+        <div style="text-align:right;">
+
+          <div class="status-label">
+            KHÁCH THANH TOÁN
+          </div>
+
+          <div
+            id="orderCustomerTotalTop"
+            class="amount"
+            style="margin-top:4px;"
+          >
+            ${money(
+              Number(o.total_amount || 0)
+              +
+              Number(shippingFee || 0)
+            )}
+          </div>
+
         </div>
 
       </section>
@@ -1204,16 +1237,22 @@
         <div class="info-grid">
 
           <div class="info-row">
+
             <div class="info-label">
               NGƯỜI NHẬN
             </div>
 
             <div class="info-value">
-              ${escapeHtml(o.customer_name)}
+              ${escapeHtml(
+                o.customer_name
+              )}
             </div>
+
           </div>
 
+
           <div class="info-row">
+
             <div class="info-label">
               NGUỒN ĐƠN
             </div>
@@ -1225,16 +1264,24 @@
                 )
               )}
             </div>
+
           </div>
-                 <div class="info-row">
+
+
+          <div class="info-row">
+
             <div class="info-label">
               ĐIỆN THOẠI
             </div>
 
             <div class="info-value">
+
               <a
                 href="tel:${escapeHtml(o.phone)}"
-                style="color:#d8ff45;text-decoration:none;"
+                style="
+                  color:#d8ff45;
+                  text-decoration:none;
+                "
               >
                 ${escapeHtml(o.phone)}
               </a>
@@ -1254,7 +1301,9 @@
               >
                 COPY SĐT
               </button>
+
             </div>
+
           </div>
 
 
@@ -1263,6 +1312,7 @@
             ?
               `
                 <div class="info-row">
+
                   <div class="info-label">
                     EMAIL
                   </div>
@@ -1270,6 +1320,7 @@
                   <div class="info-value">
                     ${escapeHtml(email)}
                   </div>
+
                 </div>
               `
             :
@@ -1277,13 +1328,17 @@
           }
 
 
-            <div class="info-row">
+          <div class="info-row">
+
             <div class="info-label">
               ĐỊA CHỈ
             </div>
 
             <div class="info-value">
-              ${escapeHtml(fullAddress || "Chưa có")}
+
+              ${escapeHtml(
+                fullAddress || "Chưa có"
+              )}
 
               ${
                 fullAddress
@@ -1308,19 +1363,27 @@
                 :
                   ""
               }
+
             </div>
+
           </div>
+
+
           ${
             legacyAddress
             ?
               `
                 <div class="info-row">
+
                   <div class="info-label">
                     ĐỊA CHỈ CŨ
                   </div>
 
                   <div class="info-value">
-                    ${escapeHtml(legacyAddress)}
+
+                    ${escapeHtml(
+                      legacyAddress
+                    )}
 
                     <br>
 
@@ -1337,25 +1400,32 @@
                     >
                       COPY ĐỊA CHỈ CŨ
                     </button>
+
                   </div>
+
                 </div>
               `
             :
               ""
           }
 
+
           ${
             note
             ?
               `
                 <div class="info-row">
+
                   <div class="info-label">
                     GHI CHÚ
                   </div>
 
                   <div class="info-value">
-                    ${escapeHtml(note)}
+                    ${escapeHtml(
+                      note
+                    )}
                   </div>
+
                 </div>
               `
             :
@@ -1366,11 +1436,14 @@
 
       </section>
 
+
+
       <section class="section">
 
         <div class="section-title">
           Ghi chú nội bộ
         </div>
+
 
         <textarea
           id="internalNoteInput"
@@ -1391,6 +1464,7 @@
           "
         >${escapeHtml(internalNote)}</textarea>
 
+
         <button
           id="saveInternalNoteBtn"
           type="button"
@@ -1405,6 +1479,7 @@
           LƯU GHI CHÚ
         </button>
 
+
         <div
           id="internalNoteMessage"
           class="message"
@@ -1412,16 +1487,29 @@
 
       </section>
 
-           <section class="section">
+
+
+      <section class="section">
 
         <div class="section-title">
           Vận chuyển
         </div>
 
-        <div style="display:grid;gap:10px;">
+
+        <div
+          style="
+            display:grid;
+            gap:10px;
+          "
+        >
+
 
           <div>
-            <div class="info-label" style="margin-bottom:6px;">
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
               TRẠNG THÁI VẬN CHUYỂN
             </div>
 
@@ -1440,27 +1528,49 @@
                 font-weight:800;
               "
             >
+
               <option
                 value="not_shipped"
-                ${shippingStatus === "not_shipped" ? "selected" : ""}
+                ${
+                  shippingStatus === "not_shipped"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 Chưa gửi hàng
               </option>
 
+
               <option
                 value="shipped"
-                ${shippingStatus === "shipped" ? "selected" : ""}
+                ${
+                  shippingStatus === "shipped"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 Đã giao cho đơn vị vận chuyển
               </option>
+
             </select>
+
           </div>
 
 
+
           <div>
-            <div class="info-label" style="margin-bottom:6px;">
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
               ĐƠN VỊ VẬN CHUYỂN
             </div>
+
 
             <select
               id="shippingProviderInput"
@@ -1477,64 +1587,117 @@
                 font-weight:800;
               "
             >
+
               <option value="">
                 Chọn đơn vị vận chuyển
               </option>
 
+
               <option
                 value="spx"
-                ${shippingProvider === "spx" ? "selected" : ""}
+                ${
+                  shippingProvider === "spx"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 SPX Shopee Express
               </option>
 
+
               <option
                 value="viettel_post"
-                ${shippingProvider === "viettel_post" ? "selected" : ""}
+                ${
+                  shippingProvider === "viettel_post"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 Viettel Post
               </option>
 
+
               <option
                 value="ghn"
-                ${shippingProvider === "ghn" ? "selected" : ""}
+                ${
+                  shippingProvider === "ghn"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 GHN
               </option>
 
+
               <option
                 value="ghtk"
-                ${shippingProvider === "ghtk" ? "selected" : ""}
+                ${
+                  shippingProvider === "ghtk"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 GHTK
               </option>
 
+
               <option
                 value="jnt"
-                ${shippingProvider === "jnt" ? "selected" : ""}
+                ${
+                  shippingProvider === "jnt"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 J&T
               </option>
 
+
               <option
                 value="other"
-                ${shippingProvider === "other" ? "selected" : ""}
+                ${
+                  shippingProvider === "other"
+                    ?
+                      "selected"
+                    :
+                      ""
+                }
               >
                 Đơn vị khác
               </option>
+
             </select>
+
           </div>
 
 
+
           <div>
-            <div class="info-label" style="margin-bottom:6px;">
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
               MÃ VẬN ĐƠN
             </div>
+
 
             <input
               id="trackingCodeInput"
               type="text"
-              value="${escapeHtml(trackingCode)}"
+              value="${escapeHtml(
+                trackingCode
+              )}"
               placeholder="Mã vận đơn / mã tracking"
               style="
                 width:100%;
@@ -1550,6 +1713,7 @@
               "
             >
 
+
             <button
               id="copyTrackingCodeBtn"
               type="button"
@@ -1563,19 +1727,29 @@
             >
               COPY MÃ VẬN ĐƠN
             </button>
+
           </div>
 
 
+
           <div>
-           <div class="info-label" style="margin-bottom:6px;">
-  CƯỚC ĐƠN VỊ VẬN CHUYỂN
-</div>
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
+              CƯỚC ĐƠN VỊ VẬN CHUYỂN
+            </div>
+
+
             <input
               id="shippingCarrierCostInput"
               type="number"
               min="0"
               step="1000"
-              value="${escapeHtml(o.shipping_carrier_cost ?? 0)}"
+              value="${escapeHtml(
+                o.shipping_carrier_cost ?? 0
+              )}"
               placeholder="Ví dụ: 15000"
               style="
                 width:100%;
@@ -1591,6 +1765,7 @@
               "
             >
 
+
             <div
               style="
                 margin-top:6px;
@@ -1599,10 +1774,13 @@
                 line-height:1.5;
               "
             >
-              SPX của PickDee mặc định 15.000đ. Nếu đơn đặc biệt
-              có phí thực tế khác, có thể sửa trực tiếp tại đây.
+              SPX của PickDee mặc định 15.000đ.
+              Nếu đơn đặc biệt có phí thực tế khác,
+              có thể sửa trực tiếp tại đây.
             </div>
+
           </div>
+
 
 
           <div
@@ -1617,6 +1795,7 @@
             "
           >
 
+
             <div
               style="
                 display:flex;
@@ -1624,16 +1803,23 @@
                 gap:12px;
               "
             >
+
               <span class="info-label">
-                PHÍ ĐVVC
+                CƯỚC HÃNG VẬN CHUYỂN
               </span>
 
-              <strong id="shippingCarrierCostText">
-                ${money(o.shipping_carrier_cost || 0)}
+              <strong
+                id="shippingCarrierCostText"
+              >
+                ${money(
+                  o.shipping_carrier_cost || 0
+                )}
               </strong>
+
             </div>
 
 
+
             <div
               style="
                 display:flex;
@@ -1641,6 +1827,7 @@
                 gap:12px;
               "
             >
+
               <span class="info-label">
                 PICKDEE HỖ TRỢ
               </span>
@@ -1649,9 +1836,23 @@
                 id="shippingDiscountText"
                 style="color:#d8ff45;"
               >
-                -${money(o.shipping_discount || 0)}
+                ${
+                  Number(
+                    o.shipping_discount || 0
+                  ) > 0
+                    ?
+                      "-"
+                      +
+                      money(
+                        o.shipping_discount
+                      )
+                    :
+                      money(0)
+                }
               </strong>
+
             </div>
+
 
 
             <div
@@ -1660,20 +1861,29 @@
                 justify-content:space-between;
                 gap:12px;
                 padding-top:8px;
-                border-top:1px solid rgba(255,255,255,.08);
+                border-top:
+                  1px solid rgba(255,255,255,.08);
               "
             >
+
               <span class="info-label">
-                PHÍ KHÁCH TRẢ
+                PHÍ SHIP KHÁCH TRẢ
               </span>
 
               <strong
                 id="shippingFeeText"
-                style="color:#d8ff45;font-size:15px;"
+                style="
+                  color:#d8ff45;
+                  font-size:15px;
+                "
               >
-                ${money(shippingFee || 0)}
+                ${money(
+                  shippingFee || 0
+                )}
               </strong>
+
             </div>
+
 
 
             <div
@@ -1683,18 +1893,27 @@
                 gap:12px;
               "
             >
+
               <span class="info-label">
-                TỔNG KHÁCH THANH TOÁN
+                KHÁCH THANH TOÁN
               </span>
 
-              <strong id="shippingCustomerTotalText">
+              <strong
+                id="shippingCustomerTotalText"
+              >
                 ${money(
-                  Number(o.total_amount || 0)
+                  Number(
+                    o.total_amount || 0
+                  )
                   +
-                  Number(shippingFee || 0)
+                  Number(
+                    shippingFee || 0
+                  )
                 )}
               </strong>
+
             </div>
+
 
 
             <div
@@ -1706,23 +1925,32 @@
                 line-height:1.5;
               "
             >
-              Chọn đơn vị vận chuyển để hệ thống gợi ý phí.
+              Chọn đơn vị vận chuyển
+              để hệ thống gợi ý phí.
             </div>
 
           </div>
 
 
+
           <div>
-            <div class="info-label" style="margin-bottom:6px;">
-              PHÍ VẬN CHUYỂN KHÁCH TRẢ
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
+              PHÍ SHIP KHÁCH TRẢ
             </div>
+
 
             <input
               id="shippingFeeInput"
               type="number"
               min="0"
               step="1000"
-              value="${escapeHtml(shippingFee || 0)}"
+              value="${escapeHtml(
+                shippingFee || 0
+              )}"
               placeholder="Phí khách phải trả"
               style="
                 width:100%;
@@ -1738,6 +1966,7 @@
               "
             >
 
+
             <div
               style="
                 margin-top:6px;
@@ -1746,21 +1975,31 @@
                 line-height:1.5;
               "
             >
-              SPX sẽ được hệ thống tự gợi ý. Anh/chị vẫn có thể
-              sửa tay nếu có chương trình đặc biệt.
+              SPX sẽ được hệ thống tự gợi ý.
+              Anh/chị vẫn có thể sửa tay
+              nếu có chương trình đặc biệt.
             </div>
+
           </div>
 
 
+
           <div>
-            <div class="info-label" style="margin-bottom:6px;">
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
               LÝ DO ĐIỀU CHỈNH PHÍ
             </div>
+
 
             <input
               id="shippingOverrideReasonInput"
               type="text"
-              value="${escapeHtml(o.shipping_override_reason || "")}"
+              value="${escapeHtml(
+                o.shipping_override_reason || ""
+              )}"
               placeholder="Ví dụ: Event freeship, hỗ trợ khách, đơn đặc biệt..."
               style="
                 width:100%;
@@ -1775,7 +2014,9 @@
                 font-weight:800;
               "
             >
+
           </div>
+
 
 
           <textarea
@@ -1795,7 +2036,10 @@
               font-weight:750;
               line-height:1.5;
             "
-          >${escapeHtml(shippingNote)}</textarea>
+          >${escapeHtml(
+            shippingNote
+          )}</textarea>
+
 
 
           <button
@@ -1817,9 +2061,13 @@
             class="message"
           ></div>
 
+
         </div>
 
       </section>
+
+
+
       <section class="section">
 
         <div class="section-title">
@@ -1848,6 +2096,7 @@
 
         <div class="info-grid">
 
+
           <div class="info-row">
 
             <div class="info-label">
@@ -1865,6 +2114,7 @@
           </div>
 
 
+
           <div class="info-row">
 
             <div class="info-label">
@@ -1872,7 +2122,7 @@
             </div>
 
             <div class="info-value">
-                          ${escapeHtml(
+              ${escapeHtml(
                 paymentStatusLabel(
                   o.payment_status
                 )
@@ -1882,13 +2132,57 @@
           </div>
 
 
+
           <div class="info-row">
 
             <div class="info-label">
-              TỔNG TIỀN
+              TIỀN HÀNG
+            </div>
+
+            <div class="info-value">
+              ${money(
+                o.total_amount
+              )}
+            </div>
+
+          </div>
+
+
+
+          <div class="info-row">
+
+            <div class="info-label">
+              PHÍ SHIP KHÁCH TRẢ
             </div>
 
             <div
+              id="paymentShippingFeeText"
+              class="info-value"
+            >
+              ${money(
+                shippingFee || 0
+              )}
+            </div>
+
+          </div>
+
+
+
+          <div
+            class="info-row"
+            style="
+              padding-top:10px;
+              border-top:
+                1px solid rgba(255,255,255,.08);
+            "
+          >
+
+            <div class="info-label">
+              KHÁCH THANH TOÁN
+            </div>
+
+            <div
+              id="paymentCustomerTotalText"
               class="info-value"
               style="
                 color:#d8ff45;
@@ -1896,10 +2190,19 @@
                 font-weight:950;
               "
             >
-              ${money(o.total_amount)}
+              ${money(
+                Number(
+                  o.total_amount || 0
+                )
+                +
+                Number(
+                  shippingFee || 0
+                )
+              )}
             </div>
 
           </div>
+
 
         </div>
 
@@ -1910,10 +2213,12 @@
         ></div>
 
       </section>
+
     `;
 
 
-       function setupCopyButton(
+
+    function setupCopyButton(
       buttonId,
       value,
       label,
@@ -1985,6 +2290,7 @@
     }
 
 
+
     setupCopyButton(
       "copyPhoneBtn",
       o.phone,
@@ -2007,6 +2313,8 @@
       "COPY ĐỊA CHỈ CŨ",
       "Copy địa chỉ cũ:"
     );
+
+
 
     const internalNoteInput =
       document.getElementById(
@@ -2039,10 +2347,13 @@
           saveInternalNoteBtn.disabled =
             true;
 
+
           try {
 
             const noteValue =
-              internalNoteInput.value.trim();
+              internalNoteInput
+                .value
+                .trim();
 
 
             const {
@@ -2078,10 +2389,13 @@
               data;
 
 
-            if (internalNoteMessage) {
+            if (
+              internalNoteMessage
+            ) {
 
               internalNoteMessage.className =
                 "message success";
+
 
               internalNoteMessage.textContent =
                 "✓ Đã lưu ghi chú nội bộ.";
@@ -2097,10 +2411,13 @@
             );
 
 
-            if (internalNoteMessage) {
+            if (
+              internalNoteMessage
+            ) {
 
               internalNoteMessage.className =
                 "message error";
+
 
               internalNoteMessage.textContent =
                 error?.message
@@ -2121,7 +2438,10 @@
       );
 
     }
-      const shippingStatusInput =
+
+
+
+    const shippingStatusInput =
       document.getElementById(
         "shippingStatusInput"
       );
@@ -2205,12 +2525,32 @@
       );
 
 
+    const orderCustomerTotalTop =
+      document.getElementById(
+        "orderCustomerTotalTop"
+      );
+
+
+    const paymentShippingFeeText =
+      document.getElementById(
+        "paymentShippingFeeText"
+      );
+
+
+    const paymentCustomerTotalText =
+      document.getElementById(
+        "paymentCustomerTotalText"
+      );
+
+
+
     const SPX_BASE_FEE =
       15000;
 
 
     const FREE_SHIPPING_THRESHOLD =
       300000;
+
 
 
     /*
@@ -2276,6 +2616,7 @@
     }
 
 
+
     const hasPickleballBall =
       orderHasPickleballBall();
 
@@ -2294,6 +2635,7 @@
       )
       ===
       "manual_override";
+
 
 
     function shippingRecommendation() {
@@ -2402,6 +2744,7 @@
     }
 
 
+
     function updateShippingPricingSummary() {
 
       if (
@@ -2463,12 +2806,16 @@
         shippingDiscountText
       ) {
 
-      shippingDiscountText.textContent =
-  actualDiscount > 0
-    ?
-      "-" + money(actualDiscount)
-    :
-      money(0);
+        shippingDiscountText.textContent =
+          actualDiscount > 0
+            ?
+              "-"
+              +
+              money(
+                actualDiscount
+              )
+            :
+              money(0);
 
       }
 
@@ -2490,6 +2837,42 @@
       ) {
 
         shippingCustomerTotalText.textContent =
+          money(
+            totalCustomerPays
+          );
+
+      }
+
+
+      if (
+        orderCustomerTotalTop
+      ) {
+
+        orderCustomerTotalTop.textContent =
+          money(
+            totalCustomerPays
+          );
+
+      }
+
+
+      if (
+        paymentShippingFeeText
+      ) {
+
+        paymentShippingFeeText.textContent =
+          money(
+            actualCustomerFee
+          );
+
+      }
+
+
+      if (
+        paymentCustomerTotalText
+      ) {
+
+        paymentCustomerTotalText.textContent =
           money(
             totalCustomerPays
           );
@@ -2525,6 +2908,7 @@
     }
 
 
+
     function applyAutomaticShippingPricing(
       force
     ) {
@@ -2543,7 +2927,9 @@
 
 
       const provider =
-        shippingProviderInput.value.trim();
+        shippingProviderInput
+          .value
+          .trim();
 
 
       if (
@@ -2599,6 +2985,7 @@
     }
 
 
+
     if (
       shippingProviderInput
     ) {
@@ -2638,6 +3025,7 @@
             shippingCarrierCostInput.value =
               "0";
 
+
             shippingFeeInput.value =
               "0";
 
@@ -2652,6 +3040,7 @@
       );
 
     }
+
 
 
     if (
@@ -2686,6 +3075,7 @@
     }
 
 
+
     if (
       shippingFeeInput
     ) {
@@ -2706,6 +3096,7 @@
     }
 
 
+
     /*
       Khởi tạo lần đầu.
 
@@ -2715,6 +3106,7 @@
     applyAutomaticShippingPricing(
       false
     );
+
 
 
     if (
@@ -3070,6 +3462,8 @@
 
     }
 
+
+
     const copyTrackingCodeBtn =
       document.getElementById(
         "copyTrackingCodeBtn"
@@ -3087,7 +3481,9 @@
         async function () {
 
           const trackingText =
-            trackingCodeInput.value.trim();
+            trackingCodeInput
+              .value
+              .trim();
 
 
           if (!trackingText) {
@@ -3095,6 +3491,7 @@
             window.alert(
               "Chưa có mã vận đơn để copy."
             );
+
 
             return;
 
@@ -3138,6 +3535,7 @@
     }
 
 
+
     renderActions();
 
   }
@@ -3148,155 +3546,163 @@
      ACTIONS
   ====================================================== */
 
- function renderActions() {
+  function renderActions() {
 
-  const status =
-    currentOrder.order_status;
-
-
-  let html = "";
+    const status =
+      currentOrder.order_status;
 
 
-  /* =====================================================
-     ĐƠN MỚI
-  ====================================================== */
-
-  if (
-    status === "new"
-  ) {
-
-    html = `
-
-      <button
-        class="action-btn action-danger"
-        data-status="cancelled"
-      >
-        HỦY ĐƠN
-      </button>
-
-      <button
-        class="action-btn action-primary"
-        data-status="confirmed"
-      >
-        XÁC NHẬN ĐƠN
-      </button>
-
-    `;
-
-  }
+    let html =
+      "";
 
 
-  /* =====================================================
-     ĐÃ XÁC NHẬN
-  ====================================================== */
+    /* =====================================================
+       ĐƠN MỚI
+    ====================================================== */
 
-  if (
-    status === "confirmed"
-  ) {
+    if (
+      status === "new"
+    ) {
 
-    html = `
+      html = `
 
-      <button
-        class="action-btn action-danger"
-        data-status="cancelled"
-      >
-        HỦY ĐƠN
-      </button>
-
-      <button
-        class="action-btn action-primary"
-        data-status="packing"
-      >
-        BẮT ĐẦU ĐÓNG GÓI
-      </button>
-
-    `;
-
-  }
+        <button
+          class="action-btn action-danger"
+          data-status="cancelled"
+        >
+          HỦY ĐƠN
+        </button>
 
 
-  /* =====================================================
-     ĐANG ĐÓNG GÓI
+        <button
+          class="action-btn action-primary"
+          data-status="confirmed"
+        >
+          XÁC NHẬN ĐƠN
+        </button>
 
-     Không còn nút ĐÃ GIAO ĐVVC.
-     Khi thực tế bàn giao hàng:
-     chọn Đã gửi hàng + hãng vận chuyển + mã vận đơn
-     rồi bấm LƯU VẬN CHUYỂN.
-  ====================================================== */
+      `;
 
-  if (
-    status === "packing"
-  ) {
-
-    html = `
-
-      <button
-        class="action-btn action-danger"
-        data-status="cancelled"
-        style="grid-column:1 / -1;"
-      >
-        HỦY ĐƠN
-      </button>
-
-    `;
-
-  }
+    }
 
 
-  /* =====================================================
-     ĐÃ GIAO ĐVVC = KẾT THÚC QUY TRÌNH PICKDEE
 
-     Không còn:
-     - ĐÃ GIAO ĐVVC
-     - HOÀN TẤT ĐƠN
-  ====================================================== */
+    /* =====================================================
+       ĐÃ XÁC NHẬN
+    ====================================================== */
 
-  if (
-    status === "shipping"
-    ||
-    status === "completed"
-    ||
-    status === "cancelled"
-  ) {
+    if (
+      status === "confirmed"
+    ) {
+
+      html = `
+
+        <button
+          class="action-btn action-danger"
+          data-status="cancelled"
+        >
+          HỦY ĐƠN
+        </button>
+
+
+        <button
+          class="action-btn action-primary"
+          data-status="packing"
+        >
+          BẮT ĐẦU ĐÓNG GÓI
+        </button>
+
+      `;
+
+    }
+
+
+
+    /* =====================================================
+       ĐANG ĐÓNG GÓI
+
+       Không còn nút ĐÃ GIAO ĐVVC.
+       Khi thực tế bàn giao hàng:
+       chọn Đã gửi hàng + hãng vận chuyển + mã vận đơn
+       rồi bấm LƯU VẬN CHUYỂN.
+    ====================================================== */
+
+    if (
+      status === "packing"
+    ) {
+
+      html = `
+
+        <button
+          class="action-btn action-danger"
+          data-status="cancelled"
+          style="grid-column:1 / -1;"
+        >
+          HỦY ĐƠN
+        </button>
+
+      `;
+
+    }
+
+
+
+    /* =====================================================
+       ĐÃ GIAO ĐVVC = KẾT THÚC QUY TRÌNH PICKDEE
+
+       Không còn:
+       - ĐÃ GIAO ĐVVC
+       - HOÀN TẤT ĐƠN
+    ====================================================== */
+
+    if (
+      status === "shipping"
+      ||
+      status === "completed"
+      ||
+      status === "cancelled"
+    ) {
+
+      actionBar.style.display =
+        "none";
+
+
+      return;
+
+    }
+
+
+    actions.innerHTML =
+      html;
+
 
     actionBar.style.display =
-      "none";
+      "block";
 
-    return;
+
+    actions
+      .querySelectorAll(
+        "[data-status]"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              changeStatus(
+                button.dataset.status
+              );
+
+            }
+          );
+
+        }
+      );
 
   }
 
-
-  actions.innerHTML =
-    html;
-
-
-  actionBar.style.display =
-    "block";
-
-
-  actions
-    .querySelectorAll(
-      "[data-status]"
-    )
-    .forEach(
-      function (button) {
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            changeStatus(
-              button.dataset.status
-            );
-
-          }
-        );
-
-      }
-    );
-
-}
 
 
   /* =====================================================
@@ -3319,7 +3725,9 @@
 
 
       if (!ok) {
+
         return;
+
       }
 
     }
@@ -3337,17 +3745,20 @@
 
     try {
 
+      const updateData = {
 
-         const updateData = {
         order_status:
           nextStatus
+
       };
 
 
       if (
         nextStatus === "completed"
         &&
-        currentOrder.payment_method !== "bank_transfer"
+        currentOrder.payment_method
+          !==
+        "bank_transfer"
       ) {
 
         updateData.payment_status =
@@ -3401,7 +3812,9 @@
         );
 
 
-      if (message) {
+      if (
+        message
+      ) {
 
         message.className =
           "message success";
@@ -3412,10 +3825,8 @@
 
       }
 
-
     }
     catch (error) {
-
 
       console.error(
         "UPDATE ORDER ERROR:",
@@ -3429,7 +3840,9 @@
         );
 
 
-      if (message) {
+      if (
+        message
+      ) {
 
         message.className =
           "message error";
@@ -3471,6 +3884,7 @@
 
       location.href =
         "./";
+
 
       return false;
 
@@ -3545,7 +3959,6 @@
 
     try {
 
-
       await requireShopAccess();
 
 
@@ -3588,14 +4001,18 @@
         ]);
 
 
-      if (orderResult.error) {
+      if (
+        orderResult.error
+      ) {
 
         throw orderResult.error;
 
       }
 
 
-      if (itemsResult.error) {
+      if (
+        itemsResult.error
+      ) {
 
         throw itemsResult.error;
 
@@ -3614,10 +4031,8 @@
 
       render();
 
-
     }
     catch (error) {
-
 
       console.error(
         "SHOP ORDER DETAIL ERROR:",
@@ -3645,6 +4060,7 @@
 </script>
 
 <script src="/shop-notifications.js?v=20261006-2"></script>
+
 </body>
 
 </html>
