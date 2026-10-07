@@ -1,0 +1,1874 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>PickDee | Hệ sinh thái Pickleball</title>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    html,
+    body {
+      margin: 0;
+
+      width: 100%;
+      max-width: 100%;
+
+      overflow-x: hidden;
+
+      background: #071523;
+      color: #ffffff;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+
+      touch-action: manipulation;
+    }
+
+
+    body {
+      min-height: 100vh;
+
+      padding-bottom:
+        calc(28px + env(safe-area-inset-bottom));
+    }
+
+
+    a,
+    button {
+      touch-action: manipulation;
+    }
+
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .header {
+      position: sticky;
+      top: 0;
+
+      z-index: 100;
+
+      background:
+        rgba(7,21,35,.94);
+
+      border-bottom:
+        1px solid rgba(255,255,255,.07);
+
+      backdrop-filter:
+        blur(18px);
+    }
+
+
+    .header-inner {
+      width:
+        min(980px,calc(100% - 20px));
+
+      min-height: 62px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+
+    .brand {
+      min-width: 0;
+
+      display: flex;
+      align-items: center;
+
+      gap: 9px;
+    }
+
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+
+      flex: 0 0 36px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 11px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+
+    .brand-text {
+      min-width: 0;
+    }
+
+
+    .brand-name {
+      font-size: 20px;
+      font-weight: 950;
+
+      letter-spacing: -.045em;
+
+      line-height: 1;
+    }
+
+
+    .brand-name span {
+      color: #d8ff45;
+    }
+
+
+    .brand-sub {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.36);
+
+      font-size: 8px;
+      font-weight: 900;
+
+      letter-spacing: .11em;
+    }
+
+
+    .account-pill {
+      min-height: 37px;
+
+      max-width: 145px;
+
+      padding:
+        0 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        rgba(255,255,255,.72);
+
+      font-size: 9px;
+      font-weight: 900;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+
+    /* =====================================================
+       MAIN
+    ====================================================== */
+
+    main {
+      width:
+        min(980px,calc(100% - 20px));
+
+      margin:
+        20px auto 0;
+    }
+
+
+
+    /* =====================================================
+       HERO
+    ====================================================== */
+
+    .hero {
+      position: relative;
+
+      overflow: hidden;
+
+      padding:
+        24px 20px;
+
+      border-radius: 22px;
+
+      border:
+        1px solid rgba(216,255,69,.15);
+
+      background:
+        linear-gradient(
+          145deg,
+          #0d1d2f,
+          #102635
+        );
+    }
+
+
+    .hero::after {
+      content: "";
+
+      position: absolute;
+
+      width: 190px;
+      height: 190px;
+
+      top: -90px;
+      right: -70px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.08);
+
+      filter:
+        blur(8px);
+
+      pointer-events: none;
+    }
+
+
+    .hero-eyebrow {
+      position: relative;
+
+      z-index: 1;
+
+      margin-bottom: 9px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+
+      letter-spacing: .13em;
+    }
+
+
+    .hero h1 {
+      position: relative;
+
+      z-index: 1;
+
+      max-width: 700px;
+
+      margin:
+        0 0 10px;
+
+      font-size:
+        clamp(34px,8vw,58px);
+
+      line-height: .98;
+
+      letter-spacing: -.055em;
+    }
+
+
+    .hero p {
+      position: relative;
+
+      z-index: 1;
+
+      max-width: 610px;
+
+      margin: 0;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 13px;
+
+      line-height: 1.55;
+    }
+
+
+    .hero-points {
+      position: relative;
+
+      z-index: 1;
+
+      margin-top: 17px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 7px;
+    }
+
+
+    .hero-point {
+      min-height: 29px;
+
+      padding:
+        0 9px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.055);
+
+      border:
+        1px solid rgba(255,255,255,.07);
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size: 9px;
+      font-weight: 850;
+    }
+
+
+
+    /* =====================================================
+       SECTION HEADING
+    ====================================================== */
+
+    .section-head {
+      margin:
+        22px 2px 10px;
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+
+    .section-kicker {
+      margin-bottom: 4px;
+
+      color: #d8ff45;
+
+      font-size: 8px;
+      font-weight: 950;
+
+      letter-spacing: .11em;
+    }
+
+
+    .section-title {
+      font-size: 19px;
+      font-weight: 950;
+
+      letter-spacing: -.03em;
+    }
+
+
+    .section-hint {
+      color:
+        rgba(255,255,255,.34);
+
+      font-size: 9px;
+      font-weight: 800;
+
+      text-align: right;
+    }
+
+
+
+    /* =====================================================
+       CONTINUE
+    ====================================================== */
+
+    #continueSection {
+      display: none;
+    }
+
+
+    .continue-card {
+      padding: 15px;
+
+      display: grid;
+
+      grid-template-columns:
+        44px minmax(0,1fr) auto;
+
+      gap: 12px;
+
+      align-items: center;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(216,255,69,.21);
+
+      background:
+        rgba(216,255,69,.055);
+    }
+
+
+    .continue-icon {
+      width: 44px;
+      height: 44px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 13px;
+
+      background:
+        rgba(216,255,69,.10);
+
+      font-size: 21px;
+    }
+
+
+    .continue-title {
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+
+    .continue-desc {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.46);
+
+      font-size: 9px;
+
+      line-height: 1.4;
+    }
+
+
+    .continue-btn {
+      min-height: 38px;
+
+      padding:
+        0 11px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 9px;
+      font-weight: 950;
+
+      white-space: nowrap;
+    }
+
+
+
+    /* =====================================================
+       ECOSYSTEM CARDS
+    ====================================================== */
+
+    .ecosystem-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3,minmax(0,1fr));
+
+      gap: 11px;
+    }
+
+
+    .ecosystem-card {
+      position: relative;
+
+      min-height: 230px;
+
+      overflow: hidden;
+
+      padding: 17px;
+
+      display: flex;
+      flex-direction: column;
+
+      border-radius: 18px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      background: #0d1d2f;
+
+      transition:
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease;
+    }
+
+
+    .ecosystem-card.active:active {
+      transform:
+        scale(.985);
+    }
+
+
+    .ecosystem-card.active:hover {
+      border-color:
+        rgba(216,255,69,.24);
+
+      background: #102438;
+    }
+
+
+    .ecosystem-card.disabled {
+      opacity: .64;
+    }
+
+
+    .module-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 10px;
+    }
+
+
+    .module-icon {
+      width: 47px;
+      height: 47px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 14px;
+
+      background:
+        rgba(255,255,255,.055);
+
+      font-size: 23px;
+    }
+
+
+    .module-status {
+      min-height: 25px;
+
+      padding:
+        0 8px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      background:
+        rgba(216,255,69,.07);
+
+      border:
+        1px solid rgba(216,255,69,.13);
+
+      color: #d8ff45;
+
+      font-size: 8px;
+      font-weight: 950;
+    }
+
+
+    .module-status.soon {
+      color:
+        rgba(255,255,255,.45);
+
+      background:
+        rgba(255,255,255,.035);
+
+      border-color:
+        rgba(255,255,255,.07);
+    }
+
+
+    .module-name {
+      margin-top: 17px;
+
+      font-size: 18px;
+      font-weight: 950;
+
+      letter-spacing: -.03em;
+    }
+
+
+    .module-desc {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.46);
+
+      font-size: 11px;
+
+      line-height: 1.48;
+    }
+
+
+    .module-steps {
+      margin-top: 12px;
+
+      display: grid;
+
+      gap: 5px;
+    }
+
+
+    .module-step {
+      color:
+        rgba(255,255,255,.59);
+
+      font-size: 9px;
+      font-weight: 750;
+    }
+
+
+    .module-action {
+      margin-top: auto;
+
+      padding-top: 17px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      color: #d8ff45;
+
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+
+    .module-action.muted {
+      color:
+        rgba(255,255,255,.34);
+    }
+
+
+
+    /* =====================================================
+       SMART AREA
+    ====================================================== */
+
+    #smartSection {
+      display: none;
+    }
+
+
+    .smart-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+      gap: 10px;
+    }
+
+
+    .smart-card {
+      padding: 15px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.03);
+    }
+
+
+    .smart-card-title {
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+
+    .smart-card-desc {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 9px;
+
+      line-height: 1.5;
+    }
+
+
+    .smart-card-actions {
+      margin-top: 11px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 7px;
+    }
+
+
+    .smart-link {
+      min-height: 33px;
+
+      padding:
+        0 10px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 9px;
+
+      border:
+        1px solid rgba(216,255,69,.18);
+
+      background:
+        rgba(216,255,69,.055);
+
+      color: #d8ff45;
+
+      font-size: 9px;
+      font-weight: 950;
+    }
+
+
+
+    /* =====================================================
+       FUTURE
+    ====================================================== */
+
+    .future {
+      margin-top: 11px;
+
+      padding: 15px;
+
+      border-radius: 16px;
+
+      border:
+        1px dashed rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.018);
+    }
+
+
+    .future-title {
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+
+    .future-desc {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.37);
+
+      font-size: 9px;
+
+      line-height: 1.5;
+    }
+
+
+    .future-tags {
+      margin-top: 10px;
+
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 6px;
+    }
+
+
+    .future-tag {
+      min-height: 27px;
+
+      padding:
+        0 8px;
+
+      display: inline-flex;
+      align-items: center;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(255,255,255,.07);
+
+      background:
+        rgba(255,255,255,.03);
+
+      color:
+        rgba(255,255,255,.42);
+
+      font-size: 8px;
+      font-weight: 850;
+    }
+
+
+
+    /* =====================================================
+       FOOTER
+    ====================================================== */
+
+    .footer {
+      margin-top: 25px;
+
+      padding:
+        16px 3px 8px;
+
+      border-top:
+        1px solid rgba(255,255,255,.06);
+
+      color:
+        rgba(255,255,255,.27);
+
+      font-size: 8px;
+
+      line-height: 1.6;
+
+      text-align: center;
+    }
+
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media(max-width:720px) {
+
+      main {
+        margin-top: 14px;
+      }
+
+
+      .hero {
+        padding:
+          21px 16px;
+
+        border-radius: 19px;
+      }
+
+
+      .hero h1 {
+        font-size: 36px;
+      }
+
+
+      .ecosystem-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .ecosystem-card {
+        min-height: 0;
+
+        padding: 16px;
+      }
+
+
+      .module-name {
+        margin-top: 14px;
+      }
+
+
+      .module-action {
+        padding-top: 15px;
+      }
+
+
+      .smart-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+    }
+
+
+    @media(max-width:480px) {
+
+      .header-inner,
+      main {
+        width:
+          calc(100% - 16px);
+      }
+
+
+      .header-inner {
+        min-height: 58px;
+      }
+
+
+      .brand-mark {
+        width: 33px;
+        height: 33px;
+
+        flex-basis: 33px;
+      }
+
+
+      .brand-name {
+        font-size: 18px;
+      }
+
+
+      .account-pill {
+        max-width: 105px;
+
+        min-height: 34px;
+
+        font-size: 8px;
+      }
+
+
+      .continue-card {
+        grid-template-columns:
+          39px minmax(0,1fr);
+
+        gap: 10px;
+      }
+
+
+      .continue-icon {
+        width: 39px;
+        height: 39px;
+      }
+
+
+      .continue-btn {
+        grid-column:
+          1 / -1;
+
+        width: 100%;
+      }
+
+
+      .section-hint {
+        display: none;
+      }
+
+
+      .hero-points {
+        gap: 5px;
+      }
+
+
+      .hero-point {
+        font-size: 8px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+
+    <a
+      href="./home"
+      class="brand"
+    >
+
+      <div class="brand-mark">
+        P
+      </div>
+
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          Pick<span>Dee</span>
+        </div>
+
+        <div class="brand-sub">
+          PICKLEBALL ECOSYSTEM
+        </div>
+
+      </div>
+
+    </a>
+
+
+    <div
+      id="accountPill"
+      class="account-pill"
+    >
+      KHÁCH
+    </div>
+
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+
+  <!-- =====================================================
+       HERO
+  ====================================================== -->
+
+  <section class="hero">
+
+    <div class="hero-eyebrow">
+      HỆ SINH THÁI PICKLEBALL
+    </div>
+
+
+    <h1>
+      Hôm nay bạn muốn làm gì?
+    </h1>
+
+
+    <p>
+      PickDee kết nối việc học, mua sắm, chơi Pickleball
+      và các dịch vụ dành cho cộng đồng trong cùng một nơi.
+      Chọn đúng nhu cầu, PickDee sẽ dẫn bạn tới bước tiếp theo.
+    </p>
+
+
+    <div class="hero-points">
+
+      <div class="hero-point">
+        🎓 Học
+      </div>
+
+      <div class="hero-point">
+        🛍 Mua sắm
+      </div>
+
+      <div class="hero-point">
+        🏓 Chơi
+      </div>
+
+      <div class="hero-point">
+        🤝 Kết nối
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       CONTINUE
+  ====================================================== -->
+
+  <section id="continueSection">
+
+    <div class="section-head">
+
+      <div>
+
+        <div class="section-kicker">
+          TIẾP TỤC
+        </div>
+
+        <div class="section-title">
+          Việc bạn đang làm
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="continueContent"
+    ></div>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       ECOSYSTEM
+  ====================================================== -->
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-kicker">
+        PICKDEE
+      </div>
+
+      <div class="section-title">
+        Chọn nhu cầu của bạn
+      </div>
+
+    </div>
+
+
+    <div class="section-hint">
+      Một chạm để đi đúng nơi
+    </div>
+
+  </div>
+
+
+
+  <section class="ecosystem-grid">
+
+
+    <!-- ACADEMY -->
+
+    <a
+      href="./"
+      class="ecosystem-card active"
+    >
+
+      <div class="module-top">
+
+        <div class="module-icon">
+          🎓
+        </div>
+
+        <div class="module-status">
+          ĐANG HOẠT ĐỘNG
+        </div>
+
+      </div>
+
+
+      <div class="module-name">
+        PickDee Academy
+      </div>
+
+
+      <div class="module-desc">
+        Học Pickleball cùng Coach phù hợp,
+        theo lộ trình rõ ràng và chủ động đặt lịch.
+      </div>
+
+
+      <div class="module-steps">
+
+        <div class="module-step">
+          1. Chọn chương trình học
+        </div>
+
+        <div class="module-step">
+          2. PickDee ghép Coach
+        </div>
+
+        <div class="module-step">
+          3. Đặt lịch và bắt đầu học
+        </div>
+
+      </div>
+
+
+      <div class="module-action">
+
+        <span>
+          HỌC PICKLEBALL
+        </span>
+
+        <span>
+          →
+        </span>
+
+      </div>
+
+    </a>
+
+
+
+    <!-- SHOP -->
+
+    <a
+      href="./shop"
+      class="ecosystem-card active"
+    >
+
+      <div class="module-top">
+
+        <div class="module-icon">
+          🛍
+        </div>
+
+        <div class="module-status">
+          ĐANG HOẠT ĐỘNG
+        </div>
+
+      </div>
+
+
+      <div class="module-name">
+        PickDee Shop
+      </div>
+
+
+      <div class="module-desc">
+        Tổng kho phụ kiện Pickleball hàng tuyển.
+        Xem sản phẩm, chọn phân loại và đặt hàng nhanh.
+      </div>
+
+
+      <div class="module-steps">
+
+        <div class="module-step">
+          1. Chọn sản phẩm
+        </div>
+
+        <div class="module-step">
+          2. Thêm vào giỏ
+        </div>
+
+        <div class="module-step">
+          3. Đặt hàng không cần tài khoản
+        </div>
+
+      </div>
+
+
+      <div class="module-action">
+
+        <span>
+          MUA SẮM
+        </span>
+
+        <span>
+          →
+        </span>
+
+      </div>
+
+    </a>
+
+
+
+    <!-- OPEN PLAY -->
+
+    <div
+      class="ecosystem-card disabled"
+    >
+
+      <div class="module-top">
+
+        <div class="module-icon">
+          🏓
+        </div>
+
+        <div class="module-status soon">
+          SẮP RA MẮT
+        </div>
+
+      </div>
+
+
+      <div class="module-name">
+        PickDee Open Play
+      </div>
+
+
+      <div class="module-desc">
+        Nơi kết nối người chơi,
+        tìm trận phù hợp và tham gia cộng đồng Pickleball.
+      </div>
+
+
+      <div class="module-steps">
+
+        <div class="module-step">
+          • Tìm người chơi phù hợp
+        </div>
+
+        <div class="module-step">
+          • Tham gia Open Play
+        </div>
+
+        <div class="module-step">
+          • Kết nối cộng đồng
+        </div>
+
+      </div>
+
+
+      <div class="module-action muted">
+
+        <span>
+          ĐANG PHÁT TRIỂN
+        </span>
+
+        <span>
+          •••
+        </span>
+
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+
+  <!-- =====================================================
+       SMART ACCOUNT
+  ====================================================== -->
+
+  <section id="smartSection">
+
+    <div class="section-head">
+
+      <div>
+
+        <div class="section-kicker">
+          DÀNH CHO BẠN
+        </div>
+
+        <div class="section-title">
+          Truy cập nhanh
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="smartContent"
+      class="smart-grid"
+    ></div>
+
+  </section>
+
+
+
+  <!-- =====================================================
+       FUTURE
+  ====================================================== -->
+
+  <section class="future">
+
+    <div class="future-title">
+      PickDee sẽ còn mở rộng
+    </div>
+
+
+    <div class="future-desc">
+      Trang này được thiết kế để sau này có thể thêm dịch vụ mới
+      mà người dùng vẫn luôn biết mình nên đi đâu và làm gì tiếp theo.
+    </div>
+
+
+    <div class="future-tags">
+
+      <div class="future-tag">
+        🏆 Giải đấu
+      </div>
+
+      <div class="future-tag">
+        🏟 Đặt sân
+      </div>
+
+      <div class="future-tag">
+        👥 CLB
+      </div>
+
+      <div class="future-tag">
+        🎥 Media
+      </div>
+
+      <div class="future-tag">
+        🤝 Cộng đồng
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <footer class="footer">
+
+    PickDee • Học • Chơi • Mua sắm • Kết nối
+
+  </footer>
+
+
+</main>
+
+
+
+<script>
+
+(function () {
+
+
+  const CART_KEY =
+    "pickdee_shop_cart";
+
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const accountPill =
+    document.getElementById(
+      "accountPill"
+    );
+
+
+  const continueSection =
+    document.getElementById(
+      "continueSection"
+    );
+
+
+  const continueContent =
+    document.getElementById(
+      "continueContent"
+    );
+
+
+  const smartSection =
+    document.getElementById(
+      "smartSection"
+    );
+
+
+  const smartContent =
+    document.getElementById(
+      "smartContent"
+    );
+
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function readCart() {
+
+    try {
+
+      const data =
+        JSON.parse(
+          localStorage.getItem(
+            CART_KEY
+          )
+          ||
+          "[]"
+        );
+
+
+      return Array.isArray(data)
+        ?
+          data
+        :
+          [];
+
+    }
+    catch (_) {
+
+      return [];
+
+    }
+
+  }
+
+
+  function cartQuantity(cart) {
+
+    return cart.reduce(
+      function (sum,item) {
+
+        return (
+          sum
+          +
+          Number(
+            item.quantity || 0
+          )
+        );
+
+      },
+      0
+    );
+
+  }
+
+
+
+  /* =====================================================
+     CONTINUE CURRENT WORK
+  ====================================================== */
+
+  function renderContinueWork() {
+
+    const cart =
+      readCart();
+
+
+    if (!cart.length) {
+
+      continueSection.style.display =
+        "none";
+
+
+      return;
+
+    }
+
+
+    const quantity =
+      cartQuantity(
+        cart
+      );
+
+
+    continueContent.innerHTML = `
+
+      <div class="continue-card">
+
+        <div class="continue-icon">
+          🛒
+        </div>
+
+
+        <div>
+
+          <div class="continue-title">
+            Bạn đang có hàng trong giỏ
+          </div>
+
+          <div class="continue-desc">
+            ${quantity} sản phẩm đang chờ.
+            Bạn có thể tiếp tục mua hoặc hoàn tất đặt hàng.
+          </div>
+
+        </div>
+
+
+        <a
+          href="./shop-cart"
+          class="continue-btn"
+        >
+          TIẾP TỤC GIỎ HÀNG →
+        </a>
+
+      </div>
+
+    `;
+
+
+    continueSection.style.display =
+      "block";
+
+  }
+
+
+
+  /* =====================================================
+     ACCOUNT / ROLE
+  ====================================================== */
+
+  async function loadAccount() {
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      return;
+
+    }
+
+
+    const sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    try {
+
+      const {
+        data: sessionData
+      } =
+        await sb.auth.getSession();
+
+
+      const user =
+        sessionData?.session?.user;
+
+
+      if (!user) {
+
+        accountPill.textContent =
+          "KHÁCH";
+
+
+        return;
+
+      }
+
+
+      const email =
+        String(
+          user.email || ""
+        )
+          .trim();
+
+
+      accountPill.textContent =
+        email
+        ||
+        "ĐÃ ĐĂNG NHẬP";
+
+
+      /*
+        Chỉ đọc Shop role nếu có.
+        Nếu bảng role lỗi hoặc user không có quyền Shop,
+        Home vẫn hoạt động bình thường.
+      */
+
+      let shopRoles = [];
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from(
+              "shop_user_roles"
+            )
+            .select(
+              "role,is_active"
+            )
+            .eq(
+              "user_id",
+              user.id
+            )
+            .eq(
+              "is_active",
+              true
+            );
+
+
+        if (!error) {
+
+          shopRoles =
+            data || [];
+
+        }
+
+      }
+      catch (_) {
+
+        shopRoles = [];
+
+      }
+
+
+      const roleNames =
+        shopRoles.map(
+          item =>
+            item.role
+        );
+
+
+      const hasShopAccess =
+        roleNames.some(
+          role =>
+            [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ]
+              .includes(
+                role
+              )
+        );
+
+
+      let html = `
+
+        <div class="smart-card">
+
+          <div class="smart-card-title">
+            👤 Tài khoản PickDee
+          </div>
+
+          <div class="smart-card-desc">
+            Bạn đang đăng nhập bằng
+            ${escapeHtml(email || "tài khoản PickDee")}.
+          </div>
+
+          <div class="smart-card-actions">
+
+            <a
+              href="./"
+              class="smart-link"
+            >
+              VÀO ACADEMY
+            </a>
+
+          </div>
+
+        </div>
+
+      `;
+
+
+      if (
+        hasShopAccess
+      ) {
+
+        html += `
+
+          <div class="smart-card">
+
+            <div class="smart-card-title">
+              🛍 Quản trị PickDee Shop
+            </div>
+
+            <div class="smart-card-desc">
+              Tài khoản này có quyền vận hành Shop.
+              Đi thẳng tới đơn hàng và khu vực quản trị.
+            </div>
+
+            <div class="smart-card-actions">
+
+              <a
+                href="./shop-admin"
+                class="smart-link"
+              >
+                QUẢN TRỊ SHOP
+              </a>
+
+              <a
+                href="./shop"
+                class="smart-link"
+              >
+                XEM SHOP
+              </a>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }
+
+
+      smartContent.innerHTML =
+        html;
+
+
+      smartSection.style.display =
+        "block";
+
+    }
+    catch (error) {
+
+      console.warn(
+        "HOME ACCOUNT:",
+        error
+      );
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  renderContinueWork();
+
+  loadAccount();
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
