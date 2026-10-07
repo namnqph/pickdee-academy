@@ -3496,54 +3496,63 @@
           );
 
 
-        const successShippingFee =
-          Number(
-            data?.shipping_fee
-            ??
-            0
-          );
+  const successShippingFee =
+  Number(
+    data?.shipping_fee
+    ??
+    0
+  );
 
 
-        const successCustomerTotal =
-          Number(
-            data?.customer_total
-            ??
-            (
-              successMerchandiseTotal
-              +
-              successShippingFee
-            )
-          );
+const successFreeShipping =
+  Boolean(
+    data?.free_shipping
+  );
 
 
-        const successFreeShipping =
-          Boolean(
-            data?.free_shipping
-          );
+const successShippingPending =
+  Boolean(
+    data?.shipping_pending_confirmation
+  );
 
 
-        const successShippingPending =
-          Boolean(
-            data?.shipping_pending_confirmation
-          );
+/*
+  Tổng tiền dùng cho QR phải luôn được tính
+  từ dữ liệu thành phần mà backend vừa trả về:
+
+  tiền hàng + phí ship khách trả.
+
+  Không phụ thuộc data.customer_total để tránh
+  trường hợp RPC trả customer_total cũ / sai.
+*/
+const successCustomerTotal =
+  successShippingPending
+    ?
+      successMerchandiseTotal
+    :
+      (
+        successMerchandiseTotal
+        +
+        successShippingFee
+      );
 
 
-        const successEstimatedShippingFee =
-          successShippingPending
-            ?
-              SPX_BASE_FEE
-            :
-              successShippingFee;
+const successEstimatedShippingFee =
+  successShippingPending
+    ?
+      SPX_BASE_FEE
+    :
+      successShippingFee;
 
 
-        const successEstimatedCustomerTotal =
-          successShippingPending
-            ?
-              successMerchandiseTotal
-              +
-              SPX_BASE_FEE
-            :
-              successCustomerTotal;
+const successEstimatedCustomerTotal =
+  successShippingPending
+    ?
+      successMerchandiseTotal
+      +
+      SPX_BASE_FEE
+    :
+      successCustomerTotal;
 
 
         checkoutContent.innerHTML = `
