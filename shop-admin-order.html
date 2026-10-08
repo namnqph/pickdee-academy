@@ -2864,7 +2864,7 @@
     }
 
 
-          async function setupPaymentProofReview() {
+       async function setupPaymentProofReview() {
 
       if (
         currentOrder.payment_method
@@ -2898,218 +2898,76 @@
           "paymentProofLoadError"
         );
 
-      function showProofButton(
-        url
+      if (
+        image
       ) {
 
-        if (
-          loading
-        ) {
+        image.removeAttribute(
+          "src"
+        );
 
-          loading.style.display =
-            "none";
+        image.style.display =
+          "none";
 
-        }
-
-        if (
-          image
-        ) {
-
-          image.removeAttribute(
-            "src"
-          );
-
-          image.style.display =
-            "none";
-
-        }
-
-        if (
-          errorBox
-        ) {
-
-          errorBox.style.display =
-            "none";
-
-          errorBox.textContent =
-            "";
-
-        }
-
-        if (
-          link
-        ) {
-
-          link.href =
-            url;
-
-          link.target =
-            "_blank";
-
-          link.rel =
-            "noopener";
-
-          link.style.display =
-            "block";
-
-          link.style.textDecoration =
-            "none";
-
-          link.style.maxHeight =
-            "none";
-
-          link.style.overflow =
-            "visible";
-
-          link.style.pointerEvents =
-            "auto";
-
-          link.innerHTML =
-            `
-              <div
-                style="
-                  padding:14px 12px;
-                  border-radius:11px;
-                  border:1px solid rgba(216,255,69,.24);
-                  background:rgba(216,255,69,.08);
-                  color:#d8ff45;
-                  font-size:11px;
-                  font-weight:950;
-                  text-align:center;
-                "
-              >
-                MỞ BILL GỐC
-              </div>
-            `;
-
-        }
+        image.style.pointerEvents =
+          "none";
 
       }
 
-      function showError(
-        text
+      if (
+        link
       ) {
 
-        if (
-          loading
-        ) {
+        link.removeAttribute(
+          "href"
+        );
 
-          loading.style.display =
-            "none";
+        link.style.display =
+          "none";
 
-        }
-
-        if (
-          link
-        ) {
-
-          link.style.display =
-            "none";
-
-        }
-
-        if (
-          image
-        ) {
-
-          image.removeAttribute(
-            "src"
-          );
-
-          image.style.display =
-            "none";
-
-        }
-
-        if (
-          errorBox
-        ) {
-
-          errorBox.style.display =
-            "block";
-
-          errorBox.textContent =
-            text
-            ||
-            "Không tải được bill khách gửi.";
-
-        }
+        link.style.pointerEvents =
+          "none";
 
       }
 
-      try {
+      if (
+        errorBox
+      ) {
 
-        if (
-          loading
-        ) {
+        errorBox.style.display =
+          "none";
 
-          loading.style.display =
-            "block";
-
-          loading.textContent =
-            "Bill đã gửi. Bấm nút bên dưới để mở file gốc khi cần kiểm tra.";
-
-        }
-
-        const {
-          data:
-            signedData,
-          error:
-            signedError
-        } =
-          await sb
-            .storage
-            .from(
-              "shop-payment-proofs"
-            )
-            .createSignedUrl(
-              paymentProofPath,
-              3600
-            );
-
-        if (
-          signedError
-        ) {
-
-          throw signedError;
-
-        }
-
-        const signedUrl =
-          String(
-            signedData?.signedUrl
-            ||
-            ""
-          )
-            .trim();
-
-        if (
-          !signedUrl
-        ) {
-
-          throw new Error(
-            "Không tạo được link xem bill."
-          );
-
-        }
-
-        showProofButton(
-          signedUrl
-        );
+        errorBox.textContent =
+          "";
 
       }
-      catch (error) {
 
-        console.error(
-          "PAYMENT PROOF LINK ERROR:",
-          error
-        );
+      if (
+        loading
+      ) {
 
-        showError(
-          error?.message
-          ||
-          "Không tạo được link xem bill."
-        );
+        loading.style.display =
+          "block";
+
+        loading.innerHTML =
+          `
+            <div
+              style="
+                padding:12px;
+                border-radius:10px;
+                border:1px solid rgba(216,255,69,.18);
+                background:rgba(216,255,69,.06);
+                color:#d8ff45;
+                font-size:11px;
+                font-weight:900;
+                text-align:center;
+                line-height:1.5;
+              "
+            >
+              BILL ĐÃ GỬI ✅<br>
+              Không tải ảnh bill trong trang để tránh lag.
+            </div>
+          `;
 
       }
 
@@ -3123,6 +2981,11 @@
           "confirmBankTransferBtn"
         );
 
+      const floatingButton =
+        document.getElementById(
+          "confirmBankTransferFloatingBtn"
+        );
+
       const messageBox =
         document.getElementById(
           "paymentProofAdminMessage"
@@ -3130,6 +2993,8 @@
 
       if (
         !button
+        &&
+        !floatingButton
       ) {
 
         return;
@@ -3147,11 +3012,26 @@
 
       }
 
-      button.disabled =
-        true;
+      [
+        button,
+        floatingButton
+      ].forEach(
+        function (btn) {
 
-      button.textContent =
-        "ĐANG XÁC NHẬN...";
+          if (
+            btn
+          ) {
+
+            btn.disabled =
+              true;
+
+            btn.textContent =
+              "ĐANG XÁC NHẬN...";
+
+          }
+
+        }
+      );
 
       try {
 
@@ -3213,6 +3093,19 @@
         currentOrder =
           refreshedOrder;
 
+        const oldFloating =
+          document.getElementById(
+            "confirmBankTransferFloatingBtn"
+          );
+
+        if (
+          oldFloating
+        ) {
+
+          oldFloating.remove();
+
+        }
+
         render();
 
         const refreshedMessage =
@@ -3254,11 +3147,26 @@
 
         }
 
-        button.disabled =
-          false;
+        [
+          button,
+          floatingButton
+        ].forEach(
+          function (btn) {
 
-        button.textContent =
-          "XÁC NHẬN ĐÃ THANH TOÁN";
+            if (
+              btn
+            ) {
+
+              btn.disabled =
+                false;
+
+              btn.textContent =
+                "XÁC NHẬN ĐÃ THANH TOÁN";
+
+            }
+
+          }
+        );
 
       }
 
@@ -3269,44 +3177,160 @@
 
       setupPaymentProofReview();
 
+      const oldFloating =
+        document.getElementById(
+          "confirmBankTransferFloatingBtn"
+        );
+
+      if (
+        oldFloating
+      ) {
+
+        oldFloating.remove();
+
+      }
+
       const button =
         document.getElementById(
           "confirmBankTransferBtn"
         );
 
       if (
-        button
+        !button
       ) {
 
-        button.style.position =
-          "relative";
-
-        button.style.zIndex =
-          "999999";
-
-        button.style.pointerEvents =
-          "auto";
-
-        button.style.cursor =
-          "pointer";
-
-        button.style.touchAction =
-          "manipulation";
-
-        button.addEventListener(
-          "click",
-          function (event) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-            confirmBankTransferPayment();
-
-          }
-        );
+        return;
 
       }
+
+      button.style.position =
+        "relative";
+
+      button.style.zIndex =
+        "999999";
+
+      button.style.pointerEvents =
+        "auto";
+
+      button.style.cursor =
+        "pointer";
+
+      button.style.touchAction =
+        "manipulation";
+
+      const floatingButton =
+        button.cloneNode(
+          true
+        );
+
+      floatingButton.id =
+        "confirmBankTransferFloatingBtn";
+
+      floatingButton.style.position =
+        "fixed";
+
+      floatingButton.style.left =
+        "12px";
+
+      floatingButton.style.right =
+        "12px";
+
+      floatingButton.style.bottom =
+        "84px";
+
+      floatingButton.style.zIndex =
+        "2147483647";
+
+      floatingButton.style.width =
+        "auto";
+
+      floatingButton.style.minHeight =
+        "52px";
+
+      floatingButton.style.borderRadius =
+        "13px";
+
+      floatingButton.style.boxShadow =
+        "0 12px 34px rgba(0,0,0,.45)";
+
+      floatingButton.style.pointerEvents =
+        "auto";
+
+      floatingButton.style.touchAction =
+        "manipulation";
+
+      floatingButton.textContent =
+        "XÁC NHẬN ĐÃ THANH TOÁN";
+
+      document.body.appendChild(
+        floatingButton
+      );
+
+      let isConfirming =
+        false;
+
+      function handleConfirm(
+        event
+      ) {
+
+        if (
+          event
+        ) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+        }
+
+        if (
+          isConfirming
+        ) {
+
+          return;
+
+        }
+
+        isConfirming =
+          true;
+
+        Promise
+          .resolve(
+            confirmBankTransferPayment()
+          )
+          .finally(
+            function () {
+
+              isConfirming =
+                false;
+
+            }
+          );
+
+      }
+
+      [
+        button,
+        floatingButton
+      ].forEach(
+        function (btn) {
+
+          btn.addEventListener(
+            "click",
+            handleConfirm
+          );
+
+          btn.addEventListener(
+            "touchend",
+            handleConfirm,
+            {
+              passive:
+                false
+            }
+          );
+
+        }
+      );
 
     }
     function setupCopyButton(
