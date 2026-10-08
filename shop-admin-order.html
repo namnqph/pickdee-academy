@@ -2864,9 +2864,43 @@
     }
 
 
-    function setupPaymentProofActions() {
+       function setupPaymentProofActions() {
 
       setupPaymentProofReview();
+
+      const proofBox =
+        document.getElementById(
+          "paymentProofBox"
+        );
+
+      const proofLink =
+        document.getElementById(
+          "paymentProofLink"
+        );
+
+      const proofImage =
+        document.getElementById(
+          "paymentProofImage"
+        );
+
+      [
+        proofBox,
+        proofLink,
+        proofImage
+      ].forEach(
+        function (element) {
+
+          if (
+            element
+          ) {
+
+            element.style.pointerEvents =
+              "none";
+
+          }
+
+        }
+      );
 
       const button =
         document.getElementById(
@@ -2877,15 +2911,80 @@
         button
       ) {
 
+        button.style.position =
+          "relative";
+
+        button.style.zIndex =
+          "999999";
+
+        button.style.pointerEvents =
+          "auto";
+
+        button.style.cursor =
+          "pointer";
+
+        button.style.touchAction =
+          "manipulation";
+
+        let isConfirmingPayment =
+          false;
+
+        const handleConfirmTap =
+          function (event) {
+
+            if (
+              event
+            ) {
+
+              event.preventDefault();
+
+              event.stopPropagation();
+
+            }
+
+            if (
+              isConfirmingPayment
+            ) {
+
+              return;
+
+            }
+
+            isConfirmingPayment =
+              true;
+
+            Promise
+              .resolve(
+                confirmBankTransferPayment()
+              )
+              .finally(
+                function () {
+
+                  isConfirmingPayment =
+                    false;
+
+                }
+              );
+
+          };
+
         button.addEventListener(
           "click",
-          confirmBankTransferPayment
+          handleConfirmTap
+        );
+
+        button.addEventListener(
+          "touchend",
+          handleConfirmTap,
+          {
+            passive:
+              false
+          }
         );
 
       }
 
     }
-
 
     function setupCopyButton(
       buttonId,
