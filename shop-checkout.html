@@ -2222,17 +2222,15 @@
 
   }
 
-
   function paymentProofExtension(
     file
   ) {
 
     const mime =
       String(
-        file && file.type ? file.type : ""
+        file?.type || ""
       )
         .toLowerCase();
-
 
     const mimeMap = {
 
@@ -2247,7 +2245,6 @@
 
     };
 
-
     if (
       mimeMap[mime]
     ) {
@@ -2256,12 +2253,10 @@
 
     }
 
-
     const name =
       String(
-        file && file.name ? file.name : ""
+        file?.name || ""
       );
-
 
     const rawExt =
       name.includes(".")
@@ -2273,47 +2268,246 @@
         :
           "";
 
-
     if (
-      rawExt === "jpeg"
+      [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp"
+      ].includes(
+        rawExt
+      )
     ) {
 
-      return "jpg";
+      return rawExt === "jpeg"
+        ?
+          "jpg"
+        :
+          rawExt;
 
     }
-
-
-    if (
-      rawExt === "jpg"
-      ||
-      rawExt === "png"
-      ||
-      rawExt === "webp"
-    ) {
-
-      return rawExt;
-
-    }
-
 
     return "";
 
   }
 
 
-  function addressName(item) {
+  function compressPaymentProofFile(
+    file
+  ) {
 
-    return (
-      item?.name?.local
-      ||
-      item?.name
-      ||
-      ""
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        if (
+          !file
+        ) {
+
+          reject(
+            new Error(
+              "Chưa chọn ảnh bill."
+            )
+          );
+
+          return;
+
+        }
+
+        if (
+          !paymentProofExtension(
+            file
+          )
+        ) {
+
+          reject(
+            new Error(
+              "Bill phải là ảnh JPG, PNG hoặc WEBP. Nếu dùng iPhone, vui lòng chụp màn hình bill rồi gửi lại."
+            )
+          );
+
+          return;
+
+        }
+
+        const imageUrl =
+          URL.createObjectURL(
+            file
+          );
+
+        const image =
+          new Image();
+
+        image.onload =
+          function () {
+
+            try {
+
+              const maxSide =
+                1600;
+
+              const quality =
+                0.82;
+
+              const originalWidth =
+                image.naturalWidth
+                ||
+                image.width;
+
+              const originalHeight =
+                image.naturalHeight
+                ||
+                image.height;
+
+              const largestSide =
+                Math.max(
+                  originalWidth,
+                  originalHeight
+                );
+
+              const ratio =
+                largestSide > maxSide
+                  ?
+                    maxSide / largestSide
+                  :
+                    1;
+
+              const targetWidth =
+                Math.max(
+                  1,
+                  Math.round(
+                    originalWidth * ratio
+                  )
+                );
+
+              const targetHeight =
+                Math.max(
+                  1,
+                  Math.round(
+                    originalHeight * ratio
+                  )
+                );
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+              canvas.width =
+                targetWidth;
+
+              canvas.height =
+                targetHeight;
+
+              const context =
+                canvas.getContext(
+                  "2d"
+                );
+
+              context.fillStyle =
+                "#ffffff";
+
+              context.fillRect(
+                0,
+                0,
+                targetWidth,
+                targetHeight
+              );
+
+              context.drawImage(
+                image,
+                0,
+                0,
+                targetWidth,
+                targetHeight
+              );
+
+              canvas.toBlob(
+                function (
+                  blob
+                ) {
+
+                  URL.revokeObjectURL(
+                    imageUrl
+                  );
+
+                  if (
+                    !blob
+                  ) {
+
+                    reject(
+                      new Error(
+                        "Không nén được ảnh bill."
+                      )
+                    );
+
+                    return;
+
+                  }
+
+                  const compressedFile =
+                    new File(
+                      [
+                        blob
+                      ],
+                      "payment-proof.jpg",
+                      {
+                        type:
+                          "image/jpeg",
+
+                        lastModified:
+                          Date.now()
+                      }
+                    );
+
+                  resolve(
+                    compressedFile
+                  );
+
+                },
+                "image/jpeg",
+                quality
+              );
+
+            }
+            catch (error) {
+
+              URL.revokeObjectURL(
+                imageUrl
+              );
+
+              reject(
+                error
+              );
+
+            }
+
+          };
+
+        image.onerror =
+          function () {
+
+            URL.revokeObjectURL(
+              imageUrl
+            );
+
+            reject(
+              new Error(
+                "Không đọc được ảnh bill. Vui lòng chọn ảnh JPG, PNG hoặc WEBP."
+              )
+            );
+
+          };
+
+        image.src =
+          imageUrl;
+
+      }
     );
 
   }
-
-
   function fillProvinceOptions(
     selectedName
   ) {
@@ -4326,7 +4520,6 @@ const successEstimatedCustomerTotal =
           }
         );
 
-
         submitPaymentProofBtn
           ?.addEventListener(
             "click",
@@ -4337,21 +4530,17 @@ const successEstimatedCustomerTotal =
                   ?.files
                   ?.[0];
 
-
               if (!file) {
 
                 paymentProofMessage.className =
                   "proof-message error";
 
-
                 paymentProofMessage.textContent =
                   "Vui lòng chọn ảnh bill trước khi gửi.";
-
 
                 return;
 
               }
-
 
               if (
                 !trackingToken
@@ -4360,31 +4549,31 @@ const successEstimatedCustomerTotal =
                 paymentProofMessage.className =
                   "proof-message error";
 
-
                 paymentProofMessage.textContent =
                   "Đơn hàng thiếu mã xác thực để gửi bill. Vui lòng liên hệ PickDee.";
-
 
                 return;
 
               }
 
-
-              const extension =
-                paymentProofExtension(
-                  file
-                );
-
-
               submitPaymentProofBtn.disabled =
                 true;
 
-
               submitPaymentProofBtn.textContent =
-                "ĐANG GỬI BILL...";
-
+                "ĐANG NÉN BILL...";
 
               try {
+
+                const uploadFile =
+                  await compressPaymentProofFile(
+                    file
+                  );
+
+                const extension =
+                  "jpg";
+
+                submitPaymentProofBtn.textContent =
+                  "ĐANG GỬI BILL...";
 
                 const randomId =
                   (
@@ -4407,7 +4596,6 @@ const successEstimatedCustomerTotal =
                           .slice(2)
                       );
 
-
                 const objectPath =
                   `${
                     trackingToken
@@ -4418,7 +4606,6 @@ const successEstimatedCustomerTotal =
                   }.${
                     extension
                   }`;
-
 
                 const {
                   error:
@@ -4431,7 +4618,7 @@ const successEstimatedCustomerTotal =
                     )
                     .upload(
                       objectPath,
-                      file,
+                      uploadFile,
                       {
                         cacheControl:
                           "3600",
@@ -4440,12 +4627,9 @@ const successEstimatedCustomerTotal =
                           false,
 
                         contentType:
-                          file.type
-                          ||
-                          undefined
+                          "image/jpeg"
                       }
                     );
-
 
                 if (
                   uploadError
@@ -4454,7 +4638,6 @@ const successEstimatedCustomerTotal =
                   throw uploadError;
 
                 }
-
 
                 const {
                   data:
@@ -4475,7 +4658,6 @@ const successEstimatedCustomerTotal =
                     }
                   );
 
-
                 if (
                   proofError
                 ) {
@@ -4483,7 +4665,6 @@ const successEstimatedCustomerTotal =
                   throw proofError;
 
                 }
-
 
                 if (
                   !proofData?.success
@@ -4495,26 +4676,20 @@ const successEstimatedCustomerTotal =
 
                 }
 
-
                 paymentProofMessage.className =
                   "proof-message success";
 
-
                 paymentProofMessage.textContent =
-                  "✓ Đã gửi bill thành công. PickDee sẽ kiểm tra giao dịch và xác nhận thanh toán.";
-
+                  "✓ Đã gửi bill thành công. Ảnh bill đã được nén để Shop mở nhanh hơn.";
 
                 paymentProofInput.disabled =
                   true;
 
-
                 submitPaymentProofBtn.disabled =
                   true;
 
-
                 submitPaymentProofBtn.textContent =
                   "✓ ĐÃ GỬI BILL";
-
 
                 if (
                   transferDoneBtn
@@ -4523,11 +4698,37 @@ const successEstimatedCustomerTotal =
                   transferDoneBtn.disabled =
                     true;
 
-
                   transferDoneBtn.textContent =
                     "✓ ĐÃ CHUYỂN KHOẢN";
 
                 }
+
+              }
+              catch (error) {
+
+                console.error(
+                  "PAYMENT PROOF ERROR:",
+                  error
+                );
+
+                paymentProofMessage.className =
+                  "proof-message error";
+
+                paymentProofMessage.textContent =
+                  error?.message
+                  ||
+                  "Không gửi được bill. Vui lòng thử lại.";
+
+                submitPaymentProofBtn.disabled =
+                  false;
+
+                submitPaymentProofBtn.textContent =
+                  "GỬI BILL XÁC NHẬN";
+
+              }
+
+            }
+          );
 
               }
               catch (error) {
