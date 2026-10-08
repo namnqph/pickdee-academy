@@ -2229,7 +2229,7 @@
 
     const mime =
       String(
-        file?.type || ""
+        file && file.type ? file.type : ""
       )
         .toLowerCase();
 
@@ -2259,7 +2259,7 @@
 
     const name =
       String(
-        file?.name || ""
+        file && file.name ? file.name : ""
       );
 
 
@@ -2275,100 +2275,23 @@
 
 
     if (
-      [
-        "jpg",
-        "jpeg",
-        "png",
-        "webp"
-      ].includes(
-        rawExt
-      )
+      rawExt === "jpeg"
     ) {
 
-      return rawExt === "jpeg"
-        ?
-          "jpg"
-        :
-          rawExt;
+      return "jpg";
 
     }
 
 
-    return "";
-
-  }
-
-    const mime =
-      String(
-        file?.type || ""
-      )
-        .toLowerCase();
-
-
-    const mimeMap = {
-
-      "image/jpeg":
-        "jpg",
-
-      "image/png":
-        "png",
-
-      "image/webp":
-        "webp",
-
-      "image/heic":
-        "heic",
-
-      "image/heif":
-        "heif"
-
-    };
-
-
     if (
-      mimeMap[mime]
+      rawExt === "jpg"
+      ||
+      rawExt === "png"
+      ||
+      rawExt === "webp"
     ) {
 
-      return mimeMap[mime];
-
-    }
-
-
-    const name =
-      String(
-        file?.name || ""
-      );
-
-
-    const rawExt =
-      name.includes(".")
-        ?
-          name
-            .split(".")
-            .pop()
-            .toLowerCase()
-        :
-          "";
-
-
-    if (
-      [
-        "jpg",
-        "jpeg",
-        "png",
-        "webp",
-        "heic",
-        "heif"
-      ].includes(
-        rawExt
-      )
-    ) {
-
-      return rawExt === "jpeg"
-        ?
-          "jpg"
-        :
-          rawExt;
+      return rawExt;
 
     }
 
