@@ -4535,20 +4535,94 @@
 
 <script>
   (function () {
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function isImageLikeUrl(href) {
+      const value = normalizeText(href);
+
+      return (
+        value.includes("payment") ||
+        value.includes("proof") ||
+        value.includes("bill") ||
+        value.includes("receipt") ||
+        value.includes("storage/v1/object") ||
+        value.includes(".jpg") ||
+        value.includes(".jpeg") ||
+        value.includes(".png") ||
+        value.includes(".webp") ||
+        value.includes(".heic")
+      );
+    }
+
     function isPaymentProofLink(link) {
-      const text = String(link.textContent || "").toLowerCase();
+      const text = normalizeText(link.textContent);
       const href = String(link.getAttribute("href") || "").trim();
 
       if (!href) {
         return false;
       }
 
+      if (link.dataset.pickdeeProofEnhanced === "1") {
+        return false;
+      }
+
       return (
         text.includes("bill") ||
-        text.includes("chuyển khoản") ||
+        text.includes("chuyen khoan") ||
         text.includes("chung tu") ||
-        text.includes("chứng từ")
+        text.includes("khach gui") ||
+        isImageLikeUrl(href)
       );
+    }
+
+    function buildPreview(link) {
+      const href = link.href;
+
+      const box = document.createElement("div");
+      box.className = "pickdee-payment-proof-preview";
+
+      const title = document.createElement("div");
+      title.className = "pickdee-payment-proof-preview-title";
+      title.textContent = "Bill chuyển khoản khách gửi";
+
+      const image = document.createElement("img");
+      image.className = "pickdee-payment-proof-preview-img";
+      image.src = href;
+      image.alt = "Bill chuyển khoản khách gửi";
+      image.loading = "lazy";
+
+      const actions = document.createElement("div");
+      actions.className = "pickdee-payment-proof-preview-actions";
+
+      const openLink = document.createElement("a");
+      openLink.href = href;
+      openLink.target = "_blank";
+      openLink.rel = "noopener";
+      openLink.textContent = "Mở ảnh bill gốc";
+
+      const note = document.createElement("div");
+      note.className = "pickdee-payment-proof-preview-note";
+      note.textContent = "Ảnh bill được hiển thị trực tiếp để admin kiểm tra nhanh, không cần tải file về.";
+
+      image.addEventListener("error", function () {
+        image.remove();
+        note.textContent =
+          "Không xem trước được ảnh trong trình duyệt này. Anh/chị bấm “Mở ảnh bill gốc” để kiểm tra.";
+      });
+
+      actions.appendChild(openLink);
+
+      box.appendChild(title);
+      box.appendChild(image);
+      box.appendChild(actions);
+      box.appendChild(note);
+
+      return box;
     }
 
     function enhancePaymentProofLinks() {
@@ -4559,63 +4633,41 @@
             return;
           }
 
-          link.setAttribute("data-pickdee-proof-enhanced", "1");
+          link.dataset.pickdeeProofEnhanced = "1";
 
-          const href = link.href;
+          const preview = buildPreview(link);
+          link.insertAdjacentElement("afterend", preview);
 
-          const box = document.createElement("div");
-          box.className = "pickdee-payment-proof-preview";
-
-          const title = document.createElement("div");
-          title.className = "pickdee-payment-proof-preview-title";
-          title.textContent = "Bill chuyển khoản khách gửi";
-
-          const image = document.createElement("img");
-          image.className = "pickdee-payment-proof-preview-img";
-          image.src = href;
-          image.alt = "Bill chuyển khoản khách gửi";
-          image.loading = "lazy";
-
-          const actions = document.createElement("div");
-          actions.className = "pickdee-payment-proof-preview-actions";
-
-          const openLink = document.createElement("a");
-          openLink.href = href;
-          openLink.target = "_blank";
-          openLink.rel = "noopener";
-          openLink.textContent = "Mở ảnh bill gốc";
-
-          const note = document.createElement("div");
-          note.className = "pickdee-payment-proof-preview-note";
-          note.textContent = "Ảnh bill được hiển thị trực tiếp để admin kiểm tra nhanh, không cần tải file về.";
-
-          image.addEventListener("error", function () {
-            image.remove();
-            note.textContent =
-              "Không xem trước được ảnh trong trình duyệt này. Anh/chị bấm “Mở ảnh bill gốc” để kiểm tra.";
-          });
-
-          actions.appendChild(openLink);
-
-          box.appendChild(title);
-          box.appendChild(image);
-          box.appendChild(actions);
-          box.appendChild(note);
-
-          link.replaceWith(box);
+          link.style.display = "none";
         });
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", enhancePaymentProofLinks);
-    } else {
+    function startEnhancer() {
       enhancePaymentProofLinks();
+
+      let count = 0;
+
+      const timer = setInterval(function () {
+        enhancePaymentProofLinks();
+
+        count += 1;
+
+        if (count >= 20) {
+          clearInterval(timer);
+        }
+      }, 500);
+
+      new MutationObserver(enhancePaymentProofLinks).observe(document.body, {
+        childList: true,
+        subtree: true
+      });
     }
 
-    new MutationObserver(enhancePaymentProofLinks).observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startEnhancer);
+    } else {
+      startEnhancer();
+    }
   })();
 </script>
 <script src="/shop-notifications.js?v=20261008-1"></script>
