@@ -2408,7 +2408,7 @@
     `;
 
 
-    async function setupPaymentProofReview() {
+       async function setupPaymentProofReview() {
 
       if (
         currentOrder.payment_method
@@ -2442,43 +2442,7 @@
           "paymentProofLoadError"
         );
 
-      try {
-
-        const {
-          data,
-          error
-        } =
-          await sb
-            .storage
-            .from(
-              "shop-payment-proofs"
-            )
-            .createSignedUrl(
-              paymentProofPath,
-              600
-            );
-
-        if (error) {
-
-          throw error;
-
-        }
-
-        const signedUrl =
-          String(
-            data?.signedUrl
-            ||
-            ""
-          )
-            .trim();
-
-        if (!signedUrl) {
-
-          throw new Error(
-            "Không tạo được link xem bill."
-          );
-
-        }
+      function hideLoading() {
 
         if (
           loading
@@ -2486,40 +2450,31 @@
 
           loading.style.display =
             "none";
-
-        }
-
-        if (
-          link
-          &&
-          image
-        ) {
-
-          link.href =
-            signedUrl;
-
-          image.src =
-            signedUrl;
-
-          link.style.display =
-            "block";
 
         }
 
       }
-      catch (error) {
 
-        console.error(
-          "PAYMENT PROOF LOAD ERROR:",
-          error
-        );
+      function showError(text) {
+
+        hideLoading();
 
         if (
-          loading
+          link
         ) {
 
-          loading.style.display =
+          link.style.display =
             "none";
+
+        }
+
+        if (
+          image
+        ) {
+
+          image.removeAttribute(
+            "src"
+          );
 
         }
 
@@ -2531,7 +2486,7 @@
             "block";
 
           errorBox.textContent =
-            error?.message
+            text
             ||
             "Không tải được bill khách gửi.";
 
@@ -2539,8 +2494,222 @@
 
       }
 
-    }
+      function showImage(
+        imageUrl,
+        openUrl
+      ) {
 
+        if (
+          !link
+          ||
+          !image
+        ) {
+
+          showError(
+            "Không tìm thấy khung hiển thị bill."
+          );
+
+          return;
+
+        }
+
+        hideLoading();
+
+        if (
+          errorBox
+        ) {
+
+          errorBox.style.display =
+            "none";
+
+          errorBox.textContent =
+            "";
+
+        }
+
+        image.onload =
+          function () {
+
+            hideLoading();
+
+            link.style.display =
+              "block";
+
+          };
+
+        image.onerror =
+          function () {
+
+            showError(
+              "Không xem trước được ảnh bill trong trình duyệt. Anh/chị bấm mở ảnh gốc để kiểm tra file."
+            );
+
+            if (
+              link
+            ) {
+
+              link.href =
+                openUrl || imageUrl;
+
+              link.style.display =
+                "block";
+
+              link.innerHTML =
+                `
+                  <div
+                    style="
+                      padding:12px;
+                      border-radius:10px;
+                      border:1px solid rgba(216,255,69,.22);
+                      color:#d8ff45;
+                      font-size:11px;
+                      font-weight:900;
+                      text-align:center;
+                    "
+                  >
+                    MỞ ẢNH BILL GỐC
+                  </div>
+                `;
+
+            }
+
+          };
+
+        link.href =
+          openUrl || imageUrl;
+
+        image.src =
+          imageUrl;
+
+        link.style.display =
+          "block";
+
+      }
+
+      try {
+
+        if (
+          loading
+        ) {
+
+          loading.style.display =
+            "block";
+
+          loading.textContent =
+            "Đang tải bill khách gửi...";
+
+        }
+
+        const {
+          data:
+            signedData,
+          error:
+            signedError
+        } =
+          await sb
+            .storage
+            .from(
+              "shop-payment-proofs"
+            )
+            .createSignedUrl(
+              paymentProofPath,
+              3600
+            );
+
+        if (
+          signedError
+        ) {
+
+          throw signedError;
+
+        }
+
+        const signedUrl =
+          String(
+            signedData?.signedUrl
+            ||
+            ""
+          )
+            .trim();
+
+        if (
+          !signedUrl
+        ) {
+
+          throw new Error(
+            "Không tạo được link xem bill."
+          );
+
+        }
+
+        const {
+          data:
+            proofBlob,
+          error:
+            downloadError
+        } =
+          await sb
+            .storage
+            .from(
+              "shop-payment-proofs"
+            )
+            .download(
+              paymentProofPath
+            );
+
+        if (
+          downloadError
+          ||
+          !proofBlob
+        ) {
+
+          showImage(
+            signedUrl,
+            signedUrl
+          );
+
+          return;
+
+        }
+
+        const blobUrl =
+          URL.createObjectURL(
+            proofBlob
+          );
+
+        window.setTimeout(
+          function () {
+
+            URL.revokeObjectURL(
+              blobUrl
+            );
+
+          },
+          10 * 60 * 1000
+        );
+
+        showImage(
+          blobUrl,
+          signedUrl
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "PAYMENT PROOF LOAD ERROR:",
+          error
+        );
+
+        showError(
+          error?.message
+          ||
+          "Không tải được bill khách gửi."
+        );
+
+      }
+
+    }
 
     async function confirmBankTransferPayment() {
 
