@@ -63,7 +63,7 @@
     #pickdeeShopNotificationRoot {
         position:fixed;
         top:11px;
-        right:250px;
+       right:340px;
         z-index:99999;
         font-family:inherit;
       }
