@@ -60,10 +60,10 @@
     style.id = "pickdee-shop-notification-style";
 
     style.textContent = `
-      #pickdeeShopNotificationRoot {
+    #pickdeeShopNotificationRoot {
         position:fixed;
         top:11px;
-        right:190px;
+        right:250px;
         z-index:99999;
         font-family:inherit;
       }
