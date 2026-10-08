@@ -2864,43 +2864,410 @@
     }
 
 
-       function setupPaymentProofActions() {
+          async function setupPaymentProofReview() {
 
-      setupPaymentProofReview();
+      if (
+        currentOrder.payment_method
+          !==
+        "bank_transfer"
+        ||
+        !paymentProofPath
+      ) {
 
-      const proofBox =
+        return;
+
+      }
+
+      const loading =
         document.getElementById(
-          "paymentProofBox"
+          "paymentProofLoading"
         );
 
-      const proofLink =
+      const link =
         document.getElementById(
           "paymentProofLink"
         );
 
-      const proofImage =
+      const image =
         document.getElementById(
           "paymentProofImage"
         );
 
-      [
-        proofBox,
-        proofLink,
-        proofImage
-      ].forEach(
-        function (element) {
+      const errorBox =
+        document.getElementById(
+          "paymentProofLoadError"
+        );
 
-          if (
-            element
-          ) {
+      function showProofButton(
+        url
+      ) {
 
-            element.style.pointerEvents =
-              "none";
+        if (
+          loading
+        ) {
 
-          }
+          loading.style.display =
+            "none";
 
         }
-      );
+
+        if (
+          image
+        ) {
+
+          image.removeAttribute(
+            "src"
+          );
+
+          image.style.display =
+            "none";
+
+        }
+
+        if (
+          errorBox
+        ) {
+
+          errorBox.style.display =
+            "none";
+
+          errorBox.textContent =
+            "";
+
+        }
+
+        if (
+          link
+        ) {
+
+          link.href =
+            url;
+
+          link.target =
+            "_blank";
+
+          link.rel =
+            "noopener";
+
+          link.style.display =
+            "block";
+
+          link.style.textDecoration =
+            "none";
+
+          link.style.maxHeight =
+            "none";
+
+          link.style.overflow =
+            "visible";
+
+          link.style.pointerEvents =
+            "auto";
+
+          link.innerHTML =
+            `
+              <div
+                style="
+                  padding:14px 12px;
+                  border-radius:11px;
+                  border:1px solid rgba(216,255,69,.24);
+                  background:rgba(216,255,69,.08);
+                  color:#d8ff45;
+                  font-size:11px;
+                  font-weight:950;
+                  text-align:center;
+                "
+              >
+                MỞ BILL GỐC
+              </div>
+            `;
+
+        }
+
+      }
+
+      function showError(
+        text
+      ) {
+
+        if (
+          loading
+        ) {
+
+          loading.style.display =
+            "none";
+
+        }
+
+        if (
+          link
+        ) {
+
+          link.style.display =
+            "none";
+
+        }
+
+        if (
+          image
+        ) {
+
+          image.removeAttribute(
+            "src"
+          );
+
+          image.style.display =
+            "none";
+
+        }
+
+        if (
+          errorBox
+        ) {
+
+          errorBox.style.display =
+            "block";
+
+          errorBox.textContent =
+            text
+            ||
+            "Không tải được bill khách gửi.";
+
+        }
+
+      }
+
+      try {
+
+        if (
+          loading
+        ) {
+
+          loading.style.display =
+            "block";
+
+          loading.textContent =
+            "Bill đã gửi. Bấm nút bên dưới để mở file gốc khi cần kiểm tra.";
+
+        }
+
+        const {
+          data:
+            signedData,
+          error:
+            signedError
+        } =
+          await sb
+            .storage
+            .from(
+              "shop-payment-proofs"
+            )
+            .createSignedUrl(
+              paymentProofPath,
+              3600
+            );
+
+        if (
+          signedError
+        ) {
+
+          throw signedError;
+
+        }
+
+        const signedUrl =
+          String(
+            signedData?.signedUrl
+            ||
+            ""
+          )
+            .trim();
+
+        if (
+          !signedUrl
+        ) {
+
+          throw new Error(
+            "Không tạo được link xem bill."
+          );
+
+        }
+
+        showProofButton(
+          signedUrl
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "PAYMENT PROOF LINK ERROR:",
+          error
+        );
+
+        showError(
+          error?.message
+          ||
+          "Không tạo được link xem bill."
+        );
+
+      }
+
+    }
+
+
+    async function confirmBankTransferPayment() {
+
+      const button =
+        document.getElementById(
+          "confirmBankTransferBtn"
+        );
+
+      const messageBox =
+        document.getElementById(
+          "paymentProofAdminMessage"
+        );
+
+      if (
+        !button
+      ) {
+
+        return;
+
+      }
+
+      const ok =
+        window.confirm(
+          "Xác nhận PickDee đã nhận đúng tiền của đơn này?"
+        );
+
+      if (!ok) {
+
+        return;
+
+      }
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "ĐANG XÁC NHẬN...";
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await sb.rpc(
+            "shop_confirm_bank_transfer_payment",
+            {
+              p_order_id:
+                Number(
+                  currentOrder.id
+                )
+            }
+          );
+
+        if (error) {
+
+          throw error;
+
+        }
+
+        if (
+          !data?.success
+        ) {
+
+          throw new Error(
+            "Không xác nhận được thanh toán."
+          );
+
+        }
+
+        const {
+          data:
+            refreshedOrder,
+          error:
+            refreshError
+        } =
+          await sb
+            .from(
+              "shop_orders"
+            )
+            .select("*")
+            .eq(
+              "id",
+              currentOrder.id
+            )
+            .single();
+
+        if (
+          refreshError
+        ) {
+
+          throw refreshError;
+
+        }
+
+        currentOrder =
+          refreshedOrder;
+
+        render();
+
+        const refreshedMessage =
+          document.getElementById(
+            "paymentProofAdminMessage"
+          );
+
+        if (
+          refreshedMessage
+        ) {
+
+          refreshedMessage.className =
+            "message success";
+
+          refreshedMessage.textContent =
+            "✓ Đã xác nhận thanh toán chuyển khoản.";
+
+        }
+
+      }
+      catch (error) {
+
+        console.error(
+          "CONFIRM BANK TRANSFER ERROR:",
+          error
+        );
+
+        if (
+          messageBox
+        ) {
+
+          messageBox.className =
+            "message error";
+
+          messageBox.textContent =
+            error?.message
+            ||
+            "Không xác nhận được thanh toán.";
+
+        }
+
+        button.disabled =
+          false;
+
+        button.textContent =
+          "XÁC NHẬN ĐÃ THANH TOÁN";
+
+      }
+
+    }
+
+
+    function setupPaymentProofActions() {
+
+      setupPaymentProofReview();
 
       const button =
         document.getElementById(
@@ -2926,66 +3293,22 @@
         button.style.touchAction =
           "manipulation";
 
-        let isConfirmingPayment =
-          false;
-
-        const handleConfirmTap =
-          function (event) {
-
-            if (
-              event
-            ) {
-
-              event.preventDefault();
-
-              event.stopPropagation();
-
-            }
-
-            if (
-              isConfirmingPayment
-            ) {
-
-              return;
-
-            }
-
-            isConfirmingPayment =
-              true;
-
-            Promise
-              .resolve(
-                confirmBankTransferPayment()
-              )
-              .finally(
-                function () {
-
-                  isConfirmingPayment =
-                    false;
-
-                }
-              );
-
-          };
-
         button.addEventListener(
           "click",
-          handleConfirmTap
-        );
+          function (event) {
 
-        button.addEventListener(
-          "touchend",
-          handleConfirmTap,
-          {
-            passive:
-              false
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            confirmBankTransferPayment();
+
           }
         );
 
       }
 
     }
-
     function setupCopyButton(
       buttonId,
       value,
