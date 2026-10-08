@@ -4476,7 +4476,148 @@
 })();
 
 </script>
+<style>
+  .pickdee-payment-proof-preview {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid rgba(216, 255, 69, 0.22);
+    border-radius: 12px;
+    background: rgba(216, 255, 69, 0.06);
+  }
 
+  .pickdee-payment-proof-preview-title {
+    margin-bottom: 8px;
+    color: #d8ff45;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .pickdee-payment-proof-preview-img {
+    display: block;
+    width: 100%;
+    max-height: 520px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  .pickdee-payment-proof-preview-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pickdee-payment-proof-preview-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 12px;
+    border: 1px solid rgba(216, 255, 69, 0.32);
+    border-radius: 10px;
+    color: #d8ff45;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none;
+    background: rgba(216, 255, 69, 0.08);
+  }
+
+  .pickdee-payment-proof-preview-note {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+</style>
+
+<script>
+  (function () {
+    function isPaymentProofLink(link) {
+      const text = String(link.textContent || "").toLowerCase();
+      const href = String(link.getAttribute("href") || "").trim();
+
+      if (!href) {
+        return false;
+      }
+
+      return (
+        text.includes("bill") ||
+        text.includes("chuyển khoản") ||
+        text.includes("chung tu") ||
+        text.includes("chứng từ")
+      );
+    }
+
+    function enhancePaymentProofLinks() {
+      document
+        .querySelectorAll("a[href]:not([data-pickdee-proof-enhanced])")
+        .forEach(function (link) {
+          if (!isPaymentProofLink(link)) {
+            return;
+          }
+
+          link.setAttribute("data-pickdee-proof-enhanced", "1");
+
+          const href = link.href;
+
+          const box = document.createElement("div");
+          box.className = "pickdee-payment-proof-preview";
+
+          const title = document.createElement("div");
+          title.className = "pickdee-payment-proof-preview-title";
+          title.textContent = "Bill chuyển khoản khách gửi";
+
+          const image = document.createElement("img");
+          image.className = "pickdee-payment-proof-preview-img";
+          image.src = href;
+          image.alt = "Bill chuyển khoản khách gửi";
+          image.loading = "lazy";
+
+          const actions = document.createElement("div");
+          actions.className = "pickdee-payment-proof-preview-actions";
+
+          const openLink = document.createElement("a");
+          openLink.href = href;
+          openLink.target = "_blank";
+          openLink.rel = "noopener";
+          openLink.textContent = "Mở ảnh bill gốc";
+
+          const note = document.createElement("div");
+          note.className = "pickdee-payment-proof-preview-note";
+          note.textContent = "Ảnh bill được hiển thị trực tiếp để admin kiểm tra nhanh, không cần tải file về.";
+
+          image.addEventListener("error", function () {
+            image.remove();
+            note.textContent =
+              "Không xem trước được ảnh trong trình duyệt này. Anh/chị bấm “Mở ảnh bill gốc” để kiểm tra.";
+          });
+
+          actions.appendChild(openLink);
+
+          box.appendChild(title);
+          box.appendChild(image);
+          box.appendChild(actions);
+          box.appendChild(note);
+
+          link.replaceWith(box);
+        });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", enhancePaymentProofLinks);
+    } else {
+      enhancePaymentProofLinks();
+    }
+
+    new MutationObserver(enhancePaymentProofLinks).observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  })();
+</script>
 <script src="/shop-notifications.js?v=20261008-1"></script>
 
 </body>
