@@ -1460,24 +1460,264 @@ textarea {
 
 
 
-  /* =====================================================
-     CATEGORY
+   /* =====================================================
+     CATEGORY / GROUP FILTER
   ====================================================== */
+
+  const PRODUCT_GROUPS =
+    [
+      {
+        id:
+          "",
+        name:
+          "TẤT CẢ"
+      },
+      {
+        id:
+          "best_seller",
+        name:
+          "BÁN CHẠY"
+      },
+      {
+        id:
+          "balls",
+        name:
+          "BÓNG"
+      },
+      {
+        id:
+          "grips",
+        name:
+          "QUẤN CÁN"
+      },
+      {
+        id:
+          "paddle_upgrade",
+        name:
+          "BẢO VỆ / ĐỘ VỢT"
+      },
+      {
+        id:
+          "care",
+        name:
+          "CHĂM SÓC"
+      },
+      {
+        id:
+          "training",
+        name:
+          "TẬP LUYỆN"
+      },
+      {
+        id:
+          "recovery",
+        name:
+          "PHỤC HỒI"
+      },
+      {
+        id:
+          "other",
+        name:
+          "PHỤ KIỆN KHÁC"
+      }
+    ];
+
+
+  function normalizeText(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .normalize(
+        "NFD"
+      )
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+      .toLowerCase()
+      .trim();
+
+  }
+
+
+  function categoryNameById(
+    categoryId
+  ) {
+
+    const found =
+      categories.find(
+        function (
+          category
+        ) {
+
+          return (
+            String(
+              category.id
+            )
+            ===
+            String(
+              categoryId
+            )
+          );
+
+        }
+      );
+
+
+    return found?.name || "";
+
+  }
+
+
+  function productGroup(
+    product
+  ) {
+
+    const rawGroup =
+      String(
+        product?.product_group
+        ||
+        ""
+      )
+        .trim();
+
+
+    if (rawGroup) {
+      return rawGroup;
+    }
+
+
+    const categoryName =
+      categoryNameById(
+        product?.category_id
+      );
+
+
+    const text =
+      normalizeText(
+        [
+          product?.name,
+          product?.brand,
+          product?.short_description,
+          product?.product_group_label,
+          categoryName
+        ]
+          .join(" ")
+      );
+
+
+    if (
+      text.includes("bong")
+      ||
+      text.includes("ball")
+    ) {
+      return "balls";
+    }
+
+
+    if (
+      text.includes("quan can")
+      ||
+      text.includes("grip")
+    ) {
+      return "grips";
+    }
+
+
+    if (
+      text.includes("bao ve")
+      ||
+      text.includes("do vot")
+      ||
+      text.includes("phu kien vot")
+      ||
+      text.includes("edge")
+      ||
+      text.includes("tape")
+      ||
+      text.includes("vien")
+      ||
+      text.includes("paddle")
+    ) {
+      return "paddle_upgrade";
+    }
+
+
+    if (
+      text.includes("cham soc")
+      ||
+      text.includes("ve sinh")
+      ||
+      text.includes("clean")
+      ||
+      text.includes("care")
+      ||
+      text.includes("khan")
+    ) {
+      return "care";
+    }
+
+
+    if (
+      text.includes("tap luyen")
+      ||
+      text.includes("training")
+      ||
+      text.includes("ho tro tap luyen")
+      ||
+      text.includes("cone")
+      ||
+      text.includes("marker")
+    ) {
+      return "training";
+    }
+
+
+    if (
+      text.includes("phuc hoi")
+      ||
+      text.includes("massage")
+      ||
+      text.includes("recovery")
+      ||
+      text.includes("gian co")
+    ) {
+      return "recovery";
+    }
+
+
+    return "other";
+
+  }
+
 
   function renderCategories() {
 
     const buttons =
-      categories
+      PRODUCT_GROUPS
         .map(
-          function (category) {
+          function (
+            group
+          ) {
+
+            const activeClass =
+              selectedCategory === group.id
+                ?
+                  " active"
+                :
+                  "";
+
 
             return `
               <button
-                class="category-btn"
+                class="category-btn${activeClass}"
                 type="button"
-                data-category="${category.id}"
+                data-category="${escapeHtml(group.id)}"
               >
-                ${escapeHtml(category.name)}
+                ${escapeHtml(group.name)}
               </button>
             `;
 
@@ -1486,17 +1726,8 @@ textarea {
         .join("");
 
 
-    categoriesBox.innerHTML = `
-      <button
-        class="category-btn active"
-        type="button"
-        data-category=""
-      >
-        TẤT CẢ
-      </button>
-
-      ${buttons}
-    `;
+    categoriesBox.innerHTML =
+      buttons;
 
 
     categoriesBox
@@ -1504,7 +1735,9 @@ textarea {
         ".category-btn"
       )
       .forEach(
-        function (button) {
+        function (
+          button
+        ) {
 
           button.addEventListener(
             "click",
@@ -1512,7 +1745,8 @@ textarea {
 
               selectedCategory =
                 button.dataset.category
-                || "";
+                ||
+                "";
 
 
               categoriesBox
@@ -1520,7 +1754,9 @@ textarea {
                   ".category-btn"
                 )
                 .forEach(
-                  function (item) {
+                  function (
+                    item
+                  ) {
 
                     item.classList.remove(
                       "active"
@@ -1694,15 +1930,33 @@ textarea {
       products.filter(
         function (product) {
 
+          const group =
+            productGroup(
+              product
+            );
+
+
+          const isBestSeller =
+            Boolean(
+              product.is_best_seller
+              ||
+              product.is_featured
+            );
+
+
           const matchesCategory =
             !selectedCategory
             ||
-            String(
-              product.category_id
+            (
+              selectedCategory === "best_seller"
+              &&
+              isBestSeller
             )
-            ===
-            String(
-              selectedCategory
+            ||
+            (
+              selectedCategory !== "best_seller"
+              &&
+              group === selectedCategory
             );
 
 
@@ -1710,7 +1964,11 @@ textarea {
             [
               product.name,
               product.brand,
-              product.short_description
+              product.short_description,
+              product.product_group_label,
+              categoryNameById(
+                product.category_id
+              )
             ]
               .join(" ")
               .toLowerCase();
@@ -1748,7 +2006,7 @@ textarea {
           </strong>
 
           Thử tìm bằng từ khóa khác
-          hoặc chọn danh mục khác.
+          hoặc chọn nhóm sản phẩm khác.
 
         </div>
       `;
@@ -1758,7 +2016,7 @@ textarea {
     }
 
 
-       grid.innerHTML =
+    grid.innerHTML =
       filtered
         .map(
           function (product) {
@@ -1923,7 +2181,10 @@ textarea {
         )
         .join("");
 
- }
+  }
+
+
+
   /* =====================================================
      LOAD DATA
   ====================================================== */
@@ -2098,7 +2359,6 @@ textarea {
     }
 
   }
-
 
 
   /* =====================================================
