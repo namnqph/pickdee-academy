@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>Hủy đơn hàng | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: #071523;
+      color: #ffffff;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-bottom:
+        calc(30px + env(safe-area-inset-bottom));
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7,21,35,.96);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(15px);
+    }
+
+    .header-inner {
+      width: min(760px,calc(100% - 22px));
+      min-height: 64px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: -.045em;
+    }
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+    .back {
+      min-height: 38px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.78);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    main {
+      width: min(760px,calc(100% - 22px));
+      margin: 22px auto 40px;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #d8ff45;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .12em;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(31px,8vw,48px);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .sub {
+      margin: 0 0 18px;
+      color: rgba(255,255,255,.58);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .card {
+      padding: 15px;
+      border-radius: 17px;
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        linear-gradient(
+          145deg,
+          #0d1d2f,
+          #102633
+        );
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(216,255,69,.20);
+      background: rgba(216,255,69,.055);
+      color: rgba(255,255,255,.78);
+      font-size: 11px;
+      line-height: 1.55;
+      font-weight: 750;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: rgba(255,255,255,.58);
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .06em;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.11);
+      background: #071523;
+      color: #ffffff;
+      outline: none;
+      border-radius: 13px;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    input {
+      min-height: 48px;
+      padding: 0 13px;
+    }
+
+    textarea {
+      min-height: 118px;
+      padding: 12px 13px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(255,255,255,.34);
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 13px;
+      background: #d8ff45;
+      color: #071523;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .btn:disabled {
+      opacity: .48;
+      cursor: wait;
+    }
+
+    .secondary-link {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.86);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .message {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .message.success {
+      display: block;
+      border: 1px solid rgba(216,255,69,.25);
+      background: rgba(216,255,69,.08);
+      color: #d8ff45;
+    }
+
+    .message.error {
+      display: block;
+      border: 1px solid rgba(255,90,90,.26);
+      background: rgba(255,90,90,.08);
+      color: #ffb0b0;
+    }
+
+    .message.info {
+      display: block;
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.76);
+    }
+
+    .footer-note {
+      margin-top: 13px;
+      color: rgba(255,255,255,.42);
+      font-size: 10px;
+      line-height: 1.55;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a
+      class="brand"
+      href="./shop"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <a
+      class="back"
+      href="./shop"
+    >
+      ← SHOP
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <div class="eyebrow">
+    PICKDEE SHOP
+  </div>
+
+  <h1>
+    Hủy đơn hàng
+  </h1>
+
+  <p class="sub">
+    Anh/chị nhập mã đơn, số điện thoại đặt hàng và lý do hủy.
+    PickDee chỉ cho hủy tự động với đơn chưa thanh toán, chưa giao hàng.
+  </p>
+
+  <section class="card">
+
+    <div class="notice">
+      Lưu ý: Nếu đơn đã thanh toán hoặc đã giao/hoàn tất, hệ thống sẽ không cho hủy tự động.
+      Khi đó anh/chị vui lòng liên hệ PickDee Shop để được xử lý riêng.
+    </div>
+
+    <form id="cancelForm">
+
+      <div class="field">
+        <label for="orderCodeInput">
+          MÃ ĐƠN HÀNG *
+        </label>
+
+        <input
+          id="orderCodeInput"
+          type="text"
+          placeholder="Ví dụ: PD-000042"
+          autocomplete="off"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label for="phoneInput">
+          SỐ ĐIỆN THOẠI ĐẶT HÀNG *
+        </label>
+
+        <input
+          id="phoneInput"
+          type="tel"
+          placeholder="Ví dụ: 09xxxxxxxx"
+          autocomplete="tel"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label for="reasonInput">
+          LÝ DO HỦY ĐƠN *
+        </label>
+
+        <textarea
+          id="reasonInput"
+          placeholder="Ví dụ: Tôi đặt nhầm sản phẩm / muốn đổi mẫu khác / chưa cần mua nữa..."
+          required
+        ></textarea>
+      </div>
+
+      <button
+        id="submitBtn"
+        class="btn"
+        type="submit"
+      >
+        GỬI YÊU CẦU HỦY ĐƠN
+      </button>
+
+      <a
+        class="secondary-link"
+        href="./shop"
+      >
+        TIẾP TỤC MUA SẮM
+      </a>
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </form>
+
+  </section>
+
+  <div class="footer-note">
+    PickDee sẽ lưu lý do hủy để Shop kiểm tra và chăm sóc khách tốt hơn.
+  </div>
+
+</main>
+
+<script>
+  (function () {
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+    const cancelForm =
+      document.getElementById(
+        "cancelForm"
+      );
+
+    const orderCodeInput =
+      document.getElementById(
+        "orderCodeInput"
+      );
+
+    const phoneInput =
+      document.getElementById(
+        "phoneInput"
+      );
+
+    const reasonInput =
+      document.getElementById(
+        "reasonInput"
+      );
+
+    const submitBtn =
+      document.getElementById(
+        "submitBtn"
+      );
+
+    const messageBox =
+      document.getElementById(
+        "message"
+      );
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const initialCode =
+      params.get("code")
+      ||
+      params.get("order_code")
+      ||
+      "";
+
+    const initialPhone =
+      params.get("phone")
+      ||
+      "";
+
+    if (
+      initialCode
+    ) {
+
+      orderCodeInput.value =
+        initialCode;
+
+    }
+
+    if (
+      initialPhone
+    ) {
+
+      phoneInput.value =
+        initialPhone;
+
+    }
+
+    function setMessage(
+      type,
+      text
+    ) {
+
+      messageBox.className =
+        "message " + type;
+
+      messageBox.textContent =
+        text;
+
+    }
+
+    function cleanPhone(
+      value
+    ) {
+
+      return String(
+        value || ""
+      )
+        .replace(
+          /\D/g,
+          ""
+        );
+
+    }
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      setMessage(
+        "error",
+        "Không tải được hệ thống PickDee Shop. Vui lòng thử lại sau."
+      );
+
+      submitBtn.disabled =
+        true;
+
+      return;
+
+    }
+
+    const sb =
+      window.supabase.createClient(
+        cfg.SUPABASE_URL,
+        cfg.SUPABASE_PUBLISHABLE_KEY
+      );
+
+    cancelForm.addEventListener(
+      "submit",
+      async function (
+        event
+      ) {
+
+        event.preventDefault();
+
+        const orderCode =
+          String(
+            orderCodeInput.value || ""
+          )
+            .trim()
+            .toUpperCase();
+
+        const phone =
+          cleanPhone(
+            phoneInput.value
+          );
+
+        const reason =
+          String(
+            reasonInput.value || ""
+          )
+            .trim();
+
+        if (
+          !orderCode
+        ) {
+
+          setMessage(
+            "error",
+            "Vui lòng nhập mã đơn hàng."
+          );
+
+          return;
+
+        }
+
+        if (
+          !phone
+          ||
+          phone.length < 9
+        ) {
+
+          setMessage(
+            "error",
+            "Vui lòng nhập đúng số điện thoại đặt hàng."
+          );
+
+          return;
+
+        }
+
+        if (
+          reason.length < 5
+        ) {
+
+          setMessage(
+            "error",
+            "Vui lòng nhập lý do hủy đơn rõ hơn."
+          );
+
+          return;
+
+        }
+
+        const ok =
+          window.confirm(
+            "Anh/chị chắc chắn muốn hủy đơn " + orderCode + "?"
+          );
+
+        if (
+          !ok
+        ) {
+
+          return;
+
+        }
+
+        submitBtn.disabled =
+          true;
+
+        submitBtn.textContent =
+          "ĐANG GỬI YÊU CẦU...";
+
+        setMessage(
+          "info",
+          "Đang kiểm tra đơn hàng..."
+        );
+
+        try {
+
+          const {
+            data,
+            error
+          } =
+            await sb.rpc(
+              "shop_customer_cancel_order",
+              {
+                p_order_code:
+                  orderCode,
+
+                p_phone:
+                  phone,
+
+                p_cancel_reason:
+                  reason
+              }
+            );
+
+          if (
+            error
+          ) {
+
+            throw error;
+
+          }
+
+          if (
+            !data?.success
+          ) {
+
+            throw new Error(
+              data?.message
+              ||
+              "Không hủy được đơn hàng."
+            );
+
+          }
+
+          setMessage(
+            "success",
+            data?.message
+            ||
+            "Đơn hàng đã được hủy thành công."
+          );
+
+          submitBtn.textContent =
+            "ĐÃ GỬI YÊU CẦU HỦY";
+
+          reasonInput.disabled =
+            true;
+
+          orderCodeInput.disabled =
+            true;
+
+          phoneInput.disabled =
+            true;
+
+        }
+        catch (error) {
+
+          console.error(
+            "CUSTOMER CANCEL ORDER ERROR:",
+            error
+          );
+
+          setMessage(
+            "error",
+            error?.message
+            ||
+            "Không hủy được đơn hàng. Vui lòng thử lại."
+          );
+
+          submitBtn.disabled =
+            false;
+
+          submitBtn.textContent =
+            "GỬI YÊU CẦU HỦY ĐƠN";
+
+        }
+
+      }
+    );
+
+  })();
+</script>
+
+</body>
+</html>
