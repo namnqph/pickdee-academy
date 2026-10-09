@@ -687,7 +687,8 @@
 
       grid-template-columns:
         minmax(0,1fr)
-        minmax(180px,330px);
+        minmax(150px,230px)
+        minmax(150px,230px);
 
       gap: 10px;
 
@@ -717,27 +718,52 @@
     }
 
 
-    .add-cart {
+    .add-cart,
+    .buy-now {
       min-height: 50px;
-
-      border: 0;
 
       border-radius: 12px;
 
       cursor: pointer;
-
-      background:
-        #d8ff45;
-
-      color:
-        #071523;
 
       font-size: 13px;
       font-weight: 950;
     }
 
 
-    .add-cart:active {
+    .add-cart {
+      border: 0;
+
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+    }
+
+
+    .buy-now {
+      border:
+        1px solid rgba(216,255,69,.38);
+
+      background:
+        rgba(216,255,69,.10);
+
+      color:
+        #d8ff45;
+    }
+
+
+    .add-cart:disabled,
+    .buy-now:disabled {
+      opacity: .65;
+
+      cursor: not-allowed;
+    }
+
+
+    .add-cart:active,
+    .buy-now:active {
       transform:
         scale(.985);
     }
@@ -880,12 +906,34 @@
         height: 54px;
       }
 
-
       .buy-bar-inner {
         grid-template-columns:
-          .72fr 1.28fr;
+          1fr 1fr;
+
+        gap: 8px;
       }
 
+
+      .buy-bar-price {
+        grid-column:
+          1 / -1;
+      }
+
+
+      .bottom-price {
+        font-size:
+          17px;
+      }
+
+
+      .add-cart,
+      .buy-now {
+        min-height:
+          46px;
+
+        font-size:
+          11px;
+      }
     }
 
 
@@ -966,11 +1014,11 @@
 
   <div class="buy-bar-inner">
 
-    <div>
+    <div class="buy-bar-price">
 
       <div class="bottom-price-label">
-  TẠM TÍNH
-</div>
+        TẠM TÍNH
+      </div>
 
       <div
         id="bottomPrice"
@@ -987,7 +1035,16 @@
       class="add-cart"
       type="button"
     >
-      THÊM VÀO GIỎ
+      THÊM GIỎ
+    </button>
+
+
+    <button
+      id="buyNowBtn"
+      class="buy-now"
+      type="button"
+    >
+      MUA NGAY
     </button>
 
   </div>
@@ -1040,7 +1097,10 @@
     document.getElementById(
       "addCartBtn"
     );
-
+  const buyNowBtn =
+    document.getElementById(
+      "buyNowBtn"
+    );
 
   const cartCount =
     document.getElementById(
@@ -2914,232 +2974,309 @@ function bindProductEvents() {
      ADD CART
   ====================================================== */
 
-  async function addToCart() {
-
-  if (
-    !product
-    ||
-    !selectedVariant
+   async function addToCart(
+    options
   ) {
 
-    return;
-
-  }
-
-
-  addCartBtn.disabled =
-    true;
-
-
-  const oldText =
-    addCartBtn.textContent;
-
-
-  addCartBtn.textContent =
-    "ĐANG THÊM...";
-
-
-  try {
-
-    const cart =
-      readCart();
-
-
-    const existing =
-      cart.find(
-        function (item) {
-
-          return (
-            String(
-              item.variant_id
-            )
-            ===
-            String(
-              selectedVariant.id
-            )
-          );
-
-        }
+    const shouldOpenCart =
+      Boolean(
+        options?.openCart
       );
 
 
-    const currentQty =
-      existing
-        ?
-          Number(
-            existing.quantity || 0
-          )
-        :
-          0;
+    if (
+      !product
+      ||
+      !selectedVariant
+    ) {
 
+      return;
 
-    const finalQuantity =
-      Math.min(
-        9999,
-        currentQty
-        +
-        quantity
-      );
-
-
-    const {
-      data: quote,
-      error: quoteError
-    } =
-      await sb.rpc(
-        "shop_price_quote",
-        {
-
-          p_variant_id:
-            Number(
-              selectedVariant.id
-            ),
-
-          p_quantity:
-            finalQuantity
-
-        }
-      );
-
-
-    if (quoteError) {
-      throw quoteError;
     }
 
 
-    const effectivePrice =
-      Number(
-        quote?.unit_price
-        ??
-        selectedVariant.price
-      );
+    addCartBtn.disabled =
+      true;
 
 
-    const primaryImage =
-      [...images]
-        .sort(
-          function (a,b) {
+    if (buyNowBtn) {
 
-            return (
-              Number(
-                b.is_primary
-              )
-              -
-              Number(
-                a.is_primary
-              )
-            );
+      buyNowBtn.disabled =
+        true;
 
-          }
-        )[0]
-        ||
-        null;
+    }
 
 
-    const selectedImageUrl =
-      primaryImage
+    const oldAddText =
+      addCartBtn.textContent;
+
+
+    const oldBuyNowText =
+      buyNowBtn
         ?
-          imageUrl(
-            primaryImage.storage_path
-          )
+          buyNowBtn.textContent
         :
           "";
 
 
-    if (existing) {
+    if (shouldOpenCart && buyNowBtn) {
 
-      existing.quantity =
-        finalQuantity;
-
-
-      existing.price =
-        effectivePrice;
-
-
-      existing.retail_price =
-        Number(
-          selectedVariant.price
-        );
+      buyNowBtn.textContent =
+        "ĐANG MỞ...";
 
     }
     else {
 
-      cart.push({
-
-        product_id:
-          product.id,
-
-        variant_id:
-          selectedVariant.id,
-
-        product_name:
-          product.name,
-
-        variant_name:
-          selectedVariant.variant_name
-          ||
-          "",
-
-        price:
-          effectivePrice,
-
-        retail_price:
-          Number(
-            selectedVariant.price
-          ),
-
-        quantity:
-          finalQuantity,
-
-        image_url:
-          selectedImageUrl
-
-      });
+      addCartBtn.textContent =
+        "ĐANG THÊM...";
 
     }
 
 
-    localStorage.setItem(
-      "pickdee_shop_cart",
-      JSON.stringify(cart)
-    );
+    try {
+
+      const cart =
+        readCart();
 
 
-    updateCartCount();
+      const existing =
+        cart.find(
+          function (item) {
 
-    showToast();
+            return (
+              String(
+                item.variant_id
+              )
+              ===
+              String(
+                selectedVariant.id
+              )
+            );
+
+          }
+        );
+
+
+      const currentQty =
+        existing
+          ?
+            Number(
+              existing.quantity || 0
+            )
+          :
+            0;
+
+
+      const finalQuantity =
+        Math.min(
+          9999,
+          currentQty
+          +
+          quantity
+        );
+
+
+      const {
+        data: quote,
+        error: quoteError
+      } =
+        await sb.rpc(
+          "shop_price_quote",
+          {
+
+            p_variant_id:
+              Number(
+                selectedVariant.id
+              ),
+
+            p_quantity:
+              finalQuantity
+
+          }
+        );
+
+
+      if (quoteError) {
+        throw quoteError;
+      }
+
+
+      const effectivePrice =
+        Number(
+          quote?.unit_price
+          ??
+          selectedVariant.price
+        );
+
+
+      const primaryImage =
+        [...images]
+          .sort(
+            function (a,b) {
+
+              return (
+                Number(
+                  b.is_primary
+                )
+                -
+                Number(
+                  a.is_primary
+                )
+              );
+
+            }
+          )[0]
+        ||
+        null;
+
+
+      const selectedImageUrl =
+        primaryImage
+          ?
+            imageUrl(
+              primaryImage.storage_path
+            )
+          :
+            "";
+
+
+      if (existing) {
+
+        existing.quantity =
+          finalQuantity;
+
+
+        existing.price =
+          effectivePrice;
+
+
+        existing.retail_price =
+          Number(
+            selectedVariant.price
+          );
+
+      }
+      else {
+
+        cart.push({
+
+          product_id:
+            product.id,
+
+          variant_id:
+            selectedVariant.id,
+
+          product_name:
+            product.name,
+
+          variant_name:
+            selectedVariant.variant_name
+            ||
+            "",
+
+          price:
+            effectivePrice,
+
+          retail_price:
+            Number(
+              selectedVariant.price
+            ),
+
+          quantity:
+            finalQuantity,
+
+          image_url:
+            selectedImageUrl
+
+        });
+
+      }
+
+
+      localStorage.setItem(
+        "pickdee_shop_cart",
+        JSON.stringify(cart)
+      );
+
+
+      updateCartCount();
+
+
+      if (shouldOpenCart) {
+
+        window.location.href =
+          "./shop-cart";
+
+        return;
+
+      }
+
+
+      showToast();
+
+    }
+    catch (error) {
+
+      console.error(
+        "ADD CART PRICE ERROR:",
+        error
+      );
+
+
+      alert(
+        "Chưa thêm được sản phẩm vào giỏ. Anh vui lòng thử lại."
+      );
+
+    }
+    finally {
+
+      addCartBtn.disabled =
+        false;
+
+
+      addCartBtn.textContent =
+        oldAddText;
+
+
+      if (buyNowBtn) {
+
+        buyNowBtn.disabled =
+          false;
+
+
+        buyNowBtn.textContent =
+          oldBuyNowText;
+
+      }
+
+    }
 
   }
-  catch (error) {
-
-    console.error(
-      "ADD CART PRICE ERROR:",
-      error
-    );
-
-
-    alert(
-      "Chưa thêm được sản phẩm vào giỏ. Anh vui lòng thử lại."
-    );
-
-  }
-  finally {
-
-    addCartBtn.disabled =
-      false;
-
-
-    addCartBtn.textContent =
-      oldText;
-
-  }
-
-}
 
 
   addCartBtn.addEventListener(
     "click",
-    addToCart
+    function () {
+
+      addToCart({
+        openCart:
+          false
+      });
+
+    }
+  );
+
+
+  buyNowBtn?.addEventListener(
+    "click",
+    function () {
+
+      addToCart({
+        openCart:
+          true
+      });
+
+    }
   );
 
 
