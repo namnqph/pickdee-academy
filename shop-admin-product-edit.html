@@ -988,7 +988,245 @@
     );
 
   }
+  const SHOP_CATEGORY_GROUPS = [
+    {
+      id: "balls",
+      name: "Bóng Pickleball"
+    },
+    {
+      id: "paddles",
+      name: "Vợt Pickleball"
+    },
+    {
+      id: "grips",
+      name: "Quấn cán / Grip"
+    },
+    {
+      id: "care",
+      name: "Chăm sóc vợt"
+    },
+    {
+      id: "training",
+      name: "Tập luyện"
+    },
+    {
+      id: "recovery",
+      name: "Bảo hộ / Phục hồi"
+    },
+    {
+      id: "other",
+      name: "Phụ kiện khác"
+    }
+  ];
 
+
+  function normalizeCategoryName(value) {
+
+    return String(
+      value ?? ""
+    )
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  }
+
+
+  function shopCategoryGroup(category) {
+
+    const text =
+      normalizeCategoryName(
+        [
+          category?.name,
+          category?.slug
+        ].join(" ")
+      );
+
+    if (
+      text.includes("bong")
+      ||
+      text.includes("ball")
+    ) {
+      return "balls";
+    }
+
+    if (
+      text.includes("quan can")
+      ||
+      text.includes("grip")
+    ) {
+      return "grips";
+    }
+
+    if (
+      text.includes("cham soc")
+      ||
+      text.includes("phu kien vot")
+      ||
+      text.includes("ve sinh")
+      ||
+      text.includes("dan vien")
+      ||
+      text.includes("bao ve vot")
+      ||
+      text.includes("care")
+    ) {
+      return "care";
+    }
+
+    if (
+      text.includes("ho tro tap luyen")
+      ||
+      text.includes("tap luyen")
+      ||
+      text.includes("training")
+    ) {
+      return "training";
+    }
+
+    if (
+      text.includes("bao ho")
+      ||
+      text.includes("phuc hoi")
+      ||
+      text.includes("massage")
+      ||
+      text.includes("tat")
+    ) {
+      return "recovery";
+    }
+
+    if (
+      text.includes("vot pickleball")
+      ||
+      text === "vot"
+      ||
+      text.includes("paddle")
+    ) {
+      return "paddles";
+    }
+
+    if (
+      text.includes("tui")
+      ||
+      text.includes("phu kien bong")
+      ||
+      text.includes("phu kien khac")
+      ||
+      text.includes("other")
+    ) {
+      return "other";
+    }
+
+    return "other";
+
+  }
+
+
+  function shopCategoryDisplayName(category) {
+
+    const groupId =
+      shopCategoryGroup(
+        category
+      );
+
+    const group =
+      SHOP_CATEGORY_GROUPS.find(
+        function (item) {
+          return item.id === groupId;
+        }
+      );
+
+    return (
+      group?.name
+      ||
+      category?.name
+      ||
+      ""
+    );
+
+  }
+
+
+  function shopCategoryOptions() {
+
+    const currentCategoryId =
+      String(
+        product?.category_id || ""
+      );
+
+    const byGroup =
+      new Map();
+
+    categories
+      .filter(
+        function (category) {
+
+          return (
+            category.is_active === true
+            ||
+            String(category.id) === currentCategoryId
+          );
+
+        }
+      )
+      .forEach(
+        function (category) {
+
+          const groupId =
+            shopCategoryGroup(
+              category
+            );
+
+          const existing =
+            byGroup.get(
+              groupId
+            );
+
+          const isCurrent =
+            String(category.id) === currentCategoryId;
+
+          const existingIsCurrent =
+            existing
+            &&
+            String(existing.id) === currentCategoryId;
+
+          if (
+            !existing
+            ||
+            isCurrent
+            ||
+            (
+              !existingIsCurrent
+              &&
+              Number(category.sort_order || 9999)
+              <
+              Number(existing.sort_order || 9999)
+            )
+          ) {
+
+            byGroup.set(
+              groupId,
+              category
+            );
+
+          }
+
+        }
+      );
+
+    return SHOP_CATEGORY_GROUPS
+      .map(
+        function (group) {
+          return byGroup.get(
+            group.id
+          );
+        }
+      )
+      .filter(Boolean);
+
+  }
   function primaryImage() {
 
     return (
@@ -1751,15 +1989,7 @@
           "";
 
     const categoryOptions =
-      categories
-        .filter(
-          item =>
-            item.is_active === true
-            ||
-            String(item.id)
-            ===
-            String(product.category_id)
-        )
+      shopCategoryOptions()
         .map(
           function (category) {
 
@@ -1778,7 +2008,9 @@
                 ${selected}
               >
                 ${escapeHtml(
-                  category.name
+                  shopCategoryDisplayName(
+                    category
+                  )
                 )}
               </option>
             `;
