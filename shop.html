@@ -2009,14 +2009,108 @@ textarea {
     background: #fbfbfb !important;
   }
 
-  .product-image::after {
-    content: "♡";
+    .product-image::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .favorite-btn {
     position: absolute;
-    right: 13px;
-    top: 12px;
+    z-index: 12;
+    right: 10px;
+    top: 10px;
+
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.10);
+
+    background: rgba(255,255,255,.92);
     color: #111111;
-    font-size: 22px;
-    font-weight: 500;
+
+    font-family: inherit;
+    font-size: 21px;
+    font-weight: 950;
+
+    cursor: pointer;
+
+    box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  }
+
+  .favorite-btn.is-active {
+    background: var(--pd-red);
+    color: #ffffff;
+    border-color: var(--pd-red);
+  }
+
+  .favorite-btn:active {
+    transform: scale(.94);
+  }
+
+  .favorite-filter-btn {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .favorite-filter-btn.is-active {
+    padding: 0 13px;
+    border-radius: 12px;
+    background: var(--pd-red) !important;
+    color: #ffffff !important;
+  }
+
+  .favorite-filter-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: var(--pd-red);
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 950;
+  }
+
+  .favorite-filter-btn.is-active .favorite-filter-count {
+    background: #ffffff;
+    color: var(--pd-red);
+  }
+
+  .app-favorite-badge {
+    position: absolute;
+    top: 4px;
+    right: 18px;
+
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: var(--pd-red);
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 950;
+  }
+
+  .app-bottom-nav .favorite-nav-link.is-active {
+    background: rgba(255,19,56,.14);
+    color: var(--pd-red);
   }
 
   .product-image img {
@@ -2886,7 +2980,7 @@ textarea {
     </div>
 
 
-    <div class="header-actions">
+      <div class="header-actions">
 
       <a
         href="./shop-order-lookup"
@@ -2894,6 +2988,22 @@ textarea {
       >
         👤 Tài khoản
       </a>
+
+
+      <button
+        id="favoriteFilterBtn"
+        class="header-link favorite-filter-btn"
+        type="button"
+      >
+        ♡ Yêu thích
+
+        <span
+          id="favoriteCount"
+          class="favorite-filter-count"
+        >
+          0
+        </span>
+      </button>
 
 
       <a
@@ -2940,7 +3050,6 @@ textarea {
       </details>
 
     </div>
-
   </div>
 
 
@@ -3246,6 +3355,21 @@ textarea {
     <span>Danh mục</span>
   </a>
 
+  <a
+    href="#productsGrid"
+    id="bottomFavoriteFilterBtn"
+    class="favorite-nav-link"
+  >
+    <span class="app-bottom-icon">♡</span>
+    <span>Yêu thích</span>
+    <span
+      id="bottomFavoriteCount"
+      class="app-favorite-badge"
+    >
+      0
+    </span>
+  </a>
+
   <a href="./shop-cart">
     <span class="app-bottom-icon">🛒</span>
     <span>Giỏ hàng</span>
@@ -3281,9 +3405,20 @@ textarea {
   const bottomCartCount =
     document.getElementById("bottomCartCount");
 
+  const favoriteFilterBtn =
+    document.getElementById("favoriteFilterBtn");
+
+  const favoriteCount =
+    document.getElementById("favoriteCount");
+
+  const bottomFavoriteFilterBtn =
+    document.getElementById("bottomFavoriteFilterBtn");
+
+  const bottomFavoriteCount =
+    document.getElementById("bottomFavoriteCount");
+
   const bestSellerSection =
     document.getElementById("bestSellerSection");
-
   const bestSellerGrid =
     document.getElementById("bestSellerGrid");
 
@@ -3315,11 +3450,16 @@ textarea {
     );
 
 
+   const FAVORITES_STORAGE_KEY =
+    "pickdee_shop_favorites";
+
   let products = [];
   let variants = [];
   let images = [];
   let categories = [];
   let selectedCategory = "";
+  let showFavoritesOnly = false;
+  let favoriteProductIds = readFavorites();
 
 
   const PRODUCT_GROUPS = [
@@ -3420,7 +3560,196 @@ textarea {
 
   }
 
+  function readFavorites() {
 
+    try {
+
+      const data =
+        JSON.parse(
+          localStorage.getItem(
+            FAVORITES_STORAGE_KEY
+          )
+          ||
+          "[]"
+        );
+
+      return new Set(
+        Array.isArray(data)
+          ?
+            data.map(String)
+          :
+            []
+      );
+
+    }
+    catch (_) {
+
+      return new Set();
+
+    }
+
+  }
+
+
+  function saveFavorites() {
+
+    localStorage.setItem(
+      FAVORITES_STORAGE_KEY,
+      JSON.stringify(
+        Array.from(
+          favoriteProductIds
+        )
+      )
+    );
+
+  }
+
+
+  function isFavorite(productId) {
+
+    return favoriteProductIds.has(
+      String(productId)
+    );
+
+  }
+
+
+  function updateFavoriteCount() {
+
+    const count =
+      favoriteProductIds.size;
+
+    if (favoriteCount) {
+      favoriteCount.textContent =
+        String(count);
+    }
+
+    if (bottomFavoriteCount) {
+      bottomFavoriteCount.textContent =
+        String(count);
+    }
+
+    if (favoriteFilterBtn) {
+      favoriteFilterBtn.classList.toggle(
+        "is-active",
+        showFavoritesOnly
+      );
+    }
+
+    if (bottomFavoriteFilterBtn) {
+      bottomFavoriteFilterBtn.classList.toggle(
+        "is-active",
+        showFavoritesOnly
+      );
+    }
+
+  }
+
+
+  function setFavoriteFilter(active) {
+
+    showFavoritesOnly =
+      Boolean(active);
+
+    if (showFavoritesOnly) {
+
+      selectedCategory =
+        "";
+
+      searchInput.value =
+        "";
+
+      categoriesBox
+        .querySelectorAll(".category-btn")
+        .forEach(
+          function (button) {
+            button.classList.toggle(
+              "active",
+              !button.dataset.category
+            );
+          }
+        );
+
+    }
+
+    updateFavoriteCount();
+
+    renderProducts();
+
+    document
+      .getElementById("productsGrid")
+      ?.scrollIntoView(
+        {
+          behavior:
+            "smooth",
+
+          block:
+            "start"
+        }
+      );
+
+  }
+
+
+  function toggleFavorite(productId) {
+
+    const id =
+      String(productId);
+
+    if (favoriteProductIds.has(id)) {
+
+      favoriteProductIds.delete(id);
+
+    }
+    else {
+
+      favoriteProductIds.add(id);
+
+    }
+
+    saveFavorites();
+
+    updateFavoriteCount();
+
+    renderProducts();
+
+  }
+
+
+  function bindFavoriteButtons() {
+
+    document
+      .querySelectorAll(".favorite-btn")
+      .forEach(
+        function (button) {
+
+          if (
+            button.dataset.favoriteBound === "1"
+          ) {
+            return;
+          }
+
+          button.dataset.favoriteBound =
+            "1";
+
+          button.addEventListener(
+            "click",
+            function (event) {
+
+              event.preventDefault();
+              event.stopPropagation();
+
+              toggleFavorite(
+                button.dataset.productId
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
   function money(value) {
 
     return new Intl.NumberFormat(
@@ -3819,8 +4148,13 @@ textarea {
             "click",
             function () {
 
-              selectedCategory =
+                    selectedCategory =
                 button.dataset.category || "";
+
+              showFavoritesOnly =
+                false;
+
+              updateFavoriteCount();
 
 
               categoriesBox
@@ -3956,8 +4290,25 @@ textarea {
     const detailUrl =
       `./shop-product?id=${encodeURIComponent(product.id)}`;
 
+    const favoriteActive =
+      isFavorite(
+        product.id
+      );
+
     return `
-      <article class="product-card">
+      <article
+        class="product-card"
+        data-product-id="${escapeHtml(product.id)}"
+      >
+
+        <button
+          class="favorite-btn ${favoriteActive ? "is-active" : ""}"
+          type="button"
+          data-product-id="${escapeHtml(product.id)}"
+          aria-label="${favoriteActive ? "Bỏ khỏi yêu thích" : "Thêm vào yêu thích"}"
+        >
+          ${favoriteActive ? "♥" : "♡"}
+        </button>
 
         <a
           class="product-main-link"
@@ -4042,7 +4393,6 @@ textarea {
 
   }
 
-
   function renderBestSellers(keyword) {
 
     if (
@@ -4053,10 +4403,12 @@ textarea {
       return;
     }
 
-    const shouldShow =
+      const shouldShow =
       !selectedCategory
       &&
-      !keyword;
+      !keyword
+      &&
+      !showFavoritesOnly;
 
     if (!shouldShow) {
 
@@ -4085,13 +4437,14 @@ textarea {
 
     }
 
-    bestSellerGrid.innerHTML =
+       bestSellerGrid.innerHTML =
       bestSellers
         .map(productCardHtml)
         .join("");
 
-    bestSellerSection.classList.remove("is-hidden");
+    bindFavoriteButtons();
 
+    bestSellerSection.classList.remove("is-hidden");
   }
 
 
@@ -4116,6 +4469,13 @@ textarea {
             ||
             group === selectedCategory;
 
+          const matchesFavorite =
+            !showFavoritesOnly
+            ||
+            isFavorite(
+              product.id
+            );
+
           const text =
             normalizeText(
               [
@@ -4134,6 +4494,8 @@ textarea {
             text.includes(keyword);
 
           return (
+            matchesFavorite
+            &&
             matchesCategory
             &&
             matchesSearch
@@ -4143,16 +4505,36 @@ textarea {
       );
 
     resultCount.textContent =
-      `${filtered.length} sản phẩm`;
+      showFavoritesOnly
+        ?
+          `${filtered.length} sản phẩm yêu thích`
+        :
+          `${filtered.length} sản phẩm`;
 
     if (!filtered.length) {
 
       grid.innerHTML = `
         <div class="state-box">
-          <strong>Chưa có sản phẩm phù hợp</strong>
-          Thử tìm bằng từ khóa khác hoặc chọn nhóm sản phẩm khác.
+          <strong>
+            ${
+              showFavoritesOnly
+                ?
+                  "Chưa có sản phẩm yêu thích"
+                :
+                  "Chưa có sản phẩm phù hợp"
+            }
+          </strong>
+          ${
+            showFavoritesOnly
+              ?
+                "Bấm vào trái tim trên sản phẩm để lưu lại danh sách mua sau."
+              :
+                "Thử tìm bằng từ khóa khác hoặc chọn nhóm sản phẩm khác."
+          }
         </div>
       `;
+
+      updateFavoriteCount();
 
       return;
 
@@ -4163,8 +4545,11 @@ textarea {
         .map(productCardHtml)
         .join("");
 
-  }
+    bindFavoriteButtons();
 
+    updateFavoriteCount();
+
+  }
   function renderPromoMedia() {
 
     const ballMedia =
@@ -4350,7 +4735,38 @@ textarea {
 
   }
 
+  if (favoriteFilterBtn) {
 
+    favoriteFilterBtn.addEventListener(
+      "click",
+      function () {
+
+        setFavoriteFilter(
+          !showFavoritesOnly
+        );
+
+      }
+    );
+
+  }
+
+
+  if (bottomFavoriteFilterBtn) {
+
+    bottomFavoriteFilterBtn.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+
+        setFavoriteFilter(
+          !showFavoritesOnly
+        );
+
+      }
+    );
+
+  }
   searchInput.addEventListener(
     "input",
     renderProducts
@@ -4367,7 +4783,12 @@ textarea {
       "click",
       function () {
 
-        selectedCategory = "";
+            selectedCategory = "";
+
+        showFavoritesOnly =
+          false;
+
+        updateFavoriteCount();
 
         searchInput.value = "";
 
@@ -4410,8 +4831,13 @@ textarea {
 
             event.preventDefault();
 
-            selectedCategory =
+                       selectedCategory =
               promoLink.dataset.promoCategory || "";
+
+            showFavoritesOnly =
+              false;
+
+            updateFavoriteCount();
 
             searchInput.value = "";
 
@@ -4443,12 +4869,26 @@ textarea {
         );
 
       }
-    );  window.addEventListener(
+    ); 
+  window.addEventListener(
     "storage",
-    updateCartCount
+    function () {
+
+      updateCartCount();
+
+      favoriteProductIds =
+        readFavorites();
+
+      updateFavoriteCount();
+
+      renderProducts();
+
+    }
   );
 
   updateCartCount();
+
+  updateFavoriteCount();
 
   loadShop();
 
