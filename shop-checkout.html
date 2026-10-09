@@ -2653,74 +2653,212 @@
   }
 
 
-  async function loadAddressData() {
+  function enableManualAddressInputs() {
 
-    const [
-      provinceResult,
-      wardResult
-    ] =
-      await Promise.all([
+    const provinceSelect =
+      document.getElementById(
+        "province"
+      );
 
-        fetch(
-          ADDRESS_PROVINCE_URL
-        ),
-
-        fetch(
-          ADDRESS_WARD_URL
-        )
-
-      ]);
-
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
 
     if (
-      !provinceResult.ok
-      ||
-      !wardResult.ok
+      provinceSelect
     ) {
 
-      throw new Error(
-        "Không tải được danh sách tỉnh/phường."
+      const provinceInput =
+        document.createElement(
+          "input"
+        );
+
+      provinceInput.id =
+        "province";
+
+      provinceInput.name =
+        "province";
+
+      provinceInput.type =
+        "text";
+
+      provinceInput.required =
+        true;
+
+      provinceInput.placeholder =
+        "Nhập tỉnh/thành";
+
+      provinceInput.autocomplete =
+        "address-level1";
+
+      provinceInput.className =
+        provinceSelect.className || "";
+
+      provinceSelect.replaceWith(
+        provinceInput
       );
 
     }
 
+    if (
+      wardSelect
+    ) {
 
-    addressProvinces =
-      await provinceResult.json();
+      const wardInput =
+        document.createElement(
+          "input"
+        );
+
+      wardInput.id =
+        "ward";
+
+      wardInput.name =
+        "ward";
+
+      wardInput.type =
+        "text";
+
+      wardInput.required =
+        true;
+
+      wardInput.placeholder =
+        "Nhập phường/xã";
+
+      wardInput.autocomplete =
+        "address-level2";
+
+      wardInput.className =
+        wardSelect.className || "";
+
+      wardSelect.replaceWith(
+        wardInput
+      );
+
+    }
+
+  }
 
 
-    addressWards =
-      await wardResult.json();
+  function fetchWithTimeout(
+    url,
+    timeoutMs
+  ) {
 
+    const controller =
+      new AbortController();
 
-    fillProvinceOptions(
-      ""
-    );
-
-
-    document
-      .getElementById(
-        "province"
-      )
-      .addEventListener(
-        "change",
+    const timer =
+      window.setTimeout(
         function () {
 
-          const selectedOption =
-            this.options[
-              this.selectedIndex
-            ];
+          controller.abort();
 
+        },
+        timeoutMs
+      );
 
-          fillWardOptions(
-            selectedOption?.dataset?.provinceId
-            ||
-            "",
-            ""
+    return fetch(
+      url,
+      {
+        signal:
+          controller.signal,
+
+        cache:
+          "no-store"
+      }
+    )
+      .finally(
+        function () {
+
+          window.clearTimeout(
+            timer
           );
 
         }
       );
+
+  }
+
+
+  async function loadAddressData() {
+
+    try {
+
+      const [
+        provinceResult,
+        wardResult
+      ] =
+        await Promise.all([
+
+          fetchWithTimeout(
+            ADDRESS_PROVINCE_URL,
+            5000
+          ),
+
+          fetchWithTimeout(
+            ADDRESS_WARD_URL,
+            5000
+          )
+
+        ]);
+
+      if (
+        !provinceResult.ok
+        ||
+        !wardResult.ok
+      ) {
+
+        throw new Error(
+          "Không tải được danh sách tỉnh/phường."
+        );
+
+      }
+
+      addressProvinces =
+        await provinceResult.json();
+
+      addressWards =
+        await wardResult.json();
+
+      fillProvinceOptions(
+        ""
+      );
+
+      document
+        .getElementById(
+          "province"
+        )
+        .addEventListener(
+          "change",
+          function () {
+
+            const selectedOption =
+              this.options[
+                this.selectedIndex
+              ];
+
+            fillWardOptions(
+              selectedOption?.dataset?.provinceId
+              ||
+              "",
+              ""
+            );
+
+          }
+        );
+
+    }
+    catch (error) {
+
+      console.warn(
+        "ADDRESS DATA FALLBACK:",
+        error
+      );
+
+      enableManualAddressInputs();
+
+    }
 
   }
 
