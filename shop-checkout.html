@@ -1906,7 +1906,42 @@
   let addressProvinces = [];
 
   let addressWards = [];
-
+  const FALLBACK_PROVINCES = [
+    "An Giang",
+    "Bắc Ninh",
+    "Cà Mau",
+    "Cao Bằng",
+    "Cần Thơ",
+    "Đà Nẵng",
+    "Đắk Lắk",
+    "Điện Biên",
+    "Đồng Nai",
+    "Đồng Tháp",
+    "Gia Lai",
+    "Hà Nội",
+    "Hà Tĩnh",
+    "Hải Phòng",
+    "Huế",
+    "Hưng Yên",
+    "Khánh Hòa",
+    "Lai Châu",
+    "Lâm Đồng",
+    "Lạng Sơn",
+    "Lào Cai",
+    "Nghệ An",
+    "Ninh Bình",
+    "Phú Thọ",
+    "Quảng Ngãi",
+    "Quảng Ninh",
+    "Quảng Trị",
+    "Sơn La",
+    "Tây Ninh",
+    "Thái Nguyên",
+    "Thanh Hóa",
+    "TP. Hồ Chí Minh",
+    "Tuyên Quang",
+    "Vĩnh Long"
+  ];
 
   const checkoutForm =
     document.getElementById(
@@ -2999,6 +3034,11 @@
         "province"
       );
 
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
+
     if (
       provinceSelect
     ) {
@@ -3006,81 +3046,153 @@
       provinceSelect.innerHTML =
         `
           <option value="">
-            Đang tải tỉnh/thành...
+            Chọn tỉnh/thành
+          </option>
+        `
+        +
+        FALLBACK_PROVINCES
+          .map(
+            function (
+              name
+            ) {
+
+              return `
+                <option value="${escapeHtml(name)}">
+                  ${escapeHtml(name)}
+                </option>
+              `;
+
+            }
+          )
+          .join("");
+
+    }
+
+    if (
+      wardSelect
+    ) {
+
+      wardSelect.disabled =
+        true;
+
+      wardSelect.innerHTML =
+        `
+          <option value="">
+            Chọn tỉnh/thành trước
           </option>
         `;
 
     }
 
-    setWardLoadingText(
-      "Chọn tỉnh/thành trước"
-    );
-
-    const provinces =
-      await fetchAddressJson(
-        addressProvinceUrls()
-      );
-
-    addressProvinces =
-      provinces;
-
-    fillProvinceOptions(
-      ""
-    );
-
-    const currentProvinceSelect =
-      document.getElementById(
-        "province"
-      );
-
-    currentProvinceSelect
-      .addEventListener(
+    provinceSelect
+      ?.addEventListener(
         "change",
         async function () {
 
-          const selectedOption =
-            this.options[
-              this.selectedIndex
-            ];
-
-          const provinceId =
-            selectedOption?.dataset?.provinceId
-            ||
-            "";
+          const provinceName =
+            this.value;
 
           if (
-            !provinceId
+            !provinceName
           ) {
 
-            fillWardOptions(
-              "",
-              ""
-            );
+            if (
+              wardSelect
+            ) {
+
+              wardSelect.disabled =
+                true;
+
+              wardSelect.innerHTML =
+                `
+                  <option value="">
+                    Chọn tỉnh/thành trước
+                  </option>
+                `;
+
+            }
 
             return;
 
           }
 
           if (
-            addressWards.length
+            wardSelect
           ) {
 
-            fillWardOptions(
-              provinceId,
-              ""
-            );
+            wardSelect.disabled =
+              true;
 
-            return;
+            wardSelect.innerHTML =
+              `
+                <option value="">
+                  Đang tải phường/xã...
+                </option>
+              `;
 
           }
-
-          setWardLoadingText(
-            "Đang tải phường/xã..."
-          );
 
           try {
 
-            await loadWardDataInBackground();
+            if (
+              !addressProvinces.length
+              ||
+              !addressWards.length
+            ) {
+
+              const [
+                provinces,
+                wards
+              ] =
+                await Promise.all(
+                  [
+                    fetchAddressJson(
+                      addressProvinceUrls()
+                    ),
+
+                    fetchAddressJson(
+                      addressWardUrls()
+                    )
+                  ]
+                );
+
+              addressProvinces =
+                provinces;
+
+              addressWards =
+                wards;
+
+            }
+
+            const matchedProvince =
+              addressProvinces.find(
+                function (
+                  province
+                ) {
+
+                  return addressName(
+                    province
+                  )
+                    ===
+                  provinceName;
+
+                }
+              );
+
+            const provinceId =
+              matchedProvince?.id
+              ||
+              "";
+
+            if (
+              !provinceId
+            ) {
+
+              throw new Error(
+                "Không tìm thấy mã tỉnh/thành."
+              );
+
+            }
 
             fillWardOptions(
               provinceId,
@@ -3095,88 +3207,23 @@
               error
             );
 
-            setWardLoadingText(
-              "Không tải được phường/xã, vui lòng thử lại"
-            );
+            if (
+              wardSelect
+            ) {
+
+              wardSelect.disabled =
+                true;
+
+              wardSelect.innerHTML =
+                `
+                  <option value="">
+                    Không tải được phường/xã, thử lại sau
+                  </option>
+                `;
+
+            }
 
           }
-
-        }
-      );
-
-    loadWardDataInBackground()
-      .catch(
-        function (
-          error
-        ) {
-
-          console.warn(
-            "WARD BACKGROUND LOAD ERROR:",
-            error
-          );
-
-        }
-      );
-
-  }
-
-    const provinceUrls =
-      [
-        "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-province.json",
-        "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json"
-      ];
-
-    const wardUrls =
-      [
-        "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-ward.json",
-        "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-ward.json"
-      ];
-
-    const [
-      provinces,
-      wards
-    ] =
-      await Promise.all(
-        [
-          fetchAddressJson(
-            provinceUrls
-          ),
-
-          fetchAddressJson(
-            wardUrls
-          )
-        ]
-      );
-
-    addressProvinces =
-      provinces;
-
-    addressWards =
-      wards;
-
-    fillProvinceOptions(
-      ""
-    );
-
-    document
-      .getElementById(
-        "province"
-      )
-      .addEventListener(
-        "change",
-        function () {
-
-          const selectedOption =
-            this.options[
-              this.selectedIndex
-            ];
-
-          fillWardOptions(
-            selectedOption?.dataset?.provinceId
-            ||
-            "",
-            ""
-          );
 
         }
       );
