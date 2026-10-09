@@ -4498,6 +4498,202 @@ button.product-action:disabled,
   }
 
 }
+
+/* =====================================================
+   FLOATING CART BUTTON
+   Giỏ hàng nổi theo màn hình khi khách cuộn trang
+====================================================== */
+
+.floating-cart-button {
+  position: fixed;
+  z-index: 9998;
+
+  right: max(18px, calc((100vw - 1180px) / 2 + 18px));
+  bottom: 24px;
+
+  min-width: 138px;
+  height: 56px;
+
+  padding:
+    0 16px 0 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border-radius:
+    999px;
+
+  border:
+    1.5px solid rgba(255,201,52,.68);
+
+  background:
+    linear-gradient(135deg, #11100a 0%, #241804 58%, #ffc934 145%);
+
+  color:
+    #ffffff !important;
+
+  text-decoration:
+    none !important;
+
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.26),
+    0 0 28px rgba(255,201,52,.18),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+
+  backdrop-filter:
+    blur(12px);
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    filter .18s ease;
+}
+
+.floating-cart-button:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 22px 52px rgba(0,0,0,.30),
+    0 0 34px rgba(255,201,52,.25),
+    inset 0 0 0 1px rgba(255,255,255,.08);
+
+  filter:
+    brightness(1.04);
+}
+
+.floating-cart-icon {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius:
+    999px;
+
+  background:
+    var(--pd-gold);
+
+  color:
+    #111111;
+
+  font-size:
+    17px;
+
+  box-shadow:
+    0 0 18px rgba(255,201,52,.26);
+}
+
+.floating-cart-text {
+  font-size:
+    12px;
+
+  line-height:
+    1;
+
+  font-weight:
+    1000;
+
+  letter-spacing:
+    .02em;
+
+  white-space:
+    nowrap;
+}
+
+.floating-cart-count {
+  min-width: 22px;
+  height: 22px;
+
+  padding:
+    0 7px;
+
+  position: absolute;
+  top: -6px;
+  right: -5px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius:
+    999px;
+
+  background:
+    var(--pd-red);
+
+  color:
+    #ffffff;
+
+  border:
+    2px solid #11100a;
+
+  font-size:
+    11px;
+
+  font-weight:
+    1000;
+
+  box-shadow:
+    0 8px 18px rgba(255,19,56,.25);
+}
+
+@media(max-width:700px) {
+
+  .floating-cart-button {
+    right:
+      14px;
+
+    bottom:
+      calc(84px + env(safe-area-inset-bottom));
+
+    min-width:
+      62px;
+
+    width:
+      62px;
+
+    height:
+      62px;
+
+    padding:
+      0;
+
+    border-radius:
+      22px;
+  }
+
+  .floating-cart-text {
+    display:
+      none;
+  }
+
+  .floating-cart-icon {
+    width:
+      38px;
+
+    height:
+      38px;
+
+    font-size:
+      18px;
+  }
+
+  .floating-cart-count {
+    top:
+      -7px;
+
+    right:
+      -7px;
+  }
+
+}
+
+    
 </style>
 
 </head>
@@ -4949,6 +5145,22 @@ button.product-action:disabled,
     <span>Đơn hàng</span>
   </a>
 </nav>
+
+<a
+  href="./shop-cart"
+  class="floating-cart-button"
+  aria-label="Mở giỏ hàng"
+>
+  <span class="floating-cart-icon">🛒</span>
+  <span class="floating-cart-text">Giỏ hàng</span>
+  <span
+    id="floatingCartCount"
+    class="floating-cart-count"
+  >
+    0
+  </span>
+</a>
+
 <script>
 (function () {
 
@@ -4967,11 +5179,14 @@ button.product-action:disabled,
   const resultCount =
     document.getElementById("resultCount");
 
-  const cartCount =
+   const cartCount =
     document.getElementById("cartCount");
 
   const bottomCartCount =
     document.getElementById("bottomCartCount");
+
+  const floatingCartCount =
+    document.getElementById("floatingCartCount");
 
   const favoriteFilterBtn =
     document.getElementById("favoriteFilterBtn");
@@ -5079,29 +5294,38 @@ button.product-action:disabled,
           "[]"
         );
 
-      const uniqueVariantIds =
-        new Set(
-          (
-            Array.isArray(cart)
-              ?
-                cart
-              :
-                []
-          )
-            .filter(function (item) {
+      const count =
+        (
+          Array.isArray(cart)
+            ?
+              cart
+            :
+              []
+        )
+          .filter(
+            function (item) {
               return (
                 item
                 &&
                 item.variant_id != null
               );
-            })
-            .map(function (item) {
-              return String(item.variant_id);
-            })
-        );
+            }
+          )
+          .reduce(
+            function (total,item) {
 
-      const count =
-        uniqueVariantIds.size;
+              return (
+                total
+                +
+                Math.max(
+                  1,
+                  Number(item.quantity || 1)
+                )
+              );
+
+            },
+            0
+          );
 
       if (cartCount) {
         cartCount.textContent =
@@ -5113,15 +5337,27 @@ button.product-action:disabled,
           String(count);
       }
 
+      if (floatingCartCount) {
+        floatingCartCount.textContent =
+          String(count);
+      }
+
     }
     catch (_) {
 
       if (cartCount) {
-        cartCount.textContent = "0";
+        cartCount.textContent =
+          "0";
       }
 
       if (bottomCartCount) {
-        bottomCartCount.textContent = "0";
+        bottomCartCount.textContent =
+          "0";
+      }
+
+      if (floatingCartCount) {
+        floatingCartCount.textContent =
+          "0";
       }
 
     }
