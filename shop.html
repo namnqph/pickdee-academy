@@ -4100,6 +4100,136 @@ textarea {
   }
 
 } 
+/* =====================================================
+   CARD QUICK CART + BUY NOW
+   1 nút thêm giỏ + 1 nút mua ngay
+====================================================== */
+
+.product-card-actions {
+  gap: 8px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+button.product-action,
+.product-buy-now-btn {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.product-action:disabled,
+.product-buy-now-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+button.product-action.is-added {
+  background: #d8ff45 !important;
+  border-color: #d8ff45 !important;
+  color: #111111 !important;
+  transform: scale(.94);
+}
+
+.product-buy-now-btn {
+  min-height: 40px;
+  flex: 1;
+
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  border:
+    2px solid var(--pd-red);
+
+  background:
+    var(--pd-red);
+
+  color:
+    #ffffff;
+
+  font-size:
+    11px;
+
+  font-weight:
+    1000;
+
+  white-space:
+    nowrap;
+
+  box-shadow:
+    0 8px 18px rgba(255,19,56,.16);
+}
+
+.product-buy-now-btn:active {
+  transform: scale(.96);
+}
+
+.shop-cart-toast {
+  position: fixed;
+  z-index: 9999;
+
+  left: 50%;
+  bottom: 26px;
+
+  min-width: 220px;
+  max-width: calc(100% - 32px);
+
+  padding: 13px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(135deg, #11100a, #241804);
+
+  color: #ffffff;
+
+  border:
+    1px solid rgba(255,201,52,.36);
+
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.32),
+    0 0 24px rgba(255,201,52,.16);
+
+  font-size: 13px;
+  font-weight: 950;
+
+  transform:
+    translateX(-50%)
+    translateY(18px);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    .22s ease;
+}
+
+.shop-cart-toast.show {
+  opacity: 1;
+
+  transform:
+    translateX(-50%)
+    translateY(0);
+}
+
+@media(max-width:700px) {
+
+  .product-buy-now-btn {
+    min-height: 38px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+}
+    
 </style>
 
 </head>
@@ -4729,7 +4859,352 @@ textarea {
     }
 
   }
+  function readShopCart() {
 
+    try {
+
+      const cart =
+        JSON.parse(
+          localStorage.getItem(
+            "pickdee_shop_cart"
+          )
+          ||
+          "[]"
+        );
+
+      return Array.isArray(cart)
+        ?
+          cart
+        :
+          [];
+
+    }
+    catch (_) {
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveShopCart(cart) {
+
+    localStorage.setItem(
+      "pickdee_shop_cart",
+      JSON.stringify(cart)
+    );
+
+  }
+
+
+  let shopCartToastTimer = null;
+
+
+  function showShopCartToast(message) {
+
+    let toast =
+      document.getElementById(
+        "shopCartToast"
+      );
+
+    if (!toast) {
+
+      toast =
+        document.createElement("div");
+
+      toast.id =
+        "shopCartToast";
+
+      toast.className =
+        "shop-cart-toast";
+
+      document.body.appendChild(
+        toast
+      );
+
+    }
+
+    toast.textContent =
+      message || "Đã thêm vào giỏ hàng";
+
+    toast.classList.add(
+      "show"
+    );
+
+    clearTimeout(
+      shopCartToastTimer
+    );
+
+    shopCartToastTimer =
+      setTimeout(
+        function () {
+
+          toast.classList.remove(
+            "show"
+          );
+
+        },
+        1700
+      );
+
+  }
+
+
+  function addProductToCartFromList(productId, options) {
+
+    const shouldOpenCart =
+      Boolean(
+        options?.openCart
+      );
+
+    const button =
+      options?.button || null;
+
+    const product =
+      products.find(
+        function (item) {
+          return (
+            String(item.id)
+            ===
+            String(productId)
+          );
+        }
+      );
+
+    if (!product) {
+      return;
+    }
+
+    const productVariants =
+      getProductVariants(
+        product.id
+      );
+
+    const selectedVariant =
+      [...productVariants]
+        .sort(
+          function (a,b) {
+            return (
+              Number(a.price || 0)
+              -
+              Number(b.price || 0)
+            );
+          }
+        )[0]
+      ||
+      null;
+
+    if (!selectedVariant) {
+
+      showShopCartToast(
+        "Sản phẩm này chưa có biến thể để thêm vào giỏ"
+      );
+
+      return;
+
+    }
+
+    const image =
+      getProductImage(
+        product.id
+      );
+
+    const imageUrl =
+      image
+        ?
+          publicImageUrl(
+            image.storage_path
+          )
+        :
+          "";
+
+    const cart =
+      readShopCart();
+
+    const existing =
+      cart.find(
+        function (item) {
+          return (
+            item
+            &&
+            String(item.variant_id)
+            ===
+            String(selectedVariant.id)
+          );
+        }
+      );
+
+    if (existing) {
+
+      existing.quantity =
+        Number(existing.quantity || 0)
+        +
+        1;
+
+      existing.price =
+        Number(selectedVariant.price || 0);
+
+      existing.retail_price =
+        Number(selectedVariant.price || 0);
+
+      existing.image_url =
+        existing.image_url || imageUrl;
+
+    }
+    else {
+
+      cart.push(
+        {
+          product_id:
+            product.id,
+
+          variant_id:
+            selectedVariant.id,
+
+          product_name:
+            product.name,
+
+          variant_name:
+            selectedVariant.variant_name
+            ||
+            "",
+
+          price:
+            Number(selectedVariant.price || 0),
+
+          retail_price:
+            Number(selectedVariant.price || 0),
+
+          quantity:
+            1,
+
+          image_url:
+            imageUrl
+        }
+      );
+
+    }
+
+    saveShopCart(
+      cart
+    );
+
+    updateCartCount();
+
+    if (shouldOpenCart) {
+
+      window.location.href =
+        "./shop-cart";
+
+      return;
+
+    }
+
+    if (button) {
+
+      button.classList.add(
+        "is-added"
+      );
+
+      setTimeout(
+        function () {
+          button.classList.remove(
+            "is-added"
+          );
+        },
+        350
+      );
+
+    }
+
+    showShopCartToast(
+      "Đã thêm vào giỏ hàng"
+    );
+
+  }
+
+
+  function bindCartButtons() {
+
+    document
+      .querySelectorAll(".add-cart-btn")
+      .forEach(
+        function (button) {
+
+          if (
+            button.dataset.cartBound === "1"
+          ) {
+            return;
+          }
+
+          button.dataset.cartBound =
+            "1";
+
+          button.addEventListener(
+            "click",
+            function (event) {
+
+              event.preventDefault();
+              event.stopPropagation();
+
+              addProductToCartFromList(
+                button.dataset.productId,
+                {
+                  openCart:
+                    false,
+
+                  button:
+                    button
+                }
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(".buy-now-card-btn")
+      .forEach(
+        function (button) {
+
+          if (
+            button.dataset.buyNowBound === "1"
+          ) {
+            return;
+          }
+
+          button.dataset.buyNowBound =
+            "1";
+
+          button.addEventListener(
+            "click",
+            function (event) {
+
+              event.preventDefault();
+              event.stopPropagation();
+
+              addProductToCartFromList(
+                button.dataset.productId,
+                {
+                  openCart:
+                    true,
+
+                  button:
+                    button
+                }
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
   function readFavorites() {
 
     try {
@@ -5549,13 +6024,25 @@ textarea {
         </a>
 
 
-        <div class="product-card-actions">
-          <a
-            class="product-action"
-            href="${detailUrl}"
+              <div class="product-card-actions">
+          <button
+            class="product-action add-cart-btn"
+            type="button"
+            data-product-id="${escapeHtml(product.id)}"
+            aria-label="Thêm ${escapeHtml(product.name)} vào giỏ"
+            ${productVariants.length ? "" : "disabled"}
           >
-            XEM / MUA NGAY
-          </a>
+            Thêm vào giỏ
+          </button>
+
+          <button
+            class="product-buy-now-btn buy-now-card-btn"
+            type="button"
+            data-product-id="${escapeHtml(product.id)}"
+            ${productVariants.length ? "" : "disabled"}
+          >
+            MUA NGAY
+          </button>
         </div>
 
       </article>
@@ -5612,7 +6099,9 @@ textarea {
         .map(productCardHtml)
         .join("");
 
-    bindFavoriteButtons();
+      bindFavoriteButtons();
+
+    bindCartButtons();
 
     bestSellerSection.classList.remove("is-hidden");
   }
@@ -5716,6 +6205,8 @@ textarea {
         .join("");
 
     bindFavoriteButtons();
+
+    bindCartButtons();
 
     updateFavoriteCount();
 
