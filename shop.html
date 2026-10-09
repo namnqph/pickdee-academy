@@ -461,7 +461,78 @@ textarea {
         #d8ff45;
     }
 
+    /* =====================================================
+       BEST SELLER
+    ====================================================== */
 
+    .best-seller-section {
+      margin-bottom: 28px;
+    }
+
+
+    .best-seller-section.is-hidden {
+      display: none;
+    }
+
+
+    .best-seller-head {
+      margin-bottom: 14px;
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
+      gap: 14px;
+    }
+
+
+    .best-seller-kicker {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 950;
+
+      letter-spacing: .1em;
+    }
+
+
+    .best-seller-title {
+      margin: 0;
+
+      color: #ffffff;
+
+      font-size: 22px;
+      font-weight: 950;
+
+      letter-spacing: -.035em;
+    }
+
+
+    .best-seller-note {
+      color: rgba(255,255,255,.5);
+
+      font-size: 12px;
+      font-weight: 800;
+
+      white-space: nowrap;
+    }
+
+
+    @media(max-width:700px) {
+
+      .best-seller-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+
+      .best-seller-note {
+        white-space: normal;
+      }
+
+    }
     /* =====================================================
        PRODUCT GRID
     ====================================================== */
@@ -1186,7 +1257,39 @@ textarea {
 
 <main>
 
+  <section
+    id="bestSellerSection"
+    class="best-seller-section is-hidden"
+  >
 
+    <div class="best-seller-head">
+
+      <div>
+
+        <div class="best-seller-kicker">
+          PICKDEE GỢI Ý
+        </div>
+
+        <h2 class="best-seller-title">
+          Sản phẩm bán chạy
+        </h2>
+
+      </div>
+
+
+      <div class="best-seller-note">
+        Những món nên xem trước
+      </div>
+
+    </div>
+
+
+    <div
+      id="bestSellerGrid"
+      class="products-grid"
+    ></div>
+
+  </section>
   <div
     id="categories"
     class="categories"
@@ -1298,7 +1401,16 @@ textarea {
       "cartCount"
     );
 
+  const bestSellerSection =
+    document.getElementById(
+      "bestSellerSection"
+    );
 
+
+  const bestSellerGrid =
+    document.getElementById(
+      "bestSellerGrid"
+    );
   if (
     !window.supabase
     ||
@@ -1599,7 +1711,7 @@ textarea {
     if (
       text.includes("bong")
       ||
-      text.includes("ball")
+      /\bballs?\b/.test(text)
     ) {
       return "balls";
     }
@@ -1633,7 +1745,7 @@ textarea {
     }
 
 
-       if (
+    if (
       text.includes("cham soc")
       ||
       text.includes("ve sinh")
@@ -1667,7 +1779,7 @@ textarea {
     }
 
 
-        if (
+    if (
       text.includes("phuc hoi")
       ||
       text.includes("massage")
@@ -1693,7 +1805,6 @@ textarea {
     return "other";
 
   }
-
 
   function renderCategories() {
 
@@ -1919,12 +2030,274 @@ textarea {
      RENDER PRODUCT
   ====================================================== */
 
+  function isBestSellerProduct(
+    product
+  ) {
+
+    return Boolean(
+      product?.is_best_seller
+      ||
+      product?.is_featured
+    );
+
+  }
+
+
+  function productCardHtml(
+    product
+  ) {
+
+    const productVariants =
+      getProductVariants(
+        product.id
+      );
+
+
+    const firstVariant =
+      productVariants[0]
+      || null;
+
+
+    const lowestPrice =
+      productVariants.length
+        ?
+          Math.min(
+            ...productVariants.map(
+              function (item) {
+
+                return Number(
+                  item.price || 0
+                );
+
+              }
+            )
+          )
+        :
+          0;
+
+
+    const comparePrice =
+      firstVariant
+        ?.compare_at_price
+      || null;
+
+
+    const image =
+      getProductImage(
+        product.id
+      );
+
+
+    const imageUrl =
+      image
+        ?
+          publicImageUrl(
+            image.storage_path
+          )
+        :
+          "";
+
+
+    const detailUrl =
+      `./shop-product?id=${encodeURIComponent(product.id)}`;
+
+
+    return `
+      <article class="product-card">
+
+        <a
+          class="product-main-link"
+          href="${detailUrl}"
+        >
+
+          <div class="product-image">
+
+            ${
+              imageUrl
+                ?
+                  `
+                    <img
+                      src="${escapeHtml(imageUrl)}"
+                      alt="${escapeHtml(
+                        image?.alt_text
+                        ||
+                        product.name
+                      )}"
+                      loading="lazy"
+                    >
+                  `
+                :
+                  `
+                    <div class="product-placeholder">
+                      🏓
+                    </div>
+                  `
+            }
+
+          </div>
+
+
+          <div class="product-body">
+
+            <div class="product-brand">
+              ${
+                escapeHtml(
+                  product.brand || "PickDee"
+                )
+              }
+            </div>
+
+
+            <div class="product-name">
+              ${escapeHtml(product.name)}
+            </div>
+
+
+            <div>
+
+              <span class="product-price">
+                ${
+                  lowestPrice
+                    ?
+                      money(lowestPrice)
+                    :
+                      "Liên hệ"
+                }
+              </span>
+
+
+              ${
+                comparePrice
+                &&
+                Number(comparePrice)
+                  >
+                Number(lowestPrice)
+                  ?
+                    `
+                      <span class="product-compare-price">
+                        ${money(comparePrice)}
+                      </span>
+                    `
+                  :
+                    ""
+              }
+
+            </div>
+
+          </div>
+
+        </a>
+
+
+        <div class="product-card-actions">
+
+          <a
+            class="product-action"
+            href="${detailUrl}"
+          >
+            XEM / MUA NGAY
+          </a>
+
+        </div>
+
+      </article>
+    `;
+
+  }
+
+
+  function renderBestSellers(
+    keyword
+  ) {
+
+    if (
+      !bestSellerSection
+      ||
+      !bestSellerGrid
+    ) {
+      return;
+    }
+
+
+    const shouldShow =
+      !selectedCategory
+      &&
+      !keyword;
+
+
+    if (!shouldShow) {
+
+      bestSellerSection.classList.add(
+        "is-hidden"
+      );
+
+      bestSellerGrid.innerHTML =
+        "";
+
+      return;
+
+    }
+
+
+    const bestSellers =
+      products
+        .filter(
+          function (
+            product
+          ) {
+
+            return isBestSellerProduct(
+              product
+            );
+
+          }
+        )
+        .slice(
+          0,
+          4
+        );
+
+
+    if (!bestSellers.length) {
+
+      bestSellerSection.classList.add(
+        "is-hidden"
+      );
+
+      bestSellerGrid.innerHTML =
+        "";
+
+      return;
+
+    }
+
+
+    bestSellerGrid.innerHTML =
+      bestSellers
+        .map(
+          productCardHtml
+        )
+        .join("");
+
+
+    bestSellerSection.classList.remove(
+      "is-hidden"
+    );
+
+  }
+
+
   function renderProducts() {
 
     const keyword =
       searchInput.value
         .trim()
         .toLowerCase();
+
+
+    renderBestSellers(
+      keyword
+    );
 
 
     const filtered =
@@ -1937,28 +2310,10 @@ textarea {
             );
 
 
-          const isBestSeller =
-            Boolean(
-              product.is_best_seller
-              ||
-              product.is_featured
-            );
-
-
           const matchesCategory =
             !selectedCategory
             ||
-            (
-              selectedCategory === "best_seller"
-              &&
-              isBestSeller
-            )
-            ||
-            (
-              selectedCategory !== "best_seller"
-              &&
-              group === selectedCategory
-            );
+            group === selectedCategory;
 
 
           const text =
@@ -2020,170 +2375,11 @@ textarea {
     grid.innerHTML =
       filtered
         .map(
-          function (product) {
-
-            const productVariants =
-              getProductVariants(
-                product.id
-              );
-
-
-            const firstVariant =
-              productVariants[0]
-              || null;
-
-
-            const lowestPrice =
-              productVariants.length
-                ?
-                  Math.min(
-                    ...productVariants.map(
-                      function (item) {
-
-                        return Number(
-                          item.price || 0
-                        );
-
-                      }
-                    )
-                  )
-                :
-                  0;
-
-
-            const comparePrice =
-              firstVariant
-                ?.compare_at_price
-              || null;
-
-
-            const image =
-              getProductImage(
-                product.id
-              );
-
-
-            const imageUrl =
-              image
-                ?
-                  publicImageUrl(
-                    image.storage_path
-                  )
-                :
-                  "";
-
-
-            const detailUrl =
-              `./shop-product?id=${encodeURIComponent(product.id)}`;
-
-
-            return `
-              <article class="product-card">
-
-                <a
-                  class="product-main-link"
-                  href="${detailUrl}"
-                >
-
-                  <div class="product-image">
-
-                    ${
-                      imageUrl
-                        ?
-                          `
-                            <img
-                              src="${escapeHtml(imageUrl)}"
-                              alt="${escapeHtml(
-                                image?.alt_text
-                                ||
-                                product.name
-                              )}"
-                              loading="lazy"
-                            >
-                          `
-                        :
-                          `
-                            <div class="product-placeholder">
-                              🏓
-                            </div>
-                          `
-                    }
-
-                  </div>
-
-
-                  <div class="product-body">
-
-                    <div class="product-brand">
-                      ${
-                        escapeHtml(
-                          product.brand || "PickDee"
-                        )
-                      }
-                    </div>
-
-
-                    <div class="product-name">
-                      ${escapeHtml(product.name)}
-                    </div>
-
-
-                    <div>
-
-                      <span class="product-price">
-                        ${
-                          lowestPrice
-                            ?
-                              money(lowestPrice)
-                            :
-                              "Liên hệ"
-                        }
-                      </span>
-
-
-                      ${
-                        comparePrice
-                        &&
-                        Number(comparePrice)
-                          >
-                        Number(lowestPrice)
-                          ?
-                            `
-                              <span class="product-compare-price">
-                                ${money(comparePrice)}
-                              </span>
-                            `
-                          :
-                            ""
-                      }
-
-                    </div>
-
-                  </div>
-
-                </a>
-
-
-                <div class="product-card-actions">
-
-                  <a
-                    class="product-action"
-                    href="${detailUrl}"
-                  >
-                    XEM / MUA NGAY
-                  </a>
-
-                </div>
-
-              </article>
-            `;
-
-          }
+          productCardHtml
         )
         .join("");
 
   }
-
 
 
   /* =====================================================
