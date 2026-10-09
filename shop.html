@@ -2997,7 +2997,10 @@ textarea {
         Phù hợp tập luyện & thi đấu phong trào
       </p>
 
-      <a href="#productsGrid">
+           <a
+        href="#productsGrid"
+        data-promo-category="balls"
+      >
         XEM NGAY →
       </a>
 
@@ -3016,7 +3019,10 @@ textarea {
         Phù hợp mọi trình độ
       </p>
 
-      <a href="#productsGrid">
+           <a
+        href="#productsGrid"
+        data-promo-category="paddles"
+      >
         XEM NGAY →
       </a>
 
@@ -4075,7 +4081,51 @@ textarea {
     );
 
   }
-  window.addEventListener(
+    document
+    .querySelectorAll("[data-promo-category]")
+    .forEach(
+      function (promoLink) {
+
+        promoLink.addEventListener(
+          "click",
+          function (event) {
+
+            event.preventDefault();
+
+            selectedCategory =
+              promoLink.dataset.promoCategory || "";
+
+            searchInput.value = "";
+
+            categoriesBox
+              .querySelectorAll(".category-btn")
+              .forEach(
+                function (button) {
+
+                  button.classList.toggle(
+                    "active",
+                    button.dataset.category === selectedCategory
+                  );
+
+                }
+              );
+
+            renderProducts();
+
+            document
+              .getElementById("productsGrid")
+              ?.scrollIntoView(
+                {
+                  behavior: "smooth",
+                  block: "start"
+                }
+              );
+
+          }
+        );
+
+      }
+    );  window.addEventListener(
     "storage",
     updateCartCount
   );
