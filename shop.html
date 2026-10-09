@@ -1939,12 +1939,24 @@ textarea {
     background: var(--pd-gold);
   }
 
-  .best-seller-note,
+   .best-seller-note,
   .result-count {
     color: #8d6300;
     font-size: 13px;
     font-weight: 900;
     white-space: nowrap;
+  }
+
+  .best-seller-note {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .best-seller-note::after {
@@ -2911,9 +2923,13 @@ textarea {
       </div>
 
 
-      <div class="best-seller-note">
+          <button
+        id="showAllProductsBtn"
+        class="best-seller-note"
+        type="button"
+      >
         Xem tất cả
-      </div>
+      </button>
 
     </div>
 
@@ -4015,7 +4031,50 @@ textarea {
     "input",
     renderProducts
   );
+  const showAllProductsBtn =
+    document.getElementById(
+      "showAllProductsBtn"
+    );
 
+
+  if (showAllProductsBtn) {
+
+    showAllProductsBtn.addEventListener(
+      "click",
+      function () {
+
+        selectedCategory = "";
+
+        searchInput.value = "";
+
+        categoriesBox
+          .querySelectorAll(".category-btn")
+          .forEach(
+            function (button) {
+
+              button.classList.toggle(
+                "active",
+                !button.dataset.category
+              );
+
+            }
+          );
+
+        renderProducts();
+
+        document
+          .getElementById("productsGrid")
+          ?.scrollIntoView(
+            {
+              behavior: "smooth",
+              block: "start"
+            }
+          );
+
+      }
+    );
+
+  }
   window.addEventListener(
     "storage",
     updateCartCount
