@@ -2781,7 +2781,27 @@
   }
 
 
-   function fetchAddressJson(
+   function addressProvinceUrls() {
+
+    return [
+      "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json",
+      "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-province.json"
+    ];
+
+  }
+
+
+  function addressWardUrls() {
+
+    return [
+      "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-ward.json",
+      "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-ward.json"
+    ];
+
+  }
+
+
+  function fetchAddressJson(
     urls
   ) {
 
@@ -2810,7 +2830,7 @@
                   controller.abort();
 
                 },
-                8000
+                20000
               );
 
             const response =
@@ -2886,7 +2906,219 @@
   }
 
 
+  let addressWardsPromise =
+    null;
+
+
+  async function loadWardDataInBackground() {
+
+    if (
+      addressWards.length
+    ) {
+
+      return addressWards;
+
+    }
+
+    if (
+      addressWardsPromise
+    ) {
+
+      return addressWardsPromise;
+
+    }
+
+    addressWardsPromise =
+      fetchAddressJson(
+        addressWardUrls()
+      )
+        .then(
+          function (
+            wards
+          ) {
+
+            addressWards =
+              wards;
+
+            return wards;
+
+          }
+        )
+        .catch(
+          function (
+            error
+          ) {
+
+            addressWardsPromise =
+              null;
+
+            throw error;
+
+          }
+        );
+
+    return addressWardsPromise;
+
+  }
+
+
+  function setWardLoadingText(
+    text
+  ) {
+
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
+
+    if (
+      !wardSelect
+    ) {
+
+      return;
+
+    }
+
+    wardSelect.disabled =
+      true;
+
+    wardSelect.innerHTML =
+      `
+        <option value="">
+          ${escapeHtml(text)}
+        </option>
+      `;
+
+  }
+
+
   async function loadAddressData() {
+
+    const provinceSelect =
+      document.getElementById(
+        "province"
+      );
+
+    if (
+      provinceSelect
+    ) {
+
+      provinceSelect.innerHTML =
+        `
+          <option value="">
+            Đang tải tỉnh/thành...
+          </option>
+        `;
+
+    }
+
+    setWardLoadingText(
+      "Chọn tỉnh/thành trước"
+    );
+
+    const provinces =
+      await fetchAddressJson(
+        addressProvinceUrls()
+      );
+
+    addressProvinces =
+      provinces;
+
+    fillProvinceOptions(
+      ""
+    );
+
+    const currentProvinceSelect =
+      document.getElementById(
+        "province"
+      );
+
+    currentProvinceSelect
+      .addEventListener(
+        "change",
+        async function () {
+
+          const selectedOption =
+            this.options[
+              this.selectedIndex
+            ];
+
+          const provinceId =
+            selectedOption?.dataset?.provinceId
+            ||
+            "";
+
+          if (
+            !provinceId
+          ) {
+
+            fillWardOptions(
+              "",
+              ""
+            );
+
+            return;
+
+          }
+
+          if (
+            addressWards.length
+          ) {
+
+            fillWardOptions(
+              provinceId,
+              ""
+            );
+
+            return;
+
+          }
+
+          setWardLoadingText(
+            "Đang tải phường/xã..."
+          );
+
+          try {
+
+            await loadWardDataInBackground();
+
+            fillWardOptions(
+              provinceId,
+              ""
+            );
+
+          }
+          catch (error) {
+
+            console.error(
+              "WARD LOAD ERROR:",
+              error
+            );
+
+            setWardLoadingText(
+              "Không tải được phường/xã, vui lòng thử lại"
+            );
+
+          }
+
+        }
+      );
+
+    loadWardDataInBackground()
+      .catch(
+        function (
+          error
+        ) {
+
+          console.warn(
+            "WARD BACKGROUND LOAD ERROR:",
+            error
+          );
+
+        }
+      );
+
+  }
 
     const provinceUrls =
       [
