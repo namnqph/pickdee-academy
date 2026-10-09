@@ -2781,84 +2781,173 @@
   }
 
 
-  async function loadAddressData() {
+   function fetchAddressJson(
+    urls
+  ) {
 
-    try {
-
-      const [
-        provinceResult,
-        wardResult
-      ] =
-        await Promise.all([
-
-          fetchWithTimeout(
-            ADDRESS_PROVINCE_URL,
-            5000
-          ),
-
-          fetchWithTimeout(
-            ADDRESS_WARD_URL,
-            5000
-          )
-
-        ]);
-
-      if (
-        !provinceResult.ok
-        ||
-        !wardResult.ok
+    return new Promise(
+      async function (
+        resolve,
+        reject
       ) {
 
-        throw new Error(
-          "Không tải được danh sách tỉnh/phường."
-        );
+        let lastError =
+          null;
 
-      }
+        for (
+          const url of urls
+        ) {
 
-      addressProvinces =
-        await provinceResult.json();
+          try {
 
-      addressWards =
-        await wardResult.json();
+            const controller =
+              new AbortController();
 
-      fillProvinceOptions(
-        ""
-      );
+            const timer =
+              window.setTimeout(
+                function () {
 
-      document
-        .getElementById(
-          "province"
-        )
-        .addEventListener(
-          "change",
-          function () {
+                  controller.abort();
 
-            const selectedOption =
-              this.options[
-                this.selectedIndex
-              ];
+                },
+                8000
+              );
 
-            fillWardOptions(
-              selectedOption?.dataset?.provinceId
-              ||
-              "",
-              ""
+            const response =
+              await fetch(
+                url,
+                {
+                  signal:
+                    controller.signal,
+
+                  cache:
+                    "no-store"
+                }
+              );
+
+            window.clearTimeout(
+              timer
+            );
+
+            if (
+              !response.ok
+            ) {
+
+              throw new Error(
+                "Không tải được dữ liệu địa chỉ."
+              );
+
+            }
+
+            const data =
+              await response.json();
+
+            if (
+              Array.isArray(
+                data
+              )
+              &&
+              data.length
+            ) {
+
+              resolve(
+                data
+              );
+
+              return;
+
+            }
+
+            throw new Error(
+              "Dữ liệu địa chỉ không hợp lệ."
             );
 
           }
+          catch (error) {
+
+            lastError =
+              error;
+
+          }
+
+        }
+
+        reject(
+          lastError
+          ||
+          new Error(
+            "Không tải được dữ liệu tỉnh/phường."
+          )
         );
 
-    }
-    catch (error) {
+      }
+    );
 
-      console.warn(
-        "ADDRESS DATA FALLBACK:",
-        error
+  }
+
+
+  async function loadAddressData() {
+
+    const provinceUrls =
+      [
+        "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-province.json",
+        "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-province.json"
+      ];
+
+    const wardUrls =
+      [
+        "https://cdn.jsdelivr.net/gh/open-admin-data/vietnam-administrative-divisions@main/data/all-ward.json",
+        "https://raw.githubusercontent.com/open-admin-data/vietnam-administrative-divisions/main/data/all-ward.json"
+      ];
+
+    const [
+      provinces,
+      wards
+    ] =
+      await Promise.all(
+        [
+          fetchAddressJson(
+            provinceUrls
+          ),
+
+          fetchAddressJson(
+            wardUrls
+          )
+        ]
       );
 
-      enableManualAddressInputs();
+    addressProvinces =
+      provinces;
 
-    }
+    addressWards =
+      wards;
+
+    fillProvinceOptions(
+      ""
+    );
+
+    document
+      .getElementById(
+        "province"
+      )
+      .addEventListener(
+        "change",
+        function () {
+
+          const selectedOption =
+            this.options[
+              this.selectedIndex
+            ];
+
+          fillWardOptions(
+            selectedOption?.dataset?.provinceId
+            ||
+            "",
+            ""
+          );
+
+        }
+      );
 
   }
 
