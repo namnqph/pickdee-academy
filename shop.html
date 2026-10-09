@@ -621,7 +621,68 @@ textarea {
         line-through;
     }
 
+    .product-main-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
 
+
+    .product-card-actions {
+      padding:
+        0 16px 16px;
+    }
+
+
+    .product-action {
+      min-height:
+        42px;
+
+      width:
+        100%;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      border-radius:
+        12px;
+
+      border:
+        1px solid rgba(216,255,69,.28);
+
+      background:
+        rgba(216,255,69,.095);
+
+      color:
+        #d8ff45;
+
+      text-decoration:
+        none;
+
+      font-size:
+        11px;
+
+      font-weight:
+        950;
+
+      letter-spacing:
+        .04em;
+    }
+
+
+    .product-card:hover .product-action {
+      background:
+        #d8ff45;
+
+      color:
+        #071523;
+    }
     /* =====================================================
        EMPTY / LOADING
     ====================================================== */
@@ -1697,7 +1758,7 @@ textarea {
     }
 
 
-    grid.innerHTML =
+       grid.innerHTML =
       filtered
         .map(
           function (product) {
@@ -1753,99 +1814,116 @@ textarea {
                   "";
 
 
+            const detailUrl =
+              `./shop-product?id=${encodeURIComponent(product.id)}`;
+
+
             return `
-              <a
-                class="product-card"
-                href="./shop-product?id=${encodeURIComponent(product.id)}"
-              >
+              <article class="product-card">
 
-                <div class="product-image">
+                <a
+                  class="product-main-link"
+                  href="${detailUrl}"
+                >
 
-                  ${
-                    imageUrl
-                    ?
-                      `
-                        <img
-                          src="${escapeHtml(imageUrl)}"
-                          alt="${escapeHtml(
-                            image?.alt_text
-                            ||
-                            product.name
-                          )}"
-                          loading="lazy"
-                        >
-                      `
-                    :
-                      `
-                        <div class="product-placeholder">
-                          🏓
-                        </div>
-                      `
-                  }
+                  <div class="product-image">
 
-                </div>
-
-
-                <div class="product-body">
-
-                  <div class="product-brand">
                     ${
-                      escapeHtml(
-                        product.brand || "PickDee"
-                      )
+                      imageUrl
+                        ?
+                          `
+                            <img
+                              src="${escapeHtml(imageUrl)}"
+                              alt="${escapeHtml(
+                                image?.alt_text
+                                ||
+                                product.name
+                              )}"
+                              loading="lazy"
+                            >
+                          `
+                        :
+                          `
+                            <div class="product-placeholder">
+                              🏓
+                            </div>
+                          `
                     }
+
                   </div>
 
 
-                  <div class="product-name">
-                    ${escapeHtml(product.name)}
-                  </div>
+                  <div class="product-body">
 
-
-                  <div>
-
-                    <span class="product-price">
+                    <div class="product-brand">
                       ${
-                        lowestPrice
-                          ?
-                            money(lowestPrice)
-                          :
-                            "Liên hệ"
+                        escapeHtml(
+                          product.brand || "PickDee"
+                        )
                       }
-                    </span>
+                    </div>
 
 
-                    ${
-                      comparePrice
-                      &&
-                      Number(comparePrice)
-                        >
-                      Number(lowestPrice)
-                      ?
-                        `
-                          <span class="product-compare-price">
-                            ${money(comparePrice)}
-                          </span>
-                        `
-                      :
-                        ""
-                    }
+                    <div class="product-name">
+                      ${escapeHtml(product.name)}
+                    </div>
+
+
+                    <div>
+
+                      <span class="product-price">
+                        ${
+                          lowestPrice
+                            ?
+                              money(lowestPrice)
+                            :
+                              "Liên hệ"
+                        }
+                      </span>
+
+
+                      ${
+                        comparePrice
+                        &&
+                        Number(comparePrice)
+                          >
+                        Number(lowestPrice)
+                          ?
+                            `
+                              <span class="product-compare-price">
+                                ${money(comparePrice)}
+                              </span>
+                            `
+                          :
+                            ""
+                      }
+
+                    </div>
 
                   </div>
 
+                </a>
+
+
+                <div class="product-card-actions">
+
+                  <a
+                    class="product-action"
+                    href="${detailUrl}"
+                  >
+                    XEM / MUA NGAY
+                  </a>
+
                 </div>
 
-              </a>
+              </article>
             `;
 
           }
         )
         .join("");
 
-  }
-
-
-
+ }
   /* =====================================================
      LOAD DATA
   ====================================================== */
