@@ -3503,6 +3503,11 @@ textarea {
         product?.category_id
       );
 
+    const categoryText =
+      normalizeText(
+        categoryName
+      );
+
     const text =
       normalizeText(
         [
@@ -3514,6 +3519,101 @@ textarea {
           categoryName
         ].join(" ")
       );
+
+
+    /*
+      Ưu tiên category trước.
+      Tránh lỗi sản phẩm "dán viền vợt" bị hiểu nhầm là "Vợt Pickleball".
+    */
+
+    if (
+      categoryText.includes("bong")
+      ||
+      /\bballs?\b/.test(categoryText)
+    ) {
+      return "balls";
+    }
+
+    if (
+      categoryText.includes("quan can")
+      ||
+      categoryText.includes("grip")
+    ) {
+      return "grips";
+    }
+
+    if (
+      categoryText.includes("cham soc")
+      ||
+      categoryText.includes("phu kien vot")
+      ||
+      categoryText.includes("bao ve vot")
+      ||
+      categoryText.includes("ve sinh")
+      ||
+      categoryText.includes("care")
+    ) {
+      return "care";
+    }
+
+    if (
+      categoryText.includes("tap luyen")
+      ||
+      categoryText.includes("training")
+    ) {
+      return "training";
+    }
+
+    if (
+      categoryText.includes("phuc hoi")
+      ||
+      categoryText.includes("bao ho")
+      ||
+      categoryText.includes("massage")
+      ||
+      categoryText.includes("tat")
+    ) {
+      return "recovery";
+    }
+
+    if (
+      categoryText.includes("vot pickleball")
+      ||
+      categoryText === "vot"
+      ||
+      categoryText.includes("paddle")
+    ) {
+      return "paddles";
+    }
+
+
+    /*
+      Sau đó mới xét theo tên / mô tả sản phẩm.
+    */
+
+    if (
+      text.includes("dan vien")
+      ||
+      text.includes("bao ve vien")
+      ||
+      text.includes("bao ve vot")
+      ||
+      text.includes("phu kien vot")
+      ||
+      text.includes("ppf")
+      ||
+      text.includes("cham soc")
+      ||
+      text.includes("ve sinh")
+      ||
+      text.includes("clean")
+      ||
+      text.includes("care")
+      ||
+      text.includes("khan")
+    ) {
+      return "care";
+    }
 
     if (
       text.includes("bong")
@@ -3529,30 +3629,6 @@ textarea {
       text.includes("grip")
     ) {
       return "grips";
-    }
-
-    if (
-      text.includes("vot")
-      ||
-      text.includes("paddle")
-      ||
-      text.includes("carbon")
-    ) {
-      return "paddles";
-    }
-
-    if (
-      text.includes("cham soc")
-      ||
-      text.includes("ve sinh")
-      ||
-      text.includes("clean")
-      ||
-      text.includes("care")
-      ||
-      text.includes("khan")
-    ) {
-      return "care";
     }
 
     if (
@@ -3583,10 +3659,19 @@ textarea {
       return "recovery";
     }
 
+    if (
+      text.includes("vot")
+      ||
+      text.includes("paddle")
+      ||
+      text.includes("carbon")
+    ) {
+      return "paddles";
+    }
+
     return "other";
 
   }
-
 
   function categoryProductForGroup(groupId) {
 
