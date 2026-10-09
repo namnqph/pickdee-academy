@@ -219,6 +219,50 @@
       font-size: 12px;
       font-weight: 950;
     }
+    .quantity input {
+  width: 100%;
+  min-width: 0;
+
+  border: 0;
+  outline: none;
+
+  background:
+    rgba(255,255,255,.035);
+
+  color:
+    #ffffff;
+
+  text-align:
+    center;
+
+  font-family:
+    inherit;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+
+  -moz-appearance:
+    textfield;
+}
+
+.quantity input::-webkit-outer-spin-button,
+.quantity input::-webkit-inner-spin-button {
+  margin: 0;
+
+  -webkit-appearance:
+    none;
+}
+
+.quantity input:focus {
+  background:
+    rgba(216,255,69,.10);
+
+  color:
+    #d8ff45;
+}
     .remove-btn {
       border: 0;
       background: transparent;
@@ -1500,12 +1544,20 @@
       −
     </button>
 
-    <span>
-      ${Number(
-        item.quantity || 1
-      )}
-    </span>
-
+   <input
+  class="quantity-input"
+  type="number"
+  inputmode="numeric"
+  min="1"
+  max="9999"
+  value="${Number(
+    item.quantity || 1
+  )}"
+  data-quantity-index="${index}"
+  aria-label="Số lượng ${escapeHtml(
+    item.product_name
+  )}"
+>
     <button
       type="button"
       data-action="plus"
@@ -1761,11 +1813,13 @@
       );
 
 
-    checkoutBar.style.display =
-      "block";
+  checkoutBar.style.display =
+  "block";
 
 
-    bindEvents();
+bindEvents();
+
+bindQuantityInputs();
 
   }
 
@@ -1880,7 +1934,103 @@
 
   }
 
+  function commitQuantityInput(input) {
 
+    const index =
+      Number(
+        input.dataset.quantityIndex
+      );
+
+    const cart =
+      readCart();
+
+    const item =
+      cart[index];
+
+    if (!item) {
+      return;
+    }
+
+    const quantity =
+      Math.max(
+        1,
+        Math.min(
+          9999,
+          Math.round(
+            Number(
+              input.value || 1
+            )
+          )
+        )
+      );
+
+    item.quantity =
+      quantity;
+
+    input.value =
+      String(quantity);
+
+    saveCart(
+      cart
+    );
+
+    render();
+
+  }
+
+
+  function bindQuantityInputs() {
+
+    document
+      .querySelectorAll(
+        ".quantity-input"
+      )
+      .forEach(
+        function (input) {
+
+          if (
+            input.dataset.quantityBound === "1"
+          ) {
+            return;
+          }
+
+          input.dataset.quantityBound =
+            "1";
+
+          input.addEventListener(
+            "change",
+            function () {
+
+              commitQuantityInput(
+                input
+              );
+
+            }
+          );
+
+          input.addEventListener(
+            "keydown",
+            function (event) {
+
+              if (
+                event.key === "Enter"
+              ) {
+
+                event.preventDefault();
+
+                commitQuantityInput(
+                  input
+                );
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+  }
   /* =====================================================
      START
   ====================================================== */
