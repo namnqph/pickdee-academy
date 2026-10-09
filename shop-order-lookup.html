@@ -1098,7 +1098,7 @@ document.addEventListener(
     }
 
 
-    function getOrderCode() {
+     function getOrderCode() {
 
       const params =
         new URLSearchParams(
@@ -1128,30 +1128,16 @@ document.addEventListener(
 
       }
 
-      const input =
+      const resultText =
         document.querySelector(
-          "#orderCodeInput, #orderCode, #codeInput, input[name='order_code'], input[name='code']"
-        );
-
-      if (
-        input?.value
-      ) {
-
-        return String(
-          input.value
+          "#orderResult, #lookupResult, .order-result, .result-card"
         )
-          .trim()
-          .toUpperCase();
-
-      }
-
-      const text =
-        document.body?.innerText
+          ?.innerText
         ||
         "";
 
       const match =
-        text.match(
+        resultText.match(
           /PD-\d{4,}/i
         );
 
@@ -1167,6 +1153,7 @@ document.addEventListener(
 
     }
 
+     
 
     function getPhone() {
 
@@ -1232,20 +1219,27 @@ document.addEventListener(
       orderCode
     ) {
 
-      const text =
-        normalizeText(
-          document.body?.innerText
-          ||
-          ""
+      const resultBox =
+        document.querySelector(
+          "#orderResult, #lookupResult, .order-result, .result-card"
         );
 
       if (
         !orderCode
+        ||
+        !resultBox
       ) {
 
         return false;
 
       }
+
+      const text =
+        normalizeText(
+          resultBox.innerText
+          ||
+          ""
+        );
 
       if (
         !text.includes(
@@ -1273,25 +1267,11 @@ document.addEventListener(
 
       }
 
-      return (
-        text.includes(
-          "trang thai"
-        )
-        ||
-        text.includes(
-          "thanh toan"
-        )
-        ||
-        text.includes(
-          "san pham"
-        )
-        ||
-        text.includes(
-          "van chuyen"
-        )
-      );
+      return true;
 
     }
+
+  
 
 
     function canShowCancelButton() {
