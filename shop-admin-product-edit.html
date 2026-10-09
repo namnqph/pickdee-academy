@@ -991,31 +991,45 @@
   const SHOP_CATEGORY_GROUPS = [
     {
       id: "balls",
-      name: "Bóng Pickleball"
+      slug: "balls",
+      name: "Bóng Pickleball",
+      sort_order: 10
     },
     {
       id: "paddles",
-      name: "Vợt Pickleball"
+      slug: "paddles",
+      name: "Vợt Pickleball",
+      sort_order: 20
     },
     {
       id: "grips",
-      name: "Quấn cán / Grip"
+      slug: "grips",
+      name: "Quấn cán / Grip",
+      sort_order: 30
     },
     {
       id: "care",
-      name: "Chăm sóc vợt"
+      slug: "care",
+      name: "Chăm sóc vợt",
+      sort_order: 40
     },
     {
       id: "training",
-      name: "Tập luyện"
+      slug: "training",
+      name: "Tập luyện",
+      sort_order: 50
     },
     {
       id: "recovery",
-      name: "Bảo hộ / Phục hồi"
+      slug: "recovery",
+      name: "Bảo hộ / Phục hồi",
+      sort_order: 60
     },
     {
       id: "other",
-      name: "Phụ kiện khác"
+      slug: "other",
+      name: "Phụ kiện khác",
+      sort_order: 70
     }
   ];
 
@@ -1261,17 +1275,20 @@
 
     const rows =
       missingGroups.map(
-        function (group,index) {
+        function (group) {
 
           return {
             name:
               group.name,
 
+            slug:
+              group.slug,
+
             is_active:
               true,
 
             sort_order:
-              (index + 1) * 10 + 20
+              group.sort_order
           };
 
         }
@@ -1290,7 +1307,7 @@
           rows
         )
         .select(
-          "id,name,is_active,sort_order"
+          "id,name,slug,is_active,sort_order"
         );
 
 
@@ -3980,7 +3997,7 @@
             "shop_categories"
           )
           .select(
-            "id,name,is_active,sort_order"
+           "id,name,slug,is_active,sort_order"
           )
           .order(
             "sort_order",
