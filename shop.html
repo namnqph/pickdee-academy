@@ -6001,8 +6001,18 @@ button.product-action:disabled,
 
     /*
       Ưu tiên category trước.
-      Tránh lỗi sản phẩm "dán viền vợt" bị hiểu nhầm là "Vợt Pickleball".
+      Nếu Admin đã chọn "Phụ kiện khác" thì không cho tên sản phẩm kéo nhầm sang Vợt.
     */
+
+    if (
+      categoryText.includes("phu kien khac")
+      ||
+      categoryText.includes("khac")
+      ||
+      categoryText.includes("other")
+    ) {
+      return "other";
+    }
 
     if (
       categoryText.includes("bong")
@@ -6062,6 +6072,28 @@ button.product-action:disabled,
       categoryText.includes("paddle")
     ) {
       return "paddles";
+    }
+
+
+    /*
+      Ưu tiên một số phụ kiện đặc biệt trước khi xét chữ "vợt".
+      Ví dụ: chì độ vợt có chữ "vợt" nhưng bản chất là phụ kiện.
+    */
+
+    if (
+      text.includes("chi do vot")
+      ||
+      text.includes("chi vot")
+      ||
+      text.includes("chi dan vot")
+      ||
+      text.includes("lead tape")
+      ||
+      text.includes("tape chi")
+      ||
+      text.includes("tape can nang")
+    ) {
+      return "other";
     }
 
 
