@@ -697,7 +697,63 @@
       opacity: .45;
       cursor: default;
     }
+    .gallery-admin-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fill,minmax(62px,1fr));
+      gap: 7px;
+      margin:
+        8px 0 10px;
+    }
 
+    .gallery-admin-item {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 10px;
+      border:
+        1px solid rgba(255,255,255,.1);
+      background:
+        rgba(255,255,255,.04);
+    }
+
+    .gallery-admin-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-admin-badge {
+      position: absolute;
+      left: 5px;
+      bottom: 5px;
+      min-height: 18px;
+      padding:
+        0 6px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background:
+        rgba(7,21,35,.82);
+      color: #d8ff45;
+      font-size: 7px;
+      font-weight: 950;
+    }
+
+    .gallery-admin-empty {
+      margin:
+        8px 0 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border:
+        1px dashed rgba(255,255,255,.13);
+      color:
+        rgba(255,255,255,.35);
+      font-size: 8px;
+      line-height: 1.45;
+      text-align: center;
+    }
     @media(max-width:390px) {
 
       .grid-2 {
@@ -811,15 +867,13 @@
       params.get("id")
     );
 
-  let product = null;
+   let product = null;
   let variants = [];
   let categories = [];
   let images = [];
   let selectedImageFile = null;
+  let selectedGalleryFiles = [];
   let wholesaleTiers = [];
-  let selectedVariantId = null;
-  let canDeleteDraftProduct = false;
-  let showAddVariantForm = false;
 
   /* =====================================================
      SUPABASE
@@ -1381,7 +1435,30 @@
     );
 
   }
+  function secondaryImages() {
 
+    return (
+      [...images]
+        .filter(
+          function (item) {
+            return !item.is_primary;
+          }
+        )
+        .sort(
+          function (a,b) {
+
+            return (
+              Number(a.sort_order || 0)
+              -
+              Number(b.sort_order || 0)
+            );
+
+          }
+        )
+        .slice(0,10)
+    );
+
+  }
   function productPublicUrl() {
 
     if (!product?.id) {
@@ -1557,7 +1634,161 @@
       null;
 
   }
+  async function uploadGalleryImages() {
 
+    if (!selectedGalleryFiles.length) {
+      return;
+    }
+
+    const currentGalleryCount =
+      secondaryImages().length;
+
+    const availableSlots =
+      10 - currentGalleryCount;
+
+    if (availableSlots <= 0) {
+      throw new Error(
+        "Sản phẩm này đã đủ 10 ảnh phụ."
+      );
+    }
+
+    if (
+      selectedGalleryFiles.length
+      >
+      availableSlots
+    ) {
+      throw new Error(
+        `Chỉ còn được thêm ${availableSlots} ảnh phụ cho sản phẩm này.`
+      );
+    }
+
+    let nextSortOrder =
+      images.reduce(
+        function (max,item) {
+          return Math.max(
+            max,
+            Number(item.sort_order || 0)
+          );
+        },
+        0
+      );
+
+    const insertedImages = [];
+
+    for (
+      const file
+      of selectedGalleryFiles
+    ) {
+
+      if (
+        !file.type
+        ||
+        !file.type.startsWith("image/")
+      ) {
+        throw new Error(
+          "File ảnh phụ phải là ảnh."
+        );
+      }
+
+      if (
+        file.size
+        >
+        10 * 1024 * 1024
+      ) {
+        throw new Error(
+          "Mỗi ảnh phụ tối đa 10MB."
+        );
+      }
+
+      nextSortOrder += 1;
+
+      const storagePath =
+        `products/${product.id}/gallery-${Date.now()}-${nextSortOrder}-${safeFileName(
+          file.name
+        )}`;
+
+      const uploadResult =
+        await sb.storage
+          .from(
+            "shop-products"
+          )
+          .upload(
+            storagePath,
+            file,
+            {
+              cacheControl:
+                "3600",
+
+              upsert:
+                false,
+
+              contentType:
+                file.type
+            }
+          );
+
+      if (uploadResult.error) {
+        throw uploadResult.error;
+      }
+
+      const insertResult =
+        await sb
+          .from(
+            "shop_product_images"
+          )
+          .insert({
+            product_id:
+              product.id,
+
+            variant_id:
+              null,
+
+            storage_path:
+              storagePath,
+
+            alt_text:
+              product.name || null,
+
+            sort_order:
+              nextSortOrder,
+
+            is_primary:
+              false
+          })
+          .select(
+            "id,product_id,variant_id,storage_path,alt_text,sort_order,is_primary"
+          )
+          .single();
+
+      if (insertResult.error) {
+        throw insertResult.error;
+      }
+
+      insertedImages.push(
+        insertResult.data
+      );
+
+    }
+
+    images =
+      [
+        ...images,
+        ...insertedImages
+      ].sort(
+        function (a,b) {
+
+          return (
+            Number(a.sort_order || 0)
+            -
+            Number(b.sort_order || 0)
+          );
+
+        }
+      );
+
+    selectedGalleryFiles = [];
+
+  }
   function selectedVariant() {
 
     return (
@@ -2097,7 +2328,49 @@
           )
         :
           "";
+    const galleryImages =
+      secondaryImages();
 
+    const galleryHtml =
+      galleryImages.length
+        ?
+          `
+            <div class="gallery-admin-grid">
+              ${
+                galleryImages
+                  .map(
+                    function (item,index) {
+
+                      return `
+                        <div class="gallery-admin-item">
+                          <img
+                            src="${escapeHtml(
+                              publicImageUrl(
+                                item.storage_path
+                              )
+                            )}"
+                            alt="${escapeHtml(
+                              item.alt_text || product.name || ""
+                            )}"
+                          >
+                          <span class="gallery-admin-badge">
+                            ${index + 1}
+                          </span>
+                        </div>
+                      `;
+
+                    }
+                  )
+                  .join("")
+              }
+            </div>
+          `
+        :
+          `
+            <div class="gallery-admin-empty">
+              Chưa có ảnh phụ cho sản phẩm này.
+            </div>
+          `;
     const categoryOptions =
       shopCategoryOptions()
         .map(
@@ -2973,7 +3246,29 @@
           </div>
 
         </div>
+        <div class="field">
 
+          <label>
+            Ảnh phụ sản phẩm
+          </label>
+
+          ${galleryHtml}
+
+          <input
+            id="galleryFilesInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/avif"
+            multiple
+          >
+
+          <div
+            id="galleryFilesPreview"
+            class="hint"
+          >
+            Có thể thêm tối đa 10 ảnh phụ. Nên dùng ảnh thật: mặt trước, mặt sau, cận chất liệu, đóng gói, ảnh cầm tay.
+          </div>
+
+        </div>
         ${
           product.status === "active"
             ?
@@ -3320,7 +3615,126 @@
       );
 
     }
+    const galleryFilesInput =
+      document.getElementById(
+        "galleryFilesInput"
+      );
 
+    const galleryFilesPreview =
+      document.getElementById(
+        "galleryFilesPreview"
+      );
+
+    if (galleryFilesInput) {
+
+      galleryFilesInput.addEventListener(
+        "change",
+        function (event) {
+
+          const files =
+            Array.from(
+              event.target.files || []
+            );
+
+          selectedGalleryFiles =
+            files;
+
+          if (!files.length) {
+
+            if (galleryFilesPreview) {
+              galleryFilesPreview.textContent =
+                "Chưa chọn ảnh phụ.";
+            }
+
+            return;
+
+          }
+
+          const currentGalleryCount =
+            secondaryImages().length;
+
+          if (
+            currentGalleryCount + files.length
+            >
+            10
+          ) {
+
+            selectedGalleryFiles =
+              [];
+
+            galleryFilesInput.value =
+              "";
+
+            if (galleryFilesPreview) {
+              galleryFilesPreview.textContent =
+                `Sản phẩm hiện có ${currentGalleryCount}/10 ảnh phụ. Anh chỉ được thêm tối đa ${10 - currentGalleryCount} ảnh nữa.`;
+            }
+
+            return;
+
+          }
+
+          const invalidFile =
+            files.find(
+              function (file) {
+                return (
+                  !file.type
+                  ||
+                  !file.type.startsWith("image/")
+                );
+              }
+            );
+
+          if (invalidFile) {
+
+            selectedGalleryFiles =
+              [];
+
+            galleryFilesInput.value =
+              "";
+
+            if (galleryFilesPreview) {
+              galleryFilesPreview.textContent =
+                "Có file không phải ảnh. Anh chọn lại ảnh phụ.";
+            }
+
+            return;
+
+          }
+
+          const tooLargeFile =
+            files.find(
+              function (file) {
+                return file.size > 10 * 1024 * 1024;
+              }
+            );
+
+          if (tooLargeFile) {
+
+            selectedGalleryFiles =
+              [];
+
+            galleryFilesInput.value =
+              "";
+
+            if (galleryFilesPreview) {
+              galleryFilesPreview.textContent =
+                "Có ảnh phụ vượt quá 10MB. Anh chọn ảnh nhẹ hơn.";
+            }
+
+            return;
+
+          }
+
+          if (galleryFilesPreview) {
+            galleryFilesPreview.textContent =
+              `Đã chọn ${files.length} ảnh phụ. Bấm LƯU THAY ĐỔI để tải lên.`;
+          }
+
+        }
+      );
+
+    }
     const option1NameInput =
       document.getElementById(
         "option1NameInput"
@@ -4287,6 +4701,9 @@
         selectedImageFile
       );
 
+    const hasGalleryFiles =
+      selectedGalleryFiles.length > 0;
+
     if (!name) {
 
       showMessage(
@@ -4780,14 +5197,20 @@
 
       ];
 
-      if (hasNewImage) {
+           if (hasNewImage) {
 
         await uploadSelectedImage();
 
       }
 
+      if (hasGalleryFiles) {
+
+        await uploadGalleryImages();
+
+      }
+
       showMessage(
-        `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${finalVariantName || variant.sku || "SKU"} • ${tiers.length} mức giá sỉ${hasNewImage ? " • đã cập nhật ảnh chính" : ""}.`,
+        `Đã lưu ${data?.product_code || product.product_code || "sản phẩm"} • ${finalVariantName || variant.sku || "SKU"} • ${tiers.length} mức giá sỉ${hasNewImage ? " • đã cập nhật ảnh chính" : ""}${hasGalleryFiles ? " • đã thêm ảnh phụ" : ""}.`,
         "success"
       );
 
