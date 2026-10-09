@@ -1227,6 +1227,100 @@
       .filter(Boolean);
 
   }
+
+    async function ensureShopCategories() {
+
+    const existingGroups =
+      new Set(
+        categories
+          .filter(
+            function (category) {
+              return category.is_active === true;
+            }
+          )
+          .map(
+            function (category) {
+              return shopCategoryGroup(category);
+            }
+          )
+      );
+
+
+    const missingGroups =
+      SHOP_CATEGORY_GROUPS.filter(
+        function (group) {
+          return !existingGroups.has(group.id);
+        }
+      );
+
+
+    if (!missingGroups.length) {
+      return;
+    }
+
+
+    const rows =
+      missingGroups.map(
+        function (group,index) {
+
+          return {
+            name:
+              group.name,
+
+            is_active:
+              true,
+
+            sort_order:
+              (index + 1) * 10 + 20
+          };
+
+        }
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_categories"
+        )
+        .insert(
+          rows
+        )
+        .select(
+          "id,name,is_active,sort_order"
+        );
+
+
+    if (error) {
+      console.warn(
+        "SYNC SHOP CATEGORIES ERROR:",
+        error
+      );
+
+      return;
+    }
+
+
+    categories =
+      [
+        ...categories,
+        ...(data || [])
+      ].sort(
+        function (a,b) {
+
+          return (
+            Number(a.sort_order || 9999)
+            -
+            Number(b.sort_order || 9999)
+          );
+
+        }
+      );
+
+  }
   function primaryImage() {
 
     return (
@@ -3968,7 +4062,7 @@
 
     categories =
       categoryResult.data || [];
-
+    await ensureShopCategories();
     images =
       imageResult.data || [];
 
