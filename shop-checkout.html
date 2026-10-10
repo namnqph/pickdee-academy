@@ -405,7 +405,26 @@
       line-height: 1.4;
     }
 
+    .paddle-prepay-note {
+      margin-bottom: 10px;
 
+      padding: 11px 12px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid rgba(216,255,69,.24);
+
+      background:
+        rgba(216,255,69,.07);
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 850;
+
+      line-height: 1.5;
+    }
 
     /* =====================================================
        BANK TRANSFER
@@ -2101,7 +2120,16 @@
 
   const BANK_ACCOUNT_NAME =
     "TRAN THU TRA";
+  const PADDLE_BANK_ID =
+    "Techcombank";
 
+
+  const PADDLE_BANK_ACCOUNT_NO =
+    "9933629966";
+
+
+  const PADDLE_BANK_ACCOUNT_NAME =
+    "NGUYEN QUOC NAM";
 
   const PAYMENT_PROOF_BUCKET =
     "shop-payment-proofs";
@@ -2326,10 +2354,68 @@
   }
 
 
+   function bankConfigForCart(
+    cart
+  ) {
+
+    if (
+      cartHasPaddle(
+        cart
+      )
+    ) {
+
+      return {
+        bankId:
+          PADDLE_BANK_ID,
+
+        accountNo:
+          PADDLE_BANK_ACCOUNT_NO,
+
+        accountName:
+          PADDLE_BANK_ACCOUNT_NAME,
+
+        bankLabel:
+          PADDLE_BANK_ID
+      };
+
+    }
+
+    return {
+      bankId:
+        BANK_ID,
+
+      accountNo:
+        BANK_ACCOUNT_NO,
+
+      accountName:
+        BANK_ACCOUNT_NAME,
+
+      bankLabel:
+        BANK_ID
+    };
+
+  }
+
+
   function vietQrUrl(
     amount,
-    orderCode
+    orderCode,
+    bankConfig
   ) {
+
+    const bank =
+      bankConfig
+      ||
+      {
+        bankId:
+          BANK_ID,
+
+        accountNo:
+          BANK_ACCOUNT_NO,
+
+        accountName:
+          BANK_ACCOUNT_NAME
+      };
 
     const params =
       new URLSearchParams();
@@ -2360,18 +2446,18 @@
 
     params.set(
       "accountName",
-      BANK_ACCOUNT_NAME
+      bank.accountName
     );
 
 
     return (
       `https://img.vietqr.io/image/${
         encodeURIComponent(
-          BANK_ID
+          bank.bankId
         )
       }-${
         encodeURIComponent(
-          BANK_ACCOUNT_NO
+          bank.accountNo
         )
       }-compact2.png?${
         params.toString()
@@ -2380,6 +2466,7 @@
 
   }
 
+  
 
   async function copyText(
     value,
@@ -3655,7 +3742,157 @@
 
   }
 
+  function cartHasPaddle(
+    cart
+  ) {
 
+    return cart.some(
+      function (item) {
+
+        const text =
+          (
+            String(
+              item.product_name || ""
+            )
+            +
+            " "
+            +
+            String(
+              item.variant_name || ""
+            )
+          )
+            .trim()
+            .toLocaleLowerCase(
+              "vi-VN"
+            );
+
+        return (
+          text.includes(
+            "vợt"
+          )
+          ||
+          text.includes(
+            "esson"
+          )
+          ||
+          text.includes(
+            "ess/on"
+          )
+          ||
+          text.includes(
+            "paddle"
+          )
+        );
+
+      }
+    );
+
+  }
+
+
+  function applyPaddlePaymentRule(
+    cart
+  ) {
+
+    const mustPrepay =
+      cartHasPaddle(
+        cart
+      );
+
+    const codInput =
+      document.querySelector(
+        'input[name="paymentMethod"][value="cod"]'
+      );
+
+    const bankInput =
+      document.querySelector(
+        'input[name="paymentMethod"][value="bank_transfer"]'
+      );
+
+    const codLabel =
+      codInput
+        ?
+          codInput.closest(
+            ".payment-option"
+          )
+        :
+          null;
+
+    const paymentOptions =
+      document.querySelector(
+        ".payment-options"
+      );
+
+    const oldNote =
+      document.getElementById(
+        "paddlePrepayNote"
+      );
+
+
+    if (mustPrepay) {
+
+      if (codInput) {
+        codInput.checked =
+          false;
+
+        codInput.disabled =
+          true;
+      }
+
+      if (codLabel) {
+        codLabel.style.display =
+          "none";
+      }
+
+      if (bankInput) {
+        bankInput.disabled =
+          false;
+
+        bankInput.checked =
+          true;
+      }
+
+      if (
+        paymentOptions
+        &&
+        !oldNote
+      ) {
+
+        paymentOptions.insertAdjacentHTML(
+          "beforebegin",
+          `
+            <div
+              id="paddlePrepayNote"
+              class="paddle-prepay-note"
+            >
+              Đơn có vợt Pickleball cần chuyển khoản trước.
+              Sản phẩm vợt sẽ chuyển vào tài khoản NGUYEN QUOC NAM.
+            </div>
+          `
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    if (codInput) {
+      codInput.disabled =
+        false;
+    }
+
+    if (codLabel) {
+      codLabel.style.display =
+        "";
+    }
+
+    if (oldNote) {
+      oldNote.remove();
+    }
+
+  }
   function shippingQuote(
     cart
   ) {
@@ -4284,7 +4521,12 @@
         );
 
 
-      saveCart(
+          saveCart(
+        cart
+      );
+
+
+      applyPaddlePaymentRule(
         cart
       );
 
@@ -4668,7 +4910,7 @@
           .trim();
 
 
-      const paymentMethod =
+           let paymentMethod =
         document.querySelector(
           'input[name="paymentMethod"]:checked'
         )
@@ -4724,7 +4966,7 @@
       }
 
 
-      const currentCart =
+        const currentCart =
         readCart();
 
 
@@ -4736,6 +4978,22 @@
         );
 
         return;
+
+      }
+
+
+      if (
+        cartHasPaddle(
+          currentCart
+        )
+      ) {
+
+        paymentMethod =
+          "bank_transfer";
+
+        applyPaddlePaymentRule(
+          currentCart
+        );
 
       }
 
@@ -4887,7 +5145,10 @@
         bottomBar.style.display =
           "none";
 
-
+        const paymentBank =
+          bankConfigForCart(
+            currentCart
+          );
         const trackingToken =
           String(
             data?.public_tracking_token
@@ -5192,8 +5453,10 @@ const successEstimatedCustomerTotal =
                         `
                           <div class="bank-transfer-box">
 
-                            <div class="bank-transfer-title">
-                              🏦 CHUYỂN KHOẢN TECHCOMBANK
+                                                       <div class="bank-transfer-title">
+                              🏦 CHUYỂN KHOẢN ${escapeHtml(
+                                paymentBank.bankLabel
+                              )}
                             </div>
 
 
@@ -5208,9 +5471,10 @@ const successEstimatedCustomerTotal =
                               <img
                                 class="bank-qr"
                                 src="${escapeHtml(
-                                  vietQrUrl(
+                                                                 vietQrUrl(
                                     successCustomerTotal,
-                                    data.order_code
+                                    data.order_code,
+                                    paymentBank
                                   )
                                 )}"
                                 alt="QR chuyển khoản Techcombank"
@@ -5228,8 +5492,10 @@ const successEstimatedCustomerTotal =
                                     NGÂN HÀNG
                                   </div>
 
-                                  <div class="bank-row-value">
-                                    TECHCOMBANK
+                                                                 <div class="bank-row-value">
+                                    ${escapeHtml(
+                                      paymentBank.bankLabel
+                                    )}
                                   </div>
                                 </div>
 
@@ -5244,8 +5510,8 @@ const successEstimatedCustomerTotal =
                                   </div>
 
                                   <div class="bank-row-value">
-                                    ${escapeHtml(
-                                      BANK_ACCOUNT_NAME
+                                                                        ${escapeHtml(
+                                      paymentBank.accountName
                                     )}
                                   </div>
                                 </div>
@@ -5261,8 +5527,8 @@ const successEstimatedCustomerTotal =
                                   </div>
 
                                   <div class="bank-row-value">
-                                    ${escapeHtml(
-                                      BANK_ACCOUNT_NO
+                                                                       ${escapeHtml(
+                                      paymentBank.accountNo
                                     )}
                                   </div>
                                 </div>
@@ -5493,8 +5759,8 @@ const successEstimatedCustomerTotal =
           "click",
           function () {
 
-            copyText(
-              BANK_ACCOUNT_NO,
+                       copyText(
+              paymentBank.accountNo,
               copyBankAccountBtn,
               "✓ ĐÃ COPY"
             );
