@@ -741,6 +741,179 @@
       font-weight: 950;
     }
 
+    .delete-product-image-btn {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      z-index: 3;
+
+      min-width: 24px;
+      height: 24px;
+
+      padding:
+        0 7px;
+
+      display:
+        inline-flex;
+      align-items:
+        center;
+      justify-content:
+        center;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid rgba(255,255,255,.18);
+
+      background:
+        rgba(255,30,60,.92);
+
+      color:
+        #ffffff;
+
+      font-family:
+        inherit;
+
+      font-size:
+        12px;
+
+      font-weight:
+        950;
+
+      cursor:
+        pointer;
+
+      box-shadow:
+        0 8px 18px rgba(0,0,0,.25);
+    }
+
+    .delete-product-image-btn:disabled {
+      opacity:
+        .45;
+
+      cursor:
+        default;
+    }
+
+    .current-primary-image-box {
+      margin:
+        8px 0 10px;
+
+      position:
+        relative;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        12px;
+
+      border:
+        1px solid rgba(255,255,255,.10);
+
+      background:
+        rgba(255,255,255,.04);
+    }
+
+    .current-primary-image-box img {
+      width:
+        100%;
+
+      max-height:
+        240px;
+
+      display:
+        block;
+
+      object-fit:
+        contain;
+
+      background:
+        rgba(0,0,0,.22);
+    }
+
+    .current-primary-image-label {
+      position:
+        absolute;
+
+      left:
+        8px;
+
+      bottom:
+        8px;
+
+      min-height:
+        22px;
+
+      padding:
+        0 9px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(7,21,35,.86);
+
+      color:
+        #d8ff45;
+
+      font-size:
+        8px;
+
+      font-weight:
+        950;
+    }
+
+    .clear-selected-image-btn {
+      min-height:
+        34px;
+
+      margin-top:
+        7px;
+
+      padding:
+        0 11px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid rgba(255,100,100,.24);
+
+      background:
+        rgba(255,100,100,.08);
+
+      color:
+        #ffaaaa;
+
+      font-family:
+        inherit;
+
+      font-size:
+        8px;
+
+      font-weight:
+        950;
+
+      cursor:
+        pointer;
+    }
     .gallery-admin-empty {
       margin:
         8px 0 10px;
@@ -1792,6 +1965,191 @@
     selectedGalleryFiles = [];
 
   }
+    async function deleteProductImage(imageId) {
+
+    const image =
+      images.find(
+        function (item) {
+          return String(item.id) === String(imageId);
+        }
+      );
+
+    if (!image) {
+      showMessage(
+        "Không tìm thấy ảnh cần xóa.",
+        "error"
+      );
+
+      return;
+    }
+
+    const isPrimary =
+      Boolean(image.is_primary);
+
+    const confirmText =
+      isPrimary
+        ?
+          "Anh chắc chắn muốn xóa ảnh chính hiện tại? Nếu còn ảnh phụ, hệ thống sẽ tự chọn ảnh phụ đầu tiên làm ảnh chính mới."
+        :
+          "Anh chắc chắn muốn xóa ảnh phụ này?";
+
+    if (
+      !confirm(confirmText)
+    ) {
+      return;
+    }
+
+    saveBtn.disabled =
+      true;
+
+    saveBtn.textContent =
+      "ĐANG XÓA ẢNH...";
+
+    try {
+
+      const remainingImages =
+        images.filter(
+          function (item) {
+            return String(item.id) !== String(image.id);
+          }
+        );
+
+      const nextPrimary =
+        isPrimary
+          ?
+            (
+              remainingImages
+                .filter(
+                  function (item) {
+                    return !item.is_primary;
+                  }
+                )
+                .sort(
+                  function (a,b) {
+                    return (
+                      Number(a.sort_order || 0)
+                      -
+                      Number(b.sort_order || 0)
+                    );
+                  }
+                )[0]
+              ||
+              null
+            )
+          :
+            null;
+
+      const deleteResult =
+        await sb
+          .from(
+            "shop_product_images"
+          )
+          .delete()
+          .eq(
+            "id",
+            image.id
+          );
+
+      if (deleteResult.error) {
+        throw deleteResult.error;
+      }
+
+      if (nextPrimary) {
+
+        const primaryResult =
+          await sb
+            .from(
+              "shop_product_images"
+            )
+            .update({
+              is_primary:
+                true,
+
+              sort_order:
+                0
+            })
+            .eq(
+              "id",
+              nextPrimary.id
+            );
+
+        if (primaryResult.error) {
+          throw primaryResult.error;
+        }
+
+      }
+
+      if (image.storage_path) {
+
+        await sb.storage
+          .from(
+            "shop-products"
+          )
+          .remove([
+            image.storage_path
+          ]);
+
+      }
+
+      images =
+        remainingImages.map(
+          function (item) {
+
+            if (
+              nextPrimary
+              &&
+              String(item.id) === String(nextPrimary.id)
+            ) {
+              return {
+                ...item,
+
+                is_primary:
+                  true,
+
+                sort_order:
+                  0
+              };
+            }
+
+            return item;
+
+          }
+        );
+
+      selectedImageFile =
+        null;
+
+      selectedGalleryFiles =
+        [];
+
+      showMessage(
+        "Đã xóa ảnh sản phẩm.",
+        "success"
+      );
+
+      render();
+
+    }
+    catch (error) {
+
+      showMessage(
+        error.message || "Không xóa được ảnh sản phẩm.",
+        "error"
+      );
+
+    }
+    finally {
+
+      saveBtn.disabled =
+        false;
+
+      saveBtn.textContent =
+        "LƯU THAY ĐỔI";
+
+    }
+
+  }
+
   function selectedVariant() {
 
     return (
@@ -2345,7 +2703,7 @@
                     function (item,index) {
 
                       return `
-                        <div class="gallery-admin-item">
+                                              <div class="gallery-admin-item">
                           <img
                             src="${escapeHtml(
                               publicImageUrl(
@@ -2356,9 +2714,19 @@
                               item.alt_text || product.name || ""
                             )}"
                           >
+
                           <span class="gallery-admin-badge">
                             ${index + 1}
                           </span>
+
+                          <button
+                            class="delete-product-image-btn"
+                            type="button"
+                            data-image-id="${escapeHtml(item.id)}"
+                            title="Xóa ảnh phụ"
+                          >
+                            ×
+                          </button>
                         </div>
                       `;
 
@@ -3231,8 +3599,44 @@
 
         <div class="field">
 
+                 <label>
+            Ảnh chính sản phẩm
+          </label>
+
+          ${
+            image
+              ?
+                `
+                  <div class="current-primary-image-box">
+                    <img
+                      src="${escapeHtml(imageUrl)}"
+                      alt="${escapeHtml(product.name || "Ảnh chính sản phẩm")}"
+                    >
+
+                    <span class="current-primary-image-label">
+                      ẢNH CHÍNH
+                    </span>
+
+                    <button
+                      class="delete-product-image-btn"
+                      type="button"
+                      data-image-id="${escapeHtml(image.id)}"
+                      title="Xóa ảnh chính"
+                    >
+                      ×
+                    </button>
+                  </div>
+                `
+              :
+                `
+                  <div class="gallery-admin-empty">
+                    Sản phẩm này chưa có ảnh chính.
+                  </div>
+                `
+          }
+
           <label>
-            Ảnh sản phẩm mới
+            Tải ảnh chính mới
           </label>
 
           <input
@@ -3248,6 +3652,14 @@
             Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.
           </div>
 
+          <button
+            id="clearSelectedImageBtn"
+            class="clear-selected-image-btn"
+            type="button"
+          >
+            BỎ ẢNH CHÍNH VỪA CHỌN
+          </button>
+
         </div>
         <div class="field">
 
@@ -3257,7 +3669,7 @@
 
           ${galleryHtml}
 
-          <input
+                    <input
             id="galleryFilesInput"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/avif"
@@ -3271,6 +3683,13 @@
             Có thể thêm tối đa 10 ảnh phụ. Nên dùng ảnh thật: mặt trước, mặt sau, cận chất liệu, đóng gói, ảnh cầm tay.
           </div>
 
+          <button
+            id="clearSelectedGalleryBtn"
+            class="clear-selected-image-btn"
+            type="button"
+          >
+            BỎ ẢNH PHỤ VỪA CHỌN
+          </button>
         </div>
         ${
           product.status === "active"
@@ -3618,6 +4037,34 @@
       );
 
     }
+        const clearSelectedImageBtn =
+      document.getElementById(
+        "clearSelectedImageBtn"
+      );
+
+    if (clearSelectedImageBtn) {
+
+      clearSelectedImageBtn.addEventListener(
+        "click",
+        function () {
+
+          selectedImageFile =
+            null;
+
+          if (imageFileInput) {
+            imageFileInput.value =
+              "";
+          }
+
+          if (imagePreview) {
+            imagePreview.textContent =
+              "Chưa chọn ảnh mới. Hỗ trợ JPG, PNG, WEBP, AVIF tối đa 10MB.";
+          }
+
+        }
+      );
+
+    }
     const galleryFilesInput =
       document.getElementById(
         "galleryFilesInput"
@@ -3738,6 +4185,57 @@
       );
 
     }
+
+        const clearSelectedGalleryBtn =
+      document.getElementById(
+        "clearSelectedGalleryBtn"
+      );
+
+    if (clearSelectedGalleryBtn) {
+
+      clearSelectedGalleryBtn.addEventListener(
+        "click",
+        function () {
+
+          selectedGalleryFiles =
+            [];
+
+          if (galleryFilesInput) {
+            galleryFilesInput.value =
+              "";
+          }
+
+          if (galleryFilesPreview) {
+            galleryFilesPreview.textContent =
+              "Chưa chọn ảnh phụ.";
+          }
+
+        }
+      );
+
+    }
+
+
+    document
+      .querySelectorAll(
+        ".delete-product-image-btn"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              deleteProductImage(
+                button.dataset.imageId
+              );
+
+            }
+          );
+
+        }
+      );
     const option1NameInput =
       document.getElementById(
         "option1NameInput"
