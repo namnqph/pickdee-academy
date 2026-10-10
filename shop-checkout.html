@@ -3865,8 +3865,8 @@
               id="paddlePrepayNote"
               class="paddle-prepay-note"
             >
-              Đơn có vợt Pickleball cần chuyển khoản trước.
-              Sản phẩm vợt sẽ chuyển vào tài khoản NGUYEN QUOC NAM.
+              Đơn có vợt Pickleball cần thanh toán chuyển khoản trước và được PickDee miễn phí vận chuyển.
+PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuyển khoản/bill thanh toán.
             </div>
           `
         );
@@ -3909,6 +3909,55 @@
       );
 
 
+    const hasPaddle =
+      cartHasPaddle(
+        cart
+      );
+
+
+    const selectedPaymentMethod =
+      document.querySelector(
+        'input[name="paymentMethod"]:checked'
+      )
+        ?.value
+      ||
+      "cod";
+
+
+    const isPaddlePrepaid =
+      hasPaddle
+      &&
+      selectedPaymentMethod === "bank_transfer";
+
+
+    /*
+      Đơn có vợt Pickleball bắt buộc chuyển khoản trước.
+      Khi chuyển khoản trước, PickDee miễn phí vận chuyển cho đơn vợt.
+    */
+    if (
+      isPaddlePrepaid
+    ) {
+
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        hasPaddle:
+          true,
+        freeShipping:
+          true,
+        shippingPending:
+          false,
+        shippingFee:
+          0,
+        customerTotal:
+          merchandiseTotal,
+        reason:
+          "Đơn có vợt Pickleball thanh toán chuyển khoản trước: PickDee miễn phí vận chuyển."
+      };
+
+    }
+
+
     /*
       Bóng Pickleball là hàng cồng kềnh.
 
@@ -3926,6 +3975,7 @@
         merchandiseTotal,
         hasPickleballBall:
           true,
+        hasPaddle,
         freeShipping:
           false,
         shippingPending:
@@ -3969,6 +4019,7 @@
       merchandiseTotal,
       hasPickleballBall:
         false,
+      hasPaddle,
       freeShipping,
       shippingPending:
         false,
@@ -4821,7 +4872,24 @@
 
   }
 
+  document
+    .querySelectorAll(
+      'input[name="paymentMethod"]'
+    )
+    .forEach(
+      function (input) {
 
+        input.addEventListener(
+          "change",
+          function () {
+
+            prepareCheckout();
+
+          }
+        );
+
+      }
+    );
   start();
 
 
