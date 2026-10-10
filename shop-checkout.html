@@ -2068,7 +2068,8 @@
 
   const CART_KEY =
     "pickdee_shop_cart";
-
+  const CUSTOMER_PROFILE_KEY =
+    "pickdee_shop_customer_profiles_v1";
 
   const SPX_BASE_FEE =
     15000;
@@ -3745,7 +3746,274 @@
       text;
 
   }
+  function normalizeCustomerPhone(value) {
 
+    return String(
+      value || ""
+    )
+      .replace(
+        /\D/g,
+        ""
+      );
+
+  }
+
+
+  function readCustomerProfiles() {
+
+    try {
+
+      const data =
+        JSON.parse(
+          localStorage.getItem(
+            CUSTOMER_PROFILE_KEY
+          )
+          ||
+          "{}"
+        );
+
+      return (
+        data
+        &&
+        typeof data === "object"
+      )
+        ?
+          data
+        :
+          {};
+
+    }
+    catch (_) {
+
+      return {};
+
+    }
+
+  }
+
+
+  function writeCustomerProfiles(profiles) {
+
+    try {
+
+      localStorage.setItem(
+        CUSTOMER_PROFILE_KEY,
+        JSON.stringify(
+          profiles || {}
+        )
+      );
+
+    }
+    catch (_) {}
+
+  }
+
+
+  function saveCustomerProfile(profile) {
+
+    const phoneDigits =
+      normalizeCustomerPhone(
+        profile?.phone
+      );
+
+    if (
+      phoneDigits.length < 9
+      ||
+      phoneDigits.length > 12
+    ) {
+      return;
+    }
+
+    const profiles =
+      readCustomerProfiles();
+
+    profiles[phoneDigits] = {
+      phone:
+        profile.phone || "",
+
+      customer_name:
+        profile.customer_name || "",
+
+      email:
+        profile.email || "",
+
+      address_line:
+        profile.address_line || "",
+
+      province:
+        profile.province || "",
+
+      ward:
+        profile.ward || "",
+
+      legacy_address:
+        profile.legacy_address || "",
+
+      updated_at:
+        new Date().toISOString()
+    };
+
+    const entries =
+      Object.entries(
+        profiles
+      )
+        .sort(
+          function (a,b) {
+            return String(
+              b[1]?.updated_at || ""
+            ).localeCompare(
+              String(
+                a[1]?.updated_at || ""
+              )
+            );
+          }
+        )
+        .slice(
+          0,
+          20
+        );
+
+    writeCustomerProfiles(
+      Object.fromEntries(
+        entries
+      )
+    );
+
+  }
+
+
+  function applyCustomerProfile(profile) {
+
+    if (!profile) {
+      return false;
+    }
+
+    document.getElementById("customerName").value =
+      profile.customer_name || "";
+
+    document.getElementById("customerEmail").value =
+      profile.email || "";
+
+    document.getElementById("addressLine").value =
+      profile.address_line || "";
+
+    document.getElementById("legacyAddress").value =
+      profile.legacy_address || "";
+
+    if (profile.province) {
+
+      fillProvinceOptions(
+        profile.province
+      );
+
+      const provinceSelect =
+        document.getElementById(
+          "province"
+        );
+
+      const selectedOption =
+        Array
+          .from(
+            provinceSelect.options
+          )
+          .find(
+            function (option) {
+              return option.value === profile.province;
+            }
+          );
+
+      if (selectedOption) {
+
+        provinceSelect.value =
+          profile.province;
+
+        fillWardOptions(
+          selectedOption?.dataset?.provinceId || "",
+          profile.ward || ""
+        );
+
+      }
+
+    }
+
+    showMessage(
+      "✓ Đã tự điền thông tin nhận hàng từ lần mua trước. Anh/chị có thể sửa lại nếu cần.",
+      "success"
+    );
+
+    return true;
+
+  }
+
+
+  function bindReturningCustomerAutofill() {
+
+    const phoneInput =
+      document.getElementById(
+        "customerPhone"
+      );
+
+    if (!phoneInput) {
+      return;
+    }
+
+    let timer =
+      null;
+
+    function tryFillCustomerProfile() {
+
+      const phoneDigits =
+        normalizeCustomerPhone(
+          phoneInput.value
+        );
+
+      if (
+        phoneDigits.length < 9
+        ||
+        phoneDigits.length > 12
+      ) {
+        return;
+      }
+
+      const profiles =
+        readCustomerProfiles();
+
+      const profile =
+        profiles[phoneDigits];
+
+      if (!profile) {
+        return;
+      }
+
+      applyCustomerProfile(
+        profile
+      );
+
+    }
+
+    phoneInput.addEventListener(
+      "input",
+      function () {
+
+        clearTimeout(
+          timer
+        );
+
+        timer =
+          setTimeout(
+            tryFillCustomerProfile,
+            350
+          );
+
+      }
+    );
+
+    phoneInput.addEventListener(
+      "blur",
+      tryFillCustomerProfile
+    );
+
+  }
 
 
   /* =====================================================
@@ -4072,7 +4340,9 @@
 
     try {
 
-      await loadAddressData();
+           await loadAddressData();
+
+      bindReturningCustomerAutofill();
 
       await prepareCheckout();
 
