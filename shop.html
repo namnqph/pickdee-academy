@@ -5435,6 +5435,250 @@ button.product-action:disabled,
   }
 
 }
+
+/* =====================================================
+   FINAL CLEAN PICKDEE HERO WORDMARK
+   Bỏ logo vuông lỗi, chỉ giữ chữ PickDee phát sáng
+====================================================== */
+
+.hero-card {
+  right: 42px !important;
+  top: 58px !important;
+
+  width: min(520px, 44vw) !important;
+  height: 340px !important;
+
+  padding: 34px !important;
+
+  overflow: visible !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 42px !important;
+
+  background:
+    radial-gradient(circle at 52% 50%, rgba(255,201,52,.30), transparent 42%),
+    radial-gradient(circle at 50% 64%, rgba(216,255,18,.10), transparent 55%),
+    linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.018)),
+    rgba(0,0,0,.16) !important;
+
+  border:
+    1px solid rgba(255,201,52,.22) !important;
+
+  box-shadow:
+    0 0 58px rgba(255,201,52,.16),
+    inset 0 0 0 1px rgba(255,255,255,.045) !important;
+
+  transform:
+    perspective(900px)
+    rotateY(-5deg)
+    rotateX(1deg) !important;
+}
+
+
+/* Chữ PickDee chính */
+.hero-card::before {
+  content:
+    "PickDee" !important;
+
+  position:
+    relative !important;
+
+  z-index:
+    6 !important;
+
+  width:
+    auto !important;
+
+  height:
+    auto !important;
+
+  display:
+    block !important;
+
+  background:
+    none !important;
+
+  color:
+    #ffe07a !important;
+
+  font-size:
+    clamp(82px, 8.4vw, 148px) !important;
+
+  line-height:
+    .86 !important;
+
+  font-weight:
+    1000 !important;
+
+  letter-spacing:
+    -.105em !important;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+
+  text-shadow:
+    0 0 10px rgba(255,242,180,.78),
+    0 0 32px rgba(255,201,52,.56),
+    0 0 86px rgba(255,201,52,.28),
+    0 24px 36px rgba(0,0,0,.48) !important;
+
+  mix-blend-mode:
+    normal !important;
+
+  filter:
+    none !important;
+
+  transform:
+    translateY(-2px)
+    rotate(-2deg) !important;
+
+  animation:
+    pickdeeFinalWordmarkFloat 5.2s ease-in-out infinite !important;
+
+  pointer-events:
+    none !important;
+}
+
+
+/* Xóa logo vuông lỗi, chuyển thành lớp glow mềm */
+.hero-card::after {
+  content:
+    "" !important;
+
+  position:
+    absolute !important;
+
+  z-index:
+    3 !important;
+
+  left:
+    50% !important;
+
+  top:
+    56% !important;
+
+  width:
+    82% !important;
+
+  height:
+    150px !important;
+
+  border-radius:
+    999px !important;
+
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,201,52,.36), transparent 58%),
+    radial-gradient(circle at 50% 58%, rgba(216,255,18,.12), transparent 74%) !important;
+
+  border:
+    0 !important;
+
+  box-shadow:
+    none !important;
+
+  filter:
+    blur(24px) !important;
+
+  transform:
+    translate(-50%, -50%) !important;
+
+  pointer-events:
+    none !important;
+}
+
+
+.hero-visual::before {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255,201,52,.34), transparent 30%),
+    radial-gradient(circle at 48% 58%, rgba(216,255,18,.12), transparent 54%) !important;
+}
+
+
+.mock-paddle,
+.mock-ball {
+  display:
+    none !important;
+}
+
+
+@keyframes pickdeeFinalWordmarkFloat {
+
+  0%,
+  100% {
+    transform:
+      translateY(-2px)
+      rotate(-2deg)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translateY(-10px)
+      rotate(-2deg)
+      scale(1.025);
+  }
+
+}
+
+
+@media(max-width:1180px) {
+
+  .hero-card {
+    right:
+      24px !important;
+
+    width:
+      min(470px, 43vw) !important;
+
+    height:
+      320px !important;
+  }
+
+  .hero-card::before {
+    font-size:
+      clamp(68px, 7.4vw, 118px) !important;
+  }
+
+}
+
+
+@media(max-width:700px) {
+
+  .hero-card {
+    right:
+      0 !important;
+
+    top:
+      20px !important;
+
+    width:
+      100% !important;
+
+    height:
+      300px !important;
+
+    padding:
+      22px !important;
+
+    transform:
+      perspective(800px)
+      rotateY(-3deg) !important;
+  }
+
+  .hero-card::before {
+    font-size:
+      clamp(62px, 18vw, 96px) !important;
+  }
+
+}
+    
 </style>
 
 </head>
@@ -5474,14 +5718,14 @@ button.product-action:disabled,
         autocomplete="off"
       >
 
-      <button
-        class="shop-search-button"
-        type="button"
-        aria-label="Tìm kiếm"
-        onclick="document.getElementById('searchInput')?.focus()"
-      >
-        🔍
-      </button>
+     <button
+  id="shopSearchButton"
+  class="shop-search-button"
+  type="button"
+  aria-label="Tìm kiếm"
+>
+  🔍
+</button>
     </div>
 
 
@@ -5914,11 +6158,14 @@ button.product-action:disabled,
   const categoriesBox =
     document.getElementById("categories");
 
-  const searchInput =
-    document.getElementById("searchInput");
+ const searchInput =
+  document.getElementById("searchInput");
 
-  const resultCount =
-    document.getElementById("resultCount");
+const shopSearchButton =
+  document.getElementById("shopSearchButton");
+
+const resultCount =
+  document.getElementById("resultCount");
 
    const cartCount =
     document.getElementById("cartCount");
@@ -7705,10 +7952,127 @@ button.product-action:disabled,
     );
 
   }
-  searchInput.addEventListener(
-    "input",
-    renderProducts
+ function refreshCategoryActiveState() {
+
+  categoriesBox
+    .querySelectorAll(".category-btn")
+    .forEach(
+      function (button) {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.category === selectedCategory
+        );
+
+      }
+    );
+
+}
+
+
+function runShopSearch(options) {
+
+  const keyword =
+    normalizeText(
+      searchInput.value
+    );
+
+  if (keyword) {
+
+    selectedCategory =
+      "";
+
+    showFavoritesOnly =
+      false;
+
+    updateFavoriteCount();
+
+    refreshCategoryActiveState();
+
+  }
+
+  renderProducts();
+
+  if (
+    options
+    &&
+    options.scroll
+  ) {
+
+    document
+      .getElementById("productsGrid")
+      ?.scrollIntoView(
+        {
+          behavior:
+            "smooth",
+
+          block:
+            "start"
+        }
+      );
+
+  }
+
+}
+
+
+searchInput.addEventListener(
+  "input",
+  function () {
+
+    runShopSearch(
+      {
+        scroll:
+          false
+      }
+    );
+
+  }
+);
+
+
+searchInput.addEventListener(
+  "keydown",
+  function (event) {
+
+    if (
+      event.key === "Enter"
+    ) {
+
+      event.preventDefault();
+
+      runShopSearch(
+        {
+          scroll:
+            true
+        }
+      );
+
+    }
+
+  }
+);
+
+
+if (shopSearchButton) {
+
+  shopSearchButton.addEventListener(
+    "click",
+    function () {
+
+      searchInput.focus();
+
+      runShopSearch(
+        {
+          scroll:
+            true
+        }
+      );
+
+    }
   );
+
+}
   const showAllProductsBtn =
     document.getElementById(
       "showAllProductsBtn"
