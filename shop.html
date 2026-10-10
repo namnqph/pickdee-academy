@@ -7261,6 +7261,95 @@ const resultCount =
 
   }
 
+  function searchWords(value) {
+
+    return normalizeText(value)
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+  }
+
+
+  function productSearchText(product) {
+
+    return normalizeText(
+      [
+        product?.name,
+        product?.brand,
+        product?.short_description,
+        product?.product_group,
+        product?.product_group_label,
+        categoryNameById(product?.category_id)
+      ].join(" ")
+    )
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+  }
+
+
+  function productMatchesSearch(product, keyword) {
+
+    const query =
+      normalizeText(keyword)
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+
+    if (!query) {
+      return true;
+    }
+
+    const queryWords =
+      query
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (!queryWords.length) {
+      return true;
+    }
+
+    const haystack =
+      productSearchText(product);
+
+    const haystackWords =
+      haystack
+        .split(/\s+/)
+        .filter(Boolean);
+
+    const queryPhrase =
+      queryWords.join(" ");
+
+    if (
+      queryWords.length > 1
+      &&
+      haystack.includes(queryPhrase)
+    ) {
+      return true;
+    }
+
+    return queryWords.every(
+      function (word) {
+
+        if (word.length <= 3) {
+          return haystackWords.includes(word);
+        }
+
+        return haystackWords.some(
+          function (item) {
+            return (
+              item === word
+              ||
+              item.startsWith(word)
+            );
+          }
+        );
+
+      }
+    );
+
+  }
+
 
   function publicImageUrl(storagePath) {
 
@@ -7995,22 +8084,11 @@ const resultCount =
               product.id
             );
 
-          const text =
-            normalizeText(
-              [
-                product.name,
-                product.brand,
-                product.short_description,
-                product.product_group,
-                product.product_group_label,
-                categoryNameById(product.category_id)
-              ].join(" ")
+                    const matchesSearch =
+            productMatchesSearch(
+              product,
+              keyword
             );
-
-          const matchesSearch =
-            !keyword
-            ||
-            text.includes(keyword);
 
           return (
             matchesFavorite
