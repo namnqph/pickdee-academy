@@ -3109,18 +3109,99 @@ function bindProductEvents() {
         );
 
 
-      const primaryImage =
+      const sameOption1VariantIds =
+        variants
+          .filter(
+            function (variant) {
+
+              return (
+                variant.option1_value
+                &&
+                selectedVariant.option1_value
+                &&
+                String(
+                  variant.option1_value
+                )
+                ===
+                String(
+                  selectedVariant.option1_value
+                )
+              );
+
+            }
+          )
+          .map(
+            function (variant) {
+              return String(
+                variant.id
+              );
+            }
+          );
+
+      const selectedVariantImage =
+        images.find(
+          function (image) {
+
+            return (
+              image.variant_id
+              &&
+              String(
+                image.variant_id
+              )
+              ===
+              String(
+                selectedVariant.id
+              )
+            );
+
+          }
+        )
+        ||
+        images.find(
+          function (image) {
+
+            return (
+              image.variant_id
+              &&
+              sameOption1VariantIds.includes(
+                String(
+                  image.variant_id
+                )
+              )
+            );
+
+          }
+        )
+        ||
         [...images]
           .sort(
             function (a,b) {
 
+              if (
+                Boolean(
+                  a.is_primary
+                )
+                !==
+                Boolean(
+                  b.is_primary
+                )
+              ) {
+
+                return a.is_primary
+                  ?
+                    -1
+                  :
+                    1;
+
+              }
+
               return (
                 Number(
-                  b.is_primary
+                  a.sort_order || 0
                 )
                 -
                 Number(
-                  a.is_primary
+                  b.sort_order || 0
                 )
               );
 
@@ -3131,10 +3212,10 @@ function bindProductEvents() {
 
 
       const selectedImageUrl =
-        primaryImage
+        selectedVariantImage
           ?
             imageUrl(
-              primaryImage.storage_path
+              selectedVariantImage.storage_path
             )
           :
             "";
@@ -3154,7 +3235,12 @@ function bindProductEvents() {
           Number(
             selectedVariant.price
           );
-
+        existing.image_url =
+          selectedImageUrl
+          ||
+          existing.image_url
+          ||
+          "";
       }
       else {
 
