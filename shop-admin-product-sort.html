@@ -1,0 +1,1951 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#071523"
+  >
+
+  <title>
+    Sắp xếp sản phẩm | PickDee Shop
+  </title>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="./config.js"></script>
+
+  <style>
+
+    * {
+      box-sizing:
+        border-box;
+    }
+
+    html,
+    body {
+      width:
+        100%;
+
+      max-width:
+        100%;
+
+      margin:
+        0;
+
+      overflow-x:
+        hidden;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background:
+        #f5f1e8;
+
+      color:
+        #111111;
+
+      -webkit-text-size-adjust:
+        100%;
+
+      text-size-adjust:
+        100%;
+    }
+
+    body {
+      min-height:
+        100vh;
+
+      padding-bottom:
+        110px;
+    }
+
+    a {
+      color:
+        inherit;
+
+      text-decoration:
+        none;
+    }
+
+    button,
+    input,
+    a {
+      touch-action:
+        manipulation;
+    }
+
+    .topbar {
+      position:
+        sticky;
+
+      top:
+        0;
+
+      z-index:
+        50;
+
+      background:
+        linear-gradient(180deg, #0a0906 0%, #151107 100%);
+
+      color:
+        #ffffff;
+
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.22);
+    }
+
+    .topbar-inner {
+      width:
+        min(980px, calc(100% - 28px));
+
+      min-height:
+        70px;
+
+      margin:
+        0 auto;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        14px;
+    }
+
+    .brand {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        10px;
+
+      font-size:
+        23px;
+
+      font-weight:
+        1000;
+
+      letter-spacing:
+        -.06em;
+
+      color:
+        #ffe07a;
+    }
+
+    .brand-badge {
+      padding:
+        6px 10px;
+
+      border-radius:
+        9px;
+
+      background:
+        #ffc934;
+
+      color:
+        #111111;
+
+      font-size:
+        12px;
+
+      font-weight:
+        950;
+
+      letter-spacing:
+        0;
+    }
+
+    .top-actions {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+    }
+
+    .top-link {
+      min-height:
+        38px;
+
+      padding:
+        0 12px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(255,255,255,.08);
+
+      color:
+        #ffffff;
+
+      font-size:
+        12px;
+
+      font-weight:
+        900;
+    }
+
+    main {
+      width:
+        min(980px, calc(100% - 28px));
+
+      margin:
+        26px auto 0;
+    }
+
+    .hero {
+      padding:
+        24px;
+
+      border-radius:
+        22px;
+
+      background:
+        linear-gradient(135deg, #151107 0%, #322107 100%);
+
+      color:
+        #ffffff;
+
+      box-shadow:
+        0 18px 44px rgba(0,0,0,.14);
+    }
+
+    .hero-kicker {
+      color:
+        #ffe07a;
+
+      font-size:
+        12px;
+
+      font-weight:
+        1000;
+
+      letter-spacing:
+        .12em;
+
+      text-transform:
+        uppercase;
+    }
+
+    h1 {
+      margin:
+        8px 0 8px;
+
+      font-size:
+        clamp(30px, 6vw, 48px);
+
+      line-height:
+        1.02;
+
+      letter-spacing:
+        -.06em;
+    }
+
+    .hero p {
+      max-width:
+        720px;
+
+      margin:
+        0;
+
+      color:
+        rgba(255,255,255,.78);
+
+      font-size:
+        14px;
+
+      font-weight:
+        700;
+
+      line-height:
+        1.6;
+    }
+
+    .message {
+      display:
+        none;
+
+      margin:
+        18px 0 0;
+
+      padding:
+        13px 15px;
+
+      border-radius:
+        14px;
+
+      font-size:
+        13px;
+
+      font-weight:
+        850;
+
+      line-height:
+        1.45;
+    }
+
+    .message.success {
+      display:
+        block;
+
+      background:
+        #e8ffd7;
+
+      color:
+        #16610c;
+
+      border:
+        1px solid rgba(22,97,12,.16);
+    }
+
+    .message.error {
+      display:
+        block;
+
+      background:
+        #ffe7e7;
+
+      color:
+        #9d1111;
+
+      border:
+        1px solid rgba(157,17,17,.16);
+    }
+
+    .toolbar {
+      margin:
+        20px 0 14px;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0,1fr) auto;
+
+      gap:
+        12px;
+
+      align-items:
+        center;
+    }
+
+    .search {
+      width:
+        100%;
+
+      min-height:
+        48px;
+
+      padding:
+        0 15px;
+
+      border-radius:
+        14px;
+
+      border:
+        1px solid rgba(0,0,0,.09);
+
+      background:
+        #ffffff;
+
+      outline:
+        none;
+
+      color:
+        #111111;
+
+      font-size:
+        15px;
+
+      font-weight:
+        750;
+
+      box-shadow:
+        0 8px 20px rgba(0,0,0,.06);
+    }
+
+    .count {
+      color:
+        #8b6200;
+
+      font-size:
+        13px;
+
+      font-weight:
+        950;
+
+      white-space:
+        nowrap;
+    }
+
+    .list {
+      display:
+        grid;
+
+      gap:
+        10px;
+    }
+
+    .empty {
+      padding:
+        34px 18px;
+
+      border-radius:
+        18px;
+
+      background:
+        #ffffff;
+
+      color:
+        #777777;
+
+      text-align:
+        center;
+
+      font-size:
+        14px;
+
+      font-weight:
+        800;
+    }
+
+    .product-row {
+      position:
+        relative;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        42px 64px minmax(0,1fr) auto;
+
+      gap:
+        12px;
+
+      align-items:
+        center;
+
+      padding:
+        12px;
+
+      border-radius:
+        16px;
+
+      background:
+        #ffffff;
+
+      border:
+        1px solid rgba(0,0,0,.07);
+
+      box-shadow:
+        0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .product-row.is-dragging {
+      opacity:
+        .45;
+
+      transform:
+        scale(.99);
+    }
+
+    .product-row.is-over {
+      outline:
+        2px solid #ffc934;
+    }
+
+    .drag-handle {
+      width:
+        38px;
+
+      height:
+        44px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      border-radius:
+        12px;
+
+      background:
+        #f7f4ec;
+
+      color:
+        #7e5700;
+
+      font-size:
+        20px;
+
+      font-weight:
+        1000;
+
+      cursor:
+        grab;
+
+      user-select:
+        none;
+    }
+
+    .thumb {
+      width:
+        64px;
+
+      height:
+        64px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        13px;
+
+      background:
+        #f8f8f8;
+
+      border:
+        1px solid rgba(0,0,0,.06);
+    }
+
+    .thumb img {
+      width:
+        100%;
+
+      height:
+        100%;
+
+      object-fit:
+        contain;
+
+      padding:
+        5px;
+    }
+
+    .thumb-placeholder {
+      color:
+        #c2a15a;
+
+      font-size:
+        26px;
+    }
+
+    .product-info {
+      min-width:
+        0;
+    }
+
+    .product-name {
+      color:
+        #111111;
+
+      font-size:
+        15px;
+
+      font-weight:
+        950;
+
+      line-height:
+        1.32;
+    }
+
+    .product-meta {
+      margin-top:
+        6px;
+
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      gap:
+        6px;
+
+      align-items:
+        center;
+    }
+
+    .tag {
+      min-height:
+        22px;
+
+      padding:
+        0 8px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      border-radius:
+        999px;
+
+      background:
+        #f4f1e8;
+
+      color:
+        #745000;
+
+      font-size:
+        10px;
+
+      font-weight:
+        950;
+    }
+
+    .tag.active {
+      background:
+        #e8ffd7;
+
+      color:
+        #16610c;
+    }
+
+    .tag.draft {
+      background:
+        #fff1d0;
+
+      color:
+        #8a5600;
+    }
+
+    .row-actions {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        7px;
+    }
+
+    .move-btn {
+      width:
+        36px;
+
+      height:
+        36px;
+
+      border:
+        0;
+
+      border-radius:
+        11px;
+
+      background:
+        #141009;
+
+      color:
+        #ffe07a;
+
+      font-size:
+        16px;
+
+      font-weight:
+        1000;
+
+      cursor:
+        pointer;
+    }
+
+    .move-btn:disabled {
+      opacity:
+        .35;
+
+      cursor:
+        default;
+    }
+
+    .sticky-save {
+      position:
+        fixed;
+
+      left:
+        0;
+
+      right:
+        0;
+
+      bottom:
+        0;
+
+      z-index:
+        60;
+
+      padding:
+        12px 14px calc(12px + env(safe-area-inset-bottom));
+
+      background:
+        rgba(255,255,255,.92);
+
+      backdrop-filter:
+        blur(14px);
+
+      border-top:
+        1px solid rgba(0,0,0,.08);
+    }
+
+    .sticky-inner {
+      width:
+        min(980px, 100%);
+
+      margin:
+        0 auto;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0,1fr) auto;
+
+      gap:
+        10px;
+
+      align-items:
+        center;
+    }
+
+    .save-note {
+      color:
+        #765700;
+
+      font-size:
+        12px;
+
+      font-weight:
+        850;
+
+      line-height:
+        1.4;
+    }
+
+    .save-btn {
+      min-height:
+        48px;
+
+      padding:
+        0 22px;
+
+      border:
+        0;
+
+      border-radius:
+        999px;
+
+      background:
+        #ffc934;
+
+      color:
+        #111111;
+
+      font-size:
+        13px;
+
+      font-weight:
+        1000;
+
+      cursor:
+        pointer;
+
+      box-shadow:
+        0 12px 26px rgba(255,201,52,.30);
+    }
+
+    .save-btn:disabled {
+      opacity:
+        .55;
+
+      cursor:
+        default;
+
+      box-shadow:
+        none;
+    }
+
+    @media(max-width:700px) {
+
+      .topbar-inner {
+        width:
+          min(100% - 22px, 980px);
+
+        min-height:
+          62px;
+      }
+
+      .brand {
+        font-size:
+          20px;
+      }
+
+      .brand-badge {
+        display:
+          none;
+      }
+
+      .top-link {
+        min-height:
+          34px;
+
+        padding:
+          0 9px;
+
+        font-size:
+          10px;
+      }
+
+      main {
+        width:
+          min(100% - 22px, 980px);
+
+        margin-top:
+          16px;
+      }
+
+      .hero {
+        padding:
+          18px;
+
+        border-radius:
+          18px;
+      }
+
+      h1 {
+        font-size:
+          30px;
+      }
+
+      .toolbar {
+        grid-template-columns:
+          1fr;
+      }
+
+      .count {
+        display:
+          none;
+      }
+
+      .product-row {
+        grid-template-columns:
+          36px 56px minmax(0,1fr);
+
+        gap:
+          9px;
+
+        padding:
+          10px;
+      }
+
+      .thumb {
+        width:
+          56px;
+
+        height:
+          56px;
+      }
+
+      .product-name {
+        font-size:
+          13px;
+      }
+
+      .row-actions {
+        grid-column:
+          1 / -1;
+
+        justify-content:
+          flex-end;
+      }
+
+      .sticky-inner {
+        grid-template-columns:
+          1fr;
+      }
+
+      .save-note {
+        display:
+          none;
+      }
+
+      .save-btn {
+        width:
+          100%;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <header class="topbar">
+
+    <div class="topbar-inner">
+
+      <a
+        class="brand"
+        href="./shop-admin"
+      >
+        PickDee
+        <span class="brand-badge">
+          SORT
+        </span>
+      </a>
+
+      <div class="top-actions">
+
+        <a
+          class="top-link"
+          href="./shop-admin"
+        >
+          Quản trị Shop
+        </a>
+
+        <a
+          class="top-link"
+          href="./shop"
+          target="_blank"
+        >
+          Xem Shop
+        </a>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <main>
+
+    <section class="hero">
+
+      <div class="hero-kicker">
+        SẮP XẾP SẢN PHẨM
+      </div>
+
+      <h1>
+        Kéo thả sản phẩm
+      </h1>
+
+      <p>
+        Giữ biểu tượng ☰ để kéo sản phẩm lên xuống. Sản phẩm ở trên sẽ hiện trước ngoài trang PickDee Shop. Trên điện thoại có thể dùng nút ↑ / ↓ cho dễ thao tác.
+      </p>
+
+    </section>
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+    <div class="toolbar">
+
+      <input
+        id="searchInput"
+        class="search"
+        type="search"
+        placeholder="Tìm sản phẩm để sắp xếp..."
+      >
+
+      <div
+        id="countText"
+        class="count"
+      >
+        Đang tải...
+      </div>
+
+    </div>
+
+    <div
+      id="productList"
+      class="list"
+    >
+      <div class="empty">
+        Đang tải danh sách sản phẩm...
+      </div>
+    </div>
+
+  </main>
+
+  <div class="sticky-save">
+
+    <div class="sticky-inner">
+
+      <div class="save-note">
+        Sau khi kéo thả xong, bấm lưu. Ngoài /shop sẽ hiển thị theo thứ tự mới.
+      </div>
+
+      <button
+        id="saveBtn"
+        class="save-btn"
+        type="button"
+        disabled
+      >
+        LƯU THỨ TỰ HIỂN THỊ
+      </button>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    (function () {
+
+      const cfg =
+        window.PICKDEE_CONFIG || {};
+
+      const listEl =
+        document.getElementById(
+          "productList"
+        );
+
+      const messageEl =
+        document.getElementById(
+          "message"
+        );
+
+      const saveBtn =
+        document.getElementById(
+          "saveBtn"
+        );
+
+      const searchInput =
+        document.getElementById(
+          "searchInput"
+        );
+
+      const countText =
+        document.getElementById(
+          "countText"
+        );
+
+      if (
+        !window.supabase
+        ||
+        !cfg.SUPABASE_URL
+        ||
+        !cfg.SUPABASE_PUBLISHABLE_KEY
+      ) {
+
+        showMessage(
+          "Thiếu cấu hình kết nối hệ thống Shop.",
+          "error"
+        );
+
+        return;
+
+      }
+
+      const sb =
+        window.supabase.createClient(
+          cfg.SUPABASE_URL,
+          cfg.SUPABASE_PUBLISHABLE_KEY
+        );
+
+      let products =
+        [];
+
+      let images =
+        [];
+
+      let draggingId =
+        null;
+
+      let hasChanged =
+        false;
+
+      function escapeHtml(value) {
+
+        return String(
+          value ?? ""
+        )
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .replaceAll("'","&#039;");
+
+      }
+
+      function showMessage(
+        text,
+        type
+      ) {
+
+        messageEl.className =
+          "message " + (
+            type || "success"
+          );
+
+        messageEl.textContent =
+          text;
+
+      }
+
+      function clearMessage() {
+
+        messageEl.className =
+          "message";
+
+        messageEl.textContent =
+          "";
+
+      }
+
+      function publicImageUrl(
+        storagePath
+      ) {
+
+        if (!storagePath) {
+          return "";
+        }
+
+        const {
+          data
+        } =
+          sb.storage
+            .from(
+              "shop-products"
+            )
+            .getPublicUrl(
+              storagePath
+            );
+
+        return (
+          data?.publicUrl
+          ||
+          ""
+        );
+
+      }
+
+      function productImage(
+        productId
+      ) {
+
+        const productImages =
+          images
+            .filter(
+              function (item) {
+                return (
+                  String(item.product_id)
+                  ===
+                  String(productId)
+                );
+              }
+            )
+            .sort(
+              function (a,b) {
+
+                if (
+                  Boolean(a.is_primary)
+                  !==
+                  Boolean(b.is_primary)
+                ) {
+                  return a.is_primary ? -1 : 1;
+                }
+
+                return (
+                  Number(a.sort_order || 0)
+                  -
+                  Number(b.sort_order || 0)
+                );
+
+              }
+            );
+
+        return (
+          productImages[0]
+          ||
+          null
+        );
+
+      }
+
+      function setChanged(
+        value
+      ) {
+
+        hasChanged =
+          Boolean(value);
+
+        saveBtn.disabled =
+          !hasChanged;
+
+      }
+
+      function visibleProducts() {
+
+        const keyword =
+          String(
+            searchInput.value || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (!keyword) {
+          return products;
+        }
+
+        return products.filter(
+          function (product) {
+
+            return (
+              [
+                product.name,
+                product.product_code,
+                product.brand,
+                product.status
+              ]
+                .join(" ")
+                .toLowerCase()
+                .includes(keyword)
+            );
+
+          }
+        );
+
+      }
+
+      function renderProducts() {
+
+        const visible =
+          visibleProducts();
+
+        countText.textContent =
+          `${products.length} sản phẩm`;
+
+        if (!visible.length) {
+
+          listEl.innerHTML =
+            `
+              <div class="empty">
+                Không tìm thấy sản phẩm phù hợp.
+              </div>
+            `;
+
+          return;
+
+        }
+
+        listEl.innerHTML =
+          visible
+            .map(
+              function (product) {
+
+                const index =
+                  products.findIndex(
+                    function (item) {
+                      return String(item.id) === String(product.id);
+                    }
+                  );
+
+                const image =
+                  productImage(
+                    product.id
+                  );
+
+                const imageUrl =
+                  image
+                    ?
+                      publicImageUrl(
+                        image.storage_path
+                      )
+                    :
+                      "";
+
+                const statusClass =
+                  product.status === "active"
+                    ?
+                      "active"
+                    :
+                      "draft";
+
+                const statusText =
+                  product.status === "active"
+                    ?
+                      "ĐANG BÁN"
+                    :
+                      "NHÁP";
+
+                return `
+                  <div
+                    class="product-row"
+                    draggable="true"
+                    data-product-id="${escapeHtml(product.id)}"
+                  >
+
+                    <div
+                      class="drag-handle"
+                      title="Kéo để sắp xếp"
+                    >
+                      ☰
+                    </div>
+
+                    <div class="thumb">
+                      ${
+                        imageUrl
+                          ?
+                            `
+                              <img
+                                src="${escapeHtml(imageUrl)}"
+                                alt="${escapeHtml(product.name)}"
+                              >
+                            `
+                          :
+                            `
+                              <div class="thumb-placeholder">
+                                🏓
+                              </div>
+                            `
+                      }
+                    </div>
+
+                    <div class="product-info">
+
+                      <div class="product-name">
+                        ${escapeHtml(product.name)}
+                      </div>
+
+                      <div class="product-meta">
+
+                        <span class="tag ${statusClass}">
+                          ${statusText}
+                        </span>
+
+                        <span class="tag">
+                          STT ${index + 1}
+                        </span>
+
+                        <span class="tag">
+                          ${escapeHtml(product.product_code || "NO-CODE")}
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                    <div class="row-actions">
+
+                      <button
+                        class="move-btn"
+                        type="button"
+                        data-move="up"
+                        data-product-id="${escapeHtml(product.id)}"
+                        ${index === 0 ? "disabled" : ""}
+                      >
+                        ↑
+                      </button>
+
+                      <button
+                        class="move-btn"
+                        type="button"
+                        data-move="down"
+                        data-product-id="${escapeHtml(product.id)}"
+                        ${index === products.length - 1 ? "disabled" : ""}
+                      >
+                        ↓
+                      </button>
+
+                    </div>
+
+                  </div>
+                `;
+
+              }
+            )
+            .join("");
+
+        bindRowEvents();
+
+      }
+
+      function moveProduct(
+        productId,
+        direction
+      ) {
+
+        const index =
+          products.findIndex(
+            function (item) {
+              return String(item.id) === String(productId);
+            }
+          );
+
+        if (index < 0) {
+          return;
+        }
+
+        const nextIndex =
+          direction === "up"
+            ?
+              index - 1
+            :
+              index + 1;
+
+        if (
+          nextIndex < 0
+          ||
+          nextIndex >= products.length
+        ) {
+          return;
+        }
+
+        const current =
+          products[index];
+
+        products[index] =
+          products[nextIndex];
+
+        products[nextIndex] =
+          current;
+
+        setChanged(
+          true
+        );
+
+        renderProducts();
+
+      }
+
+      function moveDraggedProduct(
+        targetId,
+        event
+      ) {
+
+        if (
+          !draggingId
+          ||
+          String(draggingId) === String(targetId)
+        ) {
+          return;
+        }
+
+        const draggedProduct =
+          products.find(
+            function (item) {
+              return String(item.id) === String(draggingId);
+            }
+          );
+
+        if (!draggedProduct) {
+          return;
+        }
+
+        const remaining =
+          products.filter(
+            function (item) {
+              return String(item.id) !== String(draggingId);
+            }
+          );
+
+        const targetIndex =
+          remaining.findIndex(
+            function (item) {
+              return String(item.id) === String(targetId);
+            }
+          );
+
+        if (targetIndex < 0) {
+          return;
+        }
+
+        const rect =
+          event.currentTarget.getBoundingClientRect();
+
+        const dropAfter =
+          event.clientY >
+          (
+            rect.top
+            +
+            rect.height / 2
+          );
+
+        remaining.splice(
+          targetIndex + (dropAfter ? 1 : 0),
+          0,
+          draggedProduct
+        );
+
+        products =
+          remaining;
+
+        setChanged(
+          true
+        );
+
+        renderProducts();
+
+      }
+
+      function clearDragStyles() {
+
+        document
+          .querySelectorAll(
+            ".product-row"
+          )
+          .forEach(
+            function (row) {
+              row.classList.remove(
+                "is-dragging",
+                "is-over"
+              );
+            }
+          );
+
+      }
+
+      function bindRowEvents() {
+
+        document
+          .querySelectorAll(
+            ".move-btn"
+          )
+          .forEach(
+            function (button) {
+
+              button.addEventListener(
+                "click",
+                function () {
+                  moveProduct(
+                    button.dataset.productId,
+                    button.dataset.move
+                  );
+                }
+              );
+
+            }
+          );
+
+        document
+          .querySelectorAll(
+            ".product-row"
+          )
+          .forEach(
+            function (row) {
+
+              row.addEventListener(
+                "dragstart",
+                function (event) {
+
+                  draggingId =
+                    row.dataset.productId;
+
+                  row.classList.add(
+                    "is-dragging"
+                  );
+
+                  if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed =
+                      "move";
+
+                    event.dataTransfer.setData(
+                      "text/plain",
+                      draggingId
+                    );
+                  }
+
+                }
+              );
+
+              row.addEventListener(
+                "dragover",
+                function (event) {
+
+                  event.preventDefault();
+
+                  row.classList.add(
+                    "is-over"
+                  );
+
+                  if (event.dataTransfer) {
+                    event.dataTransfer.dropEffect =
+                      "move";
+                  }
+
+                }
+              );
+
+              row.addEventListener(
+                "dragleave",
+                function () {
+                  row.classList.remove(
+                    "is-over"
+                  );
+                }
+              );
+
+              row.addEventListener(
+                "drop",
+                function (event) {
+
+                  event.preventDefault();
+
+                  moveDraggedProduct(
+                    row.dataset.productId,
+                    event
+                  );
+
+                  clearDragStyles();
+
+                }
+              );
+
+              row.addEventListener(
+                "dragend",
+                function () {
+
+                  draggingId =
+                    null;
+
+                  clearDragStyles();
+
+                }
+              );
+
+            }
+          );
+
+      }
+
+      async function requireShopAccess() {
+
+        const {
+          data: sessionData
+        } =
+          await sb.auth.getSession();
+
+        const user =
+          sessionData?.session?.user;
+
+        if (!user) {
+
+          location.href =
+            "./";
+
+          return false;
+
+        }
+
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from(
+              "shop_user_roles"
+            )
+            .select(
+              "role,is_active"
+            )
+            .eq(
+              "user_id",
+              user.id
+            )
+            .eq(
+              "is_active",
+              true
+            );
+
+        if (error) {
+          throw new Error(
+            "Không kiểm tra được quyền Shop."
+          );
+        }
+
+        const allowed =
+          (data || [])
+            .some(
+              function (item) {
+                return [
+                  "owner",
+                  "shop_admin",
+                  "shop_staff"
+                ].includes(
+                  item.role
+                );
+              }
+            );
+
+        if (!allowed) {
+          throw new Error(
+            "Tài khoản chưa có quyền sắp xếp sản phẩm."
+          );
+        }
+
+        return true;
+
+      }
+
+      async function loadProducts() {
+
+        clearMessage();
+
+        const [
+          productResult,
+          imageResult
+        ] =
+          await Promise.all([
+
+            sb
+              .from(
+                "shop_products"
+              )
+              .select(
+                "id,product_code,name,brand,status,is_featured,sort_order,created_at"
+              )
+              .in(
+                "status",
+                [
+                  "active",
+                  "draft"
+                ]
+              )
+              .order(
+                "sort_order",
+                {
+                  ascending:
+                    true
+                }
+              )
+              .order(
+                "created_at",
+                {
+                  ascending:
+                    false
+                }
+              ),
+
+            sb
+              .from(
+                "shop_product_images"
+              )
+              .select(
+                "id,product_id,storage_path,sort_order,is_primary"
+              )
+              .order(
+                "sort_order",
+                {
+                  ascending:
+                    true
+                }
+              )
+
+          ]);
+
+        if (productResult.error) {
+          throw productResult.error;
+        }
+
+        if (imageResult.error) {
+          throw imageResult.error;
+        }
+
+        products =
+          productResult.data || [];
+
+        images =
+          imageResult.data || [];
+
+        renderProducts();
+
+      }
+
+      async function saveSortOrder() {
+
+        clearMessage();
+
+        if (!products.length) {
+          return;
+        }
+
+        saveBtn.disabled =
+          true;
+
+        const oldText =
+          saveBtn.textContent;
+
+        saveBtn.textContent =
+          "ĐANG LƯU...";
+
+        try {
+
+          const items =
+            products.map(
+              function (product,index) {
+                return {
+                  id:
+                    product.id,
+
+                  sort_order:
+                    (index + 1) * 10
+                };
+              }
+            );
+
+          const {
+            error
+          } =
+            await sb.rpc(
+              "shop_admin_update_product_sort_orders_v1",
+              {
+                p_items:
+                  items
+              }
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          products =
+            products.map(
+              function (product,index) {
+                return {
+                  ...product,
+                  sort_order:
+                    (index + 1) * 10
+                };
+              }
+            );
+
+          setChanged(
+            false
+          );
+
+          renderProducts();
+
+          showMessage(
+            "Đã lưu thứ tự sản phẩm. Ngoài /shop sẽ hiển thị theo thứ tự mới.",
+            "success"
+          );
+
+        }
+        catch (error) {
+
+          console.error(
+            "SAVE SORT ERROR:",
+            error
+          );
+
+          showMessage(
+            error?.message
+            ||
+            "Không lưu được thứ tự sản phẩm.",
+            "error"
+          );
+
+          saveBtn.disabled =
+            false;
+
+        }
+        finally {
+
+          saveBtn.textContent =
+            oldText;
+
+        }
+
+      }
+
+      searchInput.addEventListener(
+        "input",
+        renderProducts
+      );
+
+      saveBtn.addEventListener(
+        "click",
+        saveSortOrder
+      );
+
+      async function start() {
+
+        try {
+
+          await requireShopAccess();
+
+          await loadProducts();
+
+        }
+        catch (error) {
+
+          console.error(
+            "SORT PAGE ERROR:",
+            error
+          );
+
+          showMessage(
+            error?.message
+            ||
+            "Không mở được trang sắp xếp sản phẩm.",
+            "error"
+          );
+
+          listEl.innerHTML =
+            `
+              <div class="empty">
+                Không tải được danh sách sản phẩm.
+              </div>
+            `;
+
+        }
+
+      }
+
+      start();
+
+    })();
+
+  </script>
+
+</body>
+
+</html>
