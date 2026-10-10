@@ -6364,10 +6364,12 @@ button.product-action:disabled,
 
     <div class="promo-card blue">
 
-      <div class="promo-media promo-placeholder">
-        <span>PickDee</span>
-      </div>
-
+  <div
+    id="promoPaddleMedia"
+    class="promo-media promo-placeholder is-loading"
+  >
+    <span>PickDee</span>
+  </div>
 
       <h3>
         Vợt Pickleball hàng tuyển
@@ -8189,6 +8191,54 @@ const resultCount =
     updateFavoriteCount();
 
   }
+  function setPromoMedia(
+    mediaEl,
+    product
+  ) {
+
+    if (
+      !mediaEl
+      ||
+      !product
+    ) {
+      return;
+    }
+
+    const image =
+      getProductImage(
+        product.id
+      );
+
+    const imageUrl =
+      image
+        ?
+          publicImageUrl(
+            image.storage_path
+          )
+        :
+          "";
+
+    if (!imageUrl) {
+      return;
+    }
+
+    mediaEl.classList.remove(
+      "is-loading"
+    );
+
+    mediaEl.classList.remove(
+      "promo-placeholder"
+    );
+
+    mediaEl.innerHTML =
+      "";
+
+    mediaEl.style.backgroundImage =
+      'url("' + imageUrl + '")';
+
+  }
+
+
   function renderPromoMedia() {
 
     const ballMedia =
@@ -8196,9 +8246,10 @@ const resultCount =
         "promoBallMedia"
       );
 
-    if (!ballMedia) {
-      return;
-    }
+    const paddleMedia =
+      document.getElementById(
+        "promoPaddleMedia"
+      );
 
 
     const ballProduct =
@@ -8221,39 +8272,43 @@ const resultCount =
       );
 
 
-    const ballImage =
-      ballProduct
-        ?
-          getProductImage(
-            ballProduct.id
-          )
-        :
-          null;
-
-
-    const imageUrl =
-      ballImage
-        ?
-          publicImageUrl(
-            ballImage.storage_path
-          )
-        :
-          "";
-
-
-    if (imageUrl) {
-
-      ballMedia.classList.remove(
-        "is-loading"
+    const paddleProduct =
+      products.find(
+        function (product) {
+          return String(product.id) === "34";
+        }
+      )
+      ||
+      products.find(
+        function (product) {
+          return (
+            productGroup(product) === "paddles"
+            &&
+            Boolean(
+              getProductImage(
+                product.id
+              )
+            )
+          );
+        }
+      )
+      ||
+      products.find(
+        function (product) {
+          return productGroup(product) === "paddles";
+        }
       );
 
-      ballMedia.innerHTML =
-        "";
 
-      ballMedia.style.backgroundImage =
-        'url("' + imageUrl + '")';
+    setPromoMedia(
+      ballMedia,
+      ballProduct
+    );
 
-    }
+    setPromoMedia(
+      paddleMedia,
+      paddleProduct
+    );
 
   }
   async function loadShop() {
