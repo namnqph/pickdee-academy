@@ -3894,28 +3894,204 @@
   }
 
 
+   function normalizeAutofillText(value) {
+
+    return String(
+      value || ""
+    )
+      .trim()
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .toLowerCase();
+
+  }
+
+
+  function setInputValue(
+    id,
+    value
+  ) {
+
+    const el =
+      document.getElementById(
+        id
+      );
+
+    if (!el) {
+      return;
+    }
+
+    el.value =
+      value || "";
+
+  }
+
+
+  function findSelectOptionByText(
+    selectEl,
+    value
+  ) {
+
+    if (
+      !selectEl
+      ||
+      selectEl.tagName !== "SELECT"
+    ) {
+      return null;
+    }
+
+    const target =
+      normalizeAutofillText(
+        value
+      );
+
+    if (!target) {
+      return null;
+    }
+
+    return (
+      Array
+        .from(
+          selectEl.options
+        )
+        .find(
+          function (option) {
+
+            return (
+              normalizeAutofillText(
+                option.value
+              )
+              ===
+              target
+              ||
+              normalizeAutofillText(
+                option.textContent
+              )
+              ===
+              target
+            );
+
+          }
+        )
+      ||
+      null
+    );
+
+  }
+
+
+  function setSelectValueSmart(
+    selectEl,
+    value
+  ) {
+
+    if (!selectEl) {
+      return null;
+    }
+
+    const cleanValue =
+      String(
+        value || ""
+      ).trim();
+
+    if (!cleanValue) {
+      return null;
+    }
+
+    if (
+      selectEl.tagName !== "SELECT"
+    ) {
+
+      selectEl.value =
+        cleanValue;
+
+      return null;
+
+    }
+
+    let option =
+      findSelectOptionByText(
+        selectEl,
+        cleanValue
+      );
+
+    if (!option) {
+
+      option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        cleanValue;
+
+      option.textContent =
+        cleanValue;
+
+      option.dataset.autofillOption =
+        "true";
+
+      selectEl.appendChild(
+        option
+      );
+
+    }
+
+    selectEl.disabled =
+      false;
+
+    selectEl.value =
+      option.value;
+
+    return option;
+
+  }
+
+
   function applyCustomerProfile(profile) {
 
     if (!profile) {
       return false;
     }
 
-    document.getElementById("customerName").value =
-      profile.customer_name || "";
+    setInputValue(
+      "customerName",
+      profile.customer_name || ""
+    );
 
-    document.getElementById("customerEmail").value =
-      profile.email || "";
+    setInputValue(
+      "customerEmail",
+      profile.email || ""
+    );
 
-    document.getElementById("addressLine").value =
-      profile.address_line || "";
+    setInputValue(
+      "addressLine",
+      profile.address_line || ""
+    );
 
-    document.getElementById("legacyAddress").value =
-      profile.legacy_address || "";
+    setInputValue(
+      "legacyAddress",
+      profile.legacy_address || ""
+    );
 
-    if (profile.province) {
+
+    const provinceValue =
+      String(
+        profile.province || ""
+      ).trim();
+
+    const wardValue =
+      String(
+        profile.ward || ""
+      ).trim();
+
+
+    if (provinceValue) {
 
       fillProvinceOptions(
-        profile.province
+        provinceValue
       );
 
       const provinceSelect =
@@ -3923,25 +4099,46 @@
           "province"
         );
 
-      const selectedOption =
-        Array
-          .from(
-            provinceSelect.options
-          )
-          .find(
-            function (option) {
-              return option.value === profile.province;
-            }
-          );
+      const provinceOption =
+        setSelectValueSmart(
+          provinceSelect,
+          provinceValue
+        );
 
-      if (selectedOption) {
+      const provinceId =
+        provinceOption
+          ?
+            (
+              provinceOption.dataset?.provinceId
+              ||
+              provinceOption.getAttribute(
+                "data-province-id"
+              )
+              ||
+              ""
+            )
+          :
+            "";
 
-        provinceSelect.value =
-          profile.province;
+      if (provinceId) {
 
         fillWardOptions(
-          selectedOption?.dataset?.provinceId || "",
-          profile.ward || ""
+          provinceId,
+          wardValue
+        );
+
+      }
+
+      const wardSelect =
+        document.getElementById(
+          "ward"
+        );
+
+      if (wardValue) {
+
+        setSelectValueSmart(
+          wardSelect,
+          wardValue
         );
 
       }
