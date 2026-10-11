@@ -3839,7 +3839,7 @@ function bindProductEvents() {
         );
 
 
-      const {
+       const {
         data: quote,
         error: quoteError
       } =
@@ -3864,12 +3864,102 @@ function bindProductEvents() {
       }
 
 
-      const effectivePrice =
+      const baseUnitPrice =
         Number(
           quote?.unit_price
           ??
           selectedVariant.price
         );
+
+
+      const baseSubtotal =
+        Number(
+          quote?.subtotal
+          ??
+          (
+            baseUnitPrice
+            *
+            finalQuantity
+          )
+        );
+
+
+      let promoQuote =
+        null;
+
+
+      const {
+        data: promoData,
+        error: promoError
+      } =
+        await sb.rpc(
+          "shop_best_product_promotion_quote",
+          {
+
+            p_product_id:
+              Number(
+                product.id
+              ),
+
+            p_variant_id:
+              Number(
+                selectedVariant.id
+              ),
+
+            p_unit_price:
+              baseUnitPrice,
+
+            p_quantity:
+              finalQuantity,
+
+            p_order_amount:
+              baseSubtotal
+
+          }
+        );
+
+
+      if (promoError) {
+        throw promoError;
+      }
+
+
+      promoQuote =
+        Array.isArray(promoData)
+        ?
+          (
+            promoData[0]
+            ||
+            null
+          )
+        :
+          (
+            promoData
+            ||
+            null
+          );
+
+
+      const hasPromotion =
+        promoQuote
+        &&
+        Number(
+          promoQuote.final_unit_price
+          ??
+          baseUnitPrice
+        )
+        <
+        baseUnitPrice;
+
+
+      const effectivePrice =
+        hasPromotion
+        ?
+          Number(
+            promoQuote.final_unit_price
+          )
+        :
+          baseUnitPrice;
 
 
       const sameOption1VariantIds =
@@ -4016,7 +4106,7 @@ function bindProductEvents() {
           ||
           "";
 
-        existing.price =
+               existing.price =
           effectivePrice;
 
 
@@ -4024,6 +4114,40 @@ function bindProductEvents() {
           Number(
             selectedVariant.price
           );
+
+
+        existing.promotion_id =
+          hasPromotion
+          ?
+            promoQuote.promotion_id
+          :
+            null;
+
+
+        existing.promotion_name =
+          hasPromotion
+          ?
+            (
+              promoQuote.promotion_name
+              ||
+              ""
+            )
+          :
+            "";
+
+
+        existing.original_price =
+          hasPromotion
+          ?
+            Number(
+              promoQuote.original_unit_price
+              ??
+              baseUnitPrice
+            )
+          :
+            Number(
+              selectedVariant.price
+            );
         existing.image_url =
           selectedImageUrl
           ||
@@ -4072,13 +4196,44 @@ function bindProductEvents() {
             ||
             "",
 
-          price:
+                    price:
             effectivePrice,
 
           retail_price:
             Number(
               selectedVariant.price
             ),
+
+          promotion_id:
+            hasPromotion
+            ?
+              promoQuote.promotion_id
+            :
+              null,
+
+          promotion_name:
+            hasPromotion
+            ?
+              (
+                promoQuote.promotion_name
+                ||
+                ""
+              )
+            :
+              "",
+
+          original_price:
+            hasPromotion
+            ?
+              Number(
+                promoQuote.original_unit_price
+                ??
+                baseUnitPrice
+              )
+            :
+              Number(
+                selectedVariant.price
+              ),
 
           quantity:
             finalQuantity,
