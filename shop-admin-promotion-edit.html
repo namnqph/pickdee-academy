@@ -1427,13 +1427,12 @@
             ascending: true
           }),
 
-        sb
+               sb
           .from("shop_products")
-          .select("id,name,status,is_active")
+          .select("id,name,status")
           .order("id",{
             ascending: false
           }),
-
         sb
           .from("shop_product_variants")
           .select("id,product_id,sku,variant_name,is_active")
@@ -1465,12 +1464,24 @@
           }
         );
 
-    products =
+      products =
       (productResult.data || [])
         .filter(
           function (item) {
 
-            return item.is_active !== false;
+            const status =
+              String(
+                item.status || ""
+              )
+                .toLowerCase();
+
+            return ![
+              "inactive",
+              "archived",
+              "deleted"
+            ].includes(
+              status
+            );
 
           }
         );
