@@ -1089,6 +1089,40 @@
       );
 
 
+    const discountNote =
+      valueFrom(
+        o,
+        [
+          "order_discount_note"
+        ]
+      );
+
+
+    const rawDiscountAmount =
+      Math.max(
+        0,
+        Number(
+          o.order_discount_amount || 0
+        )
+      );
+
+
+    const discountAmount =
+      Math.min(
+        productTotal,
+        rawDiscountAmount
+      );
+
+
+    const discountedProductTotal =
+      Math.max(
+        0,
+        productTotal
+        -
+        discountAmount
+      );
+
+
     const shippingFeeNumber =
       Math.max(
         0,
@@ -1099,7 +1133,7 @@
 
 
     const customerTotal =
-      productTotal
+      discountedProductTotal
       +
       shippingFeeNumber;
     const itemHtml =
@@ -2089,12 +2123,149 @@
           Sản phẩm
         </div>
 
-        <div class="items">
+               <div class="items">
           ${
             itemHtml
             ||
             "Không có sản phẩm."
           }
+        </div>
+
+        <div
+          style="
+            margin-top:14px;
+            padding-top:14px;
+            border-top:1px solid rgba(255,255,255,.08);
+            display:grid;
+            gap:10px;
+          "
+        >
+
+          <div class="info-row">
+
+            <div class="info-label">
+              TIỀN HÀNG GỐC
+            </div>
+
+            <div
+              id="discountProductTotalText"
+              class="info-value"
+            >
+              ${money(productTotal)}
+            </div>
+
+          </div>
+
+          <div>
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
+              CHIẾT KHẤU CHO KHÁCH
+            </div>
+
+            <input
+              id="orderDiscountInput"
+              type="number"
+              min="0"
+              step="1000"
+              value="${escapeHtml(discountAmount)}"
+              placeholder="Ví dụ: 50000"
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+
+            <div
+              style="
+                margin-top:6px;
+                color:rgba(255,255,255,.40);
+                font-size:9px;
+                line-height:1.5;
+              "
+            >
+              Nhập số tiền giảm trực tiếp cho khách trước khi xác nhận đơn.
+            </div>
+
+          </div>
+
+          <div>
+
+            <div
+              class="info-label"
+              style="margin-bottom:6px;"
+            >
+              LÝ DO / GHI CHÚ CHIẾT KHẤU
+            </div>
+
+            <input
+              id="orderDiscountNoteInput"
+              type="text"
+              value="${escapeHtml(discountNote)}"
+              placeholder="Ví dụ: khách quen, hỗ trợ ship, deal riêng..."
+              style="
+                width:100%;
+                min-height:44px;
+                padding:0 12px;
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,.10);
+                background:#071523;
+                color:#ffffff;
+                outline:none;
+                font-size:16px;
+                font-weight:800;
+              "
+            >
+
+          </div>
+
+          <div class="info-row">
+
+            <div class="info-label">
+              SAU CHIẾT KHẤU
+            </div>
+
+            <div
+              id="discountedProductTotalText"
+              class="info-value"
+              style="
+                color:#d8ff45;
+                font-weight:950;
+              "
+            >
+              ${money(discountedProductTotal)}
+            </div>
+
+          </div>
+
+          <button
+            id="saveDiscountBtn"
+            type="button"
+            class="action-btn action-primary"
+            style="
+              width:100%;
+              min-height:42px;
+              font-size:10px;
+            "
+          >
+            LƯU CHIẾT KHẤU
+          </button>
+
+          <div
+            id="discountMessage"
+            class="message"
+          ></div>
+
         </div>
 
       </section>
@@ -2152,7 +2323,35 @@
             </div>
 
           </div>
+          <div class="info-row">
 
+            <div class="info-label">
+              CHIẾT KHẤU
+            </div>
+
+            <div
+              id="paymentDiscountText"
+              class="info-value"
+            >
+              -${money(discountAmount)}
+            </div>
+
+          </div>
+
+          <div class="info-row">
+
+            <div class="info-label">
+              SAU CHIẾT KHẤU
+            </div>
+
+            <div
+              id="paymentDiscountedProductText"
+              class="info-value"
+            >
+              ${money(discountedProductTotal)}
+            </div>
+
+          </div>
           <div class="info-row">
 
             <div class="info-label">
@@ -3444,7 +3643,259 @@
 
     }
 
+    const orderDiscountInput =
+      document.getElementById(
+        "orderDiscountInput"
+      );
 
+    const orderDiscountNoteInput =
+      document.getElementById(
+        "orderDiscountNoteInput"
+      );
+
+    const saveDiscountBtn =
+      document.getElementById(
+        "saveDiscountBtn"
+      );
+
+    const discountMessage =
+      document.getElementById(
+        "discountMessage"
+      );
+
+    const discountedProductTotalText =
+      document.getElementById(
+        "discountedProductTotalText"
+      );
+
+    const paymentDiscountText =
+      document.getElementById(
+        "paymentDiscountText"
+      );
+
+    const paymentDiscountedProductText =
+      document.getElementById(
+        "paymentDiscountedProductText"
+      );
+
+
+    function getDiscountValue() {
+
+      return Math.min(
+        productTotal,
+        Math.max(
+          0,
+          Number(
+            orderDiscountInput
+              ?.value
+            ||
+            0
+          )
+        )
+      );
+
+    }
+
+
+    function updateDiscountViewOnly() {
+
+      const discount =
+        getDiscountValue();
+
+      const afterDiscount =
+        Math.max(
+          0,
+          productTotal
+          -
+          discount
+        );
+
+      if (
+        discountedProductTotalText
+      ) {
+
+        discountedProductTotalText.textContent =
+          money(
+            afterDiscount
+          );
+
+      }
+
+      if (
+        paymentDiscountText
+      ) {
+
+        paymentDiscountText.textContent =
+          "-"
+          +
+          money(
+            discount
+          );
+
+      }
+
+      if (
+        paymentDiscountedProductText
+      ) {
+
+        paymentDiscountedProductText.textContent =
+          money(
+            afterDiscount
+          );
+
+      }
+
+    }
+
+
+    if (
+      orderDiscountInput
+    ) {
+
+      orderDiscountInput.addEventListener(
+        "input",
+        function () {
+
+          updateDiscountViewOnly();
+          updateSimpleShippingView();
+
+        }
+      );
+
+    }
+
+
+    if (
+      saveDiscountBtn
+      &&
+      orderDiscountInput
+    ) {
+
+      saveDiscountBtn.addEventListener(
+        "click",
+        async function () {
+
+          saveDiscountBtn.disabled =
+            true;
+
+          try {
+
+            const discount =
+              getDiscountValue();
+
+            const fee =
+              getShippingFeeValue();
+
+            const newTotal =
+              Math.max(
+                0,
+                productTotal
+                -
+                discount
+              )
+              +
+              fee;
+
+            const discountNoteValue =
+              orderDiscountNoteInput
+                ?.value
+                ?.trim()
+              ||
+              "";
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  {
+                    order_discount_amount:
+                      discount,
+
+                    order_discount_note:
+                      discountNoteValue,
+
+                    total_amount:
+                      newTotal
+                  }
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+            if (
+              error
+            ) {
+
+              throw error;
+
+            }
+
+            currentOrder =
+              data;
+
+            render();
+
+            const refreshedDiscountMessage =
+              document.getElementById(
+                "discountMessage"
+              );
+
+            if (
+              refreshedDiscountMessage
+            ) {
+
+              refreshedDiscountMessage.className =
+                "message success";
+
+              refreshedDiscountMessage.textContent =
+                "✓ Đã lưu chiết khấu.";
+
+            }
+
+          }
+          catch (
+            error
+          ) {
+
+            console.error(
+              "SAVE DISCOUNT ERROR:",
+              error
+            );
+
+            if (
+              discountMessage
+            ) {
+
+              discountMessage.className =
+                "message error";
+
+              discountMessage.textContent =
+                error?.message
+                ||
+                "Không lưu được chiết khấu.";
+
+            }
+
+          }
+          finally {
+
+            saveDiscountBtn.disabled =
+              false;
+
+          }
+
+        }
+      );
+
+    }
     function getShippingFeeValue() {
 
       return Math.max(
@@ -3465,8 +3916,16 @@
       const fee =
         getShippingFeeValue();
 
+         const discount =
+        getDiscountValue();
+
       const total =
-        productTotal
+        Math.max(
+          0,
+          productTotal
+          -
+          discount
+        )
         +
         fee;
 
@@ -3675,8 +4134,13 @@
             const shippingFeeValue =
               getShippingFeeValue();
 
-            const customerTotalValue =
-              productTotal
+                      const customerTotalValue =
+              Math.max(
+                0,
+                productTotal
+                -
+                getDiscountValue()
+              )
               +
               shippingFeeValue;
 
