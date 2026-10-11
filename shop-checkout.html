@@ -3602,29 +3602,73 @@
             );
 
 
-          const {
-            data,
-            error
-          } =
-            await sb.rpc(
-              "shop_price_quote",
-              {
-
-                p_variant_id:
-                  Number(
-                    item.variant_id
-                  ),
-
-                p_quantity:
-                  quantity
-
-              }
+          const variantId =
+            Number(
+              item.variant_id
             );
 
 
-          if (error) {
-            throw error;
+          const [
+            quoteResult,
+            variantResult
+          ] =
+            await Promise.all([
+
+              sb.rpc(
+                "shop_price_quote",
+                {
+
+                  p_variant_id:
+                    variantId,
+
+                  p_quantity:
+                    quantity
+
+                }
+              ),
+
+              sb
+                .from(
+                  "shop_product_variants"
+                )
+                .select(
+                  "id,variant_name,option1_name,option1_value,option2_name,option2_value"
+                )
+                .eq(
+                  "id",
+                  variantId
+                )
+                .maybeSingle()
+
+            ]);
+
+
+          if (
+            quoteResult.error
+          ) {
+
+            throw quoteResult.error;
+
           }
+
+
+          if (
+            variantResult.error
+          ) {
+
+            throw variantResult.error;
+
+          }
+
+
+          const data =
+            quoteResult.data;
+
+
+          const variantData =
+            variantResult.data
+            ||
+            {};
 
 
           return {
@@ -3657,7 +3701,32 @@
             pricing_type:
               data?.pricing_type
               ||
-              "retail"
+              "retail",
+
+            backend_variant_name:
+              variantData.variant_name
+              ||
+              "",
+
+            backend_option1_name:
+              variantData.option1_name
+              ||
+              "",
+
+            backend_option1_value:
+              variantData.option1_value
+              ||
+              "",
+
+            backend_option2_name:
+              variantData.option2_name
+              ||
+              "",
+
+            backend_option2_value:
+              variantData.option2_value
+              ||
+              ""
 
           };
 
@@ -3667,6 +3736,8 @@
     );
 
   }
+
+
 
 
   function cartTotal(cart) {
@@ -3690,7 +3761,142 @@
 
   }
 
+  function textHasPaddle(value) {
 
+    const text =
+      String(
+        value
+        ||
+        ""
+      )
+        .toLowerCase();
+
+    return (
+      text.includes("vợt")
+      ||
+      text.includes("paddle")
+      ||
+      text.includes("esson")
+      ||
+      text.includes("ess/on")
+    );
+
+  }
+
+
+  function itemRequiresGiftShirtSize(item) {
+
+    return textHasPaddle(
+      [
+        item.product_name,
+        item.variant_name,
+        item.backend_variant_name
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+
+  }
+
+
+  function itemMissingRequiredSelections(item) {
+
+    const missing =
+      [];
+
+
+    if (
+      item.backend_option1_name
+      ||
+      item.backend_option1_value
+    ) {
+
+      if (
+        !item.option1_value
+      ) {
+
+        missing.push(
+          item.backend_option1_name
+          ||
+          "phân loại 1"
+        );
+
+      }
+
+    }
+
+
+    if (
+      item.backend_option2_name
+      ||
+      item.backend_option2_value
+    ) {
+
+      if (
+        !item.option2_value
+      ) {
+
+        missing.push(
+          item.backend_option2_name
+          ||
+          "phân loại 2"
+        );
+
+      }
+
+    }
+
+
+    if (
+      itemRequiresGiftShirtSize(
+        item
+      )
+      &&
+      !item.gift_shirt_size
+    ) {
+
+      missing.push(
+        "size áo tặng"
+      );
+
+    }
+
+
+    return missing;
+
+  }
+
+
+  function getInvalidCheckoutItems(cart) {
+
+    return cart
+      .map(
+        function (item,index) {
+
+          return {
+            item,
+            index,
+            missing:
+              itemMissingRequiredSelections(
+                item
+              )
+          };
+
+        }
+      )
+      .filter(
+        function (entry) {
+
+          return (
+            entry.missing.length
+            >
+            0
+          );
+
+        }
+      );
+
+  }
   function cartHasPickleballBall(
     cart
   ) {
@@ -4606,10 +4812,43 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
     }
 
 
-    const shipping =
+      const shipping =
       shippingQuote(
         cart
       );
+
+
+    const invalidCheckoutItems =
+      getInvalidCheckoutItems(
+        cart
+      );
+
+
+    const hasInvalidSelections =
+      invalidCheckoutItems.length
+      >
+      0;
+
+
+    if (
+      hasInvalidSelections
+    ) {
+
+      showMessage(
+        "Có sản phẩm trong giỏ hàng chưa chọn đủ phân loại. Anh/chị vui lòng quay lại sản phẩm để chọn đủ trước khi đặt hàng.",
+        "error"
+      );
+
+    }
+    else {
+
+      message.className =
+        "message";
+
+      message.textContent =
+        "";
+
+    }
 
 
     const displayTotal =
@@ -4646,7 +4885,38 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
                   `
                 :
                   "";
+            const missingSelections =
+              itemMissingRequiredSelections(
+                item
+              );
 
+
+            const missingSelectionsHtml =
+              missingSelections.length
+                ?
+                  `
+                    <div
+                      class="order-variant"
+                      style="
+                        margin-top:7px;
+                        padding:8px 9px;
+                        border-radius:9px;
+                        border:1px solid rgba(255,190,80,.35);
+                        background:rgba(255,190,80,.08);
+                        color:#ffcf73;
+                        line-height:1.45;
+                      "
+                    >
+                      ⚠️ Chưa chọn đủ:
+                      ${escapeHtml(
+                        missingSelections.join(
+                          ", "
+                        )
+                      )}
+                    </div>
+                  `
+                :
+                  "";
 
             return `
 
@@ -4689,7 +4959,7 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
                         ""
                   }
 
-
+                  ${missingSelectionsHtml}
                   ${wholesaleText}
 
 
@@ -4783,12 +5053,16 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
     }
 
 
-    if (
+       if (
       shippingPendingNote
     ) {
 
       shippingPendingNote.style.display =
-        shipping.shippingPending
+        (
+          !hasInvalidSelections
+          &&
+          shipping.shippingPending
+        )
           ?
             "block"
           :
@@ -4798,9 +5072,13 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
 
 
     totalPrice.textContent =
-      money(
-        shipping.customerTotal
-      );
+      hasInvalidSelections
+        ?
+          "Chưa đủ thông tin"
+        :
+          money(
+            shipping.customerTotal
+          );
 
 
     const bottomLabel =
@@ -4814,28 +5092,41 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
     ) {
 
       bottomLabel.textContent =
-        shipping.shippingPending
+        hasInvalidSelections
           ?
-            "TẠM TÍNH TỪ • SHIP CÓ THỂ CAO HƠN"
+            "CẦN CHỌN ĐỦ PHÂN LOẠI"
           :
-            "TỔNG THANH TOÁN";
+            (
+              shipping.shippingPending
+                ?
+                  "TẠM TÍNH TỪ • SHIP CÓ THỂ CAO HƠN"
+                :
+                  "TỔNG THANH TOÁN"
+            );
 
     }
 
 
     bottomTotal.textContent =
-      money(
-        shipping.customerTotal
-      );
+      hasInvalidSelections
+        ?
+          "Chưa đủ thông tin"
+        :
+          money(
+            shipping.customerTotal
+          );
 
 
     submitBtn.disabled =
-      false;
+      hasInvalidSelections;
 
 
     submitBtn.textContent =
-      "ĐẶT HÀNG";
-
+      hasInvalidSelections
+        ?
+          "CHỌN ĐỦ PHÂN LOẠI"
+        :
+          "ĐẶT HÀNG";
   }
 
 
@@ -5041,7 +5332,7 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
       }
 
 
-        const currentCart =
+           let currentCart =
         readCart();
 
 
@@ -5051,6 +5342,61 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
           "Giỏ hàng đang trống.",
           "error"
         );
+
+        return;
+
+      }
+
+
+      try {
+
+        currentCart =
+          await refreshCheckoutPrices(
+            currentCart
+          );
+
+        saveCart(
+          currentCart
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "CHECKOUT VALIDATION ERROR:",
+          error
+        );
+
+        showMessage(
+          "Không kiểm tra được phân loại sản phẩm. Anh/chị vui lòng quay lại giỏ hàng và thử lại.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const invalidCheckoutItems =
+        getInvalidCheckoutItems(
+          currentCart
+        );
+
+
+      if (
+        invalidCheckoutItems.length
+      ) {
+
+        showMessage(
+          "Có sản phẩm trong giỏ hàng chưa chọn đủ phân loại. Anh/chị vui lòng quay lại sản phẩm để chọn đủ trước khi đặt hàng.",
+          "error"
+        );
+
+        submitBtn.disabled =
+          true;
+
+        submitBtn.textContent =
+          "CHỌN ĐỦ PHÂN LOẠI";
 
         return;
 
