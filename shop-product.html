@@ -2369,6 +2369,10 @@ async function updateDisplayedPrice() {
     null;
 
 
+  let promoQuote =
+    null;
+
+
   try {
 
     const {
@@ -2410,6 +2414,90 @@ async function updateDisplayedPrice() {
   }
 
 
+  const baseUnitPrice =
+    Number(
+      quote?.unit_price
+      ??
+      retailPrice
+    );
+
+
+  const baseSubtotal =
+    Number(
+      quote?.subtotal
+      ??
+      (
+        baseUnitPrice
+        *
+        quantity
+      )
+    );
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "shop_best_product_promotion_quote",
+        {
+
+          p_product_id:
+            Number(
+              product?.id
+            ),
+
+          p_variant_id:
+            Number(
+              selectedVariant.id
+            ),
+
+          p_unit_price:
+            baseUnitPrice,
+
+          p_quantity:
+            quantity,
+
+          p_order_amount:
+            baseSubtotal
+
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    promoQuote =
+      Array.isArray(data)
+      ?
+        (
+          data[0]
+          ||
+          null
+        )
+      :
+        (
+          data
+          ||
+          null
+        );
+
+  }
+  catch (error) {
+
+    console.error(
+      "PROMOTION QUOTE ERROR:",
+      error
+    );
+
+  }
+
+
   if (
     requestSeq
     !==
@@ -2421,24 +2509,38 @@ async function updateDisplayedPrice() {
   }
 
 
-  const unitPrice =
+  const hasPromotion =
+    promoQuote
+    &&
     Number(
-      quote?.unit_price
+      promoQuote.final_unit_price
       ??
-      retailPrice
-    );
+      baseUnitPrice
+    )
+    <
+    baseUnitPrice;
+
+
+  const unitPrice =
+    hasPromotion
+    ?
+      Number(
+        promoQuote.final_unit_price
+      )
+    :
+      baseUnitPrice;
 
 
   const subtotal =
-    Number(
-      quote?.subtotal
-      ??
+    hasPromotion
+    ?
       (
         unitPrice
         *
         quantity
       )
-    );
+    :
+      baseSubtotal;
 
 
   if (mainPrice) {
@@ -2463,7 +2565,23 @@ async function updateDisplayedPrice() {
 
   if (comparePrice) {
 
-    if (
+    if (hasPromotion) {
+
+      comparePrice.style.display =
+        "";
+
+
+      comparePrice.textContent =
+        money(
+          Number(
+            promoQuote.original_unit_price
+            ??
+            baseUnitPrice
+          )
+        );
+
+    }
+    else if (
       quote?.pricing_type
       ===
       "wholesale"
@@ -2513,6 +2631,61 @@ async function updateDisplayedPrice() {
 
   if (!wholesaleHint) {
     return;
+  }
+
+
+  if (hasPromotion) {
+
+    let promoHtml = `
+      <strong>
+        ✓ ĐANG ÁP DỤNG KHUYẾN MÃI
+      </strong>
+      • ${escapeHtml(
+        promoQuote.promotion_name
+        ||
+        "Khuyến mãi PickDee"
+      )}
+      <br>
+      Giá sau khuyến mãi:
+      <strong>
+        ${money(unitPrice)}
+      </strong>
+      / sản phẩm
+    `;
+
+
+    const promoSaving =
+      Number(
+        promoQuote.total_discount
+        ??
+        0
+      );
+
+
+    if (promoSaving > 0) {
+
+      promoHtml += `
+        <br>
+        Tiết kiệm:
+        <strong>
+          ${money(promoSaving)}
+        </strong>
+        cho số lượng đang chọn.
+      `;
+
+    }
+
+
+    wholesaleHint.innerHTML =
+      promoHtml;
+
+
+    wholesaleHint.style.display =
+      "";
+
+
+    return;
+
   }
 
 
