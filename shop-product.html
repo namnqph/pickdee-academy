@@ -1142,13 +1142,35 @@
      STATE
   ====================================================== */
 
-  let product = null;
+   let product = null;
 
   let variants = [];
 
   let images = [];
 
   let selectedVariant = null;
+
+  let selectedOption1Value = "";
+
+  let selectedOption2Value = "";
+
+  let selectedLegacyVariantId = "";
+
+  let selectedGiftShirtSize = "";
+
+  let currentHasStructuredOptions = false;
+
+  let currentOption1Name = "";
+
+  let currentOption2Name = "";
+
+  let currentOption1Values = [];
+
+  let currentOption2Values = [];
+
+  let currentRequiresLegacyVariantChoice = false;
+
+  let currentRequiresGiftShirtSize = false;
 
   let quantity = 1;
 
@@ -1226,7 +1248,102 @@
 
   }
 
+  function textHasPaddle(value) {
 
+    const text =
+      String(
+        value
+        ||
+        ""
+      )
+        .toLowerCase();
+
+    return (
+      text.includes("vợt")
+      ||
+      text.includes("paddle")
+      ||
+      text.includes("esson")
+      ||
+      text.includes("ess/on")
+    );
+
+  }
+
+
+  function productRequiresGiftShirtSize(item) {
+
+    return textHasPaddle(
+      [
+        item?.name,
+        item?.brand,
+        item?.short_description,
+        item?.description
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+
+  }
+
+
+  function selectedVariantLabel() {
+
+    const parts = [];
+
+    if (
+      selectedVariant?.option1_name
+      &&
+      selectedVariant?.option1_value
+    ) {
+
+      parts.push(
+        selectedVariant.option1_name
+        +
+        ": "
+        +
+        selectedVariant.option1_value
+      );
+
+    }
+
+    if (
+      selectedVariant?.option2_name
+      &&
+      selectedVariant?.option2_value
+    ) {
+
+      parts.push(
+        selectedVariant.option2_name
+        +
+        ": "
+        +
+        selectedVariant.option2_value
+      );
+
+    }
+
+    if (
+      selectedGiftShirtSize
+    ) {
+
+      parts.push(
+        "Size áo tặng: "
+        +
+        selectedGiftShirtSize
+      );
+
+    }
+
+    return (
+      selectedVariant?.variant_name
+      ||
+      parts.join(" / ")
+      ||
+      ""
+    );
+
+  }
   function imageUrl(path) {
 
     if (!path) {
@@ -1557,7 +1674,30 @@ function updateCartCount() {
       ||
       option2Values.length > 0
     );
+  currentHasStructuredOptions =
+    hasStructuredOptions;
 
+  currentOption1Name =
+    option1Name;
+
+  currentOption2Name =
+    option2Name;
+
+  currentOption1Values =
+    option1Values;
+
+  currentOption2Values =
+    option2Values;
+
+  currentRequiresLegacyVariantChoice =
+    !hasStructuredOptions
+    &&
+    variants.length > 1;
+
+  currentRequiresGiftShirtSize =
+    productRequiresGiftShirtSize(
+      product
+    );
 
   /*
     =====================================================
@@ -1572,7 +1712,7 @@ function updateCartCount() {
 
           const active =
             String(
-              selectedVariant?.option1_value
+             selectedOption1Value
               ||
               ""
             )
@@ -1615,7 +1755,7 @@ function updateCartCount() {
 
           const active =
             String(
-              selectedVariant?.option2_value
+              selectedOption2Value
               ||
               ""
             )
@@ -1660,7 +1800,7 @@ function updateCartCount() {
 
               const active =
                 String(
-                  selectedVariant.id
+                 selectedLegacyVariantId
                 )
                 ===
                 String(
@@ -1769,7 +1909,42 @@ function updateCartCount() {
 
   }
 
+  const giftShirtSizeHtml =
+    currentRequiresGiftShirtSize
+      ?
+        `
+          <div class="section-label">
+            SIZE ÁO TẶNG
+          </div>
 
+          <div class="variants">
+            ${["S","M","L","XL","2XL","3XL"]
+              .map(
+                function (size) {
+
+                  return `
+                    <button
+                      class="variant-btn gift-shirt-size-btn ${
+                        selectedGiftShirtSize === size
+                          ?
+                            "active"
+                          :
+                            ""
+                      }"
+                      type="button"
+                      data-gift-shirt-size="${escapeHtml(size)}"
+                    >
+                      ${escapeHtml(size)}
+                    </button>
+                  `;
+
+                }
+              )
+              .join("")}
+          </div>
+        `
+      :
+        "";
   /*
     =====================================================
     THUMBNAILS
@@ -1971,7 +2146,9 @@ function updateCartCount() {
         </div>
 
 
-        ${variantSelectionHtml}
+          ${variantSelectionHtml}
+
+        ${giftShirtSizeHtml}
 
 
         <div class="quantity-row">
@@ -2559,7 +2736,7 @@ function bindProductEvents() {
             )
             ===
             String(
-              selectedVariant?.option1_value
+              selectedOption1Value
               ||
               ""
             )
@@ -2585,7 +2762,7 @@ function bindProductEvents() {
             )
             ===
             String(
-              selectedVariant?.option2_value
+              selectedOption2Value
               ||
               ""
             )
@@ -2611,7 +2788,33 @@ function bindProductEvents() {
             )
             ===
             String(
-              selectedVariant?.id
+              selectedLegacyVariantId
+              ||
+              ""
+            )
+          );
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".gift-shirt-size-btn"
+      )
+      .forEach(
+        function (button) {
+
+          button.classList.toggle(
+            "active",
+            String(
+              button.dataset.giftShirtSize
+              ||
+              ""
+            )
+            ===
+            String(
+              selectedGiftShirtSize
               ||
               ""
             )
@@ -2645,9 +2848,12 @@ function bindProductEvents() {
               ||
               "";
 
+            selectedOption1Value =
+              value;
+
 
             const currentOption2 =
-              selectedVariant?.option2_value
+              selectedOption2Value
               ||
               "";
 
@@ -2656,7 +2862,9 @@ function bindProductEvents() {
               null;
 
 
-            if (currentOption2) {
+            if (
+              currentOption2
+            ) {
 
               nextVariant =
                 variants.find(
@@ -2688,7 +2896,9 @@ function bindProductEvents() {
             }
 
 
-            if (!nextVariant) {
+            if (
+              !nextVariant
+            ) {
 
               nextVariant =
                 variants.find(
@@ -2712,8 +2922,32 @@ function bindProductEvents() {
             }
 
 
-            if (!nextVariant) {
+            if (
+              !nextVariant
+            ) {
+
               return;
+
+            }
+
+
+            if (
+              currentOption2
+              &&
+              String(
+                nextVariant.option2_value
+                ||
+                ""
+              )
+              !==
+              String(
+                currentOption2
+              )
+            ) {
+
+              selectedOption2Value =
+                "";
+
             }
 
 
@@ -2754,9 +2988,12 @@ function bindProductEvents() {
               ||
               "";
 
+            selectedOption2Value =
+              value;
+
 
             const currentOption1 =
-              selectedVariant?.option1_value
+              selectedOption1Value
               ||
               "";
 
@@ -2765,7 +3002,9 @@ function bindProductEvents() {
               null;
 
 
-            if (currentOption1) {
+            if (
+              currentOption1
+            ) {
 
               nextVariant =
                 variants.find(
@@ -2797,7 +3036,9 @@ function bindProductEvents() {
             }
 
 
-            if (!nextVariant) {
+            if (
+              !nextVariant
+            ) {
 
               nextVariant =
                 variants.find(
@@ -2821,8 +3062,32 @@ function bindProductEvents() {
             }
 
 
-            if (!nextVariant) {
+            if (
+              !nextVariant
+            ) {
+
               return;
+
+            }
+
+
+            if (
+              currentOption1
+              &&
+              String(
+                nextVariant.option1_value
+                ||
+                ""
+              )
+              !==
+              String(
+                currentOption1
+              )
+            ) {
+
+              selectedOption1Value =
+                "";
+
             }
 
 
@@ -2861,6 +3126,13 @@ function bindProductEvents() {
             const id =
               button.dataset.variantId;
 
+            selectedLegacyVariantId =
+              String(
+                id
+                ||
+                ""
+              );
+
 
             const nextVariant =
               variants.find(
@@ -2880,8 +3152,12 @@ function bindProductEvents() {
               null;
 
 
-            if (!nextVariant) {
+            if (
+              !nextVariant
+            ) {
+
               return;
+
             }
 
 
@@ -2892,6 +3168,37 @@ function bindProductEvents() {
             syncOptionButtons();
 
             updateDisplayedPrice();
+
+          }
+        );
+
+      }
+    );
+
+
+  /*
+    =====================================================
+    SIZE ÁO TẶNG
+    =====================================================
+  */
+
+  document
+    .querySelectorAll(
+      ".gift-shirt-size-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            selectedGiftShirtSize =
+              button.dataset.giftShirtSize
+              ||
+              "";
+
+            syncOptionButtons();
 
           }
         );
@@ -2966,10 +3273,217 @@ function bindProductEvents() {
         );
 
       }
-    );
+       );
 
-}
+  }
 
+  function getMissingRequiredSelections() {
+    const missing = [];
+
+
+    if (
+      currentHasStructuredOptions
+    ) {
+
+      if (
+        currentOption1Values.length
+        &&
+        !selectedOption1Value
+      ) {
+
+        missing.push(
+          currentOption1Name
+          ||
+          "phân loại 1"
+        );
+
+      }
+
+
+      if (
+        currentOption2Values.length
+        &&
+        !selectedOption2Value
+      ) {
+
+        missing.push(
+          currentOption2Name
+          ||
+          "phân loại 2"
+        );
+
+      }
+
+
+      if (
+        missing.length
+      ) {
+
+        return missing;
+
+      }
+
+
+      selectedVariant =
+        variants.find(
+          function (variant) {
+
+            const option1Ok =
+              !currentOption1Values.length
+              ||
+              String(
+                variant.option1_value
+                ||
+                ""
+              )
+              ===
+              String(
+                selectedOption1Value
+              );
+
+            const option2Ok =
+              !currentOption2Values.length
+              ||
+              String(
+                variant.option2_value
+                ||
+                ""
+              )
+              ===
+              String(
+                selectedOption2Value
+              );
+
+            return (
+              option1Ok
+              &&
+              option2Ok
+            );
+
+          }
+        )
+        ||
+        null;
+
+
+      if (
+        !selectedVariant
+      ) {
+
+        return [
+          "phân loại sản phẩm hợp lệ"
+        ];
+
+      }
+
+    }
+
+
+    if (
+      currentRequiresLegacyVariantChoice
+    ) {
+
+      if (
+        !selectedLegacyVariantId
+      ) {
+
+        return [
+          "lựa chọn sản phẩm"
+        ];
+
+      }
+
+
+      const matchedLegacyVariant =
+        variants.find(
+          function (variant) {
+
+            return (
+              String(
+                variant.id
+              )
+              ===
+              String(
+                selectedLegacyVariantId
+              )
+            );
+
+          }
+        )
+        ||
+        null;
+
+
+      if (
+        !matchedLegacyVariant
+      ) {
+
+        return [
+          "lựa chọn sản phẩm hợp lệ"
+        ];
+
+      }
+
+
+      selectedVariant =
+        matchedLegacyVariant;
+
+    }
+
+
+    if (
+      currentRequiresGiftShirtSize
+      &&
+      !selectedGiftShirtSize
+    ) {
+
+      missing.push(
+        "size áo tặng"
+      );
+
+    }
+
+
+    return missing;
+
+  }
+
+
+  function validateRequiredSelections() {
+
+    const missing =
+      getMissingRequiredSelections();
+
+    if (
+      missing.length
+    ) {
+
+      window.alert(
+        "Vui lòng chọn đầy đủ: "
+        +
+        missing.join(", ")
+        +
+        " trước khi thêm vào giỏ."
+      );
+
+      document
+        .querySelector(
+          ".info"
+        )
+        ?.scrollIntoView(
+          {
+            behavior: "smooth",
+            block: "start"
+          }
+        );
+
+      return false;
+
+    }
+
+    return true;
+
+  }
   /* =====================================================
      ADD CART
   ====================================================== */
@@ -2993,7 +3507,13 @@ function bindProductEvents() {
       return;
 
     }
+    if (
+      !validateRequiredSelections()
+    ) {
 
+      return;
+
+    }
 
     addCartBtn.disabled =
       true;
@@ -3225,7 +3745,33 @@ function bindProductEvents() {
 
         existing.quantity =
           finalQuantity;
+        existing.variant_name =
+          selectedVariantLabel();
 
+        existing.option1_name =
+          selectedVariant.option1_name
+          ||
+          "";
+
+        existing.option1_value =
+          selectedVariant.option1_value
+          ||
+          "";
+
+        existing.option2_name =
+          selectedVariant.option2_name
+          ||
+          "";
+
+        existing.option2_value =
+          selectedVariant.option2_value
+          ||
+          "";
+
+        existing.gift_shirt_size =
+          selectedGiftShirtSize
+          ||
+          "";
 
         existing.price =
           effectivePrice;
@@ -3255,8 +3801,31 @@ function bindProductEvents() {
           product_name:
             product.name,
 
-          variant_name:
-            selectedVariant.variant_name
+                    variant_name:
+            selectedVariantLabel(),
+
+          option1_name:
+            selectedVariant.option1_name
+            ||
+            "",
+
+          option1_value:
+            selectedVariant.option1_value
+            ||
+            "",
+
+          option2_name:
+            selectedVariant.option2_name
+            ||
+            "",
+
+          option2_value:
+            selectedVariant.option2_value
+            ||
+            "",
+
+          gift_shirt_size:
+            selectedGiftShirtSize
             ||
             "",
 
