@@ -1,0 +1,1732 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#071523">
+  <title>Khuyến mãi | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: #071523;
+      color: #ffffff;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-bottom: 34px;
+    }
+
+    button,
+    input,
+    a {
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7,21,35,.97);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(15px);
+    }
+
+    .header-inner,
+    main {
+      width: min(960px,calc(100% - 20px));
+      margin: auto;
+    }
+
+    .header-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+      white-space: nowrap;
+    }
+
+    .brand span,
+    .accent {
+      color: #d8ff45;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .btn-ghost,
+    .small-btn,
+    .primary-btn {
+      min-height: 38px;
+      padding: 0 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: transparent;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      min-height: 44px;
+      border: 0;
+      background: #d8ff45;
+      color: #071523;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    main {
+      margin-top: 20px;
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      color: #d8ff45;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(30px,6vw,44px);
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin: 0 0 16px;
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .hero-actions {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.11);
+      outline: 0;
+      background: #0d1d2f;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .input:focus {
+      border-color: rgba(216,255,69,.62);
+      box-shadow: 0 0 0 3px rgba(216,255,69,.06);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4,minmax(0,1fr));
+      gap: 9px;
+      margin-bottom: 13px;
+    }
+
+    .stat,
+    .card {
+      padding: 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: #0d1d2f;
+    }
+
+    .stat-label {
+      color: rgba(255,255,255,.45);
+      font-size: 8px;
+      font-weight: 950;
+      line-height: 1.35;
+    }
+
+    .stat-value {
+      margin-top: 5px;
+      color: #d8ff45;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .filters {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 12px;
+      overflow: auto;
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pill {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 0 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.11);
+      background: rgba(255,255,255,.035);
+      color: rgba(255,255,255,.65);
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pill.active {
+      background: #d8ff45;
+      color: #071523;
+      border-color: #d8ff45;
+    }
+
+    .message {
+      display: none;
+      margin-bottom: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+    .message.ok {
+      display: block;
+      border: 1px solid rgba(216,255,69,.24);
+      background: rgba(216,255,69,.07);
+      color: #d8ff45;
+    }
+
+    .message.err {
+      display: block;
+      border: 1px solid rgba(255,90,90,.24);
+      background: rgba(255,90,90,.07);
+      color: #ffb3b3;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .state {
+      padding: 42px 16px;
+      text-align: center;
+      border: 1px dashed rgba(255,255,255,.13);
+      border-radius: 14px;
+      color: rgba(255,255,255,.48);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .promo-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 950;
+      line-height: 1.35;
+    }
+
+    .muted {
+      margin-top: 4px;
+      color: rgba(255,255,255,.45);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .tag {
+      min-height: 23px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.66);
+      font-size: 8px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .tag.running {
+      color: #d8ff45;
+      background: rgba(216,255,69,.08);
+    }
+
+    .tag.scheduled {
+      color: #8fc8ff;
+      background: rgba(90,160,255,.10);
+    }
+
+    .tag.ended {
+      color: rgba(255,255,255,.46);
+      background: rgba(255,255,255,.05);
+    }
+
+    .tag.inactive {
+      color: #ffaaaa;
+      background: rgba(255,90,90,.08);
+    }
+
+    .promo-grid {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 7px;
+    }
+
+    .mini {
+      padding: 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.025);
+    }
+
+    .mini-label {
+      color: rgba(255,255,255,.38);
+      font-size: 7px;
+      font-weight: 950;
+      line-height: 1.35;
+    }
+
+    .mini-value {
+      margin-top: 4px;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .mini-value.accent {
+      color: #d8ff45;
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+
+    .action-link,
+    .action-btn {
+      min-height: 40px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(216,255,69,.20);
+      background: rgba(216,255,69,.06);
+      color: #d8ff45;
+      text-decoration: none;
+      font-size: 9px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .action-btn.off {
+      border-color: rgba(255,90,90,.20);
+      background: rgba(255,90,90,.07);
+      color: #ffaaaa;
+    }
+
+    .action-btn:disabled,
+    .action-link.disabled {
+      opacity: .48;
+      cursor: wait;
+    }
+
+    @media(max-width:720px) {
+      .stats {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+      }
+
+      .promo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:520px) {
+      .header-inner,
+      main {
+        width: calc(100% - 18px);
+      }
+
+      .header-inner {
+        min-height: 58px;
+      }
+
+      .brand {
+        font-size: 19px;
+      }
+
+      .top-actions {
+        gap: 6px;
+      }
+
+      .btn-ghost {
+        min-height: 36px;
+        padding: 0 9px;
+        font-size: 9px;
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .hero-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .input {
+        font-size: 16px;
+      }
+
+      .card-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop-admin"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <div class="top-actions">
+      <a
+        class="btn-ghost"
+        href="./shop-admin"
+      >
+        ← QUẢN TRỊ
+      </a>
+
+      <button
+        id="logoutButton"
+        class="btn-ghost"
+        type="button"
+      >
+        ĐĂNG XUẤT
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1>
+    Khuyến mãi
+  </h1>
+
+  <p class="intro">
+    Quản lý các chương trình giảm giá, mã giảm giá, combo mua nhiều và freeship của PickDee Shop.
+    Giá gốc sản phẩm không bị sửa; chương trình hết hạn sẽ tự ngừng áp dụng.
+  </p>
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+  <div class="hero-actions">
+    <input
+      id="searchInput"
+      class="input"
+      type="search"
+      placeholder="Tìm tên chương trình, mã giảm giá..."
+    >
+
+    <a
+      class="primary-btn"
+      href="./shop-admin-promotion-edit"
+    >
+      + TẠO KHUYẾN MÃI
+    </a>
+  </div>
+
+  <div class="stats">
+
+    <div class="stat">
+      <div class="stat-label">
+        TẤT CẢ
+      </div>
+      <div
+        id="statAll"
+        class="stat-value"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        ĐANG CHẠY
+      </div>
+      <div
+        id="statRunning"
+        class="stat-value"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        SẮP CHẠY
+      </div>
+      <div
+        id="statScheduled"
+        class="stat-value"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">
+        ĐÃ TẮT / KẾT THÚC
+      </div>
+      <div
+        id="statOff"
+        class="stat-value"
+      >
+        0
+      </div>
+    </div>
+
+  </div>
+
+  <div
+    id="statusFilters"
+    class="filters"
+  >
+
+    <button
+      class="pill active"
+      type="button"
+      data-v=""
+    >
+      TẤT CẢ
+    </button>
+
+    <button
+      class="pill"
+      type="button"
+      data-v="running"
+    >
+      ĐANG CHẠY
+    </button>
+
+    <button
+      class="pill"
+      type="button"
+      data-v="scheduled"
+    >
+      SẮP CHẠY
+    </button>
+
+    <button
+      class="pill"
+      type="button"
+      data-v="ended"
+    >
+      ĐÃ KẾT THÚC
+    </button>
+
+    <button
+      class="pill"
+      type="button"
+      data-v="inactive"
+    >
+      ĐÃ TẮT
+    </button>
+
+  </div>
+
+  <div
+    id="promoList"
+    class="list"
+  >
+    <div class="state">
+      Đang tải chương trình khuyến mãi...
+    </div>
+  </div>
+
+</main>
+
+<script>
+(function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const messageBox =
+    document.getElementById("message");
+
+  const promoList =
+    document.getElementById("promoList");
+
+  const searchInput =
+    document.getElementById("searchInput");
+
+  let promotions =
+    [];
+
+  let targets =
+    [];
+
+  let usages =
+    [];
+
+  let isBusy =
+    false;
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "err"
+    );
+
+    promoList.innerHTML =
+      `
+        <div class="state">
+          Không tải được cấu hình Supabase.
+        </div>
+      `;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function $(id) {
+
+    return document.getElementById(id);
+
+  }
+
+
+  function money(value) {
+
+    return new Intl.NumberFormat("vi-VN").format(
+      Number(value || 0)
+    )
+    +
+    "đ";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    messageBox.className =
+      "message"
+      +
+      (
+        text
+        ?
+          " " + type
+        :
+          ""
+      );
+
+    messageBox.textContent =
+      text || "";
+
+  }
+
+
+  function formatDateTime(value) {
+
+    if (!value) {
+      return "Không giới hạn";
+    }
+
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    ).format(
+      new Date(value)
+    );
+
+  }
+
+
+  function promotionTypeLabel(value) {
+
+    return (
+      {
+        product_discount:
+          "Giảm giá sản phẩm",
+
+        coupon_discount:
+          "Mã giảm giá",
+
+        combo_discount:
+          "Combo mua nhiều",
+
+        free_shipping:
+          "Freeship / hỗ trợ ship"
+      }[value]
+      ||
+      value
+      ||
+      "-"
+    );
+
+  }
+
+
+  function discountLabel(promo) {
+
+    const type =
+      promo.discount_type;
+
+    const value =
+      Number(
+        promo.discount_value || 0
+      );
+
+    if (
+      type === "percent"
+    ) {
+
+      return `Giảm ${value}%`;
+
+    }
+
+    if (
+      type === "amount"
+    ) {
+
+      return `Giảm ${money(value)}`;
+
+    }
+
+    if (
+      type === "fixed_price"
+    ) {
+
+      return `Giá sale ${money(value)}`;
+
+    }
+
+    if (
+      type === "free_shipping"
+    ) {
+
+      return "Miễn / hỗ trợ phí ship";
+
+    }
+
+    return "-";
+
+  }
+
+
+  function statusInfo(promo) {
+
+    const now =
+      Date.now();
+
+    const start =
+      promo.start_at
+      ?
+        new Date(promo.start_at).getTime()
+      :
+        null;
+
+    const end =
+      promo.end_at
+      ?
+        new Date(promo.end_at).getTime()
+      :
+        null;
+
+    if (
+      !promo.is_active
+    ) {
+
+      return {
+        key: "inactive",
+        label: "ĐÃ TẮT",
+        className: "inactive"
+      };
+
+    }
+
+    if (
+      start
+      &&
+      start > now
+    ) {
+
+      return {
+        key: "scheduled",
+        label: "SẮP CHẠY",
+        className: "scheduled"
+      };
+
+    }
+
+    if (
+      end
+      &&
+      end < now
+    ) {
+
+      return {
+        key: "ended",
+        label: "ĐÃ KẾT THÚC",
+        className: "ended"
+      };
+
+    }
+
+    return {
+      key: "running",
+      label: "ĐANG CHẠY",
+      className: "running"
+    };
+
+  }
+
+
+  function targetLabel(promo) {
+
+    const rows =
+      targets.filter(
+        function (item) {
+
+          return Number(item.promotion_id) === Number(promo.id);
+
+        }
+      );
+
+    if (!rows.length) {
+      return "Chưa chọn phạm vi";
+    }
+
+    if (
+      rows.some(
+        function (item) {
+
+          return item.target_type === "all";
+
+        }
+      )
+    ) {
+
+      return "Toàn shop";
+
+    }
+
+    return rows
+      .map(
+        function (item) {
+
+          if (
+            item.target_type === "category"
+          ) {
+            return "Danh mục #" + item.target_id;
+          }
+
+          if (
+            item.target_type === "product"
+          ) {
+            return "Sản phẩm #" + item.target_id;
+          }
+
+          if (
+            item.target_type === "variant"
+          ) {
+            return "Biến thể #" + item.target_id;
+          }
+
+          return item.target_type;
+
+        }
+      )
+      .join(", ");
+
+  }
+
+
+  function usageInfo(promo) {
+
+    const rows =
+      usages.filter(
+        function (item) {
+
+          return Number(item.promotion_id) === Number(promo.id);
+
+        }
+      );
+
+    const usedCount =
+      rows.length;
+
+    const discountTotal =
+      rows.reduce(
+        function (sum,item) {
+
+          return (
+            sum
+            +
+            Number(item.discount_amount || 0)
+          );
+
+        },
+        0
+      );
+
+    return {
+      usedCount,
+      discountTotal
+    };
+
+  }
+
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+    const user =
+      sessionData?.session?.user;
+
+    if (!user) {
+
+      location.href =
+        "./login";
+
+      return false;
+
+    }
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("shop_user_roles")
+        .select("role,is_active")
+        .eq("user_id",user.id)
+        .eq("is_active",true);
+
+    if (error) {
+      throw error;
+    }
+
+    const allowed =
+      (data || [])
+        .some(
+          function (item) {
+
+            return [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            );
+
+          }
+        );
+
+    if (!allowed) {
+      throw new Error(
+        "Tài khoản chưa có quyền quản lý khuyến mãi Shop."
+      );
+    }
+
+    return true;
+
+  }
+
+
+  function currentFilter() {
+
+    return (
+      document
+        .querySelector(
+          "#statusFilters .pill.active"
+        )
+        ?.dataset
+        ?.v
+      ||
+      ""
+    );
+
+  }
+
+
+  function filteredPromotions() {
+
+    const filter =
+      currentFilter();
+
+    const keyword =
+      searchInput
+        .value
+        .trim()
+        .toLowerCase();
+
+    return promotions
+      .filter(
+        function (promo) {
+
+          const status =
+            statusInfo(promo);
+
+          const matchStatus =
+            !filter
+            ||
+            status.key === filter;
+
+          const matchKeyword =
+            !keyword
+            ||
+            [
+              promo.name,
+              promo.code,
+              promotionTypeLabel(promo.promotion_type),
+              discountLabel(promo)
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(keyword);
+
+          return (
+            matchStatus
+            &&
+            matchKeyword
+          );
+
+        }
+      );
+
+  }
+
+
+  function renderStats() {
+
+    const all =
+      promotions.length;
+
+    const running =
+      promotions.filter(
+        function (item) {
+
+          return statusInfo(item).key === "running";
+
+        }
+      ).length;
+
+    const scheduled =
+      promotions.filter(
+        function (item) {
+
+          return statusInfo(item).key === "scheduled";
+
+        }
+      ).length;
+
+    const off =
+      promotions.filter(
+        function (item) {
+
+          return [
+            "inactive",
+            "ended"
+          ].includes(
+            statusInfo(item).key
+          );
+
+        }
+      ).length;
+
+    $("statAll").textContent =
+      all;
+
+    $("statRunning").textContent =
+      running;
+
+    $("statScheduled").textContent =
+      scheduled;
+
+    $("statOff").textContent =
+      off;
+
+  }
+
+
+  function renderPromotions() {
+
+    renderStats();
+
+    const list =
+      filteredPromotions();
+
+    if (!list.length) {
+
+      promoList.innerHTML =
+        `
+          <div class="state">
+            Chưa có chương trình khuyến mãi phù hợp.<br>
+            Bấm “+ Tạo khuyến mãi” để tạo chương trình đầu tiên.
+          </div>
+        `;
+
+      return;
+
+    }
+
+    promoList.innerHTML =
+      list
+        .map(
+          function (promo) {
+
+            const status =
+              statusInfo(promo);
+
+            const usage =
+              usageInfo(promo);
+
+            const codeHtml =
+              promo.code
+              ?
+                `
+                  <span class="tag">
+                    MÃ: ${escapeHtml(
+                      String(promo.code).toUpperCase()
+                    )}
+                  </span>
+                `
+              :
+                `
+                  <span class="tag">
+                    KHÔNG CẦN MÃ
+                  </span>
+                `;
+
+            const limitText =
+              promo.usage_limit_total
+              ?
+                `${usage.usedCount}/${promo.usage_limit_total} lượt`
+              :
+                `${usage.usedCount} lượt`;
+
+            const budgetText =
+              promo.budget_limit
+              ?
+                `${money(usage.discountTotal)} / ${money(promo.budget_limit)}`
+              :
+                money(usage.discountTotal);
+
+            const toggleLabel =
+              promo.is_active
+              ?
+                "TẮT CHƯƠNG TRÌNH"
+              :
+                "BẬT CHƯƠNG TRÌNH";
+
+            const toggleClass =
+              promo.is_active
+              ?
+                "action-btn off"
+              :
+                "action-btn";
+
+            return `
+
+              <article
+                class="card promo-card"
+                data-id="${promo.id}"
+              >
+
+                <div class="row">
+
+                  <div>
+                    <div class="title">
+                      ${escapeHtml(promo.name)}
+                    </div>
+
+                    <div class="muted">
+                      ${escapeHtml(
+                        promotionTypeLabel(
+                          promo.promotion_type
+                        )
+                      )}
+                      •
+                      ${escapeHtml(
+                        discountLabel(promo)
+                      )}
+                    </div>
+                  </div>
+
+                  <span class="tag ${status.className}">
+                    ${escapeHtml(status.label)}
+                  </span>
+
+                </div>
+
+                <div>
+                  ${codeHtml}
+                </div>
+
+                <div class="promo-grid">
+
+                  <div class="mini">
+                    <div class="mini-label">
+                      PHẠM VI ÁP DỤNG
+                    </div>
+                    <div class="mini-value">
+                      ${escapeHtml(
+                        targetLabel(promo)
+                      )}
+                    </div>
+                  </div>
+
+                  <div class="mini">
+                    <div class="mini-label">
+                      THỜI GIAN
+                    </div>
+                    <div class="mini-value">
+                      ${escapeHtml(
+                        formatDateTime(promo.start_at)
+                      )}
+                      <br>
+                      →
+                      ${escapeHtml(
+                        formatDateTime(promo.end_at)
+                      )}
+                    </div>
+                  </div>
+
+                  <div class="mini">
+                    <div class="mini-label">
+                      HIỆU QUẢ
+                    </div>
+                    <div class="mini-value accent">
+                      ${escapeHtml(limitText)}
+                      <br>
+                      Đã giảm: ${escapeHtml(budgetText)}
+                    </div>
+                  </div>
+
+                </div>
+
+                ${
+                  promo.note
+                  ?
+                    `
+                      <div class="muted">
+                        Ghi chú:
+                        ${escapeHtml(promo.note)}
+                      </div>
+                    `
+                  :
+                    ""
+                }
+
+                <div class="card-actions">
+
+                  <a
+                    class="action-link"
+                    href="./shop-admin-promotion-edit?id=${encodeURIComponent(
+                      promo.id
+                    )}"
+                  >
+                    SỬA CHƯƠNG TRÌNH
+                  </a>
+
+                  <button
+                    class="${toggleClass}"
+                    type="button"
+                    data-action="toggle"
+                    data-id="${promo.id}"
+                  >
+                    ${toggleLabel}
+                  </button>
+
+                </div>
+
+              </article>
+
+            `;
+
+          }
+        )
+        .join("");
+
+    promoList
+      .querySelectorAll(
+        "[data-action='toggle']"
+      )
+      .forEach(
+        function (button) {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              togglePromotion(
+                button.dataset.id,
+                button
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  async function togglePromotion(
+    id,
+    button
+  ) {
+
+    if (isBusy) {
+      return;
+    }
+
+    const promo =
+      promotions.find(
+        function (item) {
+
+          return String(item.id) === String(id);
+
+        }
+      );
+
+    if (!promo) {
+      return;
+    }
+
+    const nextActive =
+      !promo.is_active;
+
+    const confirmText =
+      nextActive
+      ?
+        "Bật chương trình khuyến mãi này?"
+      :
+        "Tắt chương trình khuyến mãi này?";
+
+    if (
+      !window.confirm(confirmText)
+    ) {
+      return;
+    }
+
+    isBusy =
+      true;
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      "ĐANG LƯU...";
+
+    showMessage(
+      "",
+      "ok"
+    );
+
+    try {
+
+      const {
+        error
+      } =
+        await sb
+          .from("shop_promotions")
+          .update({
+            is_active:
+              nextActive
+          })
+          .eq(
+            "id",
+            promo.id
+          );
+
+      if (error) {
+        throw error;
+      }
+
+      promo.is_active =
+        nextActive;
+
+      showMessage(
+        nextActive
+        ?
+          "Đã bật chương trình khuyến mãi."
+        :
+          "Đã tắt chương trình khuyến mãi.",
+        "ok"
+      );
+
+      renderPromotions();
+
+    }
+    catch (error) {
+
+      console.error(
+        "TOGGLE PROMOTION ERROR:",
+        error
+      );
+
+      showMessage(
+        error.message
+        ||
+        "Không cập nhật được chương trình khuyến mãi.",
+        "err"
+      );
+
+      renderPromotions();
+
+    }
+    finally {
+
+      isBusy =
+        false;
+
+    }
+
+  }
+
+
+  async function loadPromotions() {
+
+    promoList.innerHTML =
+      `
+        <div class="state">
+          Đang tải chương trình khuyến mãi...
+        </div>
+      `;
+
+    try {
+
+      await requireShopAccess();
+
+      const {
+        data,
+        error
+      } =
+        await sb
+          .from("shop_promotions")
+          .select(
+            [
+              "id",
+              "name",
+              "code",
+              "promotion_type",
+              "discount_type",
+              "discount_value",
+              "max_discount_amount",
+              "min_order_amount",
+              "min_quantity",
+              "start_at",
+              "end_at",
+              "is_active",
+              "stackable",
+              "usage_limit_total",
+              "usage_limit_per_phone",
+              "budget_limit",
+              "note",
+              "created_at",
+              "updated_at"
+            ].join(",")
+          )
+          .order(
+            "created_at",
+            {
+              ascending:
+                false
+            }
+          );
+
+      if (error) {
+        throw error;
+      }
+
+      promotions =
+        data || [];
+
+      const ids =
+        promotions
+          .map(
+            function (item) {
+
+              return item.id;
+
+            }
+          )
+          .filter(Boolean);
+
+      if (ids.length) {
+
+        const [
+          targetResult,
+          usageResult
+        ] =
+          await Promise.all([
+
+            sb
+              .from("shop_promotion_targets")
+              .select(
+                "promotion_id,target_type,target_id"
+              )
+              .in(
+                "promotion_id",
+                ids
+              ),
+
+            sb
+              .from("shop_promotion_usages")
+              .select(
+                "promotion_id,discount_amount"
+              )
+              .in(
+                "promotion_id",
+                ids
+              )
+
+          ]);
+
+        if (targetResult.error) {
+          throw targetResult.error;
+        }
+
+        if (usageResult.error) {
+          throw usageResult.error;
+        }
+
+        targets =
+          targetResult.data || [];
+
+        usages =
+          usageResult.data || [];
+
+      }
+      else {
+
+        targets =
+          [];
+
+        usages =
+          [];
+
+      }
+
+      renderPromotions();
+
+    }
+    catch (error) {
+
+      console.error(
+        "LOAD PROMOTIONS ERROR:",
+        error
+      );
+
+      promoList.innerHTML =
+        `
+          <div class="state">
+            ${escapeHtml(
+              error.message
+              ||
+              "Không tải được chương trình khuyến mãi."
+            )}
+          </div>
+        `;
+
+    }
+
+  }
+
+
+  document
+    .querySelectorAll(
+      "#statusFilters .pill"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            document
+              .querySelectorAll(
+                "#statusFilters .pill"
+              )
+              .forEach(
+                function (item) {
+
+                  item.classList.remove(
+                    "active"
+                  );
+
+                }
+              );
+
+            button.classList.add(
+              "active"
+            );
+
+            renderPromotions();
+
+          }
+        );
+
+      }
+    );
+
+
+  searchInput.addEventListener(
+    "input",
+    renderPromotions
+  );
+
+
+  document
+    .getElementById("logoutButton")
+    .addEventListener(
+      "click",
+      async function () {
+
+        await sb.auth.signOut();
+
+        location.href =
+          "./login";
+
+      }
+    );
+
+
+  loadPromotions();
+
+})();
+</script>
+
+</body>
+</html>
