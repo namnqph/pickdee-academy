@@ -1248,18 +1248,88 @@
 
   }
 
+  function normalizeProductText(value) {
+
+    return String(
+      value
+      ||
+      ""
+    )
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+      .toLowerCase()
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim();
+
+  }
+
+
   function textHasPaddle(value) {
 
     const text =
-      String(
+      normalizeProductText(
         value
-        ||
-        ""
+      );
+
+
+    if (
+      !text
+    ) {
+
+      return false;
+
+    }
+
+
+    const accessoryKeywords = [
+      "quan can",
+      "cuon can",
+      "grip",
+      "overgrip",
+      "dan vien",
+      "vien vot",
+      "bao ve vien",
+      "dan bao ve",
+      "edge guard",
+      "edge tape",
+      "tape",
+      "ppf",
+      "bong",
+      "ball",
+      "tui",
+      "tat",
+      "ao",
+      "phu kien",
+      "cham soc",
+      "ve sinh"
+    ];
+
+
+    if (
+      accessoryKeywords.some(
+        function (keyword) {
+
+          return text.includes(
+            keyword
+          );
+
+        }
       )
-        .toLowerCase();
+    ) {
+
+      return false;
+
+    }
+
 
     return (
-      text.includes("vợt")
+      text.includes("vot")
       ||
       text.includes("paddle")
       ||
