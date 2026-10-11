@@ -1004,11 +1004,18 @@
       Boolean(
         paymentProofPath
       );
+       const isOrderCancelled =
+      o.order_status
+        ===
+      "cancelled";
+
 
     const canConfirmBankTransfer =
       o.payment_method
         ===
       "bank_transfer"
+      &&
+      !isOrderCancelled
       &&
       hasPaymentProof
       &&
@@ -2665,7 +2672,46 @@
         return;
 
       }
+      if (
+        currentOrder?.order_status
+          ===
+        "cancelled"
+      ) {
 
+        [
+          button,
+          floatingButton
+        ].forEach(
+          function (btn) {
+
+            if (btn) {
+
+              btn.disabled =
+                true;
+
+              btn.textContent =
+                "ĐƠN ĐÃ HỦY";
+
+            }
+
+          }
+        );
+
+        if (
+          messageBox
+        ) {
+
+          messageBox.className =
+            "message error";
+
+          messageBox.textContent =
+            "Đơn đã hủy, không thể xác nhận thanh toán.";
+
+        }
+
+        return;
+
+      }
       const ok =
         window.confirm(
           "Xác nhận PickDee đã nhận đúng tiền của đơn này?"
