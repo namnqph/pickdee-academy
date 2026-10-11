@@ -992,7 +992,7 @@
      TÍNH LẠI GIÁ TỪ BACKEND
   ====================================================== */
 
-   async function refreshCartPrices(
+    async function refreshCartPrices(
     cart
   ) {
 
@@ -1024,6 +1024,12 @@
               );
 
 
+            const productId =
+              Number(
+                item.product_id
+              );
+
+
             const [
               quoteResult,
               variantResult
@@ -1046,7 +1052,7 @@
                     "shop_product_variants"
                   )
                   .select(
-                    "id,variant_name,option1_name,option1_value,option2_name,option2_value"
+                    "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value"
                   )
                   .eq(
                     "id",
@@ -1085,13 +1091,25 @@
               {};
 
 
-            const price =
+            const baseUnitPrice =
               Number(
                 data?.unit_price
                 ??
                 item.price
                 ??
                 0
+              );
+
+
+            const baseSubtotal =
+              Number(
+                data?.subtotal
+                ??
+                (
+                  baseUnitPrice
+                  *
+                  quantity
+                )
               );
 
 
@@ -1107,6 +1125,108 @@
               );
 
 
+            let promoQuote =
+              null;
+
+
+            if (
+              productId
+              &&
+              variantId
+            ) {
+
+              const {
+                data: promoData,
+                error: promoError
+              } =
+                await sb.rpc(
+                  "shop_best_product_promotion_quote",
+                  {
+
+                    p_product_id:
+                      productId,
+
+                    p_variant_id:
+                      variantId,
+
+                    p_unit_price:
+                      baseUnitPrice,
+
+                    p_quantity:
+                      quantity,
+
+                    p_order_amount:
+                      baseSubtotal
+
+                  }
+                );
+
+
+              if (promoError) {
+                throw promoError;
+              }
+
+
+              promoQuote =
+                Array.isArray(
+                  promoData
+                )
+                ?
+                  (
+                    promoData[0]
+                    ||
+                    null
+                  )
+                :
+                  (
+                    promoData
+                    ||
+                    null
+                  );
+
+            }
+
+
+            const hasPromotion =
+              promoQuote
+              &&
+              Number(
+                promoQuote.final_unit_price
+                ??
+                baseUnitPrice
+              )
+              <
+              baseUnitPrice;
+
+
+            const price =
+              hasPromotion
+              ?
+                Number(
+                  promoQuote.final_unit_price
+                )
+              :
+                baseUnitPrice;
+
+
+            const originalPrice =
+              hasPromotion
+              ?
+                Number(
+                  promoQuote.original_unit_price
+                  ??
+                  baseUnitPrice
+                )
+              :
+                Number(
+                  item.original_price
+                  ??
+                  retailPrice
+                  ??
+                  baseUnitPrice
+                );
+
+
             return {
 
               ...item,
@@ -1120,6 +1240,46 @@
               retail_price:
                 retailPrice,
 
+              original_price:
+                originalPrice,
+
+              promotion_id:
+                hasPromotion
+                ?
+                  promoQuote.promotion_id
+                :
+                  null,
+
+              promotion_name:
+                hasPromotion
+                ?
+                  (
+                    promoQuote.promotion_name
+                    ||
+                    ""
+                  )
+                :
+                  "",
+
+              promotion_discount:
+                hasPromotion
+                ?
+                  Number(
+                    promoQuote.total_discount
+                    ??
+                    (
+                      (
+                        originalPrice
+                        -
+                        price
+                      )
+                      *
+                      quantity
+                    )
+                  )
+                :
+                  0,
+
               pricing_type:
                 data?.pricing_type
                 ||
@@ -1127,13 +1287,9 @@
 
               subtotal:
                 Number(
-                  data?.subtotal
-                  ??
-                  (
-                    price
-                    *
-                    quantity
-                  )
+                  price
+                  *
+                  quantity
                 ),
 
               backend_variant_name:
@@ -1172,7 +1328,6 @@
     return pricedCart;
 
   }
-
 
   /* =====================================================
      TOTAL
@@ -1730,7 +1885,21 @@
         .map(
           function (item,index) {
 
+                        const hasPromotion =
+              item.promotion_id
+              &&
+              Number(
+                item.original_price || 0
+              )
+              >
+              Number(
+                item.price || 0
+              );
+
+
             const isWholesale =
+              !hasPromotion
+              &&
               item.pricing_type
               ===
               "wholesale"
@@ -1745,20 +1914,47 @@
 
 
             const priceNote =
-              isWholesale
+              hasPromotion
                 ?
                   `
-                    <div class="variant-name">
-                      GIÁ SỈ • Niêm yết
+                    <div
+                      class="variant-name"
+                      style="
+                        margin-top:5px;
+                        color:#d8ff45;
+                        line-height:1.45;
+                      "
+                    >
+                      🎁 ${escapeHtml(
+                        item.promotion_name
+                        ||
+                        "Khuyến mãi PickDee"
+                      )}
+                      • Giá gốc
                       <s>
                         ${money(
-                          item.retail_price
+                          item.original_price
                         )}
                       </s>
                     </div>
                   `
                 :
-                  "";
+                  (
+                    isWholesale
+                      ?
+                        `
+                          <div class="variant-name">
+                            GIÁ SỈ • Niêm yết
+                            <s>
+                              ${money(
+                                item.retail_price
+                              )}
+                            </s>
+                          </div>
+                        `
+                      :
+                        ""
+                  );
             const missingSelections =
               itemMissingRequiredSelections(
                 item
