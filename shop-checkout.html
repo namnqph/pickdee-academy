@@ -2267,7 +2267,8 @@
     document.getElementById(
       "checkoutContent"
     );
-
+  let isCreatingOrder =
+    false;
 
 
   /* =====================================================
@@ -4904,7 +4905,13 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
 
 
       event.preventDefault();
+      if (
+        isCreatingOrder
+      ) {
 
+        return;
+
+      }
 
       const customerName =
         document
@@ -5064,6 +5071,10 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
         );
 
       }
+
+
+         isCreatingOrder =
+        true;
 
 
       submitBtn.disabled =
@@ -6312,17 +6323,28 @@ const successEstimatedCustomerTotal =
         );
 
       }
-      finally {
+           finally {
 
-        submitBtn.disabled =
-          false;
+        if (
+          checkoutContent.contains(
+            checkoutForm
+          )
+        ) {
+
+          isCreatingOrder =
+            false;
 
 
-        submitBtn.textContent =
-          "ĐẶT HÀNG";
+          submitBtn.disabled =
+            false;
+
+
+          submitBtn.textContent =
+            "ĐẶT HÀNG";
+
+        }
 
       }
-
 
     }
   );
