@@ -1044,7 +1044,64 @@
       ) <= 0
       &&
       o.order_status !== "shipping";
+    const productTotal =
+      currentItems.reduce(
+        function (
+          sum,
+          item
+        ) {
 
+          const unitPrice =
+            Number(
+              item.unit_price
+              ??
+              item.price
+              ??
+              0
+            );
+
+          const quantity =
+            Number(
+              item.quantity
+              ??
+              0
+            );
+
+          const lineTotal =
+            Number(
+              item.line_total
+              ??
+              (
+                unitPrice
+                *
+                quantity
+              )
+            );
+
+          return (
+            sum
+            +
+            lineTotal
+          );
+
+        },
+        0
+      );
+
+
+    const shippingFeeNumber =
+      Math.max(
+        0,
+        Number(
+          shippingFee || 0
+        )
+      );
+
+
+    const customerTotal =
+      productTotal
+      +
+      shippingFeeNumber;
     const itemHtml =
       currentItems
         .map(
@@ -1181,16 +1238,12 @@
             class="amount"
             style="margin-top:4px;"
           >
-            ${money(
+                       ${money(
               shippingPending
                 ?
-                  Number(o.total_amount || 0)
+                  productTotal
                 :
-                  (
-                    Number(o.total_amount || 0)
-                    +
-                    Number(shippingFee || 0)
-                  )
+                  customerTotal
             )}
           </div>
 
@@ -2093,8 +2146,8 @@
             </div>
 
             <div class="info-value">
-              ${money(
-                o.total_amount
+                          ${money(
+                productTotal
               )}
             </div>
 
@@ -2154,22 +2207,12 @@
                 font-weight:950;
               "
             >
-              ${money(
+                           ${money(
                 shippingPending
                   ?
-                    Number(
-                      o.total_amount || 0
-                    )
+                    productTotal
                   :
-                    (
-                      Number(
-                        o.total_amount || 0
-                      )
-                      +
-                      Number(
-                        shippingFee || 0
-                      )
-                    )
+                    customerTotal
               )}
             </div>
 
@@ -3247,7 +3290,7 @@
     }
 
 
-    const shippingStatusInput =
+     const shippingStatusInput =
       document.getElementById(
         "shippingStatusInput"
       );
@@ -3352,253 +3395,139 @@
         "paymentCustomerTotalText"
       );
 
-    const SPX_BASE_FEE =
-      15000;
 
-    const FREE_SHIPPING_THRESHOLD =
-      300000;
-
-
-    /*
-      hasPickleballBall đã được xác định từ currentItems
-      trước khi render giao diện.
-    */
-
-    const merchandiseTotal =
-      Number(
-        currentOrder.total_amount || 0
-      );
-
-    let shippingFeeManuallyEdited =
-      String(
-        currentOrder.shipping_pricing_mode
-        ||
-        ""
-      )
-      ===
-      "manual_override";
-
-
-    function shippingRecommendation() {
-
-      const provider =
-        shippingProviderInput
-          ?.value
-          ?.trim()
-        ||
-        "";
-
-      let carrierCost =
-        Math.max(
-          0,
-          Number(
-            shippingCarrierCostInput
-              ?.value
-            ||
-            0
-          )
-        );
-
-      /*
-        Phụ kiện thường dùng mức SPX mặc định 15.000đ.
-        Đơn có bóng Pickleball là hàng cồng kềnh nên
-        KHÔNG tự gán 15.000đ khi chưa có cước thực tế.
-      */
-
-      if (
-        provider === "spx"
-        &&
-        !hasPickleballBall
-        &&
-        carrierCost <= 0
-      ) {
-
-        carrierCost =
-          SPX_BASE_FEE;
-
-      }
-
-      let suggestedFee =
-        carrierCost;
-
-      let reason =
-        "Nhập phí theo quy định của đơn vị vận chuyển.";
-
-      if (
-        provider === "spx"
+    [
+      shippingCarrierCostInput
+        ?.closest(
+          "div"
+        ),
+      document.getElementById(
+        "shippingPricingSummary"
+      ),
+      shippingOverrideReasonInput
+        ?.closest(
+          "div"
+        )
+    ].forEach(
+      function (
+        element
       ) {
 
         if (
-          hasPickleballBall
+          element
         ) {
 
-          suggestedFee =
-            carrierCost;
-
-          reason =
-            carrierCost > 0
-              ?
-                "Đơn có bóng Pickleball / hàng cồng kềnh: phí khách trả mặc định theo cước thực tế. Có thể chỉnh nếu PickDee hỗ trợ một phần."
-              :
-                "Đơn có bóng Pickleball / hàng cồng kềnh: nhập cước vận chuyển thực tế trước khi xác nhận phí khách trả.";
-
-        }
-        else if (
-          merchandiseTotal
-            >=
-          FREE_SHIPPING_THRESHOLD
-        ) {
-
-          suggestedFee =
-            0;
-
-          reason =
-            "Đơn từ 300.000đ và không có bóng Pickleball: PickDee freeship.";
-
-        }
-        else {
-
-          suggestedFee =
-            carrierCost;
-
-          reason =
-            "Đơn dưới 300.000đ: khách thanh toán phí vận chuyển.";
+          element.style.display =
+            "none";
 
         }
 
       }
-      else if (
-        !provider
-      ) {
+    );
 
-        reason =
-          "Chọn đơn vị vận chuyển để hệ thống gợi ý phí.";
 
-      }
+    const shippingFeeLabel =
+      shippingFeeInput
+        ?.closest(
+          "div"
+        )
+        ?.querySelector(
+          ".info-label"
+        );
 
-      return {
-        provider,
-        carrierCost,
-        suggestedFee,
-        reason
-      };
+    if (
+      shippingFeeLabel
+    ) {
+
+      shippingFeeLabel.textContent =
+        "PHÍ SHIP";
 
     }
 
 
-    function updateShippingPricingSummary() {
+    function getShippingFeeValue() {
+
+      return Math.max(
+        0,
+        Number(
+          shippingFeeInput
+            ?.value
+          ||
+          0
+        )
+      );
+
+    }
+
+
+    function updateSimpleShippingView() {
+
+      const fee =
+        getShippingFeeValue();
+
+      const total =
+        productTotal
+        +
+        fee;
+
 
       if (
-        !shippingCarrierCostInput
-        ||
-        !shippingFeeInput
+        shippingCarrierCostInput
       ) {
 
-        return;
+        shippingCarrierCostInput.value =
+          String(
+            fee
+          );
 
       }
 
-      const recommendation =
-        shippingRecommendation();
-
-      const actualCarrierCost =
-        recommendation.carrierCost;
-
-      const actualCustomerFee =
-        Math.max(
-          0,
-          Number(
-            shippingFeeInput.value || 0
-          )
-        );
-
-      const actualDiscount =
-        Math.max(
-          0,
-          actualCarrierCost
-          -
-          actualCustomerFee
-        );
-
-      const isShippingPending =
-        hasPickleballBall
-        &&
-        actualCarrierCost <= 0
-        &&
-        actualCustomerFee <= 0
-        &&
-        currentOrder.order_status !== "shipping";
-
-      const totalCustomerPays =
-        merchandiseTotal
-        +
-        actualCustomerFee;
 
       if (
         shippingCarrierCostText
       ) {
 
         shippingCarrierCostText.textContent =
-          isShippingPending
-            ?
-              "CHỜ NHẬP CƯỚC"
-            :
-              money(
-                actualCarrierCost
-              );
+          money(
+            fee
+          );
 
       }
+
 
       if (
         shippingDiscountText
       ) {
 
         shippingDiscountText.textContent =
-          isShippingPending
-            ?
-              "—"
-            :
-              (
-                actualDiscount > 0
-                  ?
-                    "-"
-                    +
-                    money(
-                      actualDiscount
-                    )
-                  :
-                    money(0)
-              );
+          money(
+            0
+          );
 
       }
+
 
       if (
         shippingFeeText
       ) {
 
         shippingFeeText.textContent =
-          isShippingPending
-            ?
-              "CHỜ XÁC NHẬN"
-            :
-              money(
-                actualCustomerFee
-              );
+          money(
+            fee
+          );
 
       }
+
 
       if (
         shippingCustomerTotalLabel
       ) {
 
         shippingCustomerTotalLabel.textContent =
-          isShippingPending
-            ?
-              "TẠM TÍNH TIỀN HÀNG"
-            :
-              "KHÁCH THANH TOÁN";
+          "KHÁCH THANH TOÁN";
 
       }
+
 
       if (
         shippingCustomerTotalText
@@ -3606,27 +3535,21 @@
 
         shippingCustomerTotalText.textContent =
           money(
-            isShippingPending
-              ?
-                merchandiseTotal
-              :
-                totalCustomerPays
+            total
           );
 
       }
+
 
       if (
         orderCustomerTotalLabel
       ) {
 
         orderCustomerTotalLabel.textContent =
-          isShippingPending
-            ?
-              "TẠM TÍNH TIỀN HÀNG"
-            :
-              "KHÁCH THANH TOÁN";
+          "KHÁCH THANH TOÁN";
 
       }
+
 
       if (
         orderCustomerTotalTop
@@ -3634,55 +3557,43 @@
 
         orderCustomerTotalTop.textContent =
           money(
-            isShippingPending
-              ?
-                merchandiseTotal
-              :
-                totalCustomerPays
+            total
           );
 
       }
+
 
       if (
         orderShippingPendingNote
       ) {
 
         orderShippingPendingNote.style.display =
-          isShippingPending
-            ?
-              "block"
-            :
-              "none";
+          "none";
 
       }
+
 
       if (
         paymentShippingFeeText
       ) {
 
         paymentShippingFeeText.textContent =
-          isShippingPending
-            ?
-              "CHỜ XÁC NHẬN"
-            :
-              money(
-                actualCustomerFee
-              );
+          money(
+            fee
+          );
 
       }
+
 
       if (
         paymentCustomerTotalLabel
       ) {
 
         paymentCustomerTotalLabel.textContent =
-          isShippingPending
-            ?
-              "TẠM TÍNH TIỀN HÀNG"
-            :
-              "KHÁCH THANH TOÁN";
+          "KHÁCH THANH TOÁN";
 
       }
+
 
       if (
         paymentCustomerTotalText
@@ -3690,202 +3601,20 @@
 
         paymentCustomerTotalText.textContent =
           money(
-            isShippingPending
-              ?
-                merchandiseTotal
-              :
-                totalCustomerPays
+            total
           );
 
       }
 
-      const isOverride =
-        !isShippingPending
-        &&
-        recommendation.provider
-        &&
-        Math.round(
-          actualCustomerFee
-        )
-        !==
-        Math.round(
-          recommendation.suggestedFee
-        );
 
       if (
         shippingPolicyReasonText
       ) {
 
         shippingPolicyReasonText.textContent =
-          isOverride
-            ?
-              "⚠ Phí khách trả đang được chỉnh thủ công. Khi lưu cần ghi lý do điều chỉnh."
-            :
-              recommendation.reason;
+          "Phí ship nhập trực tiếp. Khách thanh toán = tiền hàng + phí ship.";
 
       }
-
-    }
-
-
-    function applyAutomaticShippingPricing(
-      force
-    ) {
-
-      if (
-        !shippingProviderInput
-        ||
-        !shippingCarrierCostInput
-        ||
-        !shippingFeeInput
-      ) {
-
-        return;
-
-      }
-
-      const provider =
-        shippingProviderInput
-          .value
-          .trim();
-
-      if (
-        provider === "spx"
-        &&
-        !hasPickleballBall
-      ) {
-
-        if (
-          force
-          ||
-          Number(
-            shippingCarrierCostInput.value
-            ||
-            0
-          )
-          <=
-          0
-        ) {
-
-          shippingCarrierCostInput.value =
-            String(
-              SPX_BASE_FEE
-            );
-
-        }
-
-      }
-
-      const recommendation =
-        shippingRecommendation();
-
-      if (
-        provider
-        &&
-        (
-          force
-          ||
-          !shippingFeeManuallyEdited
-        )
-      ) {
-
-        shippingFeeInput.value =
-          String(
-            recommendation.suggestedFee
-          );
-
-      }
-
-      updateShippingPricingSummary();
-
-    }
-
-
-    if (
-      shippingProviderInput
-    ) {
-
-      shippingProviderInput.addEventListener(
-        "change",
-        function () {
-
-          shippingFeeManuallyEdited =
-            false;
-
-          if (
-            shippingOverrideReasonInput
-          ) {
-
-            shippingOverrideReasonInput.value =
-              "";
-
-          }
-
-          if (
-            shippingProviderInput.value
-            ===
-            "spx"
-          ) {
-
-            shippingCarrierCostInput.value =
-              hasPickleballBall
-                ?
-                  "0"
-                :
-                  String(
-                    SPX_BASE_FEE
-                  );
-
-            shippingFeeInput.value =
-              "0";
-
-          }
-          else {
-
-            shippingCarrierCostInput.value =
-              "0";
-
-            shippingFeeInput.value =
-              "0";
-
-          }
-
-          applyAutomaticShippingPricing(
-            true
-          );
-
-        }
-      );
-
-    }
-
-
-    if (
-      shippingCarrierCostInput
-    ) {
-
-      shippingCarrierCostInput.addEventListener(
-        "input",
-        function () {
-
-          if (
-            !shippingFeeManuallyEdited
-          ) {
-
-            const recommendation =
-              shippingRecommendation();
-
-            shippingFeeInput.value =
-              String(
-                recommendation.suggestedFee
-              );
-
-          }
-
-          updateShippingPricingSummary();
-
-        }
-      );
 
     }
 
@@ -3896,30 +3625,13 @@
 
       shippingFeeInput.addEventListener(
         "input",
-        function () {
-
-          shippingFeeManuallyEdited =
-            true;
-
-          updateShippingPricingSummary();
-
-        }
+        updateSimpleShippingView
       );
 
     }
 
 
-    /*
-      Khởi tạo lần đầu.
-
-      - Phụ kiện thường SPX chưa có cước: gợi ý 15.000đ.
-      - Đơn có bóng Pickleball / hàng cồng kềnh:
-        không tự gán 15.000đ, chờ nhập cước thực tế.
-    */
-
-    applyAutomaticShippingPricing(
-      false
-    );
+    updateSimpleShippingView();
 
 
     if (
@@ -3931,11 +3643,7 @@
       &&
       trackingCodeInput
       &&
-      shippingCarrierCostInput
-      &&
       shippingFeeInput
-      &&
-      shippingOverrideReasonInput
       &&
       shippingNoteInput
     ) {
@@ -3964,81 +3672,14 @@
                 .value
                 .trim();
 
-            let shippingCarrierCostValue =
-              Math.max(
-                0,
-                Number(
-                  shippingCarrierCostInput
-                    .value
-                  ||
-                  0
-                )
-              );
-
-            if (
-              shippingProviderValue
-              ===
-              "spx"
-              &&
-              !hasPickleballBall
-              &&
-              shippingCarrierCostValue
-              <=
-              0
-            ) {
-
-              shippingCarrierCostValue =
-                SPX_BASE_FEE;
-
-              shippingCarrierCostInput.value =
-                String(
-                  SPX_BASE_FEE
-                );
-
-            }
-
             const shippingFeeValue =
-              Math.max(
-                0,
-                Number(
-                  shippingFeeInput.value
-                  ||
-                  0
-                )
-              );
+              getShippingFeeValue();
 
-            const overrideReason =
-              shippingOverrideReasonInput
-                .value
-                .trim();
+            const customerTotalValue =
+              productTotal
+              +
+              shippingFeeValue;
 
-            const recommendation =
-              shippingRecommendation();
-
-            const isManualOverride =
-              Boolean(
-                shippingProviderValue
-              )
-              &&
-              Math.round(
-                shippingFeeValue
-              )
-              !==
-              Math.round(
-                recommendation.suggestedFee
-              );
-
-            if (
-              isManualOverride
-              &&
-              !overrideReason
-            ) {
-
-              throw new Error(
-                "Anh/chị đang điều chỉnh phí ship khác mức hệ thống gợi ý. Vui lòng nhập lý do điều chỉnh."
-              );
-
-            }
 
             if (
               shippingStatusValue
@@ -4054,6 +3695,7 @@
 
             }
 
+
             if (
               shippingStatusValue
               ===
@@ -4068,65 +3710,6 @@
 
             }
 
-            if (
-              shippingStatusValue
-              ===
-              "shipped"
-              &&
-              hasPickleballBall
-              &&
-              shippingCarrierCostValue <= 0
-            ) {
-
-              throw new Error(
-                "Đơn có bóng Pickleball / hàng cồng kềnh. Vui lòng nhập cước vận chuyển thực tế trước khi giao ĐVVC."
-              );
-
-            }
-
-            const shippingDiscountValue =
-              Math.max(
-                0,
-                shippingCarrierCostValue
-                -
-                shippingFeeValue
-              );
-
-            let pricingMode =
-              null;
-
-            if (
-              shippingProviderValue
-            ) {
-
-              if (
-                isManualOverride
-              ) {
-
-                pricingMode =
-                  "manual_override";
-
-              }
-              else if (
-                shippingProviderValue
-                ===
-                "spx"
-                &&
-                !hasPickleballBall
-              ) {
-
-                pricingMode =
-                  "spx_auto";
-
-              }
-              else {
-
-                pricingMode =
-                  "manual_carrier";
-
-              }
-
-            }
 
             const updateData = {
 
@@ -4140,38 +3723,30 @@
                 trackingCodeValue,
 
               shipping_carrier_cost:
-                shippingCarrierCostValue,
+                shippingFeeValue,
 
               shipping_discount:
-                shippingDiscountValue,
+                0,
 
               shipping_fee:
                 shippingFeeValue,
 
               shipping_pricing_mode:
-                pricingMode,
+                null,
 
               shipping_override_reason:
-                isManualOverride
-                  ?
-                    overrideReason
-                  :
-                    null,
+                null,
 
               shipping_note:
                 shippingNoteInput
                   .value
-                  .trim()
+                  .trim(),
+
+              total_amount:
+                customerTotalValue
 
             };
 
-            /*
-              Quy trình PickDee kết thúc
-              khi bàn giao cho ĐVVC.
-
-              Không tự completed.
-              Không tự đánh dấu COD đã thanh toán.
-            */
 
             if (
               currentOrder.order_status
@@ -4187,6 +3762,7 @@
                 "shipping";
 
             }
+
 
             const {
               data,
@@ -4206,11 +3782,15 @@
                 .select("*")
                 .single();
 
-            if (error) {
+
+            if (
+              error
+            ) {
 
               throw error;
 
             }
+
 
             currentOrder =
               data;
@@ -4230,12 +3810,14 @@
                 "message success";
 
               refreshedShippingMessage.textContent =
-                "✓ Đã lưu thông tin vận chuyển.";
+                "✓ Đã lưu vận chuyển.";
 
             }
 
           }
-          catch (error) {
+          catch (
+            error
+          ) {
 
             console.error(
               "SAVE SHIPPING ERROR:",
