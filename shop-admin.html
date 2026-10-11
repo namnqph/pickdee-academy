@@ -1740,7 +1740,40 @@ let historyLoaded=false;
 
 let submitting=false;
 
+const SHOP_OWNER_USER_ID =
+"45a42e38-5129-4cce-aea6-f46a6bddfd86";
 
+let currentShopUser =
+null;
+
+let currentShopRoles =
+[];
+
+let currentShopIsOwner =
+false;
+
+
+function shopAdminTextHasPaddle(value){
+
+const text =
+String(
+value
+||
+""
+)
+.toLowerCase();
+
+return(
+text.includes("vợt")
+||
+text.includes("paddle")
+||
+text.includes("esson")
+||
+text.includes("ess/on")
+);
+
+}
 /* =====================================================
 MESSAGE
 ===================================================== */
@@ -1832,21 +1865,48 @@ throw error;
 }
 
 
-if(
-!(
+currentShopUser =
+u;
+
+
+currentShopRoles =
+(
 data
 ||
 []
 )
-.some(
+.map(
 x=>
+x.role
+)
+.filter(
+Boolean
+);
+
+
+currentShopIsOwner =
+currentShopRoles.includes(
+"owner"
+)
+||
+String(
+u.id
+)
+===
+SHOP_OWNER_USER_ID;
+
+
+if(
+!currentShopRoles
+.some(
+role=>
 [
 "owner",
 "shop_admin",
 "shop_staff"
 ]
 .includes(
-x.role
+role
 )
 )
 ){
@@ -2612,6 +2672,7 @@ LOAD ORDERS
 ===================================================== */
 
 async function loadOrders(){
+async function loadOrders(){
 
 try{
 
@@ -2642,10 +2703,117 @@ throw error;
 }
 
 
-orders=
+const rawOrders =
 data
 ||
 [];
+
+
+const orderIds =
+rawOrders
+.map(
+o=>
+o.id
+)
+.filter(
+Boolean
+);
+
+
+const paddleOrderIds =
+new Set();
+
+
+if(
+orderIds.length
+){
+
+const {
+data:itemData,
+error:itemError
+}=
+await sb
+.from(
+"shop_order_items"
+)
+.select(
+"order_id,product_name,variant_name"
+)
+.in(
+"order_id",
+orderIds
+);
+
+
+if(itemError){
+throw itemError;
+}
+
+
+(
+itemData
+||
+[]
+)
+.forEach(
+item=>{
+
+const text =
+[
+item.product_name,
+item.variant_name
+]
+.join(
+" "
+);
+
+
+if(
+shopAdminTextHasPaddle(
+text
+)
+){
+
+paddleOrderIds.add(
+Number(
+item.order_id
+)
+);
+
+}
+
+}
+);
+
+}
+
+
+orders =
+rawOrders
+.map(
+o=>({
+...o,
+has_paddle:
+paddleOrderIds.has(
+Number(
+o.id
+)
+)
+})
+);
+
+
+if(
+!currentShopIsOwner
+){
+
+orders =
+orders.filter(
+o=>
+!o.has_paddle
+);
+
+}
 
 
 orderStats();
