@@ -816,7 +816,196 @@
     );
 
   }
+  function itemsHavePaddle(
+    items
+  ) {
 
+    return (
+      Array.isArray(items)
+      &&
+      items.some(
+        function (item) {
+
+          const text =
+            [
+              item?.product_name,
+              item?.variant_name,
+              item?.sku
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLocaleLowerCase(
+                "vi-VN"
+              );
+
+          return (
+            text.includes("vợt")
+            ||
+            text.includes("paddle")
+            ||
+            text.includes("esson")
+            ||
+            text.includes("ess/on")
+          );
+
+        }
+      )
+    );
+
+  }
+
+
+  function buildSupplierOrderText() {
+
+    const o =
+      currentOrder
+      ||
+      {};
+
+    const addressLine =
+      valueFrom(
+        o,
+        [
+          "address_line",
+          "shipping_address_line",
+          "delivery_address",
+          "address"
+        ]
+      );
+
+    const ward =
+      valueFrom(
+        o,
+        [
+          "ward",
+          "shipping_ward"
+        ]
+      );
+
+    const province =
+      valueFrom(
+        o,
+        [
+          "province",
+          "shipping_province",
+          "city"
+        ]
+      );
+
+    const legacyAddress =
+      valueFrom(
+        o,
+        [
+          "legacy_address"
+        ]
+      );
+
+    const fullAddress =
+      [
+        addressLine,
+        ward,
+        province
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+    const itemsText =
+      (
+        currentItems
+        ||
+        []
+      )
+        .map(
+          function (item,index) {
+
+            const quantity =
+              Number(
+                item.quantity
+                ||
+                1
+              );
+
+            const variantName =
+              String(
+                item.variant_name
+                ||
+                ""
+              )
+                .trim();
+
+            const sku =
+              String(
+                item.sku
+                ||
+                ""
+              )
+                .trim();
+
+            return [
+              `${index + 1}. ${item.product_name || "Sản phẩm"}`,
+              variantName
+                ?
+                  `   Phân loại: ${variantName}`
+                :
+                  "",
+              sku
+                ?
+                  `   SKU: ${sku}`
+                :
+                  "",
+              `   Số lượng: ${quantity}`
+            ]
+              .filter(Boolean)
+              .join("\n");
+
+          }
+        )
+        .join("\n\n");
+
+    return [
+      "ĐƠN VỢT PICKDEE",
+      "",
+      `Mã đơn: ${o.order_code || "-"}`,
+      "",
+      "SẢN PHẨM:",
+      itemsText || "-",
+      "",
+      "THÔNG TIN KHÁCH NHẬN:",
+      `Họ tên: ${o.customer_name || "-"}`,
+      `SĐT: ${o.phone || "-"}`,
+      `Địa chỉ: ${fullAddress || "-"}`,
+      legacyAddress
+        ?
+          `Địa chỉ cũ trước sáp nhập: ${legacyAddress}`
+        :
+          "",
+      "",
+      "GHI CHÚ KHÁCH:",
+      valueFrom(
+        o,
+        [
+          "customer_note",
+          "note",
+          "notes"
+        ]
+      )
+      ||
+      "-",
+      "",
+      "YÊU CẦU:",
+      "Nhãn hàng đóng hàng và gửi trực tiếp cho khách.",
+      "Khi có mã vận đơn, vui lòng gửi lại để PickDee cập nhật cho khách."
+    ]
+      .filter(
+        function (line) {
+
+          return line !== "";
+
+        }
+      )
+      .join("\n");
+
+  }
   function showState(text) {
 
     page.className =
@@ -965,7 +1154,52 @@
       )
       ||
       "not_shipped";
+    const hasPaddleOrder =
+      itemsHavePaddle(
+        currentItems
+      );
 
+    const paddleFulfillmentType =
+      valueFrom(
+        o,
+        [
+          "paddle_fulfillment_type"
+        ]
+      )
+      ||
+      "pickdee_self_ship";
+
+    const paddleSupplierName =
+      valueFrom(
+        o,
+        [
+          "paddle_supplier_name"
+        ]
+      );
+
+    const paddleSupplierOrderCode =
+      valueFrom(
+        o,
+        [
+          "paddle_supplier_order_code"
+        ]
+      );
+
+    const paddleSupplierNote =
+      valueFrom(
+        o,
+        [
+          "paddle_supplier_note"
+        ]
+      );
+
+    const paddleSupplierSentAt =
+      valueFrom(
+        o,
+        [
+          "paddle_supplier_sent_at"
+        ]
+      );
     const paymentProofPath =
       valueFrom(
         o,
@@ -1551,7 +1785,242 @@
         ></div>
 
       </section>
+      ${
+        hasPaddleOrder
+          ?
+            `
+              <section class="section">
 
+                <div class="section-title">
+                  Cách xử lý đơn vợt
+                </div>
+
+                <div
+                  style="
+                    display:grid;
+                    gap:10px;
+                  "
+                >
+
+                  <div>
+
+                    <div
+                      class="info-label"
+                      style="margin-bottom:6px;"
+                    >
+                      CÁCH XỬ LÝ
+                    </div>
+
+                    <select
+                      id="paddleFulfillmentTypeInput"
+                      style="
+                        width:100%;
+                        min-height:44px;
+                        padding:0 12px;
+                        border-radius:12px;
+                        border:1px solid rgba(255,255,255,.10);
+                        background:#071523;
+                        color:#ffffff;
+                        outline:none;
+                        font-size:16px;
+                        font-weight:800;
+                      "
+                    >
+
+                      <option
+                        value="pickdee_self_ship"
+                        ${
+                          paddleFulfillmentType === "pickdee_self_ship"
+                            ?
+                              "selected"
+                            :
+                              ""
+                        }
+                      >
+                        PickDee tự đóng hàng / tự gửi khách
+                      </option>
+
+                      <option
+                        value="supplier_ship"
+                        ${
+                          paddleFulfillmentType === "supplier_ship"
+                            ?
+                              "selected"
+                            :
+                              ""
+                        }
+                      >
+                        Nhãn hàng / nhà cung cấp đóng hàng
+                      </option>
+
+                    </select>
+
+                    <div
+                      style="
+                        margin-top:6px;
+                        color:rgba(255,255,255,.42);
+                        font-size:9px;
+                        line-height:1.5;
+                      "
+                    >
+                      Chọn PickDee tự gửi nếu anh tự đóng hàng. Chọn nhãn hàng nếu anh gửi thông tin cho bên vợt đóng hàng trực tiếp cho khách.
+                    </div>
+
+                  </div>
+
+                  <div>
+
+                    <div
+                      class="info-label"
+                      style="margin-bottom:6px;"
+                    >
+                      NHÃN HÀNG / NHÀ CUNG CẤP
+                    </div>
+
+                    <input
+                      id="paddleSupplierNameInput"
+                      type="text"
+                      value="${escapeHtml(paddleSupplierName)}"
+                      placeholder="Ví dụ: ESS/ON Việt Nam"
+                      style="
+                        width:100%;
+                        min-height:44px;
+                        padding:0 12px;
+                        border-radius:12px;
+                        border:1px solid rgba(255,255,255,.10);
+                        background:#071523;
+                        color:#ffffff;
+                        outline:none;
+                        font-size:16px;
+                        font-weight:800;
+                      "
+                    >
+
+                  </div>
+
+                  <div>
+
+                    <div
+                      class="info-label"
+                      style="margin-bottom:6px;"
+                    >
+                      MÃ ĐƠN / MÃ THAM CHIẾU BÊN HÃNG
+                    </div>
+
+                    <input
+                      id="paddleSupplierOrderCodeInput"
+                      type="text"
+                      value="${escapeHtml(paddleSupplierOrderCode)}"
+                      placeholder="Không bắt buộc"
+                      style="
+                        width:100%;
+                        min-height:44px;
+                        padding:0 12px;
+                        border-radius:12px;
+                        border:1px solid rgba(255,255,255,.10);
+                        background:#071523;
+                        color:#ffffff;
+                        outline:none;
+                        font-size:16px;
+                        font-weight:800;
+                      "
+                    >
+
+                  </div>
+
+                  <textarea
+                    id="paddleSupplierNoteInput"
+                    placeholder="Ghi chú gửi nhãn hàng: màu, phân loại, size áo, lưu ý đóng hàng..."
+                    style="
+                      width:100%;
+                      min-height:85px;
+                      padding:12px;
+                      border-radius:12px;
+                      border:1px solid rgba(255,255,255,.10);
+                      background:#071523;
+                      color:#ffffff;
+                      outline:none;
+                      resize:vertical;
+                      font-size:16px;
+                      font-weight:750;
+                      line-height:1.5;
+                    "
+                  >${escapeHtml(paddleSupplierNote)}</textarea>
+
+                  ${
+                    paddleSupplierSentAt
+                      ?
+                        `
+                          <div
+                            style="
+                              padding:10px 11px;
+                              border-radius:11px;
+                              border:1px solid rgba(216,255,69,.18);
+                              background:rgba(216,255,69,.055);
+                              color:#d8ff45;
+                              font-size:10px;
+                              font-weight:850;
+                              line-height:1.5;
+                            "
+                          >
+                            ✓ Đã đánh dấu gửi nhãn hàng lúc ${escapeHtml(formatTime(paddleSupplierSentAt))}
+                          </div>
+                        `
+                      :
+                        ""
+                  }
+
+                  <button
+                    id="copySupplierOrderBtn"
+                    type="button"
+                    class="action-btn action-secondary"
+                    style="
+                      width:100%;
+                      min-height:42px;
+                      font-size:10px;
+                    "
+                  >
+                    COPY NỘI DUNG GỬI HÃNG
+                  </button>
+
+                  <button
+                    id="markSupplierSentBtn"
+                    type="button"
+                    class="action-btn action-secondary"
+                    style="
+                      width:100%;
+                      min-height:42px;
+                      font-size:10px;
+                    "
+                  >
+                    ĐÁNH DẤU ĐÃ GỬI HÃNG XỬ LÝ
+                  </button>
+
+                  <button
+                    id="savePaddleFulfillmentBtn"
+                    type="button"
+                    class="action-btn action-primary"
+                    style="
+                      width:100%;
+                      min-height:44px;
+                      font-size:10px;
+                    "
+                  >
+                    LƯU CÁCH XỬ LÝ ĐƠN VỢT
+                  </button>
+
+                  <div
+                    id="paddleFulfillmentMessage"
+                    class="message"
+                  ></div>
+
+                </div>
+
+              </section>
+            `
+          :
+            ""
+      }
       <section class="section">
 
         <div class="section-title">
@@ -3375,7 +3844,351 @@
 
     setupPaymentProofActions();
 
+    const paddleFulfillmentTypeInput =
+      document.getElementById(
+        "paddleFulfillmentTypeInput"
+      );
 
+    const paddleSupplierNameInput =
+      document.getElementById(
+        "paddleSupplierNameInput"
+      );
+
+    const paddleSupplierOrderCodeInput =
+      document.getElementById(
+        "paddleSupplierOrderCodeInput"
+      );
+
+    const paddleSupplierNoteInput =
+      document.getElementById(
+        "paddleSupplierNoteInput"
+      );
+
+    const copySupplierOrderBtn =
+      document.getElementById(
+        "copySupplierOrderBtn"
+      );
+
+    const markSupplierSentBtn =
+      document.getElementById(
+        "markSupplierSentBtn"
+      );
+
+    const savePaddleFulfillmentBtn =
+      document.getElementById(
+        "savePaddleFulfillmentBtn"
+      );
+
+    const paddleFulfillmentMessage =
+      document.getElementById(
+        "paddleFulfillmentMessage"
+      );
+
+
+    function paddleFulfillmentPayload(extra) {
+
+      return {
+
+        paddle_fulfillment_type:
+          paddleFulfillmentTypeInput
+            ?.value
+            ?.trim()
+          ||
+          "pickdee_self_ship",
+
+        paddle_supplier_name:
+          paddleSupplierNameInput
+            ?.value
+            ?.trim()
+          ||
+          "",
+
+        paddle_supplier_order_code:
+          paddleSupplierOrderCodeInput
+            ?.value
+            ?.trim()
+          ||
+          "",
+
+        paddle_supplier_note:
+          paddleSupplierNoteInput
+            ?.value
+            ?.trim()
+          ||
+          "",
+
+        ...(
+          extra
+          ||
+          {}
+        )
+
+      };
+
+    }
+
+
+    if (
+      copySupplierOrderBtn
+    ) {
+
+      copySupplierOrderBtn.addEventListener(
+        "click",
+        async function () {
+
+          const text =
+            buildSupplierOrderText();
+
+          try {
+
+            await navigator.clipboard.writeText(
+              text
+            );
+
+            copySupplierOrderBtn.textContent =
+              "ĐÃ COPY";
+
+            setTimeout(
+              function () {
+
+                copySupplierOrderBtn.textContent =
+                  "COPY NỘI DUNG GỬI HÃNG";
+
+              },
+              1200
+            );
+
+          }
+          catch (_) {
+
+            window.prompt(
+              "Copy nội dung gửi hãng:",
+              text
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    if (
+      savePaddleFulfillmentBtn
+      &&
+      paddleFulfillmentTypeInput
+    ) {
+
+      savePaddleFulfillmentBtn.addEventListener(
+        "click",
+        async function () {
+
+          savePaddleFulfillmentBtn.disabled =
+            true;
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  paddleFulfillmentPayload()
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+            if (
+              error
+            ) {
+
+              throw error;
+
+            }
+
+            currentOrder =
+              data;
+
+            render();
+
+            const refreshedMessage =
+              document.getElementById(
+                "paddleFulfillmentMessage"
+              );
+
+            if (
+              refreshedMessage
+            ) {
+
+              refreshedMessage.className =
+                "message success";
+
+              refreshedMessage.textContent =
+                "✓ Đã lưu cách xử lý đơn vợt.";
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "SAVE PADDLE FULFILLMENT ERROR:",
+              error
+            );
+
+            if (
+              paddleFulfillmentMessage
+            ) {
+
+              paddleFulfillmentMessage.className =
+                "message error";
+
+              paddleFulfillmentMessage.textContent =
+                error?.message
+                ||
+                "Không lưu được cách xử lý đơn vợt.";
+
+            }
+
+          }
+          finally {
+
+            savePaddleFulfillmentBtn.disabled =
+              false;
+
+          }
+
+        }
+      );
+
+    }
+
+
+    if (
+      markSupplierSentBtn
+    ) {
+
+      markSupplierSentBtn.addEventListener(
+        "click",
+        async function () {
+
+          const ok =
+            window.confirm(
+              "Đánh dấu đã gửi thông tin đơn này cho nhãn hàng xử lý?"
+            );
+
+          if (
+            !ok
+          ) {
+
+            return;
+
+          }
+
+          markSupplierSentBtn.disabled =
+            true;
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .update(
+                  paddleFulfillmentPayload(
+                    {
+                      paddle_fulfillment_type:
+                        "supplier_ship",
+
+                      paddle_supplier_sent_at:
+                        new Date().toISOString()
+                    }
+                  )
+                )
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .select("*")
+                .single();
+
+            if (
+              error
+            ) {
+
+              throw error;
+
+            }
+
+            currentOrder =
+              data;
+
+            render();
+
+            const refreshedMessage =
+              document.getElementById(
+                "paddleFulfillmentMessage"
+              );
+
+            if (
+              refreshedMessage
+            ) {
+
+              refreshedMessage.className =
+                "message success";
+
+              refreshedMessage.textContent =
+                "✓ Đã đánh dấu gửi nhãn hàng xử lý.";
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "MARK SUPPLIER SENT ERROR:",
+              error
+            );
+
+            if (
+              paddleFulfillmentMessage
+            ) {
+
+              paddleFulfillmentMessage.className =
+                "message error";
+
+              paddleFulfillmentMessage.textContent =
+                error?.message
+                ||
+                "Không đánh dấu được trạng thái gửi nhãn hàng.";
+
+            }
+
+          }
+          finally {
+
+            markSupplierSentBtn.disabled =
+              false;
+
+          }
+
+        }
+      );
+
+    }
     const internalNoteInput =
       document.getElementById(
         "internalNoteInput"
@@ -4852,7 +5665,6 @@
 })();
 
 </script>
-<style>
 
 <script src="/shop-notifications.js?v=20261008-1"></script>
 
