@@ -1,0 +1,2268 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#071523">
+  <title>Tạo khuyến mãi | PickDee Shop</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: #071523;
+      color: #ffffff;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+      padding-bottom: 92px;
+    }
+
+    button,
+    input,
+    select,
+    textarea,
+    a {
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7,21,35,.97);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(15px);
+    }
+
+    .header-inner,
+    main {
+      width: min(760px,calc(100% - 20px));
+      margin: auto;
+    }
+
+    .header-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: -.04em;
+      white-space: nowrap;
+    }
+
+    .brand span,
+    .accent {
+      color: #d8ff45;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .btn-ghost {
+      min-height: 38px;
+      padding: 0 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: transparent;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    main {
+      margin-top: 20px;
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      color: #d8ff45;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .1em;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(30px,6vw,44px);
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .intro {
+      margin: 0 0 16px;
+      color: rgba(255,255,255,.52);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .message {
+      display: none;
+      margin-bottom: 12px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+    .message.ok {
+      display: block;
+      border: 1px solid rgba(216,255,69,.24);
+      background: rgba(216,255,69,.07);
+      color: #d8ff45;
+    }
+
+    .message.err {
+      display: block;
+      border: 1px solid rgba(255,90,90,.24);
+      background: rgba(255,90,90,.07);
+      color: #ffb3b3;
+    }
+
+    .card {
+      margin-bottom: 11px;
+      padding: 14px;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: #0d1d2f;
+    }
+
+    .card-title {
+      margin-bottom: 11px;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .card-desc {
+      margin: -5px 0 12px;
+      color: rgba(255,255,255,.43);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 11px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: rgba(255,255,255,.56);
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.11);
+      outline: 0;
+      background: #10243a;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    textarea {
+      min-height: 86px;
+      padding: 11px 12px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    select option {
+      background: #ffffff;
+      color: #071523;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(216,255,69,.62);
+      box-shadow: 0 0 0 3px rgba(216,255,69,.06);
+    }
+
+    .hint {
+      color: rgba(255,255,255,.36);
+      font-size: 8px;
+      line-height: 1.45;
+    }
+
+    .notice {
+      padding: 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(216,255,69,.16);
+      background: rgba(216,255,69,.045);
+      color: rgba(255,255,255,.55);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .switch-row {
+      min-height: 48px;
+      padding: 0 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 11px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+
+    .switch-title {
+      font-size: 10px;
+      font-weight: 950;
+    }
+
+    .switch-desc {
+      margin-top: 3px;
+      color: rgba(255,255,255,.38);
+      font-size: 8px;
+      line-height: 1.4;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      accent-color: #d8ff45;
+    }
+
+    .danger {
+      border-color: rgba(255,90,90,.20);
+      background: rgba(255,90,90,.055);
+    }
+
+    .delete-btn {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,90,90,.24);
+      background: rgba(255,90,90,.10);
+      color: #ffaaaa;
+      font-size: 10px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .delete-btn:disabled {
+      opacity: .45;
+      cursor: wait;
+    }
+
+    .sticky-save {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 80;
+      padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(7,21,35,.97);
+      backdrop-filter: blur(15px);
+    }
+
+    .sticky-inner {
+      width: min(760px,100%);
+      margin: auto;
+    }
+
+    .save-btn {
+      width: 100%;
+      min-height: 50px;
+      border: 0;
+      border-radius: 13px;
+      background: #d8ff45;
+      color: #071523;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .save-btn:disabled {
+      opacity: .48;
+      cursor: wait;
+    }
+
+    @media(max-width:560px) {
+      .header-inner,
+      main {
+        width: calc(100% - 18px);
+      }
+
+      .header-inner {
+        min-height: 58px;
+      }
+
+      .brand {
+        font-size: 19px;
+      }
+
+      .btn-ghost {
+        min-height: 36px;
+        padding: 0 9px;
+        font-size: 9px;
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      input,
+      select,
+      textarea {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+
+    <a
+      class="brand"
+      href="./shop-admin"
+    >
+      PickDee<span>Shop</span>
+    </a>
+
+    <div class="top-actions">
+      <a
+        class="btn-ghost"
+        href="./shop-admin-promotions"
+      >
+        ← KHUYẾN MÃI
+      </a>
+
+      <button
+        id="logoutButton"
+        class="btn-ghost"
+        type="button"
+      >
+        ĐĂNG XUẤT
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+  <div class="eyebrow">
+    SHOP ADMIN
+  </div>
+
+  <h1 id="pageTitle">
+    Tạo khuyến mãi
+  </h1>
+
+  <p class="intro">
+    Tạo chương trình giảm giá mà không sửa giá gốc sản phẩm.
+    Hết thời gian, chương trình tự ngừng áp dụng.
+  </p>
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
+  <form id="promotionForm">
+
+    <section class="card">
+
+      <div class="card-title">
+        1. Thông tin chương trình
+      </div>
+
+      <div class="form-grid">
+
+        <div class="field">
+          <label for="promoName">
+            Tên chương trình *
+          </label>
+
+          <input
+            id="promoName"
+            type="text"
+            placeholder="VD: Flash sale quấn cán ZARSIA"
+            required
+          >
+
+          <div class="hint">
+            Tên này chỉ để quản trị nhìn dễ hiểu.
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="promotionType">
+            Loại khuyến mãi *
+          </label>
+
+          <select id="promotionType" required>
+            <option value="product_discount">
+              Giảm giá sản phẩm
+            </option>
+
+            <option value="coupon_discount">
+              Mã giảm giá
+            </option>
+
+            <option value="combo_discount">
+              Combo mua nhiều
+            </option>
+
+            <option value="free_shipping">
+              Freeship / hỗ trợ phí ship
+            </option>
+          </select>
+        </div>
+
+        <div
+          id="couponCodeBox"
+          class="field"
+        >
+          <label for="promoCode">
+            Mã giảm giá
+          </label>
+
+          <input
+            id="promoCode"
+            type="text"
+            placeholder="VD: FB10, ZALO10, LIVE20"
+            autocomplete="off"
+          >
+
+          <div class="hint">
+            Chỉ bắt buộc khi chọn loại “Mã giảm giá”.
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="promoNote">
+            Ghi chú nội bộ
+          </label>
+
+          <textarea
+            id="promoNote"
+            placeholder="VD: Dùng cho bài Facebook tối thứ 7..."
+          ></textarea>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="card">
+
+      <div class="card-title">
+        2. Giá trị khuyến mãi
+      </div>
+
+      <div
+        id="discountNotice"
+        class="notice"
+        style="margin-bottom:11px;"
+      >
+        Chọn kiểu giảm phù hợp. Với “Giá sale cố định”, hệ thống hiểu là giá bán cuối cùng của sản phẩm trong thời gian khuyến mãi.
+      </div>
+
+      <div class="form-grid">
+
+        <div class="grid-2">
+
+          <div class="field">
+            <label for="discountType">
+              Kiểu giảm *
+            </label>
+
+            <select id="discountType" required>
+              <option value="percent">
+                Giảm theo %
+              </option>
+
+              <option value="amount">
+                Giảm số tiền
+              </option>
+
+              <option value="fixed_price">
+                Giá sale cố định
+              </option>
+
+              <option value="free_shipping">
+                Miễn / hỗ trợ phí ship
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="discountValue">
+              Giá trị giảm *
+            </label>
+
+            <input
+              id="discountValue"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="VD: 10 hoặc 9000"
+              required
+            >
+
+            <div class="hint">
+              Nếu giảm 10% thì nhập 10. Nếu giá sale 9.000đ thì nhập 9000.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid-2">
+
+          <div class="field">
+            <label for="maxDiscountAmount">
+              Giảm tối đa
+            </label>
+
+            <input
+              id="maxDiscountAmount"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="VD: 30000"
+            >
+
+            <div class="hint">
+              Dùng cho mã giảm %. Có thể để trống.
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="minOrderAmount">
+              Đơn tối thiểu
+            </label>
+
+            <input
+              id="minOrderAmount"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="VD: 200000"
+            >
+
+            <div class="hint">
+              Đơn đạt số tiền này mới được áp dụng.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid-2">
+
+          <div class="field">
+            <label for="minQuantity">
+              Số lượng tối thiểu
+            </label>
+
+            <input
+              id="minQuantity"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              value="1"
+            >
+
+            <div class="hint">
+              Dùng cho combo mua nhiều. VD: mua từ 3 món.
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="budgetLimit">
+              Ngân sách giảm tối đa
+            </label>
+
+            <input
+              id="budgetLimit"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              placeholder="VD: 500000"
+            >
+
+            <div class="hint">
+              Tổng tiền giảm của chương trình. Có thể để trống.
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="card">
+
+      <div class="card-title">
+        3. Phạm vi áp dụng
+      </div>
+
+      <p class="card-desc">
+        Chọn chương trình áp dụng cho toàn shop, một danh mục, một sản phẩm hoặc một biến thể cụ thể.
+      </p>
+
+      <div class="form-grid">
+
+        <div class="field">
+          <label for="targetType">
+            Áp dụng cho *
+          </label>
+
+          <select id="targetType" required>
+            <option value="all">
+              Toàn shop
+            </option>
+
+            <option value="category">
+              Một danh mục
+            </option>
+
+            <option value="product">
+              Một sản phẩm
+            </option>
+
+            <option value="variant">
+              Một biến thể / màu / size
+            </option>
+          </select>
+        </div>
+
+        <div
+          id="targetCategoryBox"
+          class="field"
+          style="display:none;"
+        >
+          <label for="targetCategory">
+            Chọn danh mục
+          </label>
+
+          <select id="targetCategory">
+            <option value="">
+              Đang tải danh mục...
+            </option>
+          </select>
+        </div>
+
+        <div
+          id="targetProductBox"
+          class="field"
+          style="display:none;"
+        >
+          <label for="targetProduct">
+            Chọn sản phẩm
+          </label>
+
+          <select id="targetProduct">
+            <option value="">
+              Đang tải sản phẩm...
+            </option>
+          </select>
+        </div>
+
+        <div
+          id="targetVariantBox"
+          class="field"
+          style="display:none;"
+        >
+          <label for="targetVariant">
+            Chọn biến thể
+          </label>
+
+          <select id="targetVariant">
+            <option value="">
+              Đang tải biến thể...
+            </option>
+          </select>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="card">
+
+      <div class="card-title">
+        4. Thời gian và giới hạn
+      </div>
+
+      <div class="form-grid">
+
+        <div class="grid-2">
+
+          <div class="field">
+            <label for="startAt">
+              Bắt đầu
+            </label>
+
+            <input
+              id="startAt"
+              type="datetime-local"
+            >
+
+            <div class="hint">
+              Để trống = áp dụng ngay khi bật.
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="endAt">
+              Kết thúc
+            </label>
+
+            <input
+              id="endAt"
+              type="datetime-local"
+            >
+
+            <div class="hint">
+              Để trống = không giới hạn thời gian.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid-2">
+
+          <div class="field">
+            <label for="usageLimitTotal">
+              Tổng lượt dùng
+            </label>
+
+            <input
+              id="usageLimitTotal"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="VD: 100"
+            >
+          </div>
+
+          <div class="field">
+            <label for="usageLimitPerPhone">
+              Mỗi SĐT dùng tối đa
+            </label>
+
+            <input
+              id="usageLimitPerPhone"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="VD: 1"
+            >
+          </div>
+
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div class="switch-title">
+              Bật chương trình
+            </div>
+
+            <div class="switch-desc">
+              Bật thì chương trình có thể áp dụng theo thời gian đã chọn.
+            </div>
+          </div>
+
+          <input
+            id="isActive"
+            class="check"
+            type="checkbox"
+          >
+        </div>
+
+        <div class="switch-row">
+          <div>
+            <div class="switch-title">
+              Cho cộng dồn
+            </div>
+
+            <div class="switch-desc">
+              Nên tắt mặc định để tránh cộng nhiều khuyến mãi gây lỗ.
+            </div>
+          </div>
+
+          <input
+            id="stackable"
+            class="check"
+            type="checkbox"
+          >
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section
+      id="deleteCard"
+      class="card danger"
+      style="display:none;"
+    >
+
+      <div class="card-title">
+        Xóa chương trình
+      </div>
+
+      <p class="card-desc">
+        Chỉ xóa khi anh chắc chắn không cần chương trình này nữa.
+        Thường nên tắt chương trình thay vì xóa.
+      </p>
+
+      <button
+        id="deleteBtn"
+        class="delete-btn"
+        type="button"
+      >
+        XÓA CHƯƠNG TRÌNH
+      </button>
+
+    </section>
+
+  </form>
+
+</main>
+
+
+<div class="sticky-save">
+  <div class="sticky-inner">
+    <button
+      id="saveBtn"
+      class="save-btn"
+      type="submit"
+      form="promotionForm"
+    >
+      LƯU KHUYẾN MÃI
+    </button>
+  </div>
+</div>
+
+
+<script>
+(function () {
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+  const promotionId =
+    params.get("id");
+
+  const isEditMode =
+    Boolean(promotionId);
+
+  const messageBox =
+    document.getElementById("message");
+
+  const saveBtn =
+    document.getElementById("saveBtn");
+
+  const deleteBtn =
+    document.getElementById("deleteBtn");
+
+  const deleteCard =
+    document.getElementById("deleteCard");
+
+  const form =
+    document.getElementById("promotionForm");
+
+  let currentUser =
+    null;
+
+  let currentPromotion =
+    null;
+
+  let currentTarget =
+    null;
+
+  let categories =
+    [];
+
+  let products =
+    [];
+
+  let variants =
+    [];
+
+  let isSaving =
+    false;
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    showMessage(
+      "Không tải được hệ thống Shop.",
+      "err"
+    );
+
+    saveBtn.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  function $(id) {
+
+    return document.getElementById(id);
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  }
+
+
+  function nullableText(value) {
+
+    const text =
+      String(
+        value ?? ""
+      ).trim();
+
+    return (
+      text
+      ||
+      null
+    );
+
+  }
+
+
+  function nullableNumber(value) {
+
+    const text =
+      String(
+        value ?? ""
+      ).trim();
+
+    if (!text) {
+      return null;
+    }
+
+    const number =
+      Number(text);
+
+    if (
+      !Number.isFinite(number)
+    ) {
+      return null;
+    }
+
+    return number;
+
+  }
+
+
+  function safeNumber(value, fallback) {
+
+    const number =
+      Number(value);
+
+    if (
+      Number.isFinite(number)
+    ) {
+      return number;
+    }
+
+    return fallback;
+
+  }
+
+
+  function toIsoFromLocalInput(value) {
+
+    if (!value) {
+      return null;
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return date.toISOString();
+
+  }
+
+
+  function toLocalInputValue(value) {
+
+    if (!value) {
+      return "";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "";
+    }
+
+    const offsetMs =
+      date.getTimezoneOffset()
+      *
+      60000;
+
+    return new Date(
+      date.getTime()
+      -
+      offsetMs
+    )
+      .toISOString()
+      .slice(0,16);
+
+  }
+
+
+  function showMessage(
+    text,
+    type
+  ) {
+
+    messageBox.className =
+      "message"
+      +
+      (
+        text
+        ?
+          " " + type
+        :
+          ""
+      );
+
+    messageBox.textContent =
+      text || "";
+
+    if (text) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+  }
+
+
+  async function requireShopAccess() {
+
+    const {
+      data: sessionData
+    } =
+      await sb.auth.getSession();
+
+    const user =
+      sessionData?.session?.user;
+
+    if (!user) {
+
+      location.href =
+        "./login";
+
+      return false;
+
+    }
+
+    currentUser =
+      user;
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("shop_user_roles")
+        .select("role,is_active")
+        .eq("user_id",user.id)
+        .eq("is_active",true);
+
+    if (error) {
+      throw error;
+    }
+
+    const allowed =
+      (data || [])
+        .some(
+          function (item) {
+
+            return [
+              "owner",
+              "shop_admin",
+              "shop_staff"
+            ].includes(
+              item.role
+            );
+
+          }
+        );
+
+    if (!allowed) {
+      throw new Error(
+        "Tài khoản chưa có quyền quản lý khuyến mãi Shop."
+      );
+    }
+
+    return true;
+
+  }
+
+
+  function promotionTypeChanged() {
+
+    const type =
+      $("promotionType").value;
+
+    const discountType =
+      $("discountType");
+
+    const discountValue =
+      $("discountValue");
+
+    const codeBox =
+      $("couponCodeBox");
+
+    codeBox.style.display =
+      type === "coupon_discount"
+      ?
+        "grid"
+      :
+        "none";
+
+    if (
+      type === "free_shipping"
+    ) {
+
+      discountType.value =
+        "free_shipping";
+
+      discountValue.value =
+        "0";
+
+      discountValue.disabled =
+        true;
+
+      $("discountNotice").textContent =
+        "Với Freeship / hỗ trợ ship, bước sau hệ thống sẽ áp dụng vào giỏ hàng và checkout. Có thể giới hạn theo đơn tối thiểu và thời gian.";
+
+    }
+    else {
+
+      discountValue.disabled =
+        false;
+
+      if (
+        discountType.value === "free_shipping"
+      ) {
+        discountType.value =
+          "percent";
+      }
+
+      $("discountNotice").textContent =
+        "Chọn kiểu giảm phù hợp. Với “Giá sale cố định”, hệ thống hiểu là giá bán cuối cùng của sản phẩm trong thời gian khuyến mãi.";
+
+    }
+
+    if (
+      type === "combo_discount"
+      &&
+      Number($("minQuantity").value || 1) < 2
+    ) {
+
+      $("minQuantity").value =
+        "3";
+
+    }
+
+  }
+
+
+  function targetTypeChanged() {
+
+    const type =
+      $("targetType").value;
+
+    $("targetCategoryBox").style.display =
+      type === "category"
+      ?
+        "grid"
+      :
+        "none";
+
+    $("targetProductBox").style.display =
+      type === "product"
+      ?
+        "grid"
+      :
+        "none";
+
+    $("targetVariantBox").style.display =
+      type === "variant"
+      ?
+        "grid"
+      :
+        "none";
+
+  }
+
+
+  function fillTargetOptions() {
+
+    $("targetCategory").innerHTML =
+      `
+        <option value="">
+          Chọn danh mục
+        </option>
+      `
+      +
+      categories
+        .map(
+          function (item) {
+
+            return `
+              <option value="${escapeHtml(item.id)}">
+                ${escapeHtml(item.name || ("Danh mục #" + item.id))}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+    $("targetProduct").innerHTML =
+      `
+        <option value="">
+          Chọn sản phẩm
+        </option>
+      `
+      +
+      products
+        .map(
+          function (item) {
+
+            return `
+              <option value="${escapeHtml(item.id)}">
+                #${escapeHtml(item.id)} · ${escapeHtml(item.name || "Sản phẩm")}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+    $("targetVariant").innerHTML =
+      `
+        <option value="">
+          Chọn biến thể
+        </option>
+      `
+      +
+      variants
+        .map(
+          function (item) {
+
+            const product =
+              products.find(
+                function (p) {
+
+                  return Number(p.id) === Number(item.product_id);
+
+                }
+              );
+
+            const label =
+              [
+                product?.name,
+                item.variant_name,
+                item.sku
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+            return `
+              <option value="${escapeHtml(item.id)}">
+                #${escapeHtml(item.id)} · ${escapeHtml(label || "Biến thể")}
+              </option>
+            `;
+
+          }
+        )
+        .join("");
+
+  }
+
+
+  async function loadCatalog() {
+
+    const [
+      categoryResult,
+      productResult,
+      variantResult
+    ] =
+      await Promise.all([
+
+        sb
+          .from("shop_categories")
+          .select("id,name,slug,is_active,sort_order")
+          .order("sort_order",{
+            ascending: true
+          }),
+
+        sb
+          .from("shop_products")
+          .select("id,name,status,is_active")
+          .order("id",{
+            ascending: false
+          }),
+
+        sb
+          .from("shop_product_variants")
+          .select("id,product_id,sku,variant_name,is_active")
+          .order("id",{
+            ascending: false
+          })
+
+      ]);
+
+    if (categoryResult.error) {
+      throw categoryResult.error;
+    }
+
+    if (productResult.error) {
+      throw productResult.error;
+    }
+
+    if (variantResult.error) {
+      throw variantResult.error;
+    }
+
+    categories =
+      (categoryResult.data || [])
+        .filter(
+          function (item) {
+
+            return item.is_active !== false;
+
+          }
+        );
+
+    products =
+      (productResult.data || [])
+        .filter(
+          function (item) {
+
+            return item.is_active !== false;
+
+          }
+        );
+
+    variants =
+      (variantResult.data || [])
+        .filter(
+          function (item) {
+
+            return item.is_active !== false;
+
+          }
+        );
+
+    fillTargetOptions();
+
+  }
+
+
+  async function loadPromotionForEdit() {
+
+    if (!isEditMode) {
+
+      document.title =
+        "Tạo khuyến mãi | PickDee Shop";
+
+      $("pageTitle").textContent =
+        "Tạo khuyến mãi";
+
+      deleteCard.style.display =
+        "none";
+
+      return;
+
+    }
+
+    document.title =
+      "Sửa khuyến mãi | PickDee Shop";
+
+    $("pageTitle").textContent =
+      "Sửa khuyến mãi";
+
+    deleteCard.style.display =
+      "block";
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from("shop_promotions")
+        .select("*")
+        .eq("id",promotionId)
+        .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error(
+        "Không tìm thấy chương trình khuyến mãi."
+      );
+    }
+
+    currentPromotion =
+      data;
+
+    const {
+      data: targetData,
+      error: targetError
+    } =
+      await sb
+        .from("shop_promotion_targets")
+        .select("id,promotion_id,target_type,target_id")
+        .eq("promotion_id",promotionId)
+        .limit(1)
+        .maybeSingle();
+
+    if (targetError) {
+      throw targetError;
+    }
+
+    currentTarget =
+      targetData || null;
+
+    fillFormFromData();
+
+  }
+
+
+  function fillFormFromData() {
+
+    const promo =
+      currentPromotion;
+
+    $("promoName").value =
+      promo.name || "";
+
+    $("promotionType").value =
+      promo.promotion_type || "product_discount";
+
+    $("promoCode").value =
+      promo.code || "";
+
+    $("promoNote").value =
+      promo.note || "";
+
+    $("discountType").value =
+      promo.discount_type || "percent";
+
+    $("discountValue").value =
+      String(
+        safeNumber(
+          promo.discount_value,
+          0
+        )
+      );
+
+    $("maxDiscountAmount").value =
+      promo.max_discount_amount ?? "";
+
+    $("minOrderAmount").value =
+      promo.min_order_amount ?? "";
+
+    $("minQuantity").value =
+      promo.min_quantity ?? 1;
+
+    $("budgetLimit").value =
+      promo.budget_limit ?? "";
+
+    $("startAt").value =
+      toLocalInputValue(
+        promo.start_at
+      );
+
+    $("endAt").value =
+      toLocalInputValue(
+        promo.end_at
+      );
+
+    $("usageLimitTotal").value =
+      promo.usage_limit_total ?? "";
+
+    $("usageLimitPerPhone").value =
+      promo.usage_limit_per_phone ?? "";
+
+    $("isActive").checked =
+      Boolean(
+        promo.is_active
+      );
+
+    $("stackable").checked =
+      Boolean(
+        promo.stackable
+      );
+
+    if (currentTarget) {
+
+      $("targetType").value =
+        currentTarget.target_type || "all";
+
+      targetTypeChanged();
+
+      if (
+        currentTarget.target_type === "category"
+      ) {
+        $("targetCategory").value =
+          String(currentTarget.target_id || "");
+      }
+
+      if (
+        currentTarget.target_type === "product"
+      ) {
+        $("targetProduct").value =
+          String(currentTarget.target_id || "");
+      }
+
+      if (
+        currentTarget.target_type === "variant"
+      ) {
+        $("targetVariant").value =
+          String(currentTarget.target_id || "");
+      }
+
+    }
+    else {
+
+      $("targetType").value =
+        "all";
+
+      targetTypeChanged();
+
+    }
+
+    promotionTypeChanged();
+
+  }
+
+
+  function selectedTarget() {
+
+    const type =
+      $("targetType").value;
+
+    if (
+      type === "all"
+    ) {
+
+      return {
+        target_type:
+          "all",
+
+        target_id:
+          null
+      };
+
+    }
+
+    if (
+      type === "category"
+    ) {
+
+      const id =
+        Number(
+          $("targetCategory").value
+        );
+
+      if (!id) {
+        throw new Error(
+          "Anh cần chọn danh mục áp dụng."
+        );
+      }
+
+      return {
+        target_type:
+          "category",
+
+        target_id:
+          id
+      };
+
+    }
+
+    if (
+      type === "product"
+    ) {
+
+      const id =
+        Number(
+          $("targetProduct").value
+        );
+
+      if (!id) {
+        throw new Error(
+          "Anh cần chọn sản phẩm áp dụng."
+        );
+      }
+
+      return {
+        target_type:
+          "product",
+
+        target_id:
+          id
+      };
+
+    }
+
+    if (
+      type === "variant"
+    ) {
+
+      const id =
+        Number(
+          $("targetVariant").value
+        );
+
+      if (!id) {
+        throw new Error(
+          "Anh cần chọn biến thể áp dụng."
+        );
+      }
+
+      return {
+        target_type:
+          "variant",
+
+        target_id:
+          id
+      };
+
+    }
+
+    throw new Error(
+      "Phạm vi áp dụng chưa hợp lệ."
+    );
+
+  }
+
+
+  function buildPayload() {
+
+    const name =
+      nullableText(
+        $("promoName").value
+      );
+
+    if (!name) {
+      throw new Error(
+        "Anh cần nhập tên chương trình."
+      );
+    }
+
+    const promotionType =
+      $("promotionType").value;
+
+    const code =
+      nullableText(
+        $("promoCode").value
+      );
+
+    if (
+      promotionType === "coupon_discount"
+      &&
+      !code
+    ) {
+      throw new Error(
+        "Mã giảm giá là bắt buộc với loại “Mã giảm giá”."
+      );
+    }
+
+    const discountType =
+      promotionType === "free_shipping"
+      ?
+        "free_shipping"
+      :
+        $("discountType").value;
+
+    const discountValue =
+      discountType === "free_shipping"
+      ?
+        0
+      :
+        safeNumber(
+          $("discountValue").value,
+          0
+        );
+
+    if (
+      discountType !== "free_shipping"
+      &&
+      discountValue <= 0
+    ) {
+      throw new Error(
+        "Giá trị khuyến mãi phải lớn hơn 0."
+      );
+    }
+
+    const minQuantity =
+      Math.max(
+        1,
+        Math.round(
+          safeNumber(
+            $("minQuantity").value,
+            1
+          )
+        )
+      );
+
+    if (
+      promotionType === "combo_discount"
+      &&
+      minQuantity < 2
+    ) {
+      throw new Error(
+        "Combo mua nhiều nên có số lượng tối thiểu từ 2 trở lên."
+      );
+    }
+
+    const startAt =
+      toIsoFromLocalInput(
+        $("startAt").value
+      );
+
+    const endAt =
+      toIsoFromLocalInput(
+        $("endAt").value
+      );
+
+    if (
+      startAt
+      &&
+      endAt
+      &&
+      new Date(endAt).getTime()
+      <=
+      new Date(startAt).getTime()
+    ) {
+      throw new Error(
+        "Thời gian kết thúc phải sau thời gian bắt đầu."
+      );
+    }
+
+    return {
+      name:
+        name,
+
+      code:
+        code
+        ?
+          code.toUpperCase()
+        :
+          null,
+
+      promotion_type:
+        promotionType,
+
+      discount_type:
+        discountType,
+
+      discount_value:
+        discountValue,
+
+      max_discount_amount:
+        nullableNumber(
+          $("maxDiscountAmount").value
+        ),
+
+      min_order_amount:
+        safeNumber(
+          $("minOrderAmount").value,
+          0
+        ),
+
+      min_quantity:
+        minQuantity,
+
+      start_at:
+        startAt,
+
+      end_at:
+        endAt,
+
+      is_active:
+        Boolean(
+          $("isActive").checked
+        ),
+
+      stackable:
+        Boolean(
+          $("stackable").checked
+        ),
+
+      usage_limit_total:
+        nullableNumber(
+          $("usageLimitTotal").value
+        ),
+
+      usage_limit_per_phone:
+        nullableNumber(
+          $("usageLimitPerPhone").value
+        ),
+
+      budget_limit:
+        nullableNumber(
+          $("budgetLimit").value
+        ),
+
+      note:
+        nullableText(
+          $("promoNote").value
+        )
+    };
+
+  }
+
+
+  async function savePromotion(event) {
+
+    event.preventDefault();
+
+    if (isSaving) {
+      return;
+    }
+
+    isSaving =
+      true;
+
+    saveBtn.disabled =
+      true;
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+    showMessage(
+      "",
+      "ok"
+    );
+
+    try {
+
+      const payload =
+        buildPayload();
+
+      const target =
+        selectedTarget();
+
+      let savedId =
+        promotionId;
+
+      if (isEditMode) {
+
+        const {
+          error
+        } =
+          await sb
+            .from("shop_promotions")
+            .update(payload)
+            .eq("id",promotionId);
+
+        if (error) {
+          throw error;
+        }
+
+      }
+      else {
+
+        const {
+          data,
+          error
+        } =
+          await sb
+            .from("shop_promotions")
+            .insert({
+              ...payload,
+
+              created_by:
+                currentUser?.id
+                ||
+                null
+            })
+            .select("id")
+            .single();
+
+        if (error) {
+          throw error;
+        }
+
+        savedId =
+          data.id;
+
+      }
+
+      const {
+        error: deleteTargetError
+      } =
+        await sb
+          .from("shop_promotion_targets")
+          .delete()
+          .eq("promotion_id",savedId);
+
+      if (deleteTargetError) {
+        throw deleteTargetError;
+      }
+
+      const {
+        error: insertTargetError
+      } =
+        await sb
+          .from("shop_promotion_targets")
+          .insert({
+            promotion_id:
+              savedId,
+
+            target_type:
+              target.target_type,
+
+            target_id:
+              target.target_id
+          });
+
+      if (insertTargetError) {
+        throw insertTargetError;
+      }
+
+      showMessage(
+        "Đã lưu chương trình khuyến mãi.",
+        "ok"
+      );
+
+      setTimeout(
+        function () {
+
+          location.href =
+            "./shop-admin-promotions";
+
+        },
+        550
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "SAVE PROMOTION ERROR:",
+        error
+      );
+
+      showMessage(
+        error.message
+        ||
+        "Không lưu được chương trình khuyến mãi.",
+        "err"
+      );
+
+    }
+    finally {
+
+      isSaving =
+        false;
+
+      saveBtn.disabled =
+        false;
+
+      saveBtn.textContent =
+        "LƯU KHUYẾN MÃI";
+
+    }
+
+  }
+
+
+  async function deletePromotion() {
+
+    if (!isEditMode) {
+      return;
+    }
+
+    const firstConfirm =
+      window.confirm(
+        "Anh chắc chắn muốn xóa chương trình này?"
+      );
+
+    if (!firstConfirm) {
+      return;
+    }
+
+    const secondConfirm =
+      window.confirm(
+        "Xóa xong sẽ không khôi phục. Anh xác nhận xóa?"
+      );
+
+    if (!secondConfirm) {
+      return;
+    }
+
+    deleteBtn.disabled =
+      true;
+
+    deleteBtn.textContent =
+      "ĐANG XÓA...";
+
+    try {
+
+      const {
+        error
+      } =
+        await sb
+          .from("shop_promotions")
+          .delete()
+          .eq("id",promotionId);
+
+      if (error) {
+        throw error;
+      }
+
+      showMessage(
+        "Đã xóa chương trình khuyến mãi.",
+        "ok"
+      );
+
+      setTimeout(
+        function () {
+
+          location.href =
+            "./shop-admin-promotions";
+
+        },
+        550
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "DELETE PROMOTION ERROR:",
+        error
+      );
+
+      showMessage(
+        error.message
+        ||
+        "Không xóa được chương trình khuyến mãi.",
+        "err"
+      );
+
+      deleteBtn.disabled =
+        false;
+
+      deleteBtn.textContent =
+        "XÓA CHƯƠNG TRÌNH";
+
+    }
+
+  }
+
+
+  async function start() {
+
+    try {
+
+      await requireShopAccess();
+
+      await loadCatalog();
+
+      await loadPromotionForEdit();
+
+      promotionTypeChanged();
+
+      targetTypeChanged();
+
+    }
+    catch (error) {
+
+      console.error(
+        "PROMOTION EDIT INIT ERROR:",
+        error
+      );
+
+      showMessage(
+        error.message
+        ||
+        "Không tải được trang khuyến mãi.",
+        "err"
+      );
+
+      saveBtn.disabled =
+        true;
+
+    }
+
+  }
+
+
+  $("promotionType").addEventListener(
+    "change",
+    promotionTypeChanged
+  );
+
+  $("targetType").addEventListener(
+    "change",
+    targetTypeChanged
+  );
+
+  form.addEventListener(
+    "submit",
+    savePromotion
+  );
+
+  deleteBtn.addEventListener(
+    "click",
+    deletePromotion
+  );
+
+  $("logoutButton").addEventListener(
+    "click",
+    async function () {
+
+      await sb.auth.signOut();
+
+      location.href =
+        "./login";
+
+    }
+  );
+
+
+  start();
+
+})();
+</script>
+
+</body>
+</html>
