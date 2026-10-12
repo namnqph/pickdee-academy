@@ -10522,6 +10522,590 @@ window.addEventListener(
   }
 );
 </script>
+
+  <!-- ======================================================
+     PICKDEE ADMIN - HEADER ECOSYSTEM MENU
+======================================================= -->
+
+<style>
+
+  header {
+    position: relative;
+  }
+
+
+  .pd-admin-header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+
+  .pd-admin-menu {
+    position: relative;
+    z-index: 100002;
+  }
+
+
+  .pd-admin-menu-summary {
+    min-width: 118px;
+    height: 42px;
+
+    padding: 0 13px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    border:
+      1px solid rgba(255,255,255,.17);
+
+    border-radius: 12px;
+
+    background:
+      rgba(10,31,58,.95);
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    list-style: none;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    box-shadow:
+      0 8px 24px
+      rgba(0,0,0,.20);
+  }
+
+
+  .pd-admin-menu-summary::-webkit-details-marker {
+    display: none;
+  }
+
+
+  .pd-admin-menu[open]
+  .pd-admin-menu-summary {
+    border-color:
+      rgba(185,255,24,.55);
+
+    color: #b9ff18;
+  }
+
+
+  .pd-admin-menu-panel {
+    position: absolute;
+
+    top: calc(100% + 10px);
+    right: 0;
+
+    width: 270px;
+
+    padding: 9px;
+
+    border:
+      1px solid rgba(255,255,255,.14);
+
+    border-radius: 15px;
+
+    background: #0d1b2d;
+
+    box-shadow:
+      0 22px 60px
+      rgba(0,0,0,.48);
+  }
+
+
+  .pd-admin-profile {
+    padding:
+      11px 11px 12px;
+
+    margin-bottom: 5px;
+
+    border-bottom:
+      1px solid rgba(255,255,255,.09);
+  }
+
+
+  .pd-admin-profile-name {
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+
+  .pd-admin-profile-role {
+    margin-top: 4px;
+
+    color: #b9ff18;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: .08em;
+  }
+
+
+  .pd-admin-menu-item {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 11px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 850;
+
+    text-align: left;
+
+    cursor: pointer;
+  }
+
+
+  .pd-admin-menu-item:hover {
+    background:
+      rgba(255,255,255,.06);
+  }
+
+
+  .pd-admin-menu-item.current {
+    color: #b9ff18;
+
+    background:
+      rgba(185,255,24,.08);
+  }
+
+
+  .pd-admin-menu-item.shop {
+    color: #ffffff;
+  }
+
+
+  .pd-admin-menu-item.shop:hover {
+    color: #b9ff18;
+  }
+
+
+  .pd-admin-menu-divider {
+    height: 1px;
+
+    margin: 6px 5px;
+
+    background:
+      rgba(255,255,255,.09);
+  }
+
+
+  .pd-admin-menu-logout {
+    color: #ff9a9a;
+  }
+
+
+  /*
+    Chuông notifications.js hiện đang fixed riêng.
+    Căn lại sát menu PICKDEE.
+  */
+
+  #pickdeeNotificationRoot {
+    top: 18px !important;
+    right: 156px !important;
+  }
+
+
+  @media(max-width:700px) {
+
+    header {
+      padding: 14px 16px;
+    }
+
+
+    .brand {
+      font-size: 18px;
+    }
+
+
+    .pd-admin-menu-summary {
+      min-width: 42px;
+      width: 42px;
+
+      padding: 0;
+    }
+
+
+    .pd-admin-menu-label {
+      display: none;
+    }
+
+
+    .pd-admin-menu-panel {
+      position: fixed;
+
+      top: 66px;
+      left: 12px;
+      right: 12px;
+
+      width: auto;
+    }
+
+
+    #pickdeeNotificationRoot {
+      top: 14px !important;
+      right: 74px !important;
+    }
+
+  }
+
+</style>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    const header =
+      document.querySelector(
+        "#app > header"
+      );
+
+
+    const userBox =
+      header
+        ?.querySelector(
+          ".user"
+        );
+
+
+    const logoutBtn =
+      document.getElementById(
+        "logoutBtn"
+      );
+
+
+    const adminEmail =
+      document.getElementById(
+        "adminEmail"
+      );
+
+
+    if (
+      !header
+      ||
+      !userBox
+      ||
+      !logoutBtn
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+      Lấy tên hiện tại trước khi dọn header.
+    */
+
+    const currentName =
+      userBox
+        .querySelector(
+          "strong"
+        )
+        ?.textContent
+        ?.trim()
+      ||
+      "Nam Nguyen";
+
+
+    /*
+      Link đổi mật khẩu có thể đã được
+      script cũ tạo trước đó.
+    */
+
+    let changePassword =
+      document.getElementById(
+        "changePasswordLink"
+      );
+
+
+    if (
+      !changePassword
+    ) {
+
+      changePassword =
+        document.createElement(
+          "a"
+        );
+
+
+      changePassword.id =
+        "changePasswordLink";
+
+
+      changePassword.href =
+        "/change-password";
+
+    }
+
+
+    /*
+      Giữ nguyên NODE logoutBtn
+      để không làm mất listener đăng xuất
+      hiện tại của admin.js.
+    */
+
+    logoutBtn.remove();
+
+    changePassword.remove();
+
+    adminEmail?.remove();
+
+
+    userBox.innerHTML =
+      "";
+
+
+    userBox.className =
+      "user pd-admin-header-actions";
+
+
+    /*
+      DETAILS MENU
+    */
+
+    const menu =
+      document.createElement(
+        "details"
+      );
+
+
+    menu.className =
+      "pd-admin-menu";
+
+
+    const summary =
+      document.createElement(
+        "summary"
+      );
+
+
+    summary.className =
+      "pd-admin-menu-summary";
+
+
+    summary.innerHTML = `
+      <span>☰</span>
+      <span class="pd-admin-menu-label">
+        PICKDEE
+      </span>
+    `;
+
+
+    const panel =
+      document.createElement(
+        "div"
+      );
+
+
+    panel.className =
+      "pd-admin-menu-panel";
+
+
+    panel.innerHTML = `
+
+      <div class="pd-admin-profile">
+
+        <div class="pd-admin-profile-name">
+          ${currentName}
+        </div>
+
+        <div class="pd-admin-profile-role">
+          ADMIN
+        </div>
+
+      </div>
+
+
+      <a
+        href="/"
+        class="pd-admin-menu-item"
+      >
+        🏠 TRANG TỔNG PICKDEE
+      </a>
+
+
+      <a
+        href="/admin"
+        class="pd-admin-menu-item current"
+      >
+        🎓 QUẢN TRỊ ACADEMY
+      </a>
+
+
+      <a
+        href="/shop-admin"
+        class="pd-admin-menu-item shop"
+      >
+        🛍️ QUẢN TRỊ SHOP
+      </a>
+
+
+      <div class="pd-admin-menu-divider"></div>
+
+    `;
+
+
+    /*
+      ĐỔI MẬT KHẨU
+    */
+
+    changePassword.textContent =
+      "🔑 ĐỔI MẬT KHẨU";
+
+
+    changePassword.className =
+      "pd-admin-menu-item";
+
+
+    changePassword.removeAttribute(
+      "style"
+    );
+
+
+    panel.appendChild(
+      changePassword
+    );
+
+
+    /*
+      ĐĂNG XUẤT
+    */
+
+    logoutBtn.textContent =
+      "↪ ĐĂNG XUẤT";
+
+
+    logoutBtn.className =
+      "pd-admin-menu-item pd-admin-menu-logout";
+
+
+    logoutBtn.removeAttribute(
+      "style"
+    );
+
+
+    panel.appendChild(
+      logoutBtn
+    );
+
+
+    menu.appendChild(
+      summary
+    );
+
+
+    menu.appendChild(
+      panel
+    );
+
+
+    userBox.appendChild(
+      menu
+    );
+
+
+    /*
+      Giữ adminEmail để code hiện tại
+      vẫn tìm thấy element nếu cần.
+    */
+
+    if (
+      adminEmail
+    ) {
+
+      adminEmail.style.display =
+        "none";
+
+
+      userBox.appendChild(
+        adminEmail
+      );
+
+    }
+
+
+    /*
+      Bấm ngoài menu → đóng.
+    */
+
+    document.addEventListener(
+      "click",
+      function (event) {
+
+        if (
+          menu.open
+          &&
+          !menu.contains(
+            event.target
+          )
+        ) {
+
+          menu.open =
+            false;
+
+        }
+
+      }
+    );
+
+
+    /*
+      ESC → đóng.
+    */
+
+    document.addEventListener(
+      "keydown",
+      function (event) {
+
+        if (
+          event.key ===
+          "Escape"
+        ) {
+
+          menu.open =
+            false;
+
+        }
+
+      }
+    );
+
+  }
+);
+
+</script>
 </body>
 
 </html>
