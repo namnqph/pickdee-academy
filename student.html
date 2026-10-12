@@ -6352,81 +6352,520 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
-  <script>
+<script>
 (function () {
 
   const userArea =
-    document.querySelector(".user-area");
+    document.querySelector(
+      ".user-area"
+    );
+
 
   const logoutBtn =
-    document.getElementById("logoutBtn");
+    document.getElementById(
+      "logoutBtn"
+    );
 
-  if (!userArea || !logoutBtn) {
-    return;
-  }
+
+  const userEmail =
+    document.getElementById(
+      "userEmail"
+    );
+
+
+  const profileCard =
+    document.querySelector(
+      ".profile-card"
+    );
+
 
   if (
-    document.getElementById(
-      "studentChangePasswordLink"
-    )
+    !userArea
+    ||
+    !logoutBtn
   ) {
+
     return;
+
   }
 
-  const changePassword =
-    document.createElement("a");
 
-  changePassword.id =
-    "studentChangePasswordLink";
+  /*
+    Gắn điểm đến cho:
+    HỒ SƠ CỦA TÔI
+  */
 
-  changePassword.href =
-    "/change-password";
+  if (
+    profileCard
+  ) {
+
+    profileCard.id =
+      "studentProfile";
+
+
+    profileCard.style.scrollMarginTop =
+      "90px";
+
+  }
+
+
+  /*
+    Dùng lại link đổi mật khẩu nếu đã có,
+    nếu chưa có thì tạo mới.
+  */
+
+  let changePassword =
+    document.getElementById(
+      "studentChangePasswordLink"
+    );
+
+
+  if (
+    !changePassword
+  ) {
+
+    changePassword =
+      document.createElement(
+        "a"
+      );
+
+
+    changePassword.id =
+      "studentChangePasswordLink";
+
+
+    changePassword.href =
+      "/change-password";
+
+  }
+
+
+  /*
+    Giữ nguyên logoutBtn hiện tại
+    để không mất listener đăng xuất
+    trong student.js.
+  */
+
+  changePassword.remove();
+
+  logoutBtn.remove();
+
+
+  /*
+    Email không cần hiện trực tiếp trên header nữa.
+    Vẫn giữ element để code cũ không bị ảnh hưởng.
+  */
+
+  if (
+    userEmail
+  ) {
+
+    userEmail.style.display =
+      "none";
+
+  }
+
+
+  /*
+    STYLE MENU
+  */
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+
+    .student-account-menu {
+      position: relative;
+      z-index: 1000001;
+    }
+
+
+    .student-account-menu summary {
+      width: 42px;
+      height: 42px;
+
+      padding: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border:
+        1px solid rgba(255,255,255,.20);
+
+      border-radius: 12px;
+
+      background: #0b2342;
+
+      color: #ffffff;
+
+      font-size: 20px;
+      font-weight: 900;
+
+      cursor: pointer;
+
+      list-style: none;
+
+      user-select: none;
+
+      box-shadow:
+        0 8px 25px
+        rgba(0,0,0,.25);
+    }
+
+
+    .student-account-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+
+    .student-account-menu[open] summary {
+      color: #d8ff45;
+
+      border-color:
+        rgba(216,255,69,.55);
+    }
+
+
+    .student-account-panel {
+      position: absolute;
+
+      top: calc(100% + 10px);
+      right: 0;
+
+      width: 255px;
+
+      padding: 8px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      border-radius: 15px;
+
+      background: #0d2038;
+
+      box-shadow:
+        0 22px 60px
+        rgba(0,0,0,.48);
+    }
+
+
+    .student-account-title {
+      padding: 10px 11px 12px;
+
+      margin-bottom: 5px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+
+    .student-account-item {
+      width: 100%;
+      min-height: 45px;
+
+      padding: 0 11px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 9px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: transparent;
+
+      color: #ffffff;
+
+      text-decoration: none;
+
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 900;
+
+      text-align: left;
+
+      cursor: pointer;
+    }
+
+
+    .student-account-item:hover {
+      background:
+        rgba(255,255,255,.06);
+
+      color: #d8ff45;
+    }
+
+
+    .student-account-divider {
+      height: 1px;
+
+      margin: 6px 5px;
+
+      background:
+        rgba(255,255,255,.09);
+    }
+
+
+    .student-account-logout {
+      color: #ffaaaa;
+    }
+
+
+    /*
+      Chuông nằm ngay bên trái menu 3 gạch.
+    */
+
+    #studentNotificationRoot {
+      right: 78px !important;
+    }
+
+
+    @media(max-width:700px) {
+
+      #studentNotificationRoot {
+        right: 70px !important;
+      }
+
+
+      .student-account-panel {
+        position: fixed;
+
+        top: 65px;
+        left: 12px;
+        right: 12px;
+
+        width: auto;
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  /*
+    TẠO MENU ☰
+  */
+
+  const menu =
+    document.createElement(
+      "details"
+    );
+
+
+  menu.className =
+    "student-account-menu";
+
+
+  const summary =
+    document.createElement(
+      "summary"
+    );
+
+
+  summary.setAttribute(
+    "aria-label",
+    "Menu tài khoản"
+  );
+
+
+  summary.setAttribute(
+    "title",
+    "Menu tài khoản"
+  );
+
+
+  summary.textContent =
+    "☰";
+
+
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+
+  panel.className =
+    "student-account-panel";
+
+
+  panel.innerHTML = `
+
+    <div class="student-account-title">
+      TÀI KHOẢN HỌC VIÊN
+    </div>
+
+
+    <a
+      href="#studentProfile"
+      id="studentProfileMenuLink"
+      class="student-account-item"
+    >
+      👤 HỒ SƠ CỦA TÔI
+    </a>
+
+
+    <div class="student-account-divider"></div>
+
+  `;
+
+
+  /*
+    ĐỔI MẬT KHẨU
+  */
 
   changePassword.textContent =
-    "ĐỔI MẬT KHẨU";
+    "🔑 ĐỔI MẬT KHẨU";
 
-  changePassword.style.display =
-    "inline-flex";
 
-  changePassword.style.alignItems =
-    "center";
+  changePassword.className =
+    "student-account-item";
 
-  changePassword.style.justifyContent =
-    "center";
 
-  changePassword.style.minHeight =
-    "38px";
+  changePassword.removeAttribute(
+    "style"
+  );
 
-  changePassword.style.padding =
-    "0 10px";
 
-  changePassword.style.border =
-    "1px solid rgba(216,255,69,.35)";
+  panel.appendChild(
+    changePassword
+  );
 
-  changePassword.style.borderRadius =
-    "9px";
 
-  changePassword.style.background =
-    "rgba(216,255,69,.08)";
+  /*
+    ĐĂNG XUẤT
+  */
 
-  changePassword.style.color =
-    "#d8ff45";
+  logoutBtn.textContent =
+    "↪ ĐĂNG XUẤT";
 
-  changePassword.style.textDecoration =
-    "none";
 
-  changePassword.style.fontSize =
-    "12px";
+  logoutBtn.className =
+    "student-account-item student-account-logout";
 
-  changePassword.style.fontWeight =
-    "900";
 
-  changePassword.style.whiteSpace =
-    "nowrap";
+  logoutBtn.removeAttribute(
+    "style"
+  );
 
-  userArea.insertBefore(
-    changePassword,
+
+  panel.appendChild(
     logoutBtn
+  );
+
+
+  menu.appendChild(
+    summary
+  );
+
+
+  menu.appendChild(
+    panel
+  );
+
+
+  userArea.appendChild(
+    menu
+  );
+
+
+  /*
+    Bấm HỒ SƠ CỦA TÔI
+    → cuộn đúng xuống khu hồ sơ.
+  */
+
+  document
+    .getElementById(
+      "studentProfileMenuLink"
+    )
+    ?.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+
+
+        menu.open =
+          false;
+
+
+        profileCard
+          ?.scrollIntoView(
+            {
+              behavior:
+                "smooth",
+
+              block:
+                "start"
+            }
+          );
+
+      }
+    );
+
+
+  /*
+    Bấm ngoài → đóng menu.
+  */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        menu.open
+        &&
+        !menu.contains(
+          event.target
+        )
+      ) {
+
+        menu.open =
+          false;
+
+      }
+
+    }
+  );
+
+
+  /*
+    ESC → đóng menu.
+  */
+
+  document.addEventListener(
+    "keydown",
+    function (event) {
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        menu.open =
+          false;
+
+      }
+
+    }
   );
 
 })();
