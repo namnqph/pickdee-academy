@@ -2821,121 +2821,235 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
   }
 
 
-  async function loadCoach() {
+ async function loadCoach() {
 
-    const {
-      data: { session },
-      error: sessionError
-    } =
-      await sb.auth.getSession();
-
-
-    if (
-      sessionError ||
-      !session
-    ) {
-
-      console.error(
-        "COACH SESSION ERROR:",
-        sessionError
-      );
+  const {
+    data: { session },
+    error: sessionError
+  } =
+    await sb.auth.getSession();
 
 
-      window.location.href =
-        "/login";
+  if (
+    sessionError
+    ||
+    !session
+  ) {
+
+    console.error(
+      "COACH SESSION ERROR:",
+      sessionError
+    );
 
 
-      return false;
-    }
+    window.location.replace(
+      "/login"
+    );
 
 
-    currentUser =
-      session.user;
-
-
-    userEmailEl.textContent =
-      currentUser.email || "";
-
-
-    const {
-      data: coach,
-      error: coachError
-    } =
-      await sb.rpc(
-        "get_my_coach_profile"
-      );
-
-
-    if (
-      coachError ||
-      !coach
-    ) {
-
-      console.error(
-        "GET MY COACH PROFILE:",
-        coachError
-      );
-
-
-      messageEl.textContent =
-        "Không tải được hồ sơ Coach.";
-
-
-      coachNameEl.textContent =
-        "Không tải được";
-
-
-      return false;
-    }
-
-
-    currentCoach =
-      coach;
-
-
-    renderCoachProfile();
-
-
-    try {
-
-      const {
-        data: avatarPath,
-        error: avatarError
-      } =
-        await sb.rpc(
-          "get_my_coach_avatar"
-        );
-
-
-      if (!avatarError) {
-
-        currentCoach.avatar_path =
-          avatarPath || null;
-
-
-        await showAvatar(
-          avatarPath || null
-        );
-
-      }
-
-    }
-    catch (avatarLoadError) {
-
-      console.warn(
-        "COACH AVATAR:",
-        avatarLoadError
-      );
-
-    }
-
-
-    messageEl.textContent = "";
-
-
-    return true;
+    return false;
   }
 
+
+  currentUser =
+    session.user;
+
+
+  /* =====================================================
+     KIỂM TRA ROLE TRƯỚC KHI CHO VÀO KHU COACH
+  ====================================================== */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        currentUser.id
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
+  ) {
+
+    console.error(
+      "COACH PROFILE ROLE ERROR:",
+      profileError
+    );
+
+
+    window.location.replace(
+      "/academy"
+    );
+
+
+    return false;
+  }
+
+
+  const accountRole =
+    String(
+      profile?.role
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  /*
+    ADMIN → về Admin
+  */
+
+  if (
+    accountRole === "admin"
+  ) {
+
+    window.location.replace(
+      "/admin"
+    );
+
+
+    return false;
+  }
+
+
+  /*
+    HỌC VIÊN → về Student
+  */
+
+  if (
+    accountRole === "student"
+    ||
+    accountRole === "hocvien"
+    ||
+    accountRole === "học viên"
+  ) {
+
+    window.location.replace(
+      "/student"
+    );
+
+
+    return false;
+  }
+
+
+  /*
+    Chỉ Coach mới được đứng lại trang này.
+  */
+
+  if (
+    accountRole !== "coach"
+  ) {
+
+    window.location.replace(
+      "/academy"
+    );
+
+
+    return false;
+  }
+
+
+  userEmailEl.textContent =
+    currentUser.email || "";
+
+
+  const {
+    data: coach,
+    error: coachError
+  } =
+    await sb.rpc(
+      "get_my_coach_profile"
+    );
+
+
+  if (
+    coachError
+    ||
+    !coach
+  ) {
+
+    console.error(
+      "GET MY COACH PROFILE:",
+      coachError
+    );
+
+
+    messageEl.textContent =
+      "Không tải được hồ sơ Coach.";
+
+
+    coachNameEl.textContent =
+      "Không tải được";
+
+
+    return false;
+  }
+
+
+  currentCoach =
+    coach;
+
+
+  renderCoachProfile();
+
+
+  try {
+
+    const {
+      data: avatarPath,
+      error: avatarError
+    } =
+      await sb.rpc(
+        "get_my_coach_avatar"
+      );
+
+
+    if (
+      !avatarError
+    ) {
+
+      currentCoach.avatar_path =
+        avatarPath || null;
+
+
+      await showAvatar(
+        avatarPath || null
+      );
+
+    }
+
+  }
+  catch (
+    avatarLoadError
+  ) {
+
+    console.warn(
+      "COACH AVATAR:",
+      avatarLoadError
+    );
+
+  }
+
+
+  messageEl.textContent =
+    "";
+
+
+  return true;
+
+}
 
   /* =====================================================
      COACH TỰ SỬA HỒ SƠ
