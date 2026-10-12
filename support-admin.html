@@ -2586,12 +2586,37 @@
     }
 
 
-    await loadConversations(
-      false
-    );
+  await loadConversations(
+  false
+);
 
 
-    startPolling();
+const requestedConversationId =
+  new URLSearchParams(
+    window.location.search
+  ).get(
+    "conversation"
+  );
+
+
+if (
+  requestedConversationId
+  &&
+  conversations.some(
+    item =>
+      item.id ===
+      requestedConversationId
+  )
+) {
+
+  await openConversation(
+    requestedConversationId
+  );
+
+}
+
+
+startPolling();
 
 
     console.log(
