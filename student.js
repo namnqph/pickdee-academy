@@ -29,6 +29,10 @@ let currentStudent =
   null;
 
 
+let locationAreas =
+  [];
+
+
 /* =====================================================
    HELPERS
 ===================================================== */
@@ -44,12 +48,8 @@ function show(
     );
 
 
-  if (
-    !el
-  ) {
-
+  if (!el) {
     return;
-
   }
 
 
@@ -74,9 +74,7 @@ function normalizeRole(
 ) {
 
   return String(
-    value
-    ||
-    ""
+    value || ""
   )
     .trim()
     .toLocaleLowerCase(
@@ -86,8 +84,32 @@ function normalizeRole(
 }
 
 
+function createOption(
+  value,
+  label
+) {
+
+  const option =
+    document.createElement(
+      "option"
+    );
+
+
+  option.value =
+    value;
+
+
+  option.textContent =
+    label;
+
+
+  return option;
+
+}
+
+
 /* =====================================================
-   KIỂM TRA ĐĂNG NHẬP + ĐÚNG ROLE
+   KIỂM TRA ĐĂNG NHẬP + ROLE
 ===================================================== */
 
 async function checkStudentLogin() {
@@ -162,7 +184,7 @@ async function checkStudentLogin() {
 
 
   /*
-    Admin không được đứng trong Student.
+    ADMIN → về Admin
   */
 
   if (
@@ -180,7 +202,7 @@ async function checkStudentLogin() {
 
 
   /*
-    Coach không được đứng trong Student.
+    COACH → về Coach
   */
 
   if (
@@ -198,7 +220,7 @@ async function checkStudentLogin() {
 
 
   /*
-    Chỉ Student mới được ở lại.
+    Chỉ Học viên mới được ở lại.
   */
 
   if (
@@ -300,7 +322,7 @@ function renderStudentProfile() {
 
 
 /* =====================================================
-   LOAD HỒ SƠ CỦA CHÍNH HỌC VIÊN
+   LOAD HỒ SƠ
 ===================================================== */
 
 async function loadStudent(
@@ -380,6 +402,354 @@ async function loadStudent(
 
 
 /* =====================================================
+   LOAD DANH MỤC TỈNH / THÀNH
+===================================================== */
+
+async function loadAreaCatalog(
+  areaSelect
+) {
+
+  areaSelect.disabled =
+    true;
+
+
+  areaSelect.innerHTML =
+    "";
+
+
+  areaSelect.appendChild(
+    createOption(
+      "",
+      "Đang tải Tỉnh / Thành..."
+    )
+  );
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from(
+        "dm_khu_vuc"
+      )
+      .select(`
+        ma_khu_vuc,
+        tinh_thanh
+      `)
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .order(
+        "tinh_thanh",
+        {
+          ascending:
+            true
+        }
+      );
+
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "LOAD AREA CATALOG:",
+      error
+    );
+
+
+    areaSelect.innerHTML =
+      "";
+
+
+    areaSelect.appendChild(
+      createOption(
+        "",
+        "Không tải được Tỉnh / Thành"
+      )
+    );
+
+
+    throw error;
+
+  }
+
+
+  locationAreas =
+    data || [];
+
+
+  areaSelect.innerHTML =
+    "";
+
+
+  areaSelect.appendChild(
+    createOption(
+      "",
+      "Chọn Tỉnh / Thành"
+    )
+  );
+
+
+  locationAreas.forEach(
+    function (
+      item
+    ) {
+
+      areaSelect.appendChild(
+        createOption(
+          item.tinh_thanh,
+          item.tinh_thanh
+        )
+      );
+
+    }
+  );
+
+
+  areaSelect.disabled =
+    false;
+
+}
+
+
+/* =====================================================
+   LẤY MÃ KHU VỰC TỪ TÊN TỈNH
+===================================================== */
+
+function getAreaCode(
+  areaName
+) {
+
+  const area =
+    locationAreas.find(
+      function (
+        item
+      ) {
+
+        return (
+          String(
+            item.tinh_thanh || ""
+          )
+            .trim()
+          ===
+          String(
+            areaName || ""
+          )
+            .trim()
+        );
+
+      }
+    );
+
+
+  return (
+    area?.ma_khu_vuc
+    ||
+    ""
+  );
+
+}
+
+
+/* =====================================================
+   LOAD XÃ / PHƯỜNG THEO TỈNH
+===================================================== */
+
+async function loadWardCatalog(
+  areaName,
+  wardSelect,
+  selectedWard = ""
+) {
+
+  wardSelect.disabled =
+    true;
+
+
+  wardSelect.innerHTML =
+    "";
+
+
+  if (
+    !areaName
+  ) {
+
+    wardSelect.appendChild(
+      createOption(
+        "",
+        "Chọn Tỉnh / Thành trước"
+      )
+    );
+
+
+    return;
+
+  }
+
+
+  const areaCode =
+    getAreaCode(
+      areaName
+    );
+
+
+  if (
+    !areaCode
+  ) {
+
+    wardSelect.appendChild(
+      createOption(
+        "",
+        "Không xác định được khu vực"
+      )
+    );
+
+
+    return;
+
+  }
+
+
+  wardSelect.appendChild(
+    createOption(
+      "",
+      "Đang tải Xã / Phường..."
+    )
+  );
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from(
+        "dm_xa_phuong"
+      )
+      .select(`
+        ma_xa_phuong,
+        ma_khu_vuc,
+        ten_xa_phuong
+      `)
+      .eq(
+        "dang_hoat_dong",
+        true
+      )
+      .eq(
+        "ma_khu_vuc",
+        areaCode
+      )
+      .order(
+        "ten_xa_phuong",
+        {
+          ascending:
+            true
+        }
+      );
+
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "LOAD WARD CATALOG:",
+      error
+    );
+
+
+    wardSelect.innerHTML =
+      "";
+
+
+    wardSelect.appendChild(
+      createOption(
+        "",
+        "Không tải được Xã / Phường"
+      )
+    );
+
+
+    throw error;
+
+  }
+
+
+  wardSelect.innerHTML =
+    "";
+
+
+  wardSelect.appendChild(
+    createOption(
+      "",
+      "Chọn Xã / Phường"
+    )
+  );
+
+
+  (
+    data || []
+  )
+    .forEach(
+      function (
+        item
+      ) {
+
+        wardSelect.appendChild(
+          createOption(
+            item.ten_xa_phuong,
+            item.ten_xa_phuong
+          )
+        );
+
+      }
+    );
+
+
+  wardSelect.disabled =
+    false;
+
+
+  if (
+    selectedWard
+  ) {
+
+    const exists =
+      Array.from(
+        wardSelect.options
+      )
+        .some(
+          function (
+            option
+          ) {
+
+            return (
+              option.value
+              ===
+              selectedWard
+            );
+
+          }
+        );
+
+
+    if (
+      exists
+    ) {
+
+      wardSelect.value =
+        selectedWard;
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
    TẠO GIAO DIỆN SỬA HỒ SƠ
 ===================================================== */
 
@@ -422,9 +792,9 @@ function buildStudentProfileEditor() {
   }
 
 
-  /*
-    CSS riêng phần sửa hồ sơ.
-  */
+  /* ===================================================
+     CSS
+  ==================================================== */
 
   const style =
     document.createElement(
@@ -469,14 +839,14 @@ function buildStudentProfileEditor() {
 
     .student-profile-edit-form {
       display: none;
-
       padding-top: 4px;
     }
 
 
     .student-profile-edit-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns:
+        1fr 1fr;
 
       gap: 15px;
     }
@@ -489,7 +859,8 @@ function buildStudentProfileEditor() {
 
 
     .student-profile-field.full {
-      grid-column: 1 / -1;
+      grid-column:
+        1 / -1;
     }
 
 
@@ -507,7 +878,8 @@ function buildStudentProfileEditor() {
       width: 100%;
       min-height: 46px;
 
-      padding: 0 12px;
+      padding:
+        0 12px;
 
       border:
         1px solid rgba(255,255,255,.17);
@@ -531,6 +903,12 @@ function buildStudentProfileEditor() {
     }
 
 
+    .student-profile-field select:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+
     .student-profile-readonly {
       opacity: .6;
       cursor: not-allowed;
@@ -539,7 +917,6 @@ function buildStudentProfileEditor() {
 
     .student-profile-actions {
       display: flex;
-
       gap: 10px;
 
       margin-top: 18px;
@@ -613,9 +990,9 @@ function buildStudentProfileEditor() {
   );
 
 
-  /*
-    Header của card.
-  */
+  /* ===================================================
+     HEADER CARD
+  ==================================================== */
 
   const header =
     document.createElement(
@@ -665,9 +1042,9 @@ function buildStudentProfileEditor() {
   );
 
 
-  /*
-    Form sửa.
-  */
+  /* ===================================================
+     FORM
+  ==================================================== */
 
   const form =
     document.createElement(
@@ -753,11 +1130,15 @@ function buildStudentProfileEditor() {
           Khu vực muốn học
         </label>
 
-        <input
+        <select
           id="studentEditArea"
-          type="text"
-          maxlength="120"
         >
+
+          <option value="">
+            Đang tải Tỉnh / Thành...
+          </option>
+
+        </select>
 
       </div>
 
@@ -768,11 +1149,16 @@ function buildStudentProfileEditor() {
           Xã / Phường muốn học
         </label>
 
-        <input
+        <select
           id="studentEditWard"
-          type="text"
-          maxlength="120"
+          disabled
         >
+
+          <option value="">
+            Chọn Tỉnh / Thành trước
+          </option>
+
+        </select>
 
       </div>
 
@@ -815,7 +1201,9 @@ function buildStudentProfileEditor() {
     </div>
 
 
-    <div id="studentProfileEditMessage"></div>
+    <div
+      id="studentProfileEditMessage"
+    ></div>
 
   `;
 
@@ -844,13 +1232,13 @@ function buildStudentProfileEditor() {
     );
 
 
-  const areaInput =
+  const areaSelect =
     document.getElementById(
       "studentEditArea"
     );
 
 
-  const wardInput =
+  const wardSelect =
     document.getElementById(
       "studentEditWard"
     );
@@ -880,7 +1268,11 @@ function buildStudentProfileEditor() {
     );
 
 
-  function openEditor() {
+  /* ===================================================
+     MỞ FORM
+  ==================================================== */
+
+  async function openEditor() {
 
     if (
       !currentStudent
@@ -889,6 +1281,26 @@ function buildStudentProfileEditor() {
       return;
 
     }
+
+
+    formMessage.style.color =
+      "#d8ff45";
+
+
+    formMessage.textContent =
+      "Đang tải danh mục khu vực...";
+
+
+    profileMain.style.display =
+      "none";
+
+
+    form.style.display =
+      "block";
+
+
+    editBtn.style.display =
+      "none";
 
 
     fullNameInput.value =
@@ -918,46 +1330,99 @@ function buildStudentProfileEditor() {
         "";
 
 
-    areaInput.value =
-      currentStudent.preferred_area
-      ||
-      "";
-
-
-    wardInput.value =
-      currentStudent.preferred_ward
-      ||
-      "";
-
-
     emailInput.value =
       currentStudent.email
       ||
-      currentSession?.user?.email
+      currentSession
+        ?.user
+        ?.email
       ||
       "";
 
 
-    formMessage.textContent =
-      "";
+    try {
+
+      await loadAreaCatalog(
+        areaSelect
+      );
 
 
-    profileMain.style.display =
-      "none";
+      if (
+        currentStudent.preferred_area
+      ) {
+
+        const areaExists =
+          Array.from(
+            areaSelect.options
+          )
+            .some(
+              function (
+                option
+              ) {
+
+                return (
+                  option.value
+                  ===
+                  currentStudent.preferred_area
+                );
+
+              }
+            );
 
 
-    form.style.display =
-      "block";
+        if (
+          areaExists
+        ) {
+
+          areaSelect.value =
+            currentStudent.preferred_area;
+
+        }
+
+      }
 
 
-    editBtn.style.display =
-      "none";
+      await loadWardCatalog(
+        areaSelect.value,
+        wardSelect,
+        currentStudent.preferred_ward
+        ||
+        ""
+      );
 
 
-    fullNameInput.focus();
+      formMessage.textContent =
+        "";
+
+
+      fullNameInput.focus();
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        "OPEN STUDENT PROFILE:",
+        error
+      );
+
+
+      formMessage.style.color =
+        "#ffaaaa";
+
+
+      formMessage.textContent =
+        "Không tải được danh mục khu vực.";
+
+    }
 
   }
 
+
+  /* ===================================================
+     ĐÓNG FORM
+  ==================================================== */
 
   function closeEditor() {
 
@@ -991,6 +1456,66 @@ function buildStudentProfileEditor() {
   );
 
 
+  /* ===================================================
+     ĐỔI TỈNH → LOAD XÃ / PHƯỜNG
+  ==================================================== */
+
+  areaSelect.addEventListener(
+    "change",
+    async function () {
+
+      formMessage.style.color =
+        "#d8ff45";
+
+
+      formMessage.textContent =
+        areaSelect.value
+          ?
+          "Đang tải Xã / Phường..."
+          :
+          "";
+
+
+      try {
+
+        await loadWardCatalog(
+          areaSelect.value,
+          wardSelect,
+          ""
+        );
+
+
+        formMessage.textContent =
+          "";
+
+      }
+      catch (
+        error
+      ) {
+
+        console.error(
+          "AREA CHANGE:",
+          error
+        );
+
+
+        formMessage.style.color =
+          "#ffaaaa";
+
+
+        formMessage.textContent =
+          "Không tải được danh sách Xã / Phường.";
+
+      }
+
+    }
+  );
+
+
+  /* ===================================================
+     LƯU HỒ SƠ QUA RPC
+  ==================================================== */
+
   form.addEventListener(
     "submit",
     async function (
@@ -1006,8 +1531,12 @@ function buildStudentProfileEditor() {
         !currentSession
       ) {
 
+        formMessage.style.color =
+          "#ffaaaa";
+
+
         formMessage.textContent =
-          "Không xác định được hồ sơ học viên.";
+          "Không xác định được hồ sơ Học viên.";
 
 
         return;
@@ -1034,13 +1563,13 @@ function buildStudentProfileEditor() {
 
 
       const area =
-        areaInput
+        areaSelect
           .value
           .trim();
 
 
       const ward =
-        wardInput
+        wardSelect
           .value
           .trim();
 
@@ -1048,6 +1577,10 @@ function buildStudentProfileEditor() {
       if (
         !fullName
       ) {
+
+        formMessage.style.color =
+          "#ffaaaa";
+
 
         formMessage.textContent =
           "Vui lòng nhập họ và tên.";
@@ -1061,11 +1594,38 @@ function buildStudentProfileEditor() {
       }
 
 
+      if (
+        ward
+        &&
+        !area
+      ) {
+
+        formMessage.style.color =
+          "#ffaaaa";
+
+
+        formMessage.textContent =
+          "Vui lòng chọn Tỉnh / Thành trước.";
+
+
+        return;
+
+      }
+
+
       saveBtn.disabled =
         true;
 
 
       cancelBtn.disabled =
+        true;
+
+
+      areaSelect.disabled =
+        true;
+
+
+      wardSelect.disabled =
         true;
 
 
@@ -1083,110 +1643,42 @@ function buildStudentProfileEditor() {
 
       try {
 
-        /*
-          Xác định lại chính Student đang đăng nhập.
-          Không dùng ID do người dùng truyền lên.
-        */
-
-        const {
-          data: studentId,
-          error:
-            studentIdError
-        } =
-          await supabaseClient
-            .rpc(
-              "current_student_id"
-            );
-
-
-        if (
-          studentIdError
-          ||
-          !studentId
-        ) {
-
-          throw new Error(
-            "Không xác định được hồ sơ học viên hiện tại."
-          );
-
-        }
-
-
-        if (
-          Number(
-            studentId
-          )
-          !==
-          Number(
-            currentStudent.id
-          )
-        ) {
-
-          throw new Error(
-            "Hồ sơ học viên không khớp với tài khoản đăng nhập."
-          );
-
-        }
-
-
-        /*
-          Chỉ cho phép sửa đúng các trường cá nhân.
-          KHÔNG sửa email, mã HV, trạng thái, gói học...
-        */
-
         const {
           data:
-            updatedRows,
+            updated,
           error:
             updateError
         } =
           await supabaseClient
-            .from(
-              "students"
-            )
-            .update(
+            .rpc(
+              "update_my_student_profile",
               {
-                full_name:
+
+                p_full_name:
                   fullName,
 
-                phone:
+                p_phone:
                   phone
                   ||
                   null,
 
-                gender:
+                p_gender:
                   gender
                   ||
                   null,
 
-                preferred_area:
+                p_preferred_area:
                   area
                   ||
                   null,
 
-                preferred_ward:
+                p_preferred_ward:
                   ward
                   ||
                   null
+
               }
-            )
-            .eq(
-              "id",
-              Number(
-                studentId
-              )
-            )
-            .select(`
-              id,
-              student_code,
-              full_name,
-              phone,
-              email,
-              gender,
-              preferred_area,
-              preferred_ward,
-              status
-            `);
+            );
 
 
         if (
@@ -1198,29 +1690,24 @@ function buildStudentProfileEditor() {
         }
 
 
-        const updated =
-          Array.isArray(
-            updatedRows
-          )
-            ?
-            updatedRows[0]
-            :
-            updatedRows;
-
-
         if (
           !updated
         ) {
 
           throw new Error(
-            "Hệ thống chưa cho phép Học viên tự cập nhật hồ sơ."
+            "Không nhận được hồ sơ sau khi cập nhật."
           );
 
         }
 
 
-        currentStudent =
-          updated;
+        currentStudent = {
+
+          ...currentStudent,
+
+          ...updated
+
+        };
 
 
         renderStudentProfile();
@@ -1276,6 +1763,14 @@ function buildStudentProfileEditor() {
 
         cancelBtn.disabled =
           false;
+
+
+        areaSelect.disabled =
+          false;
+
+
+        wardSelect.disabled =
+          !areaSelect.value;
 
 
         saveBtn.textContent =
