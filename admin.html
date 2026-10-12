@@ -593,73 +593,111 @@ document.addEventListener(
       );
 
 
-    async function loadSupportUnread() {
+async function loadSupportUnread() {
 
-      try {
+  try {
 
-        const {
-          data,
-          error
-        } =
-          await supportSb.rpc(
-            "support_admin_get_unread_count"
-          );
+    /* ==============================================
+       BẢO ĐẢM CLIENT ĐÃ NHẬN SESSION ADMIN
+    ============================================== */
 
-
-        if (
-          error
-        ) {
-          throw error;
-        }
+    const {
+      data: authData,
+      error: authError
+    } =
+      await supportSb.auth
+        .getSession();
 
 
-        const count =
-          Math.max(
-            0,
-            Number(
-              data || 0
-            )
-          );
+    if (
+      authError
+    ) {
+
+      throw authError;
+
+    }
 
 
-        countEl.textContent =
-          count > 99
-            ?
-            "99+"
-            :
-            String(
-              count
-            );
+    if (
+      !authData?.session
+    ) {
+
+      throw new Error(
+        "Chưa có phiên đăng nhập Admin."
+      );
+
+    }
 
 
-        countEl.style.background =
-          count > 0
-            ?
-            "#ff8e8e"
-            :
-            "#b9ff18";
+    /* ==============================================
+       LẤY SỐ TIN SUPPORT CHƯA ĐỌC
+    ============================================== */
 
-      }
-      catch (
-        error
-      ) {
+    const {
+      data,
+      error
+    } =
+      await supportSb.rpc(
+        "support_admin_get_unread_count"
+      );
 
-        console.warn(
-          "Support unread count:",
-          error
+
+    if (
+      error
+    ) {
+
+      throw error;
+
+    }
+
+
+    const count =
+      Math.max(
+        0,
+        Number(
+          data || 0
+        )
+      );
+
+
+    countEl.textContent =
+      count > 99
+        ?
+        "99+"
+        :
+        String(
+          count
         );
 
 
-        countEl.textContent =
-          "!";
+    countEl.style.background =
+      count > 0
+        ?
+        "#ff8e8e"
+        :
+        "#b9ff18";
+
+  }
+  catch (
+    error
+  ) {
+
+    console.warn(
+      "Support unread count:",
+      error
+    );
 
 
-        countEl.style.background =
-          "#ff8e8e";
+    countEl.textContent =
+      "!";
 
-      }
 
-    }
+    countEl.style.background =
+      "#ff8e8e";
+
+  }
+
+}
 
 
     loadSupportUnread();
