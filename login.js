@@ -344,6 +344,10 @@ async function redirectAfterLogin(
     getNextPath();
 
 
+  /*
+    Đọc quyền Shop.
+  */
+
   const shopAccess =
     await getShopAccess(
       userId
@@ -351,8 +355,9 @@ async function redirectAfterLogin(
 
 
   /*
-    Nếu người dùng có quyền Shop
-    và link đang yêu cầu vào Shop Admin.
+    Nếu người dùng CHỦ ĐỘNG đi từ luồng Shop
+    với ?next=/shop-admin
+    thì ưu tiên Shop.
   */
 
   if (
@@ -394,7 +399,7 @@ async function redirectAfterLogin(
 
 
   /*
-    Giữ nguyên luồng Coach Opportunity hiện tại.
+    Giữ nguyên luồng Coach Opportunity.
   */
 
   if (
@@ -416,26 +421,9 @@ async function redirectAfterLogin(
 
 
   /*
-    Nếu có quyền Shop thì ưu tiên vào Shop Admin.
-  */
-
-  if (
-    shopAccess.hasShopAccess
-  ) {
-
-    window.location.replace(
-      "/shop-admin"
-    );
-
-
-    return;
-
-  }
-
-
-  /*
-    Không có Shop role:
-    tiếp tục phân quyền Academy/System.
+    Nếu không đọc được profile Academy,
+    nhưng tài khoản vẫn có quyền Shop,
+    thì vẫn cho vào Shop Admin.
   */
 
   if (
@@ -443,6 +431,20 @@ async function redirectAfterLogin(
     ||
     !profile
   ) {
+
+    if (
+      shopAccess.hasShopAccess
+    ) {
+
+      window.location.replace(
+        "/shop-admin"
+      );
+
+
+      return;
+
+    }
+
 
     const accountType =
       String(
@@ -474,6 +476,11 @@ async function redirectAfterLogin(
 
   }
 
+
+  /*
+    ƯU TIÊN ROLE ACADEMY
+    khi đăng nhập từ cổng Academy.
+  */
 
   if (
     profileRole === "admin"
@@ -513,6 +520,26 @@ async function redirectAfterLogin(
 
     window.location.replace(
       "/student"
+    );
+
+
+    return;
+
+  }
+
+
+  /*
+    Nếu không thuộc role Academy
+    nhưng có quyền Shop
+    thì mới fallback sang Shop Admin.
+  */
+
+  if (
+    shopAccess.hasShopAccess
+  ) {
+
+    window.location.replace(
+      "/shop-admin"
     );
 
 
