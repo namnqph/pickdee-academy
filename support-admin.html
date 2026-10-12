@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#041733"
+  >
+
+  <title>Hỗ trợ | PickDee</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(
+          145deg,
+          #041733,
+          #062456 55%,
+          #03142d
+        );
+    }
+
+
+    button,
+    textarea {
+      font-family: inherit;
+    }
+
+
+    .topbar {
+      min-height: 64px;
+
+      padding:
+        11px 18px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.10);
+
+      background:
+        rgba(3,18,40,.94);
+
+      position: sticky;
+      top: 0;
+
+      z-index: 100;
+    }
+
+
+    .brand {
+      font-size: 18px;
+      font-weight: 900;
+
+      color: #ffffff;
+
+      text-decoration: none;
+    }
+
+
+    .brand span {
+      color: #d8ff45;
+    }
+
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+    }
+
+
+    .top-link {
+      min-height: 38px;
+
+      padding:
+        0 11px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+
+      border-radius: 10px;
+
+      color: #ffffff;
+
+      background:
+        rgba(255,255,255,.06);
+
+      text-decoration: none;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+
+    .page {
+      width:
+        min(
+          1380px,
+          calc(100% - 24px)
+        );
+
+      margin:
+        18px auto 32px;
+    }
+
+
+    .page-head {
+      margin-bottom: 15px;
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
+      gap: 15px;
+    }
+
+
+    .eyebrow {
+      margin-bottom: 5px;
+
+      color: #d8ff45;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+
+    h1 {
+      margin: 0;
+
+      font-size:
+        clamp(
+          27px,
+          5vw,
+          40px
+        );
+    }
+
+
+    .head-sub {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+    }
+
+
+    .summary {
+      min-width: 116px;
+
+      padding:
+        10px 13px;
+
+      border:
+        1px solid
+        rgba(216,255,69,.22);
+
+      border-radius: 12px;
+
+      background:
+        rgba(216,255,69,.07);
+
+      text-align: right;
+    }
+
+
+    .summary-label {
+      color:
+        rgba(255,255,255,.48);
+
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+
+    #unreadTotal {
+      margin-top: 2px;
+
+      color: #d8ff45;
+
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+
+    .layout {
+      display: grid;
+
+      grid-template-columns:
+        360px 1fr;
+
+      gap: 14px;
+
+      min-height:
+        calc(
+          100vh
+          - 160px
+        );
+    }
+
+
+    .panel {
+      overflow: hidden;
+
+      border:
+        1px solid
+        rgba(255,255,255,.11);
+
+      border-radius: 18px;
+
+      background:
+        rgba(6,39,88,.72);
+    }
+
+
+    .list-panel {
+      min-height: 620px;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .list-head {
+      padding:
+        15px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.09);
+    }
+
+
+    .list-title {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+
+    .list-sub {
+      margin-top: 4px;
+
+      color:
+        rgba(255,255,255,.47);
+
+      font-size: 10px;
+    }
+
+
+    #conversationList {
+      min-height: 0;
+      flex: 1;
+
+      overflow-y: auto;
+    }
+
+
+    .conversation-item {
+      width: 100%;
+
+      padding:
+        14px 15px;
+
+      display: block;
+
+      border: 0;
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.07);
+
+      background:
+        transparent;
+
+      color: #ffffff;
+
+      text-align: left;
+
+      cursor: pointer;
+    }
+
+
+    .conversation-item:hover {
+      background:
+        rgba(255,255,255,.04);
+    }
+
+
+    .conversation-item.active {
+      background:
+        rgba(216,255,69,.09);
+
+      border-left:
+        3px solid #d8ff45;
+    }
+
+
+    .conversation-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 8px;
+    }
+
+
+    .conversation-name {
+      min-width: 0;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+
+    .conversation-badge {
+      min-width: 22px;
+      height: 22px;
+
+      padding:
+        0 6px;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 999px;
+
+      background: #ff5959;
+      color: #ffffff;
+
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+
+    .conversation-badge.show {
+      display: inline-flex;
+    }
+
+
+    .conversation-meta {
+      margin-top: 5px;
+
+      color: #d8ff45;
+
+      font-size: 9px;
+      font-weight: 800;
+
+      text-transform: uppercase;
+    }
+
+
+    .conversation-preview {
+      margin-top: 6px;
+
+      overflow: hidden;
+
+      display:
+        -webkit-box;
+
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+
+      color:
+        rgba(255,255,255,.57);
+
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+
+    .conversation-time {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.30);
+
+      font-size: 9px;
+    }
+
+
+    .empty-list {
+      padding: 30px 18px;
+
+      color:
+        rgba(255,255,255,.45);
+
+      text-align: center;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+
+    .chat-panel {
+      min-height: 620px;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .empty-chat {
+      min-height: 620px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 30px;
+
+      color:
+        rgba(255,255,255,.42);
+
+      text-align: center;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+
+    #chatContent {
+      min-height: 0;
+      flex: 1;
+
+      display: none;
+      flex-direction: column;
+    }
+
+
+    .chat-head {
+      padding:
+        14px 16px;
+
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(3,20,45,.55);
+    }
+
+
+    #chatName {
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+
+    #chatMeta {
+      margin-top: 5px;
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+
+    .status-actions {
+      display: flex;
+      align-items: center;
+
+      gap: 6px;
+
+      flex-wrap: wrap;
+
+      justify-content: flex-end;
+    }
+
+
+    .status-btn {
+      min-height: 34px;
+
+      padding:
+        0 9px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+
+      border-radius: 9px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: #ffffff;
+
+      cursor: pointer;
+
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+
+    .status-btn.active {
+      border-color:
+        rgba(216,255,69,.40);
+
+      color: #d8ff45;
+
+      background:
+        rgba(216,255,69,.08);
+    }
+
+
+    .status-btn.close {
+      color: #ffaaaa;
+    }
+
+
+    #messages {
+      min-height: 0;
+      flex: 1;
+
+      padding:
+        18px;
+
+      overflow-y: auto;
+    }
+
+
+    .message-row {
+      display: flex;
+
+      margin-bottom: 12px;
+    }
+
+
+    .message-row.user {
+      justify-content: flex-start;
+    }
+
+
+    .message-row.support {
+      justify-content: flex-end;
+    }
+
+
+    .message-bubble {
+      max-width: 75%;
+
+      padding:
+        10px 12px;
+
+      border-radius: 14px;
+
+      font-size: 13px;
+      line-height: 1.45;
+
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+
+    .message-row.user
+    .message-bubble {
+      background:
+        rgba(255,255,255,.09);
+
+      border:
+        1px solid
+        rgba(255,255,255,.08);
+
+      border-bottom-left-radius: 4px;
+    }
+
+
+    .message-row.support
+    .message-bubble {
+      background: #d8ff45;
+      color: #132300;
+
+      border-bottom-right-radius: 4px;
+    }
+
+
+    .message-time {
+      margin-top: 5px;
+
+      opacity: .50;
+
+      font-size: 9px;
+    }
+
+
+    .composer {
+      padding:
+        11px;
+
+      display: flex;
+      align-items: flex-end;
+
+      gap: 8px;
+
+      border-top:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(3,18,40,.72);
+    }
+
+
+    #replyInput {
+      min-width: 0;
+      flex: 1;
+
+      min-height: 46px;
+      max-height: 120px;
+
+      padding:
+        11px 12px;
+
+      resize: none;
+
+      outline: none;
+
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      color: #ffffff;
+
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+
+    #replyInput:focus {
+      border-color:
+        rgba(216,255,69,.48);
+    }
+
+
+    #sendReply {
+      min-width: 74px;
+      height: 46px;
+
+      border: 0;
+      border-radius: 12px;
+
+      background: #d8ff45;
+      color: #122300;
+
+      cursor: pointer;
+
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+
+    #sendReply:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+
+    #pageMessage {
+      margin-bottom: 10px;
+
+      display: none;
+
+      padding:
+        10px 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,90,90,.10);
+
+      border:
+        1px solid
+        rgba(255,90,90,.15);
+
+      color: #ffb2b2;
+
+      font-size: 11px;
+    }
+
+
+    @media(max-width:800px) {
+
+      .page {
+        width:
+          calc(100% - 16px);
+
+        margin-top: 10px;
+      }
+
+
+      .page-head {
+        align-items: flex-start;
+      }
+
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+
+      .list-panel {
+        min-height: 300px;
+        max-height: 380px;
+      }
+
+
+      .chat-panel,
+      .empty-chat {
+        min-height: 520px;
+      }
+
+
+      .message-bubble {
+        max-width: 86%;
+      }
+
+
+      .top-link span {
+        display: none;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <header class="topbar">
+
+    <a
+      class="brand"
+      href="/admin"
+    >
+      PickDee
+      <span>Support</span>
+    </a>
+
+
+    <div class="top-actions">
+
+      <a
+        href="/"
+        class="top-link"
+      >
+        🏠 <span>TRANG TỔNG</span>
+      </a>
+
+
+      <a
+        href="/admin"
+        class="top-link"
+      >
+        🎓 <span>ACADEMY</span>
+      </a>
+
+
+      <a
+        href="/shop-admin"
+        class="top-link"
+      >
+        🛍 <span>SHOP</span>
+      </a>
+
+    </div>
+
+  </header>
+
+
+  <main class="page">
+
+
+    <div class="page-head">
+
+      <div>
+
+        <div class="eyebrow">
+          PICKDEE SUPPORT
+        </div>
+
+        <h1>
+          Hộp thư hỗ trợ
+        </h1>
+
+        <div class="head-sub">
+          Tin nhắn từ Học viên, Coach và khách Shop.
+        </div>
+
+      </div>
+
+
+      <div class="summary">
+
+        <div class="summary-label">
+          CHƯA ĐỌC
+        </div>
+
+        <div id="unreadTotal">
+          0
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div id="pageMessage"></div>
+
+
+    <section class="layout">
+
+
+      <div class="panel list-panel">
+
+        <div class="list-head">
+
+          <div class="list-title">
+            Cuộc trò chuyện
+          </div>
+
+          <div
+            id="conversationCount"
+            class="list-sub"
+          >
+            Đang tải...
+          </div>
+
+        </div>
+
+
+        <div id="conversationList">
+
+          <div class="empty-list">
+            Đang tải tin nhắn...
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel chat-panel">
+
+
+        <div
+          id="emptyChat"
+          class="empty-chat"
+        >
+          Chọn một cuộc trò chuyện bên trái để bắt đầu hỗ trợ.
+        </div>
+
+
+        <div id="chatContent">
+
+
+          <div class="chat-head">
+
+            <div>
+
+              <div id="chatName">
+                —
+              </div>
+
+              <div id="chatMeta">
+                —
+              </div>
+
+            </div>
+
+
+            <div class="status-actions">
+
+              <button
+                id="openStatusBtn"
+                class="status-btn"
+                type="button"
+              >
+                ĐANG HỖ TRỢ
+              </button>
+
+              <button
+                id="closeStatusBtn"
+                class="status-btn close"
+                type="button"
+              >
+                ĐÓNG CHAT
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div id="messages"></div>
+
+
+          <div class="composer">
+
+            <textarea
+              id="replyInput"
+              rows="1"
+              maxlength="4000"
+              placeholder="Nhập câu trả lời..."
+            ></textarea>
+
+            <button
+              id="sendReply"
+              type="button"
+            >
+              GỬI
+            </button>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+    </section>
+
+
+  </main>
+
+
+<script>
+
+(async function () {
+
+  "use strict";
+
+
+  /* =====================================================
+     SUPABASE
+  ====================================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    alert(
+      "Thiếu cấu hình Supabase."
+    );
+
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let conversations =
+    [];
+
+
+  let currentConversation =
+    null;
+
+
+  let listTimer =
+    null;
+
+
+  let messageTimer =
+    null;
+
+
+  let sending =
+    false;
+
+
+  let lastMessageSignature =
+    "";
+
+
+  const listEl =
+    document.getElementById(
+      "conversationList"
+    );
+
+
+  const countEl =
+    document.getElementById(
+      "conversationCount"
+    );
+
+
+  const unreadEl =
+    document.getElementById(
+      "unreadTotal"
+    );
+
+
+  const emptyChat =
+    document.getElementById(
+      "emptyChat"
+    );
+
+
+  const chatContent =
+    document.getElementById(
+      "chatContent"
+    );
+
+
+  const chatName =
+    document.getElementById(
+      "chatName"
+    );
+
+
+  const chatMeta =
+    document.getElementById(
+      "chatMeta"
+    );
+
+
+  const messagesEl =
+    document.getElementById(
+      "messages"
+    );
+
+
+  const replyInput =
+    document.getElementById(
+      "replyInput"
+    );
+
+
+  const sendReply =
+    document.getElementById(
+      "sendReply"
+    );
+
+
+  const openStatusBtn =
+    document.getElementById(
+      "openStatusBtn"
+    );
+
+
+  const closeStatusBtn =
+    document.getElementById(
+      "closeStatusBtn"
+    );
+
+
+  const pageMessage =
+    document.getElementById(
+      "pageMessage"
+    );
+
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        "\"",
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function showPageError(
+    text
+  ) {
+
+    pageMessage.textContent =
+      text || "";
+
+
+    pageMessage.style.display =
+      text
+        ?
+        "block"
+        :
+        "none";
+
+  }
+
+
+  function formatDateTime(
+    value
+  ) {
+
+    if (
+      !value
+    ) {
+
+      return "—";
+
+    }
+
+
+    const date =
+      new Date(
+        value
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return "—";
+
+    }
+
+
+    return new Intl.DateTimeFormat(
+      "vi-VN",
+      {
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        month:
+          "2-digit",
+
+        year:
+          "numeric"
+
+      }
+    ).format(
+      date
+    );
+
+  }
+
+
+  function roleLabel(
+    value
+  ) {
+
+    const role =
+      String(
+        value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      role === "coach"
+    ) {
+
+      return "COACH";
+
+    }
+
+
+    if (
+      role === "student"
+      ||
+      role === "hocvien"
+      ||
+      role === "học viên"
+    ) {
+
+      return "HỌC VIÊN";
+
+    }
+
+
+    if (
+      role === "admin"
+    ) {
+
+      return "ADMIN";
+
+    }
+
+
+    if (
+      role === "guest"
+      ||
+      !role
+    ) {
+
+      return "KHÁCH";
+
+    }
+
+
+    return role.toUpperCase();
+
+  }
+
+
+  function sourceLabel(
+    value
+  ) {
+
+    const source =
+      String(
+        value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      source ===
+      "shop"
+    ) {
+
+      return "SHOP";
+
+    }
+
+
+    if (
+      source ===
+      "academy_coach"
+    ) {
+
+      return "ACADEMY · COACH";
+
+    }
+
+
+    if (
+      source ===
+      "academy_student"
+    ) {
+
+      return "ACADEMY · HỌC VIÊN";
+
+    }
+
+
+    if (
+      source ===
+      "academy"
+    ) {
+
+      return "ACADEMY";
+
+    }
+
+
+    if (
+      source ===
+      "homepage"
+    ) {
+
+      return "TRANG TỔNG";
+
+    }
+
+
+    return (
+      source.toUpperCase()
+      ||
+      "WEB"
+    );
+
+  }
+
+
+  function statusLabel(
+    value
+  ) {
+
+    switch (
+      value
+    ) {
+
+      case "new":
+        return "MỚI";
+
+      case "open":
+        return "ĐANG HỖ TRỢ";
+
+      case "answered":
+        return "ĐÃ TRẢ LỜI";
+
+      case "closed":
+        return "ĐÃ ĐÓNG";
+
+      default:
+        return value || "—";
+
+    }
+
+  }
+
+
+  function scrollMessages() {
+
+    requestAnimationFrame(
+      function () {
+
+        messagesEl.scrollTop =
+          messagesEl.scrollHeight;
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     AUTH GUARD
+  ====================================================== */
+
+  async function guard() {
+
+    const {
+      data: {
+        session
+      },
+      error
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      error
+      ||
+      !session
+    ) {
+
+      window.location.replace(
+        "/academy.html"
+      );
+
+
+      return false;
+
+    }
+
+
+    const {
+      data: allowed,
+      error: permissionError
+    } =
+      await sb.rpc(
+        "pickdee_is_support_admin"
+      );
+
+
+    if (
+      permissionError
+    ) {
+
+      console.error(
+        permissionError
+      );
+
+
+      showPageError(
+        "Không kiểm tra được quyền hỗ trợ."
+      );
+
+
+      return false;
+
+    }
+
+
+    if (
+      allowed !== true
+    ) {
+
+      window.location.replace(
+        "/"
+      );
+
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* =====================================================
+     LOAD CONVERSATIONS
+  ====================================================== */
+
+  async function loadConversations(
+    keepCurrent = true
+  ) {
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "support_conversations"
+        )
+        .select(`
+          id,
+          public_token,
+          user_id,
+          display_name,
+          contact_phone,
+          contact_email,
+          user_role,
+          source,
+          context_url,
+          order_ref,
+          status,
+          last_message,
+          last_message_at,
+          unread_support,
+          unread_user,
+          created_at
+        `)
+        .order(
+          "last_message_at",
+          {
+            ascending:
+              false,
+            nullsFirst:
+              false
+          }
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false
+          }
+        );
+
+
+    if (
+      error
+    ) {
+
+      throw error;
+
+    }
+
+
+    conversations =
+      data || [];
+
+
+    renderConversationList();
+
+
+    if (
+      keepCurrent
+      &&
+      currentConversation
+    ) {
+
+      const fresh =
+        conversations.find(
+          item =>
+            item.id ===
+            currentConversation.id
+        );
+
+
+      if (
+        fresh
+      ) {
+
+        currentConversation =
+          fresh;
+
+
+        renderChatHeader();
+
+      }
+
+    }
+
+  }
+
+
+  /* =====================================================
+     RENDER LIST
+  ====================================================== */
+
+  function renderConversationList() {
+
+    const unreadTotal =
+      conversations.reduce(
+        (
+          total,
+          item
+        ) =>
+          total
+          +
+          Number(
+            item.unread_support
+            ||
+            0
+          ),
+        0
+      );
+
+
+    unreadEl.textContent =
+      unreadTotal;
+
+
+    countEl.textContent =
+      `${conversations.length} cuộc trò chuyện`;
+
+
+    if (
+      conversations.length === 0
+    ) {
+
+      listEl.innerHTML = `
+
+        <div class="empty-list">
+
+          Chưa có tin nhắn hỗ trợ.
+
+        </div>
+
+      `;
+
+
+      return;
+
+    }
+
+
+    listEl.innerHTML =
+      conversations
+        .map(
+          item => {
+
+            const unread =
+              Number(
+                item.unread_support
+                ||
+                0
+              );
+
+
+            const active =
+              currentConversation
+              &&
+              currentConversation.id
+              ===
+              item.id;
+
+
+            return `
+
+              <button
+                type="button"
+                class="conversation-item ${
+                  active
+                    ?
+                    "active"
+                    :
+                    ""
+                }"
+                data-id="${
+                  escapeHtml(
+                    item.id
+                  )
+                }"
+              >
+
+                <div class="conversation-top">
+
+                  <div class="conversation-name">
+
+                    ${
+                      escapeHtml(
+                        item.display_name
+                        ||
+                        item.contact_email
+                        ||
+                        "Khách PickDee"
+                      )
+                    }
+
+                  </div>
+
+
+                  <span
+                    class="conversation-badge ${
+                      unread > 0
+                        ?
+                        "show"
+                        :
+                        ""
+                    }"
+                  >
+                    ${unread}
+                  </span>
+
+                </div>
+
+
+                <div class="conversation-meta">
+
+                  ${
+                    escapeHtml(
+                      roleLabel(
+                        item.user_role
+                      )
+                    )
+                  }
+
+                  ·
+
+                  ${
+                    escapeHtml(
+                      sourceLabel(
+                        item.source
+                      )
+                    )
+                  }
+
+                  ·
+
+                  ${
+                    escapeHtml(
+                      statusLabel(
+                        item.status
+                      )
+                    )
+                  }
+
+                </div>
+
+
+                <div class="conversation-preview">
+
+                  ${
+                    escapeHtml(
+                      item.last_message
+                      ||
+                      "Chưa có nội dung."
+                    )
+                  }
+
+                </div>
+
+
+                <div class="conversation-time">
+
+                  ${
+                    escapeHtml(
+                      formatDateTime(
+                        item.last_message_at
+                        ||
+                        item.created_at
+                      )
+                    )
+                  }
+
+                </div>
+
+              </button>
+
+            `;
+
+          }
+        )
+        .join(
+          ""
+        );
+
+
+    listEl
+      .querySelectorAll(
+        ".conversation-item"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              openConversation(
+                button.dataset.id
+              );
+
+            }
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     CHAT HEADER
+  ====================================================== */
+
+  function renderChatHeader() {
+
+    if (
+      !currentConversation
+    ) {
+
+      return;
+
+    }
+
+
+    chatName.textContent =
+      currentConversation.display_name
+      ||
+      currentConversation.contact_email
+      ||
+      "Khách PickDee";
+
+
+    const metaParts =
+      [
+        roleLabel(
+          currentConversation.user_role
+        ),
+
+        sourceLabel(
+          currentConversation.source
+        )
+      ];
+
+
+    if (
+      currentConversation.contact_phone
+    ) {
+
+      metaParts.push(
+        currentConversation.contact_phone
+      );
+
+    }
+
+
+    if (
+      currentConversation.contact_email
+    ) {
+
+      metaParts.push(
+        currentConversation.contact_email
+      );
+
+    }
+
+
+    if (
+      currentConversation.order_ref
+    ) {
+
+      metaParts.push(
+        "Đơn "
+        +
+        currentConversation.order_ref
+      );
+
+    }
+
+
+    metaParts.push(
+      statusLabel(
+        currentConversation.status
+      )
+    );
+
+
+    chatMeta.textContent =
+      metaParts.join(
+        " · "
+      );
+
+
+    openStatusBtn.classList.toggle(
+      "active",
+      currentConversation.status
+      !==
+      "closed"
+    );
+
+
+    closeStatusBtn.classList.toggle(
+      "active",
+      currentConversation.status
+      ===
+      "closed"
+    );
+
+
+    const isClosed =
+      currentConversation.status
+      ===
+      "closed";
+
+
+    replyInput.disabled =
+      isClosed;
+
+
+    sendReply.disabled =
+      isClosed;
+
+
+    replyInput.placeholder =
+      isClosed
+        ?
+        "Cuộc trò chuyện đã đóng."
+        :
+        "Nhập câu trả lời...";
+
+  }
+
+
+  /* =====================================================
+     OPEN CONVERSATION
+  ====================================================== */
+
+  async function openConversation(
+    id
+  ) {
+
+    const found =
+      conversations.find(
+        item =>
+          item.id === id
+      );
+
+
+    if (
+      !found
+    ) {
+
+      return;
+
+    }
+
+
+    currentConversation =
+      found;
+
+
+    renderConversationList();
+
+
+    renderChatHeader();
+
+
+    emptyChat.style.display =
+      "none";
+
+
+    chatContent.style.display =
+      "flex";
+
+
+    showPageError(
+      ""
+    );
+
+
+    try {
+
+      await sb.rpc(
+        "support_admin_mark_read",
+        {
+          p_conversation_id:
+            currentConversation.id
+        }
+      );
+
+
+      await loadMessages();
+
+
+      await loadConversations(
+        true
+      );
+
+
+      replyInput.focus();
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        error
+      );
+
+
+      showPageError(
+        "Không mở được cuộc trò chuyện: "
+        +
+        (
+          error?.message
+          ||
+          error
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOAD MESSAGES
+  ====================================================== */
+
+  async function loadMessages() {
+
+    if (
+      !currentConversation?.id
+    ) {
+
+      return;
+
+    }
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "support_get_messages",
+        {
+
+          p_conversation_id:
+            currentConversation.id,
+
+          p_public_token:
+            null
+
+        }
+      );
+
+
+    if (
+      error
+    ) {
+
+      throw error;
+
+    }
+
+
+    const rows =
+      Array.isArray(
+        data?.messages
+      )
+        ?
+        data.messages
+        :
+        [];
+
+
+    const signature =
+      rows
+        .map(
+          item =>
+            [
+              item.id,
+              item.sender_type,
+              item.created_at,
+              item.message
+            ].join(
+              "|"
+            )
+        )
+        .join(
+          "||"
+        );
+
+
+    if (
+      signature ===
+      lastMessageSignature
+    ) {
+
+      return;
+
+    }
+
+
+    lastMessageSignature =
+      signature;
+
+
+    if (
+      rows.length === 0
+    ) {
+
+      messagesEl.innerHTML = `
+
+        <div class="empty-list">
+
+          Chưa có tin nhắn.
+
+        </div>
+
+      `;
+
+
+      return;
+
+    }
+
+
+    messagesEl.innerHTML =
+      rows
+        .map(
+          item => `
+
+            <div
+              class="message-row ${
+                item.sender_type
+                ===
+                "support"
+                  ?
+                  "support"
+                  :
+                  "user"
+              }"
+            >
+
+              <div class="message-bubble">
+
+                <div>
+                  ${
+                    escapeHtml(
+                      item.message
+                      ||
+                      ""
+                    )
+                  }
+                </div>
+
+                <div class="message-time">
+
+                  ${
+                    item.sender_type
+                    ===
+                    "support"
+                      ?
+                      "PickDee · "
+                      :
+                      ""
+                  }
+
+                  ${
+                    escapeHtml(
+                      formatDateTime(
+                        item.created_at
+                      )
+                    )
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+          `
+        )
+        .join(
+          ""
+        );
+
+
+    scrollMessages();
+
+  }
+
+
+  /* =====================================================
+     SEND REPLY
+  ====================================================== */
+
+  async function sendMessage() {
+
+    if (
+      sending
+      ||
+      !currentConversation?.id
+    ) {
+
+      return;
+
+    }
+
+
+    const message =
+      replyInput
+        .value
+        .trim();
+
+
+    if (
+      !message
+    ) {
+
+      return;
+
+    }
+
+
+    sending =
+      true;
+
+
+    sendReply.disabled =
+      true;
+
+
+    showPageError(
+      ""
+    );
+
+
+    try {
+
+      const {
+        error
+      } =
+        await sb.rpc(
+          "support_send_message",
+          {
+
+            p_conversation_id:
+              currentConversation.id,
+
+            p_public_token:
+              null,
+
+            p_message:
+              message
+
+          }
+        );
+
+
+      if (
+        error
+      ) {
+
+        throw error;
+
+      }
+
+
+      replyInput.value =
+        "";
+
+
+      replyInput.style.height =
+        "auto";
+
+
+      lastMessageSignature =
+        "";
+
+
+      await loadMessages();
+
+
+      await loadConversations(
+        true
+      );
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        error
+      );
+
+
+      showPageError(
+        "Không gửi được tin nhắn: "
+        +
+        (
+          error?.message
+          ||
+          error
+        )
+      );
+
+    }
+    finally {
+
+      sending =
+        false;
+
+
+      sendReply.disabled =
+        currentConversation?.status
+        ===
+        "closed";
+
+
+      replyInput.focus();
+
+    }
+
+  }
+
+
+  /* =====================================================
+     STATUS
+  ====================================================== */
+
+  async function setStatus(
+    status
+  ) {
+
+    if (
+      !currentConversation?.id
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const {
+        error
+      } =
+        await sb.rpc(
+          "support_admin_set_status",
+          {
+
+            p_conversation_id:
+              currentConversation.id,
+
+            p_status:
+              status
+
+          }
+        );
+
+
+      if (
+        error
+      ) {
+
+        throw error;
+
+      }
+
+
+      currentConversation.status =
+        status;
+
+
+      renderChatHeader();
+
+
+      await loadConversations(
+        true
+      );
+
+    }
+    catch (
+      error
+    ) {
+
+      console.error(
+        error
+      );
+
+
+      showPageError(
+        "Không đổi được trạng thái: "
+        +
+        (
+          error?.message
+          ||
+          error
+        )
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     EVENTS
+  ====================================================== */
+
+  sendReply.addEventListener(
+    "click",
+    sendMessage
+  );
+
+
+  replyInput.addEventListener(
+    "keydown",
+    function (
+      event
+    ) {
+
+      if (
+        event.key ===
+        "Enter"
+        &&
+        !event.shiftKey
+      ) {
+
+        event.preventDefault();
+
+
+        sendMessage();
+
+      }
+
+    }
+  );
+
+
+  replyInput.addEventListener(
+    "input",
+    function () {
+
+      replyInput.style.height =
+        "auto";
+
+
+      replyInput.style.height =
+        Math.min(
+          replyInput.scrollHeight,
+          120
+        )
+        +
+        "px";
+
+    }
+  );
+
+
+  openStatusBtn.addEventListener(
+    "click",
+    function () {
+
+      setStatus(
+        "open"
+      );
+
+    }
+  );
+
+
+  closeStatusBtn.addEventListener(
+    "click",
+    function () {
+
+      setStatus(
+        "closed"
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     POLLING
+  ====================================================== */
+
+  function startPolling() {
+
+    clearInterval(
+      listTimer
+    );
+
+
+    clearInterval(
+      messageTimer
+    );
+
+
+    listTimer =
+      setInterval(
+        async function () {
+
+          try {
+
+            await loadConversations(
+              true
+            );
+
+          }
+          catch (
+            error
+          ) {
+
+            console.warn(
+              "Support list polling:",
+              error
+            );
+
+          }
+
+        },
+        3000
+      );
+
+
+    messageTimer =
+      setInterval(
+        async function () {
+
+          if (
+            !currentConversation
+          ) {
+
+            return;
+
+          }
+
+
+          try {
+
+            await loadMessages();
+
+          }
+          catch (
+            error
+          ) {
+
+            console.warn(
+              "Support message polling:",
+              error
+            );
+
+          }
+
+        },
+        2500
+      );
+
+  }
+
+
+  /* =====================================================
+     START
+  ====================================================== */
+
+  try {
+
+    const allowed =
+      await guard();
+
+
+    if (
+      !allowed
+    ) {
+
+      return;
+
+    }
+
+
+    await loadConversations(
+      false
+    );
+
+
+    startPolling();
+
+
+    console.log(
+      "✓ PickDee Support Admin ready."
+    );
+
+  }
+  catch (
+    error
+  ) {
+
+    console.error(
+      error
+    );
+
+
+    showPageError(
+      "Không tải được Support Admin: "
+      +
+      (
+        error?.message
+        ||
+        error
+      )
+    );
+
+  }
+
+})();
+
+</script>
+
+
+</body>
+</html>
