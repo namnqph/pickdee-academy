@@ -896,7 +896,216 @@
       }
 
     }
+/* =====================================================
+   MESSENGER STYLE - PICKDEE SUPPORT
+===================================================== */
 
+#pickdeeSupportPanel {
+  width: min(
+    360px,
+    calc(100vw - 24px)
+  );
+
+  height: min(
+    520px,
+    calc(100vh - 105px)
+  );
+
+  bottom: 66px;
+
+  border-radius: 18px;
+}
+
+
+.pickdee-support-head {
+  min-height: 58px;
+
+  padding: 9px 11px;
+
+  gap: 9px;
+}
+
+
+.pickdee-support-logo {
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+
+  font-size: 17px;
+}
+
+
+.pickdee-support-title {
+  font-size: 14px;
+}
+
+
+.pickdee-support-subtitle {
+  margin-top: 2px;
+
+  font-size: 10px;
+}
+
+
+#pickdeeSupportClose {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  font-size: 17px;
+}
+
+
+#pickdeeSupportMessages {
+  padding: 12px 10px;
+}
+
+
+.pickdee-support-welcome {
+  margin:
+    2px 0 12px;
+
+  padding:
+    9px 11px;
+
+  border-radius: 12px;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+
+.pickdee-support-message-row {
+  margin-bottom: 7px;
+}
+
+
+.pickdee-support-message {
+  width: fit-content;
+  max-width: 78%;
+
+  padding: 8px 10px;
+
+  border-radius: 16px;
+
+  font-size: 13px;
+  line-height: 1.35;
+
+  white-space: normal;
+}
+
+
+.pickdee-support-message-row.user
+.pickdee-support-message {
+  border-bottom-right-radius: 5px;
+}
+
+
+.pickdee-support-message-row.support
+.pickdee-support-message {
+  border-bottom-left-radius: 5px;
+}
+
+
+.pickdee-support-time {
+  margin-top: 4px;
+
+  font-size: 8px;
+}
+
+
+#pickdeeSupportComposer {
+  padding: 8px;
+
+  gap: 7px;
+}
+
+
+#pickdeeSupportInput {
+  min-height: 40px;
+  max-height: 88px;
+
+  padding: 9px 11px;
+
+  border-radius: 18px;
+
+  font-size: 13px;
+}
+
+
+#pickdeeSupportSend {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  font-size: 16px;
+}
+
+
+#pickdeeSupportButton {
+  min-width: 52px;
+  width: 52px;
+  height: 52px;
+
+  padding: 0;
+
+  border-radius: 50%;
+}
+
+
+#pickdeeSupportButtonText {
+  display: none;
+}
+
+
+#pickdeeSupportButtonIcon {
+  font-size: 20px;
+}
+
+
+#pickdeeSupportGuest {
+  padding: 16px;
+}
+
+
+@media(max-width:700px) {
+
+  #pickdeeSupportPanel {
+    left: 8px;
+    right: 8px;
+
+    bottom:
+      max(
+        72px,
+        calc(
+          env(safe-area-inset-bottom)
+          + 62px
+        )
+      );
+
+    width: auto;
+
+    height:
+      min(
+        560px,
+        calc(
+          100dvh
+          - 90px
+        )
+      );
+
+    border-radius: 18px;
+  }
+
+
+  #pickdeeSupportRoot {
+    right: 12px;
+  }
+
+}
   `;
 
 
