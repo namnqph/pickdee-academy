@@ -3608,6 +3608,12 @@
             );
 
 
+          const productId =
+            Number(
+              item.product_id
+            );
+
+
           const [
             quoteResult,
             variantResult
@@ -3671,6 +3677,142 @@
             {};
 
 
+          const baseUnitPrice =
+            Number(
+              data?.unit_price
+              ??
+              item.price
+              ??
+              0
+            );
+
+
+          const baseSubtotal =
+            Number(
+              data?.subtotal
+              ??
+              (
+                baseUnitPrice
+                *
+                quantity
+              )
+            );
+
+
+          const retailPrice =
+            Number(
+              data?.retail_price
+              ??
+              item.retail_price
+              ??
+              item.price
+              ??
+              0
+            );
+
+
+          let promoQuote =
+            null;
+
+
+          if (
+            productId
+            &&
+            variantId
+          ) {
+
+            const {
+              data: promoData,
+              error: promoError
+            } =
+              await sb.rpc(
+                "shop_best_product_promotion_quote",
+                {
+
+                  p_product_id:
+                    productId,
+
+                  p_variant_id:
+                    variantId,
+
+                  p_unit_price:
+                    baseUnitPrice,
+
+                  p_quantity:
+                    quantity,
+
+                  p_order_amount:
+                    baseSubtotal
+
+                }
+              );
+
+
+            if (promoError) {
+              throw promoError;
+            }
+
+
+            promoQuote =
+              Array.isArray(
+                promoData
+              )
+              ?
+                (
+                  promoData[0]
+                  ||
+                  null
+                )
+              :
+                (
+                  promoData
+                  ||
+                  null
+                );
+
+          }
+
+
+          const hasPromotion =
+            promoQuote
+            &&
+            Number(
+              promoQuote.final_unit_price
+              ??
+              baseUnitPrice
+            )
+            <
+            baseUnitPrice;
+
+
+          const price =
+            hasPromotion
+            ?
+              Number(
+                promoQuote.final_unit_price
+              )
+            :
+              baseUnitPrice;
+
+
+          const originalPrice =
+            hasPromotion
+            ?
+              Number(
+                promoQuote.original_unit_price
+                ??
+                baseUnitPrice
+              )
+            :
+              Number(
+                item.original_price
+                ??
+                retailPrice
+                ??
+                baseUnitPrice
+              );
+
+
           return {
 
             ...item,
@@ -3679,24 +3821,50 @@
               quantity,
 
             price:
-              Number(
-                data?.unit_price
-                ??
-                item.price
-                ??
-                0
-              ),
+              price,
 
             retail_price:
-              Number(
-                data?.retail_price
-                ??
-                item.retail_price
-                ??
-                item.price
-                ??
-                0
-              ),
+              retailPrice,
+
+            original_price:
+              originalPrice,
+
+            promotion_id:
+              hasPromotion
+              ?
+                promoQuote.promotion_id
+              :
+                null,
+
+            promotion_name:
+              hasPromotion
+              ?
+                (
+                  promoQuote.promotion_name
+                  ||
+                  ""
+                )
+              :
+                "",
+
+            promotion_discount:
+              hasPromotion
+              ?
+                Number(
+                  promoQuote.total_discount
+                  ??
+                  (
+                    (
+                      originalPrice
+                      -
+                      price
+                    )
+                    *
+                    quantity
+                  )
+                )
+              :
+                0,
 
             pricing_type:
               data?.pricing_type
@@ -4930,7 +5098,21 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
         .map(
           function (item) {
 
+                     const hasPromotion =
+              item.promotion_id
+              &&
+              Number(
+                item.original_price || 0
+              )
+              >
+              Number(
+                item.price || 0
+              );
+
+
             const isWholesale =
+              !hasPromotion
+              &&
               item.pricing_type
               ===
               "wholesale"
@@ -4944,17 +5126,49 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
               );
 
 
-            const wholesaleText =
-              isWholesale
+            const priceNote =
+              hasPromotion
                 ?
                   `
-                    <div class="order-variant">
-                      GIÁ SỈ •
-                      ${money(item.price)}/sản phẩm
+                    <div
+                      class="order-variant"
+                      style="
+                        margin-top:4px;
+                        color:#d8ff45;
+                        line-height:1.45;
+                      "
+                    >
+                      🎁 ${escapeHtml(
+                        item.promotion_name
+                        ||
+                        "Khuyến mãi PickDee"
+                      )}
+                      <br>
+                      Giá gốc
+                      <s>
+                        ${money(
+                          item.original_price
+                        )}
+                      </s>
+                      • Giá sale
+                      ${money(
+                        item.price
+                      )}/sản phẩm
                     </div>
                   `
                 :
-                  "";
+                  (
+                    isWholesale
+                      ?
+                        `
+                          <div class="order-variant">
+                            GIÁ SỈ •
+                            ${money(item.price)}/sản phẩm
+                          </div>
+                        `
+                      :
+                        ""
+                  );
             const missingSelections =
               itemMissingRequiredSelections(
                 item
@@ -5030,8 +5244,7 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
                   }
 
                   ${missingSelectionsHtml}
-                  ${wholesaleText}
-
+                 ${priceNote}
 
                   <div class="order-qty">
                     Số lượng:
@@ -5512,7 +5725,7 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
       try {
 
 
-        const rpcItems =
+           const rpcItems =
           currentCart.map(
             function (item) {
 
@@ -5525,6 +5738,41 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
                 quantity:
                   Number(
                     item.quantity || 1
+                  ),
+
+                unit_price:
+                  Number(
+                    item.price || 0
+                  ),
+
+                original_unit_price:
+                  Number(
+                    item.original_price
+                    ||
+                    item.retail_price
+                    ||
+                    item.price
+                    ||
+                    0
+                  ),
+
+                promotion_id:
+                  item.promotion_id
+                  ?
+                    Number(
+                      item.promotion_id
+                    )
+                  :
+                    null,
+
+                promotion_name:
+                  item.promotion_name
+                  ||
+                  null,
+
+                promotion_discount:
+                  Number(
+                    item.promotion_discount || 0
                   )
               };
 
