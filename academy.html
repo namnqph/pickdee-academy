@@ -2002,181 +2002,256 @@
 
 
 
-  /* =====================================================
-     REDIRECT THEO ROLE
-  ====================================================== */
+ /* =====================================================
+   REDIRECT THEO ROLE
 
-  async function redirectByRole(
-    userId
+   NGUYÊN TẮC:
+   1. Ưu tiên role Academy nếu tài khoản có profile Academy
+   2. Chỉ fallback sang Shop nếu không có role Academy hợp lệ
+===================================================== */
+
+async function redirectByRole(
+  userId
+) {
+
+  /* =================================================
+     1. ĐỌC ROLE ACADEMY TRƯỚC
+  ================================================== */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        userId
+      )
+      .maybeSingle();
+
+
+  if (
+    profileError
   ) {
 
-
-    /* =================================================
-       ƯU TIÊN QUYỀN PICKDEE SHOP
-    ================================================== */
-
-    const {
-      data: shopRoles,
-      error: shopRoleError
-    } =
-      await sb
-        .from(
-          "shop_user_roles"
-        )
-        .select(
-          "role,is_active"
-        )
-        .eq(
-          "user_id",
-          userId
-        )
-        .eq(
-          "is_active",
-          true
-        )
-        .in(
-          "role",
-          [
-            "owner",
-            "shop_admin",
-            "shop_staff"
-          ]
-        );
-
-
-    if (shopRoleError) {
-
-      console.error(
-        "SHOP ROLE CHECK ERROR:",
-        shopRoleError
-      );
-
-    }
-
-
-    if (
-      Array.isArray(shopRoles)
-      &&
-      shopRoles.length > 0
-    ) {
-
-      window.location.href =
-        "./shop-admin";
-
-
-      return;
-
-    }
-
-
-    /* =================================================
-       SAU ĐÓ MỚI ĐI THEO ROLE ACADEMY
-    ================================================== */
-
-    const {
-      data: profile,
-      error
-    } =
-      await sb
-        .from("profiles")
-        .select("role")
-        .eq(
-          "id",
-          userId
-        )
-        .single();
-
-
-    if (error) {
-
-      console.error(
-        "PROFILE ERROR:",
-        error
-      );
-
-
-      throw new Error(
-        "Không xác định được quyền tài khoản."
-      );
-
-    }
-
-
-    const role =
-      String(
-        profile?.role || ""
-      )
-        .trim()
-        .toLowerCase();
-
-
-
-    /* =================================================
-       ADMIN
-    ================================================== */
-
-    if (
-      role === "admin"
-    ) {
-
-
-      window.location.href =
-        "./admin";
-
-
-      return;
-
-    }
-
-
-
-    /* =================================================
-       COACH
-    ================================================== */
-
-    if (
-      role === "coach"
-    ) {
-
-
-      window.location.href =
-        "./coach";
-
-
-      return;
-
-    }
-
-
-
-    /* =================================================
-       HỌC VIÊN
-    ================================================== */
-
-    if (
-      role === "student"
-      ||
-      role === "hocvien"
-      ||
-      role === "học viên"
-    ) {
-
-
-      window.location.href =
-        "./student";
-
-
-      return;
-
-    }
-
-
-    throw new Error(
-      "Tài khoản chưa được gán quyền sử dụng PickDee Academy."
+    console.warn(
+      "ACADEMY PROFILE ERROR:",
+      profileError
     );
 
   }
 
+
+  const role =
+    String(
+      profile?.role
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+
+  /* =================================================
+     ADMIN
+  ================================================== */
+
+  if (
+    role === "admin"
+  ) {
+
+    window.location.replace(
+      "./admin"
+    );
+
+
+    return;
+
+  }
+
+
+  /* =================================================
+     COACH
+  ================================================== */
+
+  if (
+    role === "coach"
+  ) {
+
+    window.location.replace(
+      "./coach"
+    );
+
+
+    return;
+
+  }
+
+
+  /* =================================================
+     HỌC VIÊN
+  ================================================== */
+
+  if (
+    role === "student"
+    ||
+    role === "hocvien"
+    ||
+    role === "học viên"
+  ) {
+
+    window.location.replace(
+      "./student"
+    );
+
+
+    return;
+
+  }
+
+
+  /* =================================================
+     2. KHÔNG CÓ ROLE ACADEMY
+        THÌ MỚI KIỂM TRA QUYỀN SHOP
+  ================================================== */
+
+  const {
+    data: shopRoles,
+    error: shopRoleError
+  } =
+    await sb
+      .from(
+        "shop_user_roles"
+      )
+      .select(
+        "role,is_active"
+      )
+      .eq(
+        "user_id",
+        userId
+      )
+      .eq(
+        "is_active",
+        true
+      )
+      .in(
+        "role",
+        [
+          "owner",
+          "shop_admin",
+          "shop_staff"
+        ]
+      );
+
+
+  if (
+    shopRoleError
+  ) {
+
+    console.warn(
+      "SHOP ROLE CHECK ERROR:",
+      shopRoleError
+    );
+
+  }
+
+
+  if (
+    Array.isArray(
+      shopRoles
+    )
+    &&
+    shopRoles.length > 0
+  ) {
+
+    window.location.replace(
+      "./shop-admin"
+    );
+
+
+    return;
+
+  }
+
+
+  throw new Error(
+    "Tài khoản chưa được gán quyền sử dụng PickDee."
+  );
+
+}
+
+
+/* =====================================================
+   NẾU ĐÃ CÓ SESSION
+   → TỰ ĐI VÀO ĐÚNG KHU VỰC
+   → KHÔNG BẮT ĐĂNG NHẬP LẠI
+===================================================== */
+
+(async function routeExistingSession() {
+
+  try {
+
+    const {
+      data:
+        sessionData,
+      error:
+        sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError
+    ) {
+
+      console.warn(
+        "ACADEMY SESSION ERROR:",
+        sessionError
+      );
+
+
+      return;
+
+    }
+
+
+    const userId =
+      sessionData
+        ?.session
+        ?.user
+        ?.id;
+
+
+    if (
+      !userId
+    ) {
+
+      return;
+
+    }
+
+
+    await redirectByRole(
+      userId
+    );
+
+  }
+  catch (error) {
+
+    console.warn(
+      "ACADEMY AUTO ROUTE:",
+      error
+    );
+
+  }
+
+})();
 
 
   /* =====================================================
