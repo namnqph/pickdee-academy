@@ -597,49 +597,25 @@ async function loadSupportUnread() {
 
   try {
 
-    /* ==============================================
-       BẢO ĐẢM CLIENT ĐÃ NHẬN SESSION ADMIN
-    ============================================== */
-
     const {
-      data: authData,
-      error: authError
-    } =
-      await supportSb.auth
-        .getSession();
-
-
-    if (
-      authError
-    ) {
-
-      throw authError;
-
-    }
-
-
-    if (
-      !authData?.session
-    ) {
-
-      throw new Error(
-        "Chưa có phiên đăng nhập Admin."
-      );
-
-    }
-
-
-    /* ==============================================
-       LẤY SỐ TIN SUPPORT CHƯA ĐỌC
-    ============================================== */
-
-    const {
-      data,
+      count,
       error
     } =
-      await supportSb.rpc(
-        "support_admin_get_unread_count"
-      );
+      await supportSb
+        .from(
+          "support_conversations"
+        )
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        )
+        .gt(
+          "unread_support",
+          0
+        );
 
 
     if (
@@ -651,27 +627,27 @@ async function loadSupportUnread() {
     }
 
 
-    const count =
+    const unread =
       Math.max(
         0,
         Number(
-          data || 0
+          count || 0
         )
       );
 
 
     countEl.textContent =
-      count > 99
+      unread > 99
         ?
         "99+"
         :
         String(
-          count
+          unread
         );
 
 
     countEl.style.background =
-      count > 0
+      unread > 0
         ?
         "#ff8e8e"
         :
@@ -689,11 +665,11 @@ async function loadSupportUnread() {
 
 
     countEl.textContent =
-      "!";
+      "0";
 
 
     countEl.style.background =
-      "#ff8e8e";
+      "#b9ff18";
 
   }
 
