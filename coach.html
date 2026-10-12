@@ -2197,28 +2197,7 @@
     </a>
 
 
-    <!-- HỒ SƠ -->
-
-    <a
-      class="menu-card"
-      href="./coach"
-    >
-
-      <div class="menu-icon">
-        👤
-      </div>
-
-      <div class="menu-title">
-        Hồ sơ của tôi
-      </div>
-
-      <div class="menu-sub">
-        Xem thông tin cá nhân,
-        khu vực phụ trách và ảnh đại diện.
-      </div>
-
-    </a>
-
+  
 
   </section>
 
@@ -10154,81 +10133,474 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
-  <script>
+<script>
 (function () {
 
   const userArea =
-    document.querySelector(".user-area");
+    document.querySelector(
+      ".user-area"
+    );
+
 
   const logoutBtn =
-    document.getElementById("logoutBtn");
+    document.getElementById(
+      "logoutBtn"
+    );
 
-  if (!userArea || !logoutBtn) {
-    return;
-  }
+
+  const userEmail =
+    document.getElementById(
+      "userEmail"
+    );
+
+
+  const profileCard =
+    document.querySelector(
+      ".profile-card"
+    );
+
 
   if (
-    document.getElementById(
-      "coachChangePasswordLink"
-    )
+    !userArea
+    ||
+    !logoutBtn
   ) {
+
     return;
+
   }
 
-  const changePassword =
-    document.createElement("a");
 
-  changePassword.id =
-    "coachChangePasswordLink";
+  /*
+    Gắn điểm đến cho HỒ SƠ CỦA TÔI
+  */
 
-  changePassword.href =
-    "/change-password";
+  if (
+    profileCard
+  ) {
+
+    profileCard.id =
+      "coachProfile";
+
+
+    profileCard.style.scrollMarginTop =
+      "90px";
+
+  }
+
+
+  /*
+    Dùng lại link đổi mật khẩu nếu có.
+  */
+
+  let changePassword =
+    document.getElementById(
+      "coachChangePasswordLink"
+    );
+
+
+  if (
+    !changePassword
+  ) {
+
+    changePassword =
+      document.createElement(
+        "a"
+      );
+
+
+    changePassword.id =
+      "coachChangePasswordLink";
+
+
+    changePassword.href =
+      "/change-password";
+
+  }
+
+
+  changePassword.remove();
+
+  logoutBtn.remove();
+
+
+  if (
+    userEmail
+  ) {
+
+    userEmail.style.display =
+      "none";
+
+  }
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.textContent = `
+
+    .coach-account-menu {
+      position: relative;
+      z-index: 1000001;
+    }
+
+
+    .coach-account-menu summary {
+      width: 42px;
+      height: 42px;
+
+      padding: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border:
+        1px solid rgba(255,255,255,.20);
+
+      border-radius: 12px;
+
+      background: #0b2342;
+
+      color: #ffffff;
+
+      font-size: 20px;
+      font-weight: 900;
+
+      cursor: pointer;
+
+      list-style: none;
+
+      user-select: none;
+
+      box-shadow:
+        0 8px 25px
+        rgba(0,0,0,.25);
+    }
+
+
+    .coach-account-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+
+    .coach-account-menu[open] summary {
+      color: #d8ff45;
+
+      border-color:
+        rgba(216,255,69,.55);
+    }
+
+
+    .coach-account-panel {
+      position: absolute;
+
+      top: calc(100% + 10px);
+      right: 0;
+
+      width: 255px;
+
+      padding: 8px;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      border-radius: 15px;
+
+      background: #0d2038;
+
+      box-shadow:
+        0 22px 60px
+        rgba(0,0,0,.48);
+    }
+
+
+    .coach-account-title {
+      padding: 10px 11px 12px;
+
+      margin-bottom: 5px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.08);
+
+      color:
+        rgba(255,255,255,.52);
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: .08em;
+    }
+
+
+    .coach-account-item {
+      width: 100%;
+      min-height: 45px;
+
+      padding: 0 11px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 9px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: transparent;
+
+      color: #ffffff;
+
+      text-decoration: none;
+
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 900;
+
+      text-align: left;
+
+      cursor: pointer;
+    }
+
+
+    .coach-account-item:hover {
+      background:
+        rgba(255,255,255,.06);
+
+      color: #d8ff45;
+    }
+
+
+    .coach-account-divider {
+      height: 1px;
+
+      margin: 6px 5px;
+
+      background:
+        rgba(255,255,255,.09);
+    }
+
+
+    .coach-account-logout {
+      color: #ffaaaa;
+    }
+
+
+    #coachNotificationRoot {
+      right: 78px !important;
+    }
+
+
+    @media(max-width:700px) {
+
+      #coachNotificationRoot {
+        right: 70px !important;
+      }
+
+
+      .coach-account-panel {
+        position: fixed;
+
+        top: 65px;
+        left: 12px;
+        right: 12px;
+
+        width: auto;
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+
+  const menu =
+    document.createElement(
+      "details"
+    );
+
+
+  menu.className =
+    "coach-account-menu";
+
+
+  const summary =
+    document.createElement(
+      "summary"
+    );
+
+
+  summary.setAttribute(
+    "aria-label",
+    "Menu tài khoản"
+  );
+
+
+  summary.setAttribute(
+    "title",
+    "Menu tài khoản"
+  );
+
+
+  summary.textContent =
+    "☰";
+
+
+  const panel =
+    document.createElement(
+      "div"
+    );
+
+
+  panel.className =
+    "coach-account-panel";
+
+
+  panel.innerHTML = `
+
+    <div class="coach-account-title">
+      TÀI KHOẢN COACH
+    </div>
+
+
+    <a
+      href="#coachProfile"
+      id="coachProfileMenuLink"
+      class="coach-account-item"
+    >
+      👤 HỒ SƠ CỦA TÔI
+    </a>
+
+
+    <div class="coach-account-divider"></div>
+
+  `;
+
 
   changePassword.textContent =
-    "ĐỔI MẬT KHẨU";
+    "🔑 ĐỔI MẬT KHẨU";
 
-  changePassword.style.display =
-    "inline-flex";
 
-  changePassword.style.alignItems =
-    "center";
+  changePassword.className =
+    "coach-account-item";
 
-  changePassword.style.justifyContent =
-    "center";
 
-  changePassword.style.minHeight =
-    "38px";
+  changePassword.removeAttribute(
+    "style"
+  );
 
-  changePassword.style.padding =
-    "0 10px";
 
-  changePassword.style.border =
-    "1px solid rgba(216,255,69,.35)";
+  panel.appendChild(
+    changePassword
+  );
 
-  changePassword.style.borderRadius =
-    "9px";
 
-  changePassword.style.background =
-    "rgba(216,255,69,.08)";
+  logoutBtn.textContent =
+    "↪ ĐĂNG XUẤT";
 
-  changePassword.style.color =
-    "#d8ff45";
 
-  changePassword.style.textDecoration =
-    "none";
+  logoutBtn.className =
+    "coach-account-item coach-account-logout";
 
-  changePassword.style.fontSize =
-    "12px";
 
-  changePassword.style.fontWeight =
-    "900";
+  logoutBtn.removeAttribute(
+    "style"
+  );
 
-  changePassword.style.whiteSpace =
-    "nowrap";
 
-  userArea.insertBefore(
-    changePassword,
+  panel.appendChild(
     logoutBtn
+  );
+
+
+  menu.appendChild(
+    summary
+  );
+
+
+  menu.appendChild(
+    panel
+  );
+
+
+  userArea.appendChild(
+    menu
+  );
+
+
+  document
+    .getElementById(
+      "coachProfileMenuLink"
+    )
+    ?.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+
+
+        menu.open =
+          false;
+
+
+        profileCard
+          ?.scrollIntoView(
+            {
+              behavior:
+                "smooth",
+
+              block:
+                "start"
+            }
+          );
+
+      }
+    );
+
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        menu.open
+        &&
+        !menu.contains(
+          event.target
+        )
+      ) {
+
+        menu.open =
+          false;
+
+      }
+
+    }
+  );
+
+
+  document.addEventListener(
+    "keydown",
+    function (event) {
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        menu.open =
+          false;
+
+      }
+
+    }
   );
 
 })();
