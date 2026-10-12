@@ -2177,11 +2177,93 @@
   }
 
 
-  /* =====================================================
-     POLLING
-     Guest + logged-in đều dùng ở bước đầu.
-     Sau khi Support Admin PASS sẽ nâng logged-in lên Realtime.
+    /* =====================================================
+     UNREAD BADGE + SMART POLLING
   ====================================================== */
+
+  async function refreshUnreadBadge() {
+
+    if (
+      panel.classList.contains(
+        "open"
+      )
+    ) {
+
+      badge.style.display =
+        "none";
+
+
+      badge.textContent =
+        "0";
+
+
+      return;
+
+    }
+
+
+    const token =
+      localStorage.getItem(
+        STORAGE_TOKEN
+      );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "support_get_unread_count",
+        {
+          p_public_token:
+            token || null
+        }
+      );
+
+
+    if (
+      error
+    ) {
+
+      console.warn(
+        "PickDee Support unread:",
+        error
+      );
+
+
+      return;
+
+    }
+
+
+    const count =
+      Math.max(
+        0,
+        Number(
+          data || 0
+        )
+      );
+
+
+    badge.textContent =
+      count > 99
+        ?
+        "99+"
+        :
+        String(
+          count
+        );
+
+
+    badge.style.display =
+      count > 0
+        ?
+        "flex"
+        :
+        "none";
+
+  }
+
 
   function stopPolling() {
 
@@ -2207,24 +2289,40 @@
     stopPolling();
 
 
+    const isOpen =
+      panel.classList.contains(
+        "open"
+      );
+
+
+    const intervalMs =
+      isOpen
+        ?
+        3000
+        :
+        30000;
+
+
     pollTimer =
       setInterval(
         async function () {
 
-          if (
-            !panel.classList.contains(
-              "open"
-            )
-          ) {
-
-            return;
-
-          }
-
-
           try {
 
-            await loadMessages();
+            if (
+              panel.classList.contains(
+                "open"
+              )
+            ) {
+
+              await loadMessages();
+
+            }
+            else {
+
+              await refreshUnreadBadge();
+
+            }
 
           }
           catch (
@@ -2239,7 +2337,7 @@
           }
 
         },
-        3000
+        intervalMs
       );
 
   }
@@ -2305,7 +2403,12 @@
     );
 
 
-    stopPolling();
+   refreshUnreadBadge()
+  .catch(
+    function () {}
+  );
+
+startPolling();
 
   }
 
@@ -2422,7 +2525,58 @@
     "aria-expanded",
     "false"
   );
+refreshUnreadBadge()
+  .catch(
+    function () {}
+  );
 
+
+startPolling();
+
+
+window.addEventListener(
+  "focus",
+  function () {
+
+    if (
+      !panel.classList.contains(
+        "open"
+      )
+    ) {
+
+      refreshUnreadBadge()
+        .catch(
+          function () {}
+        );
+
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "visibilitychange",
+  function () {
+
+    if (
+      document.visibilityState ===
+      "visible"
+      &&
+      !panel.classList.contains(
+        "open"
+      )
+    ) {
+
+      refreshUnreadBadge()
+        .catch(
+          function () {}
+        );
+
+    }
+
+  }
+);
 
   console.log(
     "✓ PickDee Support widget ready."
