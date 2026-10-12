@@ -2382,9 +2382,147 @@
 
 
 
-  renderContinueWork();
+ renderContinueWork();
 
-  loadAccount();
+
+(async function initPickDeeAccount() {
+
+  await loadAccount();
+
+
+  if (
+    !sb
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const {
+      data:
+        sessionData
+    } =
+      await sb.auth.getSession();
+
+
+    const user =
+      sessionData
+        ?.session
+        ?.user;
+
+
+    if (
+      !user
+    ) {
+
+      return;
+
+    }
+
+
+    const {
+      data:
+        profile,
+      error
+    } =
+      await sb
+        .from(
+          "profiles"
+        )
+        .select(
+          "role"
+        )
+        .eq(
+          "id",
+          user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      error
+      ||
+      !profile
+    ) {
+
+      return;
+
+    }
+
+
+    const role =
+      String(
+        profile.role
+        ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    let academyPath =
+      "/academy.html";
+
+
+    if (
+      role === "admin"
+    ) {
+
+      academyPath =
+        "/admin";
+
+    }
+    else if (
+      role === "coach"
+    ) {
+
+      academyPath =
+        "/coach";
+
+    }
+    else if (
+      role === "student"
+      ||
+      role === "hocvien"
+      ||
+      role === "học viên"
+    ) {
+
+      academyPath =
+        "/student";
+
+    }
+
+
+    document
+      .querySelectorAll(
+        'a[href="/academy.html"]'
+      )
+      .forEach(
+        function (link) {
+
+          link.setAttribute(
+            "href",
+            academyPath
+          );
+
+        }
+      );
+
+  }
+  catch (error) {
+
+    console.warn(
+      "ACADEMY ROUTE:",
+      error
+    );
+
+  }
+
+})();
 
 
 })();
