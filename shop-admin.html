@@ -1795,108 +1795,245 @@ AUTH
 
 async function auth(){
 
-const {
-data:{
-session
-}
-}=
-await sb.auth.getSession();
+  const {
+    data:{
+      session
+    }
+  } =
+    await sb.auth.getSession();
 
 
-const u=
-session?.user;
+  const u =
+    session?.user;
 
 
-if(!u){
+  if(!u){
 
-location.href=
-"./login";
+    window.location.replace(
+      "/login"
+    );
 
-return null;
+    return null;
 
-}
-
-
-const {
-data,
-error
-}=
-await sb
-.from(
-"shop_user_roles"
-)
-.select(
-"role,is_active"
-)
-.eq(
-"user_id",
-u.id
-)
-.eq(
-"is_active",
-true
-);
+  }
 
 
-if(error){
-throw error;
-}
+  /* =====================================================
+     1. KIỂM TRA ROLE ACADEMY TRƯỚC
+
+     Coach và Học viên tuyệt đối không được đứng
+     trong khu quản trị Shop.
+
+     Admin Academy vẫn có thể kiêm Owner Shop.
+  ====================================================== */
+
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await sb
+      .from(
+        "profiles"
+      )
+      .select(
+        "role"
+      )
+      .eq(
+        "id",
+        u.id
+      )
+      .maybeSingle();
 
 
-currentShopUser =
-u;
+  if(
+    profileError
+  ){
+
+    console.warn(
+      "SHOP PROFILE CHECK ERROR:",
+      profileError
+    );
+
+  }
 
 
-currentShopRoles =
-(
-data
-||
-[]
-)
-.map(
-x=>
-x.role
-)
-.filter(
-Boolean
-);
+  const academyRole =
+    String(
+      profile?.role
+      ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
 
 
-currentShopIsOwner =
-currentShopRoles.includes(
-"owner"
-)
-||
-String(
-u.id
-)
-===
-SHOP_OWNER_USER_ID;
+  /* COACH → chỉ về khu Coach */
+
+  if(
+    academyRole === "coach"
+  ){
+
+    window.location.replace(
+      "/coach"
+    );
+
+    return null;
+
+  }
 
 
-if(
-!currentShopRoles
-.some(
-role=>
-[
-"owner",
-"shop_admin",
-"shop_staff"
-]
-.includes(
-role
-)
-)
-){
+  /* HỌC VIÊN → chỉ về khu Học viên */
 
-throw new Error(
-"Tài khoản chưa có quyền quản lý Shop."
-);
+  if(
+    academyRole === "student"
+    ||
+    academyRole === "hocvien"
+    ||
+    academyRole === "học viên"
+  ){
 
-}
+    window.location.replace(
+      "/student"
+    );
+
+    return null;
+
+  }
 
 
-return u;
+  /* =====================================================
+     2. KIỂM TRA QUYỀN SHOP
+  ====================================================== */
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from(
+        "shop_user_roles"
+      )
+      .select(
+        "role,is_active"
+      )
+      .eq(
+        "user_id",
+        u.id
+      )
+      .eq(
+        "is_active",
+        true
+      );
+
+
+  if(
+    error
+  ){
+
+    console.error(
+      "SHOP ROLE ERROR:",
+      error
+    );
+
+    window.location.replace(
+      academyRole === "admin"
+        ?
+        "/admin"
+        :
+        "/"
+    );
+
+    return null;
+
+  }
+
+
+  currentShopUser =
+    u;
+
+
+  currentShopRoles =
+    (
+      data
+      ||
+      []
+    )
+      .map(
+        x =>
+          String(
+            x.role || ""
+          )
+            .trim()
+            .toLowerCase()
+      )
+      .filter(
+        Boolean
+      );
+
+
+  currentShopIsOwner =
+    currentShopRoles.includes(
+      "owner"
+    )
+    ||
+    String(
+      u.id
+    )
+    ===
+    SHOP_OWNER_USER_ID;
+
+
+  const allowed =
+    currentShopRoles.some(
+      role =>
+        [
+          "owner",
+          "shop_admin",
+          "shop_staff"
+        ]
+          .includes(
+            role
+          )
+    );
+
+
+  if(
+    !allowed
+  ){
+
+    /*
+      Admin Academy nhưng không có quyền Shop
+      → quay lại Academy Admin.
+    */
+
+    if(
+      academyRole === "admin"
+    ){
+
+      window.location.replace(
+        "/admin"
+      );
+
+      return null;
+
+    }
+
+
+    /*
+      Tài khoản khác không có quyền Shop
+      → về Trang tổng.
+    */
+
+    window.location.replace(
+      "/"
+    );
+
+    return null;
+
+  }
+
+
+  return u;
 
 }
 
