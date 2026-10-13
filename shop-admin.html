@@ -7406,6 +7406,263 @@ false
 })();
 </script>
 <script src="/shop-notifications.js?v=20261006-2"></script>
+<style>
+  /* PICKDEE SHOP - gom chuông + hồ sơ */
+  .top-actions{
+    align-items:center;
+    gap:7px;
+  }
 
+  /* Ẩn Trang tổng + Đăng xuất cũ trên header */
+  .top-actions > .btn-ghost{
+    display:none !important;
+  }
+
+  /* Chuông không còn fixed xa bên trái */
+  #pickdeeNotificationRoot{
+    position:static !important;
+    top:auto !important;
+    right:auto !important;
+    left:auto !important;
+    bottom:auto !important;
+    z-index:99999 !important;
+  }
+
+  /* Giữ panel xổ xuống đúng theo chuông */
+  #pickdeeNotificationRoot .pdn-panel{
+    right:0 !important;
+  }
+
+  #shopProfileQuickLinks{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-top:10px;
+  }
+
+  #shopProfileQuickLinks a,
+  #shopProfileQuickLinks button{
+    width:100%;
+    min-height:48px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin:0;
+    padding:0 14px;
+
+    border-radius:11px;
+
+    font-family:inherit;
+    font-size:11px;
+    font-weight:950;
+
+    text-decoration:none;
+    cursor:pointer;
+  }
+
+  #shopProfileGoShop{
+    border:
+      1px solid
+      rgba(216,255,69,.35);
+
+    background:
+      rgba(216,255,69,.07);
+
+    color:#d8ff45;
+  }
+
+  #shopProfileGoHome{
+    border:
+      1px solid
+      rgba(255,255,255,.14);
+
+    background:
+      rgba(255,255,255,.05);
+
+    color:#fff;
+  }
+
+  #shopProfileLogout{
+    border:
+      1px solid
+      rgba(255,105,105,.28);
+
+    background:
+      rgba(255,105,105,.06);
+
+    color:#ffaaaa;
+  }
+</style>
+
+<script>
+(function(){
+
+  /* =====================================================
+     1. THÊM VÀO SHOP + TRANG TỔNG + ĐĂNG XUẤT
+        VÀO HỒ SƠ
+  ====================================================== */
+
+  const actions =
+    document.querySelector(
+      ".shop-profile-actions"
+    );
+
+  if(
+    actions
+    &&
+    !document.getElementById(
+      "shopProfileQuickLinks"
+    )
+  ){
+
+    const box =
+      document.createElement(
+        "div"
+      );
+
+    box.id =
+      "shopProfileQuickLinks";
+
+    box.innerHTML = `
+      <a
+        id="shopProfileGoShop"
+        href="/shop"
+      >
+        🛍 VÀO PICKDEE SHOP
+      </a>
+
+      <a
+        id="shopProfileGoHome"
+        href="/"
+      >
+        ⌂ TRANG TỔNG PICKDEE
+      </a>
+
+      <button
+        id="shopProfileLogout"
+        type="button"
+      >
+        ↪ ĐĂNG XUẤT
+      </button>
+    `;
+
+    actions.appendChild(
+      box
+    );
+
+
+    document
+      .getElementById(
+        "shopProfileLogout"
+      )
+      ?.addEventListener(
+        "click",
+        async function(){
+
+          const client =
+            window.sb
+            ||
+            window.supabaseClient;
+
+          try{
+
+            if(client){
+              await client.auth.signOut();
+            }
+
+          }
+          finally{
+
+            window.location.replace(
+              "/login"
+            );
+
+          }
+
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     2. ĐƯA CHUÔNG VÀO CÙNG CỤM VỚI 👤
+  ====================================================== */
+
+  let attempts = 0;
+
+  const timer =
+    setInterval(
+      function(){
+
+        attempts += 1;
+
+        const bellRoot =
+          document.getElementById(
+            "pickdeeNotificationRoot"
+          );
+
+        const topActions =
+          document.querySelector(
+            ".top-actions"
+          );
+
+        const profileButton =
+          document.getElementById(
+            "shopProfileButton"
+          );
+
+
+        if(
+          bellRoot
+          &&
+          topActions
+        ){
+
+          if(
+            profileButton
+          ){
+
+            topActions.insertBefore(
+              bellRoot,
+              profileButton
+            );
+
+          }
+          else{
+
+            topActions.prepend(
+              bellRoot
+            );
+
+          }
+
+          clearInterval(
+            timer
+          );
+
+          return;
+
+        }
+
+
+        if(
+          attempts >= 40
+        ){
+
+          clearInterval(
+            timer
+          );
+
+        }
+
+      },
+      250
+    );
+
+})();
+</script>
 </body>
 </html>
