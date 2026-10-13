@@ -6440,7 +6440,978 @@ false
 
 })();
 </script>
+<style>
+  /* =====================================================
+     PICKDEE SHOP - ACCOUNT PROFILE
+  ====================================================== */
 
+  #shopProfileButton {
+    width: 40px;
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border:
+      1px solid
+      rgba(216,255,69,.35);
+
+    border-radius: 12px;
+
+    background:
+      rgba(216,255,69,.08);
+
+    color: #d8ff45;
+
+    font-size: 18px;
+    font-weight: 950;
+
+    cursor: pointer;
+  }
+
+
+  #shopProfileModal {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000000;
+
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+
+    padding:
+      18px
+      14px
+      calc(
+        18px
+        + env(safe-area-inset-bottom)
+      );
+
+    background:
+      rgba(0,0,0,.68);
+
+    backdrop-filter:
+      blur(8px);
+  }
+
+
+  #shopProfileModal.open {
+    display: flex;
+  }
+
+
+  .shop-profile-sheet {
+    width: 100%;
+    max-width: 430px;
+
+    max-height: 88vh;
+    overflow-y: auto;
+
+    padding: 20px;
+
+    border:
+      1px solid
+      rgba(255,255,255,.14);
+
+    border-radius: 20px;
+
+    background:
+      linear-gradient(
+        160deg,
+        #0b2342,
+        #07192f
+      );
+
+    box-shadow:
+      0 24px 80px
+      rgba(0,0,0,.5);
+  }
+
+
+  .shop-profile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    margin-bottom: 18px;
+  }
+
+
+  .shop-profile-avatar {
+    width: 52px;
+    height: 52px;
+
+    flex: 0 0 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #d8ff45;
+    color: #071523;
+
+    font-size: 20px;
+    font-weight: 950;
+  }
+
+
+  .shop-profile-title-box {
+    flex: 1;
+    min-width: 0;
+  }
+
+
+  .shop-profile-title {
+    color: #fff;
+
+    font-size: 18px;
+    font-weight: 950;
+  }
+
+
+  .shop-profile-role {
+    margin-top: 4px;
+
+    color: #d8ff45;
+
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+
+  .shop-profile-close {
+    width: 38px;
+    height: 38px;
+
+    flex: 0 0 38px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background:
+      rgba(255,255,255,.08);
+
+    color: #fff;
+
+    font-size: 20px;
+
+    cursor: pointer;
+  }
+
+
+  .shop-profile-field {
+    margin-top: 14px;
+  }
+
+
+  .shop-profile-field label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color:
+      rgba(255,255,255,.65);
+
+    font-size: 10px;
+    font-weight: 900;
+  }
+
+
+  .shop-profile-field input {
+    width: 100%;
+    min-height: 48px;
+
+    padding: 0 13px;
+
+    border:
+      1px solid
+      rgba(255,255,255,.15);
+
+    border-radius: 11px;
+
+    background:
+      rgba(255,255,255,.055);
+
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 16px;
+
+    outline: none;
+  }
+
+
+  .shop-profile-field input:focus {
+    border-color:
+      rgba(216,255,69,.65);
+  }
+
+
+  .shop-profile-field input[readonly] {
+    opacity: .62;
+  }
+
+
+  .shop-profile-note {
+    margin-top: 6px;
+
+    color:
+      rgba(255,255,255,.42);
+
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+
+  #shopProfileMessage {
+    min-height: 18px;
+
+    margin-top: 12px;
+
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+
+  .shop-profile-actions {
+    display: grid;
+
+    grid-template-columns:
+      1fr;
+
+    gap: 10px;
+
+    margin-top: 18px;
+  }
+
+
+  .shop-profile-save,
+  .shop-profile-password {
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 950;
+
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+
+  .shop-profile-save {
+    border: 0;
+
+    background: #d8ff45;
+    color: #071523;
+  }
+
+
+  .shop-profile-save:disabled {
+    opacity: .5;
+    cursor: wait;
+  }
+
+
+  .shop-profile-password {
+    border:
+      1px solid
+      rgba(216,255,69,.35);
+
+    background:
+      rgba(216,255,69,.06);
+
+    color: #d8ff45;
+  }
+
+
+  @media(min-width:700px) {
+
+    #shopProfileModal {
+      align-items: center;
+    }
+
+  }
+</style>
+
+
+<div
+  id="shopProfileModal"
+  aria-hidden="true"
+>
+  <div class="shop-profile-sheet">
+
+    <div class="shop-profile-head">
+
+      <div
+        id="shopProfileAvatar"
+        class="shop-profile-avatar"
+      >
+        👤
+      </div>
+
+      <div class="shop-profile-title-box">
+
+        <div class="shop-profile-title">
+          Hồ sơ của tôi
+        </div>
+
+        <div
+          id="shopProfileRole"
+          class="shop-profile-role"
+        >
+          SHOP ADMIN
+        </div>
+
+      </div>
+
+      <button
+        id="shopProfileClose"
+        class="shop-profile-close"
+        type="button"
+        aria-label="Đóng"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="shop-profile-field">
+
+      <label>
+        HỌ VÀ TÊN
+      </label>
+
+      <input
+        id="shopProfileName"
+        type="text"
+        autocomplete="name"
+        placeholder="Nhập họ và tên"
+      >
+
+    </div>
+
+
+    <div class="shop-profile-field">
+
+      <label>
+        SỐ ĐIỆN THOẠI
+      </label>
+
+      <input
+        id="shopProfilePhone"
+        type="tel"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="Nhập số điện thoại"
+      >
+
+    </div>
+
+
+    <div class="shop-profile-field">
+
+      <label>
+        EMAIL ĐĂNG NHẬP
+      </label>
+
+      <input
+        id="shopProfileEmail"
+        type="email"
+        readonly
+      >
+
+      <div class="shop-profile-note">
+        Email là tài khoản đăng nhập nên không sửa tại đây.
+      </div>
+
+    </div>
+
+
+    <div
+      id="shopProfileMessage"
+    ></div>
+
+
+    <div class="shop-profile-actions">
+
+      <button
+        id="shopProfileSave"
+        class="shop-profile-save"
+        type="button"
+      >
+        LƯU HỒ SƠ
+      </button>
+
+      <a
+        class="shop-profile-password"
+        href="/change-password"
+      >
+        🔑 ĐỔI MẬT KHẨU
+      </a>
+
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+(function () {
+
+  const sb =
+    window.sb
+    ||
+    window.supabaseClient;
+
+  if (!sb) {
+    return;
+  }
+
+
+  const headerActions =
+    document.querySelector(
+      ".header-inner > div"
+    );
+
+
+  if (!headerActions) {
+    return;
+  }
+
+
+  const profileButton =
+    document.createElement(
+      "button"
+    );
+
+
+  profileButton.id =
+    "shopProfileButton";
+
+  profileButton.type =
+    "button";
+
+  profileButton.innerHTML =
+    "👤";
+
+  profileButton.title =
+    "Hồ sơ của tôi";
+
+
+  headerActions.insertBefore(
+    profileButton,
+    headerActions.firstChild
+  );
+
+
+  const modal =
+    document.getElementById(
+      "shopProfileModal"
+    );
+
+  const closeBtn =
+    document.getElementById(
+      "shopProfileClose"
+    );
+
+  const saveBtn =
+    document.getElementById(
+      "shopProfileSave"
+    );
+
+  const nameInput =
+    document.getElementById(
+      "shopProfileName"
+    );
+
+  const phoneInput =
+    document.getElementById(
+      "shopProfilePhone"
+    );
+
+  const emailInput =
+    document.getElementById(
+      "shopProfileEmail"
+    );
+
+  const avatar =
+    document.getElementById(
+      "shopProfileAvatar"
+    );
+
+  const roleEl =
+    document.getElementById(
+      "shopProfileRole"
+    );
+
+  const messageEl =
+    document.getElementById(
+      "shopProfileMessage"
+    );
+
+
+  let currentUser =
+    null;
+
+
+  function initials(
+    value
+  ) {
+
+    const text =
+      String(
+        value || ""
+      )
+        .trim();
+
+    if (!text) {
+      return "👤";
+    }
+
+
+    const parts =
+      text
+        .split(/\s+/)
+        .filter(Boolean);
+
+
+    return parts
+      .slice(-2)
+      .map(
+        item =>
+          item.charAt(0)
+      )
+      .join("")
+      .toUpperCase();
+
+  }
+
+
+  function showMessage(
+    text,
+    ok
+  ) {
+
+    messageEl.textContent =
+      text || "";
+
+    messageEl.style.color =
+      ok
+        ?
+        "#d8ff45"
+        :
+        "#ff9a9a";
+
+  }
+
+
+  async function loadProfile() {
+
+    showMessage(
+      "",
+      true
+    );
+
+
+    const {
+      data:
+        sessionData,
+      error:
+        sessionError
+    } =
+      await sb.auth.getSession();
+
+
+    if (
+      sessionError
+      ||
+      !sessionData?.session?.user
+    ) {
+
+      throw new Error(
+        "Không lấy được tài khoản đăng nhập."
+      );
+
+    }
+
+
+    currentUser =
+      sessionData.session.user;
+
+
+    emailInput.value =
+      currentUser.email || "";
+
+
+    const {
+      data:
+        roleRows,
+      error:
+        roleError
+    } =
+      await sb
+        .from(
+          "shop_user_roles"
+        )
+        .select(
+          "role,is_active"
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .eq(
+          "is_active",
+          true
+        );
+
+
+    if (roleError) {
+      throw roleError;
+    }
+
+
+    const role =
+      roleRows?.[0]?.role
+      ||
+      "shop_admin";
+
+
+    const roleLabels = {
+
+      owner:
+        "OWNER",
+
+      shop_admin:
+        "SHOP ADMIN",
+
+      shop_staff:
+        "SHOP STAFF"
+
+    };
+
+
+    roleEl.textContent =
+      roleLabels[role]
+      ||
+      role.toUpperCase();
+
+
+    const {
+      data:
+        profile,
+      error:
+        profileError
+    } =
+      await sb
+        .from(
+          "shop_profiles"
+        )
+        .select(
+          "full_name,phone,avatar_url"
+        )
+        .eq(
+          "user_id",
+          currentUser.id
+        )
+        .maybeSingle();
+
+
+    if (profileError) {
+      throw profileError;
+    }
+
+
+    const fallbackName =
+      String(
+        currentUser
+          ?.user_metadata
+          ?.full_name
+        ||
+        currentUser
+          ?.user_metadata
+          ?.name
+        ||
+        ""
+      )
+        .trim();
+
+
+    nameInput.value =
+      profile?.full_name
+      ||
+      fallbackName
+      ||
+      "";
+
+
+    phoneInput.value =
+      profile?.phone
+      ||
+      "";
+
+
+    avatar.textContent =
+      initials(
+        nameInput.value
+        ||
+        currentUser.email
+      );
+
+  }
+
+
+  async function openProfile() {
+
+    modal.classList.add(
+      "open"
+    );
+
+    modal.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+
+    try {
+
+      await loadProfile();
+
+    }
+    catch (error) {
+
+      console.error(
+        "SHOP PROFILE LOAD:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không tải được hồ sơ.",
+        false
+      );
+
+    }
+
+  }
+
+
+  function closeProfile() {
+
+    modal.classList.remove(
+      "open"
+    );
+
+    modal.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+  }
+
+
+  async function saveProfile() {
+
+    if (!currentUser) {
+      return;
+    }
+
+
+    const fullName =
+      String(
+        nameInput.value || ""
+      )
+        .trim();
+
+
+    const phone =
+      String(
+        phoneInput.value || ""
+      )
+        .trim();
+
+
+    if (!fullName) {
+
+      showMessage(
+        "Vui lòng nhập họ và tên.",
+        false
+      );
+
+      nameInput.focus();
+
+      return;
+
+    }
+
+
+    saveBtn.disabled =
+      true;
+
+    saveBtn.textContent =
+      "ĐANG LƯU...";
+
+
+    showMessage(
+      "",
+      true
+    );
+
+
+    try {
+
+      const {
+        error
+      } =
+        await sb
+          .from(
+            "shop_profiles"
+          )
+          .upsert(
+            {
+              user_id:
+                currentUser.id,
+
+              full_name:
+                fullName,
+
+              phone:
+                phone
+            },
+            {
+              onConflict:
+                "user_id"
+            }
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      avatar.textContent =
+        initials(
+          fullName
+        );
+
+
+      showMessage(
+        "✓ Đã lưu hồ sơ.",
+        true
+      );
+
+    }
+    catch (error) {
+
+      console.error(
+        "SHOP PROFILE SAVE:",
+        error
+      );
+
+
+      showMessage(
+        error?.message
+        ||
+        "Không lưu được hồ sơ.",
+        false
+      );
+
+    }
+    finally {
+
+      saveBtn.disabled =
+        false;
+
+      saveBtn.textContent =
+        "LƯU HỒ SƠ";
+
+    }
+
+  }
+
+
+  profileButton
+    .addEventListener(
+      "click",
+      openProfile
+    );
+
+
+  closeBtn
+    .addEventListener(
+      "click",
+      closeProfile
+    );
+
+
+  saveBtn
+    .addEventListener(
+      "click",
+      saveProfile
+    );
+
+
+  modal
+    .addEventListener(
+      "click",
+      function (
+        event
+      ) {
+
+        if (
+          event.target
+          ===
+          modal
+        ) {
+
+          closeProfile();
+
+        }
+
+      }
+    );
+
+
+  document
+    .addEventListener(
+      "keydown",
+      function (
+        event
+      ) {
+
+        if (
+          event.key
+          ===
+          "Escape"
+        ) {
+
+          closeProfile();
+
+        }
+
+      }
+    );
+
+})();
+</script>
 <script src="/shop-notifications.js?v=20261006-2"></script>
 
 </body>
