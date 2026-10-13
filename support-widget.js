@@ -133,6 +133,8 @@ if (
   ||
   path === "/courts"
   ||
+  path === "/court"
+  ||
   path === "/add-my-court"
 ) {
 
