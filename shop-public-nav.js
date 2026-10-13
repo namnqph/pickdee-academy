@@ -800,5 +800,77 @@
 
     }
   );
+  /* =====================================================
+     PICKDEE SUPPORT - SHARED SHOP LOADER
+  ====================================================== */
 
+  function loadPickDeeSupport() {
+
+    if (
+      document.getElementById(
+        "pickdeeSupportRoot"
+      )
+    ) {
+      return;
+    }
+
+
+    if (
+      document.querySelector(
+        'script[data-pickdee-support-loader="1"]'
+      )
+    ) {
+      return;
+    }
+
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      window.setTimeout(
+        loadPickDeeSupport,
+        300
+      );
+
+
+      return;
+
+    }
+
+
+    const script =
+      document.createElement(
+        "script"
+      );
+
+
+    script.src =
+      "/support-widget.js?v=20261013-1";
+
+
+    script.async =
+      true;
+
+
+    script.dataset.pickdeeSupportLoader =
+      "1";
+
+
+    document.body.appendChild(
+      script
+    );
+
+  }
+
+
+  loadPickDeeSupport();
 })();
