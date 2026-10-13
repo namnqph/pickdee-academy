@@ -1177,18 +1177,161 @@ if (
 
         </div>
 
-        <button
-          id="pickdeeSupportClose"
-          type="button"
-          aria-label="Đóng hỗ trợ"
-        >
-          ×
-        </button>
+       <button
+  id="pickdeeSupportClose"
+  type="button"
+  aria-label="Đóng hỗ trợ"
+>
+  ×
+</button>
 
+</div>
+
+
+<!-- =====================================================
+     LIÊN HỆ NHANH PICKDEE
+====================================================== -->
+
+<div
+  id="pickdeeContactQuick"
+  style="
+    padding:10px 11px;
+    display:grid;
+    gap:8px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.025);
+  "
+>
+
+  <div
+    style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    "
+  >
+
+    <div>
+
+      <div
+        style="
+          color:#ffffff;
+          font-size:11px;
+          font-weight:900;
+        "
+      >
+        Liên hệ PickDee
       </div>
 
+      <div
+        style="
+          margin-top:3px;
+          color:rgba(255,255,255,.55);
+          font-size:10px;
+          line-height:1.4;
+        "
+      >
+        0926 629 966 · Điện thoại / Zalo
+      </div>
 
-      <div id="pickdeeSupportGuest">
+    </div>
+
+  </div>
+
+
+  <div
+    style="
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:7px;
+    "
+  >
+
+    <a
+      href="tel:0926629966"
+      aria-label="Gọi PickDee"
+      style="
+        min-height:40px;
+        padding:0 8px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:5px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.06);
+        color:#ffffff;
+        text-decoration:none;
+        font-family:inherit;
+        font-size:10px;
+        font-weight:900;
+        text-align:center;
+      "
+    >
+      📞 GỌI
+    </a>
+
+
+    <a
+      href="https://zalo.me/0926629966"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Liên hệ PickDee qua Zalo"
+      style="
+        min-height:40px;
+        padding:0 8px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:5px;
+        border-radius:10px;
+        border:1px solid rgba(216,255,69,.22);
+        background:rgba(216,255,69,.08);
+        color:#d8ff45;
+        text-decoration:none;
+        font-family:inherit;
+        font-size:10px;
+        font-weight:900;
+        text-align:center;
+      "
+    >
+      💬 ZALO
+    </a>
+
+
+    <a
+      href="https://www.facebook.com/nguyenquocnam268/"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Liên hệ PickDee qua Facebook"
+      style="
+        min-height:40px;
+        padding:0 8px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:5px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.06);
+        color:#ffffff;
+        text-decoration:none;
+        font-family:inherit;
+        font-size:10px;
+        font-weight:900;
+        text-align:center;
+      "
+    >
+      🔵 FACEBOOK
+    </a>
+
+  </div>
+
+</div>
+
+
+<div id="pickdeeSupportGuest">
 
         <div class="pickdee-support-intro">
           Anh/chị để lại tên và số điện thoại.
