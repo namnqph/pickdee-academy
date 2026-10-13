@@ -132,6 +132,8 @@ if (
   path === "/find-coach"
   ||
   path === "/courts"
+  ||
+  path === "/add-my-court"
 ) {
 
   return "academy";
