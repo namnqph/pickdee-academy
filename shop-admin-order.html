@@ -5694,7 +5694,2531 @@ async function loadOrder() {
   }
 
 }
+/* =====================================================
+   SUPPLIER SETTLEMENT UI
+   ĐỐI SOÁT NHÃN HÀNG / NCC
+===================================================== */
 
+let supplierSettlementCache =
+  [];
+
+let shopSupplierCache =
+  [];
+
+let settlementEditingId =
+  null;
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function supplierSettlementName(
+  supplier
+) {
+
+  if (!supplier) {
+    return "";
+  }
+
+  return String(
+    supplier.name
+    ||
+    supplier.supplier_name
+    ||
+    supplier.company_name
+    ||
+    supplier.display_name
+    ||
+    supplier.code
+    ||
+    `NCC #${supplier.id}`
+  )
+    .trim();
+
+}
+
+
+function supplierSettlementStatusLabel(
+  status
+) {
+
+  const map = {
+
+    pending_shipping:
+      "CHỜ PHÍ SHIP",
+
+    pending_payment:
+      "CHỜ THANH TOÁN",
+
+    partial:
+      "ĐÃ TRẢ MỘT PHẦN",
+
+    paid:
+      "ĐÃ THANH TOÁN",
+
+    cancelled:
+      "ĐÃ HỦY"
+
+  };
+
+
+  return (
+    map[status]
+    ||
+    status
+    ||
+    "CHƯA ĐỐI SOÁT"
+  );
+
+}
+
+
+function supplierDeliveryLabel(
+  value
+) {
+
+  const map = {
+
+    spx:
+      "SPX Shopee Express",
+
+    local_shipper:
+      "Shipper nội thành",
+
+    bus_coach:
+      "Xe bus / nhà xe",
+
+    supplier_delivery:
+      "Nhãn hàng tự giao",
+
+    customer_pickup:
+      "Khách tự lấy",
+
+    other:
+      "Khác"
+
+  };
+
+
+  return (
+    map[value]
+    ||
+    "Chưa chọn"
+  );
+
+}
+
+
+/* =====================================================
+   REFRESH DATA
+===================================================== */
+
+async function refreshSupplierSettlementData() {
+
+  const {
+    data,
+    error
+  } =
+    await sb
+      .from(
+        "shop_supplier_settlement_summary"
+      )
+      .select("*")
+      .eq(
+        "order_id",
+        orderId
+      )
+      .order(
+        "id",
+        {
+          ascending:
+            true
+        }
+      );
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  supplierSettlementCache =
+    data
+    ||
+    [];
+
+
+  if (currentOrder) {
+
+    currentOrder._supplierSettlements =
+      supplierSettlementCache;
+
+  }
+
+}
+
+
+/* =====================================================
+   MOUNT UI
+===================================================== */
+
+function mountSupplierSettlementUI() {
+
+  if (!currentOrder) {
+    return;
+  }
+
+
+  if (
+    Array.isArray(
+      currentOrder._supplierSettlements
+    )
+  ) {
+
+    supplierSettlementCache =
+      currentOrder._supplierSettlements;
+
+  }
+
+
+  if (
+    Array.isArray(
+      currentOrder._shopSuppliers
+    )
+  ) {
+
+    shopSupplierCache =
+      currentOrder._shopSuppliers;
+
+  }
+
+
+  const settlements =
+    supplierSettlementCache
+    ||
+    [];
+
+
+  const suppliers =
+    shopSupplierCache
+    ||
+    [];
+
+
+  const sections =
+    Array.from(
+      document.querySelectorAll(
+        ".section"
+      )
+    );
+
+
+  const shippingSection =
+    sections.find(
+      function (section) {
+
+        const title =
+          section
+            .querySelector(
+              ".section-title"
+            )
+            ?.textContent
+            ?.trim()
+            ?.toLowerCase();
+
+        return (
+          title
+          ===
+          "vận chuyển"
+        );
+
+      }
+    );
+
+
+  if (!shippingSection) {
+    return;
+  }
+
+
+  document
+    .getElementById(
+      "supplierSettlementSection"
+    )
+    ?.remove();
+
+
+  const selected =
+    settlements.find(
+      item =>
+        String(item.id)
+        ===
+        String(
+          settlementEditingId
+        )
+    )
+    ||
+    null;
+
+
+  const paddleSupplierName =
+    String(
+      currentOrder
+        ?.paddle_supplier_name
+      ||
+      ""
+    )
+      .trim();
+
+
+  const matchedSupplier =
+    !selected
+    &&
+    paddleSupplierName
+      ?
+        suppliers.find(
+          supplier =>
+            supplierSettlementName(
+              supplier
+            )
+              .toLocaleLowerCase(
+                "vi-VN"
+              )
+            ===
+            paddleSupplierName
+              .toLocaleLowerCase(
+                "vi-VN"
+              )
+        )
+      :
+        null;
+
+
+  const supplierId =
+    selected?.supplier_id
+    ??
+    matchedSupplier?.id
+    ??
+    "";
+
+
+  const supplierName =
+    selected
+      ?.supplier_name_snapshot
+    ||
+    paddleSupplierName
+    ||
+    supplierSettlementName(
+      matchedSupplier
+    )
+    ||
+    "";
+
+
+  const fulfillmentMode =
+    selected
+      ?.fulfillment_mode
+    ||
+    (
+      currentOrder
+        ?.paddle_fulfillment_type
+      ===
+      "supplier_ship"
+        ?
+          "supplier"
+        :
+          "pickdee"
+    );
+
+
+  const supplierOptions =
+    suppliers
+      .filter(
+        supplier =>
+          supplier.is_active
+          !==
+          false
+      )
+      .map(
+        supplier => `
+          <option
+            value="${escapeHtml(
+              supplier.id
+            )}"
+            ${
+              String(supplier.id)
+              ===
+              String(supplierId)
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            ${escapeHtml(
+              supplierSettlementName(
+                supplier
+              )
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+
+  const cardsHtml =
+    settlements.length
+      ?
+        settlements
+          .map(
+            item => {
+
+              const isEditing =
+                String(item.id)
+                ===
+                String(
+                  settlementEditingId
+                );
+
+
+              const statusColor =
+                item.settlement_status
+                ===
+                "paid"
+                  ?
+                    "#7be5a8"
+                  :
+                item.settlement_status
+                ===
+                "pending_shipping"
+                  ?
+                    "#ffd071"
+                  :
+                    "#d8ff45";
+
+
+              return `
+                <div
+                  style="
+                    padding:12px;
+                    border-radius:12px;
+                    border:
+                      1px solid
+                      ${
+                        isEditing
+                          ?
+                            "rgba(216,255,69,.35)"
+                          :
+                            "rgba(255,255,255,.08)"
+                      };
+                    background:
+                      rgba(255,255,255,.025);
+                  "
+                >
+
+                  <div
+                    style="
+                      display:flex;
+                      align-items:flex-start;
+                      justify-content:space-between;
+                      gap:10px;
+                    "
+                  >
+
+                    <div>
+
+                      <div
+                        style="
+                          color:#fff;
+                          font-size:12px;
+                          font-weight:950;
+                        "
+                      >
+                        ${escapeHtml(
+                          item
+                            .supplier_name_snapshot
+                          ||
+                          "Nhà cung cấp"
+                        )}
+                      </div>
+
+                      <div
+                        style="
+                          margin-top:4px;
+                          color:${statusColor};
+                          font-size:9px;
+                          font-weight:950;
+                        "
+                      >
+                        ${escapeHtml(
+                          supplierSettlementStatusLabel(
+                            item
+                              .settlement_status
+                          )
+                        )}
+                      </div>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      class="action-btn action-secondary"
+                      data-edit-settlement="${escapeHtml(
+                        item.id
+                      )}"
+                      style="
+                        min-height:34px;
+                        padding:0 10px;
+                        font-size:9px;
+                      "
+                    >
+                      ${
+                        isEditing
+                          ?
+                            "ĐANG SỬA"
+                          :
+                            "XEM / SỬA"
+                      }
+                    </button>
+
+                  </div>
+
+
+                  <div
+                    style="
+                      margin-top:11px;
+                      display:grid;
+                      grid-template-columns:
+                        repeat(
+                          2,
+                          minmax(0,1fr)
+                        );
+                      gap:8px;
+                    "
+                  >
+
+                    <div>
+                      <div class="info-label">
+                        TIỀN HÀNG
+                      </div>
+                      <strong>
+                        ${money(
+                          item.goods_amount
+                          ||
+                          0
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <div class="info-label">
+                        HOÀN SHIP NCC
+                      </div>
+                      <strong>
+                        ${money(
+                          item
+                            .shipping_reimbursement
+                          ||
+                          0
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <div class="info-label">
+                        PHẢI TRẢ
+                      </div>
+                      <strong
+                        style="color:#d8ff45;"
+                      >
+                        ${money(
+                          item.amount_due
+                          ||
+                          0
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <div class="info-label">
+                        ĐÃ CHUYỂN
+                      </div>
+                      <strong>
+                        ${money(
+                          item.paid_amount
+                          ||
+                          0
+                        )}
+                      </strong>
+                    </div>
+
+                  </div>
+
+
+                  <div
+                    style="
+                      margin-top:10px;
+                      padding-top:10px;
+                      border-top:
+                        1px solid
+                        rgba(255,255,255,.07);
+                      display:flex;
+                      align-items:center;
+                      justify-content:space-between;
+                      gap:10px;
+                    "
+                  >
+
+                    <span class="info-label">
+                      CÒN PHẢI TRẢ
+                    </span>
+
+                    <strong
+                      style="
+                        color:#d8ff45;
+                        font-size:16px;
+                      "
+                    >
+                      ${money(
+                        item.balance_due
+                        ||
+                        0
+                      )}
+                    </strong>
+
+                  </div>
+
+                </div>
+              `;
+
+            }
+          )
+          .join("")
+      :
+        `
+          <div
+            style="
+              padding:12px;
+              border-radius:12px;
+              border:
+                1px dashed
+                rgba(255,255,255,.13);
+              color:
+                rgba(255,255,255,.48);
+              font-size:10px;
+              line-height:1.5;
+            "
+          >
+            Chưa có đối soát cho đơn này.
+            Tạo đối soát khi PickDee phải thanh toán
+            tiền hàng hoặc hoàn phí ship cho nhãn hàng.
+          </div>
+        `;
+
+
+  const section =
+    document.createElement(
+      "section"
+    );
+
+
+  section.id =
+    "supplierSettlementSection";
+
+  section.className =
+    "section";
+
+
+  section.innerHTML = `
+
+    <div class="section-title">
+      Đối soát nhãn hàng / NCC
+    </div>
+
+    <div
+      style="
+        margin-bottom:12px;
+        color:rgba(255,255,255,.48);
+        font-size:9px;
+        line-height:1.55;
+      "
+    >
+      Tách riêng tiền khách trả và tiền PickDee
+      phải thanh toán cho nhãn hàng.
+      Một đơn có thể có nhiều NCC và nhiều lần chuyển tiền.
+    </div>
+
+
+    <div
+      style="
+        display:grid;
+        gap:9px;
+        margin-bottom:12px;
+      "
+    >
+      ${cardsHtml}
+    </div>
+
+
+    ${
+      settlements.length
+        ?
+          `
+            <button
+              id="newSupplierSettlementBtn"
+              type="button"
+              class="action-btn action-secondary"
+              style="
+                width:100%;
+                min-height:40px;
+                margin-bottom:12px;
+                font-size:9px;
+              "
+            >
+              + THÊM ĐỐI SOÁT NCC KHÁC
+            </button>
+          `
+        :
+          ""
+    }
+
+
+    <div
+      style="
+        padding-top:12px;
+        border-top:
+          1px solid
+          rgba(255,255,255,.08);
+        display:grid;
+        gap:10px;
+      "
+    >
+
+      <div
+        style="
+          color:#fff;
+          font-size:11px;
+          font-weight:950;
+        "
+      >
+        ${
+          selected
+            ?
+              "Sửa đối soát NCC"
+            :
+              "Tạo đối soát NCC"
+        }
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          CHỌN NCC CÓ SẴN
+        </div>
+
+        <select
+          id="settlementSupplierSelect"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+          <option value="">
+            Nhập tên thủ công
+          </option>
+
+          ${supplierOptions}
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          TÊN NHÃN HÀNG / NCC
+        </div>
+
+        <input
+          id="settlementSupplierName"
+          type="text"
+          value="${escapeHtml(
+            supplierName
+          )}"
+          placeholder="Ví dụ: ESS/ON Việt Nam"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          AI ĐÓNG / XỬ LÝ HÀNG
+        </div>
+
+        <select
+          id="settlementFulfillmentMode"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+          <option
+            value="supplier"
+            ${
+              fulfillmentMode
+              ===
+              "supplier"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Nhãn hàng / NCC
+          </option>
+
+          <option
+            value="pickdee"
+            ${
+              fulfillmentMode
+              ===
+              "pickdee"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            PickDee
+          </option>
+
+          <option
+            value="other"
+            ${
+              fulfillmentMode
+              ===
+              "other"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Khác
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          TIỀN HÀNG PHẢI TRẢ NCC
+        </div>
+
+        <input
+          id="settlementGoodsAmount"
+          type="number"
+          min="0"
+          step="1000"
+          value="${escapeHtml(
+            selected?.goods_amount
+            ??
+            0
+          )}"
+          placeholder="Ví dụ: 2200000"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          CÁCH GIAO HÀNG THỰC TẾ
+        </div>
+
+        <select
+          id="settlementDeliveryMethod"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+          <option value="">
+            Chưa xác định
+          </option>
+
+          <option
+            value="local_shipper"
+            ${
+              selected?.delivery_method
+              ===
+              "local_shipper"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Shipper nội thành
+          </option>
+
+          <option
+            value="bus_coach"
+            ${
+              selected?.delivery_method
+              ===
+              "bus_coach"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Xe bus / nhà xe
+          </option>
+
+          <option
+            value="spx"
+            ${
+              selected?.delivery_method
+              ===
+              "spx"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            SPX Shopee Express
+          </option>
+
+          <option
+            value="supplier_delivery"
+            ${
+              selected?.delivery_method
+              ===
+              "supplier_delivery"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Nhãn hàng tự giao
+          </option>
+
+          <option
+            value="customer_pickup"
+            ${
+              selected?.delivery_method
+              ===
+              "customer_pickup"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Khách tự lấy
+          </option>
+
+          <option
+            value="other"
+            ${
+              selected?.delivery_method
+              ===
+              "other"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Khác
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          THÔNG TIN GIAO HÀNG
+        </div>
+
+        <input
+          id="settlementDeliveryReference"
+          type="text"
+          value="${escapeHtml(
+            selected?.delivery_reference
+            ||
+            ""
+          )}"
+          placeholder="Mã vận đơn / SĐT shipper / tên nhà xe..."
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          TRẠNG THÁI PHÍ SHIP
+        </div>
+
+        <select
+          id="settlementShippingStatus"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+          <option
+            value="pending"
+            ${
+              (
+                selected
+                  ?.shipping_cost_status
+                ||
+                "pending"
+              )
+              ===
+              "pending"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Chờ NCC báo phí ship
+          </option>
+
+          <option
+            value="confirmed"
+            ${
+              selected
+                ?.shipping_cost_status
+              ===
+              "confirmed"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Đã chốt phí ship
+          </option>
+
+          <option
+            value="not_applicable"
+            ${
+              selected
+                ?.shipping_cost_status
+              ===
+              "not_applicable"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Không phát sinh phí ship
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          PHÍ SHIP THỰC TẾ
+        </div>
+
+        <input
+          id="settlementShippingAmount"
+          type="number"
+          min="0"
+          step="1000"
+          value="${escapeHtml(
+            selected?.shipping_amount
+            ??
+            0
+          )}"
+          placeholder="Ví dụ: 35000"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          AI ỨNG TIỀN SHIP TRƯỚC
+        </div>
+
+        <select
+          id="settlementShippingAdvancedBy"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+          <option
+            value="none"
+            ${
+              (
+                selected
+                  ?.shipping_advanced_by
+                ||
+                "none"
+              )
+              ===
+              "none"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Chưa có / không ai ứng
+          </option>
+
+          <option
+            value="supplier"
+            ${
+              selected
+                ?.shipping_advanced_by
+              ===
+              "supplier"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Nhãn hàng / NCC ứng
+          </option>
+
+          <option
+            value="pickdee"
+            ${
+              selected
+                ?.shipping_advanced_by
+              ===
+              "pickdee"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            PickDee ứng
+          </option>
+
+          <option
+            value="customer"
+            ${
+              selected
+                ?.shipping_advanced_by
+              ===
+              "customer"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Khách ứng / trả trực tiếp
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          CUỐI CÙNG AI CHỊU PHÍ SHIP
+        </div>
+
+        <select
+          id="settlementShippingBorneBy"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+          <option
+            value="pickdee"
+            ${
+              (
+                selected
+                  ?.shipping_borne_by
+                ||
+                "pickdee"
+              )
+              ===
+              "pickdee"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            PickDee chịu
+          </option>
+
+          <option
+            value="supplier"
+            ${
+              selected
+                ?.shipping_borne_by
+              ===
+              "supplier"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Nhãn hàng / NCC chịu
+          </option>
+
+          <option
+            value="customer"
+            ${
+              selected
+                ?.shipping_borne_by
+              ===
+              "customer"
+                ?
+                  "selected"
+                :
+                  ""
+            }
+          >
+            Khách chịu
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <div
+          class="info-label"
+          style="margin-bottom:6px;"
+        >
+          ĐIỀU CHỈNH CỘNG / TRỪ
+        </div>
+
+        <input
+          id="settlementAdjustmentAmount"
+          type="number"
+          step="1000"
+          value="${escapeHtml(
+            selected?.adjustment_amount
+            ??
+            0
+          )}"
+          placeholder="Có thể nhập số âm"
+          style="
+            width:100%;
+            min-height:44px;
+            padding:0 12px;
+            border-radius:12px;
+            border:
+              1px solid
+              rgba(255,255,255,.10);
+            background:#071523;
+            color:#fff;
+            font-size:16px;
+            font-weight:800;
+          "
+        >
+
+      </div>
+
+
+      <input
+        id="settlementAdjustmentNote"
+        type="text"
+        value="${escapeHtml(
+          selected?.adjustment_note
+          ||
+          ""
+        )}"
+        placeholder="Lý do điều chỉnh nếu có"
+        style="
+          width:100%;
+          min-height:44px;
+          padding:0 12px;
+          border-radius:12px;
+          border:
+            1px solid
+            rgba(255,255,255,.10);
+          background:#071523;
+          color:#fff;
+          font-size:16px;
+          font-weight:800;
+        "
+      >
+
+
+      <textarea
+        id="settlementNote"
+        placeholder="Ghi chú đối soát..."
+        style="
+          width:100%;
+          min-height:75px;
+          padding:12px;
+          border-radius:12px;
+          border:
+            1px solid
+            rgba(255,255,255,.10);
+          background:#071523;
+          color:#fff;
+          resize:vertical;
+          font-size:16px;
+          font-weight:750;
+          line-height:1.5;
+        "
+      >${escapeHtml(
+        selected?.note
+        ||
+        ""
+      )}</textarea>
+
+
+      <div
+        style="
+          padding:13px;
+          border-radius:12px;
+          border:
+            1px solid
+            rgba(216,255,69,.18);
+          background:
+            rgba(216,255,69,.045);
+          display:grid;
+          gap:8px;
+        "
+      >
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+          "
+        >
+          <span class="info-label">
+            DỰ KIẾN PHẢI TRẢ NCC
+          </span>
+
+          <strong
+            id="settlementDraftDue"
+            style="color:#d8ff45;"
+          >
+            0đ
+          </strong>
+        </div>
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+          "
+        >
+          <span class="info-label">
+            ĐÃ CHUYỂN
+          </span>
+
+          <strong>
+            ${money(
+              selected?.paid_amount
+              ||
+              0
+            )}
+          </strong>
+        </div>
+
+        <div
+          style="
+            padding-top:8px;
+            border-top:
+              1px solid
+              rgba(255,255,255,.08);
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+          "
+        >
+          <span class="info-label">
+            CÒN PHẢI TRẢ
+          </span>
+
+          <strong
+            id="settlementDraftBalance"
+            style="
+              color:#d8ff45;
+              font-size:16px;
+            "
+          >
+            0đ
+          </strong>
+        </div>
+
+      </div>
+
+
+      <button
+        id="saveSupplierSettlementBtn"
+        type="button"
+        class="action-btn action-primary"
+        style="
+          width:100%;
+          min-height:46px;
+          font-size:10px;
+        "
+      >
+        ${
+          selected
+            ?
+              "LƯU ĐỐI SOÁT NCC"
+            :
+              "TẠO ĐỐI SOÁT NCC"
+        }
+      </button>
+
+
+      <div
+        id="supplierSettlementMessage"
+        class="message"
+      ></div>
+
+
+      ${
+        selected
+          ?
+            `
+              <div
+                style="
+                  margin-top:5px;
+                  padding-top:14px;
+                  border-top:
+                    1px solid
+                    rgba(255,255,255,.08);
+                  display:grid;
+                  gap:9px;
+                "
+              >
+
+                <div
+                  style="
+                    color:#fff;
+                    font-size:11px;
+                    font-weight:950;
+                  "
+                >
+                  Ghi nhận tiền đã chuyển cho NCC
+                </div>
+
+                ${
+                  Number(
+                    selected.balance_due
+                    ||
+                    0
+                  ) > 0
+                    ?
+                      `
+                        <input
+                          id="settlementPaymentAmount"
+                          type="number"
+                          min="1"
+                          step="1000"
+                          value="${escapeHtml(
+                            selected.balance_due
+                            ||
+                            0
+                          )}"
+                          placeholder="Số tiền vừa chuyển"
+                          style="
+                            width:100%;
+                            min-height:44px;
+                            padding:0 12px;
+                            border-radius:12px;
+                            border:
+                              1px solid
+                              rgba(255,255,255,.10);
+                            background:#071523;
+                            color:#fff;
+                            font-size:16px;
+                            font-weight:800;
+                          "
+                        >
+
+                        <input
+                          id="settlementPaymentReference"
+                          type="text"
+                          placeholder="Mã GD / nội dung chuyển khoản"
+                          style="
+                            width:100%;
+                            min-height:44px;
+                            padding:0 12px;
+                            border-radius:12px;
+                            border:
+                              1px solid
+                              rgba(255,255,255,.10);
+                            background:#071523;
+                            color:#fff;
+                            font-size:16px;
+                            font-weight:800;
+                          "
+                        >
+
+                        <input
+                          id="settlementPaymentNote"
+                          type="text"
+                          placeholder="Ghi chú lần thanh toán"
+                          style="
+                            width:100%;
+                            min-height:44px;
+                            padding:0 12px;
+                            border-radius:12px;
+                            border:
+                              1px solid
+                              rgba(255,255,255,.10);
+                            background:#071523;
+                            color:#fff;
+                            font-size:16px;
+                            font-weight:800;
+                          "
+                        >
+
+                        <button
+                          id="saveSupplierPaymentBtn"
+                          type="button"
+                          class="action-btn action-primary"
+                          style="
+                            width:100%;
+                            min-height:46px;
+                            font-size:10px;
+                          "
+                        >
+                          ✓ GHI NHẬN ĐÃ CHUYỂN TIỀN NCC
+                        </button>
+                      `
+                    :
+                      `
+                        <div
+                          style="
+                            padding:11px;
+                            border-radius:11px;
+                            border:
+                              1px solid
+                              rgba(123,229,168,.20);
+                            background:
+                              rgba(123,229,168,.06);
+                            color:#7be5a8;
+                            font-size:10px;
+                            font-weight:900;
+                          "
+                        >
+                          ✓ Hiện không còn số tiền phải trả theo đối soát này.
+                        </div>
+                      `
+                }
+
+              </div>
+            `
+          :
+            ""
+      }
+
+    </div>
+
+  `;
+
+
+  shippingSection.parentNode.insertBefore(
+    section,
+    shippingSection
+  );
+
+
+  /* =====================================================
+     EDIT EXISTING
+  ====================================================== */
+
+  section
+    .querySelectorAll(
+      "[data-edit-settlement]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            settlementEditingId =
+              button.dataset
+                .editSettlement;
+
+            mountSupplierSettlementUI();
+
+            document
+              .getElementById(
+                "supplierSettlementSection"
+              )
+              ?.scrollIntoView(
+                {
+                  behavior:
+                    "smooth",
+                  block:
+                    "start"
+                }
+              );
+
+          }
+        );
+
+      }
+    );
+
+
+  /* =====================================================
+     NEW
+  ====================================================== */
+
+  document
+    .getElementById(
+      "newSupplierSettlementBtn"
+    )
+    ?.addEventListener(
+      "click",
+      function () {
+
+        settlementEditingId =
+          null;
+
+        mountSupplierSettlementUI();
+
+      }
+    );
+
+
+  /* =====================================================
+     SUPPLIER SELECT
+  ====================================================== */
+
+  const supplierSelect =
+    document.getElementById(
+      "settlementSupplierSelect"
+    );
+
+  const supplierNameInput =
+    document.getElementById(
+      "settlementSupplierName"
+    );
+
+
+  supplierSelect
+    ?.addEventListener(
+      "change",
+      function () {
+
+        const supplier =
+          suppliers.find(
+            item =>
+              String(item.id)
+              ===
+              String(
+                supplierSelect.value
+              )
+          );
+
+
+        if (supplier) {
+
+          supplierNameInput.value =
+            supplierSettlementName(
+              supplier
+            );
+
+        }
+
+      }
+    );
+
+
+  /* =====================================================
+     LIVE CALCULATION
+  ====================================================== */
+
+  const goodsInput =
+    document.getElementById(
+      "settlementGoodsAmount"
+    );
+
+  const shippingAmountInput =
+    document.getElementById(
+      "settlementShippingAmount"
+    );
+
+  const advancedByInput =
+    document.getElementById(
+      "settlementShippingAdvancedBy"
+    );
+
+  const borneByInput =
+    document.getElementById(
+      "settlementShippingBorneBy"
+    );
+
+  const adjustmentInput =
+    document.getElementById(
+      "settlementAdjustmentAmount"
+    );
+
+
+  function updateSettlementDraft() {
+
+    const goods =
+      Math.max(
+        0,
+        Number(
+          goodsInput?.value
+          ||
+          0
+        )
+      );
+
+
+    const ship =
+      Math.max(
+        0,
+        Number(
+          shippingAmountInput
+            ?.value
+          ||
+          0
+        )
+      );
+
+
+    const adjustment =
+      Number(
+        adjustmentInput?.value
+        ||
+        0
+      );
+
+
+    const shipReimbursement =
+      advancedByInput?.value
+      ===
+      "supplier"
+      &&
+      borneByInput?.value
+      ===
+      "pickdee"
+        ?
+          ship
+        :
+          0;
+
+
+    const amountDue =
+      Math.max(
+        0,
+        goods
+        +
+        shipReimbursement
+        +
+        adjustment
+      );
+
+
+    const paid =
+      Number(
+        selected?.paid_amount
+        ||
+        0
+      );
+
+
+    const balance =
+      Math.max(
+        0,
+        amountDue
+        -
+        paid
+      );
+
+
+    const dueEl =
+      document.getElementById(
+        "settlementDraftDue"
+      );
+
+    const balanceEl =
+      document.getElementById(
+        "settlementDraftBalance"
+      );
+
+
+    if (dueEl) {
+
+      dueEl.textContent =
+        money(
+          amountDue
+        );
+
+    }
+
+
+    if (balanceEl) {
+
+      balanceEl.textContent =
+        money(
+          balance
+        );
+
+    }
+
+  }
+
+
+  [
+    goodsInput,
+    shippingAmountInput,
+    advancedByInput,
+    borneByInput,
+    adjustmentInput
+  ]
+    .filter(Boolean)
+    .forEach(
+      input => {
+
+        input.addEventListener(
+          "input",
+          updateSettlementDraft
+        );
+
+        input.addEventListener(
+          "change",
+          updateSettlementDraft
+        );
+
+      }
+    );
+
+
+  updateSettlementDraft();
+
+
+  /* =====================================================
+     SAVE SETTLEMENT
+  ====================================================== */
+
+  document
+    .getElementById(
+      "saveSupplierSettlementBtn"
+    )
+    ?.addEventListener(
+      "click",
+      async function () {
+
+        const button =
+          this;
+
+        const message =
+          document.getElementById(
+            "supplierSettlementMessage"
+          );
+
+
+        button.disabled =
+          true;
+
+
+        try {
+
+          const supplierNameValue =
+            String(
+              supplierNameInput
+                ?.value
+              ||
+              ""
+            )
+              .trim();
+
+
+          if (
+            !supplierNameValue
+          ) {
+
+            throw new Error(
+              "Vui lòng nhập tên nhãn hàng / NCC."
+            );
+
+          }
+
+
+          const {
+            data:
+              sessionData
+          } =
+            await sb.auth.getSession();
+
+
+          const userId =
+            sessionData
+              ?.session
+              ?.user
+              ?.id
+            ||
+            null;
+
+
+          const payload = {
+
+            order_id:
+              Number(
+                orderId
+              ),
+
+            supplier_id:
+              supplierSelect
+                ?.value
+                ?
+                  Number(
+                    supplierSelect
+                      .value
+                  )
+                :
+                  null,
+
+            supplier_name_snapshot:
+              supplierNameValue,
+
+            fulfillment_mode:
+              document
+                .getElementById(
+                  "settlementFulfillmentMode"
+                )
+                ?.value
+              ||
+              "supplier",
+
+            delivery_method:
+              document
+                .getElementById(
+                  "settlementDeliveryMethod"
+                )
+                ?.value
+              ||
+              null,
+
+            delivery_reference:
+              String(
+                document
+                  .getElementById(
+                    "settlementDeliveryReference"
+                  )
+                  ?.value
+                ||
+                ""
+              )
+                .trim()
+              ||
+              null,
+
+            goods_amount:
+              Math.max(
+                0,
+                Number(
+                  goodsInput?.value
+                  ||
+                  0
+                )
+              ),
+
+            shipping_amount:
+              Math.max(
+                0,
+                Number(
+                  shippingAmountInput
+                    ?.value
+                  ||
+                  0
+                )
+              ),
+
+            shipping_cost_status:
+              document
+                .getElementById(
+                  "settlementShippingStatus"
+                )
+                ?.value
+              ||
+              "pending",
+
+            shipping_advanced_by:
+              advancedByInput
+                ?.value
+              ||
+              "none",
+
+            shipping_borne_by:
+              borneByInput
+                ?.value
+              ||
+              "pickdee",
+
+            adjustment_amount:
+              Number(
+                adjustmentInput
+                  ?.value
+                ||
+                0
+              ),
+
+            adjustment_note:
+              String(
+                document
+                  .getElementById(
+                    "settlementAdjustmentNote"
+                  )
+                  ?.value
+                ||
+                ""
+              )
+                .trim()
+              ||
+              null,
+
+            note:
+              String(
+                document
+                  .getElementById(
+                    "settlementNote"
+                  )
+                  ?.value
+                ||
+                ""
+              )
+                .trim()
+              ||
+              null,
+
+            updated_by:
+              userId
+
+          };
+
+
+          let result;
+
+
+          if (selected) {
+
+            result =
+              await sb
+                .from(
+                  "shop_order_supplier_settlements"
+                )
+                .update(
+                  payload
+                )
+                .eq(
+                  "id",
+                  selected.id
+                )
+                .select(
+                  "id"
+                )
+                .single();
+
+          }
+          else {
+
+            result =
+              await sb
+                .from(
+                  "shop_order_supplier_settlements"
+                )
+                .insert(
+                  {
+                    ...payload,
+
+                    created_by:
+                      userId
+                  }
+                )
+                .select(
+                  "id"
+                )
+                .single();
+
+          }
+
+
+          if (
+            result.error
+          ) {
+
+            throw result.error;
+
+          }
+
+
+          settlementEditingId =
+            result.data.id;
+
+
+          await refreshSupplierSettlementData();
+
+
+          mountSupplierSettlementUI();
+
+
+          const refreshedMessage =
+            document.getElementById(
+              "supplierSettlementMessage"
+            );
+
+
+          if (
+            refreshedMessage
+          ) {
+
+            refreshedMessage.className =
+              "message success";
+
+            refreshedMessage.textContent =
+              "✓ Đã lưu đối soát nhãn hàng / NCC.";
+
+          }
+
+        }
+        catch (error) {
+
+          console.error(
+            "SAVE SUPPLIER SETTLEMENT ERROR:",
+            error
+          );
+
+
+          if (message) {
+
+            message.className =
+              "message error";
+
+            message.textContent =
+              error?.message
+              ||
+              "Không lưu được đối soát NCC.";
+
+          }
+
+        }
+        finally {
+
+          button.disabled =
+            false;
+
+        }
+
+      }
+    );
+
+
+  /* =====================================================
+     SAVE PAYMENT
+  ====================================================== */
+
+  document
+    .getElementById(
+      "saveSupplierPaymentBtn"
+    )
+    ?.addEventListener(
+      "click",
+      async function () {
+
+        if (!selected) {
+          return;
+        }
+
+
+        const button =
+          this;
+
+        const message =
+          document.getElementById(
+            "supplierSettlementMessage"
+          );
+
+
+        button.disabled =
+          true;
+
+
+        try {
+
+          const amount =
+            Math.max(
+              0,
+              Number(
+                document
+                  .getElementById(
+                    "settlementPaymentAmount"
+                  )
+                  ?.value
+                ||
+                0
+              )
+            );
+
+
+          const balance =
+            Math.max(
+              0,
+              Number(
+                selected.balance_due
+                ||
+                0
+              )
+            );
+
+
+          if (
+            amount <= 0
+          ) {
+
+            throw new Error(
+              "Vui lòng nhập số tiền đã chuyển."
+            );
+
+          }
+
+
+          if (
+            balance > 0
+            &&
+            amount > balance
+          ) {
+
+            throw new Error(
+              "Số tiền chuyển lớn hơn số tiền còn phải trả."
+            );
+
+          }
+
+
+          const {
+            data:
+              sessionData
+          } =
+            await sb.auth.getSession();
+
+
+          const {
+            error
+          } =
+            await sb
+              .from(
+                "shop_supplier_settlement_payments"
+              )
+              .insert(
+                {
+                  settlement_id:
+                    selected.id,
+
+                  amount:
+                    amount,
+
+                  payment_method:
+                    "bank_transfer",
+
+                  payment_reference:
+                    String(
+                      document
+                        .getElementById(
+                          "settlementPaymentReference"
+                        )
+                        ?.value
+                      ||
+                      ""
+                    )
+                      .trim()
+                    ||
+                    null,
+
+                  note:
+                    String(
+                      document
+                        .getElementById(
+                          "settlementPaymentNote"
+                        )
+                        ?.value
+                      ||
+                      ""
+                    )
+                      .trim()
+                    ||
+                    null,
+
+                  created_by:
+                    sessionData
+                      ?.session
+                      ?.user
+                      ?.id
+                    ||
+                    null
+                }
+              );
+
+
+          if (error) {
+            throw error;
+          }
+
+
+          await refreshSupplierSettlementData();
+
+
+          mountSupplierSettlementUI();
+
+
+          const refreshedMessage =
+            document.getElementById(
+              "supplierSettlementMessage"
+            );
+
+
+          if (
+            refreshedMessage
+          ) {
+
+            refreshedMessage.className =
+              "message success";
+
+            refreshedMessage.textContent =
+              "✓ Đã ghi nhận tiền chuyển cho NCC.";
+
+          }
+
+        }
+        catch (error) {
+
+          console.error(
+            "SAVE SUPPLIER PAYMENT ERROR:",
+            error
+          );
+
+
+          if (message) {
+
+            message.className =
+              "message error";
+
+            message.textContent =
+              error?.message
+              ||
+              "Không ghi nhận được thanh toán NCC.";
+
+          }
+
+        }
+        finally {
+
+          button.disabled =
+            false;
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =====================================================
+   GẮN UI ĐỐI SOÁT SAU MỖI LẦN render()
+===================================================== */
+
+const renderBeforeSupplierSettlement =
+  render;
+
+
+render =
+  function () {
+
+    renderBeforeSupplierSettlement();
+
+    mountSupplierSettlementUI();
+
+  };
   loadOrder();
 
 })();
