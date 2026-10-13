@@ -1807,29 +1807,143 @@ async function auth(){
     session?.user;
 
 
+  /* =====================================================
+     CHƯA ĐĂNG NHẬP
+  ====================================================== */
+
   if(!u){
 
-  window.location.replace(
-    "/login?next=/shop-admin"
-  );
+    window.location.replace(
+      "/login?next=/shop-admin"
+    );
 
-  return null;
+    return null;
 
-}
+  }
 
 
   /* =====================================================
-     1. KIỂM TRA ROLE ACADEMY TRƯỚC
+     1. KIỂM TRA QUYỀN SHOP TRƯỚC
 
-     Coach và Học viên tuyệt đối không được đứng
-     trong khu quản trị Shop.
+     Một tài khoản có thể đồng thời là:
+     - Học viên Academy + Shop Admin
+     - Coach Academy + Shop Admin
+     - Admin Academy + Owner Shop
 
-     Admin Academy vẫn có thể kiêm Owner Shop.
+     Chỉ cần có quyền Shop hợp lệ
+     thì được vào khu quản trị Shop.
   ====================================================== */
 
   const {
-    data: profile,
-    error: profileError
+    data:shopRoleRows,
+    error:shopRoleError
+  } =
+    await sb
+      .from(
+        "shop_user_roles"
+      )
+      .select(
+        "role,is_active"
+      )
+      .eq(
+        "user_id",
+        u.id
+      )
+      .eq(
+        "is_active",
+        true
+      );
+
+
+  if(
+    shopRoleError
+  ){
+
+    console.error(
+      "SHOP ROLE ERROR:",
+      shopRoleError
+    );
+
+    throw new Error(
+      "Không kiểm tra được quyền PickDee Shop."
+    );
+
+  }
+
+
+  currentShopUser =
+    u;
+
+
+  currentShopRoles =
+    (
+      shopRoleRows
+      ||
+      []
+    )
+      .map(
+        item =>
+          String(
+            item?.role
+            ||
+            ""
+          )
+            .trim()
+            .toLowerCase()
+      )
+      .filter(
+        Boolean
+      );
+
+
+  currentShopIsOwner =
+    currentShopRoles.includes(
+      "owner"
+    )
+    ||
+    String(
+      u.id
+    )
+    ===
+    SHOP_OWNER_USER_ID;
+
+
+  const hasShopAccess =
+    currentShopRoles.some(
+      role =>
+        [
+          "owner",
+          "shop_admin",
+          "shop_staff"
+        ]
+          .includes(
+            role
+          )
+    );
+
+
+  /* =====================================================
+     CÓ QUYỀN SHOP
+     → CHO VÀO SHOP NGAY
+  ====================================================== */
+
+  if(
+    hasShopAccess
+  ){
+
+    return u;
+
+  }
+
+
+  /* =====================================================
+     2. KHÔNG CÓ QUYỀN SHOP
+        → MỚI XÉT ROLE ACADEMY
+  ====================================================== */
+
+  const {
+    data:profile,
+    error:profileError
   } =
     await sb
       .from(
@@ -1867,7 +1981,18 @@ async function auth(){
       .toLowerCase();
 
 
-  /* COACH → chỉ về khu Coach */
+  if(
+    academyRole === "admin"
+  ){
+
+    window.location.replace(
+      "/admin"
+    );
+
+    return null;
+
+  }
+
 
   if(
     academyRole === "coach"
@@ -1881,8 +2006,6 @@ async function auth(){
 
   }
 
-
-  /* HỌC VIÊN → chỉ về khu Học viên */
 
   if(
     academyRole === "student"
@@ -1901,143 +2024,13 @@ async function auth(){
   }
 
 
-  /* =====================================================
-     2. KIỂM TRA QUYỀN SHOP
-  ====================================================== */
+  window.location.replace(
+    "/"
+  );
 
-  const {
-    data,
-    error
-  } =
-    await sb
-      .from(
-        "shop_user_roles"
-      )
-      .select(
-        "role,is_active"
-      )
-      .eq(
-        "user_id",
-        u.id
-      )
-      .eq(
-        "is_active",
-        true
-      );
-
-
-  if(
-    error
-  ){
-
-    console.error(
-      "SHOP ROLE ERROR:",
-      error
-    );
-
-    window.location.replace(
-      academyRole === "admin"
-        ?
-        "/admin"
-        :
-        "/"
-    );
-
-    return null;
-
-  }
-
-
-  currentShopUser =
-    u;
-
-
-  currentShopRoles =
-    (
-      data
-      ||
-      []
-    )
-      .map(
-        x =>
-          String(
-            x.role || ""
-          )
-            .trim()
-            .toLowerCase()
-      )
-      .filter(
-        Boolean
-      );
-
-
-  currentShopIsOwner =
-    currentShopRoles.includes(
-      "owner"
-    )
-    ||
-    String(
-      u.id
-    )
-    ===
-    SHOP_OWNER_USER_ID;
-
-
-  const allowed =
-    currentShopRoles.some(
-      role =>
-        [
-          "owner",
-          "shop_admin",
-          "shop_staff"
-        ]
-          .includes(
-            role
-          )
-    );
-
-
-  if(
-    !allowed
-  ){
-
-    /*
-      Admin Academy nhưng không có quyền Shop
-      → quay lại Academy Admin.
-    */
-
-    if(
-      academyRole === "admin"
-    ){
-
-      window.location.replace(
-        "/admin"
-      );
-
-      return null;
-
-    }
-
-
-    /*
-      Tài khoản khác không có quyền Shop
-      → về Trang tổng.
-    */
-
-    window.location.replace(
-      "/"
-    );
-
-    return null;
-
-  }
-
-
-  return u;
+  return null;
 
 }
-
-
 /* =====================================================
 LOGOUT
 ===================================================== */
