@@ -5530,91 +5530,170 @@
      LOAD
   ====================================================== */
 
-  async function loadOrder() {
+async function loadOrder() {
 
-    try {
+  try {
 
-      await requireShopAccess();
+    await requireShopAccess();
 
-      const [
-        orderResult,
-        itemsResult
-      ] =
-        await Promise.all([
 
-          sb
-            .from(
-              "shop_orders"
-            )
-            .select("*")
-            .eq(
-              "id",
-              orderId
-            )
-            .single(),
+    const [
+      orderResult,
+      itemsResult,
+      settlementResult,
+      supplierResult
+    ] =
+      await Promise.all([
 
-          sb
-            .from(
-              "shop_order_items"
-            )
-            .select("*")
-            .eq(
-              "order_id",
-              orderId
-            )
-            .order(
-              "id",
-              {
-                ascending:
-                  true
-              }
-            )
+        sb
+          .from(
+            "shop_orders"
+          )
+          .select("*")
+          .eq(
+            "id",
+            orderId
+          )
+          .single(),
 
-        ]);
 
-      if (
-        orderResult.error
-      ) {
+        sb
+          .from(
+            "shop_order_items"
+          )
+          .select("*")
+          .eq(
+            "order_id",
+            orderId
+          )
+          .order(
+            "id",
+            {
+              ascending:
+                true
+            }
+          ),
 
-        throw orderResult.error;
 
-      }
+        sb
+          .from(
+            "shop_supplier_settlement_summary"
+          )
+          .select("*")
+          .eq(
+            "order_id",
+            orderId
+          )
+          .order(
+            "id",
+            {
+              ascending:
+                true
+            }
+          ),
 
-      if (
-        itemsResult.error
-      ) {
 
-        throw itemsResult.error;
+        sb
+          .from(
+            "shop_suppliers"
+          )
+          .select("*")
+          .order(
+            "id",
+            {
+              ascending:
+                true
+            }
+          )
 
-      }
+      ]);
 
-      currentOrder =
-        orderResult.data;
 
-      currentItems =
-        itemsResult.data
-        ||
-        [];
+    if (
+      orderResult.error
+    ) {
 
-      render();
+      throw orderResult.error;
 
     }
-    catch (error) {
 
-      console.error(
-        "SHOP ORDER DETAIL ERROR:",
-        error
-      );
 
-      showState(
-        error?.message
-        ||
-        "Không tải được đơn hàng."
-      );
+    if (
+      itemsResult.error
+    ) {
+
+      throw itemsResult.error;
 
     }
+
+
+    if (
+      settlementResult.error
+    ) {
+
+      throw settlementResult.error;
+
+    }
+
+
+    if (
+      supplierResult.error
+    ) {
+
+      throw supplierResult.error;
+
+    }
+
+
+    currentOrder =
+      orderResult.data;
+
+
+    currentItems =
+      itemsResult.data
+      ||
+      [];
+
+
+    /*
+      Gắn dữ liệu vận hành mở rộng
+      trực tiếp vào currentOrder
+      để render() và event handlers
+      dùng chung mà không cần thêm global.
+    */
+
+    currentOrder._supplierSettlements =
+      settlementResult.data
+      ||
+      [];
+
+
+    currentOrder._shopSuppliers =
+      supplierResult.data
+      ||
+      [];
+
+
+    render();
 
   }
+  catch (error) {
+
+    console.error(
+      "SHOP ORDER DETAIL ERROR:",
+      error
+    );
+
+
+    showState(
+      error?.message
+      ||
+      "Không tải được đơn hàng."
+    );
+
+  }
+
+}
 
   loadOrder();
 
