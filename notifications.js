@@ -3321,3 +3321,160 @@ async function mountPushUi() {
   }
 
 })();
+/* =========================================================
+   PICKDEE SUPPORT
+   Dùng chung cho khu vực Học viên + Coach
+========================================================= */
+
+(function () {
+
+  const path =
+    String(
+      window.location.pathname || "/"
+    )
+      .toLowerCase()
+      .replace(
+        /\/+$/,
+        ""
+      );
+
+
+  const isStudentPage =
+    path === "/student"
+    ||
+    path.startsWith(
+      "/student-"
+    );
+
+
+  const isCoachPage =
+    path === "/coach"
+    ||
+    path.startsWith(
+      "/coach-"
+    );
+
+
+  /*
+    Support nổi chỉ dành cho người dùng Academy.
+    Không tự gắn vào Admin từ notifications.js.
+  */
+  if (
+    !isStudentPage
+    &&
+    !isCoachPage
+  ) {
+
+    return;
+
+  }
+
+
+  let attempts =
+    0;
+
+
+  function loadPickDeeSupport() {
+
+    if (
+      document.getElementById(
+        "pickdeeSupportRoot"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      document.querySelector(
+        'script[data-pickdee-support-loader="academy"]'
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const cfg =
+      window.PICKDEE_CONFIG || {};
+
+
+    if (
+      !window.supabase
+      ||
+      !cfg.SUPABASE_URL
+      ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
+    ) {
+
+      attempts +=
+        1;
+
+
+      if (
+        attempts < 30
+      ) {
+
+        window.setTimeout(
+          loadPickDeeSupport,
+          300
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    const script =
+      document.createElement(
+        "script"
+      );
+
+
+    script.src =
+      "/support-widget.js?v=20261013-1";
+
+
+    script.async =
+      true;
+
+
+    script.dataset.pickdeeSupportLoader =
+      "academy";
+
+
+    document.body.appendChild(
+      script
+    );
+
+  }
+
+
+  if (
+    document.readyState
+    ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      loadPickDeeSupport,
+      {
+        once: true
+      }
+    );
+
+  }
+  else {
+
+    loadPickDeeSupport();
+
+  }
+
+})();
