@@ -2437,7 +2437,175 @@ deleteConversationBtn.style.display =
 
   }
 
+/* =====================================================
+   DELETE CONVERSATION
+===================================================== */
 
+async function deleteConversation() {
+
+  if (
+    !currentConversation?.id
+    ||
+    currentConversation.status !== "closed"
+  ) {
+    return;
+  }
+
+
+  const conversationName =
+    currentConversation.display_name
+    ||
+    currentConversation.contact_email
+    ||
+    "cuộc trò chuyện này";
+
+
+  const confirmed =
+    window.confirm(
+      `Xóa vĩnh viễn cuộc trò chuyện với ${conversationName}?\n\nToàn bộ tin nhắn trong cuộc trò chuyện này sẽ bị xóa và không thể khôi phục.`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  deleteConversationBtn.disabled =
+    true;
+
+  deleteConversationBtn.textContent =
+    "ĐANG XÓA...";
+
+
+  showPageError(
+    ""
+  );
+
+
+  try {
+
+    const conversationId =
+      currentConversation.id;
+
+
+    const {
+      error
+    } =
+      await sb.rpc(
+        "support_admin_delete_conversation",
+        {
+          p_conversation_id:
+            conversationId
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    currentConversation =
+      null;
+
+    lastMessageSignature =
+      "";
+
+
+    messagesEl.innerHTML =
+      "";
+
+    chatName.textContent =
+      "—";
+
+    chatMeta.textContent =
+      "—";
+
+
+    chatContent.style.display =
+      "none";
+
+    emptyChat.style.display =
+      "flex";
+
+    deleteConversationBtn.style.display =
+      "none";
+
+
+    const url =
+      new URL(
+        window.location.href
+      );
+
+
+    if (
+      url.searchParams.has(
+        "conversation"
+      )
+    ) {
+
+      url.searchParams.delete(
+        "conversation"
+      );
+
+
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname
+        +
+        url.search
+        +
+        url.hash
+      );
+
+    }
+
+
+    await loadConversations(
+      false
+    );
+
+  }
+  catch (
+    error
+  ) {
+
+    console.error(
+      "DELETE SUPPORT CONVERSATION:",
+      error
+    );
+
+
+    showPageError(
+      "Không xóa được cuộc trò chuyện: "
+      +
+      (
+        error?.message
+        ||
+        error
+      )
+    );
+
+  }
+  finally {
+
+    deleteConversationBtn.disabled =
+      false;
+
+    deleteConversationBtn.textContent =
+      "🗑 XÓA";
+
+  }
+
+}
+
+
+deleteConversationBtn.addEventListener(
+  "click",
+  deleteConversation
+);
   /* =====================================================
      EVENTS
   ====================================================== */
