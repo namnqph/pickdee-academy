@@ -107,15 +107,17 @@
     }
 
 
-    if (
-      path.startsWith(
-        "/student"
-      )
-    ) {
+   if (
+  path.startsWith(
+    "/student"
+  )
+  ||
+  path === "/change-coach"
+) {
 
-      return "academy_student";
+  return "academy_student";
 
-    }
+}
 
 
     if (
