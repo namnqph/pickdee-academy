@@ -3339,12 +3339,14 @@ async function mountPushUi() {
       );
 
 
-  const isStudentPage =
-    path === "/student"
-    ||
-    path.startsWith(
-      "/student-"
-    );
+ const isStudentPage =
+  path === "/student"
+  ||
+  path === "/change-coach"
+  ||
+  path.startsWith(
+    "/student-"
+  );
 
 
   const isCoachPage =
