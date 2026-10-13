@@ -8024,142 +8024,7 @@ false
 
 })();
 </script>
-<script>
-(function () {
 
-  function dockShopBell() {
-
-    const bellRoot =
-      document.getElementById(
-        "pickdeeNotificationRoot"
-      );
-
-    const topActions =
-      document.querySelector(
-        ".top-actions"
-      );
-
-    const profileButton =
-      document.getElementById(
-        "shopProfileButton"
-      );
-
-
-    if (
-      !bellRoot
-      ||
-      !topActions
-      ||
-      !profileButton
-    ) {
-      return false;
-    }
-
-
-    /*
-      Đặt chuông NGAY TRƯỚC nút Hồ sơ
-    */
-    topActions.insertBefore(
-      bellRoot,
-      profileButton
-    );
-
-
-    /*
-      Hủy hoàn toàn vị trí fixed cũ
-      của notifications.js
-    */
-    bellRoot.style.setProperty(
-      "position",
-      "relative",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "top",
-      "auto",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "right",
-      "auto",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "left",
-      "auto",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "bottom",
-      "auto",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "margin",
-      "0",
-      "important"
-    );
-
-    bellRoot.style.setProperty(
-      "flex",
-      "0 0 auto",
-      "important"
-    );
-
-
-    topActions.style.display =
-      "flex";
-
-    topActions.style.alignItems =
-      "center";
-
-    topActions.style.gap =
-      "7px";
-
-
-    return true;
-
-  }
-
-
-  if (
-    dockShopBell()
-  ) {
-    return;
-  }
-
-
-  const observer =
-    new MutationObserver(
-      function () {
-
-        if (
-          dockShopBell()
-        ) {
-
-          observer.disconnect();
-
-        }
-
-      }
-    );
-
-
-  observer.observe(
-    document.body,
-    {
-      childList: true,
-      subtree: true
-    }
-  );
-
-})();
-</script>
   <script>
 (function () {
 
@@ -8489,6 +8354,233 @@ false
     startProfileViewMode();
 
   }
+
+})();
+</script>
+  <style>
+  #shopHeaderAccountActions{
+    margin-left:auto !important;
+
+    display:flex !important;
+    align-items:center !important;
+
+    gap:7px !important;
+
+    flex:0 0 auto !important;
+  }
+
+  #shopHeaderAccountActions
+  #pickdeeNotificationRoot{
+    position:relative !important;
+
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+
+    margin:0 !important;
+
+    transform:none !important;
+
+    flex:0 0 auto !important;
+  }
+
+  #shopHeaderAccountActions
+  #shopProfileButton{
+    position:relative !important;
+
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+
+    margin:0 !important;
+
+    transform:none !important;
+
+    flex:0 0 auto !important;
+  }
+</style>
+
+<script>
+(function () {
+
+  function groupShopHeaderActions() {
+
+    const header =
+      document.querySelector(
+        ".header-inner"
+      );
+
+    const bell =
+      document.getElementById(
+        "pickdeeNotificationRoot"
+      );
+
+    const profile =
+      document.getElementById(
+        "shopProfileButton"
+      );
+
+
+    if (
+      !header
+      ||
+      !bell
+      ||
+      !profile
+    ) {
+
+      return false;
+
+    }
+
+
+    let group =
+      document.getElementById(
+        "shopHeaderAccountActions"
+      );
+
+
+    if (
+      !group
+    ) {
+
+      group =
+        document.createElement(
+          "div"
+        );
+
+
+      group.id =
+        "shopHeaderAccountActions";
+
+
+      header.appendChild(
+        group
+      );
+
+    }
+
+
+    /*
+      Chuyển hẳn 2 nút vào cùng một container.
+      Bell trước - Profile sau.
+    */
+
+    group.appendChild(
+      bell
+    );
+
+    group.appendChild(
+      profile
+    );
+
+
+    /*
+      Xóa mọi vị trí fixed cũ của chuông.
+    */
+
+    bell.style.setProperty(
+      "position",
+      "relative",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "top",
+      "auto",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "right",
+      "auto",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "bottom",
+      "auto",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "left",
+      "auto",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "margin",
+      "0",
+      "important"
+    );
+
+    bell.style.setProperty(
+      "transform",
+      "none",
+      "important"
+    );
+
+
+    profile.style.setProperty(
+      "margin",
+      "0",
+      "important"
+    );
+
+
+    return true;
+
+  }
+
+
+  let attempts =
+    0;
+
+
+  const timer =
+    setInterval(
+      function () {
+
+        attempts += 1;
+
+
+        if (
+          groupShopHeaderActions()
+          ||
+          attempts >= 40
+        ) {
+
+          clearInterval(
+            timer
+          );
+
+        }
+
+      },
+      250
+    );
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        groupShopHeaderActions();
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList:true,
+      subtree:true
+    }
+  );
 
 })();
 </script>
