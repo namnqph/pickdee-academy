@@ -119,7 +119,24 @@
 
 }
 
+if (
+  path === "/apply-coach"
+) {
 
+  return "academy_coach";
+
+}
+
+
+if (
+  path === "/find-coach"
+  ||
+  path === "/courts"
+) {
+
+  return "academy";
+
+}
     if (
       path.startsWith(
         "/admin"
