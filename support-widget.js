@@ -135,6 +135,8 @@ if (
   ||
   path === "/court"
   ||
+  path === "/court-claim"
+  ||
   path === "/add-my-court"
 ) {
 
