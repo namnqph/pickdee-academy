@@ -138,6 +138,8 @@ if (
   path === "/court-claim"
   ||
   path === "/add-my-court"
+  ||
+  path === "/forgot-password"
 ) {
 
   return "academy";
