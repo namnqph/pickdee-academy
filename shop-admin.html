@@ -8024,5 +8024,142 @@ false
 
 })();
 </script>
+<script>
+(function () {
+
+  function dockShopBell() {
+
+    const bellRoot =
+      document.getElementById(
+        "pickdeeNotificationRoot"
+      );
+
+    const topActions =
+      document.querySelector(
+        ".top-actions"
+      );
+
+    const profileButton =
+      document.getElementById(
+        "shopProfileButton"
+      );
+
+
+    if (
+      !bellRoot
+      ||
+      !topActions
+      ||
+      !profileButton
+    ) {
+      return false;
+    }
+
+
+    /*
+      Đặt chuông NGAY TRƯỚC nút Hồ sơ
+    */
+    topActions.insertBefore(
+      bellRoot,
+      profileButton
+    );
+
+
+    /*
+      Hủy hoàn toàn vị trí fixed cũ
+      của notifications.js
+    */
+    bellRoot.style.setProperty(
+      "position",
+      "relative",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "top",
+      "auto",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "right",
+      "auto",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "left",
+      "auto",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "bottom",
+      "auto",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "margin",
+      "0",
+      "important"
+    );
+
+    bellRoot.style.setProperty(
+      "flex",
+      "0 0 auto",
+      "important"
+    );
+
+
+    topActions.style.display =
+      "flex";
+
+    topActions.style.alignItems =
+      "center";
+
+    topActions.style.gap =
+      "7px";
+
+
+    return true;
+
+  }
+
+
+  if (
+    dockShopBell()
+  ) {
+    return;
+  }
+
+
+  const observer =
+    new MutationObserver(
+      function () {
+
+        if (
+          dockShopBell()
+        ) {
+
+          observer.disconnect();
+
+        }
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+})();
+</script>
+  
 </body>
 </html>
