@@ -604,204 +604,234 @@
     }
 
 
-    async function redirectUser(
-      user
-    ) {
+  async function redirectUser(
+  user
+) {
 
-      if (
-        !user?.id
-      ) {
+  if (
+    !user?.id
+  ) {
 
-        throw new Error(
-          "Không lấy được thông tin tài khoản."
-        );
+    throw new Error(
+      "Không lấy được thông tin tài khoản."
+    );
 
-      }
-
-
-      const next =
-        getNextPath();
+  }
 
 
-      const shopRoles =
-        await getShopRoles(
-          user.id
-        );
+  const next =
+    getNextPath();
 
 
-      const hasShopAccess =
-        [
-          "owner",
-          "shop_admin",
-          "shop_staff"
-        ]
-          .some(
-            function (role) {
-
-              return shopRoles.includes(
-                role
-              );
-
-            }
-          );
+  const shopRoles =
+    await getShopRoles(
+      user.id
+    );
 
 
-      if (
-        hasShopAccess
-        &&
-        safeShopNext(
-          next
-        )
-      ) {
+  const hasShopAccess =
+    [
+      "owner",
+      "shop_admin",
+      "shop_staff"
+    ]
+      .some(
+        function (role) {
 
-        window.location.replace(
-          next
-        );
-
-
-        return;
-
-      }
-
-
-      const {
-        profile,
-        error:
-          profileError
-      } =
-        await getProfile(
-          user.id
-        );
-
-
-      const role =
-        normalizeRole(
-          profile?.role
-        );
-
-
-      if (
-        role === "coach"
-        &&
-        safeCoachNext(
-          next
-        )
-      ) {
-
-        window.location.replace(
-          next
-        );
-
-
-        return;
-
-      }
-
-
-      if (
-        hasShopAccess
-      ) {
-
-        window.location.replace(
-          "/shop-admin"
-        );
-
-
-        return;
-
-      }
-
-
-      if (
-        profileError
-        ||
-        !profile
-      ) {
-
-        const accountType =
-          String(
-            user
-              ?.user_metadata
-              ?.account_type
-            ||
-            ""
-          )
-            .trim();
-
-
-        if (
-          accountType
-          ===
-          "coach_application"
-        ) {
-
-          throw new Error(
-            "Hồ sơ Coach của bạn đang chờ Admin duyệt."
+          return shopRoles.includes(
+            role
           );
 
         }
+      );
 
 
-        throw new Error(
-          "Không đọc được hồ sơ tài khoản."
-        );
+  /* =================================================
+     ĐI TỪ SHOP
+     → BẮT BUỘC ƯU TIÊN SHOP
+  ================================================== */
 
-      }
+  if (
+    safeShopNext(
+      next
+    )
+  ) {
 
+    if (
+      hasShopAccess
+    ) {
 
-      if (
-        role === "admin"
-      ) {
-
-        window.location.replace(
-          "/admin"
-        );
-
-
-        return;
-
-      }
-
-
-      if (
-        role === "coach"
-      ) {
-
-        window.location.replace(
-          "/coach"
-        );
+      window.location.replace(
+        next
+      );
 
 
-        return;
+      return;
 
-      }
+    }
 
 
-      if (
-        role === "student"
+    throw new Error(
+      "Tài khoản này chưa có quyền quản lý PickDee Shop."
+    );
+
+  }
+
+
+  /* =================================================
+     ĐỌC PROFILE ACADEMY
+  ================================================== */
+
+  const {
+    profile,
+    error:
+      profileError
+  } =
+    await getProfile(
+      user.id
+    );
+
+
+  const role =
+    normalizeRole(
+      profile?.role
+    );
+
+
+  /* =================================================
+     LINK RIÊNG CỦA COACH
+  ================================================== */
+
+  if (
+    role === "coach"
+    &&
+    safeCoachNext(
+      next
+    )
+  ) {
+
+    window.location.replace(
+      next
+    );
+
+
+    return;
+
+  }
+
+
+  /* =================================================
+     LOGIN BÌNH THƯỜNG
+     → ĐI ĐÚNG ROLE ACADEMY
+  ================================================== */
+
+  if (
+    role === "admin"
+  ) {
+
+    window.location.replace(
+      "/admin"
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    role === "coach"
+  ) {
+
+    window.location.replace(
+      "/coach"
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    role === "student"
+    ||
+    role === "hocvien"
+    ||
+    role === "học viên"
+  ) {
+
+    window.location.replace(
+      "/student"
+    );
+
+
+    return;
+
+  }
+
+
+  /* =================================================
+     KHÔNG CÓ ROLE ACADEMY
+     NHƯNG CÓ QUYỀN SHOP
+  ================================================== */
+
+  if (
+    hasShopAccess
+  ) {
+
+    window.location.replace(
+      "/shop-admin"
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    profileError
+    ||
+    !profile
+  ) {
+
+    const accountType =
+      String(
+        user
+          ?.user_metadata
+          ?.account_type
         ||
-        role === "hocvien"
-        ||
-        role === "học viên"
-      ) {
-
-        window.location.replace(
-          "/student"
-        );
+        ""
+      )
+        .trim();
 
 
-        return;
-
-      }
-
+    if (
+      accountType
+      ===
+      "coach_application"
+    ) {
 
       throw new Error(
-        "Tài khoản chưa được phân quyền."
+        "Hồ sơ Coach của bạn đang chờ Admin duyệt."
       );
 
     }
 
 
+    throw new Error(
+      "Không đọc được hồ sơ tài khoản."
+    );
+
+  }
+
+
+  throw new Error(
+    "Tài khoản chưa được phân quyền."
+  );
+
+}
     form.addEventListener(
       "submit",
       async function (event) {
