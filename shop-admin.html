@@ -8160,6 +8160,337 @@ false
 
 })();
 </script>
-  
+  <script>
+(function () {
+
+  function startProfileViewMode() {
+
+    const sb =
+      window.sb ||
+      window.supabaseClient;
+
+    const saveBtn =
+      document.getElementById(
+        "shopProfileSave"
+      );
+
+    const nameInput =
+      document.getElementById(
+        "shopProfileName"
+      );
+
+    const phoneInput =
+      document.getElementById(
+        "shopProfilePhone"
+      );
+
+    const profileButton =
+      document.getElementById(
+        "shopProfileButton"
+      );
+
+    const messageEl =
+      document.getElementById(
+        "shopProfileMessage"
+      );
+
+
+    if (
+      !sb ||
+      !saveBtn ||
+      !nameInput ||
+      !phoneInput ||
+      !profileButton ||
+      !messageEl
+    ) {
+
+      setTimeout(
+        startProfileViewMode,
+        250
+      );
+
+      return;
+    }
+
+
+    if (
+      document.getElementById(
+        "shopProfileEdit"
+      )
+    ) {
+      return;
+    }
+
+
+    const editBtn =
+      document.createElement(
+        "button"
+      );
+
+    editBtn.id =
+      "shopProfileEdit";
+
+    editBtn.type =
+      "button";
+
+    editBtn.className =
+      "shop-profile-password";
+
+    editBtn.textContent =
+      "✏️ SỬA HỒ SƠ";
+
+
+    saveBtn.parentNode.insertBefore(
+      editBtn,
+      saveBtn
+    );
+
+
+    function setEditing(
+      editing
+    ) {
+
+      nameInput.readOnly =
+        !editing;
+
+      phoneInput.readOnly =
+        !editing;
+
+
+      nameInput.style.opacity =
+        editing
+          ? "1"
+          : ".72";
+
+      phoneInput.style.opacity =
+        editing
+          ? "1"
+          : ".72";
+
+
+      nameInput.style.cursor =
+        editing
+          ? "text"
+          : "default";
+
+      phoneInput.style.cursor =
+        editing
+          ? "text"
+          : "default";
+
+
+      editBtn.style.display =
+        editing
+          ? "none"
+          : "flex";
+
+      saveBtn.style.display =
+        editing
+          ? "flex"
+          : "none";
+
+
+      if (
+        editing
+      ) {
+
+        messageEl.textContent =
+          "";
+
+        setTimeout(
+          function () {
+
+            nameInput.focus();
+
+          },
+          60
+        );
+
+      }
+
+    }
+
+
+    async function detectProfile() {
+
+      try {
+
+        const {
+          data:
+            sessionData
+        } =
+          await sb.auth.getSession();
+
+
+        const userId =
+          sessionData
+            ?.session
+            ?.user
+            ?.id;
+
+
+        if (
+          !userId
+        ) {
+          return;
+        }
+
+
+        const {
+          data:
+            profile,
+          error
+        } =
+          await sb
+            .from(
+              "shop_profiles"
+            )
+            .select(
+              "user_id"
+            )
+            .eq(
+              "user_id",
+              userId
+            )
+            .maybeSingle();
+
+
+        if (
+          error
+        ) {
+
+          console.warn(
+            "SHOP PROFILE VIEW MODE:",
+            error
+          );
+
+          return;
+        }
+
+
+        /*
+          Có hồ sơ rồi:
+          → chỉ xem
+          → hiện Sửa hồ sơ
+
+          Chưa có hồ sơ:
+          → nhập và Lưu hồ sơ
+        */
+
+        setEditing(
+          !profile
+        );
+
+      }
+      catch (error) {
+
+        console.warn(
+          "SHOP PROFILE VIEW MODE:",
+          error
+        );
+
+      }
+
+    }
+
+
+    editBtn.addEventListener(
+      "click",
+      function () {
+
+        setEditing(
+          true
+        );
+
+      }
+    );
+
+
+    /*
+      Mỗi lần mở Hồ sơ
+      thì xác định trạng thái lại.
+    */
+
+    profileButton.addEventListener(
+      "click",
+      function () {
+
+        setTimeout(
+          detectProfile,
+          200
+        );
+
+      }
+    );
+
+
+    /*
+      Sau khi code cũ lưu thành công
+      → tự trở về chế độ chỉ xem.
+    */
+
+    const observer =
+      new MutationObserver(
+        function () {
+
+          const text =
+            String(
+              messageEl.textContent || ""
+            );
+
+
+          if (
+            text.includes(
+              "Đã lưu hồ sơ"
+            )
+          ) {
+
+            setEditing(
+              false
+            );
+
+          }
+
+        }
+      );
+
+
+    observer.observe(
+      messageEl,
+      {
+        childList: true,
+        characterData: true,
+        subtree: true
+      }
+    );
+
+
+    detectProfile();
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      startProfileViewMode,
+      {
+        once: true
+      }
+    );
+
+  }
+  else {
+
+    startProfileViewMode();
+
+  }
+
+})();
+</script>
 </body>
 </html>
