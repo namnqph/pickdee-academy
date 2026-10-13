@@ -5235,23 +5235,29 @@
        rồi bấm LƯU VẬN CHUYỂN.
     ====================================================== */
 
-    if (
-      status === "packing"
-    ) {
+  if (
+  status === "packing"
+) {
 
-      html = `
+  html = `
 
-        <button
-          class="action-btn action-danger"
-          data-status="cancelled"
-          style="grid-column:1 / -1;"
-        >
-          HỦY ĐƠN
-        </button>
+    <button
+      class="action-btn action-danger"
+      data-status="cancelled"
+    >
+      HỦY ĐƠN
+    </button>
 
-      `;
+    <button
+      class="action-btn action-primary"
+      data-status="completed"
+    >
+      ✓ KHÁCH ĐÃ NHẬN / HOÀN TẤT
+    </button>
 
-    }
+  `;
+
+}
 
 
     /* =====================================================
@@ -5343,12 +5349,37 @@
 
     try {
 
-      const updateData = {
+     const updateData = {
 
-        order_status:
-          nextStatus
+  order_status:
+    nextStatus
 
-      };
+};
+
+
+if (
+  nextStatus === "completed"
+) {
+
+  const ok =
+    window.confirm(
+      "Xác nhận khách đã nhận hàng và hoàn tất đơn này?"
+    );
+
+
+  if (!ok) {
+
+    renderActions();
+
+    return;
+
+  }
+
+
+  updateData.shipping_status =
+    "delivered";
+
+}
 
       if (
         nextStatus === "completed"
