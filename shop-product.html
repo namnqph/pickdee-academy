@@ -491,6 +491,23 @@
     }
 
 
+    .variant-btn.has-thumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 5px;
+      text-align: left;
+    }
+
+    .opt-thumb {
+      width: 36px;
+      height: 36px;
+      flex: none;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #fff;
+    }
+
     .variant-btn.active {
       color: #071523;
 
@@ -1440,6 +1457,100 @@
   }
 
 
+  /*
+    Ảnh nhỏ trên nút lựa chọn (màu / combo).
+    Ô 2 ưu tiên biến thể cùng giá trị ô 1 đang chọn
+    (vd. Tất: "Đen · 1 đôi" của Cao cổ khác Ngắn cổ).
+  */
+  function optionThumbUrl(index, value) {
+
+    const key =
+      index === 1
+        ? "option1_value"
+        : "option2_value";
+
+    const matches =
+      variants.filter(
+        variant =>
+          variant.is_active !== false
+          &&
+          String(variant[key] || "") === String(value)
+      );
+
+    const preferred =
+      index === 2 && selectedOption1Value
+        ? matches.filter(
+            variant =>
+              String(variant.option1_value || "")
+              ===
+              String(selectedOption1Value)
+          )
+        : [];
+
+    for (const list of [preferred, matches]) {
+      for (const variant of list) {
+        const image =
+          images.find(
+            item =>
+              String(item.variant_id || "")
+              ===
+              String(variant.id)
+          );
+
+        if (image) {
+          return imageUrl(image.storage_path);
+        }
+      }
+    }
+
+    return "";
+
+  }
+
+
+  function optionButtonInner(index, value) {
+
+    const url =
+      optionThumbUrl(index, value);
+
+    return (
+      url
+        ? `<img class="opt-thumb" src="${escapeHtml(url)}" alt="" loading="lazy">`
+        : ""
+    )
+    + `<span>${escapeHtml(value)}</span>`;
+
+  }
+
+
+  function refreshOption2Thumbs() {
+
+    document
+      .querySelectorAll(
+        '[data-option-index="2"]'
+      )
+      .forEach(
+        function (button) {
+
+          const img =
+            button.querySelector(".opt-thumb");
+
+          const url =
+            optionThumbUrl(
+              2,
+              button.dataset.optionValue
+            );
+
+          if (img && url) {
+            img.src = url;
+          }
+
+        }
+      );
+
+  }
+
+
 
   /* =====================================================
      CART COUNT
@@ -1793,6 +1904,8 @@ function updateCartCount() {
           return `
             <button
               class="variant-btn option-btn ${
+                images.some(item => item.variant_id) ? "has-thumb" : ""
+              } ${
                 active
                   ?
                     "active"
@@ -1803,7 +1916,7 @@ function updateCartCount() {
               data-option-index="1"
               data-option-value="${escapeHtml(value)}"
             >
-              ${escapeHtml(value)}
+              ${optionButtonInner(1, value)}
             </button>
           `;
 
@@ -1836,6 +1949,8 @@ function updateCartCount() {
           return `
             <button
               class="variant-btn option-btn ${
+                images.some(item => item.variant_id) ? "has-thumb" : ""
+              } ${
                 active
                   ?
                     "active"
@@ -1846,7 +1961,7 @@ function updateCartCount() {
               data-option-index="2"
               data-option-value="${escapeHtml(value)}"
             >
-              ${escapeHtml(value)}
+              ${optionButtonInner(2, value)}
             </button>
           `;
 
@@ -3505,7 +3620,10 @@ function bindProductEvents() {
           )
         ) {
           setTimeout(
-            showSelectedVariantImage,
+            function () {
+              refreshOption2Thumbs();
+              showSelectedVariantImage();
+            },
             0
           );
         }
