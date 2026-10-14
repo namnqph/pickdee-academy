@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8">
 
+  <link rel="preconnect" href="https://snxztjsluhdibrklougo.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
@@ -3898,7 +3901,11 @@ updateControls();
   }
 
 
-  await init();
+  // Khối điểm danh nhóm (cuối trang) chờ promise này thay vì chờ cứng.
+  window.PD_SESSION_READY =
+    init();
+
+  await window.PD_SESSION_READY;
 
 
 })();
@@ -4365,22 +4372,41 @@ window.addEventListener(
       return;
     }
 
-    await new Promise(
-      resolve =>
-        setTimeout(resolve, 800)
-    );
+    // Gọi 2 truy vấn cùng lúc; chỉ chờ phần chính hiển thị xong
+    // (PD_SESSION_READY) thay vì chờ cứng 800ms.
+    const sessionRowPromise =
+      groupSb
+        .from("class_sessions")
+        .select(`
+          id,
+          status,
+          training_group_id
+        `)
+        .eq(
+          "id",
+          sessionId
+        )
+        .maybeSingle()
+        .then(result => result);
 
-    const {
-      data: participantData,
-      error: participantError
-    } =
-      await groupSb.rpc(
-        "coach_get_session_participants",
-        {
-          p_session_id:
-            sessionId
-        }
-      );
+    const [
+      {
+        data: participantData,
+        error: participantError
+      }
+    ] =
+      await Promise.all([
+        groupSb.rpc(
+          "coach_get_session_participants",
+          {
+            p_session_id:
+              sessionId
+          }
+        ),
+        Promise.resolve(
+          window.PD_SESSION_READY
+        ).catch(() => null)
+      ]);
 
     if (
       participantError ||
@@ -4407,18 +4433,7 @@ window.addEventListener(
       data: sessionRow,
       error: sessionError
     } =
-      await groupSb
-        .from("class_sessions")
-        .select(`
-          id,
-          status,
-          training_group_id
-        `)
-        .eq(
-          "id",
-          sessionId
-        )
-        .maybeSingle();
+      await sessionRowPromise;
 
     if (
       sessionError ||
