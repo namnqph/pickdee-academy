@@ -8510,5 +8510,219 @@ false
 
 })();
 </script>
+<style>
+  /* PICKDEE SHOP - Thống kê Vợt / Phụ kiện (chỉ owner) */
+  #ownerCategoryStats{
+    margin:0 0 16px;
+    padding:14px;
+    border:1px solid rgba(216,255,69,.22);
+    border-radius:16px;
+    background:rgba(216,255,69,.04);
+  }
+  #ownerCategoryStats .ocs-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  #ownerCategoryStats .ocs-title{
+    font-size:15px;
+    font-weight:800;
+  }
+  #ownerCategoryStats .ocs-note{
+    font-size:12px;
+    color:rgba(255,255,255,.5);
+  }
+  #ownerCategoryStats .ocs-periods{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  #ownerCategoryStats .ocs-period{
+    min-height:34px;
+    padding:0 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:transparent;
+    color:rgba(255,255,255,.8);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  #ownerCategoryStats .ocs-period.active{
+    background:#d8ff45;
+    border-color:#d8ff45;
+    color:#071523;
+  }
+  #ownerCategoryStats .ocs-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  #ownerCategoryStats .ocs-card{
+    padding:12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.03);
+    min-width:0;
+  }
+  #ownerCategoryStats .ocs-card.is-paddle{border-color:rgba(255,184,77,.35)}
+  #ownerCategoryStats .ocs-card.is-accessory{border-color:rgba(91,200,255,.32)}
+  #ownerCategoryStats .ocs-cat{
+    font-size:13px;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  #ownerCategoryStats .ocs-rev{
+    font-size:22px;
+    font-weight:900;
+    color:#d8ff45;
+    line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  #ownerCategoryStats .ocs-sub{
+    margin-top:4px;
+    font-size:13px;
+    color:rgba(255,255,255,.7);
+  }
+  #ownerCategoryStats .ocs-open{
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid rgba(255,255,255,.08);
+    font-size:13px;
+    color:rgba(255,255,255,.75);
+  }
+  #ownerCategoryStats .ocs-top{
+    margin-top:10px;
+    font-size:13px;
+    color:rgba(255,255,255,.75);
+  }
+  #ownerCategoryStats .ocs-top b{
+    display:block;
+    margin-bottom:4px;
+    color:#fff;
+  }
+  #ownerCategoryStats .ocs-top li{
+    margin:2px 0;
+    overflow-wrap:anywhere;
+  }
+  #ownerCategoryStats .ocs-top ol{
+    margin:0;
+    padding-left:18px;
+  }
+  @media(max-width:560px){
+    #ownerCategoryStats .ocs-grid.ocs-top{grid-template-columns:1fr}
+  }
+  @media(max-width:420px){
+    #ownerCategoryStats .ocs-rev{font-size:19px}
+  }
+</style>
+<script>
+/* PICKDEE SHOP - Thống kê Vợt / Phụ kiện: chỉ tài khoản owner thấy (RPC tự chặn người khác) */
+(function () {
+
+  const PERIODS = [
+    ["today", "Hôm nay"],
+    ["last7", "7 ngày"],
+    ["month", "Tháng này"],
+    ["prev_month", "Tháng trước"]
+  ];
+
+  let period = "month";
+  let stats = null;
+
+  try {
+    period = localStorage.getItem("pd_ocs_period") || "month";
+  } catch (e) {}
+
+  const money = value =>
+    new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + "đ";
+
+  const esc = value =>
+    String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+
+  function card(key, label, cls) {
+    const s = (stats[key] || {})[period] || {};
+    const open = (stats[key] || {}).open || {};
+    return `
+      <div class="ocs-card ${cls}">
+        <div class="ocs-cat">${label}</div>
+        <div class="ocs-rev">${money(s.revenue)}</div>
+        <div class="ocs-sub">${Number(s.orders || 0)} đơn · ${Number(s.qty || 0)} sản phẩm</div>
+        <div class="ocs-open">Đang xử lý: <b>${Number(open.orders || 0)}</b> đơn · ${money(open.value)}</div>
+      </div>`;
+  }
+
+  function topList(list) {
+    if (!list || !list.length) {
+      return "<div>Chưa có</div>";
+    }
+    return "<ol>" + list.map(item =>
+      `<li>${esc(item.name)} × ${Number(item.qty)} · ${money(item.revenue)}</li>`
+    ).join("") + "</ol>";
+  }
+
+  function render() {
+    let box = document.getElementById("ownerCategoryStats");
+    const anchor = document.querySelector("#ordersView .toolbar");
+    if (!anchor) return;
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ownerCategoryStats";
+      anchor.parentNode.insertBefore(box, anchor);
+    }
+    box.innerHTML = `
+      <div class="ocs-head">
+        <div class="ocs-title">📊 Vợt / Phụ kiện</div>
+        <div class="ocs-note">Chỉ anh xem · doanh thu đơn hoàn tất</div>
+      </div>
+      <div class="ocs-periods">
+        ${PERIODS.map(([k, l]) => `<button type="button" class="ocs-period ${k === period ? "active" : ""}" data-period="${k}">${l}</button>`).join("")}
+      </div>
+      <div class="ocs-grid">
+        ${card("paddle", "🏓 Vợt", "is-paddle")}
+        ${card("accessory", "🎒 Phụ kiện", "is-accessory")}
+      </div>
+      <div class="ocs-grid ocs-top">
+        <div><b>Vợt bán chạy tháng này</b>${topList(stats.top_paddle)}</div>
+        <div><b>Phụ kiện bán chạy tháng này</b>${topList(stats.top_accessory)}</div>
+      </div>`;
+    box.querySelectorAll("[data-period]").forEach(btn =>
+      btn.addEventListener("click", () => {
+        period = btn.dataset.period;
+        try { localStorage.setItem("pd_ocs_period", period); } catch (e) {}
+        render();
+      })
+    );
+  }
+
+  async function load(attempt) {
+    const client = window.sb;
+    if (!client) {
+      if (attempt < 40) setTimeout(() => load(attempt + 1), 250);
+      return;
+    }
+    const { data: session } = await client.auth.getSession();
+    if (!session?.session) {
+      if (attempt < 40) setTimeout(() => load(attempt + 1), 250);
+      return;
+    }
+    const { data, error } = await client.rpc("shop_owner_category_stats");
+    if (error || !data) return; // không phải owner → không hiện gì
+    stats = data;
+    render();
+  }
+
+  load(0);
+
+})();
+</script>
 </body>
 </html>
