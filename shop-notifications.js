@@ -68,6 +68,29 @@
         font-family:inherit;
       }
 
+      /* Chuông nằm trong header, ngay trái nút bên phải: không bao giờ đè chữ */
+      #pickdeeShopNotificationRoot.pdsn-in-header {
+        position:relative;
+        top:auto;
+        right:auto;
+        z-index:auto;
+        margin-left:auto;
+        flex:0 0 auto;
+      }
+
+      .pdsn-in-header .pdsn-bell {
+        width:38px;
+        height:38px;
+        border-radius:10px;
+        box-shadow:none;
+      }
+
+      @media(min-width:701px) {
+        .pdsn-in-header .pdsn-panel {
+          top:46px;
+        }
+      }
+
       .pdsn-bell {
         position:relative;
         width:42px;
@@ -281,7 +304,17 @@
       </div>
     `;
 
-    document.body.appendChild(root);
+    const headerInner = document.querySelector(".header-inner");
+
+    if (headerInner && headerInner.children.length >= 2) {
+      root.classList.add("pdsn-in-header");
+      headerInner.insertBefore(root, headerInner.lastElementChild);
+    } else if (headerInner) {
+      root.classList.add("pdsn-in-header");
+      headerInner.appendChild(root);
+    } else {
+      document.body.appendChild(root);
+    }
 
     const bell = document.getElementById("pickdeeShopNotificationBell");
     const panel = document.getElementById("pickdeeShopNotificationPanel");

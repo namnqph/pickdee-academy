@@ -102,7 +102,6 @@
       font-size:13px;
       font-weight: 900;
       white-space: nowrap;
-      margin-right: 52px;
     }
 
     /* =====================================================
@@ -624,6 +623,7 @@
     );
 
   let currentOrder = null;
+  let isShopOwner = false;
 
   let currentItems = [];
 
@@ -5693,6 +5693,13 @@ if (
 
     }
 
+    isShopOwner =
+      (data || [])
+        .some(
+          item =>
+            item.role === "owner"
+        );
+
     return true;
 
   }
@@ -6105,6 +6112,18 @@ function setupSettlementCollapse(
 function mountSupplierSettlementUI() {
 
   if (!currentOrder) {
+    return;
+  }
+
+
+  // Đối soát NCC chỉ dành cho đơn vợt và chỉ owner (anh Nam) thấy
+  if (
+    !isShopOwner
+    ||
+    !itemsHavePaddle(
+      currentItems
+    )
+  ) {
     return;
   }
 
@@ -8471,7 +8490,7 @@ render =
 
 </script>
 
-<script src="/shop-notifications.js?v=20261008-1"></script>
+<script src="/shop-notifications.js?v=20261014-1"></script>
 
 </body>
 </html>
