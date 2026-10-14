@@ -192,7 +192,9 @@
     const box = document.getElementById("pdLauncher");
     const main = box.closest("main") || document.body;
     const cands = [...main.querySelectorAll("h1,h2,h3,h4,[class*='title'],[class*='heading']")]
-      .filter(el => !box.contains(el) && el.textContent.trim().toLowerCase().includes(want));
+      .filter(el => !box.contains(el)
+        && !el.closest("[hidden],[role='dialog'],[aria-modal='true'],dialog,[class*='modal'],[class*='overlay'],[class*='popup'],[id*='Modal'],[id*='Overlay']")
+        && el.textContent.trim().toLowerCase().includes(want));
     if (!cands.length) return null;
     const head = cands.sort((a, b) => a.textContent.length - b.textContent.length)[0];
     /* khối = phần tử gần nhất là con cấp ngoài cùng nằm sau launcher */
@@ -237,7 +239,7 @@
       if (!a.closest("#pdLauncher,#pdlBottom")) return;
       e.preventDefault();
       if (a.dataset.top) return goHome();
-      if (!openSection(a.dataset.section)) { expanded = true; applyCollapse(); }
+      if (!openSection(a.dataset.section)) a.classList.add("pdl-hide");
     });
     document.getElementById("pdlMore").addEventListener("click", () => {
       expanded = !expanded;
@@ -262,6 +264,9 @@
       const b = t.querySelector(".pdl-badge");
       if (b) b.textContent = n > 99 ? "99+" : String(n);
       t.classList.toggle("has-count", n > 0);
+    });
+    document.querySelectorAll("#pdLauncher [data-section], #pdlBottom [data-section]").forEach(t => {
+      t.classList.toggle("pdl-hide", !findSection(t.dataset.section));
     });
     const tabs = document.querySelector("#pdLauncher .pdl-tabs");
     const groups = [...document.querySelectorAll("#pdLauncher .pdl-group.is-tab")];
