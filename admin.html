@@ -11595,6 +11595,31 @@ document.addEventListener(
   @media(min-width:900px){.adm-detail-btn{grid-column:1/-1}}
   .adm-hidden-by-grid{display:none !important}
 
+  /* Điện thoại: 1 hàng "Cần xử lý" + tab nhóm → gọn trong 1 màn hình */
+  .adm-tabs{display:none}
+  @media(max-width:899px){
+    .adm-tabs{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+      padding:5px;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      position:sticky;top:0;z-index:5;backdrop-filter:blur(12px);
+    }
+    .adm-tab{
+      position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
+      padding:8px 2px;border:0;border-radius:12px;background:transparent;
+      color:rgba(255,255,255,.7);font-size:11.5px;font-weight:800;cursor:pointer;
+    }
+    .adm-tab span:first-child{font-size:18px;line-height:1.1}
+    .adm-tab.is-active{background:rgba(216,255,69,.14);color:#d8ff45}
+    .adm-tab .adm-tile-badge{top:2px;right:calc(50% - 26px)}
+    .adm-tab.has-count .adm-tile-badge{display:flex}
+    .adm-launch .adm-group.is-tab{display:none}
+    .adm-launch .adm-group.is-tab.is-active{display:block}
+    .adm-launch .adm-group.is-tab .adm-group-head{display:none}
+    .adm-launch .adm-group.is-tab{padding-top:12px}
+    #pickdeeNotificationRoot{position:absolute !important}
+  }
+
   #admBottomBar{display:none}
   @media(max-width:759px){
     #admBottomBar{
@@ -11668,6 +11693,34 @@ document.addEventListener(
 
   try { expanded = localStorage.getItem("pd_admin_detail") === "1"; } catch (e) {}
 
+  /* Tab nhóm (điện thoại) */
+  const tabGroups = [...launch.querySelectorAll(".adm-group:not(.g-urgent)")];
+  let activeTab = 0;
+  try { activeTab = Math.min(tabGroups.length - 1, Math.max(0, parseInt(localStorage.getItem("pd_admin_tab") || "0", 10) || 0)); } catch (e) {}
+  const tabs = document.createElement("div");
+  tabs.className = "adm-tabs";
+  tabs.setAttribute("role", "tablist");
+  tabGroups.forEach((g, i) => {
+    g.classList.add("is-tab");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "adm-tab";
+    b.setAttribute("role", "tab");
+    b.innerHTML = `<span>${g.querySelector(".adm-group-icon")?.textContent || ""}</span><span>${g.querySelector(".adm-group-title")?.textContent || ""}</span><span class="adm-tile-badge"></span>`;
+    b.addEventListener("click", () => {
+      activeTab = i;
+      try { localStorage.setItem("pd_admin_tab", String(i)); } catch (e) {}
+      renderTabs();
+    });
+    tabs.appendChild(b);
+  });
+  function renderTabs() {
+    tabGroups.forEach((g, i) => g.classList.toggle("is-active", i === activeTab));
+    [...tabs.children].forEach((b, i) => { b.classList.toggle("is-active", i === activeTab); b.setAttribute("aria-selected", i === activeTab ? "true" : "false"); });
+  }
+  if (tabGroups[0]) tabGroups[0].before(tabs);
+  renderTabs();
+
   document.querySelector("#admBottomBar [data-top]")?.addEventListener("click", e => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -11693,6 +11746,13 @@ document.addEventListener(
       g.querySelectorAll(".adm-tile.has-count").forEach(tl => { sum += readCount(tl.dataset.countFrom); });
       const s = g.querySelector(".adm-group-sum");
       if (s) { s.textContent = sum + " việc"; s.classList.toggle("show", sum > 0); }
+      const i = tabGroups.indexOf(g);
+      const tb = i >= 0 ? tabs.children[i] : null;
+      if (tb) {
+        const bd = tb.querySelector(".adm-tile-badge");
+        if (bd) bd.textContent = sum > 99 ? "99+" : String(sum);
+        tb.classList.toggle("has-count", sum > 0);
+      }
     });
     applyCollapse(); // thẻ do script khác chèn muộn cũng được thu gọn
   }
