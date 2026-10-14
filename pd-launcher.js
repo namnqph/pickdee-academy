@@ -59,6 +59,7 @@
     background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);font:inherit;
     font-size:14px;font-weight:800;cursor:pointer}
   .pdl-hide{display:none !important}
+  .pdl-hide-focus{display:none !important}
   .pdl-back{position:sticky;top:8px;z-index:20;display:inline-flex;align-items:center;gap:6px;
     margin:0 0 10px;padding:8px 14px;border-radius:999px;border:1px solid rgba(216,255,69,.35);
     background:rgba(7,21,35,.92);color:#d8ff45;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
@@ -182,6 +183,7 @@
       el.classList.toggle("pdl-hide", !show);
     });
     box.classList.toggle("pdl-hide", !!focusBlock && !expanded);
+    if (cfg.heroSelector) document.querySelectorAll(cfg.heroSelector).forEach(h => h.classList.toggle("pdl-hide", !!focusBlock && !expanded));
     if (backBtn) backBtn.classList.toggle("pdl-hide", !focusBlock || expanded);
     const more = document.getElementById("pdlMore");
     if (more) more.textContent = expanded ? "▲ Thu gọn" : (cfg.moreLabel || "📋 Xem tất cả thông tin");
@@ -202,9 +204,40 @@
     return out.find(el => el === head || el.contains(head)) || head;
   }
 
+  function clearFocusIsolation() {
+    document.querySelectorAll(".pdl-hide-focus").forEach(el => el.classList.remove("pdl-hide-focus"));
+  }
+
+  /* Thẻ nhỏ nhất chứa tiêu đề (card/section/panel…) để chỉ hiện đúng mục đó */
+  function cardOf(head, block) {
+    let el = head;
+    while (el && el !== block) {
+      const cls = (el.className && typeof el.className === "string") ? el.className : "";
+      if (el !== head && (/card|panel|box|section|block|item/i.test(cls) || el.tagName === "SECTION" || el.tagName === "ARTICLE")) return el;
+      el = el.parentElement;
+    }
+    return block;
+  }
+
+  function isolate(card, block) {
+    clearFocusIsolation();
+    let el = card;
+    while (el && el !== block) {
+      for (const s of el.parentElement ? el.parentElement.children : []) {
+        if (s !== el && !s.matches("script,style")) s.classList.add("pdl-hide-focus");
+      }
+      el = el.parentElement;
+    }
+  }
+
   function openSection(text) {
     const block = findSection(text);
     if (!block) return false;
+    const want0 = text.toLowerCase();
+    const head0 = [...block.querySelectorAll("h1,h2,h3,h4,[class*='title'],[class*='heading']")]
+      .filter(el => el.textContent.trim().toLowerCase().includes(want0))
+      .sort((a, b) => a.textContent.length - b.textContent.length)[0] || block;
+    isolate(cardOf(head0, block), block);
     focusBlock = block;
     expanded = false;
     if (!backBtn) {
@@ -228,6 +261,7 @@
 
   function goHome() {
     focusBlock = null;
+    clearFocusIsolation();
     applyCollapse();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -244,6 +278,7 @@
     document.getElementById("pdlMore").addEventListener("click", () => {
       expanded = !expanded;
       focusBlock = null;
+      clearFocusIsolation();
       store.set("more", expanded ? "1" : "0");
       applyCollapse();
     });
