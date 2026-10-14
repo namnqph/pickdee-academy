@@ -317,10 +317,25 @@
     applyCollapse();
   }
 
+  /* Mở thẳng 1 mục khi vào trang với #hash (vd. /coach#ho-so từ trang con) */
+  function openFromHash() {
+    const sec = cfg.hashSections && cfg.hashSections[location.hash];
+    if (!sec) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      if (document.getElementById("pdLauncher") && openSection(sec)) {
+        clearInterval(timer);
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+      }
+      if (++tries > 40) clearInterval(timer);
+    }, 250);
+  }
+
   function start() {
     mount();
     sync();
     setInterval(sync, 2000);
+    openFromHash();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
