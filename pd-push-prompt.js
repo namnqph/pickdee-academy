@@ -12,6 +12,8 @@
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const standalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
   const pushSupported = "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+  const isAndroid = /Android/i.test(ua);
+  const inApp = /Zalo|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|TikTok|musical_ly|; wv\)/i.test(ua);
 
   const css = `
   .pdp-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
@@ -89,6 +91,56 @@
     }, 800);
   }
 
+  /* ---------- Mở trong Zalo / Facebook / Messenger (không nhận được thông báo) ---------- */
+  function inAppGuide() {
+    if (document.querySelector(".pdp-overlay")) return;
+    const url = location.href;
+    const chromeIntent = "intent://" + location.host + location.pathname + location.search + "#Intent;scheme=https;package=com.android.chrome;end";
+    const o = overlay(`
+      <div class="pdp-icon">🌐</div>
+      <div class="pdp-title">MỞ PICKDEE BẰNG ${isIOS ? "SAFARI" : "CHROME"}</div>
+      <p class="pdp-text">Bạn đang mở PickDee trong Zalo/Facebook. Trình duyệt này không nhận được thông báo lịch học. Hãy mở bằng ${isIOS ? "Safari" : "Chrome"} để dùng đầy đủ.</p>
+      <ol class="pdp-steps">
+        <li><span class="pdp-num">1</span><span>Bấm nút <b>⋯</b> hoặc <b>⋮</b> ở góc màn hình</span></li>
+        <li><span class="pdp-num">2</span><span>Chọn <b>“Mở bằng trình duyệt”</b>${isIOS ? " / <b>“Mở trong Safari”</b>" : " / <b>“Mở bằng Chrome”</b>"}</span></li>
+      </ol>
+      ${isAndroid ? `<a class="pdp-btn" href="${chromeIntent}" style="display:flex;align-items:center;justify-content:center;text-decoration:none">🌐 MỞ BẰNG CHROME</a>` : ""}
+      <button type="button" class="pdp-btn pdp-copy" style="margin-top:10px">📋 SAO CHÉP LINK</button>
+      <button type="button" class="pdp-link">Để sau</button>`);
+    o.querySelector(".pdp-copy").addEventListener("click", async e => {
+      try { await navigator.clipboard.writeText(url); e.target.textContent = "✓ ĐÃ SAO CHÉP – dán vào trình duyệt"; }
+      catch (err) { prompt("Sao chép link này và dán vào trình duyệt:", url); }
+    });
+    o.querySelector(".pdp-link").addEventListener("click", () => o.remove());
+  }
+
+  /* ---------- Android: nút cài app (hộp cài đặt có sẵn của Chrome) ---------- */
+  let installEvent = null;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    installEvent = e;
+    showInstallChip();
+  });
+  function showInstallChip() {
+    if (standalone || !installEvent || document.getElementById("pdpInstall")) return;
+    const b = document.createElement("button");
+    b.id = "pdpInstall";
+    b.type = "button";
+    b.textContent = "📲 Cài app PickDee";
+    b.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:9990;" +
+      "padding:11px 18px;border-radius:999px;border:0;background:#d8ff45;color:#071523;font:inherit;font-size:14px;font-weight:900;" +
+      "box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:pointer";
+    b.addEventListener("click", async () => {
+      if (!installEvent) return b.remove();
+      installEvent.prompt();
+      try { await installEvent.userChoice; } catch (e) {}
+      installEvent = null;
+      b.remove();
+    });
+    document.body.appendChild(b);
+  }
+  window.addEventListener("appinstalled", () => document.getElementById("pdpInstall")?.remove());
+
   /* ---------- Mời bật thông báo (không có "Để sau") ---------- */
   async function waitPushButton() {
     for (let i = 0; i < 100; i++) {
@@ -149,7 +201,9 @@
   }
 
   function start() {
+    if (inApp) return inAppGuide();
     if (isIOS && !standalone) { patchBellButtonForIOS(); return iosInstallGuide(); }
+    showInstallChip();
     if (cfg.mode === "ios-install") return;
     if (!pushSupported) return;
     pushPrompt();
