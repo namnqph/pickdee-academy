@@ -482,6 +482,38 @@
       line-height: 1.35;
     }
 
+    .owner-tag {
+      display: inline-block;
+      margin-bottom: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .owner-tag.is-paddle {
+      color: #ffd28a;
+      background: rgba(255,184,77,.12);
+      border: 1px solid rgba(255,184,77,.30);
+    }
+
+    .owner-tag.is-accessory {
+      color: #9be7ff;
+      background: rgba(91,200,255,.10);
+      border: 1px solid rgba(91,200,255,.28);
+    }
+
+    .mixed-note {
+      margin-bottom: 12px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(216,255,69,.22);
+      background: rgba(216,255,69,.06);
+      color: rgba(255,255,255,.86);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
     .item-meta {
       font-size: 13px;
       color: rgba(255,255,255,.55);
@@ -1498,10 +1530,37 @@
       discountedProductTotal
       +
       shippingFeeNumber;
+
+    // Đơn hỗn hợp: vợt (anh Nam phụ trách) + phụ kiện (Shop đóng gói)
+    const isMixedOrder =
+      itemsHavePaddle(currentItems)
+      &&
+      currentItems.some(
+        item => !itemsHavePaddle([item])
+      );
+
+    const accessoryTotal =
+      isMixedOrder
+        ? currentItems
+            .filter(item => !itemsHavePaddle([item]))
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.line_total ?? 0),
+              0
+            )
+        : 0;
+
     const itemHtml =
       currentItems
         .map(
           function (item) {
+
+            const ownerTag =
+              !isMixedOrder
+                ? ""
+                : itemsHavePaddle([item])
+                  ? `<span class="owner-tag is-paddle">🏓 Vợt · anh Nam phụ trách</span>`
+                  : `<span class="owner-tag is-accessory">🎒 Phụ kiện · Shop đóng gói</span>`;
 
             const unitPrice =
               Number(
@@ -1533,6 +1592,8 @@
             return `
               <div class="item">
                 <div>
+
+                  ${ownerTag}
 
                   <div class="item-name">
                     ${escapeHtml(
@@ -1671,6 +1732,20 @@
         <div class="section-title">
           Sản phẩm
         </div>
+
+        ${
+          isMixedOrder
+            ? `
+              <div class="mixed-note">
+                Đơn này có 2 phần:
+                <b>🏓 Vợt</b> do anh Nam phụ trách,
+                <b>🎒 Phụ kiện</b> do Shop đóng gói
+                (${money(accessoryTotal)}).
+                Hỏi anh Nam gửi chung hay gửi riêng trước khi giao.
+              </div>
+            `
+            : ""
+        }
 
                <div class="items">
           ${
