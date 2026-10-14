@@ -8297,12 +8297,19 @@ async function loadStudents(
     không thể bật Push thì không hiện onboarding.
   */
 
-  if (
-    pushButton.disabled
-  ) {
+  /* notifications.js khoá nút tạm thời khi đang kiểm tra (điện thoại chậm hơn):
+     đợi tối đa 12 giây trước khi kết luận thiết bị không bật được Push. */
+  for (let i = 0; i < 60 && pushButton.disabled; i += 1) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
 
+  if (String(pushButton.textContent || "").includes("THÔNG BÁO ĐÃ BẬT")) {
+    clearPushSnooze();
     return;
+  }
 
+  if (pushButton.disabled) {
+    return;
   }
 
 
