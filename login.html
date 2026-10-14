@@ -286,14 +286,17 @@
 
 
       <label for="email">
-        Email
+        Email hoặc số điện thoại
       </label>
 
 
       <input
         id="email"
-        type="email"
-        autocomplete="email"
+        type="text"
+        autocomplete="username"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="Nhập email hoặc số điện thoại"
         required
       >
 
@@ -894,18 +897,78 @@ if (
               .value;
 
 
-          const {
-            data,
-            error
-          } =
-            await supabaseClient
-              .auth
-              .signInWithPassword(
-                {
-                  email,
-                  password
-                }
-              );
+          let data = null;
+          let error = null;
+
+
+          if (
+            email.includes("@")
+          ) {
+
+            ({
+              data,
+              error
+            } =
+              await supabaseClient
+                .auth
+                .signInWithPassword(
+                  {
+                    email,
+                    password
+                  }
+                ));
+
+          } else {
+
+            /*
+              Đăng nhập bằng số điện thoại:
+              Edge Function pickdee-login tra SĐT → email
+              rồi trả về phiên đăng nhập.
+            */
+            const result =
+              await supabaseClient
+                .functions
+                .invoke(
+                  "pickdee-login",
+                  {
+                    body: {
+                      identifier: email,
+                      password
+                    }
+                  }
+                );
+
+            if (
+              result.error
+              ||
+              !result.data?.session?.access_token
+            ) {
+
+              error =
+                result.error
+                ||
+                new Error("no_session");
+
+            } else {
+
+              ({
+                data,
+                error
+              } =
+                await supabaseClient
+                  .auth
+                  .setSession(
+                    {
+                      access_token:
+                        result.data.session.access_token,
+                      refresh_token:
+                        result.data.session.refresh_token
+                    }
+                  ));
+
+            }
+
+          }
 
 
           if (
@@ -919,7 +982,7 @@ if (
 
 
             throw new Error(
-              "Email hoặc mật khẩu chưa đúng."
+              "Email/số điện thoại hoặc mật khẩu chưa đúng."
             );
 
           }
