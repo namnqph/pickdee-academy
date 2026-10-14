@@ -166,6 +166,7 @@
     const pushButton = await waitPushButton();
     if (!pushButton) return;
     await new Promise(r => setTimeout(r, 1500)); // để notifications.js kiểm tra trạng thái
+    for (let i = 0; i < 60 && pushButton.disabled && !enabledText(pushButton); i++) await new Promise(r => setTimeout(r, 200));
     if (enabledText(pushButton) || await hasSubscription()) return;
 
     const o = overlay(`
@@ -181,6 +182,7 @@
     btn.addEventListener("click", async () => {
       btn.disabled = true;
       btn.textContent = "Đang bật thông báo...";
+      if (pushButton.disabled) { try { await Notification.requestPermission(); } catch (e) {} pushButton.disabled = false; }
       pushButton.click(); // giữ thao tác bấm của người dùng để trình duyệt cho phép xin quyền
       for (let i = 0; i < 60; i++) {
         await new Promise(r => setTimeout(r, 250));
