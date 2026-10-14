@@ -2043,6 +2043,7 @@ function updateCartCount() {
                     ""
               }"
               data-image="${escapeHtml(url)}"
+              data-variant-id="${escapeHtml(String(image.variant_id || ""))}"
             >
 
               <img
@@ -3448,6 +3449,71 @@ function bindProductEvents() {
 
       }
     );
+
+
+  /*
+    =====================================================
+    ẢNH THEO MÀU: khách bấm chọn màu → ảnh chính đổi sang
+    đúng ảnh của màu đó (nếu màu có ảnh riêng).
+    Lúc mới mở trang vẫn giữ ảnh tổng.
+    =====================================================
+  */
+  function showSelectedVariantImage() {
+
+    if (!selectedVariant) {
+      return;
+    }
+
+    const thumb =
+      document.querySelector(
+        `.thumb[data-variant-id="${CSS.escape(String(selectedVariant.id))}"]`
+      );
+
+    if (!thumb) {
+      return;
+    }
+
+    thumb.click();
+
+    const strip =
+      thumb.parentElement;
+
+    if (strip) {
+      strip.scrollTo({
+        left:
+          thumb.offsetLeft
+          -
+          (strip.clientWidth - thumb.clientWidth) / 2,
+        behavior: "smooth"
+      });
+    }
+
+  }
+
+
+  if (!window.__pdVariantImageBound) {
+
+    window.__pdVariantImageBound = true;
+
+    document.addEventListener(
+      "click",
+      function (event) {
+
+        if (
+          event.target.closest(
+            ".option-btn, .legacy-variant-btn"
+          )
+        ) {
+          setTimeout(
+            showSelectedVariantImage,
+            0
+          );
+        }
+
+      }
+    );
+
+  }
 
 
   /*
