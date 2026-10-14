@@ -53,7 +53,7 @@
 
   /* ---------- iPhone chưa cài vào màn hình chính ---------- */
   function iosInstallGuide() {
-    try { if (sessionStorage.getItem("pdp_ios_seen") === "1") return; } catch (e) {}
+    if (document.querySelector(".pdp-overlay")) return;
     const o = overlay(`
       <div class="pdp-icon">📲</div>
       <div class="pdp-title">CÀI PICKDEE ĐỂ NHẬN THÔNG BÁO</div>
@@ -64,11 +64,29 @@
         <li><span class="pdp-num">3</span><span>Mở <b>PickDee</b> từ màn hình chính và bấm <b>Bật thông báo</b></span></li>
       </ol>
       <button type="button" class="pdp-btn">ĐÃ HIỂU</button>
-      <div class="pdp-note">Hướng dẫn này sẽ hiện lại cho tới khi PickDee được cài.</div>`);
-    o.querySelector(".pdp-btn").addEventListener("click", () => {
-      try { sessionStorage.setItem("pdp_ios_seen", "1"); } catch (e) {}
-      o.remove();
-    });
+      <div class="pdp-note">Hướng dẫn này sẽ hiện mỗi lần vào trang cho tới khi PickDee được cài.</div>`);
+    o.querySelector(".pdp-btn").addEventListener("click", () => o.remove());
+  }
+
+  /* Nút trong chuông (notifications.js) đang ghi "KHÔNG HỖ TRỢ PUSH" và bị khoá trên iPhone chưa cài
+     → đổi thành nút mở hướng dẫn cài. */
+  function patchBellButtonForIOS() {
+    document.addEventListener("click", e => {
+      const b = e.target.closest("#pickdeeEnablePushButton");
+      if (!b) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      iosInstallGuide();
+    }, true);
+    setInterval(() => {
+      const b = document.getElementById("pickdeeEnablePushButton");
+      if (b && !/CÀI PICKDEE/.test(b.textContent)) {
+        b.disabled = false;
+        b.textContent = "📲 CÀI PICKDEE ĐỂ NHẬN THÔNG BÁO";
+        const st = document.getElementById("pickdeePushStatus");
+        if (st) st.textContent = "iPhone cần thêm PickDee vào màn hình chính để nhận thông báo.";
+      }
+    }, 800);
   }
 
   /* ---------- Mời bật thông báo (không có "Để sau") ---------- */
@@ -131,13 +149,14 @@
   }
 
   function start() {
-    if (isIOS && !standalone) return iosInstallGuide();
+    if (isIOS && !standalone) { patchBellButtonForIOS(); return iosInstallGuide(); }
     if (cfg.mode === "ios-install") return;
     if (!pushSupported) return;
     pushPrompt();
   }
 
-  if (document.readyState === "complete") setTimeout(start, 800);
-  else window.addEventListener("load", () => setTimeout(start, 800));
+  /* Không đợi "load" (trang nặng trên điện thoại có thể rất lâu) */
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(start, 600));
+  else setTimeout(start, 600);
 
 })();
