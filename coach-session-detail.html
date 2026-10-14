@@ -727,6 +727,10 @@ window.PICKDEE_NOTIFICATION_ROLE =
     null;
 
 
+  let sessionDetail =
+    null;
+
+
   let paymentReady =
     false;
 
@@ -1315,12 +1319,19 @@ else {
     );
 
 
+    // 1 lần gọi: Coach + buổi học (server lọc Coach chính/dạy thay) + học phí.
     const {
-      data: coachId,
+      data: detail,
       error: coachError
     } =
       await sb.rpc(
-        "current_coach_id"
+        "coach_get_session_detail",
+        {
+          p_session_id:
+            Number.isFinite(sessionId)
+              ? sessionId
+              : 0
+        }
       );
 
 
@@ -1333,6 +1344,14 @@ else {
       );
 
     }
+
+
+    sessionDetail =
+      detail;
+
+
+    const coachId =
+      detail?.coach_id;
 
 
     if (!coachId) {
@@ -1372,64 +1391,12 @@ else {
     }
 
 
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from(
-          "class_sessions"
-        )
-        .select(`
-          id,
-          session_code,
-          registration_id,
-          coach_id,
-          substitute_coach_id,
-          substitute_reason,
-          substitute_assigned_at,
-          session_no,
-          session_date,
-          start_time,
-          duration_minutes,
-          court_id,
-          court_name,
-          status,
-          note,
+    // Dữ liệu buổi đã tải cùng lần gọi coach_get_session_detail (checkCoach).
+    const data =
+      sessionDetail?.session || null;
 
-          registrations (
-            id,
-            registration_code,
-            student_id,
-            package_name,
-            learning_goal,
-            tuition_fee,
-            is_test,
-
-            students (
-              id,
-              student_code,
-              full_name
-            )
-          ),
-
-          coaches!class_sessions_coach_id_fkey (
-            id,
-            coach_code,
-            full_name
-          )
-        `)
-
-        .eq(
-          "id",
-          sessionId
-        )
-
-      .or(
-  `coach_id.eq.${currentCoachId},substitute_coach_id.eq.${currentCoachId}`
-)
-
-        .maybeSingle();
+    const error =
+      null;
 
 
     if (error) {
@@ -1486,19 +1453,12 @@ else {
     }
 
 
-    const {
-      data: paidReady,
-      error: paidError
-    } =
-      await sb.rpc(
-        "registration_payment_fully_paid",
-        {
-          p_registration_id:
-            Number(
-              registration.id
-            )
-        }
-      );
+    // Học phí đã có sẵn trong coach_get_session_detail.
+    const paidReady =
+      sessionDetail?.payment_ready;
+
+    const paidError =
+      null;
 
 
     if (paidError) {
