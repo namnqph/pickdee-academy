@@ -5863,6 +5863,37 @@ window.addEventListener(
       loadAdminBellExtraData
     );
 
+
+    /*
+      Bấm "Đánh dấu tất cả đã đọc" hoặc mở 1 thông báo:
+      cập nhật số ngay, không để vòng 3 giây vẽ lại số cũ.
+    */
+    document.addEventListener(
+      "click",
+      function (event) {
+
+        if (
+          event.target.closest(
+            "#pickdeeNotificationReadAll"
+          )
+        ) {
+          normalUnreadCount = 0;
+          renderAdminBellBadge();
+          setTimeout(loadAdminBellExtraData, 1200);
+          return;
+        }
+
+        if (
+          event.target.closest(
+            "#pickdeeNotificationPanel .pdn-item"
+          )
+        ) {
+          setTimeout(loadAdminBellExtraData, 1200);
+        }
+
+      }
+    );
+
   }
 
 
