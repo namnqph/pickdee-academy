@@ -5,6 +5,9 @@
 
   <meta charset="utf-8">
 
+  <link rel="preconnect" href="https://snxztjsluhdibrklougo.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
   <meta
     name="viewport"
     content="width=device-width,initial-scale=1"
@@ -626,6 +629,13 @@
     getNextPath();
 
 
+  // Đọc hồ sơ song song với quyền Shop (trước đây chờ nối tiếp).
+  const profilePromise =
+    getProfile(
+      user.id
+    );
+
+
   const shopRoles =
     await getShopRoles(
       user.id
@@ -710,9 +720,7 @@ if (
     error:
       profileError
   } =
-    await getProfile(
-      user.id
-    );
+    await profilePromise;
 
 
   const role =

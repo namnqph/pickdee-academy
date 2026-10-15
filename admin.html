@@ -5,6 +5,9 @@
 
   <meta charset="utf-8">
 
+  <link rel="preconnect" href="https://snxztjsluhdibrklougo.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
   <meta
     name="viewport"
     content="width=device-width,initial-scale=1"
@@ -2188,6 +2191,25 @@ window.addEventListener(
 <script
   src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
+
+<script>
+/* Trang admin có ~17 khối tự gọi createClient(url, key) giống nhau.
+   Dùng chung 1 client: bớt 16 bộ auth/refresh token chạy song song trên điện thoại. */
+(function () {
+  var lib = window.supabase;
+  if (!lib || lib.__pdSharedClient) return;
+  var original = lib.createClient;
+  var clients = {};
+  try {
+    lib.createClient = function (url, key, options) {
+      if (options) return original.apply(this, arguments);
+      var id = url + "|" + key;
+      return clients[id] || (clients[id] = original.call(this, url, key));
+    };
+    lib.__pdSharedClient = true;
+  } catch (e) {}
+})();
+</script>
 
 <script src="./config.js"></script>
 
