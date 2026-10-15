@@ -1502,10 +1502,33 @@
   }
 
 
-  function optionButtonInner(index, value) {
+  /*
+    Chỉ hiện ảnh nhỏ cho 1 nhóm lựa chọn khi MỌI giá trị trong nhóm
+    đều có ảnh (vd. màu vợt). Nhóm như size áo chỉ có ảnh lẻ do
+    ảnh màu vợt gắn vào biến thể "size M" → không hiện ảnh.
+  */
+  function optionGroupHasThumbs(index, values) {
+
+    return (
+      values.length > 0
+      &&
+      values.every(
+        value =>
+          Boolean(
+            optionThumbUrl(index, value)
+          )
+      )
+    );
+
+  }
+
+
+  function optionButtonInner(index, value, withThumb) {
 
     const url =
-      optionThumbUrl(index, value);
+      withThumb
+        ? optionThumbUrl(index, value)
+        : "";
 
     return (
       url
@@ -1880,6 +1903,19 @@ function updateCartCount() {
     =====================================================
   */
 
+  const option1HasThumbs =
+    optionGroupHasThumbs(
+      1,
+      option1Values
+    );
+
+  const option2HasThumbs =
+    optionGroupHasThumbs(
+      2,
+      option2Values
+    );
+
+
   const option1Buttons =
     option1Values
       .map(
@@ -1898,7 +1934,7 @@ function updateCartCount() {
           return `
             <button
               class="variant-btn option-btn ${
-                images.some(item => item.variant_id) ? "has-thumb" : ""
+                option1HasThumbs ? "has-thumb" : ""
               } ${
                 active
                   ?
@@ -1910,7 +1946,7 @@ function updateCartCount() {
               data-option-index="1"
               data-option-value="${escapeHtml(value)}"
             >
-              ${optionButtonInner(1, value)}
+              ${optionButtonInner(1, value, option1HasThumbs)}
             </button>
           `;
 
@@ -1943,7 +1979,7 @@ function updateCartCount() {
           return `
             <button
               class="variant-btn option-btn ${
-                images.some(item => item.variant_id) ? "has-thumb" : ""
+                option2HasThumbs ? "has-thumb" : ""
               } ${
                 active
                   ?
@@ -1955,7 +1991,7 @@ function updateCartCount() {
               data-option-index="2"
               data-option-value="${escapeHtml(value)}"
             >
-              ${optionButtonInner(2, value)}
+              ${optionButtonInner(2, value, option2HasThumbs)}
             </button>
           `;
 
