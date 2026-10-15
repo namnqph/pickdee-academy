@@ -658,6 +658,8 @@
 
   let currentOrder = null;
   let isShopOwner = false;
+  /* owner hoặc shop_admin (shop_staff không xác nhận tiền ngoài web) */
+  let isShopManager = false;
 
   let currentItems = [];
 
@@ -1416,6 +1418,25 @@
       o.payment_status
         !==
       "paid";
+
+    /* Khách CK nhưng gửi bill qua Zalo/TikTok… (không có bill trên web) */
+    const canConfirmOffwebPayment =
+      isShopManager
+      &&
+      o.payment_method
+        ===
+      "bank_transfer"
+      &&
+      !isOrderCancelled
+      &&
+      !hasPaymentProof
+      &&
+      ![
+        "paid",
+        "refunded"
+      ].includes(
+        o.payment_status
+      );
 
     const hasPickleballBall =
       itemsHavePickleballBall(
@@ -2255,6 +2276,81 @@
                           >
                             XÁC NHẬN ĐÃ THANH TOÁN
                           </button>
+                        `
+                      :
+                        ""
+                  }
+
+                  ${
+                    canConfirmOffwebPayment
+                      ?
+                        `
+                          <details
+                            id="offwebPaymentBox"
+                            style="
+                              margin-top:12px;
+                              padding:12px;
+                              border-radius:11px;
+                              border:1px solid rgba(216,255,69,.22);
+                              background:rgba(216,255,69,.04);
+                            "
+                          >
+                            <summary
+                              style="
+                                cursor:pointer;
+                                color:#d8ff45;
+                                font-size:14px;
+                                font-weight:800;
+                                line-height:1.4;
+                              "
+                            >
+                              Đã nhận tiền (bill gửi ngoài web)?
+                            </summary>
+
+                            <div
+                              style="
+                                margin-top:10px;
+                                color:rgba(255,255,255,.62);
+                                font-size:13px;
+                                line-height:1.5;
+                              "
+                            >
+                              Chỉ bấm khi đã thấy tiền vào tài khoản. Ghi rõ ngân hàng, giờ, mã giao dịch hoặc nơi khách gửi bill.
+                            </div>
+
+                            <textarea
+                              id="offwebPaymentNote"
+                              maxlength="500"
+                              placeholder="VD: Techcombank 13:43, mã GD 2754053045, bill qua TikTok"
+                              style="
+                                width:100%;
+                                min-height:76px;
+                                margin-top:10px;
+                                padding:12px;
+                                border-radius:12px;
+                                border:1px solid rgba(255,255,255,.10);
+                                background:#071523;
+                                color:#ffffff;
+                                outline:none;
+                                resize:vertical;
+                                font-size:16px;
+                                line-height:1.5;
+                              "
+                            ></textarea>
+
+                            <button
+                              id="confirmOffwebPaymentBtn"
+                              type="button"
+                              class="action-btn action-primary"
+                              style="
+                                width:100%;
+                                min-height:46px;
+                                margin-top:10px;
+                              "
+                            >
+                              XÁC NHẬN ĐÃ NHẬN TIỀN
+                            </button>
+                          </details>
                         `
                       :
                         ""
@@ -3767,9 +3863,192 @@
     }
 
 
+    function setupOffwebPaymentConfirm() {
+
+      const button =
+        document.getElementById(
+          "confirmOffwebPaymentBtn"
+        );
+
+      const noteInput =
+        document.getElementById(
+          "offwebPaymentNote"
+        );
+
+      if (
+        !button
+        ||
+        !noteInput
+      ) {
+
+        return;
+
+      }
+
+      button.addEventListener(
+        "click",
+        async function () {
+
+          const messageBox =
+            document.getElementById(
+              "paymentProofAdminMessage"
+            );
+
+          const note =
+            noteInput.value.trim();
+
+          if (
+            note.length < 5
+          ) {
+
+            messageBox.className =
+              "message error";
+
+            messageBox.textContent =
+              "Ghi chú bắt buộc: ngân hàng, giờ, mã giao dịch hoặc nơi khách gửi bill.";
+
+            noteInput.focus();
+
+            return;
+
+          }
+
+          if (
+            !window.confirm(
+              "Xác nhận PickDee đã nhận đủ tiền đơn "
+              +
+              (currentOrder?.order_code || "")
+              +
+              "?"
+            )
+          ) {
+
+            return;
+
+          }
+
+          button.disabled =
+            true;
+
+          button.textContent =
+            "ĐANG XÁC NHẬN...";
+
+          try {
+
+            const {
+              data,
+              error
+            } =
+              await sb.rpc(
+                "shop_confirm_bank_transfer_payment_offweb",
+                {
+                  p_order_id:
+                    Number(
+                      currentOrder.id
+                    ),
+                  p_note:
+                    note
+                }
+              );
+
+            if (error) {
+
+              throw error;
+
+            }
+
+            if (
+              !data?.success
+            ) {
+
+              throw new Error(
+                "Không xác nhận được thanh toán."
+              );
+
+            }
+
+            const {
+              data:
+                refreshedOrder,
+              error:
+                refreshError
+            } =
+              await sb
+                .from(
+                  "shop_orders"
+                )
+                .select("*")
+                .eq(
+                  "id",
+                  currentOrder.id
+                )
+                .single();
+
+            if (
+              refreshError
+            ) {
+
+              throw refreshError;
+
+            }
+
+            currentOrder =
+              refreshedOrder;
+
+            render();
+
+            const refreshedMessage =
+              document.getElementById(
+                "paymentProofAdminMessage"
+              );
+
+            if (
+              refreshedMessage
+            ) {
+
+              refreshedMessage.className =
+                "message success";
+
+              refreshedMessage.textContent =
+                "✓ Đã xác nhận nhận tiền. Ghi chú đã lưu vào ghi chú nội bộ.";
+
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "CONFIRM OFFWEB PAYMENT ERROR:",
+              error
+            );
+
+            messageBox.className =
+              "message error";
+
+            messageBox.textContent =
+              error?.message
+              ||
+              "Không xác nhận được thanh toán.";
+
+            button.disabled =
+              false;
+
+            button.textContent =
+              "XÁC NHẬN ĐÃ NHẬN TIỀN";
+
+          }
+
+        }
+      );
+
+    }
+
+
     function setupPaymentProofActions() {
 
       setupPaymentProofReview();
+
+      setupOffwebPaymentConfirm();
 
       const oldFloating =
         document.getElementById(
@@ -5775,6 +6054,15 @@ if (
         .some(
           item =>
             item.role === "owner"
+        );
+
+    isShopManager =
+      (data || [])
+        .some(
+          item =>
+            item.role === "owner"
+            ||
+            item.role === "shop_admin"
         );
 
     return true;
