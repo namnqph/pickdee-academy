@@ -803,7 +803,7 @@
         "Đang đóng gói",
 
       shipping:
-        "Đã giao ĐVVC",
+        "Đang giao",
 
       completed:
         "Hoàn tất",
@@ -5752,16 +5752,53 @@
 
 
     /* =====================================================
-       ĐÃ GIAO ĐVVC = KẾT THÚC QUY TRÌNH PICKDEE
+       ĐANG GIAO (15/10/2026)
 
-       Không còn:
-       - ĐÃ GIAO ĐVVC
-       - HOÀN TẤT ĐƠN
+       Lưu vận chuyển "Đã gửi hàng" → DB tự chuyển 'shipping'.
+       Cron pickdee-shop-carrier-tracking tra SPX/GHN 2 tiếng/lần:
+       giao xong → tự HOÀN TẤT, hoàn về → tự HỦY.
+       Nút tay dùng cho hãng không tra được (GHTK, VTP, J&T...).
     ====================================================== */
 
     if (
       status === "shipping"
-      ||
+    ) {
+
+      html = `
+
+        <div
+          id="carrierTrackingStatus"
+          style="
+            grid-column:1 / -1;
+            color:rgba(255,255,255,.72);
+            font-size:13px;
+            line-height:1.45;
+          "
+        >
+          🚚 Đang giao – hệ thống tự hoàn tất khi khách nhận.
+        </div>
+
+        <button
+          class="action-btn action-danger"
+          data-status="cancelled"
+        >
+          HỦY (HOÀN HÀNG)
+        </button>
+
+        <button
+          class="action-btn action-primary"
+          data-status="completed"
+        >
+          ✓ KHÁCH ĐÃ NHẬN
+        </button>
+
+      `;
+
+      loadCarrierTrackingStatus();
+
+    }
+
+    if (
       status === "completed"
       ||
       status === "cancelled"
@@ -5800,6 +5837,93 @@
 
         }
       );
+
+  }
+
+
+  /* =====================================================
+     TRẠNG THÁI HÃNG VẬN CHUYỂN (bảng shop_order_carrier_tracking)
+  ====================================================== */
+
+  async function loadCarrierTrackingStatus() {
+
+    try {
+
+      const {
+        data
+      } =
+        await sb
+          .from(
+            "shop_order_carrier_tracking"
+          )
+          .select(
+            "provider,state,status_text,last_event_at,checked_at"
+          )
+          .eq(
+            "order_id",
+            currentOrder.id
+          )
+          .maybeSingle();
+
+      const box =
+        document.getElementById(
+          "carrierTrackingStatus"
+        );
+
+      if (
+        !box
+        ||
+        !data
+        ||
+        !data.checked_at
+      ) {
+
+        return;
+
+      }
+
+      const time =
+        data.last_event_at
+          ?
+            new Date(
+              data.last_event_at
+            ).toLocaleString(
+              "vi-VN",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit"
+              }
+            )
+          :
+            "";
+
+      box.textContent =
+        "🚚 "
+        +
+        String(
+          data.provider || "ĐVVC"
+        ).toUpperCase()
+        +
+        ": "
+        +
+        (
+          data.status_text
+          ||
+          "đang tra cứu"
+        )
+        +
+        (
+          time
+            ?
+              " (" + time + ")"
+            :
+              ""
+        );
+
+    }
+    catch (_) {}
 
   }
 
