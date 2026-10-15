@@ -4185,42 +4185,33 @@
     cart
   ) {
 
+    /*
+      Cùng quy tắc với DB (shop_order_has_paddle): tên sản phẩm
+      hoặc biến thể BẮT ĐẦU bằng "vợt"/"paddle".
+      "Dán viền vợt", "Chì độ vợt"… là phụ kiện → tài khoản Shop.
+    */
     return cart.some(
       function (item) {
 
-        const text =
-          (
-            String(
-              item.product_name || ""
-            )
-            +
-            " "
-            +
-            String(
-              item.variant_name || ""
-            )
-          )
-            .trim()
-            .toLocaleLowerCase(
-              "vi-VN"
+        return [
+          item.product_name,
+          item.variant_name
+        ].some(
+          function (name) {
+
+            return /^\s*(vợt|paddle)/.test(
+              String(
+                name || ""
+              )
+                .normalize(
+                  "NFC"
+                )
+                .toLocaleLowerCase(
+                  "vi-VN"
+                )
             );
 
-        return (
-          text.includes(
-            "vợt"
-          )
-          ||
-          text.includes(
-            "esson"
-          )
-          ||
-          text.includes(
-            "ess/on"
-          )
-          ||
-          text.includes(
-            "paddle"
-          )
+          }
         );
 
       }
@@ -5902,6 +5893,57 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
               )}`
             :
               "";
+
+
+        /*
+          Khách rời trang / điện thoại tải lại vẫn không mất QR:
+          - địa chỉ trang đổi sang link theo dõi đơn (có QR + gửi bill)
+          - đơn chuyển khoản được nhớ để trang Shop hiện banner "Xem mã QR"
+        */
+        if (
+          trackingUrl
+        ) {
+
+          try {
+
+            history.replaceState(
+              null,
+              "",
+              trackingUrl
+            );
+
+          }
+          catch (_) {}
+
+
+          if (
+            paymentMethod === "bank_transfer"
+          ) {
+
+            try {
+
+              localStorage.setItem(
+                "pickdee_shop_pending_payment",
+                JSON.stringify(
+                  {
+                    token:
+                      trackingToken,
+
+                    order_code:
+                      data.order_code,
+
+                    saved_at:
+                      Date.now()
+                  }
+                )
+              );
+
+            }
+            catch (_) {}
+
+          }
+
+        }
 
 
         const successMerchandiseTotal =
