@@ -304,6 +304,110 @@
     }
 
     /* =====================================================
+       HÀNH TRÌNH TỪ HÃNG VẬN CHUYỂN
+    ====================================================== */
+
+    .journey {
+      margin-top: 14px;
+      padding: 14px;
+
+      border-radius: 13px;
+      border: 1px solid rgba(216,255,69,.20);
+      background: rgba(216,255,69,.045);
+    }
+
+    .journey-head {
+      color: #d8ff45;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .05em;
+    }
+
+    .journey-sub {
+      margin-top: 4px;
+      color: rgba(255,255,255,.42);
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .journey-list {
+      margin-top: 12px;
+    }
+
+    .journey-ev {
+      position: relative;
+      padding: 0 0 12px 18px;
+    }
+
+    .journey-ev::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+    }
+
+    .journey-ev::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 14px;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .journey-ev:last-child::after {
+      display: none;
+    }
+
+    .journey-ev.latest::before {
+      background: #d8ff45;
+      box-shadow: 0 0 0 4px rgba(216,255,69,.15);
+    }
+
+    .journey-time {
+      color: rgba(255,255,255,.4);
+      font-size: 9px;
+    }
+
+    .journey-text {
+      margin-top: 2px;
+      color: rgba(255,255,255,.72);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .journey-ev.latest .journey-text {
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .journey details summary {
+      color: #d8ff45;
+      font-size: 9px;
+      font-weight: 900;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .journey-link {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255,255,255,.5);
+      font-size: 9px;
+      text-align: center;
+      text-decoration: underline;
+      background: none;
+      border: 0;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* =====================================================
        SHIPPING
     ====================================================== */
 
@@ -2134,12 +2238,6 @@ function renderOrder(data) {
   */
 
   const isSpxHandoff =
-    String(
-      data.shipping_provider || ""
-    ).toLowerCase() === "spx"
-
-    &&
-
     Boolean(
       String(
         data.tracking_code || ""
@@ -2297,10 +2395,45 @@ function renderOrder(data) {
   }
 
 
-  const reached =
+  let reached =
     timelineState(
       orderStatus,
       shippingStatus
+    );
+
+  /*
+    Đã bàn giao hãng vận chuyển:
+    bước 4 xong, bước 5 "Đang giao đến bạn".
+  */
+
+  if (
+    isSpxHandoff
+    &&
+    reached < 5
+  ) {
+
+    reached = 5;
+
+  }
+
+
+  const carrier =
+    data.carrier_tracking
+    ||
+    null;
+
+  const carrierEvents =
+    Array.isArray(
+      carrier && carrier.events
+    )
+      ? carrier.events
+      : [];
+
+  const carrierName =
+    providerLabel(
+      String(
+        data.shipping_provider || ""
+      ).toLowerCase()
     );
 
 
@@ -2312,78 +2445,109 @@ function renderOrder(data) {
     tiếp tục theo dõi trên SPX.
   */
 
+  /*
+    Hành trình lấy tự động từ hãng vận chuyển
+    (cron PickDee tra SPX / GHN mỗi 2 tiếng).
+  */
+
+  function journeyEvent(ev, latest) {
+
+    return `
+      <div class="journey-ev ${latest ? "latest" : ""}">
+        <div class="journey-time">
+          ${escapeHtml(formatTime(ev.at))}
+        </div>
+        <div class="journey-text">
+          ${escapeHtml(ev.text || "")}
+        </div>
+      </div>
+    `;
+
+  }
+
+
+  const journeyList =
+    carrierEvents.length
+      ?
+        `
+          <div class="journey-list">
+            ${carrierEvents
+              .slice(0, 4)
+              .map(function (ev, i) {
+                return journeyEvent(ev, i === 0);
+              })
+              .join("")}
+          </div>
+
+          ${
+            carrierEvents.length > 4
+              ?
+                `
+                  <details>
+                    <summary>Xem thêm ${carrierEvents.length - 4} mốc trước đó</summary>
+                    <div class="journey-list" style="margin-top:0">
+                      ${carrierEvents
+                        .slice(4)
+                        .map(function (ev) {
+                          return journeyEvent(ev, false);
+                        })
+                        .join("")}
+                    </div>
+                  </details>
+                `
+              :
+                ""
+          }
+        `
+      :
+        `
+          <div class="journey-sub" style="margin-top:10px">
+            ${
+              ["spx", "ghn"].includes(
+                String(data.shipping_provider || "").toLowerCase()
+              )
+                ?
+                  "PickDee đang lấy hành trình từ " + escapeHtml(carrierName) + ". Anh/chị quay lại sau ít phút để xem chi tiết."
+                :
+                  "Anh/chị bấm nút bên dưới để xem hành trình trên website " + escapeHtml(carrierName) + " (mã vận đơn đã được copy sẵn)."
+            }
+          </div>
+        `;
+
+
   const spxTrackingBox =
     isSpxHandoff
       ?
         `
+          <div class="journey">
 
-          <div
-            style="
-              margin-top:14px;
-              padding:14px;
-              border-radius:13px;
-              border:1px solid rgba(216,255,69,.20);
-              background:rgba(216,255,69,.045);
-            "
-          >
-
-            <div
-              style="
-                color:#d8ff45;
-                font-size:10px;
-                font-weight:950;
-                letter-spacing:.05em;
-              "
-            >
-              🚚 TIẾP TỤC THEO DÕI ĐƠN HÀNG TRÊN SPX
+            <div class="journey-head">
+              🚚 HÀNH TRÌNH VẬN CHUYỂN • ${escapeHtml(carrierName.toUpperCase())}
             </div>
 
+            ${
+              carrier && carrier.checked_at
+                ?
+                  `
+                    <div class="journey-sub">
+                      Tự động cập nhật từ ${escapeHtml(carrierName)} • lần cuối ${escapeHtml(formatTime(carrier.checked_at))}
+                    </div>
+                  `
+                :
+                  ""
+            }
 
-            <div
-              style="
-                margin-top:6px;
-                color:rgba(255,255,255,.48);
-                font-size:9px;
-                line-height:1.55;
-              "
-            >
-              PickDee đã bàn giao đơn hàng cho
-              SPX Shopee Express.
-              Từ thời điểm này, hành trình vận chuyển
-              sẽ được cập nhật trực tiếp trên hệ thống SPX.
-              Anh/chị có thể tiếp tục theo dõi đơn hàng
-              bằng mã vận đơn ở phía trên.
-            </div>
-
+            ${journeyList}
 
             <button
               id="openSpxTrackingBtn"
-              class="refresh-btn"
+              class="journey-link"
               type="button"
-              style="
-                margin-top:12px;
-              "
             >
-              🚚 THEO DÕI ĐƠN TRÊN SPX
+              Xem trên website ${escapeHtml(carrierName)}
             </button>
 
-
-            <div
-              style="
-                margin-top:8px;
-                color:rgba(255,255,255,.36);
-                font-size:8px;
-                line-height:1.5;
-                text-align:center;
-              "
-            >
-              PickDee sẽ tự copy mã vận đơn.
-              Khi trang SPX mở, anh/chị chỉ cần dán mã
-              vào ô tra cứu vận đơn để tiếp tục theo dõi.
-            </div>
-
           </div>
-
         `
       :
         "";
@@ -2459,9 +2623,25 @@ function renderOrder(data) {
           "Đã giao cho đơn vị vận chuyển",
           isSpxHandoff
             ?
-              "PickDee đã bàn giao đơn hàng cho SPX. Anh/chị tiếp tục theo dõi hành trình trên hệ thống của SPX."
+              "PickDee đã bàn giao đơn hàng cho " + carrierName + "."
             :
               "Đơn hàng đã được bàn giao cho đơn vị vận chuyển."
+        )}
+
+
+        ${timelineItem(
+          5,
+          reached,
+          reached >= 6
+            ? "Giao thành công"
+            : "Đang giao đến bạn",
+          reached >= 6
+            ? "Anh/chị đã nhận hàng. Cảm ơn anh/chị đã mua sắm tại PickDee!"
+            : (
+                carrier && carrier.status_text
+                  ? carrier.status_text
+                  : "Đơn hàng sẽ được giao đến địa chỉ của anh/chị."
+              )
         )}
 
 
@@ -2580,9 +2760,8 @@ function renderOrder(data) {
       `
 
         <div class="note">
-          Đơn hàng vẫn tiếp tục được vận chuyển sau khi
-          PickDee bàn giao. Anh/chị theo dõi các chặng
-          tiếp theo trực tiếp trên SPX.
+          Hành trình được PickDee tự động cập nhật từ
+          ${escapeHtml(carrierName)}. Anh/chị chỉ cần mở lại link này để xem.
         </div>
 
       `
@@ -2707,8 +2886,25 @@ function renderOrder(data) {
         }
 
 
+        const code =
+          encodeURIComponent(
+            data.tracking_code
+          );
+
+        const carrierSites = {
+          spx: "https://spx.vn/vi",
+          ghn: "https://donhang.ghn.vn/?order_code=" + code,
+          ghtk: "https://i.ghtk.vn/" + code,
+          jnt: "https://jtexpress.vn/vi/tracking?type=track&billcode=" + code,
+          viettel_post: "https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/"
+        };
+
         window.open(
-          "https://spx.vn/vi",
+          carrierSites[
+            String(data.shipping_provider || "").toLowerCase()
+          ]
+          ||
+          "https://www.google.com/search?q=" + encodeURIComponent("tra cứu vận đơn " + data.tracking_code),
           "_blank",
           "noopener,noreferrer"
         );
