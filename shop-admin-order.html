@@ -11,6 +11,8 @@
     content="#071523"
   >
   <title>Chi tiết đơn hàng | PickDee Shop</title>
+  <link rel="preconnect" href="https://snxztjsluhdibrklougo.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
   ></script>
@@ -5706,7 +5708,13 @@ if (
    if (!user) {
 
   location.href =
-    "/login";
+    "/login?next="
+    +
+    encodeURIComponent(
+      location.pathname
+      +
+      location.search
+    );
 
   return false;
 
@@ -5782,16 +5790,21 @@ async function loadOrder() {
 
   try {
 
-    await requireShopAccess();
-
-
+    /*
+      Kiểm tra quyền Shop song song với tải đơn
+      (RLS vẫn chặn dữ liệu nếu không có quyền).
+    */
     const [
+      accessOk,
       orderResult,
       itemsResult,
       settlementResult,
       supplierResult
     ] =
       await Promise.all([
+
+        requireShopAccess(),
+
 
         sb
           .from(
@@ -5855,6 +5868,15 @@ async function loadOrder() {
           )
 
       ]);
+
+
+    if (
+      !accessOk
+    ) {
+
+      return;
+
+    }
 
 
     if (
