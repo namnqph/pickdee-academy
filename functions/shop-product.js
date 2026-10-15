@@ -80,16 +80,13 @@ export async function onRequestGet(context) {
         || a.id - b.id
       )[0];
 
-    // Ảnh gốc là .webp — Zalo không chắc đọc được, nên đổi sang JPG vuông qua wsrv.nl (miễn phí).
+    // Ảnh JPG phục vụ ngay trên pickdee.vn (functions/og/p/[file].js): Zalo không hiện ảnh
+    // khi og:image ở domain ngoài có ?query. imageId trong tên file để đổi ảnh là đổi URL.
     const imageUrl = image
-      ? "https://wsrv.nl/?url="
-        + encodeURIComponent(
-          SUPABASE_URL.replace(/^https:\/\//, "")
-          + "/storage/v1/object/public/shop-products/"
-          + image.storage_path
-        )
-        + "&w=800&h=800&fit=contain&cbg=white&output=jpg&q=85"
-      : "https://pickdee.vn/pickdee-shop-icon.png";
+      ? "https://pickdee.vn/og/p/" + id + "-" + image.id + ".jpg"
+      : "https://pickdee.vn/og-shop.jpg";
+
+    const imageSize = image ? 800 : 0;
 
     const title =
       product.name
@@ -110,8 +107,8 @@ export async function onRequestGet(context) {
       + `<meta property="og:image" content="${esc(imageUrl)}">`
       + `<meta property="og:image:secure_url" content="${esc(imageUrl)}">`
       + `<meta property="og:image:type" content="image/jpeg">`
-      + `<meta property="og:image:width" content="800">`
-      + `<meta property="og:image:height" content="800">`
+      + `<meta property="og:image:width" content="${imageSize || 1200}">`
+      + `<meta property="og:image:height" content="${imageSize || 630}">`
       + `<meta property="og:image:alt" content="${esc(product.name)}">`
       + (minPrice
         ? `<meta property="product:price:amount" content="${minPrice}">`
@@ -128,9 +125,10 @@ export async function onRequestGet(context) {
           el.setInnerContent(product.name + " | PickDee Shop");
         }
       })
-      .on("head", {
+      // Đặt ngay sau <meta charset> (đầu <head>) để bot đọc trang nào cũng thấy sớm.
+      .on("meta[charset]", {
         element(el) {
-          el.append(meta, { html: true });
+          el.after(meta, { html: true });
         }
       })
       .transform(response);
