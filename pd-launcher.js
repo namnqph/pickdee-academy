@@ -4,8 +4,10 @@
      anchor: "selector chèn khối TRƯỚC phần tử này",
      storageKey: "pd_coach",
      groups: [{ key, icon, title, urgent?, tiles: [{ icon, label, href? | section?, count?, kind? }] }],
-     bottom: [{ icon, label, href? | section? | top?, count? }]
+     bottom: [{ icon, label, href? | section? | top?, count? }],
+     summary?: { icon, title, section, main: "id", sub?: "id", refs?: [{ label, from: "id" }] }
    }
+   - summary: thẻ tóm tắt luôn hiện đầu màn hình chính, chép chữ từ các id có sẵn; bấm mở section.
    - Hàng urgent luôn hiện; các nhóm còn lại là tab (điện thoại).
    - Ô "section" mở đúng phần trong trang (tìm theo tiêu đề), phần khác vẫn thu gọn.
    - Số đếm đọc từ các phần tử id có sẵn trên trang (cập nhật mỗi 2 giây).
@@ -58,6 +60,22 @@
   .pdl-more{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
     background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);font:inherit;
     font-size:14px;font-weight:800;cursor:pointer}
+  .pdl-sum{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:20px;
+    color:#fff;text-decoration:none;border:1px solid rgba(216,255,69,.35);
+    background:linear-gradient(135deg,rgba(216,255,69,.16),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
+    box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .pdl-sum:active{transform:scale(.98)}
+  .pdl-sum-icon{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;
+    border-radius:13px;background:rgba(216,255,69,.18);font-size:22px}
+  .pdl-sum-body{flex:1;min-width:0}
+  .pdl-sum-title{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#d8ff45}
+  .pdl-sum-main{margin-top:2px;font-size:19px;font-weight:900;line-height:1.2;overflow-wrap:anywhere}
+  .pdl-sum-sub{margin-top:3px;font-size:12px;line-height:1.35;color:rgba(255,255,255,.72)}
+  .pdl-sum-refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .pdl-sum-ref{padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.07);
+    font-size:11px;font-weight:700;color:rgba(255,255,255,.8)}
+  .pdl-sum-ref b{color:#fff}
+  .pdl-sum-go{flex:0 0 auto;font-size:22px;color:rgba(216,255,69,.8)}
   .pdl-hide{display:none !important}
   .pdl-hide-focus{display:none !important}
   .pdl-back{position:sticky;top:8px;z-index:20;display:inline-flex;align-items:center;gap:6px;
@@ -68,7 +86,7 @@
     .pdl-tabs{display:none}
     .pdl-group.is-tab{display:block}
     .pdl-group.is-tab .pdl-head{display:flex}
-    .pdl-more{grid-column:1/-1}
+    .pdl-more,.pdl-sum{grid-column:1/-1}
   }
   #pdlBottom{display:none}
   @media(max-width:759px){
@@ -111,7 +129,19 @@
     const box = document.createElement("nav");
     box.id = "pdLauncher";
     box.className = "pdl";
-    box.innerHTML = cfg.groups.map(g => `
+    const sm = cfg.summary;
+    const sumHtml = sm ? `
+      <a class="pdl-sum pdl-hide" href="#" data-section="${esc(sm.section)}" data-summary="1">
+        <span class="pdl-sum-icon">${sm.icon || "🎯"}</span>
+        <span class="pdl-sum-body">
+          <span class="pdl-sum-title">${esc(sm.title)}</span>
+          <span class="pdl-sum-main" data-copy="${esc(sm.main)}" style="display:block"></span>
+          ${sm.sub ? `<span class="pdl-sum-sub" data-copy="${esc(sm.sub)}" style="display:block"></span>` : ""}
+          ${(sm.refs || []).length ? `<span class="pdl-sum-refs">${sm.refs.map(r => `<span class="pdl-sum-ref">${esc(r.label)} <b data-copy="${esc(r.from)}"></b></span>`).join("")}</span>` : ""}
+        </span>
+        <span class="pdl-sum-go">›</span>
+      </a>` : "";
+    box.innerHTML = sumHtml + cfg.groups.map(g => `
       <section class="pdl-group c-${g.color || "lime"}${g.urgent ? " is-urgent" : ""}">
         <div class="pdl-head"><span class="pdl-head-icon">${g.icon}</span><span class="pdl-head-title">${esc(g.title)}</span></div>
         <div class="pdl-tiles">${g.tiles.map(tileHtml).join("")}</div>
@@ -300,8 +330,15 @@
       if (b) b.textContent = n > 99 ? "99+" : String(n);
       t.classList.toggle("has-count", n > 0);
     });
+    document.querySelectorAll("#pdLauncher [data-copy]").forEach(el => {
+      const src = document.getElementById(el.dataset.copy);
+      const txt = src ? String(src.textContent || "").replace(/\s+/g, " ").trim() : "";
+      if (el.textContent !== txt) el.textContent = txt;
+    });
     document.querySelectorAll("#pdLauncher [data-section], #pdlBottom [data-section]").forEach(t => {
-      t.classList.toggle("pdl-hide", !findSection(t.dataset.section));
+      const missing = !findSection(t.dataset.section)
+        || (!!t.dataset.summary && !document.getElementById(cfg.summary.main));
+      t.classList.toggle("pdl-hide", missing);
     });
     const tabs = document.querySelector("#pdLauncher .pdl-tabs");
     const groups = [...document.querySelectorAll("#pdLauncher .pdl-group.is-tab")];
