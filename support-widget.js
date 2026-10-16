@@ -1573,6 +1573,21 @@ if (
     try { return !sessionStorage.getItem(BOT_HUMAN); } catch (_) { return true; }
   }
 
+  // Trang nội bộ (admin, Coach, quản trị Shop/Support): vào thẳng chat nhân viên như cũ
+  function botStaffPage() {
+    return /^\/(admin|coach|shop-admin|support-admin)/i.test(location.pathname);
+  }
+
+  // Có tin nhân viên chưa đọc → mở chat nhân viên để khách không bỏ lỡ
+  async function botUnreadCount() {
+    try {
+      const { data, error } = await sb.rpc("support_get_unread_count", {
+        p_public_token: localStorage.getItem(STORAGE_TOKEN) || null
+      });
+      return error ? 0 : Math.max(0, Number(data || 0));
+    } catch (_) { return 0; }
+  }
+
   function botVisitor() {
     try {
       let v = localStorage.getItem(BOT_VID);
@@ -2160,6 +2175,35 @@ if (
 
 
     /*
+      TRỢ LÝ PICKDEE TRẢ LỜI TRƯỚC (mọi người, kể cả đã đăng nhập / từng chat).
+      Có tin nhân viên chưa đọc → vào thẳng chat nhân viên.
+    */
+
+    if (
+      botEnabled()
+      &&
+      !botStaffPage()
+    ) {
+
+      if (
+        await botUnreadCount() > 0
+      ) {
+
+        try { sessionStorage.setItem(BOT_HUMAN, "1"); } catch (_) {}
+
+      }
+      else {
+
+        showBot();
+
+        return;
+
+      }
+
+    }
+
+
+    /*
       TÀI KHOẢN ĐÃ ĐĂNG NHẬP
     */
 
@@ -2232,21 +2276,6 @@ if (
         );
 
       }
-
-    }
-
-
-    /*
-      KHÁCH MỚI: TRỢ LÝ PICKDEE TRẢ LỜI TRƯỚC
-    */
-
-    if (
-      botEnabled()
-    ) {
-
-      showBot();
-
-      return;
 
     }
 
