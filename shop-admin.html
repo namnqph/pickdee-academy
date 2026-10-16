@@ -8607,6 +8607,9 @@ false
     margin:0;
     padding-left:18px;
   }
+  #ownerCategoryStats .ocs-bar{
+    display:none;
+  }
   #ownerCategoryStats .ocs-traffic{
     display:flex;
     align-items:center;
@@ -8640,6 +8643,8 @@ false
 
   let period = "month";
   let stats = null;
+  let ocsOpen = false;
+  try { ocsOpen = localStorage.getItem("pd_ocs_open") === "1"; } catch (e) {}
 
   try {
     period = localStorage.getItem("pd_ocs_period") || "month";
@@ -8687,7 +8692,27 @@ false
     }
     // shop_admin: RPC không trả số liệu vợt → chỉ hiện phụ kiện
     const isOwner = stats.viewer !== "shop_admin";
+    const cur = (k) => ((stats[k] || {})[period] || {});
+    const periodName = (PERIODS.find(([k]) => k === period) || [, ""])[1];
+    const short = (v) => {
+      v = Number(v || 0);
+      if (v >= 1e6) return (Math.round(v / 1e5) / 10).toString().replace(".", ",") + "tr";
+      if (v >= 1e3) return Math.round(v / 1e3) + "k";
+      return v + "đ";
+    };
+    const openOrders = (isOwner ? Number(((stats.paddle || {}).open || {}).orders || 0) : 0) + Number(((stats.accessory || {}).open || {}).orders || 0);
+    const summary = isOwner
+      ? `🏓 ${short(cur("paddle").revenue)} · 🎒 ${short(cur("accessory").revenue)}`
+      : `🎒 ${short(cur("accessory").revenue)} · ${Number(cur("accessory").orders || 0)} đơn`;
+    box.classList.toggle("is-open", ocsOpen);
     box.innerHTML = `
+      <button type="button" class="ocs-bar" aria-expanded="${ocsOpen}">
+        <span class="ocs-bar-p">📊 ${periodName}</span>
+        <span class="ocs-bar-v">${summary}</span>
+        <span class="ocs-bar-o">${openOrders ? `⏳ ${openOrders}` : ""}</span>
+        <span class="ocs-bar-c">${ocsOpen ? "▴" : "▾"}</span>
+      </button>
+      <div class="ocs-body">
       <div class="ocs-head">
         <div class="ocs-title">${isOwner ? "📊 Vợt / Phụ kiện" : "📊 Phụ kiện"}</div>
         <div class="ocs-note">${isOwner ? "Chỉ anh xem · " : ""}doanh thu đơn hoàn tất</div>
@@ -8703,7 +8728,13 @@ false
         ${isOwner ? `<div><b>Vợt bán chạy tháng này</b>${topList(stats.top_paddle)}</div>` : ""}
         <div><b>Phụ kiện bán chạy tháng này</b>${topList(stats.top_accessory)}</div>
       </div>
-      <a class="ocs-traffic" href="/admin-traffic">${isOwner ? "📈 Xem người vào web (Shop / Academy) →" : "📈 Xem người vào Shop →"}</a>`;
+      <a class="ocs-traffic" href="/admin-traffic">${isOwner ? "📈 Xem người vào web (Shop / Academy) →" : "📈 Xem người vào Shop →"}</a>
+      </div>`;
+    box.querySelector(".ocs-bar").addEventListener("click", () => {
+      ocsOpen = !ocsOpen;
+      try { localStorage.setItem("pd_ocs_open", ocsOpen ? "1" : "0"); } catch (e) {}
+      render();
+    });
     box.querySelectorAll("[data-period]").forEach(btn =>
       btn.addEventListener("click", () => {
         period = btn.dataset.period;
@@ -8732,6 +8763,137 @@ false
 
   load(0);
 
+})();
+</script>
+
+<style>
+/* =========================================================
+   PICKDEE SHOP ADMIN - CHẾ ĐỘ APP TRÊN ĐIỆN THOẠI (≤760px)
+   Menu dưới đáy, nút Tạo đơn nổi, khung doanh thu 1 dòng,
+   danh sách đơn hiện ngay màn hình đầu. Máy tính giữ nguyên.
+========================================================= */
+.tabs .tab .pd-ti{ margin-right:6px }
+@media (max-width:760px){
+  .tabs .tab .pd-ti{ margin-right:0 }
+  body{ padding-bottom:calc(78px + env(safe-area-inset-bottom)) }
+  .page{ margin-top:10px!important }
+
+  /* Menu đáy */
+  .tabs{
+    position:fixed!important; left:0; right:0; bottom:0; z-index:70;
+    display:grid!important; grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:0!important; margin:0!important;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom))!important;
+    border:0!important; border-top:1px solid rgba(255,255,255,.10)!important; border-radius:0!important;
+    background:rgba(7,21,35,.97)!important; backdrop-filter:blur(14px);
+  }
+  .tabs .tab{
+    flex-direction:column; gap:3px; min-height:52px!important; padding:0 2px!important;
+    background:transparent!important; color:rgba(255,255,255,.55)!important;
+    font-size:10.5px!important; font-weight:800!important; letter-spacing:0; white-space:nowrap;
+  }
+  .tabs .tab .pd-ti{ font-size:21px; line-height:1; padding:3px 12px; border-radius:999px }
+  .tabs .tab.active{ color:#d8ff45!important; background:transparent!important }
+  .tabs .tab.active .pd-ti{ background:rgba(216,255,69,.16) }
+
+  /* Đầu trang gọn */
+  #ordersView .eyebrow, #ordersView .intro{ display:none }
+  #ordersView h1{ font-size:24px!important; margin:2px 0 10px!important }
+
+  /* Nút Tạo đơn nổi */
+  a.pd-fab{
+    position:fixed!important; right:14px; bottom:calc(76px + env(safe-area-inset-bottom)); z-index:71;
+    margin:0!important; min-height:52px!important; padding:0 18px!important; border-radius:999px!important;
+    font-size:15px!important; font-weight:900!important; letter-spacing:0;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(7,21,35,.6);
+  }
+  body.pd-not-orders a.pd-fab{ display:none!important }
+
+  /* Khung doanh thu: 1 dòng, bấm để mở */
+  #ownerCategoryStats{ padding:0!important; margin:0 0 10px!important; overflow:hidden }
+  #ownerCategoryStats .ocs-bar{
+    display:flex; align-items:center; gap:8px; width:100%; min-height:48px; padding:0 12px;
+    border:0; background:transparent; color:#fff; font-family:inherit; text-align:left; cursor:pointer;
+  }
+  #ownerCategoryStats .ocs-bar-p{ font-size:12px; font-weight:800; color:rgba(255,255,255,.6); white-space:nowrap }
+  #ownerCategoryStats .ocs-bar-v{ flex:1; min-width:0; font-size:15px; font-weight:900; color:#d8ff45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  #ownerCategoryStats .ocs-bar-o{ font-size:12.5px; font-weight:800; color:rgba(255,255,255,.75); white-space:nowrap }
+  #ownerCategoryStats .ocs-bar-c{ font-size:14px; color:rgba(255,255,255,.6) }
+  #ownerCategoryStats .ocs-body{ display:none; padding:0 12px 12px }
+  #ownerCategoryStats.is-open .ocs-body{ display:block }
+  #ownerCategoryStats .ocs-head{ display:none }
+
+  /* Ô số trạng thái: 1 hàng 4 ô */
+  #ordersView > .stats:not([style]){ grid-template-columns:repeat(4,minmax(0,1fr))!important; gap:6px!important; margin-bottom:10px!important }
+  #ordersView > .stats .stat{ padding:8px 6px!important; text-align:center; border-radius:12px!important }
+  #ordersView > .stats .stat-label{ font-size:9px!important; line-height:1.2; min-height:22px; display:flex; align-items:center; justify-content:center }
+  #ordersView > .stats .stat-value{ font-size:19px!important; margin-top:2px!important }
+
+  /* Bộ lọc: mỗi nhóm 1 hàng vuốt ngang, nút thấp hơn */
+  #ordersView .filters{ margin-bottom:8px!important; flex-wrap:nowrap!important }
+  #ordersView .filters .pill{ min-height:34px!important; padding:0 12px!important }
+  #ordersView details > summary.pill{ min-height:34px!important; margin-bottom:8px }
+
+  /* Số đơn đang hiển thị + tổng tiền: 1 dòng nhỏ */
+  #ordersView > .stats[style]{ gap:6px!important; margin:4px 0 10px!important }
+  #ordersView > .stats[style] .stat{ padding:8px 10px!important; display:flex; align-items:center; justify-content:space-between; gap:6px }
+  #ordersView > .stats[style] .stat-label{ font-size:9px!important }
+  #ordersView > .stats[style] .stat-value{ font-size:15px!important; margin:0!important }
+}
+</style>
+<script>
+/* PICKDEE SHOP ADMIN - chế độ app: chuẩn bị nhãn menu đáy + nút Tạo đơn nổi */
+(function () {
+  const LABELS = { orders: "Đơn hàng", inventory: "Kho", receiving: "Nhập hàng" };
+  document.querySelectorAll(".tabs .tab").forEach((tab) => {
+    if (tab.querySelector(".pd-ti")) return;
+    const raw = tab.textContent.trim();
+    const m = raw.match(/^(\S+)\s+(.*)$/);
+    if (!m) return;
+    let label = LABELS[tab.dataset.view] || m[2];
+    if (/SẢN PHẨM/i.test(m[2])) label = "Sản phẩm";
+    if (/KHUYẾN MÃI/i.test(m[2])) label = "Khuyến mãi";
+    tab.innerHTML = `<span class="pd-ti">${m[1]}</span><span class="pd-tl">${label}</span>`;
+  });
+
+  const fab = document.querySelector('#ordersView a[href="./shop-admin-create-order"]');
+  if (fab) {
+    fab.classList.add("pd-fab");
+    fab.textContent = "＋ Tạo đơn";
+  }
+
+  // Điện thoại: đưa lọc Vận chuyển + Ngày vào "Bộ lọc thêm", nút hiện số bộ lọc đang bật
+  const details = document.querySelector("#ordersView details");
+  const panel = details && details.querySelector(".panel");
+  const summary = details && details.querySelector("summary");
+  if (panel && summary && window.matchMedia("(max-width:760px)").matches) {
+    [["dateFilters", "NGÀY ĐẶT"], ["shippingFilters", "VẬN CHUYỂN"]].forEach(([id, label]) => {
+      const row = document.getElementById(id);
+      if (!row) return;
+      const title = document.createElement("div");
+      title.className = "muted";
+      title.textContent = label;
+      panel.prepend(row);
+      panel.prepend(title);
+    });
+    const countActive = () => {
+      const n = [...panel.querySelectorAll(".filters")].filter((row) => {
+        const on = row.querySelector(".pill.active");
+        return on && on.dataset.v;
+      }).length;
+      summary.textContent = n ? `+ BỘ LỌC THÊM (${n} đang bật)` : "+ BỘ LỌC THÊM";
+      summary.classList.toggle("active", n > 0);
+    };
+    panel.addEventListener("click", () => setTimeout(countActive, 0));
+    document.getElementById("resetOrders")?.addEventListener("click", () => setTimeout(countActive, 0));
+    countActive();
+  }
+
+  // Nút nổi chỉ hiện ở màn Đơn hàng
+  const ordersView = document.getElementById("ordersView");
+  const sync = () => document.body.classList.toggle("pd-not-orders", !!(ordersView && ordersView.hidden));
+  if (ordersView) new MutationObserver(sync).observe(ordersView, { attributes: true, attributeFilter: ["hidden"] });
+  sync();
 })();
 </script>
 </body>
