@@ -1559,6 +1559,30 @@ if (
       #pdBotInput:focus{border-color:rgba(216,255,69,.48)}
       #pdBotSend{flex:0 0 44px;height:44px;border:0;border-radius:12px;background:#d8ff45;color:#142300;font-size:18px;font-weight:900;cursor:pointer}
       #pdBotSend:disabled{opacity:.5}
+      /* Điện thoại, chế độ trợ lý: ngăn kéo từ dưới lên, cao theo nội dung (tối đa 72% màn hình) */
+      @media(max-width:700px){
+        #pickdeeSupportRoot:has(#pickdeeSupportPanel.open.pd-bot-mode) #pickdeeSupportButton{display:none}
+        #pickdeeSupportPanel.pd-bot-mode{left:6px;right:6px;bottom:calc(var(--pd-kb,0px) + max(8px,env(safe-area-inset-bottom)));height:auto;max-height:min(50dvh,calc(var(--pd-vvh,100dvh) - 16px));border-radius:18px}
+        /* Bàn phím đang bật: nhường chỗ cho tin nhắn + ô nhập */
+        #pickdeeSupportPanel.pd-bot-mode.pd-kb{max-height:calc(var(--pd-vvh,100dvh) - 16px)}
+        #pickdeeSupportPanel.pd-bot-mode.pd-kb #pickdeeContactQuick,#pickdeeSupportPanel.pd-bot-mode.pd-kb .pd-bot-chips{display:none!important}
+        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-head{min-height:46px;padding:7px 10px;gap:8px}
+        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-logo{width:30px;height:30px;font-size:14px}
+        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-title{font-size:15px}
+        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-subtitle{display:none}
+        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick{padding:6px 10px!important;gap:0!important}
+        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick>div:first-child{display:none!important}
+        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick a{min-height:32px!important;font-size:11px!important}
+        #pickdeeSupportPanel.pd-bot-mode #pickdeeSupportBot{flex:0 1 auto}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotMsgs{flex:0 1 auto;padding:10px 12px}
+        #pickdeeSupportPanel.pd-bot-mode .pd-bot-chips{margin:0 0 6px;gap:5px}
+        #pickdeeSupportPanel.pd-bot-mode .pd-bot-chip{padding:6px 10px;font-size:12px}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotHumanBar{padding:0 10px 6px}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotHuman{min-height:34px}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotComposer{padding:7px 10px calc(7px + env(safe-area-inset-bottom)*0)}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotInput{min-height:40px;padding:9px 11px}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotSend{flex-basis:40px;height:40px}
+      }
     `;
     document.head.appendChild(st);
   })();
@@ -1702,17 +1726,35 @@ if (
     renderBot(false);
   }
 
+  // Điện thoại: bám theo vùng nhìn thấy (bàn phím iOS không thu nhỏ layout) → khung luôn nằm ngay trên bàn phím
+  (function trackKeyboard() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = function () {
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      panel.style.setProperty("--pd-vvh", vv.height + "px");
+      panel.style.setProperty("--pd-kb", kb + "px");
+      panel.classList.toggle("pd-kb", kb > 120);
+      if (kb > 120 && botMsgs) botMsgs.scrollTop = botMsgs.scrollHeight;
+    };
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    sync();
+  })();
+
   function showBot() {
     showError("");
     guestBox.style.display = "none";
     chatBox.style.display = "none";
     botBox.style.display = "flex";
+    panel.classList.add("pd-bot-mode");
     renderBot(false);
   }
 
   async function goHuman() {
     try { sessionStorage.setItem(BOT_HUMAN, "1"); } catch (_) {}
     botBox.style.display = "none";
+    panel.classList.remove("pd-bot-mode");
     if (botLastQuestion && !messageInput.value) messageInput.value = botLastQuestion;
     await prepareChat();
   }
