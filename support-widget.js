@@ -1331,6 +1331,9 @@ if (
 </div>
 
 
+<div id="pickdeeSupportBot"></div>
+
+
 <div id="pickdeeSupportGuest">
 
         <div class="pickdee-support-intro">
@@ -1508,6 +1511,200 @@ if (
     document.getElementById(
       "pickdeeSupportBadge"
     );
+
+
+  /* =====================================================
+     TRỢ LÝ PICKDEE (BOT) - trả lời trước cho khách mới
+     Edge Function pickdee-bot: chỉ dùng dữ liệu thật + tự kiểm tra
+     giá/link/SĐT. Không chắc → mời "Gặp nhân viên" (chat thật bên dưới).
+  ====================================================== */
+
+  const BOT_URL =
+    cfg.SUPABASE_URL + "/functions/v1/pickdee-bot";
+  const BOT_HISTORY = "pickdee_bot_history";
+  const BOT_HUMAN = "pickdee_bot_human";
+  const BOT_VID = "pickdee_bot_vid";
+  const BOT_SUGGEST = [
+    "Giá vợt ESS/ON?",
+    "Phí ship thế nào?",
+    "Học phí các gói học?",
+    "Tra cứu đơn hàng"
+  ];
+
+  const botBox = document.getElementById("pickdeeSupportBot");
+  let botBusy = false;
+  let botLastQuestion = "";
+
+  (function botStyle() {
+    const st = document.createElement("style");
+    st.textContent = `
+      #pickdeeSupportBot{min-height:0;flex:1;display:none;flex-direction:column}
+      #pdBotMsgs{min-height:0;flex:1;padding:15px 14px;overflow-y:auto;overscroll-behavior:contain}
+      #pdBotMsgs a{color:#d8ff45;font-weight:800;word-break:break-all}
+      .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
+      .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(216,255,69,.3);background:rgba(216,255,69,.07);color:#d8ff45;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+      .pd-bot-typing{opacity:.6;font-style:italic}
+      #pdBotHumanBar{padding:0 74px 8px 11px}
+      #pdBotHuman{width:100%;min-height:40px;border-radius:11px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+      #pdBotHuman.pd-hot{background:#d8ff45;color:#142300;border-color:#d8ff45}
+      #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(3,17,38,.82)}
+      #pdBotInput{min-width:0;flex:1;min-height:44px;max-height:105px;padding:11px 12px;resize:none;outline:none;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:16px;line-height:1.4}
+      #pdBotInput:focus{border-color:rgba(216,255,69,.48)}
+      #pdBotSend{flex:0 0 44px;height:44px;border:0;border-radius:12px;background:#d8ff45;color:#142300;font-size:18px;font-weight:900;cursor:pointer}
+      #pdBotSend:disabled{opacity:.5}
+    `;
+    document.head.appendChild(st);
+  })();
+
+  botBox.innerHTML = `
+    <div id="pdBotMsgs"></div>
+    <div id="pdBotHumanBar"><button id="pdBotHuman" type="button">👩 Gặp nhân viên PickDee</button></div>
+    <div id="pdBotComposer">
+      <textarea id="pdBotInput" rows="1" maxlength="500" placeholder="Hỏi trợ lý PickDee..."></textarea>
+      <button id="pdBotSend" type="button" aria-label="Gửi câu hỏi">➤</button>
+    </div>`;
+
+  const botMsgs = document.getElementById("pdBotMsgs");
+  const botInput = document.getElementById("pdBotInput");
+  const botSend = document.getElementById("pdBotSend");
+  const botHumanBtn = document.getElementById("pdBotHuman");
+
+  function botEnabled() {
+    try { return !sessionStorage.getItem(BOT_HUMAN); } catch (_) { return true; }
+  }
+
+  function botVisitor() {
+    try {
+      let v = localStorage.getItem(BOT_VID);
+      if (!v) {
+        v = "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem(BOT_VID, v);
+      }
+      return v;
+    } catch (_) { return "anon"; }
+  }
+
+  function botHistory() {
+    try { return JSON.parse(sessionStorage.getItem(BOT_HISTORY) || "[]"); } catch (_) { return []; }
+  }
+
+  function botSave(h) {
+    try { sessionStorage.setItem(BOT_HISTORY, JSON.stringify(h.slice(-20))); } catch (_) {}
+  }
+
+  function botHtml(text) {
+    const esc = String(text || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return esc.replace(/https:\/\/pickdee\.vn\/[^\s<]*/g, function (u) {
+      const clean = u.replace(/[.,;!?)]+$/, "");
+      const rest = u.slice(clean.length);
+      return '<a href="' + clean + '">' + clean.replace("https://", "") + "</a>" + rest;
+    }).replace(/\n/g, "<br>");
+  }
+
+  function botRow(role, html, extraClass) {
+    const row = document.createElement("div");
+    row.className = "pickdee-support-message-row " + (role === "user" ? "user" : "support");
+    const msg = document.createElement("div");
+    msg.className = "pickdee-support-message" + (extraClass ? " " + extraClass : "");
+    msg.innerHTML = html;
+    row.appendChild(msg);
+    botMsgs.appendChild(row);
+  }
+
+  function renderBot(typing) {
+    const h = botHistory();
+    botMsgs.innerHTML = "";
+    botRow("bot",
+      "Chào anh/chị 👋 Em là <b>trợ lý PickDee</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, gói học. " +
+      "Câu nào em không chắc, em sẽ mời anh/chị gặp nhân viên ạ.");
+    if (!h.length) {
+      const chips = document.createElement("div");
+      chips.className = "pd-bot-chips";
+      BOT_SUGGEST.forEach(function (q) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "pd-bot-chip";
+        b.textContent = q;
+        b.addEventListener("click", function () { botAsk(q); });
+        chips.appendChild(b);
+      });
+      botMsgs.appendChild(chips);
+    }
+    let hot = false;
+    h.forEach(function (m) {
+      botRow(m.role, botHtml(m.text));
+      hot = !!m.handoff;
+    });
+    if (typing) botRow("bot", "Em đang xem thông tin…", "pd-bot-typing");
+    botHumanBtn.classList.toggle("pd-hot", hot);
+    botMsgs.scrollTop = botMsgs.scrollHeight;
+  }
+
+  async function botAsk(text) {
+    const q = String(text || "").trim().slice(0, 500);
+    if (!q || botBusy) return;
+    botBusy = true;
+    botSend.disabled = true;
+    botLastQuestion = q;
+    const prev = botHistory();
+    const h = prev.concat([{ role: "user", text: q }]);
+    botSave(h);
+    botInput.value = "";
+    renderBot(true);
+
+    let answer = "Xin lỗi anh/chị, trợ lý đang bận. Anh/chị bấm \"Gặp nhân viên PickDee\" hoặc gọi/Zalo 0926 629 966 nhé.";
+    let handoff = true;
+    try {
+      const res = await fetch(BOT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: cfg.SUPABASE_PUBLISHABLE_KEY
+        },
+        body: JSON.stringify({
+          message: q,
+          visitor_id: botVisitor(),
+          page: location.pathname,
+          history: prev.slice(-6).map(function (m) { return { role: m.role, text: m.text }; })
+        })
+      });
+      const d = await res.json();
+      if (d && d.answer) { answer = d.answer; handoff = !!d.handoff; }
+    } catch (e) {
+      console.warn("PickDee bot:", e);
+    }
+    botSave(h.concat([{ role: "bot", text: answer, handoff: handoff }]));
+    botBusy = false;
+    botSend.disabled = false;
+    renderBot(false);
+  }
+
+  function showBot() {
+    showError("");
+    guestBox.style.display = "none";
+    chatBox.style.display = "none";
+    botBox.style.display = "flex";
+    renderBot(false);
+  }
+
+  async function goHuman() {
+    try { sessionStorage.setItem(BOT_HUMAN, "1"); } catch (_) {}
+    botBox.style.display = "none";
+    if (botLastQuestion && !messageInput.value) messageInput.value = botLastQuestion;
+    await prepareChat();
+  }
+
+  botSend.addEventListener("click", function () { botAsk(botInput.value); });
+  botInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      botAsk(botInput.value);
+    }
+  });
+  botHumanBtn.addEventListener("click", function () {
+    goHuman().catch(function (e) { showError("Không mở được chat: " + (e?.message || e)); });
+  });
 
 
   /* =====================================================
@@ -2035,6 +2232,21 @@ if (
         );
 
       }
+
+    }
+
+
+    /*
+      KHÁCH MỚI: TRỢ LÝ PICKDEE TRẢ LỜI TRƯỚC
+    */
+
+    if (
+      botEnabled()
+    ) {
+
+      showBot();
+
+      return;
 
     }
 
