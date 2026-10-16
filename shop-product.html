@@ -509,6 +509,23 @@
       background: #fff;
     }
 
+    .variant-btn.sold-out {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+
+    .variant-btn.sold-out .opt-thumb {
+      filter: grayscale(1);
+    }
+
+    .variant-btn.sold-out small {
+      display: block;
+      margin-top: 1px;
+      color: #ff9b9b;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
     .variant-btn.active {
       color: #071523;
 
@@ -1165,6 +1182,9 @@
 
   let variants = [];
 
+  // Phân loại đang theo dõi tồn và hết hàng: hiện nút "Tạm hết", không cho chọn
+  let soldOutVariants = [];
+
   let images = [];
 
   let selectedVariant = null;
@@ -1524,6 +1544,28 @@
 
   }
 
+
+  // Nút "Tạm hết" cho giá trị phân loại 1 mà mọi biến thể đều hết (chỉ hiện, không chọn được)
+  function soldOutOption1Buttons(option1Values, withThumb) {
+    const shown = new Set(option1Values.map(String));
+    return soldOutVariants
+      .filter(function (item) {
+        const value = String(item.option1_value || "");
+        if (!value || shown.has(value) || item.option2_value) return false;
+        shown.add(value);
+        return true;
+      })
+      .map(function (item) {
+        const url = withThumb && item.image_path ? imageUrl(item.image_path) : "";
+        return `
+            <button class="variant-btn option-btn sold-out ${withThumb ? "has-thumb" : ""}" type="button" disabled aria-disabled="true">
+              ${url ? `<img class="opt-thumb" src="${escapeHtml(url)}" alt="" loading="lazy">` : ""}
+              <span>${escapeHtml(item.option1_value)}<small>Tạm hết</small></span>
+            </button>
+          `;
+      })
+      .join("");
+  }
 
   function optionButtonInner(index, value, withThumb) {
 
@@ -2082,6 +2124,7 @@ function updateCartCount() {
 
         <div class="variants">
           ${option1Buttons}
+          ${soldOutOption1Buttons(option1Values, option1HasThumbs)}
         </div>
       `;
 
@@ -4682,6 +4725,32 @@ function bindProductEvents() {
         variantsResult.data
         ||
         [];
+
+
+      try {
+        const soldOutResult =
+          await sb.rpc(
+            "shop_public_sold_out_variants_v1",
+            { p_product_id: Number(productId) }
+          );
+
+        soldOutVariants =
+          soldOutResult.error
+            ? []
+            : (soldOutResult.data || []);
+      } catch (_) {
+        soldOutVariants = [];
+      }
+
+      const soldOutIds =
+        new Set(
+          soldOutVariants.map(item => String(item.variant_id))
+        );
+
+      variants =
+        variants.filter(
+          variant => !soldOutIds.has(String(variant.id))
+        );
 
 
       images =
