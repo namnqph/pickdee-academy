@@ -1551,8 +1551,9 @@ if (
       .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
       .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(216,255,69,.3);background:rgba(216,255,69,.07);color:#d8ff45;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
       .pd-bot-typing{opacity:.6;font-style:italic}
-      #pdBotHumanBar{padding:0 74px 8px 11px}
-      #pdBotHuman{width:100%;min-height:40px;border-radius:11px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+      /* Nút "Gặp nhân viên" nằm trên thanh tiêu đề (cạnh nút ×), chỉ hiện khi đang ở trợ lý */
+      #pdBotHuman{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(216,255,69,.35);background:rgba(216,255,69,.08);color:#d8ff45;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
+      #pickdeeSupportPanel:not(.pd-bot-mode) #pdBotHuman{display:none}
       #pdBotHuman.pd-hot{background:#d8ff45;color:#142300;border-color:#d8ff45}
       #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(3,17,38,.82)}
       #pdBotInput{min-width:0;flex:1;min-height:44px;max-height:105px;padding:11px 12px;resize:none;outline:none;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:16px;line-height:1.4}
@@ -1577,8 +1578,6 @@ if (
         #pickdeeSupportPanel.pd-bot-mode #pdBotMsgs{flex:0 1 auto;padding:10px 12px}
         #pickdeeSupportPanel.pd-bot-mode .pd-bot-chips{margin:0 0 6px;gap:5px}
         #pickdeeSupportPanel.pd-bot-mode .pd-bot-chip{padding:6px 10px;font-size:12px}
-        #pickdeeSupportPanel.pd-bot-mode #pdBotHumanBar{padding:0 10px 6px}
-        #pickdeeSupportPanel.pd-bot-mode #pdBotHuman{min-height:34px}
         #pickdeeSupportPanel.pd-bot-mode #pdBotComposer{padding:7px 10px calc(7px + env(safe-area-inset-bottom)*0)}
         #pickdeeSupportPanel.pd-bot-mode #pdBotInput{min-height:40px;padding:9px 11px}
         #pickdeeSupportPanel.pd-bot-mode #pdBotSend{flex-basis:40px;height:40px}
@@ -1589,7 +1588,7 @@ if (
 
   botBox.innerHTML = `
     <div id="pdBotMsgs"></div>
-    <div id="pdBotHumanBar"><button id="pdBotHuman" type="button">👩 Gặp nhân viên PickDee</button></div>
+    <button id="pdBotHuman" type="button">👩 Gặp nhân viên</button>
     <div id="pdBotComposer">
       <textarea id="pdBotInput" rows="1" maxlength="500" placeholder="Hỏi trợ lý PickDee..."></textarea>
       <button id="pdBotSend" type="button" aria-label="Gửi câu hỏi">➤</button>
@@ -1599,6 +1598,11 @@ if (
   const botInput = document.getElementById("pdBotInput");
   const botSend = document.getElementById("pdBotSend");
   const botHumanBtn = document.getElementById("pdBotHuman");
+  // Đưa lên thanh tiêu đề, ngay trước nút đóng
+  (function () {
+    const x = document.getElementById("pickdeeSupportClose");
+    if (x && x.parentNode) x.parentNode.insertBefore(botHumanBtn, x);
+  })();
 
   function botEnabled() {
     try { return !sessionStorage.getItem(BOT_HUMAN); } catch (_) { return true; }
