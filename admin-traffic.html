@@ -25,6 +25,7 @@
       --bad: #ff8a80;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     body {
       margin: 0; min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -112,7 +113,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="sectionsCard">
         <h2>Vào khu nào?</h2>
         <p class="sub">Mỗi người chỉ đếm 1 lần trong mỗi khu, dù xem nhiều trang.</p>
         <div class="sections" id="sections"></div>
@@ -127,7 +128,7 @@
       <div class="card" id="dailyCard">
         <h2>Người vào mỗi ngày</h2>
         <p class="sub">Chạm vào biểu đồ để xem số từng ngày.</p>
-        <div class="legend">
+        <div class="legend" id="dailyLegend">
           <span style="--c:var(--series-shop)"><i></i>Shop</span>
           <span style="--c:var(--series-academy)"><i></i>Academy</span>
           <span style="--c:var(--series-home)"><i></i>Trang chủ</span>
@@ -148,7 +149,7 @@
           <p class="sub">Bao nhiêu người đi tới từng bước.</p>
           <div class="bars" id="shopFunnel" style="--c:var(--series-shop)"></div>
         </div>
-        <div class="card">
+        <div class="card" id="acaCard">
           <h2>🎓 Academy: từ xem đến đăng ký</h2>
           <p class="sub">Bao nhiêu người đi tới từng bước.</p>
           <div class="bars" id="acaFunnel" style="--c:var(--series-academy)"></div>
@@ -198,6 +199,7 @@
   const DEVICES = { mobile: "📱 Điện thoại", desktop: "💻 Máy tính", tablet: "📲 Máy tính bảng" };
 
   let days = Number(localStorage.getItem("pd_traffic_days") || 7);
+  let shopOnly = false;
 
   function deltaHtml(cur, prev) {
     if (!prev) return cur ? "kỳ trước chưa có số" : "";
@@ -227,11 +229,13 @@
   function renderDaily(daily) {
     const el = $("daily");
     const W = Math.max(300, el.clientWidth || 640), H = 220, L = 30, R = 84, T = 12, B = 26;
-    const series = [
-      { key: "shop", name: "Shop", c: "var(--series-shop)" },
-      { key: "academy", name: "Academy", c: "var(--series-academy)" },
-      { key: "home", name: "Trang chủ", c: "var(--series-home)" }
-    ];
+    const series = shopOnly
+      ? [{ key: "shop", name: "Shop", c: "var(--series-shop)" }]
+      : [
+          { key: "shop", name: "Shop", c: "var(--series-shop)" },
+          { key: "academy", name: "Academy", c: "var(--series-academy)" },
+          { key: "home", name: "Trang chủ", c: "var(--series-home)" }
+        ];
     const n = daily.length;
     const max = Math.max(4, ...daily.flatMap((d) => series.map((s) => d[s.key])));
     const nice = Math.ceil(max / 4) * 4;
@@ -274,7 +278,7 @@
       const i = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round(((px - L) / (W - L - R)) * (n - 1))));
       const d = daily[i];
       xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.style.display = "";
-      tip.innerHTML = `<b>${dd(d.date)} · ${fmt(d.total)} người</b>` + series.map((s) => `<div><i style="background:${s.c}"></i>${s.name}: ${fmt(d[s.key])}</div>`).join("");
+      tip.innerHTML = `<b>${dd(d.date)} · ${fmt(shopOnly ? d.shop : d.total)} người</b>` + series.map((s) => `<div><i style="background:${s.c}"></i>${s.name}: ${fmt(d[s.key])}</div>`).join("");
       tip.style.display = "block";
       const left = (x(i) / W) * r.width;
       tip.style.left = Math.max(0, Math.min(r.width - tip.offsetWidth, left - tip.offsetWidth / 2)) + "px";
@@ -286,8 +290,11 @@
     hit.addEventListener("touchstart", show, { passive: true }); hit.addEventListener("touchmove", show, { passive: true });
     hit.addEventListener("touchend", () => setTimeout(hide, 1800));
 
-    $("dailyTable").innerHTML = `<table><tr><th>Ngày</th><th>Tổng</th><th>Shop</th><th>Academy</th><th>Trang chủ</th></tr>` +
-      daily.slice().reverse().map((d) => `<tr><td>${dd(d.date)}</td><td>${fmt(d.total)}</td><td>${fmt(d.shop)}</td><td>${fmt(d.academy)}</td><td>${fmt(d.home)}</td></tr>`).join("") + `</table>`;
+    $("dailyTable").innerHTML = shopOnly
+      ? `<table><tr><th>Ngày</th><th>Người vào Shop</th></tr>` +
+        daily.slice().reverse().map((d) => `<tr><td>${dd(d.date)}</td><td>${fmt(d.shop)}</td></tr>`).join("") + `</table>`
+      : `<table><tr><th>Ngày</th><th>Tổng</th><th>Shop</th><th>Academy</th><th>Trang chủ</th></tr>` +
+        daily.slice().reverse().map((d) => `<tr><td>${dd(d.date)}</td><td>${fmt(d.total)}</td><td>${fmt(d.shop)}</td><td>${fmt(d.academy)}</td><td>${fmt(d.home)}</td></tr>`).join("") + `</table>`;
   }
 
   // ---- Bar chart: 24 giờ, 1 series, hover tooltip ----
@@ -333,7 +340,8 @@
 
     if (!t.visitors) return [`Chưa có ai vào trong ${periodLabel()}. Bộ đếm mới chạy, xem lại sau vài ngày nhé.`];
 
-    out.push(`${periodLabel()[0].toUpperCase() + periodLabel().slice(1)} có <b>${fmt(t.visitors)} người</b> vào PickDee: <b>${fmt(shop)}</b> vào Shop, <b>${fmt(aca)}</b> vào Academy.` +
+    if (shopOnly) out.push(`${periodLabel()[0].toUpperCase() + periodLabel().slice(1)} có <b>${fmt(t.visitors)} người</b> vào Shop, trong đó <b>${fmt(t.new_visitors)}</b> người lần đầu vào.`);
+    else out.push(`${periodLabel()[0].toUpperCase() + periodLabel().slice(1)} có <b>${fmt(t.visitors)} người</b> vào PickDee: <b>${fmt(shop)}</b> vào Shop, <b>${fmt(aca)}</b> vào Academy.` +
       (shop || aca ? ` Shop đang ${shop >= aca ? "hút khách hơn" : "ít khách hơn"} Academy.` : ""));
 
     const src = d.sources.filter((s) => s.source !== "direct" && s.source !== "other");
@@ -353,13 +361,13 @@
     if (lazy.length) out.push(`<b>${esc(lazy[0].name)}</b> có ${fmt(lazy[0].visitors)} người xem nhưng chưa có đơn nào trong kỳ.`);
 
     const af = d.academy_funnel;
-    if (af.academy_any >= 5) {
+    if (af && af.academy_any >= 5) {
       out.push(af.registrations
         ? `Academy: ${fmt(af.academy_any)} người xem → ${fmt(af.registrations)} đăng ký học (${pct(af.registrations, af.academy_any)}%).`
         : `Academy: ${fmt(af.academy_any)} người xem nhưng chưa có đăng ký học nào. Nên đặt nút "Đăng ký học thử" nổi bật hơn hoặc gắn số Zalo ngay trang Academy.`);
     }
 
-    if (t.both_shop_academy) out.push(`${fmt(t.both_shop_academy)} người vừa xem Shop vừa xem Academy. Đây là nhóm dễ bán chéo, ví dụ tặng ưu đãi phụ kiện cho học viên.`);
+    if (!shopOnly && t.both_shop_academy) out.push(`${fmt(t.both_shop_academy)} người vừa xem Shop vừa xem Academy. Đây là nhóm dễ bán chéo, ví dụ tặng ưu đãi phụ kiện cho học viên.`);
 
     const hs = d.hours.slice().sort((a, b) => b.visitors - a.visitors);
     if (hs.length && t.visitors >= 10) out.push(`Khách vào đông nhất lúc <b>${hs[0].h}h–${hs[0].h + 1}h</b>. Nên đăng bài trước giờ này khoảng 30 phút.`);
@@ -371,10 +379,17 @@
 
   function render(d) {
     const t = d.total;
-    if (d.viewer === "shop_admin") {
+    shopOnly = d.viewer === "shop_admin";
+    if (shopOnly) {
+      // shop_admin: máy chủ chỉ trả số liệu Shop (không Academy, không vợt)
       const back = document.querySelector(".top a");
       back.href = "/shop-admin";
       back.textContent = "← Shop";
+      document.querySelector(".top h1").textContent = "📈 Người vào Shop";
+      document.title = "Người vào Shop | PickDee";
+      $("sectionsCard").hidden = true;
+      $("acaCard").hidden = true;
+      $("dailyLegend").hidden = true;
     }
     $("kVisitors").textContent = fmt(t.visitors);
     $("kVisitorsD").innerHTML = deltaHtml(t.visitors, t.prev_visitors);
@@ -405,7 +420,7 @@
     renderBars($("sources"), d.sources.map((s) => ({
       k: SOURCES[s.source] || s.source, v: s.visitors,
       note: t.visitors ? pct(s.visitors, t.visitors) + "%" : "",
-      split: `Shop ${fmt(s.shop)} · Academy ${fmt(s.academy)}`
+      split: shopOnly ? "" : `Shop ${fmt(s.shop)} · Academy ${fmt(s.academy)}`
     })));
 
     const sf = d.shop_funnel;
@@ -419,13 +434,13 @@
     $("shopFunnel").insertAdjacentHTML("beforeend", `<div class="note">Tổng đơn mọi kênh (cả Zalo, TikTok, điện thoại): <b>${fmt(sf.orders_all)}</b></div>`);
 
     const af = d.academy_funnel;
-    renderBars($("acaFunnel"), [
+    if (af) renderBars($("acaFunnel"), [
       { k: "Vào Academy", v: af.academy_any },
       { k: "Xem Coach", v: af.find_coach, note: pct(af.find_coach, af.academy_any) + "%" },
       { k: "Mở form đăng ký", v: af.register_page, note: pct(af.register_page, af.academy_any) + "%" },
       { k: "Đăng ký học", v: af.registrations, note: pct(af.registrations, af.academy_any) + "%" }
     ]);
-    if (af.apply_coach) $("acaFunnel").insertAdjacentHTML("beforeend", `<div class="note">🪪 ${fmt(af.apply_coach)} người xem trang ứng tuyển Coach.</div>`);
+    if (af && af.apply_coach) $("acaFunnel").insertAdjacentHTML("beforeend", `<div class="note">🪪 ${fmt(af.apply_coach)} người xem trang ứng tuyển Coach.</div>`);
 
     $("products").innerHTML = d.top_products.length
       ? `<table><tr><th>Sản phẩm</th><th>Người xem</th><th>Đơn</th></tr>` +
