@@ -1,13 +1,14 @@
 /* =========================================================
    PICKDEE SHOP ADMIN - MENU ĐÁY DÙNG CHUNG (điện thoại ≤760px)
-   Nạp từ config.js cho các trang danh sách của Shop admin.
+   Gắn trực tiếp (thẻ script) vào các trang danh sách của Shop admin.
    Trang shop-admin (Đơn hàng) có menu riêng trong trang.
    Trang con (tạo/sửa/chi tiết) có thanh nút thao tác ở đáy → không gắn menu.
 ========================================================= */
 
 (function () {
   try {
-    if (document.getElementById("pdAppNav")) return;
+    if (window.__pdAppNav || document.getElementById("pdAppNav")) return;
+    window.__pdAppNav = true;
 
     var page = location.pathname.replace(/^\/+|\/+$/g, "").replace(/\.html$/, "");
 

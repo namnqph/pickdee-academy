@@ -8808,6 +8808,11 @@ false
     box-shadow:0 8px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(7,21,35,.6);
   }
   body.pd-not-orders a.pd-fab{ display:none!important }
+  a.pd-fab{ transition:transform .22s ease, opacity .22s ease }
+  a.pd-fab.pd-fab-hide{ transform:translateY(130px); opacity:0; pointer-events:none }
+
+  /* Thanh khởi tạo tồn (tab Kho) nằm trên menu đáy, không bị che */
+  .init-bar{ bottom:calc(76px + env(safe-area-inset-bottom))!important }
 
   /* Khung doanh thu: 1 dòng, bấm để mở */
   #ownerCategoryStats{ padding:0!important; margin:0 0 10px!important; overflow:hidden }
@@ -8887,6 +8892,22 @@ false
     panel.addEventListener("click", () => setTimeout(countActive, 0));
     document.getElementById("resetOrders")?.addEventListener("click", () => setTimeout(countActive, 0));
     countActive();
+  }
+
+  // Nút nổi tự ẩn khi vuốt xuống xem đơn, hiện lại khi vuốt lên / về đầu trang → không che nội dung
+  if (fab) {
+    let lastY = window.scrollY, ticking = false;
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 80 || y < lastY - 6) fab.classList.remove("pd-fab-hide");
+        else if (y > lastY + 6) fab.classList.add("pd-fab-hide");
+        lastY = y;
+        ticking = false;
+      });
+    }, { passive: true });
   }
 
   // Nút nổi chỉ hiện ở màn Đơn hàng
