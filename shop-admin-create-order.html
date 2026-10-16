@@ -347,6 +347,49 @@
       cursor: pointer;
     }
 
+    .paste-box {
+      margin-bottom: 12px;
+      padding: 10px;
+
+      border-radius: 11px;
+      border: 1px dashed rgba(216,255,69,.35);
+      background: rgba(216,255,69,.04);
+    }
+
+    .paste-box textarea {
+      min-height: 76px;
+    }
+
+    .paste-btn {
+      width: 100%;
+      min-height: 42px;
+      margin-top: 7px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: #d8ff45;
+      color: #071523;
+
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .paste-result {
+      display: none;
+      margin-top: 8px;
+
+      color: rgba(255,255,255,.78);
+
+      font-size: 11px;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+
+    .paste-result.warn {
+      color: #ffd27a;
+    }
+
     .customer-found {
       display: none;
 
@@ -786,6 +829,33 @@
     </div>
 
 
+    <div class="paste-box">
+
+      <label for="pasteText">
+        ✨ DÁN TIN NHẮN CỦA KHÁCH – TỰ ĐIỀN
+      </label>
+
+      <textarea
+        id="pasteText"
+        placeholder="Dán nguyên tin nhắn: tên, SĐT, địa chỉ (cũ hoặc mới), sản phẩm. Ví dụ: Vợt ess hồng elong, áo xxl"
+      ></textarea>
+
+      <button
+        id="pasteFillBtn"
+        class="paste-btn"
+        type="button"
+      >
+        ✨ TỰ ĐIỀN ĐƠN
+      </button>
+
+      <div
+        id="pasteResult"
+        class="paste-result"
+      ></div>
+
+    </div>
+
+
     <div class="form-grid">
 
       <div class="field">
@@ -1101,8 +1171,16 @@
     );
 
 
+  const SOURCE_KEY =
+    "pickdee_quick_order_source";
+
   let selectedSource =
+    localStorage.getItem(SOURCE_KEY)
+    ||
     "zalo";
+
+  let linesTouched =
+    false;
 
 
   let products = [];
@@ -1388,6 +1466,52 @@
 
   async function loadAddressData() {
 
+    /*
+      Bản gọn 97KB đặt trong web (thay 2,7MB từ GitHub).
+      Lỗi thì quay về nguồn GitHub.
+    */
+
+    try {
+
+      const localResult =
+        await fetch(
+          "/vn-address-2025.json?v=20261016"
+        );
+
+      if (localResult.ok) {
+
+        const compact =
+          await localResult.json();
+
+        addressProvinces =
+          compact.p.map(
+            ([id, name]) => ({
+              id,
+              name: { local: name }
+            })
+          );
+
+        addressWards =
+          compact.w.map(
+            ([id, name, parentId]) => ({
+              id,
+              name: { local: name },
+              parent: { id: parentId }
+            })
+          );
+
+        fillProvinceOptions("");
+
+        bindProvinceChange();
+
+        return;
+
+      }
+
+    }
+    catch (_) {}
+
+
     const [
       provinceResult,
       wardResult
@@ -1430,6 +1554,12 @@
       ""
     );
 
+    bindProvinceChange();
+
+  }
+
+
+  function bindProvinceChange() {
 
     document
       .getElementById(
@@ -1543,6 +1673,698 @@
 
 
   /* =====================================================
+     ✨ DÁN TIN NHẮN KHÁCH → TỰ ĐIỀN
+     - Tách tên, SĐT, địa chỉ, sản phẩm từ tin nhắn.
+     - Địa chỉ cũ (trước 1/7/2025) → tự đổi sang tỉnh/xã mới
+       (provinces.open-api.vn, miễn phí), giữ nguyên làm "Địa chỉ cũ".
+     - Đoán sản phẩm + tuỳ chọn (vd "ess hồng elong áo xxl").
+     Mọi thứ chỉ điền sẵn — người tạo đơn vẫn xem lại trước khi bấm TẠO ĐƠN.
+  ====================================================== */
+
+  function plain(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/đ/g, "d")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+
+  // Tỉnh cũ → tỉnh mới (Nghị quyết 202/2025/QH15, hiệu lực 1/7/2025)
+  const OLD_PROVINCE_TO_NEW = {
+    "ha giang": "Tuyên Quang", "yen bai": "Lào Cai", "bac kan": "Thái Nguyên",
+    "vinh phuc": "Phú Thọ", "hoa binh": "Phú Thọ", "bac giang": "Bắc Ninh",
+    "thai binh": "Hưng Yên", "hai duong": "Hải Phòng", "ha nam": "Ninh Bình",
+    "nam dinh": "Ninh Bình", "quang binh": "Quảng Trị", "thua thien hue": "Huế",
+    "quang nam": "Đà Nẵng", "kon tum": "Quảng Ngãi", "binh dinh": "Gia Lai",
+    "ninh thuan": "Khánh Hòa", "dak nong": "Lâm Đồng", "binh thuan": "Lâm Đồng",
+    "phu yen": "Đắk Lắk", "binh duong": "Hồ Chí Minh", "ba ria vung tau": "Hồ Chí Minh",
+    "ba ria - vung tau": "Hồ Chí Minh", "vung tau": "Hồ Chí Minh",
+    "binh phuoc": "Đồng Nai", "long an": "Tây Ninh", "soc trang": "Cần Thơ",
+    "hau giang": "Cần Thơ", "ben tre": "Vĩnh Long", "tra vinh": "Vĩnh Long",
+    "tien giang": "Đồng Tháp", "bac lieu": "Cà Mau", "kien giang": "An Giang",
+    "ho chi minh": "Hồ Chí Minh", "hcm": "Hồ Chí Minh", "sai gon": "Hồ Chí Minh",
+    "ha noi": "Hà Nội", "hn": "Hà Nội", "hue": "Huế"
+  };
+
+
+  function stripAdminPrefix(value) {
+    return plain(value)
+      .replace(/^(tinh|thanh pho|tp\.?|t\.p\.?|thi tran|tt\.?|thi xa|tx\.?|phuong|p\.|xa|x\.|quan|q\.|huyen|h\.)\s*/, "")
+      .trim();
+  }
+
+
+  function findProvince(segment) {
+
+    const key = stripAdminPrefix(segment);
+
+    if (!key) {
+      return null;
+    }
+
+    const direct =
+      addressProvinces.find(
+        p => plain(addressName(p)) === key
+      );
+
+    if (direct) {
+      return { province: direct, isOld: false };
+    }
+
+    const newName =
+      OLD_PROVINCE_TO_NEW[key];
+
+    if (newName) {
+      const mapped =
+        addressProvinces.find(
+          p => addressName(p) === newName
+        );
+      if (mapped) {
+        return { province: mapped, isOld: !["ho chi minh", "hcm", "sai gon", "ha noi", "hn", "hue"].includes(key) };
+      }
+    }
+
+    return null;
+
+  }
+
+
+  const WARD_RE = /^(xa|phuong|thi tran|tt\.?|p\.|x\.)(\s|$)/;
+  const DISTRICT_RE = /^(huyen|quan|thi xa|thanh pho|tp\.?|tx\.?|h\.|q\.)(\s|$)/;
+
+
+  function splitAddress(text) {
+
+    const parts =
+      String(text || "")
+        .split(/[,\n]/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    let provinceInfo = null;
+    let provinceIndex = -1;
+
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const found = findProvince(parts[i]);
+      if (found) {
+        provinceInfo = found;
+        provinceIndex = i;
+        break;
+      }
+    }
+
+    const before =
+      provinceIndex >= 0
+        ? parts.slice(0, provinceIndex)
+        : parts;
+
+    let wardIndex = -1;
+    let districtIndex = -1;
+
+    before.forEach(
+      (part, i) => {
+        const p = plain(part);
+        if (WARD_RE.test(p) && wardIndex < 0) wardIndex = i;
+        if (DISTRICT_RE.test(p) && i > wardIndex && wardIndex >= 0) districtIndex = i;
+        else if (DISTRICT_RE.test(p) && wardIndex < 0) districtIndex = i;
+      }
+    );
+
+    const streetEnd =
+      [wardIndex, districtIndex]
+        .filter(i => i >= 0)
+        .reduce((a, b) => Math.min(a, b), before.length);
+
+    return {
+      street: before.slice(0, streetEnd).join(", "),
+      ward: wardIndex >= 0 ? before[wardIndex] : "",
+      district: districtIndex >= 0 ? before[districtIndex] : "",
+      provinceInfo
+    };
+
+  }
+
+
+  function wardsOfProvince(provinceId) {
+    return addressWards.filter(
+      w => String(w?.parent?.id) === String(provinceId)
+    );
+  }
+
+
+  function normalizeWardQuery(ward) {
+    return String(ward || "")
+      .replace(/^\s*(TT\.?|tt\.?)\s*/, "Thị trấn ")
+      .replace(/^\s*(P\.|p\.)\s*/, "Phường ")
+      .replace(/^\s*(X\.|x\.)\s*/, "Xã ")
+      .trim();
+  }
+
+
+  /*
+    Nhiều xã trùng tên (vd "Phường 1"): tra mã xã cũ theo quận/huyện cũ
+    (API v1 dữ liệu trước sáp nhập) rồi đổi sang xã mới theo mã.
+  */
+
+  async function pickByLegacyDistrict(wardText, districtText, candidates) {
+
+    try {
+
+      const base = "https://provinces.open-api.vn/api";
+
+      const districts =
+        await (await fetch(base + "/v1/d/search/?q=" + encodeURIComponent(districtText.replace(/^(TP\.?|Tp\.?|tp\.?)\s*/, "Thành phố ").trim()))).json();
+
+      const wardQuery =
+        normalizeWardQuery(wardText);
+
+      const hits = [];
+
+      for (const d of (Array.isArray(districts) ? districts : []).slice(0, 5)) {
+
+        const wards =
+          await (await fetch(base + "/v1/w/search/?q=" + encodeURIComponent(wardQuery) + "&d=" + d.code)).json();
+
+        for (const w of (Array.isArray(wards) ? wards : []).filter(x => plain(x.name) === plain(wardQuery)).slice(0, 3)) {
+
+          const mapped =
+            await (await fetch(base + "/v2/w/from-legacy/?legacy_code=" + w.code)).json();
+
+          (Array.isArray(mapped) ? mapped : []).forEach(
+            m => {
+              const hit = candidates.find(c => String(c.id) === String(m?.ward?.code));
+              if (hit && !hits.includes(hit)) {
+                hits.push(hit);
+              }
+            }
+          );
+
+        }
+
+      }
+
+      return hits.length === 1 ? hits[0] : null;
+
+    }
+    catch (_) {
+      return null;
+    }
+
+  }
+
+
+  async function resolveAddress(text) {
+
+    const parsed = splitAddress(text);
+
+    const result = {
+      street: parsed.street,
+      provinceName: "",
+      provinceId: "",
+      wardName: "",
+      isOld: false,
+      hint: ""
+    };
+
+    if (!parsed.provinceInfo) {
+      result.hint = "Chưa nhận ra tỉnh/thành – chọn tay giúp em.";
+      return result;
+    }
+
+    const province = parsed.provinceInfo.province;
+
+    result.provinceName = addressName(province);
+    result.provinceId = province.id;
+    result.isOld = parsed.provinceInfo.isOld || Boolean(parsed.district);
+
+    const pool = wardsOfProvince(province.id);
+    const wardKey = stripAdminPrefix(parsed.ward);
+    const districtKey = stripAdminPrefix(parsed.district);
+
+    // Địa chỉ mới: xã/phường có sẵn trong tỉnh mới, không có huyện
+    if (!result.isOld && wardKey) {
+      const hit = pool.find(w => plain(addressName(w)) === wardKey);
+      if (hit) {
+        result.wardName = addressName(hit);
+        return result;
+      }
+    }
+
+    if (!parsed.ward) {
+      result.hint = "Chưa nhận ra phường/xã – chọn tay giúp em.";
+      return result;
+    }
+
+    // Địa chỉ cũ → tra xã mới
+    try {
+
+      const url =
+        "https://provinces.open-api.vn/api/v2/w/from-legacy/?legacy_name="
+        + encodeURIComponent(normalizeWardQuery(parsed.ward));
+
+      const response = await fetch(url);
+      const list = response.ok ? await response.json() : [];
+
+      const candidates =
+        (Array.isArray(list) ? list : [])
+          .map(x => x.ward)
+          .filter(w => w && String(w.province_code).padStart(2, "0") === String(province.id).padStart(2, "0"))
+          .map(w => pool.find(p => String(p.id) === String(w.code)))
+          .filter(Boolean)
+          .filter((w, i, arr) => arr.indexOf(w) === i);
+
+      let pick = null;
+
+      if (candidates.length === 1) {
+        pick = candidates[0];
+      }
+      else if (candidates.length > 1) {
+        pick =
+          candidates.find(w => stripAdminPrefix(addressName(w)) === wardKey)
+          ||
+          candidates.find(w => districtKey && plain(addressName(w)).includes(districtKey))
+          ||
+          null;
+
+        if (!pick && parsed.district) {
+          pick = await pickByLegacyDistrict(parsed.ward, parsed.district, candidates);
+        }
+
+        if (!pick) {
+          result.hint =
+            "Có nhiều xã/phường trùng tên: "
+            + candidates.map(addressName).join(" / ")
+            + " – chọn đúng giúp em.";
+        }
+      }
+
+      if (pick) {
+        result.wardName = addressName(pick);
+      }
+      else if (!result.hint) {
+        result.hint = "Không tra được xã/phường mới – chọn tay giúp em.";
+      }
+
+    }
+    catch (_) {
+      result.hint = "Không tra được địa chỉ mới (mạng) – chọn tay giúp em.";
+    }
+
+    return result;
+
+  }
+
+
+  function parseMessage(text) {
+
+    const raw = String(text || "").replace(/\r/g, "");
+
+    const phoneMatch =
+      raw.match(/(?:\+?84|0)(?:[\s.\-]?\d){9}/);
+
+    const phone =
+      phoneMatch
+        ? phoneMatch[0].replace(/\D/g, "").replace(/^84/, "0")
+        : "";
+
+    const lines =
+      raw
+        .split("\n")
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    let name = "";
+    let address = "";
+    let legacy = "";
+    const productLines = [];
+
+    const LABEL = /^\s*([^:：]{2,25})[:：]\s*(.*)$/;
+
+    const NAME_PREFIX = /^(ten nguoi nhan|nguoi nhan|ho va ten|ho ten|ten khach|ten)\s+/;
+
+    function countAdminWords(p) {
+      const m = p.match(/(^|[\s,])(xa|phuong|thi tran|huyen|quan|thi xa|tinh|tp|thanh pho|khu pho|ap|thon|xom|duong|so nha|kp|ngo|hem)(?=\s|\.|,|$)/g);
+      return m ? m.length : 0;
+    }
+
+    lines.forEach(
+      rawLine => {
+
+        // bỏ SĐT nằm chung dòng (vd "Chị Hoa - 0903.111.222")
+        const line =
+          rawLine
+            .replace(/(?:\+?84|0)(?:[\s.\-]?\d){9}/g, "")
+            .replace(/[\s\-–,:]+$/, "")
+            .trim();
+
+        if (!line) {
+          return;
+        }
+
+        const np = plain(line).match(NAME_PREFIX);
+        if (np && !/[:：]/.test(line) && !name) {
+          name = line.split(/\s+/).slice(np[0].trim().split(" ").length).join(" ");
+          return;
+        }
+
+        const m = line.match(LABEL);
+        const label = m ? plain(m[1]) : "";
+        const value = m ? m[2].trim() : line;
+
+        if (/^(ten|ho ten|ho va ten|nguoi nhan|ten nguoi nhan|khach)/.test(label)) {
+          name = value;
+          return;
+        }
+
+        if (/dia chi cu/.test(label)) {
+          legacy = value.replace(/^dia chi\s*[:：]\s*/i, "").replace(/^Địa chỉ\s*[:：]\s*/i, "");
+          return;
+        }
+
+        if (/^(dia chi|dc|d\/c|address)/.test(label)) {
+          address = value;
+          return;
+        }
+
+        if (/^(sdt|so dien thoai|dien thoai|dt|phone)/.test(label)) {
+          return;
+        }
+
+        const p = plain(line);
+        const digitsOnly = line.replace(/[\s.\-+]/g, "");
+
+        if (/^\d{9,12}$/.test(digitsOnly)) {
+          return;
+        }
+
+        const adminWords = countAdminWords(p);
+
+        if (
+          adminWords >= 2
+          ||
+          (adminWords >= 1 && line.includes(","))
+        ) {
+          if (!address || line.length > address.length) {
+            address = line;
+          }
+          return;
+        }
+
+        const looksLikeName =
+          !/\d/.test(line)
+          &&
+          line.split(/\s+/).length <= 5
+          &&
+          (
+            /^(anh|chi|em|co|chu|bac|ong|ba|a|c|e)\s/.test(p)
+            ||
+            !findProductGuess(line)
+          );
+
+        if (!name && looksLikeName) {
+          name = line;
+          return;
+        }
+
+        productLines.push(line);
+
+      }
+    );
+
+    if (!address && legacy) {
+      address = legacy;
+    }
+
+    return {
+      phone,
+      name: name.replace(/\s*[-–]\s*$/, "").trim(),
+      address,
+      legacy,
+      productText: productLines.join(" ")
+    };
+
+  }
+
+
+  function tokensOf(text) {
+    return plain(text)
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(" ")
+      .filter(Boolean);
+  }
+
+
+  function tokenHit(textTokens, word) {
+    return textTokens.some(
+      t =>
+        t === word
+        ||
+        (t.length >= 5 && word.startsWith(t))
+        ||
+        (word.length >= 5 && t.startsWith(word))
+    );
+  }
+
+
+  const STOP = new Set(["pickleball", "chuyen", "dung", "cho", "nam", "va", "nu", "the", "thao", "loai", "mau", "size", "ao", "tang", "kem", "lop", "tui", "chiec", "hang"]);
+
+
+  function findProductGuess(text) {
+
+    const textTokens = tokensOf(text);
+
+    if (!textTokens.length) {
+      return null;
+    }
+
+    let best = null;
+    let bestScore = 0;
+    let tie = false;
+
+    products.forEach(
+      p => {
+
+        if (!productVariants(p.id).length) {
+          return;
+        }
+
+        const words =
+          tokensOf(p.name).filter(w => w.length >= 2 && !STOP.has(w));
+
+        const nameHits =
+          words.filter(w => tokenHit(textTokens, w)).length;
+
+        if (!nameHits) {
+          return;
+        }
+
+        const optionWords = new Set();
+        productVariants(p.id).forEach(
+          v =>
+            tokensOf((v.option1_value || "") + " " + (v.option2_value || "") + " " + (v.variant_name || ""))
+              .filter(w => w.length >= 2 && !STOP.has(w))
+              .forEach(w => optionWords.add(w))
+        );
+
+        const optionHits =
+          [...optionWords].filter(w => textTokens.includes(w) || tokenHit(textTokens, w)).length;
+
+        const score =
+          nameHits * 10 + Math.min(optionHits, 9);
+
+        if (score > bestScore) {
+          best = p;
+          bestScore = score;
+          tie = false;
+        }
+        else if (score && score === bestScore) {
+          tie = true;
+        }
+
+      }
+    );
+
+    if (!best || tie) {
+      return null;
+    }
+
+    // Chọn tuỳ chọn khớp nhiều chữ nhất
+    const list = productVariants(best.id);
+
+    function bestValue(key, pool) {
+      let value = null;
+      let score = 0;
+      uniqueValues(pool, key).forEach(
+        v => {
+          const words = tokensOf(v).filter(w => !STOP.has(w));
+          const hit =
+            words.length && words.every(w => w.length <= 3 ? textTokens.includes(w) : tokenHit(textTokens, w))
+              ? words.join("").length + 100
+              : words.filter(w => w.length > 3 && tokenHit(textTokens, w)).length;
+          if (hit > score) {
+            value = v;
+            score = hit;
+          }
+        }
+      );
+      return value;
+    }
+
+    const opt1 = bestValue("option1_value", list);
+    const opt2 =
+      bestValue(
+        "option2_value",
+        list.filter(v => opt1 == null || v.option1_value === opt1)
+      );
+
+    const qtyMatch =
+      plain(text).match(/(?:sl|so luong|x)\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:cai|chiec|doi|hop|tui|cay)\b/);
+
+    return {
+      variant: pickVariant(best.id, opt1, opt2),
+      quantity: qtyMatch ? Number(qtyMatch[1] || qtyMatch[2]) || 1 : 1
+    };
+
+  }
+
+
+  function setValue(id, value) {
+    const el = document.getElementById(id);
+    if (el && value) {
+      el.value = value;
+    }
+  }
+
+
+  async function smartFill() {
+
+    const box = document.getElementById("pasteResult");
+    const text = document.getElementById("pasteText").value;
+
+    if (!text.trim()) {
+      return;
+    }
+
+    const info = parseMessage(text);
+    const done = [];
+    const warn = [];
+
+    if (info.phone) {
+      setValue("phone", info.phone);
+      done.push("SĐT " + info.phone);
+    }
+    else {
+      warn.push("Chưa thấy SĐT.");
+    }
+
+    if (info.name) {
+      setValue("customerName", info.name);
+      done.push("Tên " + info.name);
+    }
+    else {
+      warn.push("Chưa thấy tên người nhận.");
+    }
+
+    if (info.address) {
+
+      box.style.display = "block";
+      box.className = "paste-result";
+      box.textContent = "Đang đổi địa chỉ...";
+
+      const addr = await resolveAddress(info.address);
+
+      if (addr.street) {
+        setValue("addressLine", addr.street);
+      }
+
+      if (addr.provinceName) {
+        fillProvinceOptions(addr.provinceName);
+        fillWardOptions(addr.provinceId, addr.wardName);
+      }
+
+      if (addr.isOld || info.legacy) {
+        setValue("legacyAddress", info.legacy || info.address);
+      }
+
+      if (addr.wardName) {
+        done.push(
+          (addr.isOld ? "Địa chỉ mới: " : "Địa chỉ: ")
+          + addr.wardName + ", " + addr.provinceName
+        );
+      }
+
+      if (addr.hint) {
+        warn.push(addr.hint);
+      }
+
+      if (!addr.isOld && !info.legacy) {
+        warn.push("Khách gửi địa chỉ mới – nhập thêm địa chỉ cũ nếu có.");
+      }
+
+    }
+    else {
+      warn.push("Chưa thấy địa chỉ.");
+    }
+
+    const guess =
+      info.productText
+        ? findProductGuess(info.productText)
+        : null;
+
+    if (guess && guess.variant) {
+
+      if (!linesTouched && lines.length === 1) {
+        lines[0] = { variant_id: guess.variant.id, quantity: guess.quantity };
+      }
+      else {
+        lines.push({ variant_id: guess.variant.id, quantity: guess.quantity });
+      }
+
+      linesTouched = true;
+      renderLines();
+
+      const product =
+        products.find(p => String(p.id) === String(guess.variant.product_id));
+
+      done.push(
+        "Sản phẩm: " + (product ? product.name : "")
+        + (guess.variant.variant_name && guess.variant.variant_name !== "Mặc định" ? " • " + guess.variant.variant_name : "")
+        + (guess.quantity > 1 ? " × " + guess.quantity : "")
+      );
+
+    }
+    else if (info.productText) {
+      warn.push("Chưa đoán được sản phẩm – chọn tay giúp em.");
+    }
+
+    box.style.display = "block";
+    box.className = "paste-result" + (warn.length ? " warn" : "");
+    box.textContent =
+      (done.length ? "✓ " + done.join("\n✓ ") : "")
+      + (warn.length ? (done.length ? "\n" : "") + "⚠️ " + warn.join("\n⚠️ ") : "")
+      + "\nKiểm tra lại rồi bấm TẠO ĐƠN.";
+
+  }
+
+
+  document
+    .getElementById("pasteFillBtn")
+    .addEventListener("click", smartFill);
+
+  document
+    .getElementById("pasteText")
+    .addEventListener(
+      "paste",
+      function () {
+        setTimeout(smartFill, 50);
+      }
+    );
+
+
+  /* =====================================================
      SOURCE
   ====================================================== */
 
@@ -1559,6 +2381,13 @@
 
             selectedSource =
               button.dataset.source;
+
+            try {
+              localStorage.setItem(
+                SOURCE_KEY,
+                selectedSource
+              );
+            } catch (_) {}
 
 
             document
@@ -1802,6 +2631,8 @@
       return;
     }
 
+    linesTouched = true;
+
 
     lines.push({
 
@@ -1966,6 +2797,8 @@
                 if (next) {
                   lines[index].variant_id = next.id;
                 }
+
+                linesTouched = true;
 
                 renderLines();
 
@@ -2336,8 +3169,19 @@
             "block";
 
 
+          if (previous.legacy_address) {
+            document
+              .getElementById(
+                "legacyAddress"
+              )
+              .value =
+                previous.legacy_address;
+          }
+
           customerFound.textContent =
-            "✓ Đã điền lại thông tin từ đơn gần nhất của khách.";
+            "✓ Khách cũ – đã điền lại thông tin từ đơn "
+            + (previous.order_code || "gần nhất")
+            + ".";
 
 
         }
@@ -2360,6 +3204,37 @@
       }
     );
 
+
+
+  /*
+    Gõ đủ 10 số → tự tìm khách cũ (khi chưa có tên).
+  */
+
+  let lastLookupPhone = "";
+
+  document
+    .getElementById("phone")
+    .addEventListener(
+      "input",
+      function () {
+
+        const digits =
+          this.value.replace(/\D/g, "");
+
+        if (
+          digits.length === 10
+          &&
+          digits !== lastLookupPhone
+          &&
+          !document.getElementById("customerName").value.trim()
+        ) {
+          lastLookupPhone = digits;
+          this.value = digits;
+          document.getElementById("findCustomerBtn").click();
+        }
+
+      }
+    );
 
 
   /* =====================================================
@@ -2798,7 +3673,24 @@
      START
   ====================================================== */
 
+  function restoreSource() {
+
+    document
+      .querySelectorAll(".source-btn")
+      .forEach(
+        button =>
+          button.classList.toggle(
+            "active",
+            button.dataset.source === selectedSource
+          )
+      );
+
+  }
+
+
   async function start() {
+
+    restoreSource();
 
     try {
 
