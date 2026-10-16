@@ -401,6 +401,33 @@
       text-align: center;
     }
 
+    .item-opts {
+      margin-top: 7px;
+
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 96px;
+      gap: 7px;
+    }
+
+    .item-opts.single {
+      grid-template-columns: minmax(0,1fr);
+    }
+
+    .opt-label {
+      margin-bottom: 3px;
+
+      color: rgba(255,255,255,.45);
+
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .item-bottom {
       margin-top: 7px;
 
@@ -1562,74 +1589,209 @@
      PRODUCTS
   ====================================================== */
 
-  function variantLabel(
-    variant
-  ) {
+  /*
+    Chọn theo 3 bước: Sản phẩm → tuỳ chọn 1 (vd Loại vợt / Màu vợt)
+    → tuỳ chọn 2 (vd Size áo). Không phải dò danh sách gộp dài.
+  */
 
-    const product =
-      products.find(
-        p =>
-          String(p.id)
-          ===
-          String(
-            variant.product_id
-          )
-      );
+  function productVariants(productId) {
 
-
-    const name =
-      product?.name
-      ||
-      "Sản phẩm";
-
-
-    const variantName =
-      variant.variant_name
-      &&
-      variant.variant_name !== "Mặc định"
-        ?
-          ` • ${variant.variant_name}`
-        :
-          "";
-
-
-    return (
-      `${name}${variantName} — ${money(variant.price)}`
+    return variants.filter(
+      v =>
+        String(v.product_id)
+        ===
+        String(productId)
     );
 
   }
 
 
-  function variantOptions(
-    selectedId
-  ) {
+  function uniqueValues(list, key) {
 
-    return variants
+    const seen = [];
+
+    list.forEach(
+      v => {
+        const value = v[key];
+        if (
+          value != null
+          &&
+          value !== ""
+          &&
+          !seen.includes(value)
+        ) {
+          seen.push(value);
+        }
+      }
+    );
+
+    return seen;
+
+  }
+
+
+  function optionTags(values, selected) {
+
+    return values
       .map(
-        variant => `
-
+        value => `
           <option
-            value="${variant.id}"
-            ${
-              String(variant.id)
-              ===
-              String(selectedId)
-                ?
-                  "selected"
-                :
-                  ""
-            }
+            value="${escapeHtml(value)}"
+            ${String(value) === String(selected) ? "selected" : ""}
           >
-            ${escapeHtml(
-              variantLabel(
-                variant
-              )
-            )}
+            ${escapeHtml(value)}
           </option>
-
         `
       )
       .join("");
+
+  }
+
+
+  function productOptions(selectedProductId) {
+
+    return products
+      .filter(
+        p => productVariants(p.id).length
+      )
+      .map(
+        p => {
+
+          const list = productVariants(p.id);
+
+          const prices =
+            list.map(v => Number(v.price || 0));
+
+          const min = Math.min(...prices);
+          const max = Math.max(...prices);
+
+          return `
+            <option
+              value="${p.id}"
+              ${String(p.id) === String(selectedProductId) ? "selected" : ""}
+            >
+              ${escapeHtml(
+                p.name
+                + " — "
+                + (min === max ? money(min) : money(min) + " – " + money(max))
+              )}
+            </option>
+          `;
+
+        }
+      )
+      .join("");
+
+  }
+
+
+  /*
+    Tìm biến thể khớp lựa chọn; thiếu tổ hợp thì lấy
+    biến thể đầu tiên khớp tuỳ chọn 1.
+  */
+
+  function pickVariant(productId, opt1, opt2) {
+
+    const list = productVariants(productId);
+
+    return (
+      list.find(
+        v =>
+          (opt1 == null || v.option1_value === opt1)
+          &&
+          (opt2 == null || v.option2_value === opt2)
+      )
+      ||
+      list.find(
+        v =>
+          opt1 == null || v.option1_value === opt1
+      )
+      ||
+      list[0]
+    );
+
+  }
+
+
+  function lineOptionSelects(variant, index) {
+
+    const list =
+      productVariants(variant.product_id);
+
+    if (list.length < 2) {
+      return "";
+    }
+
+    const opt1Values =
+      uniqueValues(list, "option1_value");
+
+    /*
+      Sản phẩm nhiều biến thể nhưng không khai báo tuỳ chọn:
+      chọn theo tên biến thể.
+    */
+
+    if (!opt1Values.length) {
+
+      return `
+        <div class="item-opts single">
+          <div>
+            <div class="opt-label">Phân loại</div>
+            <select class="variant-select" data-index="${index}">
+              ${list
+                .map(
+                  v => `
+                    <option value="${v.id}" ${v.id === variant.id ? "selected" : ""}>
+                      ${escapeHtml((v.variant_name || "Mặc định") + " — " + money(v.price))}
+                    </option>
+                  `
+                )
+                .join("")}
+            </select>
+          </div>
+        </div>
+      `;
+
+    }
+
+    const opt2Values =
+      uniqueValues(
+        list.filter(
+          v => v.option1_value === variant.option1_value
+        ),
+        "option2_value"
+      );
+
+    return `
+      <div class="item-opts ${opt2Values.length ? "" : "single"}">
+
+        <div>
+          <div class="opt-label">
+            ${escapeHtml(list[0].option1_name || "Phân loại")}
+          </div>
+          <select class="opt1-select" data-index="${index}">
+            ${optionTags(opt1Values, variant.option1_value)}
+          </select>
+        </div>
+
+        ${
+          opt2Values.length
+            ?
+              `
+                <div>
+                  <div class="opt-label">
+                    ${escapeHtml(list[0].option2_name || "Tuỳ chọn")}
+                  </div>
+                  <select class="opt2-select" data-index="${index}">
+                    ${optionTags(opt2Values, variant.option2_value)}
+                  </select>
+                </div>
+              `
+            :
+              ""
+        }
+
+      </div>
+    `;
 
   }
 
@@ -1685,11 +1847,13 @@
                 <div class="item-top">
 
                   <select
-                    class="variant-select"
+                    class="product-select"
                     data-index="${index}"
                   >
-                    ${variantOptions(
-                      line.variant_id
+                    ${productOptions(
+                      variant
+                        ? variant.product_id
+                        : ""
                     )}
                   </select>
 
@@ -1705,6 +1869,13 @@
                   >
 
                 </div>
+
+
+                ${
+                  variant
+                    ? lineOptionSelects(variant, index)
+                    : ""
+                }
 
 
                 <div class="item-bottom">
@@ -1764,6 +1935,80 @@
 
 
   function bindLineEvents() {
+
+    function onChange(selector, apply) {
+
+      document
+        .querySelectorAll(selector)
+        .forEach(
+          function (select) {
+
+            select.addEventListener(
+              "change",
+              function () {
+
+                const index =
+                  Number(select.dataset.index);
+
+                const current =
+                  variants.find(
+                    v =>
+                      String(v.id)
+                      ===
+                      String(lines[index].variant_id)
+                  )
+                  ||
+                  {};
+
+                const next =
+                  apply(select.value, current);
+
+                if (next) {
+                  lines[index].variant_id = next.id;
+                }
+
+                renderLines();
+
+              }
+            );
+
+          }
+        );
+
+    }
+
+
+    onChange(
+      ".product-select",
+      function (productId) {
+        return productVariants(productId)[0];
+      }
+    );
+
+
+    onChange(
+      ".opt1-select",
+      function (value, current) {
+        return pickVariant(
+          current.product_id,
+          value,
+          current.option2_value
+        );
+      }
+    );
+
+
+    onChange(
+      ".opt2-select",
+      function (value, current) {
+        return pickVariant(
+          current.product_id,
+          current.option1_value,
+          value
+        );
+      }
+    );
+
 
     document
       .querySelectorAll(
@@ -2155,7 +2400,7 @@
             "shop_product_variants"
           )
           .select(
-            "id,product_id,variant_name,price,is_active,sort_order"
+            "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value,price,is_active,sort_order"
           )
           .eq(
             "is_active",
