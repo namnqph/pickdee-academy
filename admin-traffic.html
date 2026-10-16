@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Người vào PickDee | Admin</title>
+  <link rel="preconnect" href="https://snxztjsluhdibrklougo.supabase.co" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <style>
+    .viz-root {
+      color-scheme: dark;
+      --page: #041733;
+      --surface-1: #0a2350;
+      --surface-2: #0f2c61;
+      --border: rgba(255,255,255,.10);
+      --text-primary: #ffffff;
+      --text-secondary: #b8c7e0;
+      --text-muted: #8195b8;
+      --grid: rgba(255,255,255,.08);
+      --series-shop: #3987e5;
+      --series-academy: #d95926;
+      --series-home: #199e70;
+      --good: #4cd38a;
+      --bad: #ff8a80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(145deg, #041733, #062456 50%, #03142d);
+      color: var(--text-primary);
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 14px 14px 60px; }
+    .top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .top a { color: var(--text-secondary); text-decoration: none; font-size: 14px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
+    .top h1 { font-size: 19px; margin: 0; flex: 1; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; }
+    .chip { flex: 0 0 auto; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); padding: 9px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .chip.on { background: #fff; color: #041733; border-color: #fff; }
+    .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+    .card h2 { font-size: 15px; margin: 0 0 4px; }
+    .card .sub { font-size: 12.5px; color: var(--text-muted); margin: 0 0 12px; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .stat { background: var(--surface-2); border-radius: 12px; padding: 10px; }
+    .stat .lbl { font-size: 12px; color: var(--text-secondary); }
+    .stat .num { font-size: 26px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .stat .delta { font-size: 12px; margin-top: 2px; color: var(--text-muted); }
+    .up { color: var(--good) !important; } .down { color: var(--bad) !important; }
+    .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .sec { background: var(--surface-2); border-radius: 12px; padding: 12px; border-left: 4px solid var(--c); }
+    .sec .name { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+    .sec .name i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); display: inline-block; }
+    .sec .num { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .sec .meta { font-size: 12px; color: var(--text-muted); }
+    .note { font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
+    .insights { margin: 0; padding: 0; list-style: none; }
+    .insights li { padding: 9px 0; border-top: 1px solid var(--border); font-size: 14px; line-height: 1.45; }
+    .insights li:first-child { border-top: 0; padding-top: 0; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 14px; height: 3px; border-radius: 2px; background: var(--c); display: inline-block; }
+    .chart { position: relative; }
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .tip { position: absolute; pointer-events: none; background: #fff; color: #041733; border-radius: 10px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,.35); white-space: nowrap; display: none; z-index: 5; }
+    .tip b { display: block; margin-bottom: 3px; }
+    .tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+    .bars .row { display: grid; grid-template-columns: 96px 1fr 64px; align-items: center; gap: 8px; padding: 6px 0; }
+    .bars .row .k { font-size: 13.5px; color: var(--text-primary); }
+    .bars .row .v { font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums; }
+    .bars .row .v small { display: block; color: var(--text-muted); font-size: 11px; }
+    .bars .track { height: 12px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+    .bars .fill { height: 100%; border-radius: 0 4px 4px 0; background: var(--c, var(--series-shop)); min-width: 2px; }
+    .bars .split { grid-column: 2 / 4; font-size: 11.5px; color: var(--text-muted); margin-top: -2px; }
+    .funnels { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { padding: 8px 4px; border-top: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 12px; border-top: 0; }
+    th:first-child, td:first-child { text-align: left; }
+    td a { color: var(--text-primary); text-decoration: none; }
+    .muted { color: var(--text-muted); }
+    .empty { text-align: center; color: var(--text-muted); padding: 18px 0; font-size: 14px; }
+    .status { text-align: center; padding: 40px 10px; color: var(--text-secondary); }
+    details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
+    @media (min-width: 720px) {
+      .sections { grid-template-columns: repeat(4, 1fr); }
+      .funnels { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body class="viz-root">
+  <div class="wrap">
+    <div class="top">
+      <a href="/admin">← Admin</a>
+      <h1>📈 Người vào PickDee</h1>
+    </div>
+
+    <div class="chips" id="chips">
+      <button class="chip" data-d="1">Hôm nay</button>
+      <button class="chip on" data-d="7">7 ngày</button>
+      <button class="chip" data-d="30">30 ngày</button>
+      <button class="chip" data-d="90">90 ngày</button>
+    </div>
+
+    <div id="status" class="status">Đang tải…</div>
+    <div id="app" hidden>
+      <div class="card">
+        <div class="hero">
+          <div class="stat"><div class="lbl">Người vào</div><div class="num" id="kVisitors">0</div><div class="delta" id="kVisitorsD"></div></div>
+          <div class="stat"><div class="lbl">Người mới</div><div class="num" id="kNew">0</div><div class="delta" id="kNewD"></div></div>
+          <div class="stat"><div class="lbl">Lượt xem trang</div><div class="num" id="kViews">0</div><div class="delta" id="kViewsD"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Vào khu nào?</h2>
+        <p class="sub">Mỗi người chỉ đếm 1 lần trong mỗi khu, dù xem nhiều trang.</p>
+        <div class="sections" id="sections"></div>
+        <div class="note" id="bothNote"></div>
+      </div>
+
+      <div class="card">
+        <h2>💡 Em đọc số liệu giúp anh</h2>
+        <ul class="insights" id="insights"></ul>
+      </div>
+
+      <div class="card" id="dailyCard">
+        <h2>Người vào mỗi ngày</h2>
+        <p class="sub">Chạm vào biểu đồ để xem số từng ngày.</p>
+        <div class="legend">
+          <span style="--c:var(--series-shop)"><i></i>Shop</span>
+          <span style="--c:var(--series-academy)"><i></i>Academy</span>
+          <span style="--c:var(--series-home)"><i></i>Trang chủ</span>
+        </div>
+        <div class="chart" id="daily"></div>
+        <details><summary>Xem dạng bảng</summary><div id="dailyTable"></div></details>
+      </div>
+
+      <div class="card">
+        <h2>Khách đến từ đâu?</h2>
+        <p class="sub">Tính theo lần vào đầu tiên của mỗi người.</p>
+        <div class="bars" id="sources"></div>
+      </div>
+
+      <div class="funnels">
+        <div class="card">
+          <h2>🛍️ Shop: từ xem đến mua</h2>
+          <p class="sub">Bao nhiêu người đi tới từng bước.</p>
+          <div class="bars" id="shopFunnel" style="--c:var(--series-shop)"></div>
+        </div>
+        <div class="card">
+          <h2>🎓 Academy: từ xem đến đăng ký</h2>
+          <p class="sub">Bao nhiêu người đi tới từng bước.</p>
+          <div class="bars" id="acaFunnel" style="--c:var(--series-academy)"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sản phẩm được xem nhiều nhất</h2>
+        <p class="sub">Xem nhiều mà ít đơn: nên xem lại giá, ảnh hoặc mô tả.</p>
+        <div id="products"></div>
+      </div>
+
+      <div class="card">
+        <h2>Giờ khách vào nhiều nhất</h2>
+        <p class="sub">Giờ Việt Nam. Hợp để đăng bài hoặc livestream.</p>
+        <div class="chart" id="hours"></div>
+      </div>
+
+      <div class="card">
+        <h2>Thiết bị</h2>
+        <div class="bars" id="devices"></div>
+      </div>
+
+      <p class="muted" style="font-size:12px;text-align:center" id="since"></p>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const sb = window.PICKDEE_SUPABASE || window.supabase.createClient(PICKDEE_CONFIG.SUPABASE_URL, PICKDEE_CONFIG.SUPABASE_PUBLISHABLE_KEY);
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
+  const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : 0);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const SECTIONS = {
+    shop: { label: "🛍️ Shop", c: "var(--series-shop)" },
+    academy: { label: "🎓 Academy", c: "var(--series-academy)" },
+    home: { label: "🏠 Trang chủ", c: "var(--series-home)" },
+    court: { label: "🏟️ Sân", c: "var(--text-muted)" },
+    account: { label: "🔑 Đăng nhập", c: "var(--text-muted)" }
+  };
+  const SOURCES = {
+    zalo: "Zalo", facebook: "Facebook", tiktok: "TikTok", google: "Google",
+    instagram: "Instagram", youtube: "YouTube", direct: "Gõ thẳng / lưu sẵn", other: "Web khác"
+  };
+  const DEVICES = { mobile: "📱 Điện thoại", desktop: "💻 Máy tính", tablet: "📲 Máy tính bảng" };
+
+  let days = Number(localStorage.getItem("pd_traffic_days") || 7);
+
+  function deltaHtml(cur, prev) {
+    if (!prev) return cur ? "kỳ trước chưa có số" : "";
+    const d = Math.round(((cur - prev) / prev) * 100);
+    if (d === 0) return "bằng kỳ trước";
+    return `<span class="${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d)}%</span> so với kỳ trước`;
+  }
+
+  function periodLabel() {
+    return days === 1 ? "hôm nay" : `${days} ngày qua`;
+  }
+
+  function renderBars(el, rows, opts) {
+    opts = opts || {};
+    if (!rows.length) { el.innerHTML = `<div class="empty">Chưa có số liệu</div>`; return; }
+    const max = Math.max(1, ...rows.map((r) => r.v));
+    el.innerHTML = rows.map((r) => `
+      <div class="row" title="${esc(r.k)}: ${fmt(r.v)}">
+        <div class="k">${esc(r.k)}</div>
+        <div class="track"><div class="fill" style="width:${(r.v / max) * 100}%"></div></div>
+        <div class="v">${fmt(r.v)}${r.note ? `<small>${esc(r.note)}</small>` : ""}</div>
+        ${r.split ? `<div class="split">${r.split}</div>` : ""}
+      </div>`).join("");
+  }
+
+  // ---- Line chart: 3 series, crosshair + tooltip ----
+  function renderDaily(daily) {
+    const el = $("daily");
+    const W = Math.max(300, el.clientWidth || 640), H = 220, L = 30, R = 84, T = 12, B = 26;
+    const series = [
+      { key: "shop", name: "Shop", c: "var(--series-shop)" },
+      { key: "academy", name: "Academy", c: "var(--series-academy)" },
+      { key: "home", name: "Trang chủ", c: "var(--series-home)" }
+    ];
+    const n = daily.length;
+    const max = Math.max(4, ...daily.flatMap((d) => series.map((s) => d[s.key])));
+    const nice = Math.ceil(max / 4) * 4;
+    const x = (i) => L + (n === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (n - 1));
+    const y = (v) => T + (H - T - B) * (1 - v / nice);
+    const dd = (s) => { const [, m, d] = s.split("-"); return `${+d}/${+m}`; };
+
+    let g = "";
+    for (let k = 0; k <= 4; k++) {
+      const v = (nice / 4) * k;
+      g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>`;
+      g += `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${fmt(v)}</text>`;
+    }
+    const step = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((W - L - R) / 48))));
+    daily.forEach((d, i) => {
+      if ((i % step === 0 && n - 1 - i >= step / 2) || i === n - 1) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${dd(d.date)}</text>`;
+    });
+
+    // nhãn cuối đường, tránh chồng nhau
+    const ends = series.map((s) => ({ s, yy: y(daily[n - 1][s.key]) })).sort((a, b) => a.yy - b.yy);
+    for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 14) ends[i].yy = ends[i - 1].yy + 14;
+
+    series.forEach((s) => {
+      const pts = daily.map((d, i) => `${x(i)},${y(d[s.key])}`).join(" ");
+      g += `<polyline points="${pts}" fill="none" stroke="${s.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      if (n <= 14) daily.forEach((d, i) => { g += `<circle cx="${x(i)}" cy="${y(d[s.key])}" r="3" fill="${s.c}" stroke="var(--surface-1)" stroke-width="2"/>`; });
+    });
+    ends.forEach((e) => {
+      g += `<text x="${W - R + 8}" y="${e.yy + 4}" font-size="11.5" fill="var(--text-secondary)">${e.s.name} ${fmt(daily[n - 1][e.s.key])}</text>`;
+    });
+
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Người vào mỗi ngày theo khu">${g}
+      <line id="xh" y1="${T}" y2="${H - B}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3 3" style="display:none"/>
+      <rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent" id="hit"/></svg><div class="tip" id="dTip"></div>`;
+
+    const svg = el.querySelector("svg"), tip = $("dTip"), xh = el.querySelector("#xh");
+    function show(ev) {
+      const r = svg.getBoundingClientRect();
+      const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * (W / r.width);
+      const i = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round(((px - L) / (W - L - R)) * (n - 1))));
+      const d = daily[i];
+      xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.style.display = "";
+      tip.innerHTML = `<b>${dd(d.date)} · ${fmt(d.total)} người</b>` + series.map((s) => `<div><i style="background:${s.c}"></i>${s.name}: ${fmt(d[s.key])}</div>`).join("");
+      tip.style.display = "block";
+      const left = (x(i) / W) * r.width;
+      tip.style.left = Math.max(0, Math.min(r.width - tip.offsetWidth, left - tip.offsetWidth / 2)) + "px";
+      tip.style.top = "-6px";
+    }
+    function hide() { tip.style.display = "none"; xh.style.display = "none"; }
+    const hit = el.querySelector("#hit");
+    hit.addEventListener("mousemove", show); hit.addEventListener("mouseleave", hide);
+    hit.addEventListener("touchstart", show, { passive: true }); hit.addEventListener("touchmove", show, { passive: true });
+    hit.addEventListener("touchend", () => setTimeout(hide, 1800));
+
+    $("dailyTable").innerHTML = `<table><tr><th>Ngày</th><th>Tổng</th><th>Shop</th><th>Academy</th><th>Trang chủ</th></tr>` +
+      daily.slice().reverse().map((d) => `<tr><td>${dd(d.date)}</td><td>${fmt(d.total)}</td><td>${fmt(d.shop)}</td><td>${fmt(d.academy)}</td><td>${fmt(d.home)}</td></tr>`).join("") + `</table>`;
+  }
+
+  // ---- Bar chart: 24 giờ, 1 series, hover tooltip ----
+  function renderHours(hours) {
+    const el = $("hours");
+    const byH = Array.from({ length: 24 }, (_, h) => (hours.find((x) => x.h === h) || {}).visitors || 0);
+    if (!byH.some(Boolean)) { el.innerHTML = `<div class="empty">Chưa có số liệu</div>`; return; }
+    const W = Math.max(300, el.clientWidth || 640), H = 150, L = 2, R = 2, T = 18, B = 22, gap = 2;
+    const bw = (W - L - R) / 24;
+    const max = Math.max(...byH);
+    const peak = byH.indexOf(max);
+    let g = "";
+    byH.forEach((v, h) => {
+      const bh = v ? Math.max(3, (H - T - B) * (v / max)) : 0;
+      const x0 = L + h * bw + gap / 2, y0 = H - B - bh, w = bw - gap;
+      const r = Math.min(4, w / 2, bh);
+      if (bh) g += `<path d="M${x0},${H - B} V${y0 + r} Q${x0},${y0} ${x0 + r},${y0} H${x0 + w - r} Q${x0 + w},${y0} ${x0 + w},${y0 + r} V${H - B} Z" fill="var(--series-shop)" opacity="${h === peak ? 1 : 0.55}"/>`;
+      g += `<rect x="${L + h * bw}" y="0" width="${bw}" height="${H}" fill="transparent" data-h="${h}"/>`;
+      if (h % 3 === 0) g += `<text x="${L + h * bw + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${h}h</text>`;
+    });
+    g += `<text x="${L + peak * bw + bw / 2}" y="${H - B - (H - T - B) - 5}" text-anchor="middle" font-size="11.5" fill="var(--text-primary)">${fmt(max)}</text>`;
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Người vào theo giờ">${g}</svg><div class="tip" id="hTip"></div>`;
+    const svg = el.querySelector("svg"), tip = $("hTip");
+    svg.querySelectorAll("rect[data-h]").forEach((rc) => {
+      const on = () => {
+        const h = +rc.dataset.h, r = svg.getBoundingClientRect();
+        tip.innerHTML = `<b>${h}h–${h + 1}h</b>${fmt(byH[h])} người`;
+        tip.style.display = "block";
+        const left = ((L + h * bw + bw / 2) / W) * r.width;
+        tip.style.left = Math.max(0, Math.min(r.width - tip.offsetWidth, left - tip.offsetWidth / 2)) + "px";
+        tip.style.top = "-10px";
+      };
+      rc.addEventListener("mouseenter", on); rc.addEventListener("touchstart", on, { passive: true });
+      rc.addEventListener("mouseleave", () => (tip.style.display = "none"));
+    });
+  }
+
+  function buildInsights(d) {
+    const out = [];
+    const t = d.total;
+    const sec = Object.fromEntries(d.sections.map((s) => [s.section, s]));
+    const shop = sec.shop ? sec.shop.visitors : 0, aca = sec.academy ? sec.academy.visitors : 0;
+
+    if (!t.visitors) return [`Chưa có ai vào trong ${periodLabel()}. Bộ đếm mới chạy, anh xem lại sau vài ngày nhé.`];
+
+    out.push(`${periodLabel()[0].toUpperCase() + periodLabel().slice(1)} có <b>${fmt(t.visitors)} người</b> vào PickDee: <b>${fmt(shop)}</b> vào Shop, <b>${fmt(aca)}</b> vào Academy.` +
+      (shop || aca ? ` Shop đang ${shop >= aca ? "hút khách hơn" : "ít khách hơn"} Academy.` : ""));
+
+    const src = d.sources.filter((s) => s.source !== "direct" && s.source !== "other");
+    if (src.length) {
+      const top = src[0];
+      out.push(`Kênh mang khách nhiều nhất: <b>${SOURCES[top.source] || top.source}</b> (${fmt(top.visitors)} người, ${pct(top.visitors, t.visitors)}%). Nên dồn bài đăng vào kênh này.`);
+    }
+
+    const sf = d.shop_funnel;
+    if (sf.product >= 5) {
+      const toCart = pct(sf.cart, sf.product), toCheckout = pct(sf.checkout, sf.cart || 1), toOrder = pct(sf.orders_web, sf.checkout || 1);
+      if (toCart < 15) out.push(`Shop: ${fmt(sf.product)} người xem sản phẩm nhưng chỉ ${toCart}% bỏ vào giỏ. Có thể giá, ảnh hoặc mô tả chưa đủ thuyết phục.`);
+      else if (sf.checkout >= 3 && toOrder < 50) out.push(`Shop: ${fmt(sf.checkout)} người tới trang thanh toán nhưng chỉ ${fmt(sf.orders_web)} đơn web. Nhiều khách bỏ ở bước cuối, nên gọi/nhắn khách hoặc làm form gọn hơn.`);
+      else if (sf.cart >= 3 && toCheckout < 50) out.push(`Shop: nhiều người bỏ vào giỏ rồi không bấm thanh toán (${toCheckout}%).`);
+    }
+    const lazy = d.top_products.filter((p) => p.visitors >= 5 && !p.orders);
+    if (lazy.length) out.push(`<b>${esc(lazy[0].name)}</b> có ${fmt(lazy[0].visitors)} người xem nhưng chưa có đơn nào trong kỳ.`);
+
+    const af = d.academy_funnel;
+    if (af.academy_any >= 5) {
+      out.push(af.registrations
+        ? `Academy: ${fmt(af.academy_any)} người xem → ${fmt(af.registrations)} đăng ký học (${pct(af.registrations, af.academy_any)}%).`
+        : `Academy: ${fmt(af.academy_any)} người xem nhưng chưa có đăng ký học nào. Nên đặt nút "Đăng ký học thử" nổi bật hơn hoặc gắn số Zalo ngay trang Academy.`);
+    }
+
+    if (t.both_shop_academy) out.push(`${fmt(t.both_shop_academy)} người vừa xem Shop vừa xem Academy. Đây là nhóm dễ bán chéo, ví dụ tặng ưu đãi phụ kiện cho học viên.`);
+
+    const hs = d.hours.slice().sort((a, b) => b.visitors - a.visitors);
+    if (hs.length && t.visitors >= 10) out.push(`Khách vào đông nhất lúc <b>${hs[0].h}h–${hs[0].h + 1}h</b>. Nên đăng bài trước giờ này khoảng 30 phút.`);
+
+    const mob = d.devices.mobile || 0;
+    if (t.visitors >= 10) out.push(`${pct(mob, t.visitors)}% khách dùng điện thoại.`);
+    return out;
+  }
+
+  function render(d) {
+    const t = d.total;
+    $("kVisitors").textContent = fmt(t.visitors);
+    $("kVisitorsD").innerHTML = deltaHtml(t.visitors, t.prev_visitors);
+    $("kNew").textContent = fmt(t.new_visitors);
+    $("kNewD").textContent = t.visitors ? `${pct(t.new_visitors, t.visitors)}% lần đầu vào` : "";
+    $("kViews").textContent = fmt(t.views);
+    $("kViewsD").textContent = t.visitors ? `${(t.views / t.visitors).toFixed(1).replace(".", ",")} trang/người` : "";
+
+    const order = ["shop", "academy", "home", "court"];
+    const sec = Object.fromEntries(d.sections.map((s) => [s.section, s]));
+    $("sections").innerHTML = order.map((k) => {
+      const s = sec[k] || { visitors: 0, views: 0, prev_visitors: 0 };
+      return `<div class="sec" style="--c:${SECTIONS[k].c}">
+        <div class="name">${SECTIONS[k].label}</div>
+        <div class="num">${fmt(s.visitors)}</div>
+        <div class="meta">${t.visitors ? pct(s.visitors, t.visitors) + "% số người · " : ""}${fmt(s.views)} lượt xem</div>
+        <div class="meta">${deltaHtml(s.visitors, s.prev_visitors)}</div>
+      </div>`;
+    }).join("");
+    $("bothNote").textContent = t.both_shop_academy ? `👥 ${fmt(t.both_shop_academy)} người xem cả Shop và Academy.` : "";
+
+    $("insights").innerHTML = buildInsights(d).map((s) => `<li>${s}</li>`).join("");
+
+    $("dailyCard").hidden = d.days === 1;
+    if (d.days > 1) renderDaily(d.daily);
+    renderHours(d.hours);
+
+    renderBars($("sources"), d.sources.map((s) => ({
+      k: SOURCES[s.source] || s.source, v: s.visitors,
+      note: t.visitors ? pct(s.visitors, t.visitors) + "%" : "",
+      split: `Shop ${fmt(s.shop)} · Academy ${fmt(s.academy)}`
+    })));
+
+    const sf = d.shop_funnel;
+    renderBars($("shopFunnel"), [
+      { k: "Vào Shop", v: sf.shop_any },
+      { k: "Xem sản phẩm", v: sf.product, note: pct(sf.product, sf.shop_any) + "%" },
+      { k: "Mở giỏ hàng", v: sf.cart, note: pct(sf.cart, sf.shop_any) + "%" },
+      { k: "Trang thanh toán", v: sf.checkout, note: pct(sf.checkout, sf.shop_any) + "%" },
+      { k: "Đặt đơn web", v: sf.orders_web, note: pct(sf.orders_web, sf.shop_any) + "%" }
+    ]);
+    $("shopFunnel").insertAdjacentHTML("beforeend", `<div class="note">Tổng đơn mọi kênh (cả Zalo, TikTok, điện thoại): <b>${fmt(sf.orders_all)}</b></div>`);
+
+    const af = d.academy_funnel;
+    renderBars($("acaFunnel"), [
+      { k: "Vào Academy", v: af.academy_any },
+      { k: "Xem Coach", v: af.find_coach, note: pct(af.find_coach, af.academy_any) + "%" },
+      { k: "Mở form đăng ký", v: af.register_page, note: pct(af.register_page, af.academy_any) + "%" },
+      { k: "Đăng ký học", v: af.registrations, note: pct(af.registrations, af.academy_any) + "%" }
+    ]);
+    if (af.apply_coach) $("acaFunnel").insertAdjacentHTML("beforeend", `<div class="note">🪪 ${fmt(af.apply_coach)} người xem trang ứng tuyển Coach.</div>`);
+
+    $("products").innerHTML = d.top_products.length
+      ? `<table><tr><th>Sản phẩm</th><th>Người xem</th><th>Đơn</th></tr>` +
+        d.top_products.map((p) => `<tr><td><a href="/shop-product?id=${p.id}" target="_blank">${esc(p.name)}</a></td><td>${fmt(p.visitors)}</td><td class="${p.orders ? "" : "muted"}">${fmt(p.orders)}</td></tr>`).join("") + `</table>`
+      : `<div class="empty">Chưa có số liệu</div>`;
+
+    renderBars($("devices"), Object.entries(d.devices).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({
+      k: DEVICES[k] || k, v, note: pct(v, t.visitors) + "%"
+    })));
+
+    $("since").textContent = d.tracking_since
+      ? `Bắt đầu đếm từ ${new Date(d.tracking_since).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}. Không tính người quản trị, Coach, máy tìm kiếm.`
+      : "";
+  }
+
+  async function load() {
+    document.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", +c.dataset.d === days));
+    const { data, error } = await sb.rpc("pd_traffic_stats", { p_days: days });
+    if (error) {
+      $("app").hidden = true;
+      $("status").hidden = false;
+      $("status").textContent = /quyền/i.test(error.message) ? "Chỉ admin mới xem được trang này." : "Lỗi tải số liệu: " + error.message;
+      return;
+    }
+    $("status").hidden = true;
+    $("app").hidden = false;
+    lastData = data;
+    render(data);
+  }
+
+  let lastData = null, rz;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => lastData && render(lastData), 200); });
+
+  $("chips").addEventListener("click", (e) => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    days = +b.dataset.d;
+    localStorage.setItem("pd_traffic_days", days);
+    load();
+  });
+
+  (async function init() {
+    const { data } = await sb.auth.getSession();
+    if (!data || !data.session) {
+      location.replace("/login?next=" + encodeURIComponent("/admin-traffic"));
+      return;
+    }
+    load();
+  })();
+})();
+</script>
+</body>
+</html>

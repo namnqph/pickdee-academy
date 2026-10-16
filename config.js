@@ -328,3 +328,19 @@ const isCoachArea =
   }
 
 })();
+
+
+/* =========================================================
+   PICKDEE - ĐẾM LƯỢT TRUY CẬP (pd-track.js, admin xem ở /admin-traffic)
+========================================================= */
+
+(function () {
+  try {
+    if (document.querySelector('script[data-pd-track="1"]')) return;
+    var s = document.createElement("script");
+    s.src = "/pd-track.js?v=20261016-1";
+    s.async = true;
+    s.dataset.pdTrack = "1";
+    (document.head || document.documentElement).appendChild(s);
+  } catch (e) {}
+})();
