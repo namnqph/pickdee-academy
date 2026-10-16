@@ -1524,12 +1524,19 @@ if (
   const BOT_HISTORY = "pickdee_bot_history";
   const BOT_HUMAN = "pickdee_bot_human";
   const BOT_VID = "pickdee_bot_vid";
-  const BOT_SUGGEST = [
-    "Giá vợt ESS/ON?",
-    "Phí ship thế nào?",
-    "Học phí các gói học?",
-    "Tra cứu đơn hàng"
-  ];
+  // Kênh theo trang (khớp channelOf ở Edge pickdee-bot): Shop chỉ hỏi Shop, Academy chỉ hỏi Academy
+  const BOT_CH = /^\/shop/.test(location.pathname) ? "shop"
+    : /^\/(academy|coach|student|find-coach|apply-coach)/.test(location.pathname) ? "academy" : "all";
+  const BOT_INTRO = {
+    shop: "Em là <b>trợ lý PickDee Shop</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, đơn hàng. ",
+    academy: "Em là <b>trợ lý PickDee Academy</b>. Em trả lời nhanh về gói học, học phí, lịch học, Coach. ",
+    all: "Em là <b>trợ lý PickDee</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, gói học. "
+  }[BOT_CH];
+  const BOT_SUGGEST = {
+    shop: ["Giá vợt ESS/ON?", "Phí ship thế nào?", "Bảo hành vợt?", "Tra cứu đơn hàng"],
+    academy: ["Học phí các gói học?", "Học nhóm 2 người?", "Nghỉ / đổi lịch học?", "Tìm Coach gần tôi"],
+    all: ["Giá vợt ESS/ON?", "Phí ship thế nào?", "Học phí các gói học?", "Tra cứu đơn hàng"]
+  }[BOT_CH];
 
   const botBox = document.getElementById("pickdeeSupportBot");
   let botBusy = false;
@@ -1631,7 +1638,7 @@ if (
     const h = botHistory();
     botMsgs.innerHTML = "";
     botRow("bot",
-      "Chào anh/chị 👋 Em là <b>trợ lý PickDee</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, gói học. " +
+      "Chào anh/chị 👋 " + BOT_INTRO +
       "Câu nào em không chắc, em sẽ mời anh/chị gặp nhân viên ạ.");
     if (!h.length) {
       const chips = document.createElement("div");
