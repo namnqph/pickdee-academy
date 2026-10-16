@@ -120,7 +120,7 @@
       </div>
 
       <div class="card">
-        <h2>💡 Em đọc số liệu giúp anh</h2>
+        <h2>💡 Gợi ý từ số liệu</h2>
         <ul class="insights" id="insights"></ul>
       </div>
 
@@ -331,7 +331,7 @@
     const sec = Object.fromEntries(d.sections.map((s) => [s.section, s]));
     const shop = sec.shop ? sec.shop.visitors : 0, aca = sec.academy ? sec.academy.visitors : 0;
 
-    if (!t.visitors) return [`Chưa có ai vào trong ${periodLabel()}. Bộ đếm mới chạy, anh xem lại sau vài ngày nhé.`];
+    if (!t.visitors) return [`Chưa có ai vào trong ${periodLabel()}. Bộ đếm mới chạy, xem lại sau vài ngày nhé.`];
 
     out.push(`${periodLabel()[0].toUpperCase() + periodLabel().slice(1)} có <b>${fmt(t.visitors)} người</b> vào PickDee: <b>${fmt(shop)}</b> vào Shop, <b>${fmt(aca)}</b> vào Academy.` +
       (shop || aca ? ` Shop đang ${shop >= aca ? "hút khách hơn" : "ít khách hơn"} Academy.` : ""));
@@ -371,6 +371,11 @@
 
   function render(d) {
     const t = d.total;
+    if (d.viewer === "shop_admin") {
+      const back = document.querySelector(".top a");
+      back.href = "/shop-admin";
+      back.textContent = "← Shop";
+    }
     $("kVisitors").textContent = fmt(t.visitors);
     $("kVisitorsD").innerHTML = deltaHtml(t.visitors, t.prev_visitors);
     $("kNew").textContent = fmt(t.new_visitors);

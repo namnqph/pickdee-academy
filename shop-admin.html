@@ -8628,7 +8628,7 @@ false
   }
 </style>
 <script>
-/* PICKDEE SHOP - Thống kê Vợt / Phụ kiện: chỉ tài khoản owner thấy (RPC tự chặn người khác) */
+/* PICKDEE SHOP - Thống kê Vợt / Phụ kiện: owner thấy đủ, shop_admin chỉ thấy phụ kiện (RPC tự lọc) */
 (function () {
 
   const PERIODS = [
@@ -8685,20 +8685,22 @@ false
       box.id = "ownerCategoryStats";
       anchor.parentNode.insertBefore(box, anchor);
     }
+    // shop_admin: RPC không trả số liệu vợt → chỉ hiện phụ kiện
+    const isOwner = stats.viewer !== "shop_admin";
     box.innerHTML = `
       <div class="ocs-head">
-        <div class="ocs-title">📊 Vợt / Phụ kiện</div>
-        <div class="ocs-note">Chỉ anh xem · doanh thu đơn hoàn tất</div>
+        <div class="ocs-title">${isOwner ? "📊 Vợt / Phụ kiện" : "📊 Phụ kiện"}</div>
+        <div class="ocs-note">${isOwner ? "Chỉ anh xem · " : ""}doanh thu đơn hoàn tất</div>
       </div>
       <div class="ocs-periods">
         ${PERIODS.map(([k, l]) => `<button type="button" class="ocs-period ${k === period ? "active" : ""}" data-period="${k}">${l}</button>`).join("")}
       </div>
-      <div class="ocs-grid">
-        ${card("paddle", "🏓 Vợt", "is-paddle")}
+      <div class="ocs-grid"${isOwner ? "" : ' style="grid-template-columns:1fr"'}>
+        ${isOwner ? card("paddle", "🏓 Vợt", "is-paddle") : ""}
         ${card("accessory", "🎒 Phụ kiện", "is-accessory")}
       </div>
-      <div class="ocs-grid ocs-top">
-        <div><b>Vợt bán chạy tháng này</b>${topList(stats.top_paddle)}</div>
+      <div class="ocs-grid ocs-top"${isOwner ? "" : ' style="grid-template-columns:1fr"'}>
+        ${isOwner ? `<div><b>Vợt bán chạy tháng này</b>${topList(stats.top_paddle)}</div>` : ""}
         <div><b>Phụ kiện bán chạy tháng này</b>${topList(stats.top_accessory)}</div>
       </div>
       <a class="ocs-traffic" href="/admin-traffic">📈 Xem người vào web (Shop / Academy) →</a>`;
@@ -8723,7 +8725,7 @@ false
       return;
     }
     const { data, error } = await client.rpc("shop_owner_category_stats");
-    if (error || !data) return; // không phải owner → không hiện gì
+    if (error || !data) return; // không phải owner / shop_admin → không hiện gì
     stats = data;
     render();
   }
