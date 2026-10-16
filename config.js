@@ -344,3 +344,19 @@ const isCoachArea =
     (document.head || document.documentElement).appendChild(s);
   } catch (e) {}
 })();
+
+
+/* =========================================================
+   PICKDEE SHOP ADMIN - MENU ĐÁY DÙNG CHUNG (shop-admin-appnav.js)
+========================================================= */
+
+(function () {
+  try {
+    if (!/^\/shop-admin-(products|suppliers|promotions|stock-history|stock-receipts|stock-receipt-detail)(\.html)?\/?$/.test(location.pathname)) return;
+    if (document.querySelector('script[data-pd-appnav="1"]')) return;
+    var s = document.createElement("script");
+    s.src = "/shop-admin-appnav.js?v=20261016-1";
+    s.dataset.pdAppnav = "1";
+    (document.head || document.documentElement).appendChild(s);
+  } catch (e) {}
+})();
