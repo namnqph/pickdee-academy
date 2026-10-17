@@ -316,8 +316,9 @@ body.pd-not-orders #pdDropFab{display:none}
     // Thanh toán: có bill → CK · khách nói đã/sẽ CK mà không có bill → hỏi xác nhận · còn lại → COD
     const ocr = (o.image_indexes || []).map(function (n) { return (texts || [])[n - 1] || ""; }).join("\n");
     const plainOcr = ocr.toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
-    const evidence = o.payment_evidence === "bill" || BILL_RE.test(plainOcr) ? "bill"
-      : o.payment_evidence === "claimed" || CLAIM_RE.test(plainOcr) ? "claimed" : "none";
+    // Bill chỉ tính khi ảnh có chữ "…thành công / mã giao dịch" (AI có lúc nhầm ảnh QR shop gửi là bill → hỏi lại)
+    const evidence = BILL_RE.test(plainOcr) ? "bill"
+      : o.payment_evidence !== "none" || CLAIM_RE.test(plainOcr) ? "claimed" : "none";
     const c = {
       id: ++seq,
       el: document.createElement("div"),
