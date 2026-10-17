@@ -1522,7 +1522,6 @@ if (
   const BOT_URL =
     cfg.SUPABASE_URL + "/functions/v1/pickdee-bot";
   const BOT_HISTORY = "pickdee_bot_history";
-  const BOT_HUMAN = "pickdee_bot_human";
   const BOT_VID = "pickdee_bot_vid";
   // Kênh theo trang (khớp channelOf ở Edge pickdee-bot): Shop chỉ hỏi Shop, Academy chỉ hỏi Academy
   const BOT_CH = /^\/shop/.test(location.pathname) ? "shop"
@@ -1541,6 +1540,9 @@ if (
   const botBox = document.getElementById("pickdeeSupportBot");
   let botBusy = false;
   let botLastQuestion = "";
+  // Chỉ vào chat nhân viên khi khách bấm nút (bot không trả lời được / có trả lời của PickDee). Đóng khung → lần sau lại là trợ lý.
+  let botForceHuman = false;
+  let botUnread = 0;
 
   (function botStyle() {
     const st = document.createElement("style");
@@ -1553,7 +1555,8 @@ if (
       .pd-bot-typing{opacity:.6;font-style:italic}
       /* Nút "Gặp nhân viên" nằm trên thanh tiêu đề (cạnh nút ×), chỉ hiện khi đang ở trợ lý */
       #pdBotHuman{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(216,255,69,.35);background:rgba(216,255,69,.08);color:#d8ff45;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
-      #pickdeeSupportPanel:not(.pd-bot-mode) #pdBotHuman{display:none}
+      #pickdeeSupportPanel:not(.pd-bot-mode) #pdBotHuman,#pdBotHuman:not(.pd-show){display:none}
+      .pd-bot-handoff-btn{display:block;margin:-2px 0 10px;min-height:38px;padding:0 14px;border:0;border-radius:999px;background:#d8ff45;color:#142300;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
       #pdBotHuman.pd-hot{background:#d8ff45;color:#142300;border-color:#d8ff45}
       #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(3,17,38,.82)}
       #pdBotInput{min-width:0;flex:1;min-height:44px;max-height:105px;padding:11px 12px;resize:none;outline:none;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:16px;line-height:1.4}
@@ -1615,7 +1618,7 @@ if (
   })();
 
   function botEnabled() {
-    try { return !sessionStorage.getItem(BOT_HUMAN); } catch (_) { return true; }
+    return !botForceHuman;
   }
 
   // Trang nội bộ (admin, Coach, quản trị Shop/Support): vào thẳng chat nhân viên như cũ
@@ -1691,13 +1694,27 @@ if (
       });
       botMsgs.appendChild(chips);
     }
-    let hot = false;
+    let hot = false, anyHandoff = false;
     h.forEach(function (m) {
       botRow(m.role, botHtml(m.text));
       hot = !!m.handoff;
+      if (m.handoff) anyHandoff = true;
     });
+    // Bot không trả lời được → nút gặp nhân viên ngay dưới câu trả lời
+    if (hot && !typing) {
+      const hb = document.createElement("button");
+      hb.type = "button";
+      hb.className = "pd-bot-handoff-btn";
+      hb.textContent = "👩 Gặp nhân viên PickDee";
+      hb.addEventListener("click", function () {
+        goHuman().catch(function (e) { showError("Không mở được chat: " + (e?.message || e)); });
+      });
+      botMsgs.appendChild(hb);
+    }
     if (typing) botRow("bot", "Em đang xem thông tin…", "pd-bot-typing");
-    botHumanBtn.classList.toggle("pd-hot", hot);
+    botHumanBtn.textContent = botUnread > 0 ? "💬 Xem trả lời (" + botUnread + ")" : "👩 Gặp nhân viên";
+    botHumanBtn.classList.toggle("pd-show", anyHandoff || botUnread > 0);
+    botHumanBtn.classList.toggle("pd-hot", hot || botUnread > 0);
     botMsgs.scrollTop = botMsgs.scrollHeight;
   }
 
@@ -1767,7 +1784,8 @@ if (
   }
 
   async function goHuman() {
-    try { sessionStorage.setItem(BOT_HUMAN, "1"); } catch (_) {}
+    botForceHuman = true;
+    botUnread = 0;
     botBox.style.display = "none";
     panel.classList.remove("pd-bot-mode");
     if (botLastQuestion && !messageInput.value) messageInput.value = botLastQuestion;
@@ -2242,7 +2260,7 @@ if (
 
     /*
       TRỢ LÝ PICKDEE TRẢ LỜI TRƯỚC (mọi người, kể cả đã đăng nhập / từng chat).
-      Có tin nhân viên chưa đọc → vào thẳng chat nhân viên.
+      Chỉ vào chat nhân viên khi khách bấm nút (bot không trả lời được hoặc PickDee đã trả lời).
     */
 
     if (
@@ -2251,20 +2269,15 @@ if (
       !botStaffPage()
     ) {
 
-      if (
-        await botUnreadCount() > 0
-      ) {
+      showBot();
 
-        try { sessionStorage.setItem(BOT_HUMAN, "1"); } catch (_) {}
+      // PickDee đã trả lời mà khách chưa đọc → hiện nút "Xem trả lời" (không tự chuyển)
+      botUnreadCount().then(function (n) {
+        botUnread = n || 0;
+        if (botUnread > 0) renderBot(false);
+      });
 
-      }
-      else {
-
-        showBot();
-
-        return;
-
-      }
+      return;
 
     }
 
@@ -2870,6 +2883,8 @@ if (
 
 
   function closePanel() {
+
+    botForceHuman = false; // mở lại → trợ lý trước
 
     panel.classList.remove(
       "open"
