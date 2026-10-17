@@ -3440,7 +3440,7 @@ async function mountPushUi() {
 
 
     script.src =
-      "/support-widget.js?v=20261016-bot5";
+      "/support-widget.js?v=20261017-bot6";
 
 
     script.async =

@@ -1560,27 +1560,37 @@ if (
       #pdBotInput:focus{border-color:rgba(216,255,69,.48)}
       #pdBotSend{flex:0 0 44px;height:44px;border:0;border-radius:12px;background:#d8ff45;color:#142300;font-size:18px;font-weight:900;cursor:pointer}
       #pdBotSend:disabled{opacity:.5}
-      /* Điện thoại, chế độ trợ lý: ngăn kéo từ dưới lên, cao theo nội dung (tối đa 72% màn hình) */
+      /* Điện thoại: mọi chế độ (trợ lý, form nhân viên, chat nhân viên) là ngăn kéo gọn từ dưới lên,
+         tối đa 50% màn hình, nút tròn ẩn khi đang mở, bàn phím bật thì bám ngay trên bàn phím */
       @media(max-width:700px){
-        #pickdeeSupportRoot:has(#pickdeeSupportPanel.open.pd-bot-mode) #pickdeeSupportButton{display:none}
-        #pickdeeSupportPanel.pd-bot-mode{left:6px;right:6px;bottom:calc(var(--pd-kb,0px) + max(8px,env(safe-area-inset-bottom)));height:auto;max-height:min(50dvh,calc(var(--pd-vvh,100dvh) - 16px));border-radius:18px}
-        /* Bàn phím đang bật: nhường chỗ cho tin nhắn + ô nhập */
-        #pickdeeSupportPanel.pd-bot-mode.pd-kb{max-height:calc(var(--pd-vvh,100dvh) - 16px)}
-        #pickdeeSupportPanel.pd-bot-mode.pd-kb #pickdeeContactQuick,#pickdeeSupportPanel.pd-bot-mode.pd-kb .pd-bot-chips{display:none!important}
-        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-head{min-height:46px;padding:7px 10px;gap:8px}
-        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-logo{width:30px;height:30px;font-size:14px}
-        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-title{font-size:15px}
-        #pickdeeSupportPanel.pd-bot-mode .pickdee-support-subtitle{display:none}
-        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick{padding:6px 10px!important;gap:0!important}
-        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick>div:first-child{display:none!important}
-        #pickdeeSupportPanel.pd-bot-mode #pickdeeContactQuick a{min-height:32px!important;font-size:11px!important}
+        #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pickdeeSupportButton{display:none}
+        #pickdeeSupportPanel.open{left:6px;right:6px;bottom:calc(var(--pd-kb,0px) + max(8px,env(safe-area-inset-bottom)));height:auto;max-height:min(50dvh,calc(var(--pd-vvh,100dvh) - 16px));border-radius:18px}
+        #pickdeeSupportPanel.open.pd-kb{max-height:calc(var(--pd-vvh,100dvh) - 16px)}
+        #pickdeeSupportPanel.pd-kb #pickdeeContactQuick,#pickdeeSupportPanel.pd-kb .pd-bot-chips{display:none!important}
+        #pickdeeSupportPanel .pickdee-support-head{min-height:46px;padding:7px 10px;gap:8px}
+        #pickdeeSupportPanel .pickdee-support-logo{width:30px;height:30px;font-size:14px}
+        #pickdeeSupportPanel .pickdee-support-title{font-size:15px}
+        #pickdeeSupportPanel .pickdee-support-subtitle{display:none}
+        #pickdeeSupportPanel #pickdeeContactQuick{padding:6px 10px!important;gap:0!important}
+        #pickdeeSupportPanel #pickdeeContactQuick>div:first-child{display:none!important}
+        #pickdeeSupportPanel #pickdeeContactQuick a{min-height:32px!important;font-size:11px!important}
+        /* Trợ lý: cao theo nội dung */
         #pickdeeSupportPanel.pd-bot-mode #pickdeeSupportBot{flex:0 1 auto}
         #pickdeeSupportPanel.pd-bot-mode #pdBotMsgs{flex:0 1 auto;padding:10px 12px}
         #pickdeeSupportPanel.pd-bot-mode .pd-bot-chips{margin:0 0 6px;gap:5px}
         #pickdeeSupportPanel.pd-bot-mode .pd-bot-chip{padding:6px 10px;font-size:12px}
-        #pickdeeSupportPanel.pd-bot-mode #pdBotComposer{padding:7px 10px calc(7px + env(safe-area-inset-bottom)*0)}
+        #pickdeeSupportPanel.pd-bot-mode #pdBotComposer{padding:7px 10px}
         #pickdeeSupportPanel.pd-bot-mode #pdBotInput{min-height:40px;padding:9px 11px}
         #pickdeeSupportPanel.pd-bot-mode #pdBotSend{flex-basis:40px;height:40px}
+        /* Form nhân viên (tên + SĐT): gọn, cuộn trong khung nếu màn hình nhỏ */
+        #pickdeeSupportPanel #pickdeeSupportGuest{min-height:0;flex:0 1 auto;padding:12px 14px}
+        #pickdeeSupportPanel .pickdee-support-intro{margin-bottom:10px;font-size:13px;line-height:1.45}
+        #pickdeeSupportPanel .pickdee-support-field{margin-bottom:9px;gap:5px}
+        #pickdeeSupportPanel .pickdee-support-field input{min-height:42px;font-size:16px}
+        #pickdeeSupportPanel #pickdeeSupportGuestStart{min-height:44px;margin-top:2px}
+        /* Chat nhân viên: chiều cao cố định 50% để khung tin nhắn không nhảy khi chờ trả lời */
+        #pickdeeSupportPanel.open.pd-staff-chat{height:min(50dvh,calc(var(--pd-vvh,100dvh) - 16px))}
+        #pickdeeSupportPanel.open.pd-staff-chat.pd-kb{height:calc(var(--pd-vvh,100dvh) - 16px)}
       }
     `;
     document.head.appendChild(st);
@@ -1751,6 +1761,7 @@ if (
     guestBox.style.display = "none";
     chatBox.style.display = "none";
     botBox.style.display = "flex";
+    panel.classList.remove("pd-staff-chat");
     panel.classList.add("pd-bot-mode");
     renderBot(false);
   }
@@ -2194,6 +2205,8 @@ if (
     chatBox.style.display =
       "flex";
 
+    panel.classList.add("pd-staff-chat");
+
 
     await loadMessages();
 
@@ -2343,6 +2356,8 @@ if (
 
     guestBox.style.display =
       "block";
+
+    panel.classList.remove("pd-staff-chat");
 
 
     guestNameInput.value =
