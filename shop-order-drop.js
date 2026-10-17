@@ -376,6 +376,20 @@ body.pd-not-orders #pdDropFab{display:none}
     return c.items.reduce(function (s, i) { const v = variantOf(i.variant_id); return s + (v ? unitPrice(v, i.quantity) * Number(i.quantity || 0) : 0); }, 0);
   }
 
+  // Ship hệ thống tự tính khi tạo đơn (giống shop_create_guest_order): vợt + CK → 0; có bóng → 0, chờ báo cước;
+  // tiền hàng web ≥ 300k → freeship; còn lại 15k
+  function autoShip(c) {
+    const names = c.items.map(function (i) {
+      const v = variantOf(i.variant_id), p = productOf(v);
+      return { p: String(p ? p.name : "").trim().toLowerCase(), v: String(v ? v.variant_name || "" : "").toLowerCase() };
+    });
+    const paddle = names.some(function (n) { return /vợt|paddle/.test(n.p + " " + n.v) || /esson|ess\/on/.test(n.p); });
+    const ball = names.some(function (n) { return /^bóng /.test(n.p) || /lt48|ppa life time|toniker nexus|toniker mate pro/.test(n.p); });
+    if (paddle && c.payment === "bank_transfer") return { fee: 0, label: "freeship (vợt CK)" };
+    if (ball) return { fee: 0, label: "bóng: báo cước sau" };
+    return webGoods(c) >= 300000 ? { fee: 0, label: "freeship (≥300k)" } : { fee: 15000, label: "15.000đ (dưới 300k)" };
+  }
+
   // Chống trùng: cùng SĐT + cùng sản phẩm trong 48 giờ (đơn chưa huỷ)
   async function checkDuplicate(c) {
     c.dup = null;
@@ -503,7 +517,8 @@ body.pd-not-orders #pdDropFab{display:none}
   function totals(c) {
     const web = webGoods(c);
     const goods = c.dealGoods != null ? Math.min(c.dealGoods, web) : web;
-    return { web: web, goods: goods, pay: goods + (c.dealShip || 0) };
+    const ship = c.dealShip != null ? c.dealShip : autoShip(c).fee;
+    return { web: web, goods: goods, ship: ship, pay: goods + ship };
   }
 
   function viewHtml(c) {
@@ -517,8 +532,8 @@ body.pd-not-orders #pdDropFab{display:none}
       (c.legacy ? '<div class="pdd-muted">Khách gửi: ' + esc(c.legacy) + "</div>" : "") +
       '<ul class="pdd-items">' + items + "</ul>" +
       '<div class="pdd-sum"><span>Tiền hàng' + (c.dealGoods != null ? " (chốt, web " + money(t.web) + ")" : "") + "</span><span>" + money(t.goods) + "</span></div>" +
-      '<div class="pdd-sum"><span>Ship</span><span>' + (c.dealShip != null ? money(c.dealShip) + " (chốt)" : "theo hệ thống") + "</span></div>" +
-      '<div class="pdd-sum"><span>' + esc(payLabel(c)) + " · " + esc(SOURCES[c.source] || c.source) + "</span><b>" + money(t.pay) + (c.dealShip == null ? " + ship" : "") + "</b></div>" +
+      '<div class="pdd-sum"><span>Ship</span><span>' + (c.dealShip != null ? money(c.dealShip) + " (chốt)" : esc(autoShip(c).label)) + "</span></div>" +
+      '<div class="pdd-sum"><span>' + esc(payLabel(c)) + " · " + esc(SOURCES[c.source] || c.source) + "</span><b>" + money(t.pay) + (c.dealShip == null && /bóng/.test(autoShip(c).label) ? " + ship" : "") + "</b></div>" +
       (c.note ? '<div class="pdd-muted">Ghi chú: ' + esc(c.note) + "</div>" : "");
   }
 
@@ -553,7 +568,7 @@ body.pd-not-orders #pdDropFab{display:none}
       }).join("") +
       '<button type="button" class="pdd-add" data-a="add">+ Thêm sản phẩm</button>' +
       '<div class="pdd-two"><div><label>Giá chốt tiền hàng (trống = giá web ' + money(webGoods(c)) + ')</label><input data-f="goods" inputmode="numeric" value="' + fmtIn(c.dealGoods) + '"></div>' +
-      '<div><label>Ship chốt (trống = theo hệ thống)</label><input data-f="ship" inputmode="numeric" value="' + fmtIn(c.dealShip) + '"></div></div>' +
+      '<div><label>Ship chốt (trống = ' + esc(autoShip(c).label) + ')</label><input data-f="ship" inputmode="numeric" value="' + fmtIn(c.dealShip) + '"></div></div>' +
       '<div class="pdd-two"><div><label>Thanh toán</label><select data-f="payment"' + bad(!c.payment) + '><option value="">Chọn</option>' +
         '<option value="cod"' + (c.payment === "cod" ? " selected" : "") + ">COD (thu hộ)</option>" +
         '<option value="bank_transfer"' + (c.payment === "bank_transfer" ? " selected" : "") + ">Chuyển khoản</option></select></div>" +
