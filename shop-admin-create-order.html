@@ -391,6 +391,17 @@
       color: #ffd27a;
     }
 
+    /* Tạo đơn từ ảnh chụp chat */
+    .photo-btn { width:100%; min-height:50px; margin-bottom:9px; border:0; border-radius:12px; background:linear-gradient(135deg,#d8ff45,#9dff6a); color:#071523; font-size:13px; font-weight:950; }
+    .photo-btn:disabled { opacity:.6; }
+    .photo-hint { margin:-3px 0 10px; color:rgba(255,255,255,.5); font-size:10.5px; line-height:1.45; }
+    .deal-box { display:none; margin-top:12px; padding:10px; border-radius:11px; border:1px solid rgba(255,210,122,.4); background:rgba(255,210,122,.06); }
+    .deal-box.show { display:block; }
+    .deal-title { color:#ffd27a; font-size:10px; font-weight:950; margin-bottom:7px; }
+    .deal-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .deal-grid label { display:block; color:rgba(255,255,255,.55); font-size:9.5px; font-weight:900; margin-bottom:4px; }
+    .deal-note { margin-top:6px; color:rgba(255,255,255,.5); font-size:10px; line-height:1.45; }
+
     .customer-found {
       display: none;
 
@@ -839,6 +850,10 @@
 
     <div class="paste-box">
 
+      <button id="photoFillBtn" class="photo-btn" type="button">📷 TẠO ĐƠN TỪ ẢNH CHAT (ZALO / TIKTOK)</button>
+      <input id="photoInput" type="file" accept="image/*" multiple hidden>
+      <div class="photo-hint">Chụp màn hình đoạn chat đã chốt (sản phẩm, tên, SĐT, địa chỉ cũ/mới) – chọn 1–4 ảnh. Ảnh chỉ đọc trên máy, không gửi đi.</div>
+
       <label for="pasteText">
         ✨ DÁN TIN NHẮN CỦA KHÁCH – TỰ ĐIỀN
       </label>
@@ -1015,6 +1030,14 @@
         0đ
       </div>
 
+    </div>
+    <div id="dealBox" class="deal-box">
+      <div class="deal-title">💬 GIÁ CHỐT TRONG CHAT (áp vào đơn sau khi tạo)</div>
+      <div class="deal-grid">
+        <div><label for="dealGoods">TIỀN HÀNG</label><input id="dealGoods" type="text" inputmode="numeric" placeholder="Theo giá web"></div>
+        <div><label for="dealShip">PHÍ SHIP</label><input id="dealShip" type="text" inputmode="numeric" placeholder="Theo hệ thống"></div>
+      </div>
+      <div id="dealNote" class="deal-note"></div>
     </div>
 
   </section>
@@ -1863,7 +1886,7 @@
 
           (Array.isArray(mapped) ? mapped : []).forEach(
             m => {
-              const hit = candidates.find(c => String(c.id) === String(m?.ward?.code));
+              const hit = candidates.find(c => String(c.id).padStart(5, "0") === String(m?.ward?.code).padStart(5, "0"));
               if (hit && !hits.includes(hit)) {
                 hits.push(hit);
               }
@@ -1940,7 +1963,8 @@
         (Array.isArray(list) ? list : [])
           .map(x => x.ward)
           .filter(w => w && String(w.province_code).padStart(2, "0") === String(province.id).padStart(2, "0"))
-          .map(w => pool.find(p => String(p.id) === String(w.code)))
+          // mã xã trong web có số 0 đầu ("04273"), API trả 4273
+          .map(w => pool.find(p => String(p.id).padStart(5, "0") === String(w.code).padStart(5, "0")))
           .filter(Boolean)
           .filter((w, i, arr) => arr.indexOf(w) === i);
 
@@ -2361,6 +2385,192 @@
   document
     .getElementById("pasteFillBtn")
     .addEventListener("click", smartFill);
+
+
+  /* =====================================================
+     TẠO ĐƠN TỪ ẢNH CHAT (shop-order-photo.js + Edge shop-order-parse)
+     Điền: SĐT, tên, địa chỉ (cũ→mới), sản phẩm, nguồn, thanh toán, ghi chú, giá chốt/ship chốt.
+  ====================================================== */
+
+  function moneyInput(v) {
+    const n = Number(String(v || "").replace(/[^\d]/g, ""));
+    return n > 0 || String(v || "").trim() === "0" ? n : null;
+  }
+
+  function fmtInput(n) {
+    return n == null ? "" : Number(n).toLocaleString("vi-VN").replace(/,/g, ".");
+  }
+
+  // Có giá chốt → thanh dưới hiện số tiền khách trả thật (tiền hàng chốt + ship chốt)
+  function refreshDealTotal(webTotal) {
+    const g = moneyInput(document.getElementById("dealGoods").value);
+    const sh = moneyInput(document.getElementById("dealShip").value);
+    const label = document.querySelector(".bottom-label");
+    if (g == null && sh == null) {
+      if (label) label.textContent = "TẠM TÍNH";
+      return;
+    }
+    const goods = g != null ? Math.min(g, webTotal) : webTotal;
+    bottomTotal.textContent = money(goods + (sh || 0));
+    if (label) label.textContent = sh != null ? "KHÁCH TRẢ (GỒM SHIP)" : "GIÁ CHỐT";
+  }
+
+  ["dealGoods", "dealShip"].forEach(function (id) {
+    const el = document.getElementById(id);
+    el.addEventListener("blur", function () {
+      const n = moneyInput(el.value);
+      el.value = n == null ? "" : fmtInput(n);
+      updateTotal();
+    });
+  });
+
+  async function fillFromPhoto(r) {
+
+    const box = document.getElementById("pasteResult");
+    const done = [];
+    const warn = [];
+
+    if (r.phone) {
+      setValue("phone", r.phone);
+      done.push("SĐT " + r.phone);
+    } else {
+      warn.push("Chưa thấy SĐT người nhận.");
+    }
+    if (r.phones && r.phones.length > 1) {
+      warn.push("Ảnh có " + r.phones.length + " SĐT: " + r.phones.join(", ") + " – kiểm tra đúng số người nhận.");
+    }
+
+    if (r.customer_name) {
+      setValue("customerName", r.customer_name);
+      done.push("Tên " + r.customer_name);
+    } else {
+      warn.push("Chưa thấy tên người nhận.");
+    }
+
+    if (r.address_text) {
+      box.textContent = "Đang đổi địa chỉ...";
+      // AI đã tách sẵn có tiền tố (Phường/Xã, Quận/Huyện/TP, Tỉnh) → bộ đổi địa chỉ cũ→mới nhận ra chắc hơn
+      const ap = r.address_parts || {};
+      const structured = [ap.street, ap.ward, ap.district, ap.province].filter(Boolean).join(", ");
+      let addr = await resolveAddress(ap.province ? structured : r.address_text);
+      if (!addr.wardName && ap.province) {
+        const alt = await resolveAddress(r.address_text);
+        if (alt.wardName) addr = alt;
+      }
+      if (addr.street) setValue("addressLine", addr.street);
+      if (addr.provinceName) {
+        fillProvinceOptions(addr.provinceName);
+        fillWardOptions(addr.provinceId, addr.wardName);
+      }
+      // Địa chỉ khách gửi (cũ hoặc mới) luôn giữ nguyên ở ô địa chỉ cũ cho đơn vị vận chuyển
+      setValue("legacyAddress", r.address_text);
+      if (addr.wardName) {
+        done.push((addr.isOld ? "Địa chỉ mới: " : "Địa chỉ: ") + addr.wardName + ", " + addr.provinceName);
+      }
+      if (addr.hint) warn.push(addr.hint);
+      if (!addr.isOld) warn.push("Khách gửi địa chỉ mới – ô địa chỉ cũ đang để đúng địa chỉ khách gửi.");
+    } else {
+      warn.push("Chưa thấy địa chỉ.");
+    }
+
+    // Sản phẩm: thay toàn bộ dòng (đơn từ ảnh là đơn mới)
+    const picked = (r.items || []).filter(function (i) {
+      return i.variant_id && variants.some(function (v) { return String(v.id) === String(i.variant_id); });
+    });
+    (r.items || []).filter(function (i) { return !picked.includes(i); }).forEach(function (i) {
+      warn.push("Chưa nhận ra sản phẩm: «" + i.raw_text + "» – thêm tay giúp em.");
+    });
+    if (picked.length) {
+      lines = picked.map(function (i) { return { variant_id: i.variant_id, quantity: i.quantity }; });
+      linesTouched = true;
+      renderLines();
+      picked.forEach(function (i) {
+        const v = variants.find(function (x) { return String(x.id) === String(i.variant_id); });
+        const p = products.find(function (x) { return String(x.id) === String(v.product_id); });
+        done.push("Sản phẩm: " + (p ? p.name : "") +
+          (v.variant_name && v.variant_name !== "Mặc định" ? " • " + v.variant_name : "") +
+          " × " + i.quantity +
+          (v.is_sold_out ? " (đang TẠM HẾT)" : ""));
+        if (v.is_sold_out) warn.push((p ? p.name : "Sản phẩm") + " • " + v.variant_name + " đang tạm hết hàng.");
+      });
+    }
+
+    // Giá chốt trong chat: tổng tiền hàng nói rõ, hoặc mọi món đều có giá/cái
+    let goods = r.agreed_items_total;
+    if (goods == null && picked.length && picked.every(function (i) { return i.agreed_unit_price; })) {
+      goods = picked.reduce(function (s, i) { return s + i.agreed_unit_price * i.quantity; }, 0);
+    }
+    const webGoods = lines.reduce(function (s, l) {
+      const v = variants.find(function (x) { return String(x.id) === String(l.variant_id); });
+      return s + Number(v?.price || 0) * Number(l.quantity || 0);
+    }, 0);
+    document.getElementById("dealGoods").value = goods != null && goods !== webGoods ? fmtInput(goods) : "";
+    document.getElementById("dealShip").value = r.shipping_fee != null ? fmtInput(r.shipping_fee) : "";
+    const hasDeal = (goods != null && goods !== webGoods) || r.shipping_fee != null;
+    document.getElementById("dealBox").classList.toggle("show", hasDeal);
+    document.getElementById("dealNote").textContent = hasDeal
+      ? "Giá web " + money(webGoods) + (goods != null && goods !== webGoods ? " → chốt " + money(goods) : "") +
+        (r.shipping_fee != null ? " · ship chốt " + money(r.shipping_fee) : "") +
+        ". Sau khi tạo đơn em tự áp (giảm giá/phí ship). Xoá ô nào thì giữ theo hệ thống."
+      : "";
+    updateTotal();
+    if (goods != null && goods !== webGoods) done.push("Giá chốt tiền hàng " + money(goods) + " (web " + money(webGoods) + ")");
+    if (r.shipping_fee != null) done.push("Ship chốt " + money(r.shipping_fee));
+
+    if (r.source) {
+      const b = document.querySelector('.source-btn[data-source="' + r.source + '"]');
+      if (b) { b.click(); done.push("Nguồn " + r.source.toUpperCase()); }
+    }
+    if (r.payment_method) {
+      setValue("paymentMethod", r.payment_method);
+      done.push(r.payment_method === "cod" ? "Thu hộ COD" : "Chuyển khoản");
+    }
+    const note = document.getElementById("customerNote");
+    if (r.note && !note.value.includes(r.note)) {
+      note.value = (note.value ? note.value + "\n" : "") + r.note;
+    }
+
+    (r.warnings || []).forEach(function (w) { warn.push(w); });
+
+    box.style.display = "block";
+    box.className = "paste-result" + (warn.length ? " warn" : "");
+    box.textContent =
+      (done.length ? "✓ " + done.join("\n✓ ") : "")
+      + (warn.length ? (done.length ? "\n" : "") + "⚠️ " + warn.join("\n⚠️ ") : "")
+      + "\nKiểm tra lại rồi bấm TẠO ĐƠN.";
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  const photoBtn = document.getElementById("photoFillBtn");
+  const photoInput = document.getElementById("photoInput");
+
+  photoBtn.addEventListener("click", function () {
+    photoInput.value = "";
+    photoInput.click();
+  });
+
+  photoInput.addEventListener("change", async function () {
+    if (!photoInput.files || !photoInput.files.length) return;
+    const box = document.getElementById("pasteResult");
+    box.style.display = "block";
+    box.className = "paste-result";
+    photoBtn.disabled = true;
+    const label = photoBtn.textContent;
+    try {
+      if (!window.PDOrderPhoto) throw new Error("Chưa tải xong, thử lại.");
+      const r = await window.PDOrderPhoto.run(photoInput.files, function (msg) {
+        box.textContent = msg;
+        photoBtn.textContent = "⏳ " + msg;
+      });
+      await fillFromPhoto(r);
+    } catch (e) {
+      box.className = "paste-result warn";
+      box.textContent = "⚠️ " + (e?.message || e) + "\nCó thể dán chữ tin nhắn vào ô bên dưới rồi bấm TỰ ĐIỀN ĐƠN.";
+    } finally {
+      photoBtn.disabled = false;
+      photoBtn.textContent = label;
+    }
+  });
 
   document
     .getElementById("pasteText")
@@ -2994,6 +3204,7 @@
 
     bottomTotal.textContent =
       money(total);
+    if (typeof refreshDealTotal === "function") refreshDealTotal(total);
 
   }
 
@@ -3283,7 +3494,7 @@
             "shop_product_variants"
           )
           .select(
-            "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value,price,is_active,sort_order"
+            "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value,price,is_active,sort_order,is_sold_out"
           )
           .eq(
             "is_active",
@@ -3621,6 +3832,32 @@
 
         }
 
+        // Giá chốt trong chat (tạo từ ảnh): tiền hàng thấp hơn giá web → giảm giá đơn; phí ship chốt → ghi đè ship
+        const dealGoods = moneyInput(document.getElementById("dealGoods").value);
+        const dealShip = moneyInput(document.getElementById("dealShip").value);
+        if (dealGoods != null || dealShip != null) {
+          // total_amount do trigger shop_calculate_order_total tự tính (subtotal + ship − giảm giá)
+          const { data: od, error: odErr } = await sb
+            .from("shop_orders")
+            .select("subtotal")
+            .eq("id", data.order_id)
+            .single();
+          if (odErr) throw odErr;
+          const discount = dealGoods != null ? Math.max(0, Number(od.subtotal || 0) - dealGoods) : 0;
+          const patch = {};
+          if (dealGoods != null) {
+            patch.order_discount_amount = discount;
+            patch.order_discount_note = "Giá chốt qua chat: " + money(dealGoods);
+          }
+          if (dealShip != null) {
+            patch.shipping_fee = dealShip;
+            patch.shipping_discount = 0;
+            patch.shipping_pricing_mode = null;
+          }
+          const { error: dealErr } = await sb.from("shop_orders").update(patch).eq("id", data.order_id);
+          if (dealErr) throw dealErr;
+        }
+
         showMessage(
           `✓ Đã tạo ${data.order_code}`,
           "success"
@@ -3741,6 +3978,7 @@
 </script>
 
 <script src="/shop-notifications.js?v=20261017-sales1"></script>
+<script src="/shop-order-photo.js?v=20261017-photo1"></script>
 </body>
 
 </html>
