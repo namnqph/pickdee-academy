@@ -81,7 +81,9 @@
       say("Đang đọc chữ ảnh " + (i + 1) + "/" + list.length + "…");
       const canvas = await shrink(list[i]);
       const r = await w.recognize(canvas);
-      texts.push((alwaysMark || list.length > 1 ? "--- Ảnh " + (i + 1) + " ---\n" : "") + (r.data.text || ""));
+      // Bỏ dòng nút quay lại app của iPhone ("< Facebook") – không phải nguồn chat
+      const text = String(r.data.text || "").replace(/^\s*[<◀‹«]\s*(Facebook|Messenger|Zalo|TikTok|Instagram|Safari)\s*$/gim, "");
+      texts.push((alwaysMark || list.length > 1 ? "--- Ảnh " + (i + 1) + " ---\n" : "") + text);
     }
     return { files: list, texts: texts };
   }

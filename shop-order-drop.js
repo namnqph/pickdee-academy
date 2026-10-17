@@ -8,19 +8,21 @@
   if (window.__pdOrderDrop) return;
   window.__pdOrderDrop = true;
 
-  const V = "20261017-drop2";
+  const V = "20261017-drop3";
   const AUTO_SECONDS = 5;
   const AUTO_NOTE = "Tạo tự động từ ảnh chat";
   const MANUAL_NOTE = "Tạo từ ảnh chat (đã kiểm tra tay)";
   // Ảnh bill ngân hàng (chữ đã bỏ dấu): "Chuyển tiền thành công", "Giao dịch thành công", "Mã giao dịch"...
   const BILL_RE = /(chuyen tien|chuyen khoan|giao dich|thanh toan|ck) thanh cong|ma giao dich|so tham chieu|ma tham chieu|transfer successful|successful transfer|transaction successful/;
+  // Có nhắc chuyển khoản / STK / QR mà không có bill → hỏi "đã nhận tiền chưa" (lưới an toàn khi AI bỏ sót)
+  const CLAIM_RE = /\b(stk|ck|ckhoan)\b|so tai khoan|chuyen khoan|quet ma de chuyen tien|da chuyen tien/;
   const SOURCES = { zalo: "Zalo", tiktok: "TikTok", facebook: "Facebook", phone: "Điện thoại", other: "Khác" };
 
   const sb = window.sb;
   if (!sb) return;
 
   let fab, tray, listEl, statusEl, fileInput, dragOverlay;
-  let products = [], variants = [];
+  let products = [], variants = [], tiers = [];
   let readyP = null;
   let busy = false;
   let createdCount = 0;
@@ -52,6 +54,14 @@
   function onOrdersTab() { return !document.body.classList.contains("pd-not-orders"); }
   function variantOf(id) { return variants.find(function (v) { return String(v.id) === String(id); }); }
   function productOf(v) { return v && products.find(function (p) { return String(p.id) === String(v.product_id); }); }
+  // Giá 1 cái theo số lượng (giá sỉ) – giống shop_effective_unit_price khi tạo đơn
+  function unitPrice(v, qty) {
+    let best = Number(v.price);
+    tiers.forEach(function (t) {
+      if (String(t.variant_id) === String(v.id) && Number(qty) >= Number(t.min_quantity) && Number(t.unit_price) < best) best = Number(t.unit_price);
+    });
+    return best;
+  }
   function variantLabel(v) {
     if (!v) return "";
     const p = productOf(v);
@@ -81,7 +91,9 @@
           sb.from("shop_product_variants")
             .select("id,product_id,variant_name,option1_value,option2_value,price,is_active,sort_order,is_sold_out")
             .eq("is_active", true).order("sort_order", { ascending: true }),
-          window.PDAddress.load()
+          window.PDAddress.load(),
+          sb.from("shop_variant_wholesale_tiers").select("variant_id,min_quantity,unit_price").eq("is_active", true)
+            .then(function (r) { tiers = r.data || []; })
         ]);
         if (pr.error) throw pr.error;
         if (vr.error) throw vr.error;
@@ -304,7 +316,8 @@ body.pd-not-orders #pdDropFab{display:none}
     // Thanh toán: có bill → CK · khách nói đã/sẽ CK mà không có bill → hỏi xác nhận · còn lại → COD
     const ocr = (o.image_indexes || []).map(function (n) { return (texts || [])[n - 1] || ""; }).join("\n");
     const plainOcr = ocr.toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
-    const evidence = o.payment_evidence === "bill" || BILL_RE.test(plainOcr) ? "bill" : o.payment_evidence === "claimed" ? "claimed" : "none";
+    const evidence = o.payment_evidence === "bill" || BILL_RE.test(plainOcr) ? "bill"
+      : o.payment_evidence === "claimed" || CLAIM_RE.test(plainOcr) ? "claimed" : "none";
     const c = {
       id: ++seq,
       el: document.createElement("div"),
@@ -322,7 +335,9 @@ body.pd-not-orders #pdDropFab{display:none}
       payment: evidence === "bill" ? "bank_transfer" : evidence === "claimed" ? "" : "cod",
       payStatus: "unpaid",
       payNote: "",
-      source: o.source || localStorage.getItem("pickdee_quick_order_source") || "zalo",
+      // Giao diện Zalo (chắc hơn AI: chữ "◀ Facebook" góc trên chỉ là nút quay lại app)
+      source: (/tin nhan/.test(plainOcr) && /da nhan|sao chep so dien thoai|gui so tai khoan|dong y ket ban|goi dien|tin nhan cua /.test(plainOcr) ? "zalo" : o.source)
+        || localStorage.getItem("pickdee_quick_order_source") || "zalo",
       note: o.note || "",
       aiWarnings: (o.warnings || []).filter(Boolean),
       dealGoods: null, dealShip: o.shipping_fee,
@@ -333,7 +348,9 @@ body.pd-not-orders #pdDropFab{display:none}
     if (o.address_text) {
       try {
         const a = await window.PDAddress.resolveParsed(o.address_text, o.address_parts);
-        c.street = a.street || "";
+        // Địa chỉ quê thường không có số nhà → dùng xã/thị trấn, huyện khách ghi (bên vận chuyển vẫn có địa chỉ cũ đầy đủ)
+        const ap = o.address_parts || {};
+        c.street = a.street || [ap.ward, ap.district].filter(Boolean).join(", ") || o.address_text || "";
         c.provinceId = a.provinceId || "";
         c.provinceName = a.provinceName || "";
         c.wardName = a.wardName || "";
@@ -355,7 +372,7 @@ body.pd-not-orders #pdDropFab{display:none}
   }
 
   function webGoods(c) {
-    return c.items.reduce(function (s, i) { const v = variantOf(i.variant_id); return s + (v ? Number(v.price) * Number(i.quantity || 0) : 0); }, 0);
+    return c.items.reduce(function (s, i) { const v = variantOf(i.variant_id); return s + (v ? unitPrice(v, i.quantity) * Number(i.quantity || 0) : 0); }, 0);
   }
 
   // Chống trùng: cùng SĐT + cùng sản phẩm trong 48 giờ (đơn chưa huỷ)
@@ -382,7 +399,6 @@ body.pd-not-orders #pdDropFab{display:none}
     if (!/^0\d{9}$/.test(c.phone)) p.push("Thiếu SĐT người nhận.");
     else if (c.phones.length > 1) p.push("Ảnh có " + c.phones.length + " SĐT: " + c.phones.join(", ") + " – kiểm tra đúng số người nhận.");
     if (!c.name.trim()) p.push("Thiếu tên người nhận.");
-    if (!c.street.trim()) p.push("Thiếu số nhà/đường/thôn.");
     if (!c.provinceName || !c.wardName) p.push(c.addrHint || "Chưa có tỉnh + phường/xã mới.");
     if (!c.legacy.trim()) p.push("Thiếu địa chỉ khách gửi.");
     if (!c.items.length) p.push("Chưa có sản phẩm.");
@@ -404,7 +420,6 @@ body.pd-not-orders #pdDropFab{display:none}
     const p = [];
     if (!/^0\d{9}$/.test(c.phone)) p.push("SĐT (10 số)");
     if (!c.name.trim()) p.push("tên");
-    if (!c.street.trim()) p.push("số nhà/đường");
     if (!c.provinceName || !c.wardName) p.push("tỉnh + phường/xã");
     if (!c.legacy.trim()) p.push("địa chỉ khách gửi");
     if (!c.items.length || c.items.some(function (i) { return !variantOf(i.variant_id); })) p.push("sản phẩm");
@@ -494,7 +509,7 @@ body.pd-not-orders #pdDropFab{display:none}
     const t = totals(c);
     const items = c.items.map(function (i) {
       const v = variantOf(i.variant_id);
-      return "<li>" + (v ? esc(variantLabel(v)) + " × <b>" + i.quantity + "</b> <span class=\"pdd-muted\">(" + money(v.price) + ")</span>" : "❓ " + esc(i.raw)) + "</li>";
+      return "<li>" + (v ? esc(variantLabel(v)) + " × <b>" + i.quantity + "</b> <span class=\"pdd-muted\">(" + money(unitPrice(v, i.quantity)) + (unitPrice(v, i.quantity) < Number(v.price) ? " giá sỉ" : "") + ")</span>" : "❓ " + esc(i.raw)) + "</li>";
     }).join("");
     return '<div class="pdd-line"><b>' + esc(c.name || "?") + "</b> · " + esc(c.phone || "chưa có SĐT") + "</div>" +
       '<div class="pdd-line">' + esc([c.street, c.wardName, c.provinceName].filter(Boolean).join(", ") || "?") + "</div>" +
@@ -520,7 +535,7 @@ body.pd-not-orders #pdDropFab{display:none}
     return '<div class="pdd-f">' +
       '<div class="pdd-two"><div><label>Tên người nhận</label><input data-f="name" value="' + esc(c.name) + '"' + bad(!c.name.trim()) + "></div>" +
       '<div><label>SĐT</label><input data-f="phone" inputmode="tel" value="' + esc(c.phone) + '"' + bad(!/^0\d{9}$/.test(c.phone)) + "></div></div>" +
-      "<label>Số nhà, đường, thôn</label><input data-f=\"street\" value=\"" + esc(c.street) + '"' + bad(!c.street.trim()) + ">" +
+      "<label>Số nhà, đường, thôn</label><input data-f=\"street\" value=\"" + esc(c.street) + '">' +
       '<div class="pdd-two"><div><label>Tỉnh/thành (mới)</label><select data-f="province"' + bad(!c.provinceName) + '><option value="">Chọn tỉnh</option>' +
         provs.map(function (p) { return '<option value="' + esc(p.id) + '"' + (String(p.id) === String(c.provinceId) ? " selected" : "") + ">" + esc(name(p)) + "</option>"; }).join("") +
       "</select></div>" +
@@ -640,7 +655,7 @@ body.pd-not-orders #pdDropFab{display:none}
       const data = await window.PDOrderPhoto.createOrderFromParsed(sb, {
         customer_name: c.name.trim(),
         phone: c.phone,
-        address_line: c.street.trim(),
+        address_line: c.street.trim() || c.legacy.trim(),
         ward: c.wardName,
         province: c.provinceName,
         legacy_address: c.legacy.trim(),
