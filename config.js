@@ -176,6 +176,65 @@ window.PICKDEE_CONFIG = {
 
 
   /*
+    ĐĂNG XUẤT KHÔNG BAO GIỜ TREO.
+    Safari iPhone: khoá phiên có thể kẹt khi app mở lại từ nền
+    → signOut() chờ mãi, trang không chuyển, phiên không xoá.
+    Hoặc server báo lỗi mạng → thư viện giữ nguyên phiên trên máy.
+    Sửa: chờ server tối đa 3 giây, sau đó LUÔN xoá phiên trên máy.
+  */
+
+  const originalSignOut =
+    sharedClient.auth.signOut.bind(
+      sharedClient.auth
+    );
+
+  sharedClient.auth.signOut =
+    async function (options) {
+
+      try {
+
+        await Promise.race([
+          originalSignOut(options),
+          new Promise(function (resolve) {
+            setTimeout(resolve, 3000);
+          })
+        ]);
+
+      }
+      catch (error) {
+
+        console.warn(
+          "PickDee signOut:",
+          error
+        );
+
+      }
+
+      try {
+
+        Object.keys(localStorage).forEach(
+          function (key) {
+            if (
+              key === "pickdee-auth"
+              ||
+              key.indexOf("pickdee-auth-") === 0
+              ||
+              /^sb-.*-auth-token/.test(key)
+            ) {
+              localStorage.removeItem(key);
+            }
+          }
+        );
+
+      }
+      catch (_) {}
+
+      return { error: null };
+
+    };
+
+
+  /*
     Toàn bộ tên client cũ
     đều trỏ về cùng một client.
   */
