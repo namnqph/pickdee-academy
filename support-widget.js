@@ -1528,16 +1528,40 @@ if (
   // Kênh theo trang (khớp channelOf ở Edge pickdee-bot): Shop chỉ hỏi Shop, Academy chỉ hỏi Academy
   const BOT_CH = /^\/shop/.test(location.pathname) ? "shop"
     : /^\/(academy|coach|student|find-coach|apply-coach)/.test(location.pathname) ? "academy" : "all";
-  const BOT_INTRO = {
-    shop: "Em là <b>trợ lý PickDee Shop</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, đơn hàng. ",
-    academy: "Em là <b>trợ lý PickDee Academy</b>. Em trả lời nhanh về gói học, học phí, lịch học, Coach. ",
-    all: "Em là <b>trợ lý PickDee</b>. Em trả lời nhanh về sản phẩm, giá, phí ship, gói học. "
-  }[BOT_CH];
+  // Lời chào + câu gợi ý theo đúng trang khách đang xem (tư vấn như nhân viên bán hàng)
+  const BOT_PAGE = /^\/shop-product/.test(location.pathname) ? "product"
+    : /^\/shop-(cart|checkout)/.test(location.pathname) ? "cart"
+    : /^\/shop-(track|order-lookup|cancel-order)/.test(location.pathname) ? "order"
+    : BOT_CH;
+  function botEsc(t) {
+    return String(t || "").replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; });
+  }
+  // Tên sản phẩm lấy từ tiêu đề trang ("<tên> | PickDee Shop", shop-product đặt sau khi tải xong)
+  function botProductName() {
+    const t = String(document.title || "").split("|")[0].trim();
+    return BOT_PAGE === "product" && t && !/pickdee/i.test(t) ? t : "";
+  }
+  function botGreeting() {
+    const name = botProductName();
+    return {
+      product: name
+        ? "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Anh/chị đang xem <b>" + botEsc(name) + "</b>, em tư vấn ngay loại/màu phù hợp, phí ship và thời gian nhận hàng ạ."
+        : "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Em tư vấn ngay loại/màu phù hợp, phí ship và thời gian nhận hàng ạ.",
+      cart: "Chào anh/chị 👋 Em hỗ trợ anh/chị hoàn tất đơn hàng: phí ship, thanh toán, thời gian giao. Đặt hàng không cần tạo tài khoản ạ.",
+      order: "Chào anh/chị 👋 Em hỗ trợ tra cứu và giải đáp mọi thắc mắc về đơn hàng của anh/chị ạ.",
+      shop: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Shop</b>. Anh/chị cho em biết trình độ và ngân sách, em gợi ý ngay vợt và phụ kiện phù hợp nhất ạ.",
+      academy: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Academy</b>. Anh/chị cho em biết trình độ và muốn học 1 kèm 1 hay nhóm 2 người, em tư vấn gói học phù hợp ạ.",
+      all: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Anh/chị đang cần chọn vợt, phụ kiện hay tìm khoá học Pickleball ạ?"
+    }[BOT_PAGE];
+  }
   const BOT_SUGGEST = {
-    shop: ["Giá vợt ESS/ON?", "Phí ship thế nào?", "Bảo hành vợt?", "Tra cứu đơn hàng"],
-    academy: ["Học phí các gói học?", "Học nhóm 2 người?", "Nghỉ / đổi lịch học?", "Tìm Coach gần tôi"],
-    all: ["Giá vợt ESS/ON?", "Phí ship thế nào?", "Học phí các gói học?", "Tra cứu đơn hàng"]
-  }[BOT_CH];
+    product: ["Mẫu này hợp với tôi không?", "Có những loại/màu nào?", "Phí ship bao nhiêu?", "Bao lâu nhận hàng?"],
+    cart: ["Phí ship thế nào?", "Thanh toán thế nào?", "Bao lâu nhận hàng?", "Bảo hành vợt?"],
+    order: ["Tra cứu đơn hàng", "Bao lâu nhận hàng?", "Bảo hành vợt?"],
+    shop: ["Tư vấn vợt cho người mới", "Vợt cho người chơi lâu năm", "Phí ship thế nào?", "Tra cứu đơn hàng"],
+    academy: ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người?", "Nghỉ / đổi lịch học?"],
+    all: ["Tư vấn vợt cho người mới", "Học phí các gói học?", "Phí ship thế nào?", "Tra cứu đơn hàng"]
+  }[BOT_PAGE];
 
   const botBox = document.getElementById("pickdeeSupportBot");
   let botBusy = false;
@@ -1607,7 +1631,7 @@ if (
     <div id="pdBotMsgs"></div>
     <button id="pdBotHuman" type="button">👩 Gặp nhân viên</button>
     <div id="pdBotComposer">
-      <textarea id="pdBotInput" rows="1" maxlength="500" placeholder="Hỏi trợ lý PickDee..."></textarea>
+      <textarea id="pdBotInput" rows="1" maxlength="500" placeholder="Nhập câu hỏi, em tư vấn ngay..."></textarea>
       <button id="pdBotSend" type="button" aria-label="Gửi câu hỏi">➤</button>
     </div>`;
 
@@ -1682,9 +1706,7 @@ if (
   function renderBot(typing) {
     const h = botHistory();
     botMsgs.innerHTML = "";
-    botRow("bot",
-      "Chào anh/chị 👋 " + BOT_INTRO +
-      "Câu nào em không chắc, em sẽ hỏi PickDee và trả lời anh/chị ngay tại đây ạ.");
+    botRow("bot", botGreeting());
     if (!h.length) {
       const chips = document.createElement("div");
       chips.className = "pd-bot-chips";
@@ -1742,7 +1764,7 @@ if (
         body: JSON.stringify({
           message: q,
           visitor_id: botVisitor(),
-          page: location.pathname,
+          page: location.pathname + (BOT_PAGE === "product" ? location.search : ""), // ?id= → bot biết khách đang xem SP nào
           history: prev.slice(-6).map(function (m) { return { role: m.role, text: m.text }; })
         })
       });
@@ -2903,6 +2925,99 @@ if (
       );
 
   }
+
+
+  /* =====================================================
+     GỢI Ý TƯ VẤN CHỦ ĐỘNG (bong bóng nhỏ cạnh nút, không tự mở khung)
+     Hiện 1 lần/phiên khi khách xem đủ lâu / cuộn xuống tìm hiểu; bấm × → ẩn 24 giờ.
+     Không hiện ở trang nội bộ, giỏ hàng/thanh toán, khi khách đã chat hoặc đang gõ.
+  ====================================================== */
+  (function botTeaser() {
+    const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
+    const plan = {
+      product: { wait: 18000, scroll: 0.45, minWait: 7000 },
+      shop: { wait: 30000, scroll: 0.6, minWait: 12000 },
+      academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
+      all: { wait: 40000, scroll: 0, minWait: 0 }
+    }[BOT_PAGE];
+    // Chỉ trang khách đang chọn mua/chọn khoá (không làm phiền học viên, Coach, trang đăng nhập…)
+    const salesPage = /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
+    if (!plan || !salesPage || botStaffPage()) return;
+    try {
+      if (sessionStorage.getItem(SEEN)) return;
+      if (Date.now() - Number(localStorage.getItem(OFF) || 0) < 864e5) return;
+    } catch (_) { return; }
+
+    const st = document.createElement("style");
+    st.textContent = `
+      #pdTease{position:absolute;right:0;bottom:66px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#0f1d3a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(10,20,50,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
+      #pdTease.pd-on{opacity:1;transform:none}
+      #pdTease b{color:#0f1d3a}
+      #pdTease .pd-tease-go{display:inline-block;margin-top:6px;font-weight:800;color:#1a7f37}
+      #pdTease button{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
+      #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
+    `;
+    document.head.appendChild(st);
+
+    let timer = null, done = false;
+    const t0 = Date.now();
+
+    function text() {
+      const name = botProductName();
+      const short = name.length > 42 ? name.slice(0, 40).trim() + "…" : name;
+      return {
+        product: short
+          ? "Anh/chị đang cân nhắc <b>" + botEsc(short) + "</b>? Em tư vấn nhanh loại/màu phù hợp và phí ship ạ."
+          : "Anh/chị cần tư vấn sản phẩm này? Em trả lời ngay ạ.",
+        shop: "Anh/chị cần chọn vợt hay phụ kiện phù hợp? Cho em biết trình độ và ngân sách, em gợi ý ngay ạ.",
+        academy: "Anh/chị muốn học 1 kèm 1 hay nhóm 2 người? Em tư vấn gói học phù hợp trình độ ạ.",
+        all: "Anh/chị cần chọn vợt hay tìm khoá học Pickleball? Em tư vấn ngay ạ."
+      }[BOT_PAGE];
+    }
+
+    function busy() {
+      if (panel.classList.contains("open")) return true;
+      if (botHistory().length) return true; // đã chat trong phiên → không làm phiền
+      const a = document.activeElement;
+      return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); // đang gõ/điền form
+    }
+
+    function show() {
+      if (done) return;
+      if (busy()) { clearTimeout(timer); timer = setTimeout(show, 8000); return; }
+      done = true;
+      cleanup();
+      try { sessionStorage.setItem(SEEN, "1"); } catch (_) {}
+      const box = document.createElement("div");
+      box.id = "pdTease";
+      box.setAttribute("role", "status");
+      box.innerHTML = text() + '<br><span class="pd-tease-go">Hỏi ngay →</span><button type="button" aria-label="Đóng">×</button>';
+      openBtn.parentNode.insertBefore(box, openBtn);
+      requestAnimationFrame(function () { box.classList.add("pd-on"); });
+      const hide = function () { box.remove(); };
+      box.querySelector("button").addEventListener("click", function (e) {
+        e.stopPropagation();
+        try { localStorage.setItem(OFF, String(Date.now())); } catch (_) {}
+        hide();
+      });
+      box.addEventListener("click", function () { hide(); openPanel(); });
+      openBtn.addEventListener("click", hide, { once: true });
+      setTimeout(hide, 25000); // tự ẩn, không che trang lâu
+    }
+
+    function onScroll() {
+      const h = document.documentElement.scrollHeight - innerHeight;
+      if (plan.scroll && h > 200 && scrollY / h >= plan.scroll) {
+        clearTimeout(timer);
+        timer = setTimeout(show, Math.max(0, plan.minWait - (Date.now() - t0)));
+        removeEventListener("scroll", onScroll);
+      }
+    }
+    function cleanup() { clearTimeout(timer); removeEventListener("scroll", onScroll); }
+
+    timer = setTimeout(show, plan.wait);
+    if (plan.scroll) addEventListener("scroll", onScroll, { passive: true });
+  })();
 
 
   /* =====================================================
