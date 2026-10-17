@@ -1523,6 +1523,8 @@ if (
     cfg.SUPABASE_URL + "/functions/v1/pickdee-bot";
   const BOT_HISTORY = "pickdee_bot_history";
   const BOT_VID = "pickdee_bot_vid";
+  const BOT_SEEN = "pickdee_bot_seen"; // câu PickDee trả lời đã hiện cho khách: { qid: answered_at }
+  const BOT_WAIT_MS = 6 * 3600e3; // hiện "đang chờ PickDee" + hỏi câu trả lời tối đa 6 giờ
   // Kênh theo trang (khớp channelOf ở Edge pickdee-bot): Shop chỉ hỏi Shop, Academy chỉ hỏi Academy
   const BOT_CH = /^\/shop/.test(location.pathname) ? "shop"
     : /^\/(academy|coach|student|find-coach|apply-coach)/.test(location.pathname) ? "academy" : "all";
@@ -1548,15 +1550,17 @@ if (
     const st = document.createElement("style");
     st.textContent = `
       #pickdeeSupportBot{min-height:0;flex:1;display:none;flex-direction:column}
-      #pdBotMsgs{min-height:0;flex:1;padding:15px 14px;overflow-y:auto;overscroll-behavior:contain}
+      #pdBotMsgs{min-height:0;flex:1;padding:15px 14px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;transform:translateZ(0)}
       #pdBotMsgs a{color:#d8ff45;font-weight:800;word-break:break-all}
       .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
       .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(216,255,69,.3);background:rgba(216,255,69,.07);color:#d8ff45;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
       .pd-bot-typing{opacity:.6;font-style:italic}
+      .pd-bot-wait{margin:-4px 0 10px 4px;font-size:12px;font-weight:800;color:#d8ff45;opacity:.85}
+      .pd-bot-owner{border:1px solid rgba(216,255,69,.45)!important}
+      #pickdeeSupportButton.pd-bot-new::after{content:"";position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#ff3b30;border:2px solid #fff}
       /* Nút "Gặp nhân viên" nằm trên thanh tiêu đề (cạnh nút ×), chỉ hiện khi đang ở trợ lý */
       #pdBotHuman{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(216,255,69,.35);background:rgba(216,255,69,.08);color:#d8ff45;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
       #pickdeeSupportPanel:not(.pd-bot-mode) #pdBotHuman,#pdBotHuman:not(.pd-show){display:none}
-      .pd-bot-handoff-btn{display:block;margin:-2px 0 10px;min-height:38px;padding:0 14px;border:0;border-radius:999px;background:#d8ff45;color:#142300;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
       #pdBotHuman.pd-hot{background:#d8ff45;color:#142300;border-color:#d8ff45}
       #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(3,17,38,.82)}
       #pdBotInput{min-width:0;flex:1;min-height:44px;max-height:105px;padding:11px 12px;resize:none;outline:none;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:16px;line-height:1.4}
@@ -1680,7 +1684,7 @@ if (
     botMsgs.innerHTML = "";
     botRow("bot",
       "Chào anh/chị 👋 " + BOT_INTRO +
-      "Câu nào em không chắc, em sẽ mời anh/chị gặp nhân viên ạ.");
+      "Câu nào em không chắc, em sẽ hỏi PickDee và trả lời anh/chị ngay tại đây ạ.");
     if (!h.length) {
       const chips = document.createElement("div");
       chips.className = "pd-bot-chips";
@@ -1694,27 +1698,23 @@ if (
       });
       botMsgs.appendChild(chips);
     }
-    let hot = false, anyHandoff = false;
+    const answered = {};
+    h.forEach(function (m) { if (m.owner && m.qid) answered[m.qid] = 1; });
     h.forEach(function (m) {
-      botRow(m.role, botHtml(m.text));
-      hot = !!m.handoff;
-      if (m.handoff) anyHandoff = true;
+      botRow(m.role, botHtml(m.text), m.owner ? "pd-bot-owner" : "");
+      // Câu đã chuyển PickDee mà chưa có trả lời → báo đang chờ (khách vẫn hỏi bot tiếp được)
+      if (m.handoff && m.qid && !answered[m.qid] && Date.now() - (m.t || 0) < BOT_WAIT_MS) {
+        const w = document.createElement("div");
+        w.className = "pd-bot-wait";
+        w.textContent = "⏳ Đang chờ PickDee trả lời…";
+        botMsgs.appendChild(w);
+      }
     });
-    // Bot không trả lời được → nút gặp nhân viên ngay dưới câu trả lời
-    if (hot && !typing) {
-      const hb = document.createElement("button");
-      hb.type = "button";
-      hb.className = "pd-bot-handoff-btn";
-      hb.textContent = "👩 Gặp nhân viên PickDee";
-      hb.addEventListener("click", function () {
-        goHuman().catch(function (e) { showError("Không mở được chat: " + (e?.message || e)); });
-      });
-      botMsgs.appendChild(hb);
-    }
     if (typing) botRow("bot", "Em đang xem thông tin…", "pd-bot-typing");
-    botHumanBtn.textContent = botUnread > 0 ? "💬 Xem trả lời (" + botUnread + ")" : "👩 Gặp nhân viên";
-    botHumanBtn.classList.toggle("pd-show", anyHandoff || botUnread > 0);
-    botHumanBtn.classList.toggle("pd-hot", hot || botUnread > 0);
+    // Nút header chỉ dùng khi nhân viên trả lời trong chat nhân viên (support-admin)
+    botHumanBtn.textContent = "💬 Xem trả lời (" + botUnread + ")";
+    botHumanBtn.classList.toggle("pd-show", botUnread > 0);
+    botHumanBtn.classList.toggle("pd-hot", botUnread > 0);
     botMsgs.scrollTop = botMsgs.scrollHeight;
   }
 
@@ -1730,8 +1730,8 @@ if (
     botInput.value = "";
     renderBot(true);
 
-    let answer = "Xin lỗi anh/chị, trợ lý đang bận. Anh/chị bấm \"Gặp nhân viên PickDee\" hoặc gọi/Zalo 0926 629 966 nhé.";
-    let handoff = true;
+    let answer = "Xin lỗi anh/chị, trợ lý đang bận. Anh/chị hỏi lại sau ít phút hoặc gọi/Zalo 0926 629 966 nhé.";
+    let handoff = false, qid = null;
     try {
       const res = await fetch(BOT_URL, {
         method: "POST",
@@ -1747,26 +1747,95 @@ if (
         })
       });
       const d = await res.json();
-      if (d && d.answer) { answer = d.answer; handoff = !!d.handoff; }
+      if (d && d.answer) { answer = d.answer; handoff = !!d.handoff; qid = d.qid || null; }
     } catch (e) {
       console.warn("PickDee bot:", e);
     }
-    botSave(h.concat([{ role: "bot", text: answer, handoff: handoff }]));
+    botSave(h.concat([{ role: "bot", text: answer, handoff: handoff, qid: qid, t: Date.now() }]));
     botBusy = false;
     botSend.disabled = false;
     renderBot(false);
+    if (handoff && qid) botWatch();
+  }
+
+  /*
+    PickDee (anh Nam) trả lời "#Q<id> ..." trên Telegram → bot_logs.owner_answer.
+    Widget hỏi RPC pd_bot_owner_replies(visitor) → chèn vào khung chat bot; bot nói chuyện tiếp (câu trả lời nằm trong lịch sử gửi AI).
+    Chỉ hỏi định kỳ khi còn câu đang chờ (tối đa BOT_WAIT_MS) và tab đang mở; mở trang thì hỏi 1 lần.
+  */
+  let botPollTimer = null;
+
+  function botPending() {
+    const h = botHistory();
+    const answered = {};
+    h.forEach(function (m) { if (m.owner && m.qid) answered[m.qid] = 1; });
+    return h.some(function (m) { return m.handoff && m.qid && !answered[m.qid] && Date.now() - (m.t || 0) < BOT_WAIT_MS; });
+  }
+
+  async function botFetchReplies() {
+    let vid = null;
+    try { vid = localStorage.getItem(BOT_VID); } catch (_) {}
+    if (!vid) return;
+    let seen = {};
+    try { seen = JSON.parse(localStorage.getItem(BOT_SEEN) || "{}") || {}; } catch (_) {}
+    const { data, error } = await sb.rpc("pd_bot_owner_replies", { p_visitor: vid });
+    if (error || !Array.isArray(data)) return;
+    const fresh = data.filter(function (r) { return seen[r.id] !== r.answered_at; });
+    if (!fresh.length) return;
+    const h = botHistory();
+    fresh.forEach(function (r) {
+      h.push({
+        role: "bot",
+        owner: true,
+        qid: r.id,
+        text: "💬 PickDee trả lời câu «" + String(r.question || "").slice(0, 80) + "»:\n" + r.answer
+      });
+      seen[r.id] = r.answered_at;
+    });
+    botSave(h);
+    try { localStorage.setItem(BOT_SEEN, JSON.stringify(seen)); } catch (_) {}
+    if (panel.classList.contains("open") && panel.classList.contains("pd-bot-mode")) renderBot(botBusy);
+    else openBtn.classList.add("pd-bot-new");
+  }
+
+  function botWatch() {
+    if (botPollTimer) return;
+    botPollTimer = setInterval(function () {
+      if (!botPending()) { clearInterval(botPollTimer); botPollTimer = null; return; }
+      if (document.visibilityState === "visible") botFetchReplies().catch(function () {});
+    }, 12000);
+  }
+
+  if (!botStaffPage()) {
+    botFetchReplies().catch(function () {});
+    if (botPending()) botWatch();
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible" && botPending()) botFetchReplies().catch(function () {});
+    });
   }
 
   // Điện thoại: bám theo vùng nhìn thấy (bàn phím iOS không thu nhỏ layout) → khung luôn nằm ngay trên bàn phím
   (function trackKeyboard() {
     const vv = window.visualViewport;
     if (!vv) return;
+    let kbWas = false;
     const sync = function () {
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const kbOn = kb > 120;
       panel.style.setProperty("--pd-vvh", vv.height + "px");
       panel.style.setProperty("--pd-kb", kb + "px");
-      panel.classList.toggle("pd-kb", kb > 120);
-      if (kb > 120 && botMsgs) botMsgs.scrollTop = botMsgs.scrollHeight;
+      panel.classList.toggle("pd-kb", kbOn);
+      if (kbOn && botMsgs) botMsgs.scrollTop = botMsgs.scrollHeight;
+      // iOS: khung đổi cao khi bàn phím bật/tắt nhưng giữ vị trí cuộn cũ → vùng tin nhắn trắng. Cuộn lại câu cuối sau khi vẽ lại.
+      if (kbOn !== kbWas && botMsgs) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            botMsgs.scrollTop = 0;
+            botMsgs.scrollTop = botMsgs.scrollHeight;
+          });
+        });
+      }
+      kbWas = kbOn;
     };
     vv.addEventListener("resize", sync);
     vv.addEventListener("scroll", sync);
@@ -1780,6 +1849,7 @@ if (
     botBox.style.display = "flex";
     panel.classList.remove("pd-staff-chat");
     panel.classList.add("pd-bot-mode");
+    openBtn.classList.remove("pd-bot-new");
     renderBot(false);
   }
 

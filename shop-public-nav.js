@@ -854,7 +854,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261017-bot7";
+      "/support-widget.js?v=20261017-bot8";
 
 
     script.async =
