@@ -8,10 +8,12 @@
   if (window.__pdOrderDrop) return;
   window.__pdOrderDrop = true;
 
-  const V = "20261017-drop1";
+  const V = "20261017-drop2";
   const AUTO_SECONDS = 5;
   const AUTO_NOTE = "Tạo tự động từ ảnh chat";
   const MANUAL_NOTE = "Tạo từ ảnh chat (đã kiểm tra tay)";
+  // Ảnh bill ngân hàng (chữ đã bỏ dấu): "Chuyển tiền thành công", "Giao dịch thành công", "Mã giao dịch"...
+  const BILL_RE = /(chuyen tien|chuyen khoan|giao dich|thanh toan|ck) thanh cong|ma giao dich|so tham chieu|ma tham chieu|transfer successful|successful transfer|transaction successful/;
   const SOURCES = { zalo: "Zalo", tiktok: "TikTok", facebook: "Facebook", phone: "Điện thoại", other: "Khác" };
 
   const sb = window.sb;
@@ -279,7 +281,7 @@ body.pd-not-orders #pdDropFab{display:none}
       const urls = r.files.map(function (f) { return URL.createObjectURL(f); });
       statusEl.textContent = "Đang đổi địa chỉ, kiểm tra đơn trùng…";
       const built = [];
-      for (const o of r.orders) built.push(await buildCard(o, urls));
+      for (const o of r.orders) built.push(await buildCard(o, urls, r.texts));
       statusEl.textContent = "Tách được " + built.length + " đơn từ " + r.files.length + " ảnh.";
       built.forEach(function (c) {
         cards.push(c);
@@ -298,7 +300,11 @@ body.pd-not-orders #pdDropFab{display:none}
     }
   }
 
-  async function buildCard(o, urls) {
+  async function buildCard(o, urls, texts) {
+    // Thanh toán: có bill → CK · khách nói đã/sẽ CK mà không có bill → hỏi xác nhận · còn lại → COD
+    const ocr = (o.image_indexes || []).map(function (n) { return (texts || [])[n - 1] || ""; }).join("\n");
+    const plainOcr = ocr.toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+    const evidence = o.payment_evidence === "bill" || BILL_RE.test(plainOcr) ? "bill" : o.payment_evidence === "claimed" ? "claimed" : "none";
     const c = {
       id: ++seq,
       el: document.createElement("div"),
@@ -311,8 +317,11 @@ body.pd-not-orders #pdDropFab{display:none}
       items: (o.items || []).map(function (i) {
         return { variant_id: i.variant_id && variantOf(i.variant_id) ? i.variant_id : null, quantity: i.quantity || 1, raw: i.raw_text || "", unit: i.agreed_unit_price };
       }),
-      // Chat không nhắc cách trả → COD như trang Tạo đơn (khách CK thì chat có QR/STK/bill → AI nhận ra)
-      payment: o.payment_method || "cod",
+      payEvidence: evidence,
+      paidAmount: o.paid_amount || null,
+      payment: evidence === "bill" ? "bank_transfer" : evidence === "claimed" ? "" : "cod",
+      payStatus: "unpaid",
+      payNote: "",
       source: o.source || localStorage.getItem("pickdee_quick_order_source") || "zalo",
       note: o.note || "",
       aiWarnings: (o.warnings || []).filter(Boolean),
@@ -340,7 +349,8 @@ body.pd-not-orders #pdDropFab{display:none}
     c.dealGoods = goods != null && goods !== webGoods(c) ? goods : null;
     await checkDuplicate(c);
     c.state = problems(c).length ? "warn" : "ok";
-    c.edit = c.state === "warn";
+    // Chỉ còn hỏi "đã nhận tiền chưa" → thẻ gọn, 3 nút ngay trước mắt; thiếu thứ khác mới mở ô sửa
+    c.edit = problems(c).some(function (x) { return !/đã nhận tiền chưa\?$/.test(x); });
     return c;
   }
 
@@ -381,7 +391,9 @@ body.pd-not-orders #pdDropFab{display:none}
       if (!v) p.push("Chưa nhận ra sản phẩm: «" + (i.raw || "?") + "».");
       else if (v.is_sold_out) p.push(variantLabel(v) + " đang TẠM HẾT.");
     });
-    if (!c.payment) p.push("Chưa rõ COD hay chuyển khoản.");
+    if (!c.payment && c.payEvidence === "claimed") p.push("Khách nói chuyển khoản nhưng chưa thấy bill – đã nhận tiền chưa?");
+    else if (!c.payment) p.push("Chưa rõ COD hay chuyển khoản.");
+    if (c.payEvidence === "bill" && c.paidAmount && c.paidAmount < totals(c).goods) p.push("Bill " + money(c.paidAmount) + " ít hơn tiền hàng " + money(totals(c).goods) + " – kiểm tra lại.");
     c.aiWarnings.forEach(function (w) { p.push(w); });
     if (c.dup && !c.dupOk) p.push("Đơn này đã có " + c.dup.code + " (cùng SĐT + sản phẩm trong 48h) – vẫn tạo?");
     return p;
@@ -396,7 +408,7 @@ body.pd-not-orders #pdDropFab{display:none}
     if (!c.provinceName || !c.wardName) p.push("tỉnh + phường/xã");
     if (!c.legacy.trim()) p.push("địa chỉ khách gửi");
     if (!c.items.length || c.items.some(function (i) { return !variantOf(i.variant_id); })) p.push("sản phẩm");
-    if (!c.payment) p.push("cách thanh toán");
+    if (!c.payment) p.push(c.payEvidence === "claimed" ? "xác nhận đã nhận tiền chưa" : "cách thanh toán");
     return p;
   }
 
@@ -418,6 +430,12 @@ body.pd-not-orders #pdDropFab{display:none}
     if (c.error) html += '<div class="pdd-probs">❌ ' + esc(c.error) + "</div>";
     else if (probs.length && c.state !== "creating") html += '<div class="pdd-probs">⚠️ ' + probs.map(esc).join("<br>⚠️ ") + "</div>";
 
+    if (needPayConfirm(c) && c.state !== "counting") {
+      html += '<div class="pdd-act">' +
+        '<button type="button" class="pdd-btn main" data-a="paid">✅ Đã nhận tiền</button>' +
+        '<button type="button" class="pdd-btn" data-a="waitpay">⏳ Tạo, chờ tiền</button>' +
+        '<button type="button" class="pdd-btn" data-a="cod">🚚 Chưa – COD</button></div>';
+    }
     if (c.state === "counting") {
       html += '<div class="pdd-count"><i></i></div><div class="pdd-act"><button type="button" class="pdd-btn" data-a="cancel">Huỷ – để em xem lại</button></div>';
     } else if (c.state === "done") {
@@ -427,7 +445,7 @@ body.pd-not-orders #pdDropFab{display:none}
       html += '<div class="pdd-act">' +
         (c.edit ? "" : '<button type="button" class="pdd-btn" data-a="edit">Sửa</button>') +
         '<button type="button" class="pdd-btn" data-a="drop">Bỏ</button>' +
-        '<button type="button" class="pdd-btn main" data-a="create">' + label + "</button></div>";
+        (needPayConfirm(c) ? "" : '<button type="button" class="pdd-btn main" data-a="create">' + label + "</button>") + "</div>";
     }
     el.innerHTML = html;
     bindCard(c);
@@ -437,6 +455,33 @@ body.pd-not-orders #pdDropFab{display:none}
       bar.style.width = (left / (AUTO_SECONDS * 1000) * 100) + "%";
       requestAnimationFrame(function () { bar.style.transition = "width " + left + "ms linear"; bar.style.width = "0%"; });
     }
+  }
+
+  function needPayConfirm(c) {
+    return c.payEvidence === "claimed" && !c.payment && c.state !== "done" && c.state !== "creating";
+  }
+
+  function payLabel(c) {
+    if (c.payment === "cod") return "COD – khách trả";
+    if (c.payment === "bank_transfer") {
+      if (c.payStatus === "paid") return "CK – đã nhận tiền";
+      if (c.payEvidence === "bill") return "CK – có bill" + (c.paidAmount ? " " + money(c.paidAmount) : "");
+      return "CK – chờ tiền";
+    }
+    return "Thanh toán ?";
+  }
+
+  // Chọn cách thanh toán khi khách nói CK mà không có bill → đủ thì tự tạo như thẻ ✅
+  function resolvePay(c, how) {
+    c.payment = how === "cod" ? "cod" : "bank_transfer";
+    c.payStatus = how === "paid" ? "paid" : "unpaid";
+    c.payNote = how === "paid" ? "Đã xác nhận nhận tiền CK khi tạo đơn"
+      : how === "waitpay" ? "Khách hẹn CK, chưa nhận tiền – nhận tiền rồi mới giao"
+      : "Khách nói CK nhưng chưa nhận tiền → chuyển COD";
+    c.error = "";
+    if (!problems(c).length) { c.edit = false; startCountdown(c); }
+    else render(c);
+    updateBadge();
   }
 
   function totals(c) {
@@ -457,7 +502,7 @@ body.pd-not-orders #pdDropFab{display:none}
       '<ul class="pdd-items">' + items + "</ul>" +
       '<div class="pdd-sum"><span>Tiền hàng' + (c.dealGoods != null ? " (chốt, web " + money(t.web) + ")" : "") + "</span><span>" + money(t.goods) + "</span></div>" +
       '<div class="pdd-sum"><span>Ship</span><span>' + (c.dealShip != null ? money(c.dealShip) + " (chốt)" : "theo hệ thống") + "</span></div>" +
-      '<div class="pdd-sum"><span>' + (c.payment === "bank_transfer" ? "Chuyển khoản" : c.payment === "cod" ? "COD – khách trả" : "Thanh toán ?") + " · " + esc(SOURCES[c.source] || c.source) + "</span><b>" + money(t.pay) + (c.dealShip == null ? " + ship" : "") + "</b></div>" +
+      '<div class="pdd-sum"><span>' + esc(payLabel(c)) + " · " + esc(SOURCES[c.source] || c.source) + "</span><b>" + money(t.pay) + (c.dealShip == null ? " + ship" : "") + "</b></div>" +
       (c.note ? '<div class="pdd-muted">Ghi chú: ' + esc(c.note) + "</div>" : "");
   }
 
@@ -518,7 +563,7 @@ body.pd-not-orders #pdDropFab{display:none}
         else if (f === "note") c.note = v;
         else if (f === "goods") c.dealGoods = moneyIn(v);
         else if (f === "ship") c.dealShip = moneyIn(v);
-        else if (f === "payment") c.payment = v;
+        else if (f === "payment") { c.payment = v; c.payStatus = "unpaid"; c.payNote = ""; }
         else if (f === "source") c.source = v;
         else if (f === "qty") c.items[i].quantity = Math.max(1, Math.min(9999, parseInt(v, 10) || 1));
         else if (f === "variant") { c.items[i].variant_id = v ? Number(v) : null; c.dupOk = false; recheck(c); return; }
@@ -549,6 +594,7 @@ body.pd-not-orders #pdDropFab{display:none}
         else if (a === "rm") { c.items.splice(Number(b.dataset.i), 1); recheck(c); }
         else if (a === "add") { c.items.push({ variant_id: null, quantity: 1, raw: "", unit: null }); render(c); }
         else if (a === "create") manualCreate(c);
+        else if (a === "paid" || a === "waitpay" || a === "cod") resolvePay(c, a);
       });
     });
   }
@@ -599,13 +645,19 @@ body.pd-not-orders #pdDropFab{display:none}
         province: c.provinceName,
         legacy_address: c.legacy.trim(),
         payment_method: c.payment,
-        payment_status: "unpaid",
+        payment_status: c.payStatus,
         customer_note: c.note.trim(),
         source: c.source,
         items: c.items,
         deal_goods: c.dealGoods,
         deal_ship: c.dealShip,
-        internal_note: internalNote
+        internal_note: [
+          internalNote,
+          c.payEvidence === "bill" && c.payStatus !== "paid"
+            ? "Khách gửi bill CK trong chat" + (c.paidAmount ? " " + money(c.paidAmount) : "") + " – đối chiếu TK rồi bấm Đã nhận tiền"
+            : "",
+          c.payNote
+        ].filter(Boolean).join(" · ")
       });
       c.state = "done";
       c.code = data.order_code;
