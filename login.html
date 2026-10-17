@@ -286,6 +286,9 @@
     </p>
 
 
+    <div id="pdFaceIdLogin"></div>
+
+
     <form id="loginForm">
 
 
@@ -357,6 +360,9 @@
 
 
   <script src="/config.js"></script>
+
+
+  <script src="/pd-faceid.js?v=20261017-faceid1"></script>
 
 
   <script>
@@ -1017,6 +1023,26 @@ if (
           );
 
 
+          /*
+            Hỏi bật Face ID cho máy này (máy hỗ trợ, chưa bật, chưa bấm "Để sau").
+            Chọn xong mới chuyển trang.
+          */
+          if (
+            window.PDFaceID
+          ) {
+            const sessionResult =
+              await supabaseClient
+                .auth
+                .getSession();
+
+            await window.PDFaceID.offer(
+              data.user,
+              sessionResult?.data?.session
+            );
+          }
+
+
+
           await redirectUser(
             data.user
           );
@@ -1053,6 +1079,25 @@ if (
     );
 
 
+
+
+    /*
+      Máy đã bật Face ID → nút "Đăng nhập bằng Face ID" trên đầu form.
+    */
+    if (
+      window.PDFaceID
+    ) {
+      window.PDFaceID.mountLogin(
+        document.getElementById(
+          "pdFaceIdLogin"
+        ),
+        async function (user) {
+          await redirectUser(
+            user
+          );
+        }
+      );
+    }
   })();
 
   </script>
