@@ -1,7 +1,8 @@
 /* =========================================================
    PICKDEE — ĐĂNG NHẬP BẰNG FACE ID / TOUCH ID / VÂN TAY (passkey)
    - Trang đăng nhập: nút "Đăng nhập bằng Face ID" (máy đã bật).
-   - Đăng nhập bằng mật khẩu xong: hỏi "Bật Face ID?" (1 chạm), "Để sau" thì 14 ngày sau mới hỏi lại.
+   - Vào trang chính (admin / Coach / học viên / shop admin) mà máy chưa bật: hỏi "Bật Face ID?" (1 chạm),
+     "Để sau" thì 14 ngày sau mới hỏi lại. Trang đăng nhập KHÔNG hỏi.
    - Trang Bảo mật (đổi mật khẩu): công tắc bật/tắt cho máy này + danh sách thiết bị đã bật.
    Server: Edge pickdee-passkey, bảng pd_passkeys (chỉ khoá công khai).
 ========================================================= */
@@ -275,7 +276,7 @@
     });
   }
 
-  /* Sau khi đăng nhập bằng mật khẩu: hỏi bật Face ID (Promise xong khi người dùng chọn) */
+  /* Hỏi bật Face ID (Promise xong khi người dùng chọn) */
   async function offer(user, session) {
     try {
       if (!user || !session?.access_token || !(await supported())) return;
@@ -398,5 +399,19 @@
     await refresh();
   }
 
-  window.PDFaceID = { label: LABEL, supported: supported, mountLogin: mountLogin, offer: offer, mountSettings: mountSettings };
+  /* Trong app (trang chính): đã đăng nhập, máy hỗ trợ, chưa bật → mời bật, đợi trang hiện xong */
+  async function offerInApp(delayMs) {
+    await new Promise(function (r) { setTimeout(r, delayMs == null ? 1500 : delayMs); });
+    try {
+      const { data } = await sb.auth.getSession();
+      const session = data?.session, user = session?.user;
+      if (!user) return;
+      const md = user.user_metadata || {};
+      if (md.must_change_password === true || md.must_change_password === "true") return; // đang phải đổi mật khẩu tạm
+      if (document.querySelector(".pdf-sheet-bg")) return;
+      await offer(user, session);
+    } catch (e) { console.warn("PickDee Face ID:", e); }
+  }
+
+  window.PDFaceID = { label: LABEL, supported: supported, mountLogin: mountLogin, offer: offer, offerInApp: offerInApp, mountSettings: mountSettings };
 })();
