@@ -2578,6 +2578,73 @@
   }
 
 
+  // "TP. Hồ Chí Minh" / "Thành phố Hồ Chí Minh" / "Hồ Chí Minh" → cùng 1 khoá.
+  function normalizeProvinceName(name) {
+
+    return String(
+      name || ""
+    )
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/^\s*(tp\.?|thanh pho|tinh)\s+/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  }
+
+
+  function enableManualWardInput() {
+
+    const wardSelect =
+      document.getElementById(
+        "ward"
+      );
+
+    if (
+      !wardSelect
+      ||
+      wardSelect.tagName !== "SELECT"
+    ) {
+
+      return;
+
+    }
+
+    const wardInput =
+      document.createElement(
+        "input"
+      );
+
+    wardInput.id =
+      "ward";
+
+    wardInput.name =
+      "ward";
+
+    wardInput.type =
+      "text";
+
+    wardInput.required =
+      true;
+
+    wardInput.placeholder =
+      "Nhập phường/xã";
+
+    wardInput.autocomplete =
+      "address-level2";
+
+    wardInput.className =
+      wardSelect.className || "";
+
+    wardSelect.replaceWith(
+      wardInput
+    );
+
+  }
+
+
   function paymentProofExtension(
     file
   ) {
@@ -3479,11 +3546,15 @@
                   province
                 ) {
 
-                  return addressName(
-                    province
+                  return normalizeProvinceName(
+                    addressName(
+                      province
+                    )
                   )
                     ===
-                  provinceName;
+                  normalizeProvinceName(
+                    provinceName
+                  );
 
                 }
               );
@@ -3516,21 +3587,8 @@
               error
             );
 
-            if (
-              wardSelect
-            ) {
-
-              wardSelect.disabled =
-                true;
-
-              wardSelect.innerHTML =
-                `
-                  <option value="">
-                    Không tải được phường/xã, thử lại sau
-                  </option>
-                `;
-
-            }
+            // Không chặn đơn: cho khách gõ tay phường/xã.
+            enableManualWardInput();
 
           }
 
