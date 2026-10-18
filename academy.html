@@ -2176,8 +2176,8 @@ async function redirectByRole(
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
         layer = L.layerGroup().addTo(map);
         map.on("dragstart zoomstart", function () { if (here) moved = true; });
-        map.on("moveend", function () { $("pdaHere").classList.toggle("show", moved && !loading); });
-        locate();
+        map.on("moveend", function () { $("pdaHere").classList.toggle("show", moved && !loading); save(); });
+        if (!restore()) locate();
       }).catch(function () {
         $("pdaSheetTitle").textContent = "Không tải được bản đồ";
         $("pdaList").innerHTML = '<div class="pda-empty">Mạng chập chờn. Bạn thử lại hoặc tìm theo khu vực.<a class="pda-cta ghost" href="./find-coach">TÌM THEO KHU VỰC →</a></div>';
@@ -2258,7 +2258,7 @@ async function redirectByRole(
           + '<div class="info"><b>' + esc(c.full_name) + '</b><small>📍 ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area) + '</small>'
           + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
           + '<div class="pda-km"><b>' + km(c.distance_km) + '</b><small>km</small></div></div>'
-          + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '">Học với Coach này</a></div>';
+          + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '&from=near">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '&from=near">Học với Coach này</a></div>';
       });
       $("pdaList").innerHTML = html;
       $("pdaList").querySelectorAll(".pda-coach").forEach(function (el) {
@@ -2268,8 +2268,38 @@ async function redirectByRole(
         var pts = [here].concat(coaches.slice(0, 5).map(function (c) { return c._ll; }));
         map.fitBounds(pts, { paddingTopLeft: [40, 80], paddingBottomRight: [40, Math.round($("pdaMap").clientHeight * 0.52) + 20], maxZoom: 14 });
       }
-      setTimeout(function () { moved = false; $("pdaHere").classList.remove("show"); }, 400);
+      setTimeout(function () { moved = false; $("pdaHere").classList.remove("show"); save(); }, 400);
       avatars(coaches.slice(0, 10));
+    }
+
+    /* Giữ trạng thái khi sang hồ sơ Coach rồi quay lại (không định vị/tìm lại) */
+    var KEY = "pda_near_v1";
+    function save() {
+      if (!map || !here || loading) return;
+      try {
+        var cc = map.getCenter();
+        sessionStorage.setItem(KEY, JSON.stringify({ t: Date.now(), here: here, gps: !!meMarker, pinned: $("pdaCenter").classList.contains("show"),
+          center: [cc.lat, cc.lng], zoom: map.getZoom(), sel: selId, full: $("pdaSheet").classList.contains("full"),
+          rows: coaches.map(function (c) { return { id: c.id, coach_code: c.coach_code, full_name: c.full_name, preferred_area: c.preferred_area, preferred_ward: c.preferred_ward, accepting_students: c.accepting_students, distance_km: c.distance_km, lat: c.lat, lng: c.lng }; }) }));
+      } catch (e) {}
+    }
+    function restore() {
+      var st; try { st = JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (e) {}
+      if (!st || !st.here || !Array.isArray(st.rows) || Date.now() - st.t > 30 * 60000) return false;
+      setScan(false);
+      here = st.here; coaches = st.rows;
+      if (st.gps) {
+        meMarker = L.marker(here, { icon: L.divIcon({ className: "", html: '<div class="pda-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+        $("pdaLocText").textContent = "Vị trí của bạn";
+      } else {
+        $("pdaLocText").textContent = "Kéo bản đồ tới nơi bạn muốn học";
+      }
+      if (st.pinned) $("pdaCenter").classList.add("show");
+      $("pdaSheet").classList.toggle("full", !!st.full);
+      map.setView(st.center, st.zoom, { animate: false });
+      render(false);
+      if (st.sel != null && coaches.some(function (c) { return c.id === st.sel; })) select(st.sel, true);
+      return true;
     }
 
     function pin(c, sel) {
@@ -2279,7 +2309,7 @@ async function redirectByRole(
 
     function select(id, fromMap) {
       coaches.forEach(function (c) { if (c._m) c._m.setIcon(pin(c, c.id === id)); });
-      selId = id;
+      selId = id; save();
       var el = null;
       $("pdaList").querySelectorAll(".pda-coach").forEach(function (x) {
         var on = Number(x.getAttribute("data-id")) === id; x.classList.toggle("sel", on); if (on) el = x;
@@ -2310,7 +2340,7 @@ async function redirectByRole(
 
     $("pdaLocate").onclick = function () { if (map) { $("pdaCenter").classList.remove("show"); locate(); } };
     $("pdaHere").onclick = searchCenter;
-    $("pdaHandle").onclick = function () { $("pdaSheet").classList.toggle("full"); };
+    $("pdaHandle").onclick = function () { $("pdaSheet").classList.toggle("full"); save(); };
     return { open: open };
   })();
 
