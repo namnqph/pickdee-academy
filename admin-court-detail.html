@@ -559,6 +559,25 @@
         </div>
 
 
+        <div class="field full">
+
+          <label>
+            Dán link Google Maps (tự điền toạ độ)
+          </label>
+
+          <input
+            id="mapsLink"
+            inputmode="url"
+            placeholder="https://www.google.com/maps/place/...@21.03,105.85..."
+          >
+
+          <div id="mapsLinkHint" style="font-size:12px;margin-top:4px;color:#64748b">
+            Mở đúng sân trên Google Maps → Chia sẻ → Sao chép link, hoặc giữ tay lên ghim → chép số toạ độ. Sân Hoạt động bắt buộc có toạ độ.
+          </div>
+
+        </div>
+
+
         <div class="field">
 
           <label>
@@ -1591,6 +1610,98 @@
 
 
     /* =====================================================
+       6b. GOOGLE MAPS LINK → LAT/LNG
+    ====================================================== */
+
+    function parseMapsCoords(
+      text
+    ) {
+
+      let s = String(text || "").trim();
+
+      try { s = decodeURIComponent(s); } catch (e) {}
+
+      const pats = [
+        /!3d(-?\d{1,2}\.\d+)!4d(-?\d{1,3}\.\d+)/,
+        /[?&](?:q|query|ll|destination|center)=(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/,
+        /@(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/,
+        /^(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/
+      ];
+
+      for (const re of pats) {
+
+        const m = s.match(re);
+
+        if (m) {
+
+          const lat = Number(m[1]);
+          const lng = Number(m[2]);
+
+          if (
+            lat >= -90 && lat <= 90 &&
+            lng >= -180 && lng <= 180
+          ) {
+            return { lat, lng };
+          }
+
+        }
+
+      }
+
+      return null;
+
+    }
+
+
+    document
+      .getElementById("mapsLink")
+      .addEventListener(
+        "input",
+        function () {
+
+          const hint =
+            document.getElementById("mapsLinkHint");
+
+          const v = this.value.trim();
+
+          if (!v) return;
+
+          const c = parseMapsCoords(v);
+
+          if (c) {
+
+            document.getElementById("latitude").value =
+              c.lat.toFixed(7);
+
+            document.getElementById("longitude").value =
+              c.lng.toFixed(7);
+
+            hint.style.color = "#15803d";
+
+            hint.textContent =
+              "✓ Đã điền toạ độ " + c.lat.toFixed(6) + ", " + c.lng.toFixed(6) + " — bấm Lưu.";
+
+          } else if (/goo\.gl|g\.co\//i.test(v)) {
+
+            hint.style.color = "#b91c1c";
+
+            hint.textContent =
+              "Link rút gọn không đọc được toạ độ. Mở link trên trình duyệt rồi chép link đầy đủ, hoặc giữ tay lên ghim để chép số toạ độ.";
+
+          } else {
+
+            hint.style.color = "#b91c1c";
+
+            hint.textContent =
+              "Không thấy toạ độ trong link này. Dán link có dạng .../@21.03,105.85... hoặc số toạ độ \"21.03, 105.85\".";
+
+          }
+
+        }
+      );
+
+
+    /* =====================================================
        7. SAVE
     ====================================================== */
 
@@ -1667,6 +1778,20 @@
 
           showError(
             "Longitude phải nằm trong khoảng -180 đến 180."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          document.getElementById("status").value === "active" &&
+          (latitude === null || longitude === null)
+        ) {
+
+          showError(
+            "Sân Hoạt động bắt buộc có toạ độ chính xác: dán link Google Maps của sân vào ô phía trên."
           );
 
           return;
