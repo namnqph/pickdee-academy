@@ -7,7 +7,7 @@
 
   <meta
     name="viewport"
-    content="width=device-width,initial-scale=1, maximum-scale=1"
+    content="width=device-width,initial-scale=1, maximum-scale=1, viewport-fit=cover"
   >
   <style id="pd-no-zoom">html{touch-action:manipulation}</style>
 
@@ -609,6 +609,9 @@
 }
   </style>
 
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PickDee">
 </head>
 
 
@@ -619,1081 +622,329 @@
      HERO
 ====================================================== -->
 
-<header class="hero">
+<!-- =====================================================
+     APP SHELL: 5 TAB DƯỚI (Trang chủ · Coach gần · Khoá học · Hợp tác · Tài khoản)
+====================================================== -->
+<style>
+body.pda{overflow:hidden;background:#07101c}
+.pda-app{position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(120% 60% at 90% 0%,rgba(216,255,69,.10),transparent 55%),linear-gradient(170deg,#0a1424,#07101c 60%)}
+.pda-top{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top) + 10px) 18px 10px}
+.pda-brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;letter-spacing:-.01em}
+.pda-brand img{width:32px;height:32px;border-radius:9px}
+.pda-brand small{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;color:#d8ff45}
+.pda-views{flex:1;min-height:0;position:relative}
+.pda-view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 18px 24px;display:none;animation:pdaIn .22s ease}
+.pda-view.active{display:block}
+@keyframes pdaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pda-eyebrow{color:#d8ff45;font-size:11px;font-weight:900;letter-spacing:.14em}
+.pda-h1{font-size:27px;line-height:1.12;font-weight:900;margin:8px 0 6px;letter-spacing:-.02em}
+.pda-h1 em{font-style:normal;color:#d8ff45}
+.pda-sub{color:#aab6c5;font-size:14px;line-height:1.5;margin:0 0 16px}
+.pda-radar-card{position:relative;display:block;overflow:hidden;border-radius:22px;padding:18px;background:linear-gradient(135deg,#d8ff45,#b9f21a);color:#07101b;box-shadow:0 14px 40px rgba(216,255,69,.18)}
+.pda-radar-card b{display:block;font-size:20px;font-weight:900;letter-spacing:-.01em}
+.pda-radar-card span{display:block;font-size:13px;font-weight:700;opacity:.75;margin-top:4px;max-width:62%}
+.pda-radar-card i{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:9px 14px;border-radius:999px;background:#07101b;color:#d8ff45;font-style:normal;font-size:13px;font-weight:900}
+.pda-radar{position:absolute;right:-18px;top:50%;width:150px;height:150px;transform:translateY(-50%)}
+.pda-radar::before,.pda-radar::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(7,16,27,.35);animation:pdaPulse 2.4s ease-out infinite}
+.pda-radar::after{animation-delay:1.2s}
+.pda-radar u{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px;border-radius:50%;background:#07101b;box-shadow:0 0 0 6px rgba(7,16,27,.15)}
+@keyframes pdaPulse{from{transform:scale(.2);opacity:1}to{transform:scale(1);opacity:0}}
+.pda-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pda-tile{display:flex;flex-direction:column;gap:8px;min-height:96px;padding:14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;text-align:left;font:inherit;cursor:pointer}
+.pda-tile:active,.pda-radar-card:active{transform:scale(.98)}
+.pda-tile .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(216,255,69,.12);color:#d8ff45}
+.pda-tile b{font-size:14px;font-weight:900}
+.pda-tile small{font-size:12px;color:#93a1b3;line-height:1.35;margin-top:-4px}
+.pda-tile.primary{background:#fff;color:#07101b}
+.pda-tile.primary .ic{background:#07101b;color:#d8ff45}
+.pda-tile.primary small{color:#4b5768}
+.pda-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+.pda-steps div{text-align:center;font-size:11px;font-weight:800;color:#c6cfda;line-height:1.3}
+.pda-steps b{display:block;color:#d8ff45;font-size:15px;margin-bottom:2px}
+.pda-h2{font-size:21px;font-weight:900;margin:6px 0 4px;letter-spacing:-.01em}
+.pda-card{padding:16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-top:12px}
+.pda-prog{display:flex;align-items:center;gap:12px}
+.pda-prog .n{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#d8ff45;color:#07101b;font-weight:900;font-size:15px}
+.pda-prog b{display:block;font-size:15px}
+.pda-prog small{color:#93a1b3;font-size:12px}
+.pda-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pda-chips span{padding:8px 12px;border-radius:999px;background:rgba(216,255,69,.1);color:#e6ff9a;font-size:12px;font-weight:800}
+.pda-list{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+.pda-list li{display:flex;gap:10px;font-size:13px;color:#c6cfda;line-height:1.4}
+.pda-list li::before{content:"✓";flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(216,255,69,.14);color:#d8ff45;font-size:11px;font-weight:900}
+.pda-list b{color:#fff}
+.pda-faq details{border-top:1px solid rgba(255,255,255,.08);padding:12px 0}
+.pda-faq details:first-child{border-top:0}
+.pda-faq summary{list-style:none;cursor:pointer;font-weight:800;font-size:14px;display:flex;justify-content:space-between;gap:10px}
+.pda-faq summary::after{content:"+";color:#d8ff45;font-weight:900}
+.pda-faq details[open] summary::after{content:"–"}
+.pda-faq p{margin:8px 0 0;color:#aab6c5;font-size:13px;line-height:1.5}
+.pda-cta{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;margin-top:14px;border-radius:16px;background:#d8ff45;color:#07101b;font-weight:900;font-size:14px;letter-spacing:.02em}
+.pda-cta.ghost{background:transparent;color:#d8ff45;border:1px solid rgba(216,255,69,.45)}
+.pda-view .academy-access{margin-top:12px}
+.pda-view .academy-tabs{display:none}
+.pda-tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(env(safe-area-inset-bottom) + 6px);background:rgba(7,16,28,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.07)}
+.pda-tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:#7d8a9c;font-size:10.5px;font-weight:800}
+.pda-tabs a svg{width:23px;height:23px}
+.pda-tabs a.active{color:#d8ff45}
+.pda-tabs a.mid span.dot{display:grid;place-items:center;width:44px;height:44px;margin-top:-20px;border-radius:50%;background:#d8ff45;color:#07101b;box-shadow:0 8px 22px rgba(216,255,69,.3);border:4px solid #07101c}
+.pda-tabs a.mid svg{width:20px;height:20px}
+body.pda #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 78px)!important}
+body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
+/* ---------- Coach gần bạn (kiểu Xanh SM) ---------- */
+#v-coach{padding:0;overflow:hidden}
+#pdaMap{position:absolute;inset:0;background:#0b1626}
+#pdaMap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.55)}
+#pdaMap .leaflet-control-attribution{background:rgba(7,16,28,.7);color:#7d8a9c;font-size:9px}
+#pdaMap .leaflet-control-attribution a{color:#9fb0c4}
+.pda-me{width:18px;height:18px;border-radius:50%;background:#3b9bff;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,155,255,.25)}
+.pda-pin{display:grid;place-items:center;width:38px;height:38px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:#d8ff45;border:2px solid #07101b;box-shadow:0 6px 14px rgba(0,0,0,.45)}
+.pda-pin span{transform:rotate(45deg);color:#07101b;font-weight:900;font-size:12px}
+.pda-pin.off{background:#5b6677}
+.pda-pin.sel{background:#fff;transform:rotate(-45deg) scale(1.18)}
+.pda-center{position:absolute;left:50%;top:38%;z-index:500;transform:translate(-50%,-100%);pointer-events:none;display:none}
+.pda-center.show{display:block}
+.pda-center svg{width:34px;height:44px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.pda-scan{position:absolute;left:50%;top:38%;z-index:450;width:260px;height:260px;margin:-130px 0 0 -130px;pointer-events:none;display:none}
+.pda-scan.show{display:block}
+.pda-scan::before,.pda-scan::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(216,255,69,.28),rgba(216,255,69,0) 70%);border:2px solid rgba(216,255,69,.6);animation:pdaPulse 1.8s ease-out infinite}
+.pda-scan::after{animation-delay:.9s}
+.pda-float{position:absolute;top:12px;left:12px;right:12px;z-index:600;display:flex;gap:8px}
+.pda-float .loc{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;background:rgba(7,16,28,.92);border:1px solid rgba(255,255,255,.1);font-size:13px;font-weight:800;color:#e6edf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pda-float .loc i{flex:none;width:8px;height:8px;border-radius:50%;background:#3b9bff;box-shadow:0 0 0 4px rgba(59,155,255,.25)}
+.pda-fab{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(7,16,28,.92);border:1px solid rgba(255,255,255,.1);color:#d8ff45;cursor:pointer}
+.pda-here{position:absolute;left:50%;top:calc(38% + 14px);z-index:600;transform:translateX(-50%);display:none;padding:10px 16px;border-radius:999px;background:#07101b;color:#d8ff45;border:1px solid rgba(216,255,69,.5);font:inherit;font-size:13px;font-weight:900;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.4);cursor:pointer}
+.pda-here.show{display:block}
+.pda-sheet{position:absolute;left:0;right:0;bottom:0;z-index:700;max-height:52%;display:flex;flex-direction:column;border-radius:22px 22px 0 0;background:#0b1626;border-top:1px solid rgba(255,255,255,.08);box-shadow:0 -12px 30px rgba(0,0,0,.45);transition:max-height .25s ease}
+.pda-sheet.full{max-height:86%}
+.pda-handle{flex:none;padding:8px 0 4px;display:grid;place-items:center;cursor:pointer}
+.pda-handle::before{content:"";width:40px;height:5px;border-radius:9px;background:rgba(255,255,255,.22)}
+.pda-sheet-head{flex:none;padding:2px 16px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.pda-sheet-head b{font-size:16px;font-weight:900}
+.pda-sheet-head small{display:block;color:#93a1b3;font-size:12px;margin-top:2px}
+.pda-sheet-head a{flex:none;color:#d8ff45;font-size:12px;font-weight:900}
+.pda-sheet-body{flex:1;min-height:0;overflow-y:auto;padding:0 12px calc(env(safe-area-inset-bottom) + 12px)}
+.pda-coach{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:8px;cursor:pointer}
+.pda-coach.sel{border-color:#d8ff45;background:rgba(216,255,69,.07)}
+.pda-av{flex:none;width:50px;height:50px;border-radius:15px;display:grid;place-items:center;background:#1a2a40 center/cover no-repeat;color:#d8ff45;font-weight:900;font-size:16px}
+.pda-coach .info{flex:1;min-width:0}
+.pda-coach .info b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pda-coach .info small{display:block;color:#93a1b3;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pda-coach .info em{display:inline-block;margin-top:5px;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.04em;color:#8bf0a8}
+.pda-coach .info em.off{color:#ffc46b}
+.pda-km{flex:none;text-align:right}
+.pda-km b{display:block;font-size:17px;font-weight:900;color:#d8ff45}
+.pda-km small{color:#93a1b3;font-size:10.5px;font-weight:800}
+.pda-coach-act{display:none;gap:8px;margin:-2px 0 10px}
+.pda-coach.sel + .pda-coach-act{display:flex}
+.pda-coach-act a{flex:1;min-height:44px;display:grid;place-items:center;border-radius:12px;font-size:13px;font-weight:900;border:1px solid rgba(216,255,69,.45);color:#d8ff45}
+.pda-coach-act a.go{background:#d8ff45;color:#07101b;border-color:#d8ff45}
+.pda-coach-act a.dis{opacity:.4;pointer-events:none}
+.pda-empty{padding:18px 6px 8px;text-align:center;color:#aab6c5;font-size:13px;line-height:1.5}
+.pda-empty .pda-cta{margin-top:12px}
+.pda-skel{height:76px;border-radius:16px;margin-bottom:8px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:pdaSk 1.2s linear infinite}
+@keyframes pdaSk{to{background-position:-200% 0}}
+@media(min-width:760px){.pda-view{padding-left:calc(50% - 300px);padding-right:calc(50% - 300px)}#v-coach{padding:0}.pda-sheet{left:calc(50% - 320px);right:calc(50% - 320px)}}
+</style>
 
+<div class="pda-app" id="pdaApp">
 
- <div class="topbar">
-
-  <div class="brand">
-    PickDee Academy
+  <div class="pda-top">
+    <div class="pda-brand">
+      <img src="/icon-192.png" alt="">
+      <div>PickDee Academy<small>HỌC ĐÚNG NGƯỜI • ĐÚNG KHU VỰC</small></div>
+    </div>
+    <details class="pickdee-ecosystem">
+      <summary class="pickdee-ecosystem-toggle" aria-label="Mở hệ sinh thái PickDee">
+        <span class="pickdee-ecosystem-desktop">☰ PICKDEE</span>
+        <span class="pickdee-ecosystem-mobile">☰</span>
+      </summary>
+      <div class="pickdee-ecosystem-menu">
+        <div class="pickdee-ecosystem-item current">
+          <span>🎓 PICKDEE ACADEMY</span>
+          <span class="pickdee-ecosystem-status">ĐANG Ở ĐÂY</span>
+        </div>
+        <a href="./shop" class="pickdee-ecosystem-item">
+          <span>🛍️ PICKDEE SHOP</span><span>›</span>
+        </a>
+        <div class="pickdee-ecosystem-item disabled">
+          <span>🏓 PICKDEE OPEN PLAY</span>
+          <span class="pickdee-ecosystem-status">SẮP CÓ</span>
+        </div>
+      </div>
+    </details>
   </div>
 
+  <div class="pda-views">
 
-  <details class="pickdee-ecosystem">
+    <!-- ================= TRANG CHỦ ================= -->
+    <div class="pda-view active" id="v-home" data-view="home">
+      <h1 class="pda-h1">Học Pickleball bài bản cùng <em>Coach phù hợp</em> với bạn</h1>
+      <p class="pda-sub">Chọn khu vực • Kết nối Coach • Đặt lịch học • Theo dõi tiến trình</p>
 
-    <summary
-      class="pickdee-ecosystem-toggle"
-      aria-label="Mở hệ sinh thái PickDee"
-    >
-      <span class="pickdee-ecosystem-desktop">
-        ☰ PICKDEE
-      </span>
-
-      <span class="pickdee-ecosystem-mobile">
-        ☰
-      </span>
-    </summary>
-
-
-    <div class="pickdee-ecosystem-menu">
-
-      <div
-        class="pickdee-ecosystem-item current"
-      >
-        <span>
-          🎓 PICKDEE ACADEMY
-        </span>
-
-        <span class="pickdee-ecosystem-status">
-          ĐANG Ở ĐÂY
-        </span>
-      </div>
-
-
-      <a
-        href="./shop"
-        class="pickdee-ecosystem-item"
-      >
-        <span>
-          🛍️ PICKDEE SHOP
-        </span>
-
-        <span>
-          ›
-        </span>
+      <a class="pda-radar-card" href="#coach">
+        <div class="pda-radar"><u></u></div>
+        <b>Tìm Coach gần bạn</b>
+        <span>Định vị và xem ngay Coach đang nhận học viên quanh bạn</span>
+        <i>📍 Tìm ngay</i>
       </a>
 
-
-      <div
-        class="pickdee-ecosystem-item disabled"
-      >
-        <span>
-          🏓 PICKDEE OPEN PLAY
-        </span>
-
-        <span class="pickdee-ecosystem-status">
-          SẮP CÓ
-        </span>
-      </div>
-
-    </div>
-
-  </details>
-
-</div>
-
-
-  <div class="hero-inner">
-
-
-    <div class="eyebrow">
-
-      HỌC ĐÚNG NGƯỜI • ĐÚNG KHU VỰC
-
-    </div>
-
-
-    <h1>
-
-      HỌC PICKLEBALL BÀI BẢN CÙNG COACH PHÙ HỢP VỚI BẠN
-
-    </h1>
-
-
-    <p class="lead">
-
-      Chọn khu vực • Kết nối Coach • Đặt lịch học • Theo dõi tiến trình
-
-    </p>
-
-
-    <p class="sub">
-
-      PickDee Academy giúp bạn tìm Coach phù hợp ngay tại khu vực mình muốn học,
-      theo một lộ trình rõ ràng từ cơ bản đến nâng cao.
-
-    </p>
-
-
-
-    <!-- =====================================================
-         ĐĂNG KÝ / ĐĂNG NHẬP
-    ====================================================== -->
-
-    <div class="academy-access">
-
-
-      <div class="academy-tabs">
-
-
-        <button
-          id="showRegisterTab"
-          class="academy-tab active"
-          type="button"
-        >
-
-          ĐĂNG KÝ HỌC
-
-        </button>
-
-
-        <button
-          id="showLoginTab"
-          class="academy-tab"
-          type="button"
-        >
-
-          ĐĂNG NHẬP
-
-        </button>
-
-
-      </div>
-
-
-
-      <!-- =================================================
-           TAB ĐĂNG KÝ
-      ================================================== -->
-
-      <div
-        id="registerPanel"
-        class="academy-panel active"
-      >
-
-
-        <div class="register-panel-title">
-
-          Bắt đầu học cùng PickDee
-
-        </div>
-
-
-        <p class="register-panel-text">
-
-          Đăng ký nhu cầu học.
-          PickDee sẽ kết nối bạn với Coach phù hợp theo khu vực.
-
-        </p>
-
-
-        <a
-          id="registerBtn"
-          class="register-action"
-          href="#"
-        >
-
-          ĐĂNG KÝ HỌC NGAY →
-
+      <div class="pda-grid">
+        <a id="registerBtn" class="pda-tile primary" href="./student-register">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <b>Đăng ký học</b><small>PickDee ghép Coach cho bạn</small>
         </a>
-<a
-  href="./find-coach"
-  style="
-    margin-top:10px;
-    min-height:48px;
-    padding:0 20px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:10px;
-    border:1px solid rgba(216,255,69,.55);
-    color:#d8ff45;
-    text-decoration:none;
-    font-size:13px;
-    font-weight:900;
-  "
->
-  🔎 TÌM COACH GẦN BẠN →
-</a>
-<a
-  href="./courts"
-  style="
-    margin-top:10px;
-    margin-left:6px;
-    min-height:48px;
-    padding:0 20px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:10px;
-    border:1px solid rgba(216,255,69,.55);
-    color:#d8ff45;
-    text-decoration:none;
-    font-size:13px;
-    font-weight:900;
-  "
->
-  📍 TÌM SÂN GẦN BẠN →
-</a>
+        <a class="pda-tile" href="./courts">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16M12 3v18"/></svg></span>
+          <b>Tìm sân gần bạn</b><small>Danh bạ sân Pickleball</small>
+        </a>
+        <a class="pda-tile" href="#hoc">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>
+          <b>Khoá học</b><small>Cơ bản • Nâng cao • Theo yêu cầu</small>
+        </a>
+        <a class="pda-tile" href="#hop-tac">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 010 6M18 14c2 .7 3 2.8 3 6"/></svg></span>
+          <b>Hợp tác</b><small>Coach đối tác • Chủ sân</small>
+        </a>
       </div>
 
+      <div class="pda-steps">
+        <div><b>01</b>Đăng ký nhu cầu</div>
+        <div><b>02</b>Chọn Coach phù hợp</div>
+        <div><b>03</b>Đặt lịch học</div>
+        <div><b>04</b>Theo dõi tiến trình</div>
+      </div>
+    </div>
 
-
-      <!-- =================================================
-           TAB ĐĂNG NHẬP
-      ================================================== -->
-
-      <div
-        id="loginPanel"
-        class="academy-panel"
-      >
-
-
-        <div class="login-panel-title">
-
-          Chào mừng bạn quay lại
-
+    <!-- ================= COACH GẦN BẠN ================= -->
+    <div class="pda-view" id="v-coach" data-view="coach">
+      <div id="pdaMap"></div>
+      <div class="pda-scan" id="pdaScan"></div>
+      <div class="pda-center" id="pdaCenter"><svg viewBox="0 0 34 44"><path d="M17 43C17 43 32 27 32 16A15 15 0 0 0 2 16C2 27 17 43 17 43Z" fill="#d8ff45" stroke="#07101b" stroke-width="2"/><circle cx="17" cy="16" r="5.5" fill="#07101b"/></svg></div>
+      <button class="pda-here" id="pdaHere" type="button">🔎 Tìm Coach quanh điểm này</button>
+      <div class="pda-float">
+        <div class="loc"><i></i><span id="pdaLocText">Đang xác định vị trí của bạn…</span></div>
+        <button class="pda-fab" id="pdaLocate" type="button" aria-label="Về vị trí của tôi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+      </div>
+      <div class="pda-sheet" id="pdaSheet">
+        <div class="pda-handle" id="pdaHandle"></div>
+        <div style="position:absolute;top:8px;right:14px;font-size:9px;color:#5d6b7d">Bản đồ © <a href="https://www.openstreetmap.org/copyright" style="color:#7d8a9c">OpenStreetMap</a></div>
+        <div class="pda-sheet-head">
+          <div><b id="pdaSheetTitle">Đang tìm Coach gần bạn…</b><small id="pdaSheetSub">Khoảng cách tính tới khu vực Coach nhận dạy</small></div>
+          <a href="./find-coach">Theo khu vực ›</a>
         </div>
+        <div class="pda-sheet-body" id="pdaList"></div>
+      </div>
+    </div>
 
+    <!-- ================= KHOÁ HỌC ================= -->
+    <div class="pda-view" id="v-learn" data-view="hoc">
+      <div class="pda-eyebrow">LỘ TRÌNH RÕ RÀNG</div>
+      <div class="pda-h2">Chương trình đào tạo</div>
+      <div class="pda-card">
+        <div class="pda-prog"><span class="n">CB</span><div><b>Cơ bản</b><small>12 buổi • cho người mới bắt đầu</small></div></div>
+      </div>
+      <div class="pda-card">
+        <div class="pda-prog"><span class="n">NC</span><div><b>Nâng cao</b><small>12 buổi • cải thiện kỹ thuật, thi đấu</small></div></div>
+      </div>
+      <div class="pda-card">
+        <div class="pda-prog"><span class="n">TYC</span><div><b>Theo yêu cầu</b><small>Linh hoạt theo mục tiêu của bạn</small></div></div>
+      </div>
 
-        <p class="login-panel-text">
-
-          Đăng nhập để vào đúng khu vực
-          Học viên, Coach hoặc Admin của bạn.
-
-        </p>
-
-
-        <div id="pdFaceIdLogin"></div>
-
-        <form
-          id="academyLoginForm"
-          class="login-form"
-        >
-
-
-          <div class="login-field">
-
-            <label for="loginEmail">
-
-              EMAIL
-
-            </label>
-
-
-            <input
-              id="loginEmail"
-              type="email"
-              inputmode="email"
-              autocomplete="email"
-              placeholder="Email đăng nhập"
-              required
-            >
-
-          </div>
-
-
-
-          <div class="login-field">
-
-            <label for="loginPassword">
-
-              MẬT KHẨU
-
-            </label>
-
-
-            <input
-              id="loginPassword"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Mật khẩu"
-              required
-            >
-
-          </div>
-
-<div
-  style="
-    text-align:right;
-    margin-top:-4px;
-    margin-bottom:2px;
-  "
->
-  <a
-    href="/forgot-password"
-    style="
-      color:#d8ff45;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:800;
-    "
-  >
-    Quên mật khẩu?
-  </a>
-</div>
-
-          <button
-            id="academyLoginBtn"
-            class="login-submit"
-            type="submit"
-          >
-
-            ĐĂNG NHẬP
-
-          </button>
-
-
-        </form>
-
-
-        <div
-          id="academyLoginMessage"
-          class="login-message"
-        ></div>
-
-
-        <div class="login-hint">
-
-          Sau khi đăng nhập,
-          hệ thống sẽ tự đưa bạn đến đúng khu vực tài khoản.
-
+      <div class="pda-card">
+        <b>Dành cho ai?</b>
+        <div class="pda-chips">
+          <span>Người mới bắt đầu</span><span>Cải thiện kỹ thuật</span><span>Luyện thi đấu</span><span>Học riêng theo mục tiêu</span>
         </div>
-
-
       </div>
 
+      <div class="pda-card">
+        <b>Vì sao chọn PickDee Academy</b>
+        <ul class="pda-list">
+          <li><span><b>Coach phù hợp theo khu vực</b> — ngay gần nơi bạn muốn học.</span></li>
+          <li><span><b>Lộ trình rõ ràng</b> — từ cơ bản đến nâng cao.</span></li>
+          <li><span><b>Đặt lịch linh hoạt</b> — giữa học viên và Coach.</span></li>
+          <li><span><b>Theo dõi tiến trình</b> — biết đã học bao nhiêu buổi, tiến bộ ở đâu.</span></li>
+        </ul>
+      </div>
 
+      <div class="pda-card pda-faq">
+        <details><summary>Tôi chưa biết chơi có học được không?</summary><p>Có. Chương trình Cơ bản được thiết kế cho người mới bắt đầu.</p></details>
+        <details><summary>Tôi có được chọn Coach không?</summary><p>Có. PickDee sẽ gợi ý Coach phù hợp để bạn lựa chọn.</p></details>
+        <details><summary>Tôi có thể chọn khu vực học không?</summary><p>Có. Bạn có thể đăng ký khu vực và xã/phường muốn học.</p></details>
+        <details><summary>Tôi theo dõi lịch học ở đâu?</summary><p>Sau khi có tài khoản, bạn đăng nhập ở tab Tài khoản để xem lịch học và tiến trình.</p></details>
+        <details><summary>Tôi có thể đổi lịch không?</summary><p>Có, tùy theo quy định và lịch trống của Coach.</p></details>
+      </div>
+
+      <a id="registerBtn2" class="pda-cta" href="./student-register">ĐĂNG KÝ HỌC NGAY →</a>
     </div>
 
-
-
-   <!-- =====================================================
-     TRỞ THÀNH COACH PICKDEE
-====================================================== -->
-
-<div class="coach-apply-card">
-
-  <div class="coach-apply-eyebrow">
-    🏓 TRỞ THÀNH COACH ĐỐI TÁC PICKDEE
-  </div>
-
-  <div class="coach-apply-title">
-    Có thêm cơ hội nhận Học viên cùng PickDee Academy
-  </div>
-
-  <p class="coach-apply-text">
-    Tham gia mạng lưới Coach PickDee để có thêm cơ hội
-    kết nối với Học viên phù hợp theo khu vực,
-    đồng thời chủ động lịch dạy và quản lý công việc tập trung hơn.
-  </p>
-
-
-  <div
-    style="
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin:16px 0 18px;
-    "
-  >
-
-    <div
-      style="
-        padding:13px;
-        border-radius:12px;
-        background:rgba(255,255,255,.055);
-        border:1px solid rgba(255,255,255,.09);
-      "
-    >
-      <div
-        style="
-          font-size:18px;
-          margin-bottom:6px;
-        "
-      >
-        🎯
+    <!-- ================= HỢP TÁC ================= -->
+    <div class="pda-view" id="v-partner" data-view="hop-tac">
+      <div class="pda-eyebrow">🏓 COACH ĐỐI TÁC PICKDEE</div>
+      <div class="pda-h2">Có thêm cơ hội nhận Học viên</div>
+      <div class="pda-card">
+        <ul class="pda-list">
+          <li><span><b>Thêm Học viên</b> — PickDee kết nối theo khu vực và nhu cầu học.</span></li>
+          <li><span><b>Chủ động lịch dạy</b> — tự chọn thời gian, khu vực, khả năng nhận lớp.</span></li>
+          <li><span><b>Quản lý tập trung</b> — yêu cầu lịch, lịch dạy, đổi lịch, thông báo một nơi.</span></li>
+          <li><span><b>Công dạy rõ ràng</b> — theo dõi số buổi, công và trạng thái thanh toán.</span></li>
+        </ul>
+        <a class="pda-cta" href="./apply-coach">TRỞ THÀNH COACH PICKDEE →</a>
       </div>
 
-      <div
-        style="
-          color:#fff;
-          font-size:13px;
-          font-weight:900;
-          margin-bottom:4px;
-        "
-      >
-        Có thêm cơ hội nhận Học viên
-      </div>
-
-      <div
-        style="
-          color:rgba(255,255,255,.58);
-          font-size:12px;
-          line-height:1.45;
-        "
-      >
-        PickDee kết nối Coach với Học viên
-        theo khu vực và nhu cầu học phù hợp.
+      <div class="pda-eyebrow" style="margin-top:22px">🏟 DÀNH CHO CHỦ SÂN</div>
+      <div class="pda-h2">Đưa sân của bạn lên PickDee</div>
+      <div class="pda-card">
+        <p class="pda-sub" style="margin:0">Người chơi, học viên và Coach dễ dàng tìm thấy sân của bạn trên danh bạ PickDee.</p>
+        <a class="pda-cta ghost" href="./add-my-court">ĐƯA SÂN LÊN PICKDEE →</a>
       </div>
     </div>
 
+    <!-- ================= TÀI KHOẢN ================= -->
+    <div class="pda-view" id="v-account" data-view="tai-khoan">
+      <div class="academy-access">
+        <div class="academy-tabs">
+          <button id="showRegisterTab" class="academy-tab" type="button">ĐĂNG KÝ HỌC</button>
+          <button id="showLoginTab" class="academy-tab active" type="button">ĐĂNG NHẬP</button>
+        </div>
+        <div id="registerPanel" class="academy-panel"></div>
 
-    <div
-      style="
-        padding:13px;
-        border-radius:12px;
-        background:rgba(255,255,255,.055);
-        border:1px solid rgba(255,255,255,.09);
-      "
-    >
-      <div
-        style="
-          font-size:18px;
-          margin-bottom:6px;
-        "
-      >
-        🗓
-      </div>
-
-      <div
-        style="
-          color:#fff;
-          font-size:13px;
-          font-weight:900;
-          margin-bottom:4px;
-        "
-      >
-        Chủ động lịch dạy
-      </div>
-
-      <div
-        style="
-          color:rgba(255,255,255,.58);
-          font-size:12px;
-          line-height:1.45;
-        "
-      >
-        Chủ động thời gian, khu vực
-        và khả năng nhận lớp phù hợp.
-      </div>
-    </div>
-
-
-    <div
-      style="
-        padding:13px;
-        border-radius:12px;
-        background:rgba(255,255,255,.055);
-        border:1px solid rgba(255,255,255,.09);
-      "
-    >
-      <div
-        style="
-          font-size:18px;
-          margin-bottom:6px;
-        "
-      >
-        📲
-      </div>
-
-      <div
-        style="
-          color:#fff;
-          font-size:13px;
-          font-weight:900;
-          margin-bottom:4px;
-        "
-      >
-        Quản lý tập trung
-      </div>
-
-      <div
-        style="
-          color:rgba(255,255,255,.58);
-          font-size:12px;
-          line-height:1.45;
-        "
-      >
-        Yêu cầu lịch, lịch dạy, thay đổi lịch
-        và thông báo trong cùng một hệ thống.
-      </div>
-    </div>
-
-
-    <div
-      style="
-        padding:13px;
-        border-radius:12px;
-        background:rgba(255,255,255,.055);
-        border:1px solid rgba(255,255,255,.09);
-      "
-    >
-      <div
-        style="
-          font-size:18px;
-          margin-bottom:6px;
-        "
-      >
-        💰
-      </div>
-
-      <div
-        style="
-          color:#fff;
-          font-size:13px;
-          font-weight:900;
-          margin-bottom:4px;
-        "
-      >
-        Công dạy rõ ràng
-      </div>
-
-      <div
-        style="
-          color:rgba(255,255,255,.58);
-          font-size:12px;
-          line-height:1.45;
-        "
-      >
-        Theo dõi số buổi dạy,
-        công Coach và trạng thái thanh toán.
+        <div id="loginPanel" class="academy-panel active">
+          <div class="login-panel-title">Chào mừng bạn quay lại</div>
+          <p class="login-panel-text">Đăng nhập để vào đúng khu vực Học viên, Coach hoặc Admin của bạn.</p>
+          <div id="pdFaceIdLogin"></div>
+          <form id="academyLoginForm" class="login-form">
+            <div class="login-field">
+              <label for="loginEmail">EMAIL</label>
+              <input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email đăng nhập" required>
+            </div>
+            <div class="login-field">
+              <label for="loginPassword">MẬT KHẨU</label>
+              <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu" required>
+            </div>
+            <div style="text-align:right;margin-top:-4px;margin-bottom:2px">
+              <a href="/forgot-password" style="color:#d8ff45;font-size:13px;font-weight:800">Quên mật khẩu?</a>
+            </div>
+            <button id="academyLoginBtn" class="login-submit" type="submit">ĐĂNG NHẬP</button>
+          </form>
+          <div id="academyLoginMessage" class="login-message"></div>
+          <div class="login-hint">Chưa có tài khoản? <a href="./student-register" style="color:#d8ff45;font-weight:900">Đăng ký học</a></div>
+        </div>
       </div>
     </div>
 
   </div>
 
-
-  <p
-    style="
-      margin:0 0 15px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      line-height:1.5;
-    "
-  >
-    Coach vẫn chủ động quyết định khả năng nhận lớp
-    theo lịch cá nhân của mình.
-  </p>
-
-
-  <a
-    class="coach-apply-btn"
-    href="./apply-coach"
-  >
-    TRỞ THÀNH COACH PICKDEE →
-  </a>
-
-</div>
-<!-- =====================================================
-     DÀNH CHO CHỦ SÂN PICKLEBALL
-====================================================== -->
-
-<div class="coach-apply-card">
-
-  <div class="coach-apply-eyebrow">
-    🏟 DÀNH CHO CHỦ SÂN PICKLEBALL
-  </div>
-
-  <div class="coach-apply-title">
-    Đưa sân của bạn lên PickDee
-  </div>
-
-  <p class="coach-apply-text">
-    Đưa thông tin sân lên danh bạ PickDee
-    để người chơi, học viên và Coach
-    dễ dàng tìm thấy sân của bạn.
-  </p>
-
-  <a
-    class="coach-apply-btn"
-    href="./add-my-court"
-  >
-    ĐƯA SÂN LÊN PICKDEE →
-  </a>
-
+  <nav class="pda-tabs" id="pdaTabs">
+    <a href="#" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg>Trang chủ</a>
+    <a href="#hoc" data-tab="hoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg>Khoá học</a>
+    <a href="#coach" data-tab="coach" class="mid"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>Coach gần</a>
+    <a href="#hop-tac" data-tab="hop-tac"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 010 6M18 14c2 .7 3 2.8 3 6"/></svg>Hợp tác</a>
+    <a href="#tai-khoan" data-tab="tai-khoan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Tài khoản</a>
+  </nav>
 </div>
 
-  </div>
-
-</header>
-
-
-
-<!-- =====================================================
-     MAIN
-====================================================== -->
-
-<main>
-
-
-
-<!-- =====================================================
-     VÌ SAO CHỌN PICKDEE
-====================================================== -->
-
-<section class="section light">
-
-
-  <div class="section-head">
-
-    <span>
-      LÝ DO ĐỂ BẮT ĐẦU
-    </span>
-
-    <h2>
-      VÌ SAO CHỌN PICKDEE ACADEMY
-    </h2>
-
-  </div>
-
-
-  <div class="grid four">
-
-
-    <article class="card">
-
-      <b>
-        Coach phù hợp theo khu vực
-      </b>
-
-      <p>
-        Tìm người hướng dẫn phù hợp ngay gần nơi bạn muốn học.
-      </p>
-
-    </article>
-
-
-    <article class="card">
-
-      <b>
-        Lộ trình học rõ ràng
-      </b>
-
-      <p>
-        Từ cơ bản đến nâng cao với mục tiêu rõ ràng từng giai đoạn.
-      </p>
-
-    </article>
-
-
-    <article class="card">
-
-      <b>
-        Đặt lịch linh hoạt
-      </b>
-
-      <p>
-        Sắp xếp lịch học phù hợp giữa học viên và Coach.
-      </p>
-
-    </article>
-
-
-    <article class="card">
-
-      <b>
-        Theo dõi tiến trình
-      </b>
-
-      <p>
-        Biết mình đã học bao nhiêu buổi và đang tiến bộ ở đâu.
-      </p>
-
-    </article>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     QUY TRÌNH
-====================================================== -->
-
-<section class="section dark">
-
-
-  <div class="section-head">
-
-    <span>
-      4 BƯỚC ĐƠN GIẢN
-    </span>
-
-    <h2>
-      QUY TRÌNH HỌC
-    </h2>
-
-  </div>
-
-
-  <div class="steps">
-
-
-    <div>
-
-      <strong>
-        01
-      </strong>
-
-      <span>
-        Đăng ký nhu cầu
-      </span>
-
-    </div>
-
-
-    <div>
-
-      <strong>
-        02
-      </strong>
-
-      <span>
-        Chọn Coach phù hợp
-      </span>
-
-    </div>
-
-
-    <div>
-
-      <strong>
-        03
-      </strong>
-
-      <span>
-        Đặt lịch học
-      </span>
-
-    </div>
-
-
-    <div>
-
-      <strong>
-        04
-      </strong>
-
-      <span>
-        Theo dõi tiến trình
-      </span>
-
-    </div>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CHƯƠNG TRÌNH
-====================================================== -->
-
-<section class="section light">
-
-
-  <div class="section-head">
-
-    <span>
-      LỘ TRÌNH RÕ RÀNG
-    </span>
-
-    <h2>
-      CHƯƠNG TRÌNH ĐÀO TẠO
-    </h2>
-
-  </div>
-
-
-  <div class="grid three">
-
-
-    <article class="program">
-
-      <h3>
-        CƠ BẢN
-      </h3>
-
-      <p>
-        12 buổi
-      </p>
-
-    </article>
-
-
-    <article class="program">
-
-      <h3>
-        NÂNG CAO
-      </h3>
-
-      <p>
-        12 buổi
-      </p>
-
-    </article>
-
-
-    <article class="program">
-
-      <h3>
-        THEO YÊU CẦU
-      </h3>
-
-      <p>
-        Linh hoạt theo mục tiêu
-      </p>
-
-    </article>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     DÀNH CHO AI
-====================================================== -->
-
-<section class="section dark">
-
-
-  <div class="section-head">
-
-    <span>
-      PHÙ HỢP VỚI NHIỀU MỤC TIÊU
-    </span>
-
-    <h2>
-      DÀNH CHO AI?
-    </h2>
-
-  </div>
-
-
-  <div class="grid two">
-
-
-    <div class="pill">
-      Người mới bắt đầu
-    </div>
-
-
-    <div class="pill">
-      Người muốn cải thiện kỹ thuật
-    </div>
-
-
-    <div class="pill">
-      Người muốn luyện thi đấu
-    </div>
-
-
-    <div class="pill">
-      Người muốn học riêng theo mục tiêu
-    </div>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     COACH
-====================================================== -->
-
-<section class="section accent">
-
-
-  <div class="cta">
-
-
-    <span>
-      ĐỘI NGŨ COACH PICKDEE
-    </span>
-
-
-    <h2>
-
-      ĐÚNG CHUYÊN MÔN.
-      ĐÚNG KHU VỰC.
-      ĐÚNG MỤC TIÊU.
-
-    </h2>
-
-
-    <p>
-
-      Coach được lựa chọn theo khu vực,
-      chuyên môn và mục tiêu học tập phù hợp.
-
-    </p>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     FAQ
-====================================================== -->
-
-<section class="section dark">
-
-
-  <div class="section-head">
-
-    <span>
-      GIẢI ĐÁP NHANH
-    </span>
-
-    <h2>
-      CÂU HỎI THƯỜNG GẶP
-    </h2>
-
-  </div>
-
-
-  <div class="faq">
-
-
-    <details>
-
-      <summary>
-        Tôi chưa biết chơi có học được không?
-      </summary>
-
-      <p>
-        Có. Chương trình Cơ bản được thiết kế cho người mới bắt đầu.
-      </p>
-
-    </details>
-
-
-    <details>
-
-      <summary>
-        Tôi có được chọn Coach không?
-      </summary>
-
-      <p>
-        Có. PickDee sẽ gợi ý Coach phù hợp để bạn lựa chọn.
-      </p>
-
-    </details>
-
-
-    <details>
-
-      <summary>
-        Tôi có thể chọn khu vực học không?
-      </summary>
-
-      <p>
-        Có. Bạn có thể đăng ký khu vực và xã/phường muốn học.
-      </p>
-
-    </details>
-
-
-    <details>
-
-      <summary>
-        Tôi theo dõi lịch học ở đâu?
-      </summary>
-
-      <p>
-        Sau khi có tài khoản, bạn có thể đăng nhập trực tiếp
-        tại trang PickDee Academy để xem lịch học và tiến trình.
-      </p>
-
-    </details>
-
-
-    <details>
-
-      <summary>
-        Tôi có thể đổi lịch không?
-      </summary>
-
-      <p>
-        Có, tùy theo quy định và lịch trống của Coach.
-      </p>
-
-    </details>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CTA CUỐI
-====================================================== -->
-
-<section class="section accent final">
-
-
-  <h2>
-
-    SẴN SÀNG BẮT ĐẦU HÀNH TRÌNH PICKLEBALL CỦA BẠN?
-
-  </h2>
-
-
-  <a
-    id="registerBtn2"
-    class="btn darkbtn"
-    href="#"
-  >
-
-    ĐĂNG KÝ HỌC NGAY
-
-  </a>
-
-
-</section>
-
-
-</main>
-
-
-
-<!-- =====================================================
-     FOOTER
-====================================================== -->
-
-<footer>
-
-
-  <b>
-    PickDee Academy
-  </b>
-
-
-  <span>
-
-    Học Pickleball bài bản •
-    Coach phù hợp •
-    Học đúng khu vực
-
-  </span>
-
-
-</footer>
 
 
 
@@ -2849,6 +2100,214 @@ async function redirectByRole(
     }
   );
 
+})();
+</script>
+
+<!-- =====================================================
+     APP SHELL: ĐIỀU HƯỚNG TAB + COACH GẦN BẠN (BẢN ĐỒ)
+====================================================== -->
+<script>
+(function () {
+  document.body.classList.add("pda");
+  var views = { home: "v-home", coach: "v-coach", hoc: "v-learn", "hop-tac": "v-partner", "tai-khoan": "v-account" };
+  var current = "";
+
+  function show(name) {
+    if (!views[name]) name = "home";
+    if (name === current) return;
+    current = name;
+    Object.keys(views).forEach(function (k) {
+      document.getElementById(views[k]).classList.toggle("active", k === name);
+    });
+    document.querySelectorAll("#pdaTabs a").forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("data-tab") === name);
+    });
+    document.body.classList.toggle("pda-on-coach", name === "coach");
+    document.getElementById(views[name]).scrollTop = 0;
+    if (name === "coach") Near.open();
+  }
+  function route() { show((location.hash || "").replace("#", "") || "home"); }
+  document.getElementById("pdaTabs").addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-tab]");
+    if (!a || a.getAttribute("data-tab") !== "home") return;
+    e.preventDefault();
+    history.pushState(null, "", location.pathname + location.search);
+    route();
+  });
+  window.addEventListener("hashchange", route);
+  window.addEventListener("popstate", route);
+
+  /* ---------------- Coach gần bạn ---------------- */
+  var Near = (function () {
+    var map, meMarker, layer, started = false, loading = false, coaches = [], selId = null, here = null, moved = false;
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+    var initials = function (n) { var p = String(n || "").trim().split(/\s+/); return ((p.length > 1 ? p[p.length - 2][0] : "") + (p[p.length - 1] || "?")[0]).toUpperCase(); };
+    var km = function (v) { v = Number(v); return v < 1 ? "<1" : v.toLocaleString("vi-VN", { maximumFractionDigits: 1 }); };
+    var HN = [21.0285, 105.8542];
+
+    function loadLeaflet() {
+      if (window.L) return Promise.resolve();
+      return new Promise(function (ok, fail) {
+        var css = document.createElement("link");
+        css.rel = "stylesheet"; css.href = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(css);
+        var s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+        s.onload = ok; s.onerror = fail;
+        document.head.appendChild(s);
+      });
+    }
+
+    function skeleton(title) {
+      $("pdaSheetTitle").textContent = title;
+      $("pdaList").innerHTML = '<div class="pda-skel"></div><div class="pda-skel"></div><div class="pda-skel"></div>';
+    }
+
+    function setScan(on) { $("pdaScan").classList.toggle("show", on); }
+
+    function open() {
+      if (started) { if (map) setTimeout(function () { map.invalidateSize(); }, 50); return; }
+      started = true;
+      skeleton("Đang tìm Coach gần bạn…");
+      loadLeaflet().then(function () {
+        map = L.map("pdaMap", { zoomControl: false, attributionControl: false }).setView(HN, 12);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
+        layer = L.layerGroup().addTo(map);
+        map.on("dragstart zoomstart", function () { if (here) moved = true; });
+        map.on("moveend", function () { $("pdaHere").classList.toggle("show", moved && !loading); });
+        locate();
+      }).catch(function () {
+        $("pdaSheetTitle").textContent = "Không tải được bản đồ";
+        $("pdaList").innerHTML = '<div class="pda-empty">Mạng chập chờn. Bạn thử lại hoặc tìm theo khu vực.<a class="pda-cta ghost" href="./find-coach">TÌM THEO KHU VỰC →</a></div>';
+      });
+    }
+
+    function locate() {
+      $("pdaLocText").textContent = "Đang xác định vị trí của bạn…";
+      setScan(true);
+      if (!navigator.geolocation) return noGps();
+      navigator.geolocation.getCurrentPosition(function (p) {
+        var ll = [p.coords.latitude, p.coords.longitude];
+        if (meMarker) meMarker.setLatLng(ll);
+        else meMarker = L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="pda-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+        $("pdaLocText").textContent = "Vị trí của bạn";
+        search(ll, true);
+      }, noGps, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    }
+
+    function noGps() {
+      setScan(false);
+      $("pdaCenter").classList.add("show");
+      $("pdaLocText").textContent = "Kéo bản đồ tới nơi bạn muốn học";
+      $("pdaSheetTitle").textContent = "Chưa lấy được vị trí";
+      $("pdaSheetSub").textContent = "Kéo bản đồ để ghim nơi bạn muốn học";
+      $("pdaList").innerHTML = '<div class="pda-empty">Bạn chưa cho phép vị trí (hoặc đang mở trong Zalo/Telegram). Kéo bản đồ tới nơi muốn học rồi bấm tìm.<a class="pda-cta" href="#" id="pdaPick">🔎 TÌM QUANH ĐIỂM GHIM</a><a class="pda-cta ghost" href="./find-coach">CHỌN TỈNH / PHƯỜNG →</a></div>';
+      $("pdaPick").onclick = function (e) { e.preventDefault(); searchCenter(); };
+    }
+
+    function centerLatLng() {
+      var el = $("pdaMap"), r = el.getBoundingClientRect();
+      return map.containerPointToLatLng([r.width / 2, r.height * 0.38]);
+    }
+    function searchCenter() { var c = centerLatLng(); $("pdaCenter").classList.add("show"); search([c.lat, c.lng], false); }
+
+    function search(ll, fit) {
+      loading = true; moved = false; here = ll;
+      $("pdaHere").classList.remove("show");
+      skeleton("Đang tìm Coach gần bạn…");
+      $("pdaSheetSub").textContent = "Khoảng cách tính tới khu vực Coach nhận dạy";
+      setScan(true);
+      var t0 = Date.now();
+      (window.sb ? window.sb.rpc("public_nearby_coaches", { p_lat: ll[0], p_lng: ll[1], p_limit: 20 }) : Promise.reject())
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; })
+        .then(function (rows) {
+          return new Promise(function (ok) { setTimeout(function () { ok(rows); }, Math.max(0, 1100 - (Date.now() - t0))); });
+        })
+        .then(function (rows) { coaches = rows; render(fit); })
+        .catch(function (e) {
+          console.warn("NEARBY COACHES:", e);
+          $("pdaSheetTitle").textContent = "Chưa tải được danh sách";
+          $("pdaList").innerHTML = '<div class="pda-empty">Bạn thử lại sau ít phút.<a class="pda-cta" href="#" id="pdaRetry">THỬ LẠI</a></div>';
+          $("pdaRetry").onclick = function (ev) { ev.preventDefault(); search(ll, fit); };
+        })
+        .then(function () { loading = false; setScan(false); });
+    }
+
+    function render(fit) {
+      layer.clearLayers(); selId = null;
+      var seen = {};
+      if (!coaches.length) {
+        $("pdaSheetTitle").textContent = "Chưa có Coach quanh đây";
+        $("pdaList").innerHTML = '<div class="pda-empty">Bạn cứ đăng ký, PickDee sẽ tìm Coach phù hợp và báo lại cho bạn.<a class="pda-cta" href="./student-register">ĐĂNG KÝ HỌC →</a></div>';
+        return;
+      }
+      var nOn = coaches.filter(function (c) { return c.accepting_students !== false; }).length;
+      $("pdaSheetTitle").textContent = nOn + " Coach đang nhận học viên";
+      $("pdaSheetSub").textContent = "Gần nhất ~" + km(coaches[0].distance_km) + " km • tính tới khu vực Coach dạy";
+      var html = "";
+      coaches.forEach(function (c, i) {
+        var key = c.lat + "," + c.lng, k = seen[key] = (seen[key] || 0) + 1, off = (k - 1) * 0.0018;
+        c._ll = [Number(c.lat) + off, Number(c.lng) + off * 0.6];
+        var on = c.accepting_students !== false;
+        c._m = L.marker(c._ll, { icon: pin(c, false), zIndexOffset: on ? 200 - i : -i }).addTo(layer).on("click", function () { select(c.id, true); });
+        html += '<div class="pda-coach" data-id="' + c.id + '"><div class="pda-av" id="pdaAv' + c.id + '">' + esc(initials(c.full_name)) + '</div>'
+          + '<div class="info"><b>' + esc(c.full_name) + '</b><small>📍 ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area) + '</small>'
+          + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
+          + '<div class="pda-km"><b>' + km(c.distance_km) + '</b><small>km</small></div></div>'
+          + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '">Học với Coach này</a></div>';
+      });
+      $("pdaList").innerHTML = html;
+      $("pdaList").querySelectorAll(".pda-coach").forEach(function (el) {
+        el.onclick = function () { select(Number(el.getAttribute("data-id")), false); };
+      });
+      if (fit) {
+        var pts = [here].concat(coaches.slice(0, 5).map(function (c) { return c._ll; }));
+        map.fitBounds(pts, { paddingTopLeft: [40, 80], paddingBottomRight: [40, Math.round($("pdaMap").clientHeight * 0.52) + 20], maxZoom: 14 });
+      }
+      setTimeout(function () { moved = false; $("pdaHere").classList.remove("show"); }, 400);
+      avatars(coaches.slice(0, 10));
+    }
+
+    function pin(c, sel) {
+      var on = c.accepting_students !== false;
+      return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '"><span>' + esc(initials(c.full_name)) + '</span></div>', iconSize: [38, 38], iconAnchor: [4, 38] });
+    }
+
+    function select(id, fromMap) {
+      coaches.forEach(function (c) { if (c._m) c._m.setIcon(pin(c, c.id === id)); });
+      selId = id;
+      var el = null;
+      $("pdaList").querySelectorAll(".pda-coach").forEach(function (x) {
+        var on = Number(x.getAttribute("data-id")) === id; x.classList.toggle("sel", on); if (on) el = x;
+      });
+      var c = coaches.find(function (x) { return x.id === id; });
+      if (c && !fromMap) { var z = map.getZoom(), h = $("pdaMap").clientHeight; map.panTo(map.unproject(map.project(c._ll, z).add([0, h * 0.2]), z)); }
+      if (el && fromMap) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    function avatars(list) {
+      if (!window.sb) return;
+      list.forEach(function (c) {
+        window.sb.rpc("public_get_coach_avatar", { p_coach_id: Number(c.id) }).then(function (r) {
+          var row = Array.isArray(r.data) ? r.data[0] : null;
+          if (!row || !row.avatar_path) return;
+          var bucket = row.avatar_bucket === "avatars" ? "avatars" : "profile-photos";
+          return window.sb.storage.from(bucket).createSignedUrl(row.avatar_path, 3600).then(function (s) {
+            var el = $("pdaAv" + c.id);
+            if (s && s.data && s.data.signedUrl && el) { el.style.backgroundImage = 'url("' + s.data.signedUrl + '")'; el.textContent = ""; }
+          });
+        }).catch(function () {});
+      });
+    }
+
+    $("pdaLocate").onclick = function () { if (map) { $("pdaCenter").classList.remove("show"); locate(); } };
+    $("pdaHere").onclick = searchCenter;
+    $("pdaHandle").onclick = function () { $("pdaSheet").classList.toggle("full"); };
+    return { open: open };
+  })();
+
+  route();
 })();
 </script>
 
