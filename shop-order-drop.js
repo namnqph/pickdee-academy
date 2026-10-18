@@ -8,7 +8,7 @@
   if (window.__pdOrderDrop) return;
   window.__pdOrderDrop = true;
 
-  const V = "20261018-drop5";
+  const V = "20261018-drop6";
   const AUTO_SECONDS = 5;
   const AUTO_NOTE = "Tạo tự động từ ảnh chat";
   const MANUAL_NOTE = "Tạo từ ảnh chat (đã kiểm tra tay)";
@@ -343,6 +343,8 @@ body.pd-not-orders #pdDropFab{display:none}
         || localStorage.getItem("pickdee_quick_order_source") || "zalo",
       note: o.note || "",
       aiWarnings: (o.warnings || []).filter(Boolean),
+      // Máy đã sửa chữ/số AI đổi sai về đúng chữ khách viết (PDOrderPhoto.verifyParsed)
+      fixes: Array.from(new Set(o.fixes || [])),
       // Số hai lượt đọc khác nhau (đã lấy số lượt "eng") nằm trong địa chỉ → nhắc so với ảnh, không tự tạo
       doubts: (o.digit_doubts || []).filter(function (d) { return String(o.address_text || "").indexOf(d.eng) >= 0; }),
       dealGoods: null, dealShip: o.shipping_fee,
@@ -462,6 +464,7 @@ body.pd-not-orders #pdDropFab{display:none}
     else html += viewHtml(c);
 
     const probs = c.state === "done" ? [] : problems(c);
+    if (c.fixes.length) html += '<div class="pdd-muted">🔧 Đã sửa theo chữ khách: ' + c.fixes.map(esc).join(" · ") + "</div>";
     if (c.error) html += '<div class="pdd-probs">❌ ' + esc(c.error) + "</div>";
     else if (probs.length && c.state !== "creating") html += '<div class="pdd-probs">⚠️ ' + probs.map(esc).join("<br>⚠️ ") + "</div>";
 

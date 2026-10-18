@@ -118,6 +118,92 @@
   }
 
   // Đọc chữ từng ảnh trên máy; nhiều ảnh thì giữ ranh giới "--- Ảnh n ---"
+  /* ---------- Đối chiếu kết quả AI với chữ trong ảnh ----------
+     Mọi chữ/số AI trả về (tên, số nhà, đường, xã, huyện, tỉnh) bỏ dấu phải có trong ảnh.
+     AI chỉ được THÊM DẤU (le lai → Lê Lai), không được đổi chữ (le lai → Lê Lợi) hay đổi số.
+     Lệch → lấy đúng chữ/số khách viết ở vị trí đó (fixes); không dò được → untraced (thẻ chặn tự tạo). */
+  // Chữ AI tự thêm cho rõ loại đơn vị/địa chỉ – không cần có trong ảnh
+  const ADDED = { phuong: 1, xa: 1, thi: 1, tran: 1, quan: 1, huyen: 1, tinh: 1, thanh: 1, pho: 1, tp: 1, tx: 1, p: 1, q: 1, so: 1, ngo: 1, ngach: 1, hem: 1, kiet: 1, duong: 1, pho_: 1, thon: 1, xom: 1, ap: 1, to: 1, khu: 1, cum: 1, khom: 1, ban: 1, lang: 1, nha: 1, toa: 1, tang: 1, phong: 1, can: 1, ho: 1, chung: 1, cu: 1, kdt: 1 };
+  function wkey(w) { return String(w).toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  function lev(a, b) {
+    if (Math.abs(a.length - b.length) > 1) return 2;
+    const d = [];
+    for (let i = 0; i <= a.length; i++) { d[i] = [i]; }
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  function ocrWords(text) {
+    return (String(text || "").match(/\d+(?:[\/.\-]\d+)*|[\p{L}]+/gu) || []).map(function (w) { return { raw: w, k: wkey(w), num: /^\d/.test(w) }; });
+  }
+  // Chữ khớp: giống hệt (bỏ dấu); chữ ≥ 5 ký tự cho lệch 1 ký tự (AI sửa lỗi đọc như "gianh" → "Giang")
+  function wordMatch(fk, ok) { return fk === ok || (fk.length >= 5 && ok.length >= 4 && lev(fk, ok) <= 1); }
+  // Khách viết tắt tỉnh/thành → AI viết đầy đủ là đúng
+  const ABBR = { hn: "ha noi", hcm: "ho chi minh", tphcm: "ho chi minh", sg: "sai gon ho chi minh", hp: "hai phong", dn: "da nang", ct: "can tho", brvt: "ba ria vung tau", bd: "binh duong" };
+  function anchorField(value, words, label, out) {
+    if (!value) return value;
+    const abbr = {};
+    words.forEach(function (w) { if (ABBR[w.k]) ABBR[w.k].split(" ").forEach(function (x) { abbr[x] = 1; }); });
+    let last = -1;
+    return String(value).replace(/\d+(?:[\/.\-]\d+)*|[\p{L}]+/gu, function (tok) {
+      const fk = wkey(tok), num = /^\d/.test(tok);
+      if (!num && (ADDED[fk] || abbr[fk])) return tok;
+      // tìm từ khớp, ưu tiên sau từ khớp trước (giữ thứ tự khách viết)
+      let hit = -1;
+      for (let pass = 0; pass < 2 && hit < 0; pass++) {
+        for (let j = pass ? 0 : last + 1; j < words.length; j++) {
+          if (num ? words[j].k === fk : (!words[j].num && wordMatch(fk, words[j].k))) { hit = j; break; }
+        }
+      }
+      if (hit >= 0) { last = hit; return tok; }
+      // không có trong ảnh → lấy từ đứng ngay sau từ khớp trước (cùng loại chữ/số, độ dài gần bằng)
+      const cand = last >= 0 ? words[last + 1] : null;
+      if (cand && cand.num === num && Math.abs(cand.k.length - fk.length) <= 2) {
+        last = last + 1;
+        const fixed = num ? cand.raw : (tok[0] === tok[0].toUpperCase() ? cand.raw[0].toUpperCase() + cand.raw.slice(1) : cand.raw);
+        out.fixes.push(label + ": «" + tok + "» → «" + fixed + "»");
+        return fixed;
+      }
+      // số chưa neo được vị trí: trong ảnh có đúng 1 số gần giống (65/5/47 ↔ 63/5/47) → lấy số đó
+      if (num) {
+        const near = words.filter(function (w) { return w.num && nearNum(fk, w.k); })
+          .filter(function (w, i, arr) { return arr.findIndex(function (x) { return x.k === w.k; }) === i; });
+        if (near.length === 1) {
+          last = words.indexOf(near[0]);
+          out.fixes.push(label + ": «" + tok + "» → «" + near[0].raw + "»");
+          return near[0].raw;
+        }
+      }
+      out.untraced.push(label + ": «" + tok + "» không có trong ảnh");
+      return tok;
+    });
+  }
+  // o = 1 đơn AI trả về; text = chữ các ảnh của đơn đó. Sửa tại chỗ, trả { fixes, untraced }
+  function verifyParsed(o, text) {
+    const words = ocrWords(text);
+    const out = { fixes: [], untraced: [] };
+    if (!words.length || !o) return out;
+    o.customer_name = anchorField(o.customer_name, words, "Tên", out);
+    const ap = o.address_parts || {};
+    ap.street = anchorField(ap.street, words, "Số nhà/đường", out);
+    ap.ward = anchorField(ap.ward, words, "Xã/phường", out);
+    ap.district = anchorField(ap.district, words, "Huyện/quận", out);
+    ap.province = anchorField(ap.province, words, "Tỉnh", out);
+    o.address_text = anchorField(o.address_text, words, "Địa chỉ khách gửi", out);
+    (o.items || []).forEach(function (i) {
+      // số lượng phải có trong chữ món đó (raw_text) hoặc = 1 khi khách không ghi số
+      const q = Number(i.quantity || 1);
+      const raw = String(i.raw_text || "");
+      if (q > 1 && !(raw.match(/\d+/g) || []).some(function (n) { return Number(n) === q; })
+          && !words.some(function (w) { return w.num && Number(w.raw) === q; })) {
+        out.untraced.push("Số lượng " + q + " không có trong ảnh");
+      }
+    });
+    out.untraced = Array.from(new Set(out.untraced));
+    return out;
+  }
+
   async function readImages(files, progress, max, alwaysMark) {
     const list = Array.from(files || []).filter(function (f) { return /^image\//.test(f.type); }).slice(0, max);
     if (!list.length) throw new Error("Chưa chọn ảnh.");
@@ -167,6 +253,9 @@
     r.phone = m.phones[idx] || (m.phones.length === 1 ? m.phones[0] : "");
     r.phones = m.phones;
     r.ocr_text = texts.join("\n");
+    const chk = verifyParsed(r, r.ocr_text);
+    r.fixes = chk.fixes;
+    r.warnings = (r.warnings || []).concat(chk.untraced.map(function (x) { return "Kiểm tra lại – " + x; }));
     return r;
   }
 
@@ -185,6 +274,9 @@
       const own = Array.from(new Set(imgs.reduce(function (a, n) { return a.concat(perImage[n - 1] || []); }, [])));
       const ref = m.phones[Number(o.phone_ref) - 1];
       o.image_indexes = imgs;
+      const chk = verifyParsed(o, imgs.map(function (n) { return read.texts[n - 1] || ""; }).join("\n"));
+      o.fixes = chk.fixes;
+      o.warnings = (o.warnings || []).concat(chk.untraced.map(function (x) { return "Kiểm tra lại – " + x; }));
       // Số hai lượt đọc khác nhau (đã lấy theo "eng") → thẻ nhắc so với ảnh
       o.digit_doubts = imgs.reduce(function (a, n) { return a.concat(read.doubts[n - 1] || []); }, []);
       o.phones = own;
@@ -248,5 +340,5 @@
     return data;
   }
 
-  window.PDOrderPhoto = { run: run, runMulti: runMulti, createOrderFromParsed: createOrderFromParsed };
+  window.PDOrderPhoto = { run: run, runMulti: runMulti, createOrderFromParsed: createOrderFromParsed, verifyParsed: verifyParsed };
 })();
