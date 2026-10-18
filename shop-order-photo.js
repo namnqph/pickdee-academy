@@ -55,8 +55,9 @@
     return 2 * hit / (a.length + b.length - 2);
   }
   // Chỉ thay khi 2 số gần giống: cùng độ dài, ≥ 2 chữ số, khác ≤ 1/3 số chữ số (65/5/47 ↔ 63/5/47, không phải 7:28 ↔ 6:47)
-  function nearNum(a, b) {
-    if (a.length !== b.length || a.replace(/\D/g, "").length < 2) return false;
+  //   Số 1 chữ số (vd "5 set" ↔ "3 set": bộ vie hay đọc 3 thành 5) chỉ thay khi cả dòng khớp gần tuyệt đối (one=true)
+  function nearNum(a, b, one) {
+    if (a.length !== b.length || a.replace(/\D/g, "").length < (one ? 1 : 2)) return false;
     let diff = 0;
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) { if (/\D/.test(a[i] + b[i])) return false; diff++; }
     return diff <= Math.max(1, Math.floor(a.replace(/\D/g, "").length / 3));
@@ -78,7 +79,7 @@
       let i = 0;
       return line.replace(NUM_RE, function (m) {
         const e = en[i++];
-        if (e === m || !nearNum(m, e)) return m;
+        if (e === m || !nearNum(m, e, score >= 0.85)) return m;
         doubts.push({ vie: m, eng: e });
         return e;
       });
@@ -103,6 +104,59 @@
       img.onerror = function () { URL.revokeObjectURL(url); fail(new Error("Không mở được ảnh.")); };
       img.src = url;
     });
+  }
+
+  // Chữ trắng trên bong bóng màu (tin PickDee gửi: xanh/tím, chế độ tối) bộ đọc thường bỏ sót.
+  //   Ảnh đen-trắng theo vùng (giống student-bill-ocr.js): nền = màu đa số quanh điểm (~80px), chữ = phần thiểu số,
+  //   chiều sáng/tối theo độ lệch (moment bậc 3) → chữ luôn đen trên nền trắng, kể cả chữ trắng trên nền màu.
+  function normalize(src) {
+    const W = src.width, H = src.height;
+    const d = src.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, W, H).data;
+    const g = new Float64Array(W * H);
+    for (let i = 0, p = 0; p < g.length; i += 4, p++) g[p] = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0;
+    function integral(pow) {
+      const S = new Float64Array((W + 1) * (H + 1));
+      for (let y = 0; y < H; y++) {
+        let rs = 0;
+        for (let x = 0; x < W; x++) { const v = g[y * W + x]; rs += pow === 3 ? v * v * v : pow === 2 ? v * v : v; S[(y + 1) * (W + 1) + x + 1] = S[y * (W + 1) + x + 1] + rs; }
+      }
+      return function (x, y, r) {
+        const x0 = Math.max(0, x - r), x1 = Math.min(W, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(H, y + r + 1);
+        return (S[y1 * (W + 1) + x1] - S[y0 * (W + 1) + x1] - S[y1 * (W + 1) + x0] + S[y0 * (W + 1) + x0]) / ((y1 - y0) * (x1 - x0));
+      };
+    }
+    const m1 = integral(1), m2 = integral(2), m3 = integral(3);
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const ctx = c.getContext("2d"), o = ctx.createImageData(W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const p = y * W + x, a = m1(x, y, 40), b = m2(x, y, 40), cc = m3(x, y, 40);
+      const skew = cc - 3 * a * b + 2 * a * a * a, sd = Math.sqrt(Math.max(0, b - a * a)), k = Math.max(15, sd * 0.35);
+      const v = (skew > 0 ? g[p] > a + k : g[p] < a - k) ? 0 : 255;
+      o.data[p * 4] = o.data[p * 4 + 1] = o.data[p * 4 + 2] = v; o.data[p * 4 + 3] = 255;
+    }
+    ctx.putImageData(o, 0, 0);
+    return c;
+  }
+
+  // Ảnh gốc là chính (ảnh đen-trắng làm hỏng chữ nền sáng: "tran hung" → "tranhung", SĐT sai). Chỉ chèn dòng của ảnh
+  //   đen-trắng mà ảnh gốc KHÔNG có (≥ 5 chữ cái, không giống dòng nào), đúng vị trí theo thứ tự trên → dưới.
+  function mergeLines(base, extra) {
+    const B = String(base || "").split("\n"), keys = B.map(letters), out = [];
+    let j = 0;
+    String(extra || "").split("\n").forEach(function (e) {
+      const k = letters(e);
+      if (k.length < 3) return;
+      // dòng ngắn (vd "Hòa" — tên bị xuống dòng) so khớp nguyên chữ; dòng dài so gần giống
+      const same = function (i) { return k.length < 5 ? keys[i] === k : similar(k, keys[i]) >= 0.6; };
+      let hit = -1;
+      for (let i = j; i < B.length; i++) if (same(i)) { hit = i; break; }
+      if (hit >= 0) { for (; j <= hit; j++) out.push(B[j]); return; }
+      for (let i = 0; i < j; i++) if (same(i)) return; // đã có ở phía trên
+      out.push(e.replace(/^[^0-9A-Za-zÀ-ỹ]+|[^0-9A-Za-zÀ-ỹ.,)]+$/g, ""));
+    });
+    for (; j < B.length; j++) out.push(B[j]);
+    return out.join("\n");
   }
 
   function maskPhones(text) {
@@ -179,18 +233,48 @@
       return tok;
     });
   }
+  // Chiều ngược: AI bỏ rơi mã số nhà/khu khách viết ngay trước địa chỉ ("K1 tổ8 ấp…" → "Tổ 8 ấp…").
+  // Tìm dòng ảnh có 2 từ đầu của địa chỉ; từ đứng ngay trước là mã (K1, 12A, 36/8, B5) mà địa chỉ chưa có → thêm lại đúng chữ khách.
+  const LEAD_RE = /(?:^|[\s,.;])([a-z]{1,3}\d{1,4}[a-h]?|\d{1,4}[a-h]?(?:[\/\-]\d{1,4}[a-h]?)*)[\s,.]*$/;
+  function keepLeadCode(value, text, label, out) {
+    if (!value) return value;
+    const vk = wkey(value);
+    const head = (vk.match(/[a-z0-9]+/g) || []).slice(0, 2);
+    if (head.length < 2) return value;
+    const re = new RegExp(head.map(function (t) { return t.replace(/[^a-z0-9]/g, ""); }).join("[\\s,.]*"));
+    const lines = String(text || "").split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const lk = wkey(lines[i]);
+      const m = lk.match(re);
+      if (!m) continue;
+      const lead = lk.slice(0, m.index).match(LEAD_RE);
+      if (!lead) return value;
+      const code = lead[1];
+      if ((vk.match(/[a-z0-9\/\-]+/g) || []).indexOf(code) >= 0) return value;
+      const raw = (lines[i].match(new RegExp(code.replace(/[\/\-]/g, "\\$&"), "i")) || [code.toUpperCase()])[0];
+      out.fixes.push(label + ": thêm «" + raw + "» khách ghi ở đầu địa chỉ");
+      return raw + " " + value;
+    }
+    return value;
+  }
   // o = 1 đơn AI trả về; text = chữ các ảnh của đơn đó. Sửa tại chỗ, trả { fixes, untraced }
   function verifyParsed(o, text) {
     const words = ocrWords(text);
     const out = { fixes: [], untraced: [] };
     if (!words.length || !o) return out;
     o.customer_name = anchorField(o.customer_name, words, "Tên", out);
+    // Tên người Việt không có chữ 1 ký tự ("Nguyễn Văn T") → tên bị cắt/đọc thiếu
+    String(o.customer_name || "").split(/\s+/).forEach(function (w) {
+      if (w.length === 1) out.untraced.push("Tên: «" + o.customer_name + "» có chữ viết tắt «" + w + "», có thể đọc thiếu");
+    });
     const ap = o.address_parts || {};
     ap.street = anchorField(ap.street, words, "Số nhà/đường", out);
     ap.ward = anchorField(ap.ward, words, "Xã/phường", out);
     ap.district = anchorField(ap.district, words, "Huyện/quận", out);
     ap.province = anchorField(ap.province, words, "Tỉnh", out);
     o.address_text = anchorField(o.address_text, words, "Địa chỉ khách gửi", out);
+    ap.street = keepLeadCode(ap.street, text, "Số nhà/đường", out);
+    o.address_text = keepLeadCode(o.address_text, text, "Địa chỉ khách gửi", out);
     (o.items || []).forEach(function (i) {
       // số lượng phải có trong chữ món đó (raw_text) hoặc = 1 khi khách không ghi số
       const q = Number(i.quantity || 1);
@@ -217,7 +301,17 @@
       const canvas = await shrink(list[i]);
       const r = await w.recognize(canvas);
       const re = wEng ? await wEng.recognize(canvas).catch(function () { return null; }) : null;
-      const fixed = re ? fixDigits(r.data.text, re.data.text) : { text: String(r.data.text || ""), doubts: [] };
+      const base = re ? fixDigits(r.data.text, re.data.text) : { text: String(r.data.text || ""), doubts: [] };
+      // Lượt 2: ảnh đen-trắng → lấy thêm dòng bị sót (chữ trắng trên bong bóng màu)
+      let fixed = base;
+      try {
+        const nc = normalize(canvas);
+        const r2 = await w.recognize(nc);
+        const re2 = wEng ? await wEng.recognize(nc).catch(function () { return null; }) : null;
+        const extra = re2 ? fixDigits(r2.data.text, re2.data.text) : { text: String(r2.data.text || ""), doubts: [] };
+        const merged = mergeLines(base.text, extra.text);
+        fixed = { text: merged, doubts: base.doubts.concat(extra.doubts.filter(function (x) { return merged.indexOf(x.eng) >= 0; })) };
+      } catch (e) { console.warn("PickDee OCR lượt 2:", e); }
       doubts.push(fixed.doubts);
       // Bỏ dòng nút quay lại app của iPhone ("< Facebook") – không phải nguồn chat
       const text = fixed.text.replace(/^\s*[<◀‹«]\s*(Facebook|Messenger|Zalo|TikTok|Instagram|Safari)\s*$/gim, "");

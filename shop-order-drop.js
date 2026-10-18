@@ -8,7 +8,7 @@
   if (window.__pdOrderDrop) return;
   window.__pdOrderDrop = true;
 
-  const V = "20261018-drop6";
+  const V = "20261018-drop7";
   const AUTO_SECONDS = 5;
   const AUTO_NOTE = "Tạo tự động từ ảnh chat";
   const MANUAL_NOTE = "Tạo từ ảnh chat (đã kiểm tra tay)";
@@ -346,7 +346,20 @@ body.pd-not-orders #pdDropFab{display:none}
       // Máy đã sửa chữ/số AI đổi sai về đúng chữ khách viết (PDOrderPhoto.verifyParsed)
       fixes: Array.from(new Set(o.fixes || [])),
       // Số hai lượt đọc khác nhau (đã lấy số lượt "eng") nằm trong địa chỉ → nhắc so với ảnh, không tự tạo
-      doubts: (o.digit_doubts || []).filter(function (d) { return String(o.address_text || "").indexOf(d.eng) >= 0; }),
+      doubts: (o.digit_doubts || []).filter(function (d, i, arr) {
+        return arr.findIndex(function (x) { return x.eng === d.eng && x.vie === d.vie; }) === i && String(o.address_text || "").indexOf(d.eng) >= 0;
+      }),
+      // Số trong chữ món hàng mà 2 lượt đọc khác nhau (vd "3 set" ↔ "5 set") → nhắc so với ảnh, không tự tạo.
+      // Ngoại lệ: các dòng hàng chứa số đó cộng lại đúng bằng số lượt "eng" ("3 set: 2 đen 1 xám") → đã xác nhận.
+      qtyDoubts: (o.digit_doubts || []).filter(function (d, i, arr) {
+        if (arr.findIndex(function (x) { return x.eng === d.eng && x.vie === d.vie; }) !== i) return false;
+        const re = new RegExp("(^|\\D)" + String(d.eng).replace(/[.\-\/]/g, "\\$&") + "(\\D|$)");
+        const lines = (o.items || []).filter(function (it) { return re.test(String(it.raw_text || "")); });
+        if (!lines.length) return false;
+        const sum = lines.reduce(function (s, it) { return s + Number(it.quantity || 1); }, 0);
+        const partsSure = lines.every(function (it) { return !arr.some(function (x) { return Number(x.eng) === Number(it.quantity || 1); }); });
+        return !(lines.length > 1 && partsSure && sum === Number(d.eng) && sum !== Number(d.vie));
+      }),
       dealGoods: null, dealShip: o.shipping_fee,
       dup: null, dupOk: false,
       state: "warn", edit: false, error: "", code: "", orderId: null
@@ -433,6 +446,7 @@ body.pd-not-orders #pdDropFab{display:none}
     if (c.payEvidence === "bill" && c.paidAmount && c.paidAmount < totals(c).goods) p.push("Bill " + money(c.paidAmount) + " ít hơn tiền hàng " + money(totals(c).goods) + " – kiểm tra lại.");
     c.aiWarnings.forEach(function (w) { p.push(w); });
     c.doubts.forEach(function (d) { p.push("Số nhà đọc không chắc: đã lấy «" + d.eng + "» (có thể là «" + d.vie + "») – so với ảnh."); });
+    (c.qtyDoubts || []).forEach(function (d) { p.push("Số lượng đọc không chắc: đã lấy «" + d.eng + "» (có thể là «" + d.vie + "») – so với ảnh."); });
     if (c.dup && !c.dupOk) p.push("Đơn này đã có " + c.dup.code + " (cùng SĐT + sản phẩm trong 48h) – vẫn tạo?");
     return p;
   }
@@ -618,6 +632,7 @@ body.pd-not-orders #pdDropFab{display:none}
         else if (f === "ward") { c.wardName = v; c.addrHint = ""; render(c); return; }
         if (f === "phone") { c.phones = []; c.dupOk = false; }
         if (f === "street" || f === "legacy") c.doubts = [];
+        if (f === "qty") c.qtyDoubts = [];
         if (ev === "change") render(c);
       });
       // Ô chữ: vẽ lại khi rời ô (giữ con trỏ khi đang gõ)
