@@ -319,7 +319,7 @@
   <div class="topbar">
 
     <a
-      href="/"
+      href="/academy"
       class="brand"
     >
       PickDee
@@ -335,6 +335,17 @@
     >
       ← Danh bạ sân
     </a>
+<script>
+/* Nút quay lại: về đúng trang trước (Sân gần / danh bạ) */
+(function () {
+  var a = document.querySelector("a.back-btn"); if (!a) return;
+  var near = new URLSearchParams(location.search).get("from") === "near", same = false;
+  try { same = new URL(document.referrer).origin === location.origin; } catch (e) {}
+  if (near) { a.textContent = "← Sân gần bạn"; a.href = "/academy#san"; }
+  else if (same) a.textContent = "← Quay lại";
+  a.addEventListener("click", function (e) { if (same && history.length > 1) { e.preventDefault(); history.back(); } });
+})();
+</script>
 
   </div>
 

@@ -697,6 +697,17 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
 #pdaMap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.55)}
 #pdaMap .leaflet-control-attribution{background:rgba(7,16,28,.7);color:#7d8a9c;font-size:9px}
 #pdaMap .leaflet-control-attribution a{color:#9fb0c4}
+.pda-seg{flex:none;display:flex;padding:3px;border-radius:14px;background:rgba(7,16,28,.92);border:1px solid rgba(255,255,255,.1)}
+.pda-seg button{border:0;background:transparent;color:#93a1b3;font:inherit;font-size:13px;font-weight:900;padding:0 12px;border-radius:11px;cursor:pointer}
+.pda-seg button.on{background:#d8ff45;color:#07101b}
+.pda-pin.court{background:#fff}
+.pda-pin.court.sel{background:#07101b;border-color:#d8ff45}
+.pda-pin.court span{display:grid;place-items:center}
+.pda-av.court{background:rgba(216,255,69,.1)}
+.pda-coach .info small.meta{color:#c6cfda;font-weight:700}
+.pda-approx{margin:-4px 4px 10px;font-size:10.5px;color:#6f7d90}
+.pda-coach + .pda-coach-act + .pda-approx{display:none}
+.pda-coach.sel + .pda-coach-act + .pda-approx{display:block}
 .pda-me{width:18px;height:18px;border-radius:50%;background:#3b9bff;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,155,255,.25)}
 .pda-pin{display:grid;place-items:center;width:38px;height:38px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:#d8ff45;border:2px solid #07101b;box-shadow:0 6px 14px rgba(0,0,0,.45)}
 .pda-pin span{transform:rotate(45deg);color:#07101b;font-weight:900;font-size:12px}
@@ -801,7 +812,7 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
           <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
           <b>Đăng ký học</b><small>PickDee ghép Coach cho bạn</small>
         </a>
-        <a class="pda-tile" href="./courts">
+        <a class="pda-tile" href="#san">
           <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16M12 3v18"/></svg></span>
           <b>Tìm sân gần bạn</b><small>Danh bạ sân Pickleball</small>
         </a>
@@ -830,6 +841,7 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
       <div class="pda-center" id="pdaCenter"><svg viewBox="0 0 34 44"><path d="M17 43C17 43 32 27 32 16A15 15 0 0 0 2 16C2 27 17 43 17 43Z" fill="#d8ff45" stroke="#07101b" stroke-width="2"/><circle cx="17" cy="16" r="5.5" fill="#07101b"/></svg></div>
       <button class="pda-here" id="pdaHere" type="button">🔎 Tìm Coach quanh điểm này</button>
       <div class="pda-float">
+        <div class="pda-seg" id="pdaSeg"><button type="button" data-mode="coach" class="on">Coach</button><button type="button" data-mode="court">Sân</button></div>
         <div class="loc"><i></i><span id="pdaLocText">Đang xác định vị trí của bạn…</span></div>
         <button class="pda-fab" id="pdaLocate" type="button" aria-label="Về vị trí của tôi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
       </div>
@@ -838,7 +850,7 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
         <div style="position:absolute;top:8px;right:14px;font-size:9px;color:#5d6b7d">Bản đồ © <a href="https://www.openstreetmap.org/copyright" style="color:#7d8a9c">OpenStreetMap</a></div>
         <div class="pda-sheet-head">
           <div><b id="pdaSheetTitle">Đang tìm Coach gần bạn…</b><small id="pdaSheetSub">Khoảng cách tính tới khu vực Coach nhận dạy</small></div>
-          <a href="./find-coach">Theo khu vực ›</a>
+          <a href="./find-coach" id="pdaAll">Theo khu vực ›</a>
         </div>
         <div class="pda-sheet-body" id="pdaList"></div>
       </div>
@@ -946,7 +958,7 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
   <nav class="pda-tabs" id="pdaTabs">
     <a href="#" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg>Trang chủ</a>
     <a href="#hoc" data-tab="hoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg>Khoá học</a>
-    <a href="#coach" data-tab="coach" class="mid"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>Coach gần</a>
+    <a href="#coach" data-tab="coach" class="mid"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>Gần bạn</a>
     <a href="#hop-tac" data-tab="hop-tac"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 010 6M18 14c2 .7 3 2.8 3 6"/></svg>Hợp tác</a>
     <a href="#tai-khoan" data-tab="tai-khoan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Tài khoản</a>
   </nav>
@@ -2116,22 +2128,23 @@ async function redirectByRole(
 <script>
 (function () {
   document.body.classList.add("pda");
-  var views = { home: "v-home", coach: "v-coach", hoc: "v-learn", "hop-tac": "v-partner", "tai-khoan": "v-account" };
+  var views = { home: "v-home", coach: "v-coach", san: "v-coach", hoc: "v-learn", "hop-tac": "v-partner", "tai-khoan": "v-account" };
   var current = "";
 
   function show(name) {
     if (!views[name]) name = "home";
     if (name === current) return;
     current = name;
+    var near = name === "coach" || name === "san";
     Object.keys(views).forEach(function (k) {
-      document.getElementById(views[k]).classList.toggle("active", k === name);
+      document.getElementById(views[k]).classList.toggle("active", views[k] === views[name]);
     });
     document.querySelectorAll("#pdaTabs a").forEach(function (a) {
-      a.classList.toggle("active", a.getAttribute("data-tab") === name);
+      a.classList.toggle("active", a.getAttribute("data-tab") === (near ? "coach" : name));
     });
-    document.body.classList.toggle("pda-on-coach", name === "coach");
+    document.body.classList.toggle("pda-on-coach", near);
     document.getElementById(views[name]).scrollTop = 0;
-    if (name === "coach") Near.open();
+    if (near) Near.open(name === "san" ? "court" : "coach");
   }
   function route() { show((location.hash || "").replace("#", "") || "home"); }
   document.getElementById("pdaTabs").addEventListener("click", function (e) {
@@ -2146,12 +2159,21 @@ async function redirectByRole(
 
   /* ---------------- Coach gần bạn ---------------- */
   var Near = (function () {
-    var map, meMarker, layer, started = false, loading = false, coaches = [], selId = null, here = null, moved = false;
+    var BALL = function (n) { return '<svg viewBox="0 0 24 24" width="%s" height="%s" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#d8ff45" stroke="#07101b" stroke-width="1.6"/><g fill="#07101b"><circle cx="12" cy="6.6" r="1.5"/><circle cx="7.2" cy="10.2" r="1.5"/><circle cx="16.8" cy="10.2" r="1.5"/><circle cx="9" cy="15.8" r="1.5"/><circle cx="15" cy="15.8" r="1.5"/><circle cx="12" cy="11.6" r="1.2"/></g></svg>'.replace(/%s/g, n); };
+    /* Bản đồ "Gần bạn" dùng chung cho 2 chế độ: Coach (#coach) và Sân (#san) */
+    var map, meMarker, layer, started = false, loading = false, here = null, moved = false, mode = "coach";
+    var data = { coach: { rows: [], sel: null, at: null }, court: { rows: [], sel: null, at: null } };
     var $ = function (id) { return document.getElementById(id); };
     var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
     var initials = function (n) { var p = String(n || "").trim().split(/\s+/); return ((p.length > 1 ? p[p.length - 2][0] : "") + (p[p.length - 1] || "?")[0]).toUpperCase(); };
     var km = function (v) { v = Number(v); return v < 1 ? "<1" : v.toLocaleString("vi-VN", { maximumFractionDigits: 1 }); };
+    var money = function (v) { v = Number(v); return v >= 1000 ? Math.round(v / 1000) + "k" : String(v); };
     var HN = [21.0285, 105.8542];
+    var TXT = {
+      coach: { searching: "Đang tìm Coach gần bạn…", sub: "Khoảng cách tính tới khu vực Coach nhận dạy", all: "./find-coach", allText: "Theo khu vực ›", pickHint: "Kéo bản đồ tới nơi bạn muốn học" },
+      court: { searching: "Đang tìm sân gần bạn…", sub: "Sân Pickleball quanh vị trí của bạn", all: "./courts", allText: "Danh bạ sân ›", pickHint: "Kéo bản đồ tới nơi bạn muốn chơi" }
+    };
+    var cur = function () { return data[mode]; };
 
     function loadLeaflet() {
       if (window.L) return Promise.resolve();
@@ -2166,17 +2188,30 @@ async function redirectByRole(
       });
     }
 
-    function skeleton(title) {
-      $("pdaSheetTitle").textContent = title;
+    function skeleton() {
+      $("pdaSheetTitle").textContent = TXT[mode].searching;
       $("pdaList").innerHTML = '<div class="pda-skel"></div><div class="pda-skel"></div><div class="pda-skel"></div>';
     }
-
     function setScan(on) { $("pdaScan").classList.toggle("show", on); }
+    function paintMode() {
+      document.querySelectorAll("#pdaSeg button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-mode") === mode); });
+      $("pdaAll").href = TXT[mode].all; $("pdaAll").textContent = TXT[mode].allText;
+    }
 
-    function open() {
-      if (started) { if (map) setTimeout(function () { map.invalidateSize(); }, 50); return; }
+    function open(m) {
+      var changed = m !== mode;
+      mode = m; paintMode();
+      if (started) {
+        if (map) setTimeout(function () { map.invalidateSize(); }, 50);
+        if (!changed || !map) return;
+        layer.clearLayers();
+        if (cur().at && here && cur().at[0] === here[0] && cur().at[1] === here[1]) render(false);
+        else if (here) search(here, !!meMarker && !$("pdaCenter").classList.contains("show"));
+        else skeleton();
+        return;
+      }
       started = true;
-      skeleton("Đang tìm Coach gần bạn…");
+      skeleton();
       loadLeaflet().then(function () {
         map = L.map("pdaMap", { zoomControl: false, attributionControl: false }).setView(HN, 12);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
@@ -2186,7 +2221,7 @@ async function redirectByRole(
         if (!restore()) locate();
       }).catch(function () {
         $("pdaSheetTitle").textContent = "Không tải được bản đồ";
-        $("pdaList").innerHTML = '<div class="pda-empty">Mạng chập chờn. Bạn thử lại hoặc tìm theo khu vực.<a class="pda-cta ghost" href="./find-coach">TÌM THEO KHU VỰC →</a></div>';
+        $("pdaList").innerHTML = '<div class="pda-empty">Mạng chập chờn. Bạn thử lại hoặc xem danh sách.<a class="pda-cta ghost" href="' + TXT[mode].all + '">XEM DANH SÁCH →</a></div>';
       });
     }
 
@@ -2199,41 +2234,45 @@ async function redirectByRole(
         if (meMarker) meMarker.setLatLng(ll);
         else meMarker = L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="pda-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
         $("pdaLocText").textContent = "Vị trí của bạn";
+        data.coach.at = data.court.at = null;
         search(ll, true);
-      }, noGps, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+      }, noGps, { enableHighAccuracy: true, timeout: 10000, maximumAge: 120000 });
     }
 
     function noGps() {
       setScan(false);
       $("pdaCenter").classList.add("show");
-      $("pdaLocText").textContent = "Kéo bản đồ tới nơi bạn muốn học";
+      $("pdaLocText").textContent = TXT[mode].pickHint;
       $("pdaSheetTitle").textContent = "Chưa lấy được vị trí";
-      $("pdaSheetSub").textContent = "Kéo bản đồ để ghim nơi bạn muốn học";
-      $("pdaList").innerHTML = '<div class="pda-empty">Bạn chưa cho phép vị trí (hoặc đang mở trong Zalo/Telegram). Kéo bản đồ tới nơi muốn học rồi bấm tìm.<a class="pda-cta" href="#" id="pdaPick">🔎 TÌM QUANH ĐIỂM GHIM</a><a class="pda-cta ghost" href="./find-coach">CHỌN TỈNH / PHƯỜNG →</a></div>';
+      $("pdaSheetSub").textContent = "Kéo bản đồ để ghim vị trí";
+      $("pdaList").innerHTML = '<div class="pda-empty">Bạn chưa cho phép vị trí (hoặc đang mở trong Zalo/Telegram). Kéo bản đồ tới vị trí muốn tìm rồi bấm tìm.<a class="pda-cta" href="#" id="pdaPick">🔎 TÌM QUANH ĐIỂM GHIM</a><a class="pda-cta ghost" href="' + TXT[mode].all + '">XEM DANH SÁCH →</a></div>';
       $("pdaPick").onclick = function (e) { e.preventDefault(); searchCenter(); };
     }
 
     function centerLatLng() {
-      var el = $("pdaMap"), r = el.getBoundingClientRect();
+      var r = $("pdaMap").getBoundingClientRect();
       return map.containerPointToLatLng([r.width / 2, r.height * 0.38]);
     }
-    function searchCenter() { var c = centerLatLng(); $("pdaCenter").classList.add("show"); search([c.lat, c.lng], false); }
+    function searchCenter() { var c = centerLatLng(); $("pdaCenter").classList.add("show"); data.coach.at = data.court.at = null; search([c.lat, c.lng], false); }
 
     function search(ll, fit) {
+      var m = mode;
       loading = true; moved = false; here = ll;
       $("pdaHere").classList.remove("show");
-      skeleton("Đang tìm Coach gần bạn…");
-      $("pdaSheetSub").textContent = "Khoảng cách tính tới khu vực Coach nhận dạy";
+      skeleton();
+      $("pdaSheetSub").textContent = TXT[m].sub;
       setScan(true);
       var t0 = Date.now();
-      (window.sb ? window.sb.rpc("public_nearby_coaches", { p_lat: ll[0], p_lng: ll[1], p_limit: 20 }) : Promise.reject())
+      var rpc = m === "coach"
+        ? window.sb && window.sb.rpc("public_nearby_coaches", { p_lat: ll[0], p_lng: ll[1], p_limit: 20 })
+        : window.sb && window.sb.rpc("public_nearby_courts", { p_lat: ll[0], p_lng: ll[1], p_limit: 40 });
+      (rpc || Promise.reject())
         .then(function (r) { if (r.error) throw r.error; return r.data || []; })
-        .then(function (rows) {
-          return new Promise(function (ok) { setTimeout(function () { ok(rows); }, Math.max(0, 1100 - (Date.now() - t0))); });
-        })
-        .then(function (rows) { coaches = rows; render(fit); })
+        .then(function (rows) { return new Promise(function (ok) { setTimeout(function () { ok(rows); }, Math.max(0, 900 - (Date.now() - t0))); }); })
+        .then(function (rows) { data[m] = { rows: rows, sel: null, at: ll }; if (m === mode) render(fit); })
         .catch(function (e) {
-          console.warn("NEARBY COACHES:", e);
+          console.warn("NEARBY " + m + ":", e);
+          if (m !== mode) return;
           $("pdaSheetTitle").textContent = "Chưa tải được danh sách";
           $("pdaList").innerHTML = '<div class="pda-empty">Bạn thử lại sau ít phút.<a class="pda-cta" href="#" id="pdaRetry">THỬ LẠI</a></div>';
           $("pdaRetry").onclick = function (ev) { ev.preventDefault(); search(ll, fit); };
@@ -2241,101 +2280,155 @@ async function redirectByRole(
         .then(function () { loading = false; setScan(false); });
     }
 
+    /* Nhiều điểm trùng toạ độ (cùng tâm phường) → xếp vòng tròn nhỏ để bấm được từng ghim */
+    function spread(rows) {
+      var groups = {};
+      rows.forEach(function (r) { var k = r.lat + "," + r.lng; (groups[k] = groups[k] || []).push(r); });
+      Object.keys(groups).forEach(function (k) {
+        var g = groups[k];
+        g.forEach(function (r, i) {
+          if (g.length === 1) { r._ll = [Number(r.lat), Number(r.lng)]; return; }
+          var a = (2 * Math.PI * i) / g.length, d = 0.0025 + 0.0004 * g.length;
+          r._ll = [Number(r.lat) + d * Math.cos(a), Number(r.lng) + d * 1.1 * Math.sin(a)];
+        });
+      });
+    }
+
     function render(fit) {
-      layer.clearLayers(); selId = null;
-      var seen = {};
-      if (!coaches.length) {
-        if (fit) map.setView(here, 13);
-        $("pdaSheetTitle").textContent = "Chưa có Coach trong bán kính 25 km";
+      var D = cur(), rows = D.rows;
+      layer.clearLayers();
+      paintMode();
+      if (!rows.length) {
+        if (fit && here) map.setView(here, 13);
+        $("pdaSheetTitle").textContent = mode === "coach" ? "Chưa có Coach trong bán kính 25 km" : "Chưa có sân trong bán kính 25 km";
         $("pdaSheetSub").textContent = "Kéo bản đồ tới nơi khác để tìm thêm";
-        $("pdaList").innerHTML = '<div class="pda-empty">Bạn cứ đăng ký, PickDee sẽ tìm Coach phù hợp và báo lại cho bạn.<a class="pda-cta" href="./student-register">ĐĂNG KÝ HỌC →</a></div>';
+        $("pdaList").innerHTML = mode === "coach"
+          ? '<div class="pda-empty">Bạn cứ đăng ký, PickDee sẽ tìm Coach phù hợp và báo lại cho bạn.<a class="pda-cta" href="./student-register">ĐĂNG KÝ HỌC →</a></div>'
+          : '<div class="pda-empty">PickDee đang cập nhật thêm sân ở khu vực này.<a class="pda-cta ghost" href="./courts">XEM DANH BẠ SÂN →</a><a class="pda-cta ghost" href="./add-my-court">BẠN LÀ CHỦ SÂN? ĐƯA SÂN LÊN →</a></div>';
         return;
       }
-      var nOn = coaches.filter(function (c) { return c.accepting_students !== false; }).length;
-      $("pdaSheetTitle").textContent = nOn + " Coach đang nhận học viên";
-      $("pdaSheetSub").textContent = "Trong bán kính 25 km • gần nhất ~" + km(coaches[0].distance_km) + " km";
+      spread(rows);
+      if (mode === "coach") {
+        var nOn = rows.filter(function (c) { return c.accepting_students !== false; }).length;
+        $("pdaSheetTitle").textContent = nOn + " Coach đang nhận học viên";
+        $("pdaSheetSub").textContent = "Trong bán kính 25 km • gần nhất ~" + km(rows[0].distance_km) + " km";
+      } else {
+        $("pdaSheetTitle").textContent = rows.length + " sân Pickleball gần bạn";
+        $("pdaSheetSub").textContent = "Trong bán kính 25 km • gần nhất ~" + km(rows[0].distance_km) + " km";
+      }
       var html = "";
-      coaches.forEach(function (c, i) {
-        var key = c.lat + "," + c.lng, k = seen[key] = (seen[key] || 0) + 1, off = (k - 1) * 0.0018;
-        c._ll = [Number(c.lat) + off, Number(c.lng) + off * 0.6];
-        var on = c.accepting_students !== false;
-        c._m = L.marker(c._ll, { icon: pin(c, false), zIndexOffset: on ? 200 - i : -i }).addTo(layer).on("click", function () { select(c.id, true); });
-        html += '<div class="pda-coach" data-id="' + c.id + '"><div class="pda-av" id="pdaAv' + c.id + '">' + esc(initials(c.full_name)) + '</div>'
-          + '<div class="info"><b>' + esc(c.full_name) + '</b><small>📍 ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area) + '</small>'
-          + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
-          + '<div class="pda-km"><b>' + km(c.distance_km) + '</b><small>km</small></div></div>'
-          + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '&from=near">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '&from=near">Học với Coach này</a></div>';
+      rows.forEach(function (r, i) {
+        r._m = L.marker(r._ll, { icon: pin(r, false), zIndexOffset: 200 - i }).addTo(layer).on("click", function () { select(r.id, true); });
+        html += mode === "coach" ? coachCard(r) : courtCard(r);
       });
       $("pdaList").innerHTML = html;
       $("pdaList").querySelectorAll(".pda-coach").forEach(function (el) {
         el.onclick = function () { select(Number(el.getAttribute("data-id")), false); };
       });
-      if (fit) {
-        var pts = [here].concat(coaches.slice(0, 5).map(function (c) { return c._ll; }));
-        map.fitBounds(pts, { paddingTopLeft: [40, 80], paddingBottomRight: [40, Math.round($("pdaMap").clientHeight * 0.52) + 20], maxZoom: 14 });
+      if (fit && here) {
+        var pts = [here].concat(rows.slice(0, 5).map(function (r) { return r._ll; }));
+        map.fitBounds(pts, { paddingTopLeft: [40, 90], paddingBottomRight: [40, $("pdaSheet").offsetHeight + 40], maxZoom: 15 });
       }
       setTimeout(function () { moved = false; $("pdaHere").classList.remove("show"); save(); }, 400);
-      avatars(coaches.slice(0, 10));
+      if (D.sel != null && rows.some(function (r) { return r.id === D.sel; })) select(D.sel, true);
+      if (mode === "coach") avatars(rows.slice(0, 10));
     }
 
-    /* Giữ trạng thái khi sang hồ sơ Coach rồi quay lại (không định vị/tìm lại) */
-    var KEY = "pda_near_v1";
+    function coachCard(c) {
+      var on = c.accepting_students !== false;
+      return '<div class="pda-coach" data-id="' + c.id + '"><div class="pda-av" id="pdaAv' + c.id + '"' + (c._img ? ' style="background-image:url(&quot;' + esc(c._img) + '&quot;)">' : ">" + esc(initials(c.full_name))) + '</div>'
+        + '<div class="info"><b>' + esc(c.full_name) + '</b><small>📍 ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area) + '</small>'
+        + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
+        + '<div class="pda-km"><b>' + km(c.distance_km) + '</b><small>km</small></div></div>'
+        + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '&from=near">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '&from=near">Học với Coach này</a></div>';
+    }
+
+    function courtCard(s) {
+      var meta = [];
+      if (s.number_of_courts) meta.push(s.number_of_courts + " sân");
+      if (s.price_min || s.price_max) meta.push(s.price_min && s.price_max && s.price_min !== s.price_max ? money(s.price_min) + "–" + money(s.price_max) : money(s.price_min || s.price_max));
+      if (s.opening_hours) meta.push("🕒 " + s.opening_hours);
+      var dest = s.approx
+        ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([s.court_name, s.address, s.ward, s.province].filter(Boolean).join(", "))
+        : "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lng;
+      var tel = String(s.phone || "").replace(/[^\d+]/g, "");
+      return '<div class="pda-coach" data-id="' + s.id + '"><div class="pda-av court">' + BALL(30) + '</div>'
+        + '<div class="info"><b>' + esc(s.court_name) + '</b><small>📍 ' + esc(s.address || (s.ward + ", " + s.province)) + '</small>'
+        + (meta.length ? '<small class="meta">' + esc(meta.join(" • ")) + '</small>' : "") + '</div>'
+        + '<div class="pda-km"><b>' + (s.approx ? "~" : "") + km(s.distance_km) + '</b><small>km</small></div></div>'
+        + '<div class="pda-coach-act"><a href="./court?id=' + s.id + '&from=near">Chi tiết</a>'
+        + (tel ? '<a href="tel:' + esc(tel) + '">📞 Gọi</a>' : "")
+        + '<a class="go" href="' + esc(dest) + '" target="_blank" rel="noopener">🧭 Chỉ đường</a></div>'
+        + (s.approx ? '<div class="pda-approx">Vị trí gần đúng theo phường • Chỉ đường mở Google Maps theo tên sân</div>' : "");
+    }
+
+    /* Giữ trạng thái khi sang trang khác rồi quay lại (không định vị/tìm lại) */
+    var KEY = "pda_near_v2";
+    var plain = function (rows) { return rows.map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (k.charAt(0) !== "_") o[k] = r[k]; }); return o; }); };
     function save() {
       if (!map || !here || loading) return;
       try {
         var cc = map.getCenter();
-        sessionStorage.setItem(KEY, JSON.stringify({ t: Date.now(), here: here, gps: !!meMarker, pinned: $("pdaCenter").classList.contains("show"),
-          center: [cc.lat, cc.lng], zoom: map.getZoom(), sel: selId, full: $("pdaSheet").classList.contains("full"),
-          rows: coaches.map(function (c) { return { id: c.id, coach_code: c.coach_code, full_name: c.full_name, preferred_area: c.preferred_area, preferred_ward: c.preferred_ward, accepting_students: c.accepting_students, distance_km: c.distance_km, lat: c.lat, lng: c.lng }; }) }));
+        sessionStorage.setItem(KEY, JSON.stringify({ t: Date.now(), mode: mode, here: here, gps: !!meMarker, pinned: $("pdaCenter").classList.contains("show"),
+          center: [cc.lat, cc.lng], zoom: map.getZoom(), full: $("pdaSheet").classList.contains("full"),
+          coach: { rows: plain(data.coach.rows), sel: data.coach.sel, at: data.coach.at },
+          court: { rows: plain(data.court.rows), sel: data.court.sel, at: data.court.at } }));
       } catch (e) {}
     }
     function restore() {
       var st; try { st = JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (e) {}
-      if (!st || !st.here || !Array.isArray(st.rows) || Date.now() - st.t > 30 * 60000) return false;
+      if (!st || !st.here || Date.now() - st.t > 30 * 60000) return false;
       setScan(false);
-      here = st.here; coaches = st.rows;
+      here = st.here;
+      data.coach = st.coach || data.coach; data.court = st.court || data.court;
       if (st.gps) {
         meMarker = L.marker(here, { icon: L.divIcon({ className: "", html: '<div class="pda-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
         $("pdaLocText").textContent = "Vị trí của bạn";
-      } else {
-        $("pdaLocText").textContent = "Kéo bản đồ tới nơi bạn muốn học";
-      }
+      } else $("pdaLocText").textContent = TXT[mode].pickHint;
       if (st.pinned) $("pdaCenter").classList.add("show");
       $("pdaSheet").classList.toggle("full", !!st.full);
       map.setView(st.center, st.zoom, { animate: false });
-      render(false);
-      if (st.sel != null && coaches.some(function (c) { return c.id === st.sel; })) select(st.sel, true);
+      var D = cur();
+      if (D.at && D.at[0] === here[0] && D.at[1] === here[1]) render(false);
+      else search(here, false);
       return true;
     }
 
-    function pin(c, sel) {
-      var on = c.accepting_students !== false;
-      return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '">' + (c._img ? '<span class="ph" style="background-image:url(&quot;' + esc(c._img) + '&quot;)"></span>' : '<span>' + esc(initials(c.full_name)) + '</span>') + '</div>', iconSize: [38, 38], iconAnchor: [4, 38] });
+    function pin(r, sel) {
+      if (mode === "court") return L.divIcon({ className: "", html: '<div class="pda-pin court' + (sel ? " sel" : "") + '"><span>' + BALL(22) + '</span></div>', iconSize: [38, 38], iconAnchor: [4, 38] });
+      var on = r.accepting_students !== false;
+      return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '">' + (r._img ? '<span class="ph" style="background-image:url(&quot;' + esc(r._img) + '&quot;)"></span>' : '<span>' + esc(initials(r.full_name)) + '</span>') + '</div>', iconSize: [38, 38], iconAnchor: [4, 38] });
     }
 
     function select(id, fromMap) {
-      coaches.forEach(function (c) { if (c._m) c._m.setIcon(pin(c, c.id === id)); });
-      selId = id; save();
+      var D = cur();
+      D.rows.forEach(function (r) { if (r._m) r._m.setIcon(pin(r, r.id === id)); });
+      D.sel = id; save();
       var el = null;
       $("pdaList").querySelectorAll(".pda-coach").forEach(function (x) {
         var on = Number(x.getAttribute("data-id")) === id; x.classList.toggle("sel", on); if (on) el = x;
       });
-      var c = coaches.find(function (x) { return x.id === id; });
-      if (c && !fromMap) { var z = map.getZoom(), h = $("pdaMap").clientHeight; map.panTo(map.unproject(map.project(c._ll, z).add([0, h * 0.2]), z)); }
+      var r = D.rows.find(function (x) { return x.id === id; });
+      if (r && r._ll && !fromMap) { var z = map.getZoom(), h = $("pdaMap").clientHeight; map.panTo(map.unproject(map.project(r._ll, z).add([0, h * 0.2]), z)); }
       if (el && fromMap) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
 
     function avatars(list) {
       if (!window.sb) return;
       list.forEach(function (c) {
+        if (c._img) return;
         window.sb.rpc("public_get_coach_avatar", { p_coach_id: Number(c.id) }).then(function (r) {
           var row = Array.isArray(r.data) ? r.data[0] : null;
           if (!row || !row.avatar_path) return;
           var put = function (url) {
-            var el = $("pdaAv" + c.id);
-            if (!url || !el) return;
+            if (!url) return;
             var img = new Image();
-            img.onload = function () { el.style.backgroundImage = 'url("' + url + '")'; el.textContent = ""; c._img = url; if (c._m) c._m.setIcon(pin(c, c.id === selId)); };
+            img.onload = function () {
+              c._img = url;
+              var el = $("pdaAv" + c.id);
+              if (el && mode === "coach") { el.style.backgroundImage = 'url("' + url + '")'; el.textContent = ""; }
+              if (c._m && mode === "coach") c._m.setIcon(pin(c, c.id === data.coach.sel));
+            };
             img.src = url;
           };
           if (row.avatar_bucket === "avatars") return put(window.sb.storage.from("avatars").getPublicUrl(row.avatar_path).data.publicUrl);
@@ -2347,6 +2440,9 @@ async function redirectByRole(
     $("pdaLocate").onclick = function () { if (map) { $("pdaCenter").classList.remove("show"); locate(); } };
     $("pdaHere").onclick = searchCenter;
     $("pdaHandle").onclick = function () { $("pdaSheet").classList.toggle("full"); save(); };
+    document.querySelectorAll("#pdaSeg button").forEach(function (b) {
+      b.onclick = function () { var m = b.getAttribute("data-mode"); history.replaceState(null, "", "#" + (m === "court" ? "san" : "coach")); route(); };
+    });
     return { open: open };
   })();
 
