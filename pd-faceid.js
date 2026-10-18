@@ -251,20 +251,41 @@
 
   /* Trang đăng nhập: passkey nằm trong iCloud Keychain/Google nên hiện cả ở trình duyệt chưa lưu dấu "đã bật"
      (vd mở link từ Telegram); có dấu thì chào tên. */
-  async function mountLogin(host, onUser) {
+  /* opts.form: form mật khẩu — máy đã dùng Face ID thì ẩn form (như app: không hiện ô nhập,
+     iOS không bật bảng "Điền mật khẩu"), bấm "Đăng nhập bằng mật khẩu" mới hiện.
+     opts.auto: tự mở Face ID khi vào trang (1 lần mỗi phiên tab → đăng xuất xong không bị bật lại). */
+  async function mountLogin(host, onUser, opts) {
+    opts = opts || {};
     const h = hint();
     if (!host || !(IN_APP || await supported())) return;
     authPrep();
+    const form = opts.form || null;
+    const collapse = !!(h && form && !IN_APP);
     const box = el(
       '<div class="pdf-box">' +
         (h ? '<p class="pdf-hello">Chào ' + esc(h.name || "bạn") + ' 👋</p>' : '') +
         '<button type="button" class="pdf-btn" id="pdFaceIdLoginBtn"><span class="pdf-ic">' + ICON + '</span>Đăng nhập bằng ' + LABEL + '</button>' +
         '<div class="pdf-msg" role="status"></div>' +
-        '<div class="pdf-or">hoặc dùng mật khẩu</div>' +
+        (collapse
+          ? '<button type="button" class="pdf-ghost" data-pw>Đăng nhập bằng mật khẩu</button>'
+          : '<div class="pdf-or">hoặc dùng mật khẩu</div>') +
       '</div>'
     );
     host.appendChild(box);
     const btn = box.querySelector(".pdf-btn"), msg = box.querySelector(".pdf-msg");
+    function showPassword(focus) {
+      if (!form) return;
+      form.hidden = false; form.style.display = "";
+      const pw = box.querySelector("[data-pw]");
+      if (pw) pw.replaceWith(el('<div class="pdf-or">hoặc dùng mật khẩu</div>'));
+      if (focus) { const f = form.querySelector("input"); if (f) f.focus(); }
+    }
+    if (collapse) {
+      if (document.activeElement && form.contains(document.activeElement)) document.activeElement.blur();
+      form.hidden = true; form.style.display = "none";
+      box.querySelector("[data-pw]").addEventListener("click", function () { showPassword(true); });
+    }
+    let auto = false;
     btn.addEventListener("click", async function () {
       btn.disabled = true; msg.className = "pdf-msg"; msg.textContent = "";
       try {
@@ -280,11 +301,18 @@
           btn.disabled = false;
           return;
         }
+        if (auto && e && (e.name === "NotAllowedError" || e.name === "AbortError")) { auto = false; btn.disabled = false; return; } // tự mở bị chặn/huỷ → chờ bấm, không báo lỗi
+        auto = false;
         msg.textContent = e && e.message && !e.name && !e.code ? e.message : friendly(e);
-        if (e && e.code === "unknown_credential") { const hh = box.querySelector(".pdf-hello"); if (hh) hh.remove(); btn.remove(); }
+        if (e && e.code === "unknown_credential") { const hh = box.querySelector(".pdf-hello"); if (hh) hh.remove(); btn.remove(); showPassword(false); }
         btn.disabled = false;
       }
     });
+    if (opts.auto && h && !IN_APP) {
+      let done = false;
+      try { done = sessionStorage.getItem("pd_faceid_auto") === "1"; sessionStorage.setItem("pd_faceid_auto", "1"); } catch (_) {}
+      if (!done) { auto = true; btn.click(); }
+    }
   }
 
   /* Hỏi bật Face ID (Promise xong khi người dùng chọn) */

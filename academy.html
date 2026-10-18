@@ -864,6 +864,8 @@
         </p>
 
 
+        <div id="pdFaceIdLogin"></div>
+
         <form
           id="academyLoginForm"
           class="login-form"
@@ -1705,6 +1707,8 @@
 
 <script src="config.js?v=20261017-logout1"></script>
 
+<script src="/pd-faceid.js?v=20261018-auto1"></script>
+
 
 <!-- GIỮ APP.JS ĐỂ FORM ĐĂNG KÝ HIỆN TẠI VẪN CHẠY -->
 
@@ -2519,6 +2523,26 @@ async function redirectByRole(
 
     }
   );
+
+  /* Máy đã bật Face ID → nút Face ID, ẩn form mật khẩu (không bật bảng "Điền mật khẩu" của iOS) */
+  if (
+    window.PDFaceID
+  ) {
+    window.PDFaceID.mountLogin(
+      document.getElementById(
+        "pdFaceIdLogin"
+      ),
+      async function (user) {
+        await redirectByRole(
+          user.id
+        );
+      },
+      {
+        form:
+          loginForm
+      }
+    );
+  }
 
 
 })();
