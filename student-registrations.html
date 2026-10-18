@@ -642,6 +642,15 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
   let sb = null;
 
+  /* Tự giao Coach: trạng thái tìm Coach theo đăng ký */
+  let dispatchMap = new Map();
+  let dispatchPoll = null;
+  const DISPATCH_TEXT = {
+    searching: "🔎 Đang tìm Coach gần bạn…",
+    manual: "🔎 PickDee đang chọn Coach cho bạn",
+    waiting_payment: "Sẽ tự tìm Coach ngay khi thanh toán được xác nhận"
+  };
+
 
   /* =====================================================
      HELPERS
@@ -1288,6 +1297,12 @@ window.PICKDEE_NOTIFICATION_ROLE =
               ||
               coach?.coach_code
               ||
+              DISPATCH_TEXT[
+                dispatchMap.get(
+                  Number(registration.id)
+                )?.status
+              ]
+              ||
               "Chưa phân Coach";
 
 
@@ -1840,9 +1855,30 @@ window.PICKDEE_NOTIFICATION_ROLE =
 
           getCoaches(
             coachIds
+          ),
+
+          sb.rpc(
+            "student_get_my_dispatch_status"
+          ).then(
+            r => r.data || [],
+            () => []
           )
 
-        ]);
+        ]).then(
+          ([a, b, c, d]) => {
+            dispatchMap = new Map(
+              (Array.isArray(d) ? d : []).map(
+                x => [Number(x.registration_id), x]
+              )
+            );
+            /* Đang tìm Coach → tự tải lại sau 30 giây */
+            clearTimeout(dispatchPoll);
+            if ([...dispatchMap.values()].some(x => x.status === "searching")) {
+              dispatchPoll = setTimeout(() => { if (document.visibilityState === "visible") loadPage(); else dispatchPoll = null; }, 30000);
+            }
+            return [a, b, c];
+          }
+        );
 
 
       renderRegistrations(

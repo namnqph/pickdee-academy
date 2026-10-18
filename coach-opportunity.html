@@ -1,1408 +1,206 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
   <style id="pd-no-zoom">html{touch-action:manipulation}</style>
-
-  <meta
-    name="theme-color"
-    content="#041733"
-  >
-
-  <title>Cơ hội học viên | PickDee Academy</title>
-
+  <meta name="theme-color" content="#041733">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Lời mời nhận học viên | PickDee Academy</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config.js?v=20261017-logout1"></script>
-
-
+  <script src="./config.js?v=20261017-logout1"></script>
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-
-    body {
-      margin: 0;
-
-      min-height: 100vh;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-      color: #fff;
-
-      background:
-        radial-gradient(
-          circle at 80% 10%,
-          rgba(80,255,190,.12),
-          transparent 30%
-        ),
-        linear-gradient(
-          145deg,
-          #041733,
-          #062456 50%,
-          #03142d
-        );
-    }
-
-
-    .topbar {
-      padding: 18px 24px;
-
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      border-bottom:
-        1px solid rgba(255,255,255,.12);
-    }
-
-
-    .brand {
-      color: white;
-
-      text-decoration: none;
-
-      font-size: 19px;
-      font-weight: 900;
-    }
-
-
-    .brand span {
-      color: #d8ff45;
-    }
-
-
-    .top-actions {
-      display: flex;
-
-      align-items: center;
-
-      gap: 10px;
-    }
-
-
-    .back-link {
-      color: #d8ff45;
-
-      text-decoration: none;
-
-      font-size: 13px;
-
-      font-weight: 900;
-    }
-
-
-    .logout-btn {
-      border:
-        1px solid rgba(255,255,255,.18);
-
-      background:
-        rgba(255,255,255,.08);
-
-      color: white;
-
-      padding: 9px 12px;
-
-      border-radius: 9px;
-
-      cursor: pointer;
-
-      font-weight: 800;
-    }
-
-
-    .container {
-      width:
-        min(
-          720px,
-          calc(100% - 28px)
-        );
-
-      margin: auto;
-
-      padding:
-        42px 0 70px;
-    }
-
-
-    .eyebrow {
-      color: #d8ff45;
-
-      font-size: 13px;
-
-      font-weight: 900;
-
-      letter-spacing: 1px;
-    }
-
-
-    h1 {
-      margin:
-        8px 0 8px;
-
-      font-size:
-        clamp(
-          32px,
-          6vw,
-          48px
-        );
-    }
-
-
-    .subtitle {
-      margin-bottom: 26px;
-
-      color:
-        rgba(255,255,255,.62);
-
-      font-size: 14px;
-
-      line-height: 1.6;
-    }
-
-
-    .card {
-      padding: 24px;
-
-      border-radius: 20px;
-
-      background:
-        rgba(6,39,88,.78);
-
-      border:
-        1px solid rgba(255,255,255,.12);
-
-      box-shadow:
-        0 18px 50px rgba(0,0,0,.18);
-    }
-
-
-    .status-box {
-      margin-bottom: 20px;
-
-      padding: 14px 16px;
-
-      border-radius: 12px;
-
-      background:
-        rgba(255,255,255,.06);
-
-      border:
-        1px solid rgba(255,255,255,.09);
-
-      font-size: 14px;
-
-      line-height: 1.55;
-    }
-
-
-    .status-box.success {
-      color: #d8ff45;
-
-      border-color:
-        rgba(216,255,69,.28);
-
-      background:
-        rgba(216,255,69,.08);
-    }
-
-
-    .status-box.error {
-      color: #ffb0b0;
-
-      border-color:
-        rgba(255,130,130,.28);
-
-      background:
-        rgba(255,100,100,.07);
-    }
-
-
-    .status-box.warning {
-      color: #ffd58a;
-
-      border-color:
-        rgba(255,199,100,.28);
-
-      background:
-        rgba(255,180,80,.07);
-    }
-
-
-    .opportunity-title {
-      margin:
-        0 0 20px;
-
-      font-size: 22px;
-    }
-
-
-    .info-grid {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 14px;
-
-      margin-bottom: 22px;
-    }
-
-
-    .info-item {
-      padding: 15px;
-
-      border-radius: 13px;
-
-      background:
-        rgba(0,0,0,.13);
-
-      border:
-        1px solid rgba(255,255,255,.08);
-    }
-
-
-    .info-label {
-      margin-bottom: 6px;
-
-      color:
-        rgba(255,255,255,.5);
-
-      font-size: 12px;
-    }
-
-
-    .info-value {
-      color: #fff;
-
-      font-size: 15px;
-
-      font-weight: 900;
-
-      line-height: 1.45;
-    }
-
-
-    .privacy-box {
-      margin:
-        4px 0 22px;
-
-      padding: 14px;
-
-      border-radius: 12px;
-
-      color:
-        rgba(255,255,255,.66);
-
-      background:
-        rgba(216,255,69,.06);
-
-      border:
-        1px solid rgba(216,255,69,.18);
-
-      font-size: 13px;
-
-      line-height: 1.55;
-    }
-
-
-    .claim-btn {
-      width: 100%;
-
-      min-height: 52px;
-
-      border: 0;
-
-      border-radius: 12px;
-
-      background: #d8ff45;
-
-      color: #172600;
-
-      font-size: 15px;
-
-      font-weight: 900;
-
-      cursor: pointer;
-
-      transition: .15s ease;
-    }
-
-
-    .claim-btn:hover {
-      transform:
-        translateY(-1px);
-    }
-
-
-    .claim-btn:disabled {
-      opacity: .5;
-
-      cursor: not-allowed;
-
-      transform: none;
-    }
-
-
-    .dashboard-btn {
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-      width: 100%;
-
-      min-height: 48px;
-
-      margin-top: 12px;
-
-      border-radius: 12px;
-
-      border:
-        1px solid rgba(255,255,255,.16);
-
-      background:
-        rgba(255,255,255,.06);
-
-      color: white;
-
-      text-decoration: none;
-
-      font-size: 14px;
-
-      font-weight: 900;
-    }
-
-
-    .loading {
-      padding: 28px 0;
-
-      text-align: center;
-
-      color:
-        rgba(255,255,255,.65);
-    }
-
-
-    #opportunityContent {
-      display: none;
-    }
-
-
-    @media(max-width:600px) {
-
-      .topbar {
-        padding: 15px;
-      }
-
-
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-
-      .card {
-        padding: 19px;
-      }
-
-
-      .back-link {
-        display: none;
-      }
-
-    }
-
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:#fff;
+      background:radial-gradient(circle at top,#0f2f5c,#041733 55%,#020c1b)}
+    .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;background:rgba(4,23,51,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
+    .brand{color:#fff;text-decoration:none;font-weight:900;font-size:18px}.brand span{color:#d8ff45}
+    .back{color:#d8ff45;text-decoration:none;font-weight:900;font-size:12px}
+    main{max-width:520px;margin:0 auto;padding:18px 16px 110px}
+    .eyebrow{color:#d8ff45;font-size:12px;font-weight:900;letter-spacing:.08em}
+    h1{margin:6px 0 4px;font-size:26px}
+    .sub{color:rgba(255,255,255,.65);font-size:14px;line-height:1.5;margin-bottom:16px}
+    .offer{position:relative;margin-bottom:14px;padding:18px 16px;border-radius:22px;
+      background:linear-gradient(160deg,#123a6b,#0a1f3d);border:1px solid rgba(216,255,69,.35);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+    .offer.focus{border-color:#d8ff45;box-shadow:0 0 0 2px rgba(216,255,69,.35),0 20px 50px rgba(0,0,0,.35)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .chip{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900;background:rgba(216,255,69,.15);color:#d8ff45}
+    .chip.all{background:rgba(255,184,77,.16);color:#ffc46b}
+    .timer{font-variant-numeric:tabular-nums;font-size:22px;font-weight:900;color:#d8ff45}
+    .timer.low{color:#ff8a8a}
+    .place{margin:12px 0 2px;font-size:20px;font-weight:900;line-height:1.3}
+    .dist{color:rgba(255,255,255,.75);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+    .box{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06)}
+    .lb{font-size:11px;color:rgba(255,255,255,.55);font-weight:700}
+    .vl{margin-top:3px;font-size:15px;font-weight:900}
+    .income{grid-column:1/-1;background:rgba(216,255,69,.1);border:1px solid rgba(216,255,69,.25)}
+    .income .vl{font-size:22px;color:#d8ff45}
+    .income .sm{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px}
+    .goal{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin:-4px 0 12px}
+    .btns{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+    button{font-family:inherit}
+    .yes{min-height:56px;border:0;border-radius:16px;background:#d8ff45;color:#071523;font-size:17px;font-weight:900;cursor:pointer}
+    .no{min-height:56px;border:1px solid rgba(255,255,255,.25);border-radius:16px;background:transparent;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+    button[disabled]{opacity:.55}
+    .reasons{display:none;margin-top:12px;gap:8px;flex-wrap:wrap}
+    .reasons button{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+    .note{font-size:12px;color:rgba(255,255,255,.55);margin-top:10px;line-height:1.5}
+    .state{padding:22px 18px;border-radius:22px;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);margin-bottom:14px}
+    .state .ic{font-size:44px}
+    .state h2{margin:10px 0 6px;font-size:20px;color:#d8ff45}
+    .state p{margin:0 0 12px;color:rgba(255,255,255,.8);line-height:1.55;font-size:14px}
+    .link{display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#d8ff45;color:#071523;font-weight:900;text-decoration:none;margin-top:8px}
+    .link.ghost{background:transparent;color:#d8ff45;border:1px solid rgba(216,255,69,.4)}
+    .loading{padding:30px;text-align:center;color:rgba(255,255,255,.6)}
   </style>
-
 </head>
-
-
 <body>
-
-
 <header class="topbar">
-
-  <a
-    class="brand"
-    href="/coach"
-  >
-    PickDee <span>Academy</span>
-  </a>
-
-
-  <div class="top-actions">
-
-    <a
-      class="back-link"
-      href="/coach"
-    >
-      ← DASHBOARD
-    </a>
-
-    <button
-      id="logoutBtn"
-      class="logout-btn"
-      type="button"
-    >
-      ĐĂNG XUẤT
-    </button>
-
-  </div>
-
+  <a class="brand" href="/coach">PickDee <span>Academy</span></a>
+  <a class="back" href="/coach">← DASHBOARD</a>
 </header>
-
-
-<main class="container">
-
-
-  <div class="eyebrow">
-    CƠ HỘI DÀNH CHO COACH
-  </div>
-
-
-  <h1>
-    Học viên mới
-  </h1>
-
-
-  <div class="subtitle">
-    Xem thông tin cơ hội phù hợp với khu vực hoạt động của bạn.
-    Coach nhận trước sẽ được ưu tiên phụ trách học viên.
-  </div>
-
-
-  <section class="card">
-
-
-    <div
-      id="loadingBox"
-      class="loading"
-    >
-      Đang kiểm tra cơ hội học viên...
-    </div>
-
-
-    <div
-      id="messageBox"
-      class="status-box"
-      style="display:none;"
-    ></div>
-
-
-    <div id="opportunityContent">
-
-
-      <h2 class="opportunity-title">
-        🎯 Cơ hội học viên mới
-      </h2>
-
-
-      <div class="info-grid">
-
-
-        <div class="info-item">
-
-          <div class="info-label">
-            Mã đăng ký
-          </div>
-
-          <div
-            id="registrationCode"
-            class="info-value"
-          >
-            —
-          </div>
-
-        </div>
-
-
-        <div class="info-item">
-
-          <div class="info-label">
-            Gói học
-          </div>
-
-          <div
-            id="packageName"
-            class="info-value"
-          >
-            —
-          </div>
-
-        </div>
-
-
-        <div class="info-item">
-
-          <div class="info-label">
-            Tỉnh / Thành
-          </div>
-
-          <div
-            id="preferredArea"
-            class="info-value"
-          >
-            —
-          </div>
-
-        </div>
-
-
-        <div class="info-item">
-
-          <div class="info-label">
-            Xã / Phường
-          </div>
-
-          <div
-            id="preferredWard"
-            class="info-value"
-          >
-            —
-          </div>
-
-        </div>
-
-
-      </div>
-
-
-      <div class="privacy-box">
-        🔒 Thông tin cá nhân của học viên chưa được hiển thị tại bước này.
-        Sau khi Coach nhận học viên thành công, PickDee sẽ tiếp tục xử lý
-        theo quy trình vận hành của Academy.
-      </div>
-
-
-      <button
-        id="claimBtn"
-        class="claim-btn"
-        type="button"
-      >
-        NHẬN HỌC VIÊN
-      </button>
-
-
-      <a
-        class="dashboard-btn"
-        href="/coach"
-      >
-        QUAY LẠI DASHBOARD COACH
-      </a>
-
-
-    </div>
-
-  </section>
-
-
+<main>
+  <div class="eyebrow">TỰ GIAO HỌC VIÊN</div>
+  <h1>Lời mời nhận học viên</h1>
+  <div class="sub">Học viên đã thanh toán đủ cho PickDee. Bấm <b>Nhận</b> để phụ trách — học viên là của bạn ngay.</div>
+  <div id="top"></div>
+  <div id="list"><div class="loading">Đang tải lời mời…</div></div>
 </main>
 
-
 <script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = n => Number(n || 0).toLocaleString("vi-VN") + "đ";
+  const qs = new URLSearchParams(location.search);
+  const focusOffer = Number(qs.get("offer")) || null;
+  let offers = [], sb, busy = false;
 
-(async function () {
+  function place(o) { return [o.preferred_ward, o.preferred_area].filter(Boolean).join(", ") || "Khu vực chưa rõ"; }
+  function distText(o) {
+    if (o.distance_km == null) return "📍 Cùng tỉnh/thành với bạn";
+    return Number(o.distance_km) < 1 ? "📍 Rất gần bạn (dưới 1 km)" : "📍 Cách nơi bạn dạy ~" + Number(o.distance_km).toLocaleString("vi-VN") + " km";
+  }
+  function incomeBox(o) {
+    const i = o.income || {};
+    if (!i.total) return "";
+    const parts = [money(i.session_amount) + "/buổi" + (i.sessions ? " × " + i.sessions + " buổi" : "")];
+    if (Number(i.completion_bonus) > 0) parts.push("thưởng hoàn thành " + money(i.completion_bonus));
+    return `<div class="box income"><div class="lb">THU NHẬP DỰ KIẾN CỦA BẠN</div><div class="vl">${money(i.total)}</div><div class="sm">${esc(parts.join(" + "))}</div></div>`;
+  }
+  function left(o) { return Math.max(0, Math.floor((new Date(o.expires_at) - Date.now()) / 1000)); }
+  function mmss(s) { return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
 
-
-  /* =====================================================
-     SUPABASE
-  ====================================================== */
-
-  const cfg =
-    window.PICKDEE_CONFIG || {};
-
-
-  if (
-    !window.supabase
-    ||
-    !cfg.SUPABASE_URL
-    ||
-    !cfg.SUPABASE_PUBLISHABLE_KEY
-  ) {
-
-    alert(
-      "PickDee: thiếu cấu hình Supabase."
-    );
-
-    return;
+  function card(o) {
+    const s = left(o);
+    return `<div class="offer ${o.offer_id === focusOffer ? "focus" : ""}" data-id="${o.offer_id}">
+      <div class="row">
+        <span class="chip ${o.round === "broadcast" ? "all" : ""}">${o.round === "broadcast" ? "⚡ AI NHẬN TRƯỚC ĐƯỢC TRƯỚC" : "⭐ PICKDEE MỜI RIÊNG BẠN"}</span>
+        <span class="timer ${s < 120 ? "low" : ""}" data-exp="${esc(o.expires_at)}">${mmss(s)}</span>
+      </div>
+      <div class="place">${esc(place(o))}</div>
+      <div class="dist">${esc(distText(o))}</div>
+      <div class="grid">
+        <div class="box"><div class="lb">GÓI HỌC</div><div class="vl">${esc(o.package_name || "—")}</div></div>
+        <div class="box"><div class="lb">HÌNH THỨC</div><div class="vl">${o.is_group ? "Nhóm 2 người" : "1 kèm 1"}</div></div>
+        ${incomeBox(o)}
+      </div>
+      ${o.learning_goal ? `<div class="goal">🎯 Mục tiêu: ${esc(o.learning_goal)}</div>` : ""}
+      <div class="btns">
+        <button type="button" class="no" data-act="no">Bận</button>
+        <button type="button" class="yes" data-act="yes">✅ NHẬN HỌC VIÊN</button>
+      </div>
+      <div class="reasons">
+        ${["Kín lịch", "Xa quá", "Không hợp gói học", "Lý do khác"].map(r => `<button type="button" data-reason="${r}">${r}</button>`).join("")}
+      </div>
+      <div class="note">🔒 SĐT học viên hiện sau khi bạn nhận. ${o.round === "broadcast" ? "Lời mời gửi nhiều Coach — ai bấm nhận trước được trước." : "Nếu bạn bận, PickDee sẽ mời Coach khác."}</div>
+    </div>`;
   }
 
+  function stateCard(ic, title, text, links) {
+    return `<div class="state"><div class="ic">${ic}</div><h2>${esc(title)}</h2><p>${text}</p>${links || ""}</div>`;
+  }
 
-  const sb =
-    window.supabase.createClient(
-      cfg.SUPABASE_URL,
-      cfg.SUPABASE_PUBLISHABLE_KEY
-    );
+  function acceptedCard() {
+    return stateCard("🎉", "Học viên là của bạn!", "PickDee đã báo học viên. Hãy liên hệ và chốt buổi học đầu tiên trong 24 giờ.",
+      `<a class="link" href="/coach-students">XEM HỌC VIÊN CỦA TÔI</a><a class="link ghost" href="/coach">VỀ DASHBOARD</a>`);
+  }
 
+  function renderList() {
+    const live = offers.filter(o => left(o) > 0);
+    $("list").innerHTML = live.length ? live.map(card).join("") :
+      stateCard("🛵", "Chưa có lời mời mới", "Khi có học viên đã thanh toán gần nơi bạn dạy, PickDee sẽ <b>gửi thông báo</b> và lời mời hiện ở đây. Hãy giữ thông báo PickDee luôn bật.",
+        `<a class="link ghost" href="/coach-profile">Cập nhật khu vực dạy</a>`);
+  }
 
-  /* =====================================================
-     ELEMENTS
-  ====================================================== */
-
-  const loadingBox =
-    document.getElementById(
-      "loadingBox"
-    );
-
-
-  const messageBox =
-    document.getElementById(
-      "messageBox"
-    );
-
-
-  const opportunityContent =
-    document.getElementById(
-      "opportunityContent"
-    );
-
-
-  const registrationCodeEl =
-    document.getElementById(
-      "registrationCode"
-    );
-
-
-  const packageNameEl =
-    document.getElementById(
-      "packageName"
-    );
-
-
-  const preferredAreaEl =
-    document.getElementById(
-      "preferredArea"
-    );
-
-
-  const preferredWardEl =
-    document.getElementById(
-      "preferredWard"
-    );
-
-
-  const claimBtn =
-    document.getElementById(
-      "claimBtn"
-    );
-
-
-  const logoutBtn =
-    document.getElementById(
-      "logoutBtn"
-    );
-
-
-  /* =====================================================
-     STATE
-  ====================================================== */
-
-  let registrationId =
-    null;
-
-
-  let opportunity =
-    null;
-
-
-  /* =====================================================
-     HELPERS
-  ====================================================== */
-
-  function showMessage(
-    text,
-    type = ""
-  ) {
-
-    messageBox.textContent =
-      text || "";
-
-    messageBox.className =
-      "status-box";
-
-    if (type) {
-      messageBox.classList.add(
-        type
-      );
+  async function load() {
+    const { data, error } = await sb.rpc("coach_get_my_dispatch_offers");
+    if (error) { $("list").innerHTML = stateCard("⚠️", "Không tải được lời mời", esc(error.message)); return; }
+    offers = Array.isArray(data) ? data : [];
+    if (focusOffer && !offers.some(o => o.offer_id === focusOffer) && !$("top").dataset.done) {
+      $("top").dataset.done = "1";
+      const { data: one } = await sb.rpc("coach_get_dispatch_offer", { p_offer_id: focusOffer });
+      const st = one?.status;
+      if (st === "accepted") $("top").innerHTML = acceptedCard();
+      else if (st === "cancelled") $("top").innerHTML = stateCard("🙌", "Học viên đã có Coach khác nhận", "Lần sau bấm nhận sớm hơn nhé. Lời mời mới sẽ hiện ngay bên dưới.");
+      else if (st === "expired") $("top").innerHTML = stateCard("⏱️", "Lời mời đã hết thời gian", "PickDee đã mời Coach khác cho học viên này.");
+      else if (st === "declined") $("top").innerHTML = stateCard("👌", "Bạn đã báo bận", "Cảm ơn bạn đã phản hồi.");
     }
-
-    messageBox.style.display =
-      text
-        ? "block"
-        : "none";
-
+    if (!busy) renderList();
   }
 
-
-  function hideLoading() {
-
-    loadingBox.style.display =
-      "none";
-
-  }
-
-
-  function showOpportunity() {
-
-    opportunityContent.style.display =
-      "block";
-
-  }
-
-
-  function hideOpportunity() {
-
-    opportunityContent.style.display =
-      "none";
-
-  }
-
-
-  function readRegistrationId() {
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-
-    const value =
-      Number(
-        params.get("id")
-      );
-
-
-    if (
-      !Number.isFinite(value)
-      ||
-      value <= 0
-    ) {
-
-      return null;
-    }
-
-
-    return value;
-
-  }
-
-
-  /* =====================================================
-     AUTH
-  ====================================================== */
-
-  async function requireCoach() {
-
-    const {
-      data: {
-        session
-      },
-      error
-    } =
-      await sb.auth
-        .getSession();
-
-
-    if (
-      error
-      ||
-      !session
-    ) {
-
-     const next =
-  window.location.pathname +
-  window.location.search;
-
-window.location.href =
-  "/login?next=" +
-  encodeURIComponent(next);
-
-      return false;
-    }
-
-
-    const {
-      data: coach,
-      error: coachError
-    } =
-      await sb.rpc(
-        "get_my_coach_profile"
-      );
-
-
-    if (
-      coachError
-      ||
-      !coach
-    ) {
-
-      hideLoading();
-
-      showMessage(
-        "Không tìm thấy hồ sơ Coach của tài khoản này.",
-        "error"
-      );
-
-      return false;
-    }
-
-
-    return true;
-
-  }
-
-
-  /* =====================================================
-     LOAD OPPORTUNITY
-  ====================================================== */
-
-  async function loadOpportunity() {
-
-    hideOpportunity();
-
-    loadingBox.style.display =
-      "block";
-
-    loadingBox.textContent =
-      "Đang kiểm tra cơ hội học viên...";
-
-    showMessage("");
-
-
-    const {
-      data,
-      error
-    } =
-      await sb.rpc(
-        "coach_get_registration_opportunity",
-        {
-          p_registration_id:
-            registrationId
-        }
-      );
-
-
-    hideLoading();
-
-
-    if (error) {
-
-      console.error(
-        "LOAD OPPORTUNITY:",
-        error
-      );
-
-
-      showMessage(
-        "Không tải được cơ hội học viên. Vui lòng thử lại.",
-        "error"
-      );
-
+  async function respond(el, accept, reason) {
+    if (busy) return; busy = true;
+    const id = Number(el.dataset.id);
+    el.querySelectorAll("button").forEach(b => b.disabled = true);
+    if (accept) el.querySelector(".yes").textContent = "Đang nhận…";
+    const { data, error } = await sb.rpc("coach_respond_dispatch_offer", { p_offer_id: id, p_accept: accept, p_reason: reason || null });
+    busy = false;
+    offers = offers.filter(o => o.offer_id !== id);
+    if (error || !data?.ok) {
+      const taken = data?.code === "already_taken" || data?.code === "closed";
+      el.outerHTML = stateCard(taken ? "🙌" : "⚠️", taken ? "Học viên đã có Coach khác nhận" : "Không thực hiện được",
+        esc(data?.message || error?.message || "Vui lòng thử lại."));
       return;
     }
-
-
-    opportunity =
-      data || {};
-
-
-    /*
-      CƠ HỘI KHÔNG CÒN KHẢ DỤNG
-    */
-
-    if (
-      opportunity.ok !== true
-    ) {
-
-      const code =
-        String(
-          opportunity.code
-          || ""
-        );
-
-
-      if (
-        code ===
-        "already_claimed"
-      ) {
-
-        showMessage(
-          "Cơ hội này đã có Coach khác nhận.",
-          "warning"
-        );
-
-      }
-      else if (
-        code ===
-        "not_eligible"
-      ) {
-
-        showMessage(
-          "Cơ hội này không thuộc khu vực nhận học viên của bạn.",
-          "warning"
-        );
-
-      }
-      else if (
-        code ===
-        "not_available"
-      ) {
-
-        showMessage(
-          "Cơ hội này hiện không còn khả dụng.",
-          "warning"
-        );
-
-      }
-      else {
-
-        showMessage(
-          opportunity.message
-          ||
-          "Không thể mở cơ hội học viên này.",
-          "error"
-        );
-
-      }
-
-
-      return;
-    }
-
-
-    /*
-      HIỂN THỊ THÔNG TIN
-    */
-
-    registrationCodeEl.textContent =
-      opportunity.registration_code
-      || "—";
-
-
-    packageNameEl.textContent =
-      opportunity.package_name
-      || "—";
-
-
-    preferredAreaEl.textContent =
-      opportunity.preferred_area
-      || "—";
-
-
-    preferredWardEl.textContent =
-      opportunity.preferred_ward
-      || "—";
-
-
-    showOpportunity();
-
-
-    /*
-      COACH ĐÃ NHẬN TRƯỚC ĐÓ
-    */
-
-    if (
-      opportunity.claimed_by_you
-      === true
-    ) {
-
-      claimBtn.disabled =
-        true;
-
-      claimBtn.textContent =
-        "ĐÃ NHẬN HỌC VIÊN";
-
-
-      showMessage(
-        "✅ Bạn đã nhận học viên này.",
-        "success"
-      );
-
-
-      return;
-    }
-
-
-    /*
-      CƠ HỘI CÒN TRỐNG
-    */
-
-    claimBtn.disabled =
-      false;
-
-    claimBtn.textContent =
-      "NHẬN HỌC VIÊN";
-
+    if (accept) { $("top").innerHTML = acceptedCard(); renderList(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    else el.outerHTML = stateCard("👌", "Đã báo bận", "Cảm ơn bạn! PickDee sẽ mời Coach khác.");
   }
 
+  $("list").addEventListener("click", e => {
+    const el = e.target.closest(".offer"); if (!el) return;
+    const act = e.target.closest("[data-act]")?.dataset.act, reason = e.target.closest("[data-reason]")?.dataset.reason;
+    if (act === "yes") return respond(el, true);
+    if (act === "no") { const r = el.querySelector(".reasons"); r.style.display = r.style.display === "flex" ? "none" : "flex"; return; }
+    if (reason) return respond(el, false, reason);
+  });
 
-  /* =====================================================
-     CLAIM
-  ====================================================== */
-
-  async function claimOpportunity() {
-
-    if (!registrationId) {
-      return;
-    }
-
-
-    
-
-
-    claimBtn.disabled =
-      true;
-
-    claimBtn.textContent =
-      "ĐANG NHẬN...";
-
-
-    showMessage(
-      "Đang xử lý yêu cầu...",
-      ""
-    );
-
-
-    const {
-      data,
-      error
-    } =
-      await sb.rpc(
-        "coach_claim_registration_opportunity",
-        {
-          p_registration_id:
-            registrationId
-        }
-      );
-
-
-    if (error) {
-
-      console.error(
-        "CLAIM OPPORTUNITY:",
-        error
-      );
-
-
-      claimBtn.disabled =
-        false;
-
-      claimBtn.textContent =
-        "NHẬN HỌC VIÊN";
-
-
-      showMessage(
-        "Không thể nhận học viên. Vui lòng thử lại.",
-        "error"
-      );
-
-
-      return;
-    }
-
-
-    const result =
-      data || {};
-
-
-    const code =
-      String(
-        result.code
-        || ""
-      );
-
-
-    if (
-      result.ok === true
-      &&
-      (
-        code === "claimed"
-        ||
-        code ===
-          "already_claimed_by_you"
-      )
-    ) {
-
-      claimBtn.disabled =
-        true;
-
-      claimBtn.textContent =
-        "ĐÃ NHẬN HỌC VIÊN";
-
-
-      showMessage(
-        code === "claimed"
-          ?
-          "✅ Nhận học viên thành công."
-          :
-          "✅ Bạn đã nhận học viên này trước đó.",
-        "success"
-      );
-
-
-      await loadOpportunity();
-
-
-      return;
-    }
-
-
-    if (
-      code ===
-      "already_claimed"
-    ) {
-
-      hideOpportunity();
-
-
-      showMessage(
-        "Cơ hội này vừa được Coach khác nhận trước.",
-        "warning"
-      );
-
-
-      return;
-    }
-
-
-    if (
-      code ===
-      "not_eligible"
-    ) {
-
-      hideOpportunity();
-
-
-      showMessage(
-        "Bạn không nằm trong khu vực phù hợp để nhận học viên này.",
-        "warning"
-      );
-
-
-      return;
-    }
-
-
-    claimBtn.disabled =
-      false;
-
-    claimBtn.textContent =
-      "NHẬN HỌC VIÊN";
-
-
-    showMessage(
-      result.message
-      ||
-      "Không thể nhận học viên này.",
-      "error"
-    );
-
+  function tick() {
+    let expired = false;
+    document.querySelectorAll(".timer[data-exp]").forEach(t => {
+      const s = Math.max(0, Math.floor((new Date(t.dataset.exp) - Date.now()) / 1000));
+      t.textContent = mmss(s); t.classList.toggle("low", s < 120);
+      if (s === 0) expired = true;
+    });
+    if (expired && !busy) renderList();
   }
 
-
-  /* =====================================================
-     LOGOUT
-  ====================================================== */
-
-  logoutBtn.addEventListener(
-    "click",
-    async function () {
-
-      await sb.auth.signOut();
-
-      window.location.href =
-        "/login";
-
-    }
-  );
-
-
-  claimBtn.addEventListener(
-    "click",
-    claimOpportunity
-  );
-
-
-    /* =====================================================
-     INIT
-  ====================================================== */
-
-  registrationId =
-    readRegistrationId();
-
-
-  if (!registrationId) {
-
-    hideLoading();
-
-    showMessage(
-      "Link cơ hội học viên không hợp lệ hoặc thiếu mã đăng ký.",
-      "error"
-    );
-
-    return;
+  async function start() {
+    for (let i = 0; i < 100 && !window.sb?.auth; i++) await new Promise(r => setTimeout(r, 100));
+    sb = window.sb;
+    const { data } = await sb.auth.getSession();
+    if (!data?.session) { location.href = "/login?next=" + encodeURIComponent(location.pathname + location.search); return; }
+    await load();
+    setInterval(tick, 1000);
+    setInterval(() => { if (!busy && document.visibilityState === "visible") load(); }, 20000);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !busy) load(); });
   }
-
-
-  const coachReady =
-    await requireCoach();
-
-
-  if (!coachReady) {
-    return;
-  }
-
-
-  /* =====================================================
-     KIỂM TRA TELEGRAM COACH
-  ====================================================== */
-
-  const {
-    data: {
-      session
-    }
-  } =
-    await sb.auth.getSession();
-
-
-  if (!session) {
-
-    const next =
-      window.location.pathname +
-      window.location.search;
-
-    window.location.href =
-      "/login?next=" +
-      encodeURIComponent(next);
-
-    return;
-  }
-
-
-  let telegramStatus =
-    null;
-
-
-  try {
-
-    const telegramResponse =
-      await fetch(
-        cfg.SUPABASE_URL +
-        "/functions/v1/coach-telegram-group-status",
-        {
-          method: "POST",
-
-          headers: {
-            Authorization:
-              `Bearer ${session.access_token}`,
-
-            "Content-Type":
-              "application/json"
-          },
-
-          body: "{}"
-        }
-      );
-
-
-    telegramStatus =
-      await telegramResponse.json();
-
-
-    if (
-      !telegramResponse.ok
-      ||
-      telegramStatus?.ok !== true
-    ) {
-
-      console.error(
-        "TELEGRAM GROUP STATUS:",
-        telegramStatus
-      );
-
-      hideLoading();
-      hideOpportunity();
-
-      showMessage(
-        "Không kiểm tra được trạng thái Telegram. Vui lòng thử lại.",
-        "error"
-      );
-
-      return;
-    }
-
-  }
-  catch (error) {
-
-    console.error(
-      "TELEGRAM GROUP STATUS:",
-      error
-    );
-
-    hideLoading();
-    hideOpportunity();
-
-    showMessage(
-      "Không kết nối được hệ thống Telegram. Vui lòng thử lại.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  if (
-    telegramStatus.connected !== true
-  ) {
-
-    hideLoading();
-    hideOpportunity();
-
-    showMessage(
-      "⚠️ Bạn chưa kết nối tài khoản Telegram với PickDee. Vui lòng kết nối Telegram trước khi nhận cơ hội học viên.",
-      "warning"
-    );
-
-    return;
-  }
-
-
-  if (
-    telegramStatus.joined !== true
-  ) {
-
-    hideLoading();
-    hideOpportunity();
-
-    showMessage(
-      "⚠️ Bạn chưa tham gia nhóm Coach PickDee Academy. Vui lòng tham gia nhóm trước khi nhận cơ hội học viên.",
-      "warning"
-    );
-
-    return;
-  }
-
-
-  await loadOpportunity();
-
+  start();
 })();
-
 </script>
-
-
 <script src="/pd-portal-appnav.js?v=20261016-1"></script>
 </body>
-
 </html>

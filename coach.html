@@ -15901,6 +15901,42 @@ window.PD_LAUNCHER = {
   ]
 };
 </script>
+<script>
+/* Tự giao học viên: có lời mời đang chờ → dải nhắc nổi, bấm mở /coach-opportunity */
+(function () {
+  let bar, exp = null;
+  function mmss(s) { return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+  async function check() {
+    if (!window.sb?.rpc) return;
+    const { data } = await window.sb.rpc("coach_get_my_dispatch_offers");
+    const list = Array.isArray(data) ? data.filter(o => new Date(o.expires_at) > Date.now()) : [];
+    if (!list.length) { bar?.remove(); bar = null; exp = null; return; }
+    exp = new Date(list[0].expires_at);
+    if (!bar) {
+      bar = document.createElement("a");
+      bar.href = "/coach-opportunity?offer=" + list[0].offer_id;
+      bar.style.cssText = "position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:9995;display:flex;align-items:center;" +
+        "justify-content:space-between;gap:10px;padding:14px 16px;border-radius:18px;background:#d8ff45;color:#071523;text-decoration:none;" +
+        "font-family:inherit;font-weight:900;font-size:15px;box-shadow:0 14px 40px rgba(0,0,0,.5)";
+      document.body.appendChild(bar);
+    }
+    bar.href = "/coach-opportunity?offer=" + list[0].offer_id;
+    bar.dataset.n = list.length;
+    paint();
+  }
+  function paint() {
+    if (!bar || !exp) return;
+    const s = Math.max(0, Math.floor((exp - Date.now()) / 1000));
+    if (!s) return check();
+    const n = Number(bar.dataset.n || 1);
+    bar.innerHTML = `<span>🎯 ${n > 1 ? n + " học viên mới" : "Có học viên mới"} gần bạn</span><span style="font-variant-numeric:tabular-nums">${mmss(s)} ›</span>`;
+  }
+  setTimeout(check, 1200);
+  setInterval(paint, 1000);
+  setInterval(() => { if (document.visibilityState === "visible") check(); }, 30000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+})();
+</script>
 <script src="/pd-launcher.js?v=20261015-1"></script>
 <script>window.PD_PUSH_PROMPT = { mode: "full", role: "Coach" };</script>
 <script src="/pd-push-prompt.js?v=20261018-disp1"></script>
