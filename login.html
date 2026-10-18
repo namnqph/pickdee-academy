@@ -261,6 +261,11 @@
 
   </style>
 
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PickDee">
 </head>
 
 
@@ -367,7 +372,7 @@
 
   <script>
 
-  (function () {
+  (async function () {
 
 
     const config =
@@ -1065,6 +1070,33 @@ if (
     /*
       Máy đã bật Face ID → tự mở Face ID, ẩn form mật khẩu (bấm "Đăng nhập bằng mật khẩu" mới hiện).
     */
+    /*
+      Mở app (icon màn hình chính → /login) khi vẫn còn phiên đăng nhập
+      → vào thẳng khu vực của mình như app, không hiện trang đăng nhập.
+    */
+    const {
+      data: existingSession
+    } =
+      await supabaseClient.auth.getSession();
+
+    if (
+      existingSession?.session?.user
+    ) {
+      try {
+        await redirectUser(
+          existingSession.session.user
+        );
+        return;
+      }
+      catch (error) {
+        console.warn(
+          "AUTO REDIRECT:",
+          error
+        );
+      }
+    }
+
+
     if (
       window.PDFaceID
     ) {
