@@ -12,7 +12,7 @@
 ========================================================= */
 
 const PICKDEE_SW_VERSION =
-  "pickdee-push-20261007-1";
+  "pickdee-push-20261018-offer";
 
 
 /* =========================================================
@@ -391,6 +391,15 @@ self.addEventListener(
 
 
 
+    // Lời mời nhận học viên (tự giao Coach): rung dài, giữ trên màn hình tới khi Coach bấm.
+    // Web Push không cho chọn file chuông riêng → dùng chuông mặc định của máy (không silent).
+    const isDispatchOffer =
+      /\/coach-opportunity\b/.test(targetUrl)
+      &&
+      /[?&]offer=/.test(targetUrl);
+
+
+
     const options = {
 
       body:
@@ -408,6 +417,14 @@ self.addEventListener(
 
 
       tag:
+        (
+          isDispatchOffer
+            ?
+              "pickdee-offer-" + (targetUrl.match(/[?&]offer=([^&#]+)/) || [])[1]
+            :
+              ""
+        )
+        ||
         payload.tag
         ||
         "pickdee-notification",
@@ -415,6 +432,22 @@ self.addEventListener(
 
       renotify:
         true,
+
+
+      vibrate:
+        isDispatchOffer
+          ?
+            [600, 250, 600, 250, 600, 250, 1200]
+          :
+            undefined,
+
+
+      requireInteraction:
+        isDispatchOffer,
+
+
+      silent:
+        false,
 
 
       data: {
