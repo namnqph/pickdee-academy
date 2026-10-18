@@ -479,6 +479,10 @@
           Quét QR để chuyển khoản
         </h2>
 
+        <p style="margin:-4px 0 10px;font-size:13px;color:#555">
+          Mã QR đã có sẵn số tiền và nội dung — quét bằng app ngân hàng, không cần gõ lại.
+        </p>
+
         <div class="qr-wrap">
 
           <img
@@ -640,7 +644,8 @@
   ></script>
 
   <script src="./config.js?v=20261017-logout1"></script>
-  <script src="./student-bill-ocr.js?v=20261018-1"></script>
+  <script src="./student-bill-ocr.js?v=20261018-2"></script>
+  <script src="./student-vietqr.js?v=20261018-1"></script>
 
 
   <script>
@@ -1004,6 +1009,19 @@
       ).src =
         qrUrl?.data?.publicUrl
         || "";
+
+      // QR động: quét là điền sẵn số tiền + nội dung (lỗi → giữ QR tĩnh ở trên)
+      if (Number(row.amount_due || 0) > 0) {
+        PDVietQR.render(
+          document.getElementById("qrImage"),
+          {
+            bankName: row.bank_name,
+            accountNumber: row.account_number,
+            amount: row.amount_due,
+            content: row.transfer_content
+          }
+        );
+      }
 
 
       const due =
