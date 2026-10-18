@@ -699,7 +699,12 @@ body.pda.pda-inst #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 
 .pda-install b{display:block;color:#fff;font-size:13px}
 .pda-install button{flex:none;font:inherit;cursor:pointer}
 .pda-install .go{padding:8px 12px;border:0;border-radius:10px;background:#d8ff45;color:#07101b;font-size:12px;font-weight:900}
-.pda-install .x{width:28px;height:28px;border:0;background:transparent;color:#7d8a9c;font-size:16px}
+.pda-install .x{width:44px;height:44px;margin:-8px -8px -8px -4px;border:0;background:transparent;color:#9fb0c4;font-size:18px}
+.pda-install.ask .go,.pda-install.ask .x,.pda-install.ask img{display:none}
+.pda-install .ask{display:none;gap:8px;flex:none}
+.pda-install.ask .ask{display:flex}
+.pda-install .ask button{padding:9px 11px;border-radius:10px;font-size:12px;font-weight:900;border:1px solid rgba(216,255,69,.45);background:transparent;color:#d8ff45}
+.pda-install .ask button.yes{background:#d8ff45;color:#07101b;border-color:#d8ff45}
 .pda-guide{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(3,10,20,.7);backdrop-filter:blur(4px)}
 .pda-guide-card{width:100%;padding:20px 18px calc(env(safe-area-inset-bottom) + 18px);border-radius:22px 22px 0 0;background:#0b1626;border-top:1px solid rgba(216,255,69,.35);color:#fff}
 .pda-guide-card h3{margin:0 0 4px;font-size:18px;font-weight:900;color:#d8ff45}
@@ -967,6 +972,7 @@ body.pda.pda-inst #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 
     <div><b>Cài PickDee như app</b>Mở nhanh, toàn màn hình, không thanh Safari</div>
     <button class="go" type="button" id="pdaInstallGo">Cài</button>
     <button class="x" type="button" id="pdaInstallX" aria-label="Đóng">✕</button>
+    <span class="ask"><button class="yes" type="button" id="pdaInstallDone">Đã cài rồi</button><button type="button" id="pdaInstallLater">Để sau</button></span>
   </div>
 
   <nav class="pda-tabs" id="pdaTabs">
@@ -2384,11 +2390,18 @@ async function redirectByRole(
     var inApp = /Zalo|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|TikTok|musical_ly|; wv\)/i.test(ua);
     var KEY = "pda_install_x", bar = document.getElementById("pdaInstall"), evt = null;
     var showBar = function (on) { bar.classList.toggle("show", on); document.body.classList.toggle("pda-inst", on); };
-    var hidden = function () { try { return Date.now() - Number(localStorage.getItem(KEY) || 0) < 7 * 864e5; } catch (e) { return false; } };
+    /* "Đã cài rồi" → không nhắc nữa (Safari không biết máy đã cài vì app MH chính dùng bộ nhớ riêng); "Để sau" → 7 ngày */
+    var hidden = function () { try { var v = localStorage.getItem(KEY) || ""; return v === "installed" || Date.now() - Number(v || 0) < 7 * 864e5; } catch (e) { return false; } };
+    var remember = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} bar.classList.remove("ask"); showBar(false); };
     if (standalone) return;
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); evt = e; if (!hidden()) showBar(true); });
     if (isIOS && !hidden()) showBar(true);
-    document.getElementById("pdaInstallX").onclick = function () { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} showBar(false); };
+    document.getElementById("pdaInstallX").onclick = function () {
+      bar.classList.add("ask");
+      bar.querySelector("div").innerHTML = "<b>Bạn đã cài PickDee chưa?</b>Đã cài thì PickDee không nhắc nữa";
+    };
+    document.getElementById("pdaInstallDone").onclick = function () { remember("installed"); };
+    document.getElementById("pdaInstallLater").onclick = function () { remember(String(Date.now())); };
     document.getElementById("pdaInstallGo").onclick = function () {
       if (evt && !isIOS) { try { evt.prompt(); evt.userChoice.then(function () { evt = null; showBar(false); }); return; } catch (e) {} }
       var steps = inApp
