@@ -10,7 +10,7 @@
 
   const TESS = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
   const HOTLINE = "0926629966";
-  let workerP = null;
+  const workers = {};
 
   function loadScript(src) {
     return new Promise(function (ok, fail) {
@@ -23,19 +23,67 @@
     });
   }
 
-  async function worker(progress) {
-    if (!workerP) {
-      workerP = (async function () {
+  // lang "vie" đọc chữ; "eng" chỉ để đọc lại CHỮ SỐ (bộ vie hay nhầm 3↔5 với font mảnh iPhone)
+  async function worker(progress, lang) {
+    lang = lang || "vie";
+    if (!workers[lang]) {
+      workers[lang] = (async function () {
         await loadScript(TESS);
-        return window.Tesseract.createWorker("vie", 1, {
+        return window.Tesseract.createWorker(lang, 1, {
           logger: function (m) {
-            if (m && m.status === "loading language traineddata" && progress) progress("Đang tải bộ đọc tiếng Việt (lần đầu)…");
+            if (m && m.status === "loading language traineddata" && progress) progress("Đang tải bộ đọc chữ (lần đầu)…");
           }
         });
       })();
-      workerP.catch(function () { workerP = null; });
+      workers[lang].catch(function () { delete workers[lang]; });
     }
-    return workerP;
+    return workers[lang];
+  }
+
+  // Sửa số theo lượt đọc "eng": ghép dòng vie ↔ dòng eng giống nhau nhất (bỏ dấu, bỏ số),
+  // cùng số lượng cụm số thì lấy số của eng; khác nhau → ghi doubts để thẻ nhắc so với ảnh
+  const NUM_RE = /\d+(?:[\/.\-]\d+)*/g;
+  function letters(s) {
+    return String(s).toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+  }
+  function similar(a, b) {
+    if (a.length < 4 || b.length < 4) return 0;
+    const grams = {};
+    for (let i = 0; i < a.length - 1; i++) { const g = a.substr(i, 2); grams[g] = (grams[g] || 0) + 1; }
+    let hit = 0;
+    for (let i = 0; i < b.length - 1; i++) { const g = b.substr(i, 2); if (grams[g] > 0) { grams[g]--; hit++; } }
+    return 2 * hit / (a.length + b.length - 2);
+  }
+  // Chỉ thay khi 2 số gần giống: cùng độ dài, ≥ 2 chữ số, khác ≤ 1/3 số chữ số (65/5/47 ↔ 63/5/47, không phải 7:28 ↔ 6:47)
+  function nearNum(a, b) {
+    if (a.length !== b.length || a.replace(/\D/g, "").length < 2) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) { if (/\D/.test(a[i] + b[i])) return false; diff++; }
+    return diff <= Math.max(1, Math.floor(a.replace(/\D/g, "").length / 3));
+  }
+  function fixDigits(vie, eng) {
+    const doubts = [];
+    const engLines = String(eng || "").split("\n").map(function (l) { return { l: l, k: letters(l), n: l.match(NUM_RE) || [] }; });
+    let from = 0; // dòng eng đi theo thứ tự trên → dưới như dòng vie
+    const text = String(vie || "").split("\n").map(function (line) {
+      const nums = line.match(NUM_RE);
+      if (!nums) return line;
+      const k = letters(line);
+      let best = -1, score = 0;
+      for (let j = from; j < engLines.length; j++) { const sc = similar(k, engLines[j].k); if (sc > score) { score = sc; best = j; } }
+      if (best < 0 || score < 0.6) return line;
+      from = best + 1;
+      const en = engLines[best].n;
+      if (en.length !== nums.length) return line;
+      let i = 0;
+      return line.replace(NUM_RE, function (m) {
+        const e = en[i++];
+        if (e === m || !nearNum(m, e)) return m;
+        doubts.push({ vie: m, eng: e });
+        return e;
+      });
+    }).join("\n");
+    return { text: text, doubts: doubts };
   }
 
   // Thu nhỏ ảnh chụp màn hình (iPhone 1170px+) → đọc nhanh hơn, đủ nét
@@ -76,16 +124,20 @@
     const say = progress || function () {};
     say("Đang chuẩn bị bộ đọc chữ…");
     const w = await worker(say);
-    const texts = [];
+    const wEng = await worker(say, "eng").catch(function () { return null; });
+    const texts = [], doubts = [];
     for (let i = 0; i < list.length; i++) {
       say("Đang đọc chữ ảnh " + (i + 1) + "/" + list.length + "…");
       const canvas = await shrink(list[i]);
       const r = await w.recognize(canvas);
+      const re = wEng ? await wEng.recognize(canvas).catch(function () { return null; }) : null;
+      const fixed = re ? fixDigits(r.data.text, re.data.text) : { text: String(r.data.text || ""), doubts: [] };
+      doubts.push(fixed.doubts);
       // Bỏ dòng nút quay lại app của iPhone ("< Facebook") – không phải nguồn chat
-      const text = String(r.data.text || "").replace(/^\s*[<◀‹«]\s*(Facebook|Messenger|Zalo|TikTok|Instagram|Safari)\s*$/gim, "");
+      const text = fixed.text.replace(/^\s*[<◀‹«]\s*(Facebook|Messenger|Zalo|TikTok|Instagram|Safari)\s*$/gim, "");
       texts.push((alwaysMark || list.length > 1 ? "--- Ảnh " + (i + 1) + " ---\n" : "") + text);
     }
-    return { files: list, texts: texts };
+    return { files: list, texts: texts, doubts: doubts };
   }
 
   async function parse(masked, multi, say) {
@@ -133,6 +185,8 @@
       const own = Array.from(new Set(imgs.reduce(function (a, n) { return a.concat(perImage[n - 1] || []); }, [])));
       const ref = m.phones[Number(o.phone_ref) - 1];
       o.image_indexes = imgs;
+      // Số hai lượt đọc khác nhau (đã lấy theo "eng") → thẻ nhắc so với ảnh
+      o.digit_doubts = imgs.reduce(function (a, n) { return a.concat(read.doubts[n - 1] || []); }, []);
       o.phones = own;
       o.phone = ref && (!own.length || own.includes(ref)) ? ref : (own.length === 1 ? own[0] : "");
       return o;

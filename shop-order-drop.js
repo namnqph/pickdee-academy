@@ -8,7 +8,7 @@
   if (window.__pdOrderDrop) return;
   window.__pdOrderDrop = true;
 
-  const V = "20261017-drop3";
+  const V = "20261018-drop5";
   const AUTO_SECONDS = 5;
   const AUTO_NOTE = "Tạo tự động từ ảnh chat";
   const MANUAL_NOTE = "Tạo từ ảnh chat (đã kiểm tra tay)";
@@ -337,10 +337,14 @@ body.pd-not-orders #pdDropFab{display:none}
       payStatus: "unpaid",
       payNote: "",
       // Giao diện Zalo (chắc hơn AI: chữ "◀ Facebook" góc trên chỉ là nút quay lại app)
-      source: (/tin nhan/.test(plainOcr) && /da nhan|sao chep so dien thoai|gui so tai khoan|dong y ket ban|goi dien|tin nhan cua /.test(plainOcr) ? "zalo" : o.source)
+      source: (/tin nhan/.test(plainOcr) && /da nhan|sao chep so dien thoai|gui so tai khoan|dong y ket ban|goi dien|tin nhan cua /.test(plainOcr) ? "zalo"
+        // TikTok: "Đã xem" + mốc "Hôm nay 6:47 SA" (Zalo ghi "06:47 Hôm nay")
+        : /da xem/.test(plainOcr) && /hom nay \d{1,2}:\d{2} (sa|ch)\b/.test(plainOcr) ? "tiktok" : o.source)
         || localStorage.getItem("pickdee_quick_order_source") || "zalo",
       note: o.note || "",
       aiWarnings: (o.warnings || []).filter(Boolean),
+      // Số hai lượt đọc khác nhau (đã lấy số lượt "eng") nằm trong địa chỉ → nhắc so với ảnh, không tự tạo
+      doubts: (o.digit_doubts || []).filter(function (d) { return String(o.address_text || "").indexOf(d.eng) >= 0; }),
       dealGoods: null, dealShip: o.shipping_fee,
       dup: null, dupOk: false,
       state: "warn", edit: false, error: "", code: "", orderId: null
@@ -376,14 +380,14 @@ body.pd-not-orders #pdDropFab{display:none}
     return c.items.reduce(function (s, i) { const v = variantOf(i.variant_id); return s + (v ? unitPrice(v, i.quantity) * Number(i.quantity || 0) : 0); }, 0);
   }
 
-  // Ship hệ thống tự tính khi tạo đơn (giống shop_create_guest_order): vợt + CK → 0; có bóng → 0, chờ báo cước;
+  // Ship hệ thống tự tính khi tạo đơn (giống shop_create_guest_order_with_shipping_v1): vợt + CK → 0; có bóng → 0, chờ báo cước;
   // tiền hàng web ≥ 300k → freeship; còn lại 15k
   function autoShip(c) {
     const names = c.items.map(function (i) {
       const v = variantOf(i.variant_id), p = productOf(v);
       return { p: String(p ? p.name : "").trim().toLowerCase(), v: String(v ? v.variant_name || "" : "").toLowerCase() };
     });
-    const paddle = names.some(function (n) { return /vợt|paddle/.test(n.p + " " + n.v) || /esson|ess\/on/.test(n.p); });
+    const paddle = names.some(function (n) { return /^\s*(vợt|paddle)/.test(n.p) || /^\s*(vợt|paddle)/.test(n.v); });
     const ball = names.some(function (n) { return /^bóng /.test(n.p) || /lt48|ppa life time|toniker nexus|toniker mate pro/.test(n.p); });
     if (paddle && c.payment === "bank_transfer") return { fee: 0, label: "freeship (vợt CK)" };
     if (ball) return { fee: 0, label: "bóng: báo cước sau" };
@@ -426,6 +430,7 @@ body.pd-not-orders #pdDropFab{display:none}
     else if (!c.payment) p.push("Chưa rõ COD hay chuyển khoản.");
     if (c.payEvidence === "bill" && c.paidAmount && c.paidAmount < totals(c).goods) p.push("Bill " + money(c.paidAmount) + " ít hơn tiền hàng " + money(totals(c).goods) + " – kiểm tra lại.");
     c.aiWarnings.forEach(function (w) { p.push(w); });
+    c.doubts.forEach(function (d) { p.push("Số nhà đọc không chắc: đã lấy «" + d.eng + "» (có thể là «" + d.vie + "») – so với ảnh."); });
     if (c.dup && !c.dupOk) p.push("Đơn này đã có " + c.dup.code + " (cùng SĐT + sản phẩm trong 48h) – vẫn tạo?");
     return p;
   }
@@ -609,6 +614,7 @@ body.pd-not-orders #pdDropFab{display:none}
         }
         else if (f === "ward") { c.wardName = v; c.addrHint = ""; render(c); return; }
         if (f === "phone") { c.phones = []; c.dupOk = false; }
+        if (f === "street" || f === "legacy") c.doubts = [];
         if (ev === "change") render(c);
       });
       // Ô chữ: vẽ lại khi rời ô (giữ con trỏ khi đang gõ)
