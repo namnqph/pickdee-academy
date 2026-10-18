@@ -258,6 +258,63 @@
       margin-bottom: 24px;
     }
 
+    /* Trình độ Coach: hiện ngay dưới tên */
+    .coach-levels {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: -12px 0 24px;
+    }
+
+    .coach-levels:empty {
+      display: none;
+    }
+
+    .coach-level {
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      text-align: center;
+      min-width: 0;
+    }
+
+    .coach-level span {
+      display: block;
+      color: rgba(255,255,255,.55);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .coach-level b {
+      display: block;
+      margin-top: 4px;
+      color: #d8ff45;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .coach-level b.none {
+      color: rgba(255,255,255,.4);
+      font-size: 14px;
+      padding: 3px 0;
+    }
+
+    .coach-level small {
+      display: block;
+      margin-top: 3px;
+      color: rgba(255,255,255,.45);
+      font-size: 10px;
+    }
+
+    .coach-level.pd {
+      border-color: rgba(216,255,69,.35);
+      background: rgba(216,255,69,.07);
+    }
+
 
     /* =====================================================
        DASHBOARD
@@ -941,6 +998,12 @@
   <div
     class="code"
     id="coachCode"
+  ></div>
+
+
+  <div
+    class="coach-levels"
+    id="coachLevels"
   ></div>
 
 
@@ -2693,6 +2756,60 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
   }
 
 
+  /* Trình PickDee (PickDee xếp) · Sport Connect / DUPR (Coach tự khai) */
+  function renderCoachLevels() {
+
+    const box =
+      document.getElementById(
+        "coachLevels"
+      );
+
+    if (!box || !currentCoach) return;
+
+    const verified =
+      String(
+        currentCoach.level_verification_status || ""
+      ) === "Đã xác minh";
+
+    const selfNote =
+      verified
+        ? "Đã xác minh"
+        : "Tự khai";
+
+    function rating(value) {
+      const n = Number(value);
+      return value === null || value === undefined || value === "" || !Number.isFinite(n) || n <= 0
+        ? ""
+        : String(Math.round(n * 100) / 100);
+    }
+
+    function card(label, value, note, extra) {
+      const has = String(value || "").trim() !== "";
+      return (
+        '<div class="coach-level' + (extra ? " " + extra : "") + '">' +
+          '<span>' + escapeLevel(label) + '</span>' +
+          (has
+            ? '<b>' + escapeLevel(value) + '</b>'
+            : '<b class="none">Chưa có</b>') +
+          '<small>' + escapeLevel(has ? note : (extra ? "Chờ PickDee xếp" : "Chưa khai")) + '</small>' +
+        '</div>'
+      );
+    }
+
+    function escapeLevel(v) {
+      return String(v ?? "").replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    box.innerHTML =
+      card("Trình PickDee", currentCoach.pickdee_academy_level, "PickDee xếp", "pd") +
+      card("Sport Connect", rating(currentCoach.sport_connect_rating), selfNote) +
+      card("DUPR", rating(currentCoach.dupr_rating), selfNote);
+
+  }
+
+
   function renderCoachProfile() {
 
     if (!currentCoach) return;
@@ -2708,6 +2825,9 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
           ? ` · ${currentCoach.status}`
           : ""
       }`;
+
+
+    renderCoachLevels();
 
 
     phoneEl.textContent =
@@ -15866,7 +15986,7 @@ dashboardGrid.parentNode.insertBefore(
 /* PICKDEE COACH - màn hình chính kiểu app (pd-launcher.js) */
 window.PD_LAUNCHER = {
   anchor: "main h2.section-title",
-  heroSelector: "main > .eyebrow, #coachName, #coachCode",
+  heroSelector: "main > .eyebrow, #coachName, #coachCode, #coachLevels",
   hashSections: { "#ho-so": "Hồ sơ Coach", "#khu-vuc": "Khu vực nhận học viên" },
   storageKey: "pd_coach_home",
   moreLabel: "📋 Xem tất cả thông tin",
