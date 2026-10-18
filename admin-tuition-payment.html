@@ -1865,7 +1865,8 @@
           status,
           policy_version,
           policy_accepted_at,
-          submitted_at
+          submitted_at,
+          auto_check
         `)
         .eq(
           "status",
@@ -2336,6 +2337,17 @@
                   </div>
 
                 </div>
+
+
+                ${(row.auto_check?.failed || []).length ? `
+                <div class="proof-transfer" style="background:#fff4e5;border:1px solid #f5b971;border-radius:10px;padding:10px">
+                  <div class="proof-info-label" style="color:#b45309">
+                    ⚠️ Chưa tự xác nhận vì
+                  </div>
+                  <div class="proof-info-value" style="color:#7c2d12">
+                    ${escapeHtml(row.auto_check.failed.join(" · "))}
+                  </div>
+                </div>` : ""}
 
 
                 <div class="proof-actions">
