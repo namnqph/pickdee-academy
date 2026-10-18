@@ -427,6 +427,40 @@
       line-height: 1.5;
     }
 
+    .paddle-pay-box {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      border:
+        1px solid rgba(216,255,69,.24);
+      background:
+        rgba(216,255,69,.04);
+    }
+
+    .paddle-pay-box .bank-qr {
+      max-width: 220px;
+    }
+
+    .paddle-pay-lines {
+      margin: 10px 0 12px;
+      color:
+        rgba(255,255,255,.78);
+      font-size: 11px;
+      line-height: 1.6;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .paddle-pay-lines strong {
+      color: #d8ff45;
+    }
+
+    .paddle-pay-hint {
+      color:
+        rgba(255,255,255,.48);
+      font-size: 10px;
+    }
+
     /* =====================================================
        BANK TRANSFER
     ====================================================== */
@@ -2715,6 +2749,194 @@
   }
 
 
+  /*
+    Đơn vợt: chưa có mã đơn khi khách chuyển khoản,
+    nên nội dung CK = PICKDEE + số điện thoại.
+  */
+  function paddlePayReference() {
+
+    const phoneDigits =
+      String(
+        document.getElementById(
+          "customerPhone"
+        )?.value
+        ||
+        ""
+      ).replace(
+        /\D/g,
+        ""
+      );
+
+    return "PICKDEE " + phoneDigits;
+
+  }
+
+
+  function updatePaddlePayBox(
+    cart
+  ) {
+
+    const qr =
+      document.getElementById(
+        "paddleQr"
+      );
+
+    if (!qr) {
+      return;
+    }
+
+    const amount =
+      shippingQuote(
+        cart
+      ).customerTotal;
+
+    const reference =
+      transferReference(
+        paddlePayReference()
+      );
+
+    const url =
+      vietQrUrl(
+        amount,
+        reference,
+        bankConfigForCart(
+          cart
+        )
+      );
+
+    if (
+      qr.getAttribute(
+        "src"
+      )
+      !==
+      url
+    ) {
+      qr.src =
+        url;
+    }
+
+    document.getElementById(
+      "paddlePayAmount"
+    ).textContent =
+      money(
+        amount
+      );
+
+    document.getElementById(
+      "paddlePayRef"
+    ).textContent =
+      reference;
+
+  }
+
+
+  async function uploadPaymentProof(
+    trackingToken,
+    uploadFile
+  ) {
+
+    const randomId =
+      (
+        globalThis.crypto
+        &&
+        typeof globalThis.crypto.randomUUID
+          ===
+        "function"
+      )
+        ?
+          globalThis.crypto.randomUUID()
+        :
+          (
+            Date.now()
+            +
+            "-"
+            +
+            Math.random()
+              .toString(36)
+              .slice(2)
+          );
+
+    const objectPath =
+      `${
+        trackingToken
+      }/${
+        Date.now()
+      }-${
+        randomId
+      }.jpg`;
+
+    const {
+      error:
+        uploadError
+    } =
+      await sb
+        .storage
+        .from(
+          PAYMENT_PROOF_BUCKET
+        )
+        .upload(
+          objectPath,
+          uploadFile,
+          {
+            cacheControl:
+              "3600",
+
+            upsert:
+              false,
+
+            contentType:
+              "image/jpeg"
+          }
+        );
+
+    if (
+      uploadError
+    ) {
+
+      throw uploadError;
+
+    }
+
+    const {
+      data:
+        proofData,
+      error:
+        proofError
+    } =
+      await sb.rpc(
+        "shop_submit_bank_transfer_proof",
+        {
+
+          p_tracking_token:
+            trackingToken,
+
+          p_payment_proof_path:
+            objectPath
+
+        }
+      );
+
+    if (
+      proofError
+    ) {
+
+      throw proofError;
+
+    }
+
+    if (
+      !proofData?.success
+    ) {
+
+      throw new Error(
+        "Không gửi được bill chuyển khoản."
+      );
+
+    }
+
+  }
+
+
   function compressPaymentProofFile(
     file
   ) {
@@ -4355,12 +4577,148 @@
               class="paddle-prepay-note"
             >
               Đơn có vợt Pickleball cần thanh toán chuyển khoản trước và được PickDee miễn phí vận chuyển.
-PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuyển khoản/bill thanh toán.
+Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì mới đặt được đơn.
             </div>
           `
         );
 
+        paymentOptions.insertAdjacentHTML(
+          "afterend",
+          `
+            <div
+              id="paddlePayBox"
+              class="paddle-pay-box"
+            >
+              <div class="bank-transfer-title">
+                🏦 BƯỚC 1 • CHUYỂN KHOẢN ${escapeHtml(
+                  PADDLE_BANK_ID
+                )}
+              </div>
+
+              <div class="bank-qr-wrap">
+                <img
+                  id="paddleQr"
+                  class="bank-qr"
+                  alt="QR chuyển khoản đơn vợt"
+                >
+              </div>
+
+              <div class="paddle-pay-lines">
+                ${escapeHtml(
+                  PADDLE_BANK_ACCOUNT_NAME
+                )} • ${escapeHtml(
+                  PADDLE_BANK_ACCOUNT_NO
+                )}<br>
+                Số tiền: <strong id="paddlePayAmount"></strong><br>
+                Nội dung: <strong id="paddlePayRef"></strong><br>
+                <span class="paddle-pay-hint">Đặt trên điện thoại: chụp màn hình QR → app ngân hàng → Quét QR → chọn ảnh.</span>
+              </div>
+
+              <div class="proof-label">
+                BƯỚC 2 • ĐÍNH KÈM ẢNH BILL CHUYỂN KHOẢN *
+              </div>
+
+              <input
+                id="paddleBillInput"
+                class="proof-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+              >
+
+              <img
+                id="paddleBillPreview"
+                class="proof-preview"
+                alt="Xem trước bill chuyển khoản"
+              >
+            </div>
+          `
+        );
+
+        const billInput =
+          document.getElementById(
+            "paddleBillInput"
+          );
+
+        const billPreview =
+          document.getElementById(
+            "paddleBillPreview"
+          );
+
+        billInput?.addEventListener(
+          "change",
+          function () {
+
+            const file =
+              billInput.files?.[0];
+
+            billPreview.classList.remove(
+              "show"
+            );
+
+            if (
+              billPreview.src
+            ) {
+              URL.revokeObjectURL(
+                billPreview.src
+              );
+
+              billPreview.removeAttribute(
+                "src"
+              );
+            }
+
+            if (!file) {
+              return;
+            }
+
+            if (
+              file.size
+              >
+              MAX_PAYMENT_PROOF_SIZE
+            ) {
+
+              billInput.value =
+                "";
+
+              showMessage(
+                "Ảnh bill tối đa 8 MB.",
+                "error"
+              );
+
+              return;
+
+            }
+
+            billPreview.src =
+              URL.createObjectURL(
+                file
+              );
+
+            billPreview.classList.add(
+              "show"
+            );
+
+          }
+        );
+
+        document
+          .getElementById(
+            "customerPhone"
+          )
+          ?.addEventListener(
+            "input",
+            function () {
+              updatePaddlePayBox(
+                cart
+              );
+            }
+          );
+
       }
+
+      updatePaddlePayBox(
+        cart
+      );
 
       return;
 
@@ -4380,6 +4738,12 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
     if (oldNote) {
       oldNote.remove();
     }
+
+    document
+      .getElementById(
+        "paddlePayBox"
+      )
+      ?.remove();
 
   }
   function shippingQuote(
@@ -5611,6 +5975,9 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
         ||
         "cod";
 
+      let paddleBillUpload =
+        null;
+
 
       if (
         !customerName
@@ -5742,6 +6109,73 @@ PickDee chỉ xác nhận và xử lý đơn vợt sau khi nhận được chuy�
         applyPaddlePaymentRule(
           currentCart
         );
+
+        const billFile =
+          document.getElementById(
+            "paddleBillInput"
+          )
+            ?.files
+            ?.[0];
+
+        if (
+          !billFile
+        ) {
+
+          showMessage(
+            "Đơn có vợt: anh/chị vui lòng chuyển khoản theo QR rồi đính kèm ảnh bill trước khi đặt hàng.",
+            "error"
+          );
+
+          document
+            .getElementById(
+              "paddlePayBox"
+            )
+            ?.scrollIntoView(
+              {
+                behavior:
+                  "smooth",
+
+                block:
+                  "center"
+              }
+            );
+
+          return;
+
+        }
+
+        submitBtn.disabled =
+          true;
+
+        submitBtn.textContent =
+          "ĐANG NÉN BILL...";
+
+        try {
+
+          paddleBillUpload =
+            await compressPaymentProofFile(
+              billFile
+            );
+
+        }
+        catch (error) {
+
+          submitBtn.disabled =
+            false;
+
+          submitBtn.textContent =
+            "ĐẶT HÀNG";
+
+          showMessage(
+            error?.message
+            ||
+            "Không đọc được ảnh bill. Vui lòng chọn ảnh JPG, PNG hoặc WEBP.",
+            "error"
+          );
+
+          return;
+
+        }
 
       }
 
@@ -6903,112 +7337,13 @@ const successEstimatedCustomerTotal =
                     file
                   );
 
-                const extension =
-                  "jpg";
-
                 submitPaymentProofBtn.textContent =
                   "ĐANG GỬI BILL...";
 
-                const randomId =
-                  (
-                    globalThis.crypto
-                    &&
-                    typeof globalThis.crypto.randomUUID
-                      ===
-                    "function"
-                  )
-                    ?
-                      globalThis.crypto.randomUUID()
-                    :
-                      (
-                        Date.now()
-                        +
-                        "-"
-                        +
-                        Math.random()
-                          .toString(36)
-                          .slice(2)
-                      );
-
-                const objectPath =
-                  `${
-                    trackingToken
-                  }/${
-                    Date.now()
-                  }-${
-                    randomId
-                  }.${
-                    extension
-                  }`;
-
-                const {
-                  error:
-                    uploadError
-                } =
-                  await sb
-                    .storage
-                    .from(
-                      PAYMENT_PROOF_BUCKET
-                    )
-                    .upload(
-                      objectPath,
-                      uploadFile,
-                      {
-                        cacheControl:
-                          "3600",
-
-                        upsert:
-                          false,
-
-                        contentType:
-                          "image/jpeg"
-                      }
-                    );
-
-                if (
-                  uploadError
-                ) {
-
-                  throw uploadError;
-
-                }
-
-                const {
-                  data:
-                    proofData,
-                  error:
-                    proofError
-                } =
-                  await sb.rpc(
-                    "shop_submit_bank_transfer_proof",
-                    {
-
-                      p_tracking_token:
-                        trackingToken,
-
-                      p_payment_proof_path:
-                        objectPath
-
-                    }
-                  );
-
-                if (
-                  proofError
-                ) {
-
-                  throw proofError;
-
-                }
-
-                if (
-                  !proofData?.success
-                ) {
-
-                  throw new Error(
-                    "Không gửi được bill chuyển khoản."
-                  );
-
-                }
+                await uploadPaymentProof(
+                  trackingToken,
+                  uploadFile
+                );
 
                 paymentProofMessage.className =
                   "proof-message success";
@@ -7064,7 +7399,102 @@ const successEstimatedCustomerTotal =
             }
           );
 
-           
+
+        /*
+          Đơn vợt: khách đã đính kèm bill trước khi đặt
+          → gửi bill ngay, đơn chỉ báo Shop đúng 1 lần lúc này.
+        */
+        if (
+          paddleBillUpload
+        ) {
+
+          const bankBox =
+            checkoutContent.querySelector(
+              ".bank-transfer-box"
+            );
+
+          const proofMessage =
+            bankBox?.querySelector(
+              "#paymentProofMessage"
+            );
+
+          bankBox
+            ?.querySelector(
+              "#paymentProofPanel"
+            )
+            ?.classList.add(
+              "open"
+            );
+
+          if (proofMessage) {
+            proofMessage.className =
+              "proof-message success";
+
+            proofMessage.textContent =
+              "Đang gửi bill...";
+          }
+
+          try {
+
+            if (
+              !trackingToken
+            ) {
+              throw new Error(
+                "Đơn hàng thiếu mã xác thực để gửi bill."
+              );
+            }
+
+            await uploadPaymentProof(
+              trackingToken,
+              paddleBillUpload
+            );
+
+            try {
+              localStorage.removeItem(
+                "pickdee_shop_pending_payment"
+              );
+            }
+            catch (_) {}
+
+            if (bankBox) {
+              bankBox.innerHTML = `
+                <div class="bank-transfer-title">
+                  ✓ ĐÃ NHẬN BILL CHUYỂN KHOẢN
+                </div>
+                <div class="bank-transfer-note">
+                  PickDee sẽ kiểm tra tiền về và xác nhận đơn vợt sớm.
+                  Anh/chị không cần chuyển khoản thêm.
+                </div>
+              `;
+            }
+
+          }
+          catch (error) {
+
+            console.error(
+              "PADDLE BILL ERROR:",
+              error
+            );
+
+            if (proofMessage) {
+              proofMessage.className =
+                "proof-message error";
+
+              proofMessage.textContent =
+                "Đơn đã tạo nhưng chưa gửi được bill. Anh/chị ĐÃ chuyển khoản thì KHÔNG chuyển lại — chọn lại ảnh bill ở đây và bấm Gửi bill xác nhận.";
+
+              proofMessage.scrollIntoView(
+                {
+                  block:
+                    "center"
+                }
+              );
+            }
+
+          }
+
+        }
+
       }
       catch (error) {
 
