@@ -2238,13 +2238,15 @@ async function redirectByRole(
       layer.clearLayers(); selId = null;
       var seen = {};
       if (!coaches.length) {
-        $("pdaSheetTitle").textContent = "Chưa có Coach quanh đây";
+        if (fit) map.setView(here, 13);
+        $("pdaSheetTitle").textContent = "Chưa có Coach trong bán kính 25 km";
+        $("pdaSheetSub").textContent = "Kéo bản đồ tới nơi khác để tìm thêm";
         $("pdaList").innerHTML = '<div class="pda-empty">Bạn cứ đăng ký, PickDee sẽ tìm Coach phù hợp và báo lại cho bạn.<a class="pda-cta" href="./student-register">ĐĂNG KÝ HỌC →</a></div>';
         return;
       }
       var nOn = coaches.filter(function (c) { return c.accepting_students !== false; }).length;
       $("pdaSheetTitle").textContent = nOn + " Coach đang nhận học viên";
-      $("pdaSheetSub").textContent = "Gần nhất ~" + km(coaches[0].distance_km) + " km • tính tới khu vực Coach dạy";
+      $("pdaSheetSub").textContent = "Trong bán kính 25 km • gần nhất ~" + km(coaches[0].distance_km) + " km";
       var html = "";
       coaches.forEach(function (c, i) {
         var key = c.lat + "," + c.lng, k = seen[key] = (seen[key] || 0) + 1, off = (k - 1) * 0.0018;
