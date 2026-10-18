@@ -700,6 +700,7 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
 .pda-me{width:18px;height:18px;border-radius:50%;background:#3b9bff;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,155,255,.25)}
 .pda-pin{display:grid;place-items:center;width:38px;height:38px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:#d8ff45;border:2px solid #07101b;box-shadow:0 6px 14px rgba(0,0,0,.45)}
 .pda-pin span{transform:rotate(45deg);color:#07101b;font-weight:900;font-size:12px}
+.pda-pin span.ph{width:30px;height:30px;border-radius:50%;background:#1a2a40 center/cover no-repeat}
 .pda-pin.off{background:#5b6677}
 .pda-pin.sel{background:#fff;transform:rotate(-45deg) scale(1.18)}
 .pda-center{position:absolute;left:50%;top:38%;z-index:500;transform:translate(-50%,-100%);pointer-events:none;display:none}
@@ -2273,7 +2274,7 @@ async function redirectByRole(
 
     function pin(c, sel) {
       var on = c.accepting_students !== false;
-      return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '"><span>' + esc(initials(c.full_name)) + '</span></div>', iconSize: [38, 38], iconAnchor: [4, 38] });
+      return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '">' + (c._img ? '<span class="ph" style="background-image:url(&quot;' + esc(c._img) + '&quot;)"></span>' : '<span>' + esc(initials(c.full_name)) + '</span>') + '</div>', iconSize: [38, 38], iconAnchor: [4, 38] });
     }
 
     function select(id, fromMap) {
@@ -2294,11 +2295,15 @@ async function redirectByRole(
         window.sb.rpc("public_get_coach_avatar", { p_coach_id: Number(c.id) }).then(function (r) {
           var row = Array.isArray(r.data) ? r.data[0] : null;
           if (!row || !row.avatar_path) return;
-          var bucket = row.avatar_bucket === "avatars" ? "avatars" : "profile-photos";
-          return window.sb.storage.from(bucket).createSignedUrl(row.avatar_path, 3600).then(function (s) {
+          var put = function (url) {
             var el = $("pdaAv" + c.id);
-            if (s && s.data && s.data.signedUrl && el) { el.style.backgroundImage = 'url("' + s.data.signedUrl + '")'; el.textContent = ""; }
-          });
+            if (!url || !el) return;
+            var img = new Image();
+            img.onload = function () { el.style.backgroundImage = 'url("' + url + '")'; el.textContent = ""; c._img = url; if (c._m) c._m.setIcon(pin(c, c.id === selId)); };
+            img.src = url;
+          };
+          if (row.avatar_bucket === "avatars") return put(window.sb.storage.from("avatars").getPublicUrl(row.avatar_path).data.publicUrl);
+          return window.sb.storage.from("profile-photos").createSignedUrl(row.avatar_path, 3600).then(function (s) { put(s && s.data && s.data.signedUrl); });
         }).catch(function () {});
       });
     }
