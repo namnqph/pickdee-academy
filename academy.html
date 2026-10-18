@@ -690,31 +690,7 @@ body.pda{overflow:hidden;background:#07101c}
 .pda-tabs a.mid span.dot{display:grid;place-items:center;width:44px;height:44px;margin-top:-20px;border-radius:50%;background:#d8ff45;color:#07101b;box-shadow:0 8px 22px rgba(216,255,69,.3);border:4px solid #07101c}
 .pda-tabs a.mid svg{width:20px;height:20px}
 body.pda #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 78px)!important}
-body.pda.pda-on-coach #pickdeeSupportRoot,body.pda.pda-guide-open #pickdeeSupportRoot{display:none!important}
-body.pda.pda-inst #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 142px)!important}
-.pda-install{flex:none;display:none;align-items:center;gap:10px;margin:0 10px 6px;padding:9px 10px 9px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(216,255,69,.16),rgba(216,255,69,.06));border:1px solid rgba(216,255,69,.35)}
-.pda-install.show{display:flex}
-.pda-install img{flex:none;width:30px;height:30px;border-radius:8px}
-.pda-install div{flex:1;min-width:0;font-size:12px;line-height:1.3;color:#c6cfda}
-.pda-install b{display:block;color:#fff;font-size:13px}
-.pda-install button{flex:none;font:inherit;cursor:pointer}
-.pda-install .go{padding:8px 12px;border:0;border-radius:10px;background:#d8ff45;color:#07101b;font-size:12px;font-weight:900}
-.pda-install .x{width:44px;height:44px;margin:-8px -8px -8px -4px;border:0;background:transparent;color:#9fb0c4;font-size:18px}
-.pda-install.ask .go,.pda-install.ask .x,.pda-install.ask img{display:none}
-.pda-install .ask{display:none;gap:8px;flex:none}
-.pda-install.ask .ask{display:flex}
-.pda-install .ask button{padding:9px 11px;border-radius:10px;font-size:12px;font-weight:900;border:1px solid rgba(216,255,69,.45);background:transparent;color:#d8ff45}
-.pda-install .ask button.yes{background:#d8ff45;color:#07101b;border-color:#d8ff45}
-.pda-guide{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(3,10,20,.7);backdrop-filter:blur(4px)}
-.pda-guide-card{width:100%;padding:20px 18px calc(env(safe-area-inset-bottom) + 18px);border-radius:22px 22px 0 0;background:#0b1626;border-top:1px solid rgba(216,255,69,.35);color:#fff}
-.pda-guide-card h3{margin:0 0 4px;font-size:18px;font-weight:900;color:#d8ff45}
-.pda-guide-card p{margin:0 0 12px;font-size:13px;color:#aab6c5;line-height:1.5}
-.pda-guide-card ol{margin:0 0 14px;padding:0;list-style:none;display:grid;gap:9px}
-.pda-guide-card li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
-.pda-guide-card li i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#d8ff45;color:#07101b;font-style:normal;font-weight:900;font-size:12px}
-.pda-guide-card .pda-cta{margin-top:4px}
-.pda-guide-arrow{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 4px);right:26px;z-index:100002;font-size:30px;color:#d8ff45;animation:pdaBob 1s ease-in-out infinite;pointer-events:none}
-@keyframes pdaBob{50%{transform:translateY(6px)}}
+body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
 /* ---------- Coach gần bạn (kiểu Xanh SM) ---------- */
 #v-coach{padding:0;overflow:hidden}
 #pdaMap{position:absolute;inset:0;background:#0b1626}
@@ -965,14 +941,6 @@ body.pda.pda-inst #pickdeeSupportRoot{bottom:calc(env(safe-area-inset-bottom) + 
       </div>
     </div>
 
-  </div>
-
-  <div class="pda-install" id="pdaInstall">
-    <img src="/icon-192.png" alt="">
-    <div><b>Cài PickDee như app</b>Mở nhanh, toàn màn hình, không thanh Safari</div>
-    <button class="go" type="button" id="pdaInstallGo">Cài</button>
-    <button class="x" type="button" id="pdaInstallX" aria-label="Đóng">✕</button>
-    <span class="ask"><button class="yes" type="button" id="pdaInstallDone">Đã cài rồi</button><button type="button" id="pdaInstallLater">Để sau</button></span>
   </div>
 
   <nav class="pda-tabs" id="pdaTabs">
@@ -2380,43 +2348,6 @@ async function redirectByRole(
     $("pdaHere").onclick = searchCenter;
     $("pdaHandle").onclick = function () { $("pdaSheet").classList.toggle("full"); save(); };
     return { open: open };
-  })();
-
-  /* ---------- Mời cài vào màn hình chính (chỉ khi đang mở bằng trình duyệt) ---------- */
-  (function () {
-    var ua = navigator.userAgent || "";
-    var standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
-    var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    var inApp = /Zalo|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|TikTok|musical_ly|; wv\)/i.test(ua);
-    var KEY = "pda_install_x", bar = document.getElementById("pdaInstall"), evt = null;
-    var showBar = function (on) { bar.classList.toggle("show", on); document.body.classList.toggle("pda-inst", on); };
-    /* "Đã cài rồi" → không nhắc nữa (Safari không biết máy đã cài vì app MH chính dùng bộ nhớ riêng); "Để sau" → 7 ngày */
-    var hidden = function () { try { var v = localStorage.getItem(KEY) || ""; return v === "installed" || Date.now() - Number(v || 0) < 7 * 864e5; } catch (e) { return false; } };
-    var remember = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} bar.classList.remove("ask"); showBar(false); };
-    if (standalone) return;
-    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); evt = e; if (!hidden()) showBar(true); });
-    if (isIOS && !hidden()) showBar(true);
-    document.getElementById("pdaInstallX").onclick = function () {
-      bar.classList.add("ask");
-      bar.querySelector("div").innerHTML = "<b>Bạn đã cài PickDee chưa?</b>Đã cài thì PickDee không nhắc nữa";
-    };
-    document.getElementById("pdaInstallDone").onclick = function () { remember("installed"); };
-    document.getElementById("pdaInstallLater").onclick = function () { remember(String(Date.now())); };
-    document.getElementById("pdaInstallGo").onclick = function () {
-      if (evt && !isIOS) { try { evt.prompt(); evt.userChoice.then(function () { evt = null; showBar(false); }); return; } catch (e) {} }
-      var steps = inApp
-        ? '<li><i>1</i><span>Bấm <b>•••</b> ở góc trên rồi chọn <b>Mở bằng Safari</b> (Zalo/Facebook không cài được)</span></li><li><i>2</i><span>Trong Safari, bấm Cài lại trên thanh này</span></li>'
-        : '<li><i>1</i><span>Bấm nút <b>•••</b> ở thanh dưới Safari (máy cũ: nút <b>Chia sẻ ⬆︎</b>)</span></li>'
-        + '<li><i>2</i><span>Chọn <b>Chia sẻ</b> → kéo xuống chọn <b>“Thêm vào MH chính”</b></span></li>'
-        + '<li><i>3</i><span>Bật <b>“Mở dưới dạng ứng dụng web”</b> nếu có, rồi bấm <b>Thêm</b></span></li>'
-        + '<li><i>4</i><span>Từ giờ mở <b>PickDee</b> ở màn hình chính như một app</span></li>';
-      var g = document.createElement("div");
-      g.className = "pda-guide";
-      g.innerHTML = '<div class="pda-guide-card"><h3>📲 Cài PickDee vào màn hình chính</h3><p>Miễn phí, không cần App Store. Mở toàn màn hình, nhanh như app.</p><ol>' + steps + '</ol><a href="#" class="pda-cta">ĐÃ HIỂU</a></div>' + (inApp ? "" : '<div class="pda-guide-arrow">⬇︎</div>');
-      g.onclick = function (e) { if (e.target === g || e.target.closest(".pda-cta")) { e.preventDefault(); g.remove(); document.body.classList.remove("pda-guide-open"); } };
-      document.body.classList.add("pda-guide-open");
-      document.body.appendChild(g);
-    };
   })();
 
   route();

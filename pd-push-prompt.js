@@ -3,6 +3,7 @@
    window.PD_PUSH_PROMPT = { mode: "full" | "ios-install", role: "Học viên" }
    - full:        mời bật thông báo (không có "Để sau") + hướng dẫn iPhone cài vào màn hình chính.
    - ios-install: chỉ hướng dẫn iPhone cài vào màn hình chính (trang đã có hộp bật thông báo riêng).
+   - installText: (tuỳ chọn) câu giải thích riêng trong hướng dẫn cài iPhone.
    Đăng ký Push vẫn do notifications.js (#pickdeeEnablePushButton) thực hiện.
 ========================================================= */
 (function () {
@@ -62,7 +63,7 @@
     const o = overlay(`
       <div class="pdp-icon">📲</div>
       <div class="pdp-title">CÀI PICKDEE ĐỂ NHẬN THÔNG BÁO</div>
-      <p class="pdp-text">Trên iPhone, PickDee chỉ gửi được thông báo lịch học khi đã được thêm vào màn hình chính.</p>
+      <p class="pdp-text">${cfg.installText || "Trên iPhone, PickDee chỉ gửi được thông báo lịch học khi đã được thêm vào màn hình chính."}</p>
       <ol class="pdp-steps">
         <li><span class="pdp-num">1</span><span>Bấm nút <b>Chia sẻ</b> <b>⬆︎</b> ở thanh dưới của Safari</span></li>
         <li><span class="pdp-num">2</span><span>Chọn <b>“Thêm vào MH chính”</b> rồi bấm <b>Thêm</b></span></li>
