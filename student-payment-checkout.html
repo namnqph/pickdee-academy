@@ -568,7 +568,7 @@
         <ol class="steps">
           <li>Chuyển khoản đúng số tiền.</li>
           <li>Giữ lại ảnh giao dịch thành công.</li>
-          <li>Tải bill lên bên dưới.</li>
+          <li>Tải ảnh chụp màn hình bill (đủ số tiền, nội dung, ngày giờ) — bill rõ ràng được xác nhận ngay.</li>
           <li>Đồng ý chính sách và gửi xác nhận.</li>
         </ol>
 
@@ -640,6 +640,7 @@
   ></script>
 
   <script src="./config.js?v=20261017-logout1"></script>
+  <script src="./student-bill-ocr.js?v=20261018-1"></script>
 
 
   <script>
@@ -1233,7 +1234,7 @@
 
 
       submitButton.textContent =
-        "ĐANG GỬI BILL...";
+        "ĐANG ĐỌC BILL...";
 
 
       let uploadedPath =
@@ -1241,6 +1242,16 @@
 
 
       try {
+
+        // Đọc chữ trên bill ngay trên máy → PickDee kiểm 6 điểm, đủ thì xác nhận ngay
+        const ocrText =
+          await PDBillOcr.read(
+            file,
+            (msg) => showStatus(msg, "info")
+          );
+
+        submitButton.textContent =
+          "ĐANG GỬI BILL...";
 
         const {
           data: authData,
@@ -1346,7 +1357,9 @@
           ),
 
         proof_path:
-          uploadedPath
+          uploadedPath,
+        ocr_text:
+          ocrText
       }
     }
   );
@@ -1411,10 +1424,21 @@ if (
 }
 
 
-        showStatus(
-          "Gửi bill thành công. PickDee sẽ kiểm tra và xác nhận thanh toán sớm.",
-          "success"
-        );
+        if (submitData.auto_verified) {
+          showStatus(
+            "✅ PickDee đã xác nhận thanh toán. Bạn sẽ nhận thông báo khi Coach sẵn sàng.",
+            "success"
+          );
+          document.getElementById("paidAmount").textContent =
+            money(Number(checkoutData.paid_amount || 0) + Number(checkoutData.amount_due || 0));
+          document.getElementById("amountDue").textContent = money(0);
+          document.getElementById("paymentSection").classList.add("hidden");
+        } else {
+          showStatus(
+            "Gửi bill thành công. PickDee sẽ kiểm tra và xác nhận thanh toán sớm.",
+            "success"
+          );
+        }
 
 
         document
