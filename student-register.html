@@ -382,6 +382,17 @@
   >
     ← TÌM COACH
   </a>
+<script>
+/* Nút quay lại: về đúng trang trước (Coach gần / hồ sơ / khu vực) thay vì link cứng */
+(function () {
+  var a = document.querySelector("header a.back"); if (!a) return;
+  var near = new URLSearchParams(location.search).get("from") === "near", same = false;
+  try { same = new URL(document.referrer).origin === location.origin; } catch (e) {}
+  if (near) { a.textContent = "← COACH GẦN BẠN"; a.href = "/academy#coach"; }
+  else if (same) a.textContent = "← QUAY LẠI";
+  a.addEventListener("click", function (e) { if (same && history.length > 1) { e.preventDefault(); history.back(); } });
+})();
+</script>
 
 </header>
 
@@ -3813,17 +3824,6 @@ avatar_mime:
 
 </script>
   <script src="/support-widget.js?v=20261017-sales1"></script>
-<script>
-/* Nút quay lại: về đúng trang trước (Coach gần / hồ sơ / khu vực) thay vì link cứng */
-(function () {
-  var a = document.querySelector("header a.back"); if (!a) return;
-  var near = new URLSearchParams(location.search).get("from") === "near", same = false;
-  try { same = new URL(document.referrer).origin === location.origin; } catch (e) {}
-  if (near) { a.textContent = "← COACH GẦN BẠN"; a.href = "/academy#coach"; }
-  else if (same) a.textContent = "← QUAY LẠI";
-  a.addEventListener("click", function (e) { if (same && history.length > 1) { e.preventDefault(); history.back(); } });
-})();
-</script>
 </body>
 
 </html>
