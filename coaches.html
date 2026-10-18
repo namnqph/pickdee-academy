@@ -695,6 +695,8 @@
 
   <div id="message"></div>
 
+  <div id="pdReady" class="pdr-box"></div>
+
 
 
   <div class="card">
@@ -3039,6 +3041,91 @@ observer.observe(
 
 </script>
   
+<style>
+  .pdr-box{margin:0 0 14px}
+  .pdr-head{width:100%;min-height:48px;border:0;border-radius:14px;background:#d8ff45;color:#071523;font-weight:900;font-size:14px;cursor:pointer}
+  .pdr-list{display:none;margin-top:10px;display:grid;gap:8px}
+  .pdr-item{padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+  .pdr-name{font-weight:900;font-size:15px}
+  .pdr-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+  .pdr-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .pdr-chip{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:rgba(255,120,120,.15);color:#ffb0b0}
+  .pdr-chip.ok{background:rgba(157,255,157,.13);color:#9dff9d}
+  .pdr-act{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .pdr-act button,.pdr-act a{flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:0;
+    background:rgba(216,255,69,.15);color:#d8ff45;font-weight:900;font-size:12px;text-decoration:none;cursor:pointer;padding:0 10px}
+  .pdr-msg{margin-top:8px;padding:10px;border-radius:10px;background:rgba(0,0,0,.25);font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .pdr-note{font-size:12px;color:rgba(255,255,255,.6);margin-top:8px;line-height:1.5}
+</style>
+<script>
+/* Mời Coach kích hoạt: Coach phải đăng nhập + bật thông báo thì hệ thống tự giao học viên mới mời được */
+(function () {
+  const box = document.getElementById("pdReady");
+  if (!box) return;
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const phoneZalo = p => String(p || "").replace(/\D/g, "").replace(/^84/, "0");
+  let rows = [], open = false;
+
+  function chips(r) {
+    const c = [];
+    if (!r.has_account) c.push(`<span class="pdr-chip">Chưa có tài khoản</span>`);
+    else if (!r.last_login) c.push(`<span class="pdr-chip">Chưa từng đăng nhập</span>`);
+    if (r.has_account && !r.push_devices) c.push(`<span class="pdr-chip">Chưa bật thông báo</span>`);
+    if (r.push_devices) c.push(`<span class="pdr-chip ok">🔔 ${r.push_devices} máy</span>`);
+    if (r.has_telegram) c.push(`<span class="pdr-chip ok">Telegram</span>`);
+    if (!r.accepting_students) c.push(`<span class="pdr-chip">Đang tắt nhận HV</span>`);
+    if (r.ready) c.push(`<span class="pdr-chip ok">✅ Sẵn sàng nhận HV</span>`);
+    return c.join("");
+  }
+
+  function render() {
+    const notReady = rows.filter(r => !r.ready).length;
+    box.innerHTML = `<button type="button" class="pdr-head">📲 MỜI COACH KÍCH HOẠT · ${notReady}/${rows.length} chưa sẵn sàng ${open ? "▲" : "▼"}</button>
+      <div class="pdr-list" style="display:${open ? "grid" : "none"}">
+        <div class="pdr-note">Hệ thống chỉ tự mời Coach <b>đã bật thông báo</b>. Bấm “Tạo link” → Copy → Mở Zalo của Coach → dán gửi. Coach bấm link là vào thẳng app (không cần mật khẩu), đặt mật khẩu và bật thông báo.</div>
+        ${rows.map(r => `<div class="pdr-item" data-id="${r.coach_id}">
+          <div class="pdr-name">${esc(r.full_name)}</div>
+          <div class="pdr-sub">${esc([r.preferred_ward, r.preferred_area].filter(Boolean).join(", "))}${r.phone ? " · " + esc(r.phone) : ""}</div>
+          <div class="pdr-chips">${chips(r)}</div>
+          ${r.has_account && !r.ready ? `<div class="pdr-act"><button type="button" class="pdr-gen">🔗 Tạo link kích hoạt</button></div><div class="pdr-out"></div>` : ""}
+        </div>`).join("")}
+      </div>`;
+  }
+
+  async function load() {
+    for (let i = 0; i < 80 && !window.sb?.rpc; i++) await new Promise(r => setTimeout(r, 100));
+    const { data, error } = await window.sb.rpc("admin_get_coach_readiness");
+    if (error) { box.innerHTML = ""; console.warn("coach readiness:", error); return; }
+    rows = data || [];
+    render();
+  }
+
+  box.addEventListener("click", async e => {
+    if (e.target.closest(".pdr-head")) { open = !open; return render(); }
+    const gen = e.target.closest(".pdr-gen");
+    if (gen) {
+      const item = gen.closest(".pdr-item"), id = Number(item.dataset.id), r = rows.find(x => x.coach_id === id);
+      gen.disabled = true; gen.textContent = "Đang tạo…";
+      const { data, error } = await window.sb.rpc("admin_create_coach_activation_link", { p_coach_id: id });
+      if (error) { gen.disabled = false; gen.textContent = "🔗 Tạo link kích hoạt"; return alert("Lỗi: " + error.message); }
+      const text = `Chào ${r.full_name}, PickDee Academy đã chuyển sang TỰ GIAO HỌC VIÊN gần nơi Coach dạy.\n` +
+        `Bấm link để vào app Coach (1 chạm, không cần mật khẩu), đặt mật khẩu riêng rồi bấm "Bật thông báo" để nhận lời mời học viên:\n` +
+        `${data.url}\n(Link dùng trong 7 ngày. iPhone: mở bằng Safari; Android: mở bằng Chrome.)`;
+      const z = phoneZalo(r.phone);
+      item.querySelector(".pdr-out").innerHTML = `<div class="pdr-msg">${esc(text)}</div>
+        <div class="pdr-act"><button type="button" class="pdr-copy">📋 Copy tin nhắn</button>
+        ${z ? `<a href="https://zalo.me/${z}" target="_blank" rel="noopener">💬 Mở Zalo ${esc(z)}</a>` : ""}</div>`;
+      item.querySelector(".pdr-copy").onclick = async ev => {
+        try { await navigator.clipboard.writeText(text); ev.target.textContent = "✓ Đã copy — dán vào Zalo"; }
+        catch (err) { prompt("Copy tin nhắn này:", text); }
+      };
+      gen.textContent = "🔗 Tạo link mới (link cũ hết hiệu lực)"; gen.disabled = false;
+    }
+  });
+
+  load();
+})();
+</script>
 <script src="/academy-admin-appnav.js?v=20261016-1"></script>
 </body>
 

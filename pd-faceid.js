@@ -409,6 +409,10 @@
       const md = user.user_metadata || {};
       if (md.must_change_password === true || md.must_change_password === "true") return; // đang phải đổi mật khẩu tạm
       if (document.querySelector(".pdf-sheet-bg")) return;
+      // Đang hiện màn bật thông báo/cài app (pd-push-prompt.js) → đợi xong mới mời Face ID
+      if (window.PDPushPromptDone) await Promise.race([window.PDPushPromptDone, new Promise(function (r) { setTimeout(r, 30000); })]);
+      for (let i = 0; i < 600 && document.querySelector(".pdp-overlay"); i++) await new Promise(function (r) { setTimeout(r, 500); });
+      if (document.querySelector(".pdp-overlay")) return;
       await offer(user, session);
     } catch (e) { console.warn("PickDee Face ID:", e); }
   }

@@ -8,6 +8,9 @@
 (function () {
 
   const cfg = window.PD_PUSH_PROMPT || { mode: "full" };
+  /* Báo cho pd-faceid.js biết màn bật thông báo đã xử lý xong (để không hiện chồng lên nhau) */
+  let promptDone;
+  window.PDPushPromptDone = new Promise(r => { promptDone = r; });
   const ua = navigator.userAgent || "";
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const standalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
@@ -161,20 +164,29 @@
 
   const enabledText = b => /THÔNG BÁO ĐÃ BẬT/i.test(String(b?.textContent || ""));
 
+  /* Bật xong → gửi 1 thông báo thử cho chính mình để thấy ngay là chạy */
+  async function selfTest() {
+    try {
+      await new Promise(r => setTimeout(r, 1500));
+      const sb = window.sb || window.PICKDEE_SUPABASE;
+      if (sb?.rpc) await sb.rpc("pd_push_self_test");
+    } catch (e) { /* không quan trọng */ }
+  }
+
   async function pushPrompt() {
-    if (Notification.permission === "denied") return; // đã chặn trong trình duyệt → không làm kẹt người dùng
+    if (Notification.permission === "denied") return promptDone(); // đã chặn trong trình duyệt → không làm kẹt người dùng
     const pushButton = await waitPushButton();
-    if (!pushButton) return;
+    if (!pushButton) return promptDone();
     await new Promise(r => setTimeout(r, 1500)); // để notifications.js kiểm tra trạng thái
     for (let i = 0; i < 60 && pushButton.disabled && !enabledText(pushButton); i++) await new Promise(r => setTimeout(r, 200));
-    if (enabledText(pushButton) || await hasSubscription()) return;
+    if (enabledText(pushButton) || await hasSubscription()) return promptDone();
 
     const o = overlay(`
       <div class="pdp-icon">🔔</div>
       <div class="pdp-title">BẬT THÔNG BÁO PICKDEE</div>
       <p class="pdp-text">${cfg.role === "Học viên"
         ? "Bật thông báo để không lỡ lịch học, nhắc buổi học, xác nhận thanh toán và tin nhắn từ Coach."
-        : "Bật thông báo để nhận ngay lịch học, thay đổi lịch và các cập nhật quan trọng từ PickDee."}</p>
+        : "PickDee tự giao học viên gần bạn qua thông báo này. Chưa bật thông báo = chưa được mời nhận học viên mới."}</p>
       <button type="button" class="pdp-btn">🔔 BẬT THÔNG BÁO</button>
       <div class="pdp-note">Khi trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div>`);
     const btn = o.querySelector(".pdp-btn");
@@ -186,7 +198,7 @@
       pushButton.click(); // giữ thao tác bấm của người dùng để trình duyệt cho phép xin quyền
       for (let i = 0; i < 60; i++) {
         await new Promise(r => setTimeout(r, 250));
-        if (enabledText(pushButton) || await hasSubscription()) { o.remove(); return; }
+        if (enabledText(pushButton) || await hasSubscription()) { o.remove(); promptDone(); selfTest(); return; }
         if (Notification.permission === "denied") break;
       }
       if (Notification.permission === "denied") {
@@ -194,7 +206,7 @@
         btn.textContent = "ĐÃ HIỂU";
         o.querySelector(".pdp-text").textContent =
           "Trình duyệt đang chặn thông báo của PickDee. Vào Cài đặt trình duyệt → Thông báo → cho phép pickdee.vn để không lỡ lịch học.";
-        btn.onclick = () => o.remove();
+        btn.onclick = () => { o.remove(); promptDone(); };
         return;
       }
       btn.disabled = false;
@@ -203,12 +215,12 @@
   }
 
   function start() {
-    if (inApp) return inAppGuide();
-    if (isIOS && !standalone) { patchBellButtonForIOS(); return iosInstallGuide(); }
+    if (inApp) { inAppGuide(); return promptDone(); }
+    if (isIOS && !standalone) { patchBellButtonForIOS(); iosInstallGuide(); return promptDone(); }
     showInstallChip();
-    if (cfg.mode === "ios-install") return;
-    if (!pushSupported) return;
-    pushPrompt();
+    if (cfg.mode === "ios-install") return promptDone();
+    if (!pushSupported) return promptDone();
+    pushPrompt().catch(() => promptDone());
   }
 
   /* Không đợi "load" (trang nặng trên điện thoại có thể rất lâu) */
