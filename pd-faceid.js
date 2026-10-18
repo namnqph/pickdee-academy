@@ -24,6 +24,9 @@
     : /Android/.test(ua) ? "vân tay"
     : /Windows/.test(ua) ? "Windows Hello"
     : "Face ID";
+  // Trình duyệt nhúng trong app (Telegram, Zalo, Facebook...): passkey thường bị iOS chặn → hướng dẫn mở Safari
+  const STANDALONE = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+  const IN_APP = !STANDALONE && (/Telegram|Zalo|FBAN|FBAV|FB_IAB|Instagram|Line\//i.test(ua) || (isIOS && !/Safari\//.test(ua)));
   function deviceName() {
     const dev = /iPad/.test(ua) || (isIOS && !/iPhone|iPod/.test(ua)) ? "iPad"
       : /iPhone|iPod/.test(ua) ? "iPhone"
@@ -246,14 +249,15 @@
   function el(html) { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; }
   const esc = function (s) { return String(s || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
 
-  /* Trang đăng nhập: chỉ hiện khi máy này đã bật Face ID */
+  /* Trang đăng nhập: passkey nằm trong iCloud Keychain/Google nên hiện cả ở trình duyệt chưa lưu dấu "đã bật"
+     (vd mở link từ Telegram); có dấu thì chào tên. */
   async function mountLogin(host, onUser) {
     const h = hint();
-    if (!host || !h || !(await supported())) return;
+    if (!host || !(IN_APP || await supported())) return;
     authPrep();
     const box = el(
       '<div class="pdf-box">' +
-        '<p class="pdf-hello">Chào ' + esc(h.name || "bạn") + ' 👋</p>' +
+        (h ? '<p class="pdf-hello">Chào ' + esc(h.name || "bạn") + ' 👋</p>' : '') +
         '<button type="button" class="pdf-btn" id="pdFaceIdLoginBtn"><span class="pdf-ic">' + ICON + '</span>Đăng nhập bằng ' + LABEL + '</button>' +
         '<div class="pdf-msg" role="status"></div>' +
         '<div class="pdf-or">hoặc dùng mật khẩu</div>' +
@@ -269,8 +273,15 @@
         await onUser(user);
       } catch (e) {
         console.warn("PickDee Face ID:", e);
+        if (IN_APP && !(e && typeof e.code === "string")) { // lỗi trình duyệt (DOMException có code số), không phải lỗi máy chủ
+          msg.innerHTML = LABEL + ' không chạy trong trình duyệt của ứng dụng này. ' +
+            (isIOS ? '<a href="x-safari-' + esc(location.href) + '" style="color:#b9ff18;font-weight:800">Mở bằng Safari</a> (hoặc bấm biểu tượng la bàn 🧭 ở góc dưới) rồi đăng nhập lại.'
+                   : 'Bấm ⋮ → "Mở bằng trình duyệt" rồi đăng nhập lại.');
+          btn.disabled = false;
+          return;
+        }
         msg.textContent = e && e.message && !e.name && !e.code ? e.message : friendly(e);
-        if (e && e.code === "unknown_credential") box.querySelector(".pdf-hello").remove(), btn.remove();
+        if (e && e.code === "unknown_credential") { const hh = box.querySelector(".pdf-hello"); if (hh) hh.remove(); btn.remove(); }
         btn.disabled = false;
       }
     });
@@ -279,7 +290,7 @@
   /* Hỏi bật Face ID (Promise xong khi người dùng chọn) */
   async function offer(user, session) {
     try {
-      if (!user || !session?.access_token || !(await supported())) return;
+      if (IN_APP || !user || !session?.access_token || !(await supported())) return;
       const h = hint();
       if ((h && h.uid === user.id) || laterFor(user.id)) return;
     } catch (_) { return; }
