@@ -198,6 +198,29 @@
       margin-top: 15px;
     }
 
+
+    .pd-hint{font-weight:400;color:rgba(255,255,255,.5)}
+    .pd-chips{display:flex;gap:6px;flex-wrap:wrap}
+    .pd-chips button{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#081c3b;color:#c4cdd8;font:inherit;font-weight:800;font-size:14px;cursor:pointer;padding:6px 4px;line-height:1.2}
+    .pd-chips button small{display:block;font-size:11px;font-weight:400;opacity:.8}
+    .pd-chips button.on{background:#d8ff45;border-color:#d8ff45;color:#071523}
+    .pd-field-err .pd-chips button,.pd-field-err .pd-court-list{border-color:#ff8a8a}
+    .pd-court-row{display:flex;gap:8px}
+    .pd-court-row input{flex:1;min-width:0}
+    .pd-court-gps{flex:none;min-height:48px;padding:0 12px;border-radius:10px;border:1px solid rgba(216,255,69,.4);background:transparent;color:#d8ff45;font:inherit;font-weight:800;font-size:13px}
+    .pd-court-list{margin-top:8px;max-height:300px;overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,.1)}
+    .pd-court-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer}
+    .pd-court-item:last-child{border-bottom:0}
+    .pd-court-item b{display:block;font-size:14px}
+    .pd-court-item small{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+    .pd-court-item .i{flex:1;min-width:0}
+    .pd-court-item .km{flex:none;color:#d8ff45;font-weight:900;font-size:12px}
+    .pd-court-empty{padding:12px;font-size:13px;color:rgba(255,255,255,.55);line-height:1.5}
+    .pd-court-chosen{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;border:1px solid #d8ff45;background:rgba(216,255,69,.08)}
+    .pd-court-chosen .i{flex:1;min-width:0}
+    .pd-court-chosen b{display:block;font-size:14px}
+    .pd-court-chosen small{display:block;font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+    .pd-court-chosen button{flex:none;border:0;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:12px;font-weight:800;padding:8px 10px}
     .field.full {
       grid-column:
         1 / -1;
@@ -739,6 +762,29 @@
 
         </select>
 
+      </div>
+
+      <div class="field full" id="pdStudyDaysField">
+        <label>NGÀY BẠN HỌC ĐƯỢC * <small class="pd-hint">(chọn tất cả ngày có thể)</small></label>
+        <div class="pd-chips" id="pdStudyDays">
+          <button type="button" data-v="1">T2</button><button type="button" data-v="2">T3</button><button type="button" data-v="3">T4</button><button type="button" data-v="4">T5</button><button type="button" data-v="5">T6</button><button type="button" data-v="6">T7</button><button type="button" data-v="7">CN</button>
+        </div>
+      </div>
+
+      <div class="field full" id="pdStudySlotsField">
+        <label>KHUNG GIỜ * <small class="pd-hint">(chọn được nhiều)</small></label>
+        <div class="pd-chips" id="pdStudySlots">
+          <button type="button" data-v="sang">Sáng<small>6–11h</small></button><button type="button" data-v="chieu">Chiều<small>14–17h</small></button><button type="button" data-v="toi">Tối<small>17–22h</small></button>
+        </div>
+      </div>
+
+      <div class="field full" id="pdCourtField">
+        <label>SÂN BẠN MUỐN HỌC *</label>
+        <div id="pdCourtChosen" class="pd-court-chosen" hidden></div>
+        <div id="pdCourtPick">
+          <div class="pd-court-row"><input id="pdCourtQ" type="search" placeholder="Tìm tên sân hoặc đường…" autocomplete="off"><button type="button" id="pdCourtGps" class="pd-court-gps">📍 Gần tôi</button></div>
+          <div id="pdCourtList" class="pd-court-list"><div class="pd-court-empty">Chọn Tỉnh / Thành ở trên để xem sân.</div></div>
+        </div>
       </div>
 
  <div class="field full">
@@ -2212,6 +2258,15 @@ if (
 
 
       if (
+        window.PDStudyPick
+        &&
+        !window.PDStudyPick.validate(message)
+      ) {
+        return;
+      }
+
+
+      if (
         !registerForm.checkValidity()
       ) {
 
@@ -2624,7 +2679,9 @@ avatar_base64:
 avatar_mime:
   avatarMime,
           source:
-            "Web PickDee"
+            "Web PickDee",
+
+          ...(window.PDStudyPick ? window.PDStudyPick.value() : {})
 
         };
 
@@ -3824,6 +3881,83 @@ avatar_mime:
 
 </script>
   <script src="/support-widget.js?v=20261017-sales1"></script>
+<script>
+/* Ngày học được + khung giờ + sân muốn học (bắt buộc) */
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const area = $("area"), ward = $("ward");
+  let court = null, ll = null, timer = null, seq = 0;
+
+  ["pdStudyDays", "pdStudySlots"].forEach(id => $(id).querySelectorAll("button").forEach(b => b.onclick = () => { b.classList.toggle("on"); $(id).closest(".field").classList.remove("pd-field-err"); clearMsg(); }));
+  const picked = id => [...$(id).querySelectorAll("button.on")].map(b => b.dataset.v);
+  const clearMsg = () => { const m = document.querySelector(".message.error"); if (m && /ngày bạn học|khung giờ|chọn sân/i.test(m.textContent)) { m.textContent = ""; m.className = "message"; } };
+
+  function choose(c) {
+    court = c;
+    $("pdCourtField").classList.remove("pd-field-err");
+    if (c) clearMsg();
+    $("pdCourtChosen").hidden = !c; $("pdCourtPick").hidden = !!c;
+    if (c) {
+      $("pdCourtChosen").innerHTML = '<span>✅</span><div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || "") + '</small></div><button type="button">Đổi sân</button>';
+      $("pdCourtChosen").querySelector("button").onclick = () => { choose(null); load(); };
+    }
+  }
+
+  function paint(rows, note) {
+    $("pdCourtList").innerHTML = rows.length ? rows.map((c, i) => '<div class="pd-court-item" data-i="' + i + '"><div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || [c.ward, c.province].filter(Boolean).join(", ")) + '</small></div>'
+      + (c.distance_km != null ? '<span class="km">' + Number(c.distance_km).toLocaleString("vi-VN") + ' km</span>' : '') + '</div>').join("")
+      : '<div class="pd-court-empty">' + note + '</div>';
+    $("pdCourtList").querySelectorAll(".pd-court-item").forEach(el => el.onclick = () => choose(rows[Number(el.dataset.i)]));
+  }
+
+  async function load() {
+    if (court || !window.sb) return;
+    const my = ++seq, q = $("pdCourtQ").value.trim();
+    let rows = [];
+    if (ll) {
+      const r = await window.sb.rpc("public_nearby_courts", { p_lat: ll[0], p_lng: ll[1], p_limit: 40 });
+      rows = (r.data || []).filter(c => !q || (c.court_name + " " + (c.address || "")).toLowerCase().includes(q.toLowerCase()));
+    } else {
+      if (!area.value) return paint([], "Chọn Tỉnh / Thành ở trên để xem sân.");
+      let qr = window.sb.from("court_directory").select("id,court_name,address,ward,province").eq("status", "active").eq("province", area.value).not("latitude", "is", null).order("court_name").limit(300);
+      if (q) qr = qr.or("court_name.ilike.%" + q.replace(/[%,()]/g, " ") + "%,address.ilike.%" + q.replace(/[%,()]/g, " ") + "%");
+      const r = await qr; rows = r.data || [];
+      const w = ward.value;
+      if (w) rows.sort((a, b) => (b.ward === w) - (a.ward === w));
+      rows = rows.slice(0, 40);
+    }
+    if (my !== seq) return;
+    paint(rows, q ? "Không thấy sân này. Thử tên đường, hoặc bấm 📍 Gần tôi." : "Chưa có sân trong danh bạ ở khu vực này — bấm 📍 Gần tôi hoặc nhắn PickDee (0926 629 966).");
+  }
+
+  $("pdCourtQ").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(load, 350); });
+  area.addEventListener("change", () => { ll = null; $("pdCourtGps").textContent = "📍 Gần tôi"; choose(null); setTimeout(load, 50); });
+  ward.addEventListener("change", () => { if (!ll) load(); });
+  $("pdCourtGps").onclick = () => {
+    if (!navigator.geolocation) return;
+    $("pdCourtGps").textContent = "Đang lấy…";
+    navigator.geolocation.getCurrentPosition(p => { ll = [p.coords.latitude, p.coords.longitude]; $("pdCourtGps").textContent = "📍 Gần tôi ✓"; load(); },
+      () => { $("pdCourtGps").textContent = "📍 Gần tôi"; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 120000 });
+  };
+
+  function fail(id, text, msgEl) {
+    const f = $(id); f.classList.add("pd-field-err"); f.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (msgEl) { msgEl.textContent = text; msgEl.className = "message error"; }
+    return false;
+  }
+
+  window.PDStudyPick = {
+    validate(msgEl) {
+      if (!picked("pdStudyDays").length) return fail("pdStudyDaysField", "Vui lòng chọn ngày bạn học được.", msgEl);
+      if (!picked("pdStudySlots").length) return fail("pdStudySlotsField", "Vui lòng chọn khung giờ bạn học được.", msgEl);
+      if (!court) return fail("pdCourtField", "Vui lòng chọn sân bạn muốn học.", msgEl);
+      return true;
+    },
+    value() { return { study_days: picked("pdStudyDays").map(Number), study_slots: picked("pdStudySlots"), preferred_court_id: court ? court.id : null }; }
+  };
+})();
+</script>
 </body>
 
 </html>
