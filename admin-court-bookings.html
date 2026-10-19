@@ -113,6 +113,8 @@
       outline: none;
     }
     .form input[type=file] { padding: 10px 12px; font-size: 14px; }
+    .mode { margin-top: 6px; font-size: 13px; color: rgba(255,255,255,.7); }
+    .mode a { color: #d8ff45; font-weight: 850; text-decoration: underline; }
     .done-box { margin-top: 12px; padding: 12px; border-radius: 10px; background: rgba(90,255,160,.07); font-size: 14px; line-height: 1.6; }
     .empty { padding: 30px 16px; text-align: center; color: rgba(255,255,255,.55); border: 1px dashed rgba(255,255,255,.14); border-radius: 14px; }
     .toast {
@@ -149,6 +151,7 @@
   <h1>📅 Đặt sân</h1>
   <p class="lead">
     Mỗi buổi học tự có 1 phiếu. Gọi/Zalo sân → chuyển khoản từ tài khoản PickDee → bấm <b>Đã đặt &amp; đã trả</b>.
+    Sân đối tác (trả cuối tháng) chỉ cần bấm <b>Đã đặt</b>, tiền trả ở <a href="./admin-court-reconciliation" style="color:#d8ff45;font-weight:850">Đối soát sân</a>.
     Coach và học viên chỉ thấy "Sân đã đặt", không thấy số tiền.
   </p>
 
@@ -217,7 +220,9 @@
   function bookingMessage(r) {
     return "Chào sân, PickDee Academy muốn đặt 1 sân " + dayText(r) + ", " + timeRange(r)
       + " (" + (r.duration_minutes || 60) + " phút) để dạy học viên. Tên đặt: " + BOOKER
-      + ". Sân báo giúp em giá và số tài khoản, em chuyển khoản trước luôn ạ. Cảm ơn sân!";
+      + (r.billing_mode === "Cuối tháng"
+        ? ". Sân ghi giúp em vào công nợ tháng của PickDee, cuối tháng em đối soát và chuyển khoản 1 lần ạ. Cảm ơn sân!"
+        : ". Sân báo giúp em giá và số tài khoản, em chuyển khoản trước luôn ạ. Cảm ơn sân!");
   }
 
   function chip(status) {
@@ -230,6 +235,7 @@
     const phone = phoneDigits(r.court_phone);
     const zalo = phoneDigits(r.court_zalo) || phone;
     const id = r.session_id;
+    const monthly = r.billing_mode === "Cuối tháng";
     let html = '<div class="card" data-id="' + id + '">'
       + '<div class="card-head"><div>'
       + '<div class="when">' + esc(dayText(r)) + " · " + esc(timeRange(r)) + "</div>"
@@ -237,7 +243,10 @@
       + '<div class="muted">' + esc(r.court_address || "") + "</div>"
       + '<div class="muted">Coach: ' + esc(r.coach_name || "—") + " · HV: " + esc(r.student_names || "—") + " · " + esc(r.session_code || "") + "</div>"
       + "</div>" + chip(r.status) + "</div>"
-      + '<div class="cost">Tiền sân dự kiến: <b>' + money(r.expected_cost) + "</b></div>";
+      + '<div class="cost">Tiền sân dự kiến: <b>' + money(r.expected_cost) + "</b></div>"
+      + (r.court_id ? '<div class="mode">' + (monthly
+          ? '🤝 Sân đối tác · trả cuối tháng · <a href="#" data-act="mode">đổi sang trả trước</a>'
+          : '💳 Trả trước mỗi lần đặt · <a href="#" data-act="mode">đổi sang sân đối tác</a>') + "</div>" : "");
 
     html += '<div class="btns">'
       + '<a class="btn' + (phone ? "" : " disabled") + '" href="tel:' + phone + '">📞 ' + (phone ? "Gọi sân" : "Chưa có SĐT") + "</a>"
@@ -250,10 +259,10 @@
       html += '<div class="form">'
         + (r.status === "Cần đổi lịch" ? '<div class="muted" style="color:#ff8a8a">⚠️ Buổi học đã đổi giờ/sân sau khi đặt. Báo sân đổi lịch rồi chốt lại.</div>' : "")
         + '<label>Tên / mã đặt sân<input data-f="ref" value="' + esc(r.booking_ref || BOOKER) + '"></label>'
-        + '<label>Số tiền đã chuyển cho sân<input data-f="amount" inputmode="numeric" value="' + esc(r.expected_cost ?? "") + '"></label>'
-        + '<label>Ảnh xác nhận (không bắt buộc)<input data-f="proof" type="file" accept="image/*"></label>'
+        + (monthly ? "" : '<label>Số tiền đã chuyển cho sân<input data-f="amount" inputmode="numeric" value="' + esc(r.expected_cost ?? "") + '"></label>'
+          + '<label>Ảnh xác nhận (không bắt buộc)<input data-f="proof" type="file" accept="image/*"></label>')
         + '<label>Ghi chú<input data-f="note" placeholder="VD: sân số 3"></label>'
-        + '<button class="btn main full" data-act="booked">✅ Đã đặt &amp; đã trả</button>'
+        + '<button class="btn main full" data-act="booked">' + (monthly ? "✅ Đã đặt (trả cuối tháng)" : "✅ Đã đặt &amp; đã trả") + "</button>"
         + "</div>";
     } else if (r.status === "Cần huỷ sân") {
       html += '<div class="form">'
@@ -262,7 +271,7 @@
         + '<button class="btn main full" data-act="cancelled">✔️ Đã báo huỷ với sân</button>'
         + "</div>";
     } else if (r.status === "Đã đặt") {
-      html += '<div class="done-box">✅ Đặt tên: <b>' + esc(r.booking_ref) + "</b><br>Đã trả: <b>" + money(r.amount_paid) + "</b>"
+      html += '<div class="done-box">✅ Đặt tên: <b>' + esc(r.booking_ref) + "</b><br>" + (r.amount_paid == null && monthly ? 'Trả: <b>cuối tháng</b> (<a href="./admin-court-reconciliation" style="color:#d8ff45;font-weight:850">Đối soát sân</a>)' : "Đã trả: <b>" + money(r.amount_paid) + "</b>")
         + (r.note ? "<br>Ghi chú: " + esc(r.note) : "")
         + (r.proof_path ? '<br><a href="#" data-act="proof" style="color:#d8ff45;font-weight:850">🧾 Xem ảnh xác nhận</a>' : "")
         + '</div><div class="btns"><button class="btn full" data-act="reset">↩️ Đặt lại (sân huỷ / sai)</button></div>';
@@ -280,7 +289,9 @@
 
   async function load() {
     listEl.innerHTML = '<div class="empty">Đang tải...</div>';
+    const seq = load.seq = (load.seq || 0) + 1;
     const { data, error } = await sb.rpc("admin_list_court_bookings", { p_scope: scope });
+    if (seq !== load.seq) return; // bấm tab khác trong lúc tải → bỏ kết quả cũ
     if (error) { listEl.innerHTML = '<div class="empty">Lỗi: ' + esc(error.message) + "</div>"; return; }
     rows = Array.isArray(data) ? data : [];
     render();
@@ -303,6 +314,18 @@
       return;
     }
 
+    if (act === "mode") {
+      const next = r.billing_mode === "Cuối tháng" ? "Trả trước" : "Cuối tháng";
+      if (!confirm(next === "Cuối tháng"
+        ? "Đặt " + r.court_name + " là SÂN ĐỐI TÁC: đặt sân không cần chuyển khoản, cuối tháng trả 1 lần ở Đối soát sân?"
+        : "Đổi " + r.court_name + " về TRẢ TRƯỚC: chuyển khoản mỗi lần đặt sân?")) return;
+      const { error } = await sb.rpc("admin_set_court_billing_mode", { p_court_id: r.court_id, p_mode: next });
+      if (error) { toast(error.message); return; }
+      toast("Đã đổi: " + (next === "Cuối tháng" ? "sân đối tác, trả cuối tháng" : "trả trước mỗi lần đặt"));
+      await load();
+      return;
+    }
+
     if (act === "proof") {
       const { data, error } = await sb.storage.from("payment-proofs").createSignedUrl(r.proof_path, 300);
       if (error) { toast("Không mở được ảnh: " + error.message); return; }
@@ -314,10 +337,10 @@
     try {
       if (act === "booked") {
         const ref = f("ref").value.trim();
-        const amountRaw = f("amount").value.replace(/[^\d]/g, "");
+        const amountRaw = f("amount") ? f("amount").value.replace(/[^\d]/g, "") : "";
         if (!ref) { toast("Ghi tên/mã đặt sân."); return; }
         let proofPath = null;
-        const file = f("proof").files[0];
+        const file = f("proof") ? f("proof").files[0] : null;
         if (file) {
           const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
           proofPath = user.id + "/court-booking-" + id + "-" + Date.now() + "." + ext;
