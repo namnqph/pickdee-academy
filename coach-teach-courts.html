@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <title>Sân bạn dạy | PickDee Academy</title>
+  <meta name="theme-color" content="#09111f">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="robots" content="noindex">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PickDee">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:#fff;background:radial-gradient(circle at top,#123158,#09111f 60%);padding:16px 16px 110px}
+    .wrap{max-width:520px;margin:0 auto}
+    .back{display:inline-block;color:#d8ff45;text-decoration:none;font-weight:800;font-size:14px;margin-bottom:12px}
+    h1{margin:0 0 6px;font-size:22px;color:#d8ff45}
+    .lead{margin:0 0 14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.8)}
+    .row{display:flex;gap:8px;margin-bottom:10px}
+    input{flex:1;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:16px}
+    .gps{flex:none;min-height:48px;padding:0 12px;border-radius:14px;border:1px solid rgba(216,255,69,.4);background:transparent;color:#d8ff45;font-weight:800;font-size:13px}
+    .sec{margin:16px 0 8px;font-size:12px;font-weight:900;letter-spacing:.08em;color:#93a1b3}
+    .court{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);cursor:pointer}
+    .court.on{border-color:#d8ff45;background:rgba(216,255,69,.1)}
+    .court .ck{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid rgba(255,255,255,.35);display:grid;place-items:center;font-weight:900;color:#071523}
+    .court.on .ck{background:#d8ff45;border-color:#d8ff45}
+    .court .i{flex:1;min-width:0}
+    .court b{display:block;font-size:15px}
+    .court small{display:block;color:#93a1b3;font-size:12px;line-height:1.45;margin-top:2px}
+    .court .km{flex:none;color:#d8ff45;font-weight:900;font-size:13px}
+    .empty{color:#93a1b3;font-size:14px;line-height:1.5;padding:10px 2px}
+    .empty a,.add a{color:#d8ff45}
+    .add{margin:14px 2px;font-size:13px;color:#93a1b3;line-height:1.5}
+    .bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(9,17,31,.96);border-top:1px solid rgba(255,255,255,.1)}
+    .bar .in{max-width:520px;margin:0 auto}
+    .btn{width:100%;min-height:52px;border:0;border-radius:14px;background:#d8ff45;color:#071523;font-size:16px;font-weight:900;cursor:pointer}
+    .btn[disabled]{opacity:.5}
+    .msg{font-size:13px;margin-bottom:8px;min-height:0;line-height:1.4}
+    .err{color:#ff8a8a}.ok{color:#9dff9d}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/coach">← Về trang Coach</a>
+  <h1>📍 Sân bạn dạy</h1>
+  <p class="lead">Chọn 1–5 sân bạn thường dạy. Vị trí của bạn trên bản đồ <b>"Gần bạn"</b> và lúc PickDee giao học viên sẽ tính <b>đúng theo toạ độ sân</b>, nên học viên ở gần sân sẽ tìm thấy bạn.</p>
+  <div class="row">
+    <input id="q" type="search" placeholder="Tìm tên sân hoặc đường…" autocomplete="off">
+    <button class="gps" id="gps" type="button">📍 Gần tôi</button>
+  </div>
+  <div class="sec" id="selTitle">ĐÃ CHỌN</div>
+  <div id="sel"></div>
+  <div class="sec" id="listTitle">SÂN GẦN KHU VỰC CỦA BẠN</div>
+  <div id="list"><div class="empty">Đang tải…</div></div>
+  <div class="add">Không thấy sân của bạn? <a href="/add-my-court">Gửi sân lên danh bạ →</a> (PickDee duyệt xong là chọn được).</div>
+</div>
+<div class="bar"><div class="in"><div class="msg" id="msg"></div><button class="btn" id="save" type="button">LƯU SÂN DẠY</button></div></div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const MAX = 5;
+  const sel = new Map(); // id -> court
+  let rows = [], ll = null, timer = null, seq = 0;
+
+  function card(c) {
+    const on = sel.has(c.id);
+    const km = c.distance_km != null ? '<span class="km">' + Number(c.distance_km).toLocaleString("vi-VN") + ' km</span>' : "";
+    return '<div class="court' + (on ? " on" : "") + '" data-id="' + c.id + '"><span class="ck">' + (on ? "✓" : "") + '</span>'
+      + '<div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || [c.ward, c.province].filter(Boolean).join(", ")) + '</small></div>' + km + '</div>';
+  }
+
+  function paint() {
+    const chosen = [...sel.values()];
+    $("selTitle").textContent = "ĐÃ CHỌN " + chosen.length + "/" + MAX;
+    $("sel").innerHTML = chosen.length ? chosen.map(card).join("") : '<div class="empty">Chưa chọn sân nào — học viên chưa thấy bạn chính xác trên bản đồ.</div>';
+    const rest = rows.filter(c => !sel.has(c.id));
+    $("list").innerHTML = rest.length ? rest.map(card).join("") : '<div class="empty">Không tìm thấy sân phù hợp. Thử tìm theo tên đường.</div>';
+    document.querySelectorAll(".court").forEach(el => el.onclick = () => toggle(Number(el.dataset.id)));
+  }
+
+  function toggle(id) {
+    $("msg").textContent = ""; $("msg").className = "msg";
+    if (sel.has(id)) sel.delete(id);
+    else {
+      if (sel.size >= MAX) { $("msg").textContent = "Chọn tối đa " + MAX + " sân."; $("msg").className = "msg err"; return; }
+      const c = rows.find(x => x.id === id); if (c) sel.set(id, c);
+    }
+    paint();
+  }
+
+  async function load() {
+    const my = ++seq, q = $("q").value.trim();
+    const { data, error } = await sb.rpc("coach_teach_court_options", { p_q: q || null, p_lat: ll ? ll[0] : null, p_lng: ll ? ll[1] : null });
+    if (my !== seq) return;
+    if (error) { $("list").innerHTML = '<div class="empty">Không tải được danh sách sân: ' + esc(error.message) + '</div>'; return; }
+    rows = data || [];
+    rows.forEach(c => { if (c.is_selected && !sel.has(c.id) && !loaded) sel.set(c.id, c); });
+    loaded = true;
+    $("listTitle").textContent = q ? "KẾT QUẢ TÌM" : ll ? "SÂN GẦN VỊ TRÍ CỦA BẠN" : "SÂN GẦN KHU VỰC CỦA BẠN";
+    paint();
+  }
+  let loaded = false;
+
+  $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(load, 350); });
+  $("gps").onclick = () => {
+    if (!navigator.geolocation) return;
+    $("gps").textContent = "Đang lấy…";
+    navigator.geolocation.getCurrentPosition(p => { ll = [p.coords.latitude, p.coords.longitude]; $("gps").textContent = "📍 Gần tôi ✓"; $("q").value = ""; load(); },
+      () => { $("gps").textContent = "📍 Gần tôi"; $("msg").textContent = "Chưa lấy được vị trí — bạn tìm theo tên sân nhé."; $("msg").className = "msg err"; },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 120000 });
+  };
+
+  $("save").onclick = async () => {
+    if (!sel.size) { $("msg").textContent = "Chọn ít nhất 1 sân bạn dạy."; $("msg").className = "msg err"; return; }
+    $("save").disabled = true; $("save").textContent = "ĐANG LƯU…";
+    const { error } = await sb.rpc("save_my_teach_courts", { p_ids: [...sel.keys()] });
+    $("save").disabled = false; $("save").textContent = "LƯU SÂN DẠY";
+    if (error) { $("msg").textContent = "Chưa lưu được: " + error.message; $("msg").className = "msg err"; return; }
+    $("msg").textContent = "✓ Đã lưu " + sel.size + " sân. Học viên gần các sân này sẽ thấy bạn trên bản đồ."; $("msg").className = "msg ok";
+  };
+
+  (async () => {
+    const { data } = await sb.auth.getUser();
+    if (!data || !data.user) { location.replace("/login?next=" + encodeURIComponent("/coach-teach-courts")); return; }
+    load();
+  })();
+})();
+</script>
+</body>
+</html>

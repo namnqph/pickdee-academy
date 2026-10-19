@@ -2316,7 +2316,10 @@ async function redirectByRole(
           : '<div class="pda-empty">PickDee đang cập nhật thêm sân ở khu vực này.<a class="pda-cta ghost" href="./courts">XEM DANH BẠ SÂN →</a><a class="pda-cta ghost" href="./add-my-court">BẠN LÀ CHỦ SÂN? ĐƯA SÂN LÊN →</a></div>';
         return;
       }
-      spread(rows);
+      /* Coach chưa chọn sân dạy (exact=false) → vị trí chỉ là tâm phường → không cắm ghim */
+      var pinned = mode === "coach" ? rows.filter(function (r) { return r.exact; }) : rows;
+      rows.forEach(function (r) { r._ll = null; });
+      spread(pinned);
       if (mode === "coach") {
         var nOn = rows.filter(function (c) { return c.accepting_students !== false; }).length;
         $("pdaSheetTitle").textContent = nOn + " Coach đang nhận học viên";
@@ -2327,7 +2330,7 @@ async function redirectByRole(
       }
       var html = "";
       rows.forEach(function (r, i) {
-        r._m = L.marker(r._ll, { icon: pin(r, false), zIndexOffset: 200 - i }).addTo(layer).on("click", function () { select(r.id, true); });
+        r._m = r._ll ? L.marker(r._ll, { icon: pin(r, false), zIndexOffset: 200 - i }).addTo(layer).on("click", function () { select(r.id, true); }) : null;
         html += mode === "coach" ? coachCard(r) : courtCard(r);
       });
       $("pdaList").innerHTML = html;
@@ -2335,7 +2338,7 @@ async function redirectByRole(
         el.onclick = function () { select(Number(el.getAttribute("data-id")), false); };
       });
       if (fit && here) {
-        var pts = [here].concat(rows.slice(0, 5).map(function (r) { return r._ll; }));
+        var pts = [here].concat(pinned.slice(0, 5).map(function (r) { return r._ll; }));
         map.fitBounds(pts, { paddingTopLeft: [40, 90], paddingBottomRight: [40, $("pdaSheet").offsetHeight + 40], maxZoom: 15 });
       }
       setTimeout(function () { moved = false; $("pdaHere").classList.remove("show"); save(); }, 400);
@@ -2346,9 +2349,9 @@ async function redirectByRole(
     function coachCard(c) {
       var on = c.accepting_students !== false;
       return '<div class="pda-coach" data-id="' + c.id + '"><div class="pda-av" id="pdaAv' + c.id + '"' + (c._img ? ' style="background-image:url(&quot;' + esc(c._img) + '&quot;)">' : ">" + esc(initials(c.full_name))) + '</div>'
-        + '<div class="info"><b>' + esc(c.full_name) + '</b><small>📍 ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area) + '</small>'
+        + '<div class="info"><b>' + esc(c.full_name) + '</b><small>' + (c.exact ? '🏓 Dạy tại ' + esc(c.court_name) : '📍 Khu vực ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area)) + '</small>'
         + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
-        + '<div class="pda-km"><b>' + km(c.distance_km) + '</b><small>km</small></div></div>'
+        + '<div class="pda-km"><b>' + (c.exact ? "" : "~") + km(c.distance_km) + '</b><small>km</small></div></div>'
         + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '&from=near">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '&from=near">Học với Coach này</a></div>';
     }
 

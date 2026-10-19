@@ -1350,6 +1350,10 @@
 
         </div>
 
+        <a id="dashboardTeach" href="/coach-teach-courts" style="display:block;margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(216,255,69,.32);background:rgba(216,255,69,.08);color:#fff;text-decoration:none;font-size:14px;line-height:1.45">
+          📍 Sân bạn dạy: <b style="color:#d8ff45">đang tải…</b>
+        </a>
+
 
         <div class="info-line">
 
@@ -2865,6 +2869,26 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
    dashboardRate.textContent =
   "Xem bảng quyền lợi bên dưới";
+
+    sb.rpc("get_my_teach_courts").then(function (r) {
+      var el = document.getElementById("dashboardTeach");
+      if (!el || r.error) return;
+      var list = r.data || [];
+      el.innerHTML = list.length
+        ? '📍 Sân bạn dạy: <b style="color:#d8ff45">' + list.map(function (c) { return String(c.court_name).replace(/[&<>"]/g, ""); }).join(", ") + '</b> <span style="color:#93a1b3">· Sửa →</span>'
+        : '⚠️ <b style="color:#ffd166">Chưa chọn sân bạn dạy</b> — học viên chưa thấy bạn chính xác trên bản đồ. <b style="color:#d8ff45">Chọn sân →</b>';
+      if (!list.length) {
+        el.style.borderColor = "rgba(255,209,102,.6)";
+        var lv = document.getElementById("coachLevels");
+        if (lv && !document.getElementById("pdTeachWarn")) {
+          var w = document.createElement("a");
+          w.id = "pdTeachWarn"; w.href = "/coach-teach-courts";
+          w.style.cssText = "display:block;margin:12px 0 4px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,209,102,.6);background:rgba(255,209,102,.1);color:#fff;text-decoration:none;font-size:14px;line-height:1.45";
+          w.innerHTML = '⚠️ <b style="color:#ffd166">Bạn chưa chọn sân dạy</b> — học viên gần bạn chưa thấy bạn trên bản đồ. <b style="color:#d8ff45">Chọn sân ngay →</b>';
+          lv.insertAdjacentElement("afterend", w);
+        }
+      }
+    });
 
 
     const years =
@@ -15986,7 +16010,7 @@ dashboardGrid.parentNode.insertBefore(
 /* PICKDEE COACH - màn hình chính kiểu app (pd-launcher.js) */
 window.PD_LAUNCHER = {
   anchor: "main h2.section-title",
-  heroSelector: "main > .eyebrow, #coachName, #coachCode, #coachLevels",
+  heroSelector: "main > .eyebrow, #coachName, #coachCode, #coachLevels, #pdTeachWarn",
   hashSections: { "#ho-so": "Hồ sơ Coach", "#khu-vuc": "Khu vực nhận học viên" },
   storageKey: "pd_coach_home",
   moreLabel: "📋 Xem tất cả thông tin",
