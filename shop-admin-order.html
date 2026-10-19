@@ -262,6 +262,29 @@
       border-bottom: 0;
     }
 
+    .item.has-thumb {
+      grid-template-columns:
+        64px minmax(0,1fr) auto;
+    }
+
+    .item-thumb {
+      display: block;
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #071523;
+      border:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .item-thumb img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .item-name {
       font-size: 12px;
       font-weight: 950;
@@ -1614,8 +1637,24 @@
                 )
               );
 
+            const thumbUrl =
+              item._imageUrl
+              ||
+              "";
+
             return `
-              <div class="item">
+              <div class="item${thumbUrl ? " has-thumb" : ""}">
+
+                ${
+                  thumbUrl
+                    ?
+                      `<a class="item-thumb" href="${escapeHtml(thumbUrl)}" target="_blank" rel="noopener">
+                        <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(item.variant_name || item.product_name || "Ảnh sản phẩm")}" loading="lazy">
+                      </a>`
+                    :
+                      ""
+                }
+
                 <div>
 
                   ${ownerTag}
@@ -6203,6 +6242,84 @@ if (
 
 
   /* =====================================================
+     ẢNH SẢN PHẨM TỪNG DÒNG
+     Ưu tiên ảnh đúng biến thể (màu), không có thì ảnh chính
+     của sản phẩm. Lỗi tải ảnh không chặn hiển thị đơn.
+  ====================================================== */
+
+  async function attachItemImages(items) {
+
+    const productIds =
+      [...new Set(
+        items
+          .map(item => item.product_id)
+          .filter(Boolean)
+      )];
+
+    if (!productIds.length) {
+      return;
+    }
+
+    const {
+      data,
+      error
+    } =
+      await sb
+        .from(
+          "shop_product_images"
+        )
+        .select(
+          "product_id,variant_id,storage_path,sort_order,is_primary"
+        )
+        .in(
+          "product_id",
+          productIds
+        )
+        .order(
+          "is_primary",
+          { ascending: false }
+        )
+        .order(
+          "sort_order",
+          { ascending: true }
+        );
+
+    if (error) {
+      console.warn("shop order item images:", error);
+      return;
+    }
+
+    const rows =
+      data || [];
+
+    items.forEach(function (item) {
+
+      const variantId =
+        item.variant_id
+        ??
+        item.stock_variant_id;
+
+      const row =
+        rows.find(r => variantId && r.variant_id === variantId)
+        ||
+        rows.find(r => r.product_id === item.product_id && !r.variant_id)
+        ||
+        rows.find(r => r.product_id === item.product_id);
+
+      item._imageUrl =
+        row?.storage_path
+          ? sb.storage
+              .from("shop-products")
+              .getPublicUrl(row.storage_path)
+              .data?.publicUrl || ""
+          : "";
+
+    });
+
+  }
+
+
+  /* =====================================================
      LOAD
   ====================================================== */
 
@@ -6343,6 +6460,9 @@ async function loadOrder() {
       itemsResult.data
       ||
       [];
+
+
+    await attachItemImages(currentItems);
 
 
     /*
