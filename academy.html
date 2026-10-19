@@ -667,6 +667,7 @@ body.pda{overflow:hidden;background:#07101c}
 .pda-prog .n{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#d8ff45;color:#07101b;font-weight:900;font-size:15px}
 .pda-prog b{display:block;font-size:15px}
 .pda-prog small{color:#93a1b3;font-size:12px}
+.pda-coach .info small.pda-when{color:#d8ff45;font-weight:700}
 .pda-progd summary{list-style:none;cursor:pointer}.pda-progd summary::-webkit-details-marker{display:none}
 .pda-progd summary>div{flex:1}.pda-chev{font-style:normal;color:#93a1b3;font-size:22px;transition:transform .2s}
 .pda-progd[open] .pda-chev{transform:rotate(90deg)}
@@ -2346,10 +2347,21 @@ async function redirectByRole(
       if (mode === "coach") avatars(rows.slice(0, 10));
     }
 
+    /* Ngày dạy ở sân: {1..7} → "T2–T5", "T6, T7, CN"; cả tuần → "" */
+    function teachWhen(c) {
+      var N = ["", "T2", "T3", "T4", "T5", "T6", "T7", "CN"], d = (c.teach_days || []).map(Number).sort(), out = [], i = 0, t = "";
+      if (d.length && d.length < 7) {
+        while (i < d.length) { var j = i; while (j + 1 < d.length && d[j + 1] === d[j] + 1) j++; out.push(j - i >= 2 ? N[d[i]] + "–" + N[d[j]] : d.slice(i, j + 1).map(function (x) { return N[x]; }).join(", ")); i = j + 1; }
+        t = out.join(", ");
+      }
+      if (c.date_to) { var f = function (x) { return x.slice(8, 10) + "/" + x.slice(5, 7); }; t += (t ? " · " : "") + "tạm thời " + (c.date_from ? f(c.date_from) + "–" : "đến ") + f(c.date_to); }
+      return t;
+    }
+
     function coachCard(c) {
       var on = c.accepting_students !== false;
       return '<div class="pda-coach" data-id="' + c.id + '"><div class="pda-av" id="pdaAv' + c.id + '"' + (c._img ? ' style="background-image:url(&quot;' + esc(c._img) + '&quot;)">' : ">" + esc(initials(c.full_name))) + '</div>'
-        + '<div class="info"><b>' + esc(c.full_name) + '</b><small>' + (c.exact ? '🏓 Dạy tại ' + esc(c.court_name) : '📍 Khu vực ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area)) + '</small>'
+        + '<div class="info"><b>' + esc(c.full_name) + '</b><small>' + (c.exact ? '🏓 Dạy tại ' + esc(c.court_name) : '📍 Khu vực ' + esc(c.preferred_ward) + ', ' + esc(c.preferred_area)) + '</small>' + (c.exact && teachWhen(c) ? '<small class="pda-when">🗓 Ngày dạy: ' + esc(teachWhen(c)) + '</small>' : '')
         + '<em class="' + (on ? "" : "off") + '">' + (on ? "● ĐANG NHẬN HỌC VIÊN" : "● TẠM NGỪNG NHẬN") + '</em></div>'
         + '<div class="pda-km"><b>' + (c.exact ? "" : "~") + km(c.distance_km) + '</b><small>km</small></div></div>'
         + '<div class="pda-coach-act"><a href="./coach-profile?id=' + c.id + '&from=near">Xem hồ sơ</a><a class="go' + (on ? "" : " dis") + '" href="./student-register?coach_id=' + c.id + '&from=near">Học với Coach này</a></div>';
