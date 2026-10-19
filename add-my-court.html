@@ -533,9 +533,22 @@
     </div>
 
     <p class="note">
-      Sau khi nhập địa chỉ, bạn có thể mở
-      Google Maps để kiểm tra vị trí sân.
+      Mở đúng sân trên Google Maps → Chia sẻ → Sao chép link → dán vào ô dưới.
+      Hoặc giữ tay lên ghim sân để chép số toạ độ.
     </p>
+
+    <label for="mapsLink">
+      Link Google Maps của sân *
+    </label>
+
+    <input
+      id="mapsLink"
+      inputmode="url"
+      autocomplete="off"
+      placeholder="https://maps.app.goo.gl/..."
+    >
+
+    <p class="note" id="mapsLinkHint"></p>
 
     <button
       id="mapBtn"
@@ -1111,6 +1124,94 @@
   );
 
 
+
+  /* =============================================
+     LINK GOOGLE MAPS → TOẠ ĐỘ
+     Link đầy đủ / số toạ độ: đọc ngay. Link rút gọn: lưu link,
+     admin bấm Duyệt sẽ tự lấy toạ độ (Edge pickdee-maps-resolve, chỉ admin).
+  ============================================== */
+
+  function parseMapsCoords(text) {
+
+    let s = String(text || "").trim();
+
+    try { s = decodeURIComponent(s); } catch (e) {}
+
+    const pats = [
+      /!3d(-?\d{1,2}\.\d+)!4d(-?\d{1,3}\.\d+)/,
+      /[?&](?:q|query|ll|destination|center)=(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/,
+      /\/maps\/(?:search|place)\/(-?\d{1,2}\.\d+),\+?(-?\d{1,3}\.\d+)/,
+      /@(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/,
+      /^(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/
+    ];
+
+    for (const re of pats) {
+
+      const m = s.match(re);
+
+      if (m) {
+
+        const lat = Number(m[1]);
+        const lng = Number(m[2]);
+
+        if (lat >= 8 && lat <= 24 && lng >= 102 && lng <= 110) {
+          return { lat, lng };
+        }
+
+      }
+
+    }
+
+    return null;
+
+  }
+
+
+  function readMapsLink() {
+
+    const raw = clean("mapsLink");
+
+    const url = (raw.match(/https:\/\/[^\s]+/) || [raw])[0];
+
+    const c = parseMapsCoords(raw);
+
+    if (c) return { ok: true, url: /^https:/.test(url) ? url : null, lat: c.lat, lng: c.lng };
+
+    if (/^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps)\//i.test(url)) {
+      return { ok: true, url: url, lat: null, lng: null };
+    }
+
+    return { ok: false };
+
+  }
+
+
+  $("mapsLink").addEventListener(
+    "input",
+    function () {
+
+      const hint = $("mapsLinkHint");
+
+      if (!clean("mapsLink")) {
+        hint.textContent = "";
+        return;
+      }
+
+      const r = readMapsLink();
+
+      hint.style.color = r.ok ? "#4ade80" : "#f87171";
+
+      hint.textContent =
+        !r.ok
+          ? "Chưa đọc được vị trí. Hãy dán link chia sẻ từ Google Maps hoặc số toạ độ dạng 21.03, 105.85."
+          : r.lat !== null
+            ? "✓ Đã lấy vị trí sân: " + r.lat.toFixed(6) + ", " + r.lng.toFixed(6)
+            : "✓ Đã nhận link Google Maps của sân.";
+
+    }
+  );
+
+
   /* =============================================
      GOOGLE MAPS
   ============================================== */
@@ -1261,6 +1362,18 @@
       }
 
 
+      const mapsInfo =
+        readMapsLink();
+
+      if (!mapsInfo.ok) {
+        showMessage(
+          "error",
+          "❌ Vui lòng dán link Google Maps của sân (hoặc số toạ độ) để khách tìm đúng vị trí."
+        );
+        $("mapsLink").focus();
+        return;
+      }
+
       const priceMin =
         numberOrNull(
           "priceMin"
@@ -1312,6 +1425,15 @@
           address:
             clean("address")
             || null,
+
+          maps_url:
+            mapsInfo.url,
+
+          latitude:
+            mapsInfo.lat,
+
+          longitude:
+            mapsInfo.lng,
 
           phone:
             normalizePhone(

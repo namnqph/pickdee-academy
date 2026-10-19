@@ -1128,13 +1128,21 @@
 
 
             const mapsUrl =
-              "https://www.google.com/maps/search/?api=1&query="
-              +
-              encodeURIComponent(
-                location
+              row.latitude != null && row.longitude != null
+                ?
+                "https://www.google.com/maps/search/?api=1&query=" + row.latitude + "," + row.longitude
+                :
+                row.maps_url
                 ||
-                row.court_name
-              );
+                (
+                  "https://www.google.com/maps/search/?api=1&query="
+                  +
+                  encodeURIComponent(
+                    location
+                    ||
+                    row.court_name
+                  )
+                );
 
 
             return `
@@ -1550,6 +1558,47 @@
 
         try {
 
+          // Chủ sân gửi link rút gọn → lấy toạ độ ghim trước khi duyệt
+          const sub =
+            allRows.find(r => Number(r.id) === id);
+
+          if (
+            sub
+            &&
+            sub.maps_url
+            &&
+            (sub.latitude == null || sub.longitude == null)
+          ) {
+
+            const res =
+              await sb.functions.invoke(
+                "pickdee-maps-resolve",
+                { body: { url: sub.maps_url } }
+              );
+
+            let d = res.data;
+
+            if (!d && res.error?.context?.json) {
+              try { d = await res.error.context.json(); } catch (e) {}
+            }
+
+            if (!d || !d.ok) {
+              throw new Error(
+                "Không lấy được vị trí từ link Google Maps của chủ sân. "
+                + ((d && d.error) || "")
+              );
+            }
+
+            const { error: upErr } =
+              await sb
+                .from("court_directory_submissions")
+                .update({ latitude: d.lat, longitude: d.lng })
+                .eq("id", id);
+
+            if (upErr) throw upErr;
+
+          }
+
           const {
             data: courtId,
             error
@@ -1600,15 +1649,22 @@
           );
 
 
+          const dup =
+            String(error?.message || "").match(/DUPLICATE_COURT:(\d+)/);
+
           showMessage(
             "error",
-            "❌ Không duyệt được sân: "
-            +
-            (
-              error?.message
-              ||
-              "Lỗi không xác định"
-            )
+            dup
+              ?
+              "⚠️ Sân này đã có trong danh bạ (mã sân " + dup[1] + "). Mở admin-court-detail?id=" + dup[1] + " để cập nhật, rồi từ chối đơn này."
+              :
+              "❌ Không duyệt được sân: "
+              +
+              (
+                error?.message
+                ||
+                "Lỗi không xác định"
+              )
           );
 
 
