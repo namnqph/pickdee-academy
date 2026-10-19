@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <title>Đặt sân | PickDee Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20261017-logout1"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(90,255,180,.13), transparent 30%),
+        linear-gradient(145deg, #041733, #062456 50%, #03142d);
+    }
+    a { color: inherit; text-decoration: none; }
+    .page { max-width: 860px; margin: 0 auto; padding: 0 16px 120px; }
+    .topbar {
+      padding: 18px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 20px;
+    }
+    .brand { font-size: 20px; font-weight: 950; }
+    .brand span { color: #d8ff45; }
+    .back {
+      min-height: 42px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      font-size: 13px;
+      font-weight: 850;
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(26px, 5vw, 36px); }
+    .lead { margin: 0 0 18px; color: rgba(255,255,255,.6); line-height: 1.55; font-size: 14px; }
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .tab {
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: #fff;
+      font-weight: 850;
+      font-size: 14px;
+    }
+    .tab.on { background: #d8ff45; color: #071a10; border-color: #d8ff45; }
+    .list { display: grid; gap: 14px; }
+    .card {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+    }
+    .card-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .when { font-size: 18px; font-weight: 950; }
+    .court { margin-top: 4px; font-size: 16px; font-weight: 850; color: #d8ff45; }
+    .muted { color: rgba(255,255,255,.6); font-size: 13px; line-height: 1.5; margin-top: 4px; }
+    .chip {
+      flex: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .chip.todo { background: rgba(255,190,70,.16); color: #ffc75a; }
+    .chip.warn { background: rgba(255,90,90,.16); color: #ff8a8a; }
+    .chip.ok { background: rgba(90,255,160,.16); color: #6dffb0; }
+    .chip.off { background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); }
+    .cost { margin-top: 10px; font-size: 14px; }
+    .cost b { font-size: 16px; }
+    .btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+    .btn {
+      min-height: 44px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn.disabled { opacity: .4; pointer-events: none; }
+    .btn.main { background: #d8ff45; color: #071a10; border-color: #d8ff45; }
+    .btn.full { grid-column: 1 / -1; }
+    .form { display: grid; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,.14); }
+    .form label { font-size: 12px; font-weight: 900; color: rgba(255,255,255,.6); display: grid; gap: 6px; }
+    .form input {
+      min-height: 46px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+    .form input[type=file] { padding: 10px 12px; font-size: 14px; }
+    .done-box { margin-top: 12px; padding: 12px; border-radius: 10px; background: rgba(90,255,160,.07); font-size: 14px; line-height: 1.6; }
+    .empty { padding: 30px 16px; text-align: center; color: rgba(255,255,255,.55); border: 1px dashed rgba(255,255,255,.14); border-radius: 14px; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: #0b2b1b;
+      border: 1px solid #6dffb0;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      display: none;
+      z-index: 50;
+      max-width: 90vw;
+    }
+  </style>
+  <link rel="manifest" href="/admin.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PD Admin">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <a class="brand" href="./admin">PickDee <span>Admin</span></a>
+    <a class="back" href="./admin">← Admin</a>
+  </div>
+
+  <h1>📅 Đặt sân</h1>
+  <p class="lead">
+    Mỗi buổi học tự có 1 phiếu. Gọi/Zalo sân → chuyển khoản từ tài khoản PickDee → bấm <b>Đã đặt &amp; đã trả</b>.
+    Coach và học viên chỉ thấy "Sân đã đặt", không thấy số tiền.
+  </p>
+
+  <div class="tabs">
+    <button class="tab on" data-scope="todo">Cần xử lý</button>
+    <button class="tab" data-scope="done">Đã xong</button>
+    <button class="tab" data-scope="all">Tất cả</button>
+  </div>
+
+  <div id="list" class="list"><div class="empty">Đang tải...</div></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(async function () {
+  const cfg = window.PICKDEE_CONFIG || {};
+  if (!window.supabase || !cfg.SUPABASE_URL || !cfg.SUPABASE_PUBLISHABLE_KEY) return;
+  const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_PUBLISHABLE_KEY);
+
+  const BOOKER = "PickDee - 0926 629 966";
+  const listEl = document.getElementById("list");
+  let scope = "todo";
+  let rows = [];
+
+  /* ===== ADMIN CHECK ===== */
+  const { data: authData } = await sb.auth.getUser();
+  const user = authData?.user;
+  if (!user) { location.href = "./"; return; }
+  const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (String(profile?.role || "").trim().toLowerCase() !== "admin") { location.href = "./"; return; }
+
+  /* ===== HELPERS ===== */
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = n => n == null || n === "" ? "—" : Number(n).toLocaleString("vi-VN") + "đ";
+  const DAYS = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { t.style.display = "none"; }, 2600);
+  }
+
+  function timeRange(r) {
+    const [h, m] = String(r.start_time || "00:00").split(":").map(Number);
+    const end = h * 60 + m + Number(r.duration_minutes || 60);
+    const pad = x => String(x).padStart(2, "0");
+    return pad(h) + ":" + pad(m) + "–" + pad(Math.floor(end / 60) % 24) + ":" + pad(end % 60);
+  }
+
+  function dayText(r) {
+    const d = new Date(r.session_date + "T00:00:00");
+    return DAYS[d.getDay()] + " " + String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  function phoneDigits(p) { return String(p || "").replace(/[^\d]/g, ""); }
+
+  function mapsUrl(r) {
+    if (r.latitude != null && r.longitude != null) return "https://www.google.com/maps/dir/?api=1&destination=" + r.latitude + "," + r.longitude;
+    if (r.google_maps_url) return r.google_maps_url;
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent((r.court_name || "") + " " + (r.court_address || ""));
+  }
+
+  function bookingMessage(r) {
+    return "Chào sân, PickDee Academy muốn đặt 1 sân " + dayText(r) + ", " + timeRange(r)
+      + " (" + (r.duration_minutes || 60) + " phút) để dạy học viên. Tên đặt: " + BOOKER
+      + ". Sân báo giúp em giá và số tài khoản, em chuyển khoản trước luôn ạ. Cảm ơn sân!";
+  }
+
+  function chip(status) {
+    const cls = { "Chưa đặt": "todo", "Cần đổi lịch": "warn", "Cần huỷ sân": "warn", "Đã đặt": "ok", "Đã huỷ": "off" }[status] || "off";
+    return '<span class="chip ' + cls + '">' + esc(status) + "</span>";
+  }
+
+  /* ===== RENDER ===== */
+  function card(r) {
+    const phone = phoneDigits(r.court_phone);
+    const zalo = phoneDigits(r.court_zalo) || phone;
+    const id = r.session_id;
+    let html = '<div class="card" data-id="' + id + '">'
+      + '<div class="card-head"><div>'
+      + '<div class="when">' + esc(dayText(r)) + " · " + esc(timeRange(r)) + "</div>"
+      + '<div class="court">' + esc(r.court_name || "Chưa chọn sân") + "</div>"
+      + '<div class="muted">' + esc(r.court_address || "") + "</div>"
+      + '<div class="muted">Coach: ' + esc(r.coach_name || "—") + " · HV: " + esc(r.student_names || "—") + " · " + esc(r.session_code || "") + "</div>"
+      + "</div>" + chip(r.status) + "</div>"
+      + '<div class="cost">Tiền sân dự kiến: <b>' + money(r.expected_cost) + "</b></div>";
+
+    html += '<div class="btns">'
+      + '<a class="btn' + (phone ? "" : " disabled") + '" href="tel:' + phone + '">📞 ' + (phone ? "Gọi sân" : "Chưa có SĐT") + "</a>"
+      + '<a class="btn' + (zalo ? "" : " disabled") + '" href="https://zalo.me/' + zalo + '" target="_blank" rel="noopener">💬 Zalo sân</a>'
+      + '<button class="btn" data-act="copy">📋 Chép tin đặt sân</button>'
+      + '<a class="btn" href="' + esc(mapsUrl(r)) + '" target="_blank" rel="noopener">🗺️ Bản đồ</a>'
+      + "</div>";
+
+    if (r.status === "Chưa đặt" || r.status === "Cần đổi lịch") {
+      html += '<div class="form">'
+        + (r.status === "Cần đổi lịch" ? '<div class="muted" style="color:#ff8a8a">⚠️ Buổi học đã đổi giờ/sân sau khi đặt. Báo sân đổi lịch rồi chốt lại.</div>' : "")
+        + '<label>Tên / mã đặt sân<input data-f="ref" value="' + esc(r.booking_ref || BOOKER) + '"></label>'
+        + '<label>Số tiền đã chuyển cho sân<input data-f="amount" inputmode="numeric" value="' + esc(r.expected_cost ?? "") + '"></label>'
+        + '<label>Ảnh xác nhận (không bắt buộc)<input data-f="proof" type="file" accept="image/*"></label>'
+        + '<label>Ghi chú<input data-f="note" placeholder="VD: sân số 3"></label>'
+        + '<button class="btn main full" data-act="booked">✅ Đã đặt &amp; đã trả</button>'
+        + "</div>";
+    } else if (r.status === "Cần huỷ sân") {
+      html += '<div class="form">'
+        + '<div class="muted" style="color:#ff8a8a">⚠️ Buổi học đã huỷ. Báo sân huỷ (xin hoàn/giữ tiền cho buổi sau) rồi bấm nút dưới.</div>'
+        + '<label>Ghi chú<input data-f="note" placeholder="VD: sân giữ tiền cho buổi sau"></label>'
+        + '<button class="btn main full" data-act="cancelled">✔️ Đã báo huỷ với sân</button>'
+        + "</div>";
+    } else if (r.status === "Đã đặt") {
+      html += '<div class="done-box">✅ Đặt tên: <b>' + esc(r.booking_ref) + "</b><br>Đã trả: <b>" + money(r.amount_paid) + "</b>"
+        + (r.note ? "<br>Ghi chú: " + esc(r.note) : "")
+        + (r.proof_path ? '<br><a href="#" data-act="proof" style="color:#d8ff45;font-weight:850">🧾 Xem ảnh xác nhận</a>' : "")
+        + '</div><div class="btns"><button class="btn full" data-act="reset">↩️ Đặt lại (sân huỷ / sai)</button></div>';
+    }
+    return html + "</div>";
+  }
+
+  function render() {
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="empty">' + (scope === "todo" ? "🎉 Không còn buổi nào cần đặt sân." : "Chưa có phiếu nào.") + "</div>";
+      return;
+    }
+    listEl.innerHTML = rows.map(card).join("");
+  }
+
+  async function load() {
+    listEl.innerHTML = '<div class="empty">Đang tải...</div>';
+    const { data, error } = await sb.rpc("admin_list_court_bookings", { p_scope: scope });
+    if (error) { listEl.innerHTML = '<div class="empty">Lỗi: ' + esc(error.message) + "</div>"; return; }
+    rows = Array.isArray(data) ? data : [];
+    render();
+  }
+
+  /* ===== ACTIONS ===== */
+  listEl.addEventListener("click", async e => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    e.preventDefault();
+    const cardEl = btn.closest(".card");
+    const id = Number(cardEl.dataset.id);
+    const r = rows.find(x => x.session_id === id);
+    const f = name => cardEl.querySelector('[data-f="' + name + '"]');
+    const act = btn.dataset.act;
+
+    if (act === "copy") {
+      try { await navigator.clipboard.writeText(bookingMessage(r)); toast("Đã chép tin nhắn, dán vào Zalo sân."); }
+      catch { prompt("Chép tin nhắn này:", bookingMessage(r)); }
+      return;
+    }
+
+    if (act === "proof") {
+      const { data, error } = await sb.storage.from("payment-proofs").createSignedUrl(r.proof_path, 300);
+      if (error) { toast("Không mở được ảnh: " + error.message); return; }
+      window.open(data.signedUrl, "_blank");
+      return;
+    }
+
+    btn.disabled = true;
+    try {
+      if (act === "booked") {
+        const ref = f("ref").value.trim();
+        const amountRaw = f("amount").value.replace(/[^\d]/g, "");
+        if (!ref) { toast("Ghi tên/mã đặt sân."); return; }
+        let proofPath = null;
+        const file = f("proof").files[0];
+        if (file) {
+          const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+          proofPath = user.id + "/court-booking-" + id + "-" + Date.now() + "." + ext;
+          const up = await sb.storage.from("payment-proofs").upload(proofPath, file, { contentType: file.type || "image/jpeg" });
+          if (up.error) { toast("Lỗi tải ảnh: " + up.error.message); return; }
+        }
+        const { error } = await sb.rpc("admin_mark_court_booked", {
+          p_session_id: id,
+          p_booking_ref: ref,
+          p_amount_paid: amountRaw ? Number(amountRaw) : null,
+          p_proof_path: proofPath,
+          p_note: f("note").value
+        });
+        if (error) { toast(error.message); return; }
+        toast("✅ Đã chốt đặt sân.");
+      } else if (act === "cancelled" || act === "reset") {
+        if (act === "reset" && !confirm("Chuyển buổi này về 'Chưa đặt'?")) return;
+        const { error } = await sb.rpc("admin_set_court_booking_status", {
+          p_session_id: id,
+          p_status: act === "cancelled" ? "Đã huỷ" : "Chưa đặt",
+          p_note: f("note") ? f("note").value : null
+        });
+        if (error) { toast(error.message); return; }
+        toast(act === "cancelled" ? "Đã ghi nhận huỷ sân." : "Đã chuyển về Chưa đặt.");
+      }
+      await load();
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === t));
+    scope = t.dataset.scope;
+    load();
+  }));
+
+  await load();
+})();
+</script>
+<script src="/academy-admin-appnav.js?v=20261016-1"></script>
+</body>
+</html>

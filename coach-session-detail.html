@@ -729,6 +729,25 @@ window.PICKDEE_NOTIFICATION_ROLE =
     null;
 
 
+  /* Phiếu đặt sân: Coach chỉ thấy trạng thái, không thấy tiền */
+  async function showCourtBooking() {
+    const el = document.getElementById("courtName");
+    if (!el || !sb || !sessionId) return;
+    const { data } = await sb.rpc("get_court_booking_statuses", { p_session_ids: [sessionId] });
+    const cb = data && data[String(sessionId)];
+    document.getElementById("courtBookingTag")?.remove();
+    if (!cb || !["Đã đặt", "Chưa đặt", "Cần đổi lịch"].includes(cb.status)) return;
+    const ok = cb.status === "Đã đặt";
+    const tag = document.createElement("div");
+    tag.id = "courtBookingTag";
+    tag.style.cssText = "margin-top:6px;font-size:13px;font-weight:800;line-height:1.45;color:" + (ok ? "#6dffb0" : "#ffc75a");
+    tag.textContent = ok
+      ? "✅ Sân đã đặt & đã thanh toán · báo tên: " + (cb.booking_ref || "PickDee")
+      : "⏳ PickDee đang đặt sân, Coach không cần trả tiền sân";
+    el.appendChild(tag);
+  }
+
+
   let currentSession =
     null;
 
@@ -1572,6 +1591,9 @@ else {
       ||
       "—"
     );
+
+
+    showCourtBooking();
 
 
     noteInput.value =

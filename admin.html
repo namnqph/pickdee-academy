@@ -479,7 +479,7 @@ PickDee
     </section>
     <section class="adm-group g-court">
       <div class="adm-group-head"><span class="adm-group-icon">🏟️</span><span class="adm-group-title">Sân</span><span class="adm-group-sum"></span></div>
-      <div class="adm-group-tiles"><a class="adm-tile" href="/admin-courts" data-count-from="courtUnverified"><span class="adm-tile-icon">🏟️</span><span class="adm-tile-label">Sân & khu vực</span><span class="adm-tile-badge"></span></a><a class="adm-tile" href="/admin-court-reconciliation"><span class="adm-tile-icon">🧾</span><span class="adm-tile-label">Đối soát sân</span></a><a class="adm-tile" href="/admin-court-directory"><span class="adm-tile-icon">🌏</span><span class="adm-tile-label">Danh bạ sân</span></a><a class="adm-tile" href="/admin-court-submissions"><span class="adm-tile-icon">📨</span><span class="adm-tile-label">Sân chờ duyệt</span></a><a class="adm-tile" href="/admin-court-claims"><span class="adm-tile-icon">✅</span><span class="adm-tile-label">Xác minh sân</span></a></div>
+      <div class="adm-group-tiles"><a class="adm-tile" href="/admin-court-bookings" data-count-from="courtBookingTodo"><span class="adm-tile-icon">📅</span><span class="adm-tile-label">Đặt sân</span><span class="adm-tile-badge"></span></a><a class="adm-tile" href="/admin-courts" data-count-from="courtUnverified"><span class="adm-tile-icon">🏟️</span><span class="adm-tile-label">Sân & khu vực</span><span class="adm-tile-badge"></span></a><a class="adm-tile" href="/admin-court-reconciliation"><span class="adm-tile-icon">🧾</span><span class="adm-tile-label">Đối soát sân</span></a><a class="adm-tile" href="/admin-court-directory"><span class="adm-tile-icon">🌏</span><span class="adm-tile-label">Danh bạ sân</span></a><a class="adm-tile" href="/admin-court-submissions"><span class="adm-tile-icon">📨</span><span class="adm-tile-label">Sân chờ duyệt</span></a><a class="adm-tile" href="/admin-court-claims"><span class="adm-tile-icon">✅</span><span class="adm-tile-label">Xác minh sân</span></a></div>
     </section>
     <section class="adm-group g-biz">
       <div class="adm-group-head"><span class="adm-group-icon">💼</span><span class="adm-group-title">Kinh doanh</span><span class="adm-group-sum"></span></div>
@@ -11791,6 +11791,17 @@ document.addEventListener(
   setInterval(sync, 2000);
 
 })();
+</script>
+<span id="courtBookingTodo" hidden>0</span>
+<script>
+  // Số buổi học cần đặt / đổi / huỷ sân → huy hiệu ô "Đặt sân"
+  (async function () {
+    const cfg = window.PICKDEE_CONFIG || {};
+    if (!window.supabase || !cfg.SUPABASE_URL) return;
+    const sbBook = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_PUBLISHABLE_KEY);
+    const { data } = await sbBook.rpc("admin_list_court_bookings", { p_scope: "todo" });
+    document.getElementById("courtBookingTodo").textContent = Array.isArray(data) ? data.length : 0;
+  })();
 </script>
 <script src="/pd-faceid.js?v=20261018-auto1"></script>
 <script>

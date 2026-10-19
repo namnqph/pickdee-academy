@@ -2129,6 +2129,7 @@
                     ||
                     "Chưa chọn sân"
                   )}
+                  <div class="court-booking-tag" data-cb-session="${Number(item.id)}"></div>
                 </td>
 
                 <td>
@@ -2183,6 +2184,25 @@
         }
       );
 
+
+    showCourtBookings();
+
+  }
+
+
+  /* Phiếu đặt sân: học viên chỉ thấy trạng thái, không thấy tiền */
+  async function showCourtBookings() {
+    const ids = currentSessions.map(x => Number(x.id)).filter(Boolean);
+    if (!ids.length) return;
+    const { data } = await sb.rpc("get_court_booking_statuses", { p_session_ids: ids });
+    if (!data) return;
+    document.querySelectorAll("[data-cb-session]").forEach(el => {
+      const cb = data[el.dataset.cbSession];
+      if (!cb || !["Đã đặt", "Chưa đặt", "Cần đổi lịch"].includes(cb.status)) return;
+      const ok = cb.status === "Đã đặt";
+      el.style.cssText = "margin-top:4px;font-size:12px;font-weight:800;color:" + (ok ? "#6dffb0" : "#ffc75a");
+      el.textContent = ok ? "✅ Sân đã đặt & trả" : "⏳ PickDee đang đặt sân";
+    });
   }
 
 
