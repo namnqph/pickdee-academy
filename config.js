@@ -176,6 +176,104 @@ window.PICKDEE_CONFIG = {
 
 
   /*
+    GIỮ ĐĂNG NHẬP ÍT NHẤT 30 NGÀY (functions/api/auth-keep.js).
+    Safari iPhone / Zalo / Telegram có thể xoá localStorage sau vài ngày → mất phiên.
+    - Có phiên: lưu refresh token mới nhất vào cookie HttpOnly 30 ngày (gia hạn mỗi lần làm mới token).
+    - Mất phiên mà còn cookie: lấy lại phiên TRƯỚC khi trang đọc getSession/getUser (chờ tối đa 5 giây).
+    - Đăng xuất: xoá cookie, không tự lấy lại.
+  */
+
+  const KEEP_URL =
+    "/api/auth-keep";
+
+  function keepStore(key, value) {
+    try {
+      if (value == null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    }
+    catch (_) {}
+  }
+
+  function keepRead(key) {
+    try { return localStorage.getItem(key); }
+    catch (_) { return null; }
+  }
+
+  function keepPost(body) {
+    return fetch(KEEP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+      keepalive: true
+    });
+  }
+
+  let restoring = false;
+
+  const restorePromise =
+    !keepRead("pickdee-auth")
+    && !keepRead("pd_signed_out")
+    && /(?:^|;\s*)pd_rt_hint=1/.test(document.cookie)
+      ? keepPost({ action: "restore" })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(async function (s) {
+            if (!s || !s.access_token) return;
+            restoring = true;
+            try {
+              await sharedClient.auth.setSession({
+                access_token: s.access_token,
+                refresh_token: s.refresh_token
+              });
+            }
+            finally {
+              restoring = false;
+            }
+          })
+          .catch(function (error) {
+            console.warn("PickDee auth restore:", error);
+          })
+      : null;
+
+  function waitRestore() {
+    return restorePromise && !restoring
+      ? Promise.race([
+          restorePromise,
+          new Promise(function (resolve) { setTimeout(resolve, 5000); })
+        ])
+      : Promise.resolve();
+  }
+
+  ["getSession", "getUser"].forEach(function (name) {
+    const original =
+      sharedClient.auth[name].bind(sharedClient.auth);
+    sharedClient.auth[name] =
+      async function () {
+        await waitRestore();
+        return original.apply(null, arguments);
+      };
+  });
+
+  sharedClient.auth.onAuthStateChange(function (event, session) {
+    const token =
+      session && session.refresh_token;
+    if (event === "SIGNED_OUT") {
+      keepStore("pd_rt_kept", null);
+      return;
+    }
+    if (event === "SIGNED_IN") {
+      keepStore("pd_signed_out", null);
+    }
+    if (token && token !== keepRead("pd_rt_kept")) {
+      keepStore("pd_rt_kept", token);
+      keepPost({ action: "save", refresh_token: token })
+        .then(function (res) { if (!res.ok) keepStore("pd_rt_kept", null); })
+        .catch(function () { keepStore("pd_rt_kept", null); });
+    }
+  });
+
+
+  /*
     ĐĂNG XUẤT KHÔNG BAO GIỜ TREO.
     Safari iPhone: khoá phiên có thể kẹt khi app mở lại từ nền
     → signOut() chờ mãi, trang không chuyển, phiên không xoá.
@@ -209,6 +307,27 @@ window.PICKDEE_CONFIG = {
         );
 
       }
+
+      /* Xoá cookie giữ đăng nhập (chờ tối đa 1,5 giây) */
+      try {
+
+        await Promise.race([
+          fetch(KEEP_URL, {
+            method: "DELETE",
+            credentials: "same-origin",
+            keepalive: true
+          }),
+          new Promise(function (resolve) {
+            setTimeout(resolve, 1500);
+          })
+        ]);
+
+      }
+      catch (_) {}
+
+      keepStore("pd_signed_out", "1");
+
+      keepStore("pd_rt_kept", null);
 
       try {
 

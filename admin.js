@@ -37,8 +37,7 @@ async function startAdmin() {
 
   if (profile.role !== "admin") {
 
-    await supabaseClient.auth.signOut();
-
+    /* Không đăng xuất: /login còn phiên sẽ tự chuyển về đúng trang theo vai trò */
     window.location.href = "/login.html";
 
     return;
