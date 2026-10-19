@@ -257,6 +257,12 @@
         not-allowed;
     }
 
+    .checkin {
+      width: 100%;
+      margin-top: 8px;
+      background: #6dffb0;
+      color: #06210f;
+    }
     .complete {
       background: #d8ff45;
 
@@ -568,6 +574,14 @@
 
       </div>
 
+      <div class="item" id="checkinItem" hidden>
+        <div class="label">
+          Check-in tại sân
+        </div>
+        <div class="value" id="checkinStatus">—</div>
+        <button id="checkinBtn" class="checkin" type="button" hidden>📍 CHECK-IN TẠI SÂN</button>
+      </div>
+
 
     </div>
 
@@ -747,6 +761,68 @@ window.PICKDEE_NOTIFICATION_ROLE =
     el.appendChild(tag);
   }
 
+
+  /* Check-in GPS: chỉ lấy vị trí lúc Coach bấm, mở 60' trước giờ học → 30' sau giờ kết thúc */
+  function sessionWindow(s) {
+    const [y, mo, d] = String(s.session_date || "").split("-").map(Number);
+    const [h, mi] = String(s.start_time || "00:00").split(":").map(Number);
+    const start = new Date(y, mo - 1, d, h, mi);
+    const end = new Date(start.getTime() + Number(s.duration_minutes || 60) * 60000);
+    return { open: new Date(start.getTime() - 60 * 60000), close: new Date(end.getTime() + 30 * 60000) };
+  }
+
+  const hhmm = d => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  const distText = m => m == null ? "" : m < 1000 ? m + "m" : (m / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + "km";
+
+  async function showCheckin(note) {
+    const item = document.getElementById("checkinItem");
+    const st = document.getElementById("checkinStatus");
+    const btn = document.getElementById("checkinBtn");
+    const s = currentSession;
+    if (!item || !s || !sb) return;
+    if (["Đã hủy", "Hủy", "Đã huỷ", "Huỷ"].includes(String(s.status || ""))) { item.hidden = true; return; }
+    item.hidden = false;
+    const { data: ck } = await sb.rpc("get_session_checkin", { p_session_id: sessionId });
+    const w = sessionWindow(s);
+    const now = new Date();
+    const inWindow = now >= w.open && now <= w.close && s.status !== "Đã hoàn thành";
+    let text;
+    if (ck) {
+      const at = hhmm(new Date(ck.checked_in_at));
+      text = !ck.court_has_location ? "📍 Đã check-in " + at + " (sân chưa có toạ độ để so)"
+        : ck.within_range ? "✅ Đã check-in " + at + " · cách sân " + distText(ck.distance_m)
+        : "⚠️ Check-in " + at + " cách sân " + distText(ck.distance_m) + " — tới sân rồi bấm lại";
+    } else if (now < w.open) {
+      text = "Mở lúc " + hhmm(w.open) + " ngày " + String(w.open.getDate()).padStart(2, "0") + "/" + String(w.open.getMonth() + 1).padStart(2, "0") + " (60 phút trước giờ học)";
+    } else {
+      text = inWindow ? "Tới sân thì bấm nút dưới để báo PickDee" : "Không check-in";
+    }
+    st.textContent = text + (note ? "\n" + note : "");
+    st.style.whiteSpace = "pre-line";
+    btn.hidden = !(inWindow && !(ck && (ck.within_range || !ck.court_has_location)));
+  }
+
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("#checkinBtn");
+    if (!btn || btn.disabled) return;
+    if (!navigator.geolocation) { showCheckin("Máy không hỗ trợ lấy vị trí. Mở pickdee.vn bằng Safari/Chrome rồi bấm lại."); return; }
+    btn.disabled = true;
+    btn.textContent = "⏳ Đang lấy vị trí...";
+    const done = msg => { btn.disabled = false; btn.textContent = "📍 CHECK-IN TẠI SÂN"; showCheckin(msg); };
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { error } = await sb.rpc("coach_session_checkin", {
+        p_session_id: sessionId,
+        p_lat: pos.coords.latitude,
+        p_lng: pos.coords.longitude,
+        p_accuracy: Math.round(pos.coords.accuracy || 0)
+      });
+      done(error ? "❌ " + error.message : "");
+    }, err => {
+      done(err.code === 1
+        ? "❌ Chưa cho phép Vị trí. Trên iPhone: Cài đặt › Quyền riêng tư › Dịch vụ định vị › Safari → 'Khi dùng', rồi bấm lại. Đang mở trong Telegram/Zalo thì mở bằng Safari."
+        : "❌ Chưa lấy được vị trí, ra chỗ thoáng rồi bấm lại.");
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  });
 
   let currentSession =
     null;
@@ -1594,6 +1670,7 @@ else {
 
 
     showCourtBooking();
+    showCheckin();
 
 
     noteInput.value =
