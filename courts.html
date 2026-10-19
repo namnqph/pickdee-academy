@@ -241,6 +241,42 @@
     }
 
 
+    .court-card .court-photo {
+      margin: -17px -17px 12px;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .court-photo {
+      margin: 0 0 14px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,.05);
+      position: relative;
+      aspect-ratio: 3 / 2;
+    }
+
+    .court-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .court-photo figcaption {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: rgba(255,255,255,.85);
+      background: rgba(0,0,0,.55);
+    }
+
+    .court-photo figcaption a {
+      color: inherit;
+    }
+
     .court-card {
       min-width: 0;
 
@@ -909,6 +945,39 @@
   }
 
 
+  function photoUrl(path) {
+
+    return path
+      ?
+      sb.storage.from("court-photos").getPublicUrl(path).data.publicUrl
+      :
+      "";
+
+  }
+
+
+  function photoBlock(row) {
+
+    if (!row.photo_path) return "";
+
+    const credit =
+      row.photo_credit
+        ?
+        `<figcaption>${
+          row.photo_credit_url
+            ?
+            `<a href="${esc(row.photo_credit_url)}" target="_blank" rel="nofollow noopener noreferrer">${esc(row.photo_credit)}</a>`
+            :
+            esc(row.photo_credit)
+        }</figcaption>`
+        :
+        "";
+
+    return `<figure class="court-photo"><img src="${esc(photoUrl(row.photo_path))}" alt="${esc(row.court_name)}" loading="lazy" decoding="async" width="900" height="600">${credit}</figure>`;
+
+  }
+
+
   function mapsUrl(row) {
 
     if (
@@ -1117,7 +1186,10 @@
             booking_url,
             verified,
             owner_claimed,
-            status
+            status,
+            photo_path,
+            photo_credit,
+            photo_credit_url
           `,
           "status",
           "active",
@@ -1510,6 +1582,9 @@
      RENDER
   ========================================== */
 
+  // Hiện dần 40 sân/lần cho nhẹ trên điện thoại
+  let courtLimit = 40;
+
   function render() {
 
     const rows =
@@ -1586,6 +1661,7 @@
 
     grid.innerHTML =
       rows
+        .slice(0, courtLimit)
         .map(
           row => {
 
@@ -1620,6 +1696,7 @@
             return `
 
               <article class="court-card">
+                ${photoBlock(row)}
 
 
                 <div class="court-head">
@@ -1873,9 +1950,44 @@
 
           }
         )
-        .join("");
+        .join("")
+      +
+      (
+        rows.length > courtLimit
+          ?
+          `<button type="button" class="action-btn" id="courtMore" style="grid-column:1/-1;width:100%;margin:8px 0">XEM THÊM ${rows.length - courtLimit} SÂN</button>`
+          :
+          ""
+      );
 
   }
+
+
+  function renderFromStart() {
+
+    courtLimit = 40;
+
+    render();
+
+  }
+
+
+  grid.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target.closest("#courtMore")
+      ) {
+
+        courtLimit += 40;
+
+        render();
+
+      }
+
+    }
+  );
 
 
   /* =========================================
@@ -1884,7 +1996,7 @@
 
   searchInput.addEventListener(
     "input",
-    render
+    renderFromStart
   );
 
 
@@ -1894,7 +2006,7 @@
 
       buildWardFilter();
 
-      render();
+      renderFromStart();
 
     }
   );
@@ -1902,7 +2014,7 @@
 
   wardFilter.addEventListener(
     "change",
-    render
+    renderFromStart
   );
 
 
