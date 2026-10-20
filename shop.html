@@ -6038,6 +6038,63 @@ button.product-action:disabled,
     
 </style>
 
+<style>
+/* =====================================================
+   SHOP – danh mục có số lượng + "Tất cả" chia theo nhóm
+====================================================== */
+.category-btn{ position:relative }
+.category-count{
+  position:absolute; top:8px; right:8px;
+  min-width:22px; height:22px; padding:0 6px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:999px; background:#fff7df; color:#8d6300;
+  font-size:11px; font-weight:1000; line-height:1;
+}
+.category-btn.active .category-count{ background:var(--pd-gold); color:#141009 }
+#productsGrid.is-grouped{ display:block !important }
+.shop-group{ margin:0 0 30px; scroll-margin-top:80px }
+.shop-group-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:0 0 14px; padding:0 0 10px; border-bottom:2px solid #f1e6c4;
+}
+.shop-group-title{
+  margin:0; position:relative; padding-left:14px;
+  color:#111; font-size:20px; line-height:1.15; font-weight:1000; letter-spacing:-.03em; text-transform:uppercase;
+}
+.shop-group-title::before{
+  content:""; position:absolute; left:0; top:2px; bottom:2px; width:5px; border-radius:999px; background:var(--pd-gold);
+}
+.shop-group-more{
+  flex:none; display:inline-flex; align-items:center; gap:6px;
+  padding:7px 12px; border:1px solid #f1e0a6; border-radius:999px;
+  background:#fff7df; color:#8d6300; font:inherit; font-size:12.5px; font-weight:900; cursor:pointer; white-space:nowrap;
+}
+.shop-group-more::after{ content:"→" }
+#shopChipBar{
+  position:fixed; left:0; right:0; z-index:99;
+  display:flex; gap:8px; padding:9px 12px;
+  overflow-x:auto; scrollbar-width:none;
+  background:rgba(255,255,255,.96); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  box-shadow:0 6px 18px rgba(0,0,0,.10);
+  transform:translateY(-120%); opacity:0; pointer-events:none;
+  transition:transform .22s ease, opacity .22s ease;
+}
+#shopChipBar::-webkit-scrollbar{ display:none }
+#shopChipBar.show{ transform:none; opacity:1; pointer-events:auto }
+.shop-chip{
+  flex:none; display:inline-flex; align-items:center; gap:6px;
+  padding:8px 12px; border:1px solid #eadfbf; border-radius:999px;
+  background:#fff; color:#141009; font:inherit; font-size:12px; font-weight:900; white-space:nowrap; cursor:pointer;
+}
+.shop-chip span{ min-width:18px; padding:1px 5px; border-radius:999px; background:#fff7df; color:#8d6300; font-size:10.5px; text-align:center }
+.shop-chip.active{ background:#141009; color:var(--pd-gold-2); border-color:#141009 }
+.shop-chip.active span{ background:var(--pd-gold); color:#141009 }
+@media(max-width:700px){
+  .category-count{ top:6px; right:6px; min-width:20px; height:20px; font-size:10.5px }
+  .shop-group{ margin-bottom:24px }
+  .shop-group-title{ font-size:17px }
+}
+</style>
 </head>
 
 
@@ -6616,40 +6673,30 @@ const resultCount =
   let favoriteProductIds = readFavorites();
 
 
+  /* Nhóm hiển thị cho khách: thứ tự theo mức quan trọng (vợt → bóng → quấn cán → phụ kiện vợt…) */
   const PRODUCT_GROUPS = [
-    {
-      id: "",
-      name: "TẤT CẢ"
-    },
-    {
-      id: "balls",
-      name: "BÓNG PICKLEBALL"
-    },
-    {
-      id: "paddles",
-      name: "VỢT PICKLEBALL"
-    },
-    {
-      id: "grips",
-      name: "QUẤN CÁN / GRIP"
-    },
-    {
-      id: "care",
-      name: "CHĂM SÓC VỢT"
-    },
-    {
-      id: "training",
-      name: "TẬP LUYỆN"
-    },
-    {
-      id: "recovery",
-      name: "BẢO HỘ / PHỤC HỒI"
-    },
-    {
-      id: "other",
-      name: "PHỤ KIỆN KHÁC"
-    }
+    { id: "", name: "TẤT CẢ" },
+    { id: "paddles", name: "VỢT PICKLEBALL" },
+    { id: "balls", name: "BÓNG PICKLEBALL" },
+    { id: "grips", name: "QUẤN CÁN / GRIP" },
+    { id: "care", name: "PHỤ KIỆN VỢT" },
+    { id: "recovery", name: "BẢO HỘ / PHỤC HỒI" },
+    { id: "training", name: "TẬP LUYỆN" },
+    { id: "other", name: "PHỤ KIỆN KHÁC" }
   ];
+
+  /* Nhóm do Admin chọn cho từng sản phẩm (shop_products.product_group) được ưu tiên */
+  const PRODUCT_GROUP_MAP = {
+    paddles: "paddles", balls: "balls", grips: "grips",
+    paddle_upgrade: "care", care: "care",
+    training: "training", recovery: "recovery", other: "other"
+  };
+
+  function groupCount(groupId) {
+    return products.filter(function (product) {
+      return !groupId || productGroup(product) === groupId;
+    }).length;
+  }
 
 
   function updateCartCount() {
@@ -7440,6 +7487,10 @@ const resultCount =
 
   function productGroup(product) {
 
+    if (PRODUCT_GROUP_MAP[product?.product_group]) {
+      return PRODUCT_GROUP_MAP[product.product_group];
+    }
+
     const categoryName =
       categoryNameById(
         product?.category_id
@@ -7795,6 +7846,11 @@ const resultCount =
 
     categoriesBox.innerHTML =
       PRODUCT_GROUPS
+        .filter(
+          function (group) {
+            return !group.id || groupCount(group.id) > 0;
+          }
+        )
         .map(
           function (group) {
 
@@ -7815,6 +7871,9 @@ const resultCount =
 
                 <span class="category-name">
                   ${escapeHtml(group.name)}
+                </span>
+                <span class="category-count">
+                  ${groupCount(group.id)}
                 </span>
               </button>
             `;
@@ -7861,6 +7920,57 @@ const resultCount =
 
         }
       );
+
+  }
+
+  /* Thanh chọn nhóm gọn: hiện bám dưới đầu trang khi đã cuộn qua ô danh mục lớn */
+  function renderChipBar() {
+
+    let bar = document.getElementById("shopChipBar");
+
+    if (!bar) {
+      bar = document.createElement("nav");
+      bar.id = "shopChipBar";
+      bar.setAttribute("aria-label", "Chọn nhóm sản phẩm");
+      document.body.appendChild(bar);
+
+      const header = document.querySelector(".shop-header");
+      let ticking = false;
+      const place = function () {
+        ticking = false;
+        const top = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+        bar.style.top = top + "px";
+        bar.style.paddingTop = top ? "" : "calc(9px + env(safe-area-inset-top))";
+        bar.classList.toggle("show", categoriesBox.getBoundingClientRect().bottom < top);
+      };
+      const later = function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(place); }
+      };
+      window.addEventListener("scroll", later, { passive: true });
+      window.addEventListener("resize", later, { passive: true });
+      place();
+    }
+
+    bar.innerHTML =
+      PRODUCT_GROUPS
+        .filter(function (group) { return !group.id || groupCount(group.id) > 0; })
+        .map(function (group) {
+          return `<button type="button" class="shop-chip${selectedCategory === group.id ? " active" : ""}" data-category="${escapeHtml(group.id)}">${escapeHtml(group.name)}<span>${groupCount(group.id)}</span></button>`;
+        })
+        .join("");
+
+    bar.querySelectorAll(".shop-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        const target = categoriesBox.querySelector('.category-btn[data-category="' + chip.dataset.category + '"]');
+        if (target) target.click();
+        const head = document.querySelector(".section-head");
+        const top = (head || grid).getBoundingClientRect().top + window.scrollY - 120;
+        window.scrollTo({ top: top, behavior: "smooth" });
+      });
+    });
+
+    const active = bar.querySelector(".shop-chip.active");
+    if (active) bar.scrollLeft = active.offsetLeft - 12;
 
   }
 
@@ -8166,13 +8276,7 @@ const resultCount =
                    const matchesCategory =
             !selectedCategory
             ||
-            group === selectedCategory
-            ||
-            (
-              selectedCategory === "paddles"
-              &&
-              String(product.id) === "34"
-            );
+            group === selectedCategory;
 
           const matchesFavorite =
             !showFavoritesOnly
@@ -8234,10 +8338,57 @@ const resultCount =
 
     }
 
+    const grouped =
+      !selectedCategory
+      &&
+      !keyword
+      &&
+      !showFavoritesOnly;
+
+    grid.classList.toggle("is-grouped", grouped);
+
     grid.innerHTML =
-      filtered
-        .map(productCardHtml)
-        .join("");
+      grouped
+        ?
+          PRODUCT_GROUPS
+            .filter(function (group) { return group.id; })
+            .map(
+              function (group) {
+                const items = filtered.filter(function (product) {
+                  return productGroup(product) === group.id;
+                });
+                if (!items.length) return "";
+                return `
+                  <section class="shop-group" id="group-${escapeHtml(group.id)}">
+                    <div class="shop-group-head">
+                      <h3 class="shop-group-title">${escapeHtml(group.name)}</h3>
+                      <button class="shop-group-more" type="button" data-group="${escapeHtml(group.id)}">
+                        ${items.length} sản phẩm
+                      </button>
+                    </div>
+                    <div class="products-grid">
+                      ${items.map(productCardHtml).join("")}
+                    </div>
+                  </section>
+                `;
+              }
+            )
+            .join("")
+        :
+          filtered
+            .map(productCardHtml)
+            .join("");
+
+    renderChipBar();
+
+    grid.querySelectorAll(".shop-group-more").forEach(function (button) {
+      button.addEventListener("click", function () {
+        const target = categoriesBox.querySelector('.category-btn[data-category="' + button.dataset.group + '"]');
+        if (target) target.click();
+        const top = categoriesBox.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: top, behavior: "smooth" });
+      });
+    });
 
     bindFavoriteButtons();
 
@@ -8391,7 +8542,7 @@ const resultCount =
 
                    sb
             .from("shop_products")
-            .select("id,category_id,product_code,name,slug,brand,short_description,is_featured,sort_order,created_at")
+            .select("id,category_id,product_code,name,slug,brand,short_description,is_featured,sort_order,created_at,product_group")
             .eq("status", "active")
             .order(
               "sort_order",
