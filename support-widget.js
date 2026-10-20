@@ -3338,7 +3338,7 @@ if (
     const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
     const plan = {
       product: { wait: 18000, scroll: 0.45, minWait: 7000 },
-      shop: { wait: 400, scroll: 0, minWait: 0, chime: true }, // vào Shop là bong bóng hiện ngay + tiếng "ting"
+      shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true }, // mỗi lần vào Shop: bong bóng hiện ngay; "ting" 1 lần/phiên
       academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
       all: { wait: 40000, scroll: 0, minWait: 0 }
     }[BOT_PAGE];
@@ -3346,7 +3346,7 @@ if (
     const salesPage = /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
     if (!plan || !salesPage || botStaffPage()) return;
     try {
-      if (sessionStorage.getItem(SEEN)) return;
+      if (!plan.every && sessionStorage.getItem(SEEN)) return;
       if (Date.now() - Number(localStorage.getItem(OFF) || 0) < 864e5) return;
     } catch (_) { return; }
 
@@ -3437,7 +3437,9 @@ if (
       if (PDJ) pdjLoad().catch(function () {});
       openBtn.parentNode.insertBefore(box, openBtn);
       requestAnimationFrame(function () { box.classList.add("pd-on"); });
-      if (plan.chime) chime(box);
+      let rang = false;
+      try { rang = !!sessionStorage.getItem(SEEN + "_ting"); sessionStorage.setItem(SEEN + "_ting", "1"); } catch (_) {}
+      if (plan.chime && !rang) chime(box);
       const hide = function () { box.remove(); };
       box.querySelectorAll("[data-act]").forEach(function (c) {
         c.addEventListener("click", function (e) {
@@ -3466,7 +3468,7 @@ if (
     }
     function cleanup() { clearTimeout(timer); removeEventListener("scroll", onScroll); }
 
-    timer = setTimeout(show, plan.wait);
+    if (plan.wait) timer = setTimeout(show, plan.wait); else show();
     if (plan.scroll) addEventListener("scroll", onScroll, { passive: true });
   })();
 
