@@ -177,6 +177,11 @@
       h.appendChild(root);
       h.style.display = "flex"; h.style.alignItems = "center"; h.style.gap = "10px";
       if (h.firstElementChild && h.firstElementChild !== last) h.firstElementChild.style.marginRight = "auto";
+      // Chữ dài (email người dùng…) co lại thành "…" thay vì đẩy chuông ra ngoài màn hình
+      Array.prototype.forEach.call(h.children, function (c) {
+        if (c === root || c === h.firstElementChild || c.children.length) return;
+        c.style.minWidth = "0"; c.style.flexShrink = "1"; c.style.overflow = "hidden"; c.style.textOverflow = "ellipsis"; c.style.whiteSpace = "nowrap";
+      });
     }
     root.style.cssText += ";position:relative !important;top:auto !important;right:auto !important;left:auto !important;bottom:auto !important;margin:0 !important;flex:none";
   }
