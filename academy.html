@@ -2376,7 +2376,7 @@ async function redirectByRole(
         ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([s.court_name, s.address, s.ward, s.province].filter(Boolean).join(", "))
         : "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lng;
       var tel = String(s.phone || "").replace(/[^\d+]/g, "");
-      var ph = s.photo_path && window.sb ? window.sb.storage.from("court-photos").getPublicUrl(s.photo_path).data.publicUrl : "";
+      var ph = courtPhoto(s);
       return '<div class="pda-coach" data-id="' + s.id + '"><div class="pda-av court"' + (ph ? ' style="background-image:url(&quot;' + esc(ph) + '&quot;)">' : ">" + BALL(30)) + '</div>'
         + '<div class="info"><b>' + esc(s.court_name) + '</b><small>📍 ' + esc(s.address || (s.ward + ", " + s.province)) + '</small>'
         + (meta.length ? '<small class="meta">' + esc(meta.join(" • ")) + '</small>' : "") + '</div>'
@@ -2419,8 +2419,10 @@ async function redirectByRole(
       return true;
     }
 
+    function courtPhoto(s) { return s.photo_path && window.sb ? window.sb.storage.from("court-photos").getPublicUrl(s.photo_path).data.publicUrl : ""; }
+
     function pin(r, sel) {
-      if (mode === "court") return L.divIcon({ className: "", html: '<div class="pda-pin court' + (sel ? " sel" : "") + '"><span>' + BALL(22) + '</span></div>', iconSize: [38, 38], iconAnchor: [4, 38] });
+      if (mode === "court") { var cp = courtPhoto(r); return L.divIcon({ className: "", html: '<div class="pda-pin court' + (sel ? " sel" : "") + '">' + (cp ? '<span class="ph" style="background-image:url(&quot;' + esc(cp) + '&quot;)"></span>' : '<span>' + BALL(22) + '</span>') + '</div>', iconSize: [38, 38], iconAnchor: [4, 38] }); }
       var on = r.accepting_students !== false;
       return L.divIcon({ className: "", html: '<div class="pda-pin' + (on ? "" : " off") + (sel ? " sel" : "") + '">' + (r._img ? '<span class="ph" style="background-image:url(&quot;' + esc(r._img) + '&quot;)"></span>' : '<span>' + esc(initials(r.full_name)) + '</span>') + '</div>', iconSize: [38, 38], iconAnchor: [4, 38] });
     }
