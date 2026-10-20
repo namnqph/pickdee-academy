@@ -3338,7 +3338,7 @@ if (
     const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
     const plan = {
       product: { wait: 18000, scroll: 0.45, minWait: 7000 },
-      shop: { wait: 5000, scroll: 0, minWait: 0 }, // vào Shop là tư vấn viên chào + hỏi nhu cầu
+      shop: { wait: 400, scroll: 0, minWait: 0, chime: true }, // vào Shop là bong bóng hiện ngay + tiếng "ting"
       academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
       all: { wait: 40000, scroll: 0, minWait: 0 }
     }[BOT_PAGE];
@@ -3365,6 +3365,39 @@ if (
 
     let timer = null, done = false;
     const t0 = Date.now();
+
+    // Tiếng "ting" 2 nốt bằng Web Audio (không tải file). Trình duyệt chặn âm thanh khi khách
+    // chưa chạm trang → chờ lần chạm/bấm phím đầu tiên rồi kêu (nếu bong bóng còn hiện).
+    function chime(box) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      let ac = null;
+      const ring = function () {
+        try {
+          ac = ac || new AC();
+          if (ac.state !== "running") return false;
+          const t = ac.currentTime;
+          [[880, 0], [1320, 0.13]].forEach(function (n) {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine"; o.frequency.value = n[0];
+            g.gain.setValueAtTime(0.0001, t + n[1]);
+            g.gain.exponentialRampToValueAtTime(0.25, t + n[1] + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.45);
+            o.connect(g); g.connect(ac.destination);
+            o.start(t + n[1]); o.stop(t + n[1] + 0.5);
+          });
+          return true;
+        } catch (_) { return true; }
+      };
+      if (ring()) return;
+      const evs = ["pointerdown", "touchend", "keydown"];
+      const later = function () {
+        evs.forEach(function (e) { removeEventListener(e, later, true); });
+        if (!box.isConnected) return;
+        (ac && ac.resume ? ac.resume() : Promise.resolve()).then(ring, function () {});
+      };
+      evs.forEach(function (e) { addEventListener(e, later, { capture: true, passive: true }); });
+    }
 
     function text() {
       const name = botProductName();
@@ -3404,6 +3437,7 @@ if (
       if (PDJ) pdjLoad().catch(function () {});
       openBtn.parentNode.insertBefore(box, openBtn);
       requestAnimationFrame(function () { box.classList.add("pd-on"); });
+      if (plan.chime) chime(box);
       const hide = function () { box.remove(); };
       box.querySelectorAll("[data-act]").forEach(function (c) {
         c.addEventListener("click", function (e) {
