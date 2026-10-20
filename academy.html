@@ -707,7 +707,7 @@ body.pda{overflow:hidden;background:#07101c}
 #v-learn .pda-faq summary::after{content:"+";flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);color:#d8ff45;font-size:17px;font-weight:900}
 #v-learn .pda-faq details[open] summary::after{content:"−";background:#d8ff45;color:#07101b}
 #v-learn .pda-faq p{margin:0 0 10px;color:#aab6c5;font-size:13.5px;line-height:1.55}
-#v-learn .pda-cta{position:sticky;bottom:10px;z-index:3;margin-right:66px;box-shadow:0 14px 30px rgba(0,0,0,.45),0 6px 18px rgba(216,255,69,.25)}
+#v-learn .pda-cta{margin-top:16px;box-shadow:0 10px 26px rgba(216,255,69,.22)}
 
 /* ===== Tab Hợp tác premium (pp-) ===== */
 .pp-card{position:relative;overflow:hidden;margin-top:14px;padding:18px 16px 16px;border-radius:24px;background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.09);box-shadow:0 16px 36px rgba(0,0,0,.3)}
@@ -856,6 +856,32 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
 .pda-coach-act a.go{background:linear-gradient(180deg,#e4ff6e,#c9f526);box-shadow:0 8px 20px rgba(216,255,69,.25)}
 .pda-seg,.pda-float .loc,.pda-fab{background:rgba(9,18,32,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .pda-seg button.on{background:linear-gradient(180deg,#e4ff6e,#c9f526);box-shadow:0 4px 12px rgba(216,255,69,.3)}
+/* ===== Cảm giác app ===== */
+.pda-app{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.pda-app input,.pda-app textarea,.pda-app select{-webkit-user-select:text;user-select:text}
+html,body.pda{overscroll-behavior:none}
+.pda-view{overscroll-behavior:contain}
+.pda-view.active.pda-from-r{animation:pdaR .3s cubic-bezier(.2,.8,.2,1)}
+.pda-view.active.pda-from-l{animation:pdaL .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes pdaR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes pdaL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.pda-app a,.pda-app button,.pda-app summary{transition:transform .12s ease,filter .12s ease}
+.pda-app a:active,.pda-app button:active,.pda-app summary:active{transform:scale(.97);filter:brightness(.95)}
+.pda-top{position:relative;z-index:5;transition:background .2s,box-shadow .2s}
+.pda-top.pda-scrolled{background:rgba(9,18,32,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(255,255,255,.07)}
+.pda-tabs a{transition:color .15s,transform .12s}
+.pda-tabs a.active svg{filter:drop-shadow(0 0 8px rgba(216,255,69,.45))}
+/* Khoá học: thanh chọn lộ trình */
+.pl-seg{position:sticky;top:0;z-index:4;display:flex;gap:4px;margin:4px 0 12px;padding:4px;border-radius:16px;background:rgba(9,18,32,.9);border:1px solid rgba(255,255,255,.09);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pl-seg button{flex:1;min-height:40px;border:0;border-radius:12px;background:transparent;color:#93a1b3;font:inherit;font-size:13.5px;font-weight:900;cursor:pointer}
+.pl-seg button.on[data-i="0"]{background:linear-gradient(180deg,#e4ff6e,#c9f526);color:#07101b}
+.pl-seg button.on[data-i="1"]{background:linear-gradient(180deg,#7fdcff,#2b8cff);color:#04101f}
+.pl-seg button.on[data-i="2"]{background:linear-gradient(180deg,#d6bcff,#8b5cff);color:#120626}
+#v-learn.pl-tabbed .pda-progd.pl-off{display:none}
+#v-learn.pl-tabbed .pda-progd .pda-chev{display:none}
+#v-learn.pl-tabbed .pda-progd summary{pointer-events:none}
+#v-learn.pl-tabbed .pda-progd{animation:pdaIn .22s ease}
+
 
 .pda-empty{padding:18px 6px 8px;text-align:center;color:#aab6c5;font-size:13px;line-height:1.5}
 .pda-empty .pda-cta{margin-top:12px}
@@ -965,7 +991,10 @@ body.pda.pda-on-coach #pickdeeSupportRoot{display:none!important}
     <div class="pda-view" id="v-learn" data-view="hoc">
       <div class="pda-eyebrow">LỘ TRÌNH RÕ RÀNG</div>
       <div class="pda-h2">Chương trình đào tạo</div>
-      <details class="pda-card pda-progd pl-cb">
+      <div class="pl-seg" id="plSeg" role="tablist">
+        <button type="button" data-i="0" class="on">Cơ bản</button><button type="button" data-i="1">Nâng cao</button><button type="button" data-i="2">Theo yêu cầu</button>
+      </div>
+      <details class="pda-card pda-progd pl-cb" open>
         <summary class="pda-prog"><span class="n">CB</span><div><b>Cơ bản</b><small>12 buổi • cho người mới bắt đầu</small></div><i class="pda-chev">›</i></summary>
         <div class="pl-meta"><span>12 buổi</span><span>1–1 hoặc nhóm 2</span><span>Đã gồm tiền sân</span></div>
         <ol class="pda-lessons"><li><b>Đánh thuận tay cơ bản</b><small>Làm quen cách cầm vợt, tư thế chuẩn bị, điểm tiếp xúc và đánh thuận tay qua lưới ổn định.</small></li><li><b>Đánh thuận tay kết hợp di chuyển</b><small>Di chuyển đến bóng, giữ thăng bằng khi đánh thuận tay và trở về vị trí trung tâm.</small></li><li><b>Đánh trái tay</b><small>Làm quen và ổn định kỹ thuật trái tay, đồng thời phân biệt đúng bóng thuận tay và trái tay.</small></li><li><b>Giao bóng</b><small>Thực hiện giao bóng đúng luật, đúng ô và tăng dần khả năng kiểm soát độ sâu.</small></li><li><b>Trả giao bóng</b><small>Trả giao bóng sâu, ổn định và biết di chuyển lên phía trước sau cú trả.</small></li><li><b>Duy trì chuỗi đánh bóng cuối sân</b><small>Kiểm soát lực, duy trì rally cuối sân và tăng khả năng giữ bóng trong cuộc.</small></li><li><b>Đánh bóng trên không (Volley)</b><small>Làm quen volley thuận tay, trái tay và xử lý bóng nhanh khi đứng gần lưới.</small></li><li><b>Vùng bếp và đánh bóng mềm thuận tay</b><small>Hiểu luật vùng bếp và kiểm soát bóng mềm thuận tay rơi vào vùng bếp đối diện.</small></li><li><b>Đánh bóng mềm trái tay và làm quen cú hóa giải</b><small>Phát triển bóng mềm trái tay và làm quen kỹ thuật reset để giảm tốc độ bóng.</small></li><li><b>Cú thả bóng (Drop) và di chuyển lên lưới</b><small>Thực hiện cú drop vào vùng bếp và nhận biết thời điểm phù hợp để tiến lên.</small></li><li><b>Cú hóa giải (Reset) và vượt qua khu vực chuyển tiếp</b><small>Hóa giải bóng dưới áp lực và di chuyển có kiểm soát từ cuối sân lên vùng bếp.</small></li><li><b>Kết nối thả bóng, hóa giải và thi đấu 1-1</b><small>Kết nối các kỹ thuật đã học thành chuỗi hoàn chỉnh và thực hành tình huống thi đấu.</small></li></ol>
@@ -2258,9 +2287,16 @@ async function redirectByRole(
   var views = { home: "v-home", coach: "v-coach", san: "v-coach", hoc: "v-learn", "hop-tac": "v-partner", "tai-khoan": "v-account" };
   var current = "";
 
+  var ORDER = ["home", "hoc", "coach", "hop-tac", "tai-khoan"];
+  var TITLE = { home: "HỌC ĐÚNG NGƯỜI • ĐÚNG KHU VỰC", hoc: "KHOÁ HỌC", coach: "GẦN BẠN", san: "GẦN BẠN", "hop-tac": "HỢP TÁC", "tai-khoan": "TÀI KHOẢN" };
   function show(name) {
     if (!views[name]) name = "home";
     if (name === current) return;
+    var oi = ORDER.indexOf(current === "san" ? "coach" : current), ni = ORDER.indexOf(name === "san" ? "coach" : name);
+    var el = document.getElementById(views[name]);
+    el.classList.remove("pda-from-l", "pda-from-r");
+    if (current && oi > -1 && ni > -1 && oi !== ni) { void el.offsetWidth; el.classList.add(ni > oi ? "pda-from-r" : "pda-from-l"); if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) {} }
+    var sub = document.querySelector(".pda-brand small"); if (sub) sub.textContent = TITLE[name] || TITLE.home;
     current = name;
     var near = name === "coach" || name === "san";
     Object.keys(views).forEach(function (k) {
@@ -2283,6 +2319,9 @@ async function redirectByRole(
   });
   window.addEventListener("hashchange", route);
   window.addEventListener("popstate", route);
+  document.querySelectorAll(".pda-view").forEach(function (v) {
+    v.addEventListener("scroll", function () { document.querySelector(".pda-top").classList.toggle("pda-scrolled", v.classList.contains("active") && v.scrollTop > 8); }, { passive: true });
+  });
 
   /* ---------------- Coach gần bạn ---------------- */
   var Near = (function () {
@@ -2596,6 +2635,22 @@ async function redirectByRole(
 
 <script src="/support-widget.js?v=20261017-sales1"></script>
 
+
+<script>
+/* Khoá học: chọn lộ trình bằng thanh trên (mỗi lần 1 lộ trình, như app) */
+(function () {
+  var v = document.getElementById("v-learn"), seg = document.getElementById("plSeg");
+  if (!v || !seg) return;
+  var cards = v.querySelectorAll("details.pda-progd");
+  function pick(i) {
+    seg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", Number(b.dataset.i) === i); });
+    cards.forEach(function (d, k) { d.open = k === i; d.classList.toggle("pl-off", k !== i); });
+  }
+  v.classList.add("pl-tabbed");
+  seg.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (!b) return; pick(Number(b.dataset.i)); if (navigator.vibrate) try { navigator.vibrate(6); } catch (x) {} });
+  pick(0);
+})();
+</script>
 </body>
 
 </html>
