@@ -1549,7 +1549,7 @@ if (
         : "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Em tư vấn ngay loại/màu phù hợp, phí ship và thời gian nhận hàng ạ.",
       cart: "Chào anh/chị 👋 Em hỗ trợ anh/chị hoàn tất đơn hàng: phí ship, thanh toán, thời gian giao. Đặt hàng không cần tạo tài khoản ạ.",
       order: "Chào anh/chị 👋 Em hỗ trợ tra cứu và giải đáp mọi thắc mắc về đơn hàng của anh/chị ạ.",
-      shop: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Shop</b>. Anh/chị cho em biết trình độ và ngân sách, em gợi ý ngay vợt và phụ kiện phù hợp nhất ạ.",
+      shop: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Shop</b>. Anh/chị đang tìm gì hôm nay ạ? Chọn bên dưới, em gợi ý đúng sản phẩm trong 30 giây.",
       academy: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Academy</b>. Anh/chị cho em biết trình độ và muốn học 1 kèm 1 hay nhóm 2 người, em tư vấn gói học phù hợp ạ.",
       all: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Anh/chị đang cần chọn vợt, phụ kiện hay tìm khoá học Pickleball ạ?"
     }[BOT_PAGE];
@@ -1562,6 +1562,365 @@ if (
     academy: ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người?", "Nghỉ / đổi lịch học?"],
     all: ["Tư vấn vợt cho người mới", "Học phí các gói học?", "Phí ship thế nào?", "Tra cứu đơn hàng"]
   }[BOT_PAGE];
+
+  /* =====================================================
+     TƯ VẤN BÁN HÀNG THEO HÀNH TRÌNH KHÁCH (Shop, 20/10)
+     Khách bấm chọn, không cần gõ: nhu cầu → 1–2 câu hỏi ngắn → gợi ý sản phẩm thật
+     (ảnh, giá, lý do) → mua kèm → chính sách → đặt hàng. Giá/ảnh/hết hàng lấy thẳng từ DB,
+     không qua AI. Gõ câu hỏi bất kỳ lúc nào → trợ lý AI như cũ (lựa chọn của khách nằm trong lịch sử).
+     Chính sách khớp bot_knowledge: Phí giao hàng · Thanh toán · Thời gian giao hàng · Bảo hành vợt · Kiểm hàng.
+  ====================================================== */
+  const PDJ = BOT_CH === "shop";
+  const PDJ_CART = "pickdee_shop_cart";
+  let pdjCat = null, pdjCatP = null;
+
+  function pdjVnd(n) {
+    return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ";
+  }
+  function pdjPrice(p) {
+    return p.min === p.max ? pdjVnd(p.min) : "từ " + pdjVnd(p.min);
+  }
+
+  function pdjLoad() {
+    if (pdjCat) return Promise.resolve(pdjCat);
+    if (pdjCatP) return pdjCatP;
+    pdjCatP = Promise.all([
+      sb.from("shop_categories").select("id,name").eq("is_active", true),
+      sb.from("shop_products").select("id,category_id,name,short_description,is_featured,sort_order").eq("status", "active").order("sort_order", { ascending: true }),
+      sb.from("shop_product_variants").select("id,product_id,variant_name,price,is_sold_out,sort_order").eq("is_active", true),
+      sb.from("shop_product_images").select("product_id,storage_path,is_primary,sort_order").order("sort_order", { ascending: true })
+    ]).then(function (r) {
+      if (r.some(function (x) { return x.error; })) throw new Error("catalog");
+      const cats = {}, vs = {}, imgs = {};
+      r[0].data.forEach(function (c) { cats[c.id] = c.name; });
+      r[2].data.forEach(function (v) { (vs[v.product_id] = vs[v.product_id] || []).push(v); });
+      r[3].data.forEach(function (i) {
+        const cur = imgs[i.product_id];
+        if (i.storage_path && (!cur || (i.is_primary && !cur.is_primary))) imgs[i.product_id] = i;
+      });
+      pdjCat = r[1].data.map(function (p) {
+        const all = (vs[p.id] || []).sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); });
+        const avail = all.filter(function (v) { return !v.is_sold_out && Number(v.price) > 0; });
+        const prices = avail.map(function (v) { return Number(v.price); });
+        const img = imgs[p.id] ? sb.storage.from("shop-products").getPublicUrl(imgs[p.id].storage_path).data.publicUrl : "";
+        return {
+          id: p.id, name: String(p.name || "").trim(), lname: String(p.name || "").toLowerCase(),
+          cat: cats[p.category_id] || "", desc: String(p.short_description || "").trim(),
+          featured: !!p.is_featured, variants: all, avail: avail,
+          min: Math.min.apply(null, prices), max: Math.max.apply(null, prices), img: img
+        };
+      }).filter(function (p) { return p.avail.length; });
+      return pdjCat;
+    });
+    pdjCatP.catch(function () { pdjCatP = null; });
+    return pdjCatP;
+  }
+
+  // Nhóm sản phẩm theo tên (thêm sản phẩm mới đặt tên đúng là tự vào đúng nhóm)
+  const PDJ_T = {
+    paddle: function (p) { return /^vợt/.test(p.lname); },
+    ball: function (p) { return /^bóng/.test(p.lname); },
+    grip: function (p) { return /quấn cán|cốt cán/.test(p.lname); },
+    wrap: function (p) { return /quấn cán/.test(p.lname); },
+    sweat: function (p) { return /phấn|mồ hôi/.test(p.lname); },
+    joint: function (p) { return /gối|khuỷu|khớp/.test(p.lname); },
+    warm: function (p) { return /xịt nóng|khởi động/.test(p.lname); },
+    cool: function (p) { return /xịt lạnh|giảm đau/.test(p.lname); },
+    energy: function (p) { return /điện giải|năng lượng/.test(p.lname); },
+    care: function (p) { return /bọc bảo vệ|dán viền|làm sạch mặt vợt|chì độ/.test(p.lname); },
+    cover: function (p) { return /bọc bảo vệ mặt vợt/.test(p.lname); },
+    bag: function (p) { return /^túi/.test(p.lname); }
+  };
+  function pdjPick(cat, t) { return cat.filter(PDJ_T[t]); }
+
+  // Lý do ngắn: câu đầu mô tả (hoặc câu có "Tặng") – chỉ dùng chữ có sẵn trong DB
+  function pdjWhy(p) {
+    const parts = p.desc.replace(/([.!])\s+/g, "$1\n").split("\n").filter(Boolean);
+    const gift = parts.find(function (s) { return /tặng/i.test(s); });
+    const s = gift || parts[0] || "";
+    return s.length > 96 ? s.slice(0, 94).trim() + "…" : s;
+  }
+
+  function pdjCard(p, why, star) {
+    return {
+      id: p.id, name: p.name, price: pdjPrice(p), img: p.img,
+      why: why || pdjWhy(p), star: !!star,
+      // 1 lựa chọn → thêm thẳng vào giỏ; nhiều màu/loại → mở trang sản phẩm để chọn
+      quick: p.avail.length === 1 && p.variants.length === 1
+    };
+  }
+
+  const PDJ_HOME = [
+    ["🏓 Chọn vợt", "paddle"], ["🟡 Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
+    ["🦵 Bảo hộ & phục hồi", "body"], ["🛡️ Phụ kiện cho vợt", "care"], ["🎁 Mua làm quà", "gift"],
+    ["📦 Tra cứu đơn hàng", "lookup"]
+  ];
+  const PDJ_CLOSE = [["🛒 Đặt hàng ngay", "checkout"], ["🚚 Giao hàng & thanh toán", "policy"], ["💬 Hỏi thêm", "ask"]];
+
+  function pdjCartItems() {
+    try {
+      const c = JSON.parse(localStorage.getItem(PDJ_CART) || "[]");
+      return Array.isArray(c) ? c.filter(Boolean) : [];
+    } catch (_) { return []; }
+  }
+
+  const PDJ_LV = { new: "mới chơi", mid: "đã chơi dưới 1 năm", pro: "chơi lâu năm / thi đấu" };
+  const PDJ_ST = { control: "thích kiểm soát, đánh chắc", attack: "thích tấn công, tầm với xa", any: "chưa rõ lối đánh" };
+
+  // Trả về { text (cho AI), html (hiển thị), cards, chips } của 1 bước
+  function pdjNode(act, cat) {
+    const a = act.split(":");
+    const none = { html: "Mục này hiện tạm hết hàng ạ. Anh/chị xem nhóm khác, hoặc nhắn em nhu cầu cụ thể nhé.", chips: PDJ_HOME };
+
+    if (act === "home") return { html: "Anh/chị đang tìm gì hôm nay ạ? Chọn bên dưới, em gợi ý đúng sản phẩm trong 30 giây.", chips: PDJ_HOME };
+
+    if (a[0] === "paddle") {
+      const pads = pdjPick(cat, "paddle");
+      if (!pads.length) return none;
+      if (!a[1]) return { html: "Anh/chị chơi Pickleball được bao lâu rồi ạ?", chips: [["🌱 Mới bắt đầu", "paddle:new"], ["📈 Dưới 1 năm", "paddle:mid"], ["🏆 Lâu năm / thi đấu", "paddle:pro"]] };
+      if (!a[2]) return { html: "Anh/chị thích lối đánh nào hơn ạ?", chips: [["🎯 Kiểm soát, đánh chắc", "paddle:" + a[1] + ":control"], ["💥 Tấn công, tầm với xa", "paddle:" + a[1] + ":attack"], ["🤔 Chưa rõ, em gợi ý giúp", "paddle:" + a[1] + ":any"]] };
+      // Nhiều vợt khác giá → hỏi ngân sách
+      const prices = pads.map(function (p) { return p.min; });
+      const spread = pads.length > 1 && Math.max.apply(null, prices) > Math.min.apply(null, prices);
+      const B = [["Dưới 1.500.000đ", 0, 1500000], ["1.500.000đ – 3.000.000đ", 1500000, 3000000], ["Trên 3.000.000đ", 3000000, 1e12]];
+      if (spread && !a[3]) {
+        const opts = B.filter(function (b) { return pads.some(function (p) { return p.min >= b[1] && p.min < b[2]; }); });
+        if (opts.length > 1) return { html: "Ngân sách cho vợt của anh/chị khoảng bao nhiêu ạ?", chips: opts.map(function (b) { return ["💰 " + b[0], "paddle:" + a[1] + ":" + a[2] + ":" + b[1]]; }) };
+      }
+      let list = pads.slice();
+      if (a[3]) {
+        const b = B.find(function (x) { return String(x[1]) === a[3]; });
+        const inB = b ? list.filter(function (p) { return p.min >= b[1] && p.min < b[2]; }) : [];
+        if (inB.length) list = inB;
+      }
+      list.sort(function (x, y) { return (y.featured - x.featured) || (x.min - y.min); });
+      list = list.slice(0, 2);
+      // Dáng vợt (kiến thức chung về dáng, không phải thông số riêng của mẫu)
+      const shapes = list[0].variants.map(function (v) { return String(v.variant_name || "").toLowerCase(); }).join(" ");
+      const wantLong = a[2] === "attack" || (a[2] === "any" && a[1] === "pro");
+      let shape = "";
+      if (/elongate/.test(shapes) && /hybrid/.test(shapes)) {
+        shape = wantLong
+          ? "Nên chọn dáng <b>Elongate</b> (đầu dài): tầm với xa, lực đánh mạnh, hợp lối tấn công; điểm ngọt nhỏ hơn nên cần cú đánh ổn định."
+          : "Nên chọn dáng <b>Hybrid</b>: cân bằng giữa tầm với và điểm ngọt, dễ làm quen, đánh chắc tay" + (a[1] === "new" ? " – hợp nhất cho người mới." : ".");
+      }
+      const who = PDJ_LV[a[1]] + ", " + PDJ_ST[a[2]];
+      const cards = list.map(function (p, i) { return pdjCard(p, "", i === 0); });
+      return {
+        text: "Em gợi ý cho người " + who + ": " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; ") + (shape ? ". " + shape.replace(/<[^>]+>/g, "") : ""),
+        html: "Với người <b>" + botEsc(who) + "</b>, em gợi ý:",
+        cards: cards,
+        after: (shape ? shape + "<br>" : "") + "Vợt được <b>đồng kiểm</b> khi nhận và <b>bảo hành 3 tháng</b> lỗi nhà sản xuất.",
+        chips: [["🎨 Chọn màu & đặt vợt", "href:/shop-product?id=" + list[0].id], ["➕ Phụ kiện nên mua kèm", "addons"]].concat(PDJ_CLOSE.slice(1))
+      };
+    }
+
+    if (act === "addons") {
+      const ball = pdjPick(cat, "ball").sort(function (x, y) { return (/thi đấu|ppa/.test(y.lname) - /thi đấu|ppa/.test(x.lname)) || (y.min - x.min); })[0];
+      const picks = [[pdjPick(cat, "wrap")[0], "Quấn cán mới giúp cầm chắc tay, không trơn khi ra mồ hôi."], [ball, ""], pdjPick(cat, "cover")[0] ? [pdjPick(cat, "cover")[0], "Che mặt vợt khi mang đi, đỡ trầy xước."] : [pdjPick(cat, "care")[0], ""]]
+        .filter(function (x) { return x[0]; });
+      if (!picks.length) return none;
+      return {
+        text: "Phụ kiện mua kèm: " + picks.map(function (x) { return x[0].name + " " + pdjPrice(x[0]); }).join("; "),
+        html: "Người chơi thường mua kèm vợt mấy món này ạ:",
+        cards: picks.map(function (x) { return pdjCard(x[0], x[1]); }),
+        chips: PDJ_CLOSE
+      };
+    }
+
+    if (a[0] === "ball") {
+      const balls = pdjPick(cat, "ball");
+      if (!balls.length) return none;
+      if (!a[1]) return { html: "Anh/chị cần bóng để làm gì ạ?", chips: [["🏆 Thi đấu, giao lưu", "ball:match"], ["🏃 Tập luyện, tiết kiệm", "ball:train"]] };
+      const pro = function (p) { return /thi đấu|ppa/.test(p.lname) ? 1 : 0; };
+      balls.sort(a[1] === "match"
+        ? function (x, y) { return (pro(y) - pro(x)) || (y.min - x.min); }
+        : function (x, y) { return x.min - y.min; });
+      const list = balls.slice(0, 3);
+      const bag = pdjPick(cat, "bag")[0];
+      return {
+        text: "Bóng " + (a[1] === "match" ? "thi đấu" : "tập luyện") + ": " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "),
+        html: a[1] === "match" ? "Bóng cho thi đấu, giao lưu – em xếp mẫu phù hợp nhất lên đầu:" : "Bóng tập luyện – em xếp giá tốt nhất lên đầu:",
+        cards: list.map(function (p, i) { return pdjCard(p, "", i === 0); }),
+        chips: [["📦 Mua nhiều có giá tốt hơn không?", "ask:Mua nhiều bóng có giá tốt hơn không?"]].concat(bag ? [["👜 Túi đựng bóng", "bag"]] : []).concat(PDJ_CLOSE.slice(0, 2))
+      };
+    }
+
+    if (act === "bag") {
+      const list = pdjPick(cat, "bag").slice(0, 3);
+      if (!list.length) return none;
+      return { text: "Túi: " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "), html: "Túi đựng gọn, mang ra sân tiện ạ:", cards: list.map(function (p) { return pdjCard(p); }), chips: PDJ_CLOSE };
+    }
+
+    if (a[0] === "grip") {
+      if (!pdjPick(cat, "grip").length) return none;
+      if (!a[1]) return { html: "Tay anh/chị có hay ra mồ hôi, trơn tay khi chơi không ạ?", chips: [["💧 Có, hay trơn tay", "grip:sweat"], ["👌 Bình thường", "grip:normal"]] };
+      const list = a[1] === "sweat"
+        ? pdjPick(cat, "wrap").slice(0, 1).concat(pdjPick(cat, "sweat").slice(0, 2))
+        : pdjPick(cat, "grip").slice(0, 3);
+      return {
+        text: "Gợi ý cầm vợt chắc tay: " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "),
+        html: a[1] === "sweat" ? "Hay trơn tay thì nên thay quấn cán mới và dùng thêm đồ chống trơn ạ:" : "Quấn cán nên thay khi bị mòn, trơn để luôn cầm chắc tay ạ:",
+        cards: list.map(function (p) { return pdjCard(p); }),
+        chips: PDJ_CLOSE
+      };
+    }
+
+    if (a[0] === "body") {
+      const opts = [["🦵 Bảo vệ khớp gối, khuỷu tay", "joint"], ["🔥 Khởi động trước khi chơi", "warm"], ["❄️ Giảm đau sau khi chơi", "cool"], ["⚡ Bù điện giải, năng lượng", "energy"]]
+        .filter(function (o) { return pdjPick(cat, o[1]).length; });
+      if (!opts.length) return none;
+      if (!a[1]) return { html: "Anh/chị cần hỗ trợ gì ạ?", chips: opts.map(function (o) { return [o[0], "body:" + o[1]]; }) };
+      const list = pdjPick(cat, a[1]).slice(0, 3);
+      if (!list.length) return none;
+      return {
+        text: "Gợi ý bảo hộ/phục hồi: " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "),
+        html: "Em gợi ý ạ:",
+        cards: list.map(function (p) { return pdjCard(p); }),
+        chips: PDJ_CLOSE
+      };
+    }
+
+    if (act === "care") {
+      const list = pdjPick(cat, "care").slice(0, 4);
+      if (!list.length) return none;
+      return {
+        text: "Phụ kiện cho vợt: " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "),
+        html: "Phụ kiện giữ vợt bền, đẹp và tuỳ chỉnh độ nặng ạ:",
+        cards: list.map(function (p) { return pdjCard(p); }),
+        chips: PDJ_CLOSE
+      };
+    }
+
+    if (a[0] === "gift") {
+      const G = [["Dưới 200.000đ", 0, 200000], ["200.000đ – 500.000đ", 200000, 500000], ["Trên 500.000đ", 500000, 1e12]];
+      const opts = G.filter(function (g) { return cat.some(function (p) { return p.min >= g[1] && p.min < g[2]; }); });
+      if (!a[1]) return { html: "Ngân sách cho món quà khoảng bao nhiêu ạ?", chips: opts.map(function (g) { return ["💰 " + g[0], "gift:" + g[1]]; }) };
+      const g = G.find(function (x) { return String(x[1]) === a[1]; }) || G[0];
+      const list = cat.filter(function (p) { return p.min >= g[1] && p.min < g[2]; })
+        .sort(function (x, y) { return (y.featured - x.featured) || (PDJ_T.paddle(y) - PDJ_T.paddle(x)) || (y.min - x.min); }).slice(0, 4);
+      if (!list.length) return none;
+      return {
+        text: "Gợi ý quà " + g[0] + ": " + list.map(function (p) { return p.name + " " + pdjPrice(p); }).join("; "),
+        html: "Quà cho người chơi Pickleball, ngân sách <b>" + g[0] + "</b>:",
+        cards: list.map(function (p) { return pdjCard(p); }),
+        chips: PDJ_CLOSE
+      };
+    }
+
+    if (act === "policy") return {
+      text: "Chính sách mua hàng: không cần tài khoản; Hà Nội 1–2 ngày, tỉnh 2–3 ngày; đơn dưới 300.000đ phí ship 15.000đ, từ 300.000đ không có bóng freeship; chuyển khoản QR hoặc COD (đơn có vợt chuyển khoản trước); vợt đồng kiểm, bảo hành 3 tháng lỗi nhà sản xuất.",
+      html: "Anh/chị yên tâm đặt hàng tại PickDee ạ:<br>" +
+        "✓ Đặt hàng <b>không cần tạo tài khoản</b><br>" +
+        "✓ Giao toàn quốc qua SPX: Hà Nội khoảng 1–2 ngày, tỉnh khác 2–3 ngày<br>" +
+        "✓ Đơn dưới 300.000đ phí ship 15.000đ; đơn từ 300.000đ và không có bóng được <b>freeship</b><br>" +
+        "✓ Thanh toán chuyển khoản QR hoặc COD (đơn có vợt chuyển khoản trước)<br>" +
+        "✓ Đơn vợt được <b>đồng kiểm</b> khi nhận; vợt bảo hành 3 tháng lỗi nhà sản xuất",
+      chips: [["🛒 Đặt hàng ngay", "checkout"], ["📞 Gọi 0926 629 966", "href:tel:0926629966"], ["💬 Zalo tư vấn", "href:https://zalo.me/0926629966"]]
+    };
+
+    if (act === "checkout") {
+      const items = pdjCartItems();
+      if (!items.length) return { html: "Giỏ hàng của anh/chị đang trống ạ. Anh/chị chọn sản phẩm trước, em gợi ý nhé:", chips: PDJ_HOME };
+      return { go: "/shop-cart" };
+    }
+
+    if (act === "lookup") return {
+      text: "Tra cứu đơn tại https://pickdee.vn/shop-order-lookup bằng mã đơn + số điện thoại.",
+      html: "Anh/chị tra cứu đơn bằng <b>mã đơn + số điện thoại</b> đặt hàng ạ.",
+      chips: [["🔎 Mở trang tra cứu đơn", "href:/shop-order-lookup"], ["💬 Hỏi thêm", "ask"]]
+    };
+    return null;
+  }
+
+  // Khách bấm 1 lựa chọn: ghi câu khách + câu trả lời vào lịch sử (AI đọc được), vẽ lại
+  async function pdjStep(act, label) {
+    if (botBusy) return;
+    if (act.indexOf("href:") === 0) { location.href = act.slice(5); return; }
+    if (act.indexOf("ask") === 0) {
+      const q = act.slice(4);
+      if (q) { botAsk(q); return; }
+      botInput.placeholder = "Anh/chị hỏi gì, em trả lời ngay…";
+      botInput.focus();
+      return;
+    }
+    const h = botHistory();
+    if (label) h.push({ role: "user", text: label.replace(/^[^\wÀ-ỹ]+/, "").trim() });
+    botSave(h);
+    renderBot(true);
+    let n = null;
+    try { n = pdjNode(act, await pdjLoad()); } catch (e) { console.warn("PickDee tư vấn:", e); }
+    if (n && n.go) { location.href = n.go; return; }
+    if (!n) n = { html: "Em chưa tải được danh sách sản phẩm. Anh/chị thử lại, hoặc gọi/Zalo 0926 629 966 nhé.", chips: [["🔄 Thử lại", act]] };
+    botSave(botHistory().concat([{
+      role: "bot", t: Date.now(), pdj: 1,
+      text: n.text || String(n.html || "").replace(/<br>/g, "\n").replace(/<[^>]+>/g, ""),
+      html: n.html, after: n.after || "", cards: n.cards || null, chips: n.chips || null
+    }]));
+    renderBot(false);
+  }
+
+  async function pdjAdd(pid, btn) {
+    let p = null;
+    try { p = (await pdjLoad()).find(function (x) { return x.id === Number(pid); }); } catch (_) {}
+    if (!p || p.avail.length !== 1 || p.variants.length !== 1) { location.href = "/shop-product?id=" + encodeURIComponent(pid); return; }
+    const v = p.avail[0];
+    const cart = pdjCartItems();
+    const ex = cart.find(function (i) { return String(i.variant_id) === String(v.id); });
+    if (ex) {
+      ex.quantity = Number(ex.quantity || 0) + 1;
+      ex.price = ex.retail_price = Number(v.price);
+      ex.image_url = ex.image_url || p.img;
+    } else {
+      cart.push({ product_id: p.id, variant_id: v.id, product_name: p.name, variant_name: v.variant_name || "", price: Number(v.price), retail_price: Number(v.price), quantity: 1, image_url: p.img });
+    }
+    try { localStorage.setItem(PDJ_CART, JSON.stringify(cart)); } catch (_) { location.href = "/shop-product?id=" + p.id; return; }
+    // Trang đang mở cập nhật số trên biểu tượng giỏ
+    try { window.dispatchEvent(new StorageEvent("storage", { key: PDJ_CART })); } catch (_) {}
+    try { window.PickDeeShopNav && window.PickDeeShopNav.refreshCartCount(); } catch (_) {}
+    if (btn) { btn.textContent = "✓ Đã thêm"; btn.disabled = true; }
+    const qty = cart.reduce(function (s, i) { return s + (Number(i.quantity) || 0); }, 0);
+    botSave(botHistory().concat([{
+      role: "bot", t: Date.now(), pdj: 1,
+      text: "Đã thêm " + p.name + " vào giỏ (giỏ có " + qty + " sản phẩm).",
+      html: "✓ Đã thêm <b>" + botEsc(p.name) + "</b> vào giỏ (giỏ có " + qty + " sản phẩm). Đặt hàng không cần tạo tài khoản ạ.",
+      chips: [["🛒 Đặt hàng ngay", "checkout"], ["➕ Xem thêm phụ kiện", "home"], ["🚚 Giao hàng & thanh toán", "policy"]]
+    }]));
+    renderBot(false);
+  }
+
+  function pdjCardsEl(cards) {
+    const box = document.createElement("div");
+    box.className = "pdj-cards";
+    box.innerHTML = cards.map(function (c) {
+      const link = "/shop-product?id=" + encodeURIComponent(c.id);
+      return '<div class="pdj-card' + (c.star ? " pdj-star" : "") + '">' +
+        '<a class="pdj-main" href="' + link + '">' +
+        (c.img ? '<img src="' + botEsc(c.img) + '" alt="" loading="lazy">' : '<span class="pdj-noimg">🏓</span>') +
+        '<span class="pdj-info">' + (c.star ? '<span class="pdj-tag">⭐ Em gợi ý</span>' : "") +
+        '<b>' + botEsc(c.name) + '</b><span class="pdj-pr">' + botEsc(c.price) + "</span>" +
+        (c.why ? "<small>" + botEsc(c.why) + "</small>" : "") + "</span></a>" +
+        (c.quick
+          ? '<button type="button" class="pdj-buy" data-pdj-add="' + c.id + '">＋ Thêm vào giỏ</button>'
+          : '<a class="pdj-buy" href="' + link + '">Chọn mẫu ›</a>') +
+        "</div>";
+    }).join("");
+    return box;
+  }
+
+  function pdjChipsEl(chips) {
+    const box = document.createElement("div");
+    box.className = "pd-bot-chips";
+    chips.forEach(function (c) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pd-bot-chip";
+      b.textContent = c[0];
+      b.addEventListener("click", function () { pdjStep(c[1], c[0]); });
+      box.appendChild(b);
+    });
+    return box;
+  }
 
   const botBox = document.getElementById("pickdeeSupportBot");
   let botBusy = false;
@@ -1579,6 +1938,21 @@ if (
       .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
       .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(216,255,69,.3);background:rgba(216,255,69,.07);color:#d8ff45;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
       .pd-bot-typing{opacity:.6;font-style:italic}
+      #pdBotMsgs{position:relative}
+      .pdj-cards{display:flex;flex-direction:column;gap:7px;margin:-2px 0 10px}
+      .pdj-card{display:flex;align-items:center;gap:8px;padding:7px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05)}
+      .pdj-card.pdj-star{border-color:rgba(216,255,69,.5);background:rgba(216,255,69,.07)}
+      #pdBotMsgs .pdj-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1;color:#fff;font-weight:400;text-decoration:none;word-break:normal}
+      .pdj-main img,.pdj-noimg{flex:0 0 54px;width:54px;height:54px;border-radius:10px;object-fit:cover;background:#fff}
+      .pdj-noimg{display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.08)}
+      .pdj-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+      .pdj-info b{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .pdj-pr{color:#d8ff45;font-weight:900;font-size:13px}
+      .pdj-info small{font-size:11.5px;line-height:1.35;color:rgba(255,255,255,.66);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .pdj-tag{font-size:10.5px;font-weight:900;color:#d8ff45}
+      #pdBotMsgs .pdj-buy{flex:0 0 auto;min-height:36px;padding:0 11px;display:inline-flex;align-items:center;border-radius:999px;border:0;background:#d8ff45;color:#142300;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;text-decoration:none;word-break:normal;cursor:pointer}
+      #pdBotMsgs a.pdj-buy{background:transparent;color:#d8ff45;border:1px solid rgba(216,255,69,.45)}
+      #pdBotMsgs .pdj-buy:disabled{opacity:.75}
       .pd-bot-wait{margin:-4px 0 10px 4px;font-size:12px;font-weight:800;color:#d8ff45;opacity:.85}
       .pd-bot-owner{border:1px solid rgba(216,255,69,.45)!important}
       #pickdeeSupportButton.pd-bot-new::after{content:"";position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#ff3b30;border:2px solid #fff}
@@ -1639,6 +2013,12 @@ if (
   const botInput = document.getElementById("pdBotInput");
   const botSend = document.getElementById("pdBotSend");
   const botHumanBtn = document.getElementById("pdBotHuman");
+  botMsgs.addEventListener("click", function (e) {
+    const b = e.target.closest && e.target.closest("[data-pdj-add]");
+    if (!b) return;
+    e.preventDefault();
+    pdjAdd(b.getAttribute("data-pdj-add"), b);
+  });
   // Đưa lên thanh tiêu đề, ngay trước nút đóng
   (function () {
     const x = document.getElementById("pickdeeSupportClose");
@@ -1701,13 +2081,16 @@ if (
     msg.innerHTML = html;
     row.appendChild(msg);
     botMsgs.appendChild(row);
+    return row;
   }
 
   function renderBot(typing) {
     const h = botHistory();
     botMsgs.innerHTML = "";
     botRow("bot", botGreeting());
-    if (!h.length) {
+    if (!h.length && PDJ && BOT_PAGE === "shop") {
+      botMsgs.appendChild(pdjChipsEl(PDJ_HOME));
+    } else if (!h.length) {
       const chips = document.createElement("div");
       chips.className = "pd-bot-chips";
       BOT_SUGGEST.forEach(function (q) {
@@ -1718,12 +2101,26 @@ if (
         b.addEventListener("click", function () { botAsk(q); });
         chips.appendChild(b);
       });
+      // Trang sản phẩm / giỏ: thêm lối vào tư vấn theo nhu cầu + mua kèm
+      if (PDJ && (BOT_PAGE === "product" || BOT_PAGE === "cart")) {
+        Array.prototype.slice.call(pdjChipsEl([["➕ Phụ kiện nên mua kèm", "addons"], ["🛍️ Tư vấn chọn sản phẩm", "home"]]).children)
+          .forEach(function (b) { chips.appendChild(b); });
+      }
       botMsgs.appendChild(chips);
     }
     const answered = {};
     h.forEach(function (m) { if (m.owner && m.qid) answered[m.qid] = 1; });
-    h.forEach(function (m) {
-      botRow(m.role, botHtml(m.text), m.owner ? "pd-bot-owner" : "");
+    const rows = [];
+    h.forEach(function (m, i) {
+      const row = botRow(m.role, m.html ? m.html : botHtml(m.text), m.owner ? "pd-bot-owner" : "");
+      rows[i] = row;
+      if (m.cards && m.cards.length) botMsgs.appendChild(pdjCardsEl(m.cards));
+      if (m.after) botRow("bot", m.after);
+      if (i === h.length - 1 && !typing && PDJ) {
+        // Câu cuối: lựa chọn tiếp theo (câu AI trả lời xong → mời đặt hàng / gợi ý tiếp)
+        if (m.chips && m.chips.length) botMsgs.appendChild(pdjChipsEl(m.chips));
+        else if (m.role === "bot" && !m.pdj && !m.handoff) botMsgs.appendChild(pdjChipsEl([["🛒 Đặt hàng ngay", "checkout"], ["🛍️ Gợi ý sản phẩm", "home"]]));
+      }
       // Câu đã chuyển PickDee mà chưa có trả lời → báo đang chờ (khách vẫn hỏi bot tiếp được)
       if (m.handoff && m.qid && !answered[m.qid] && Date.now() - (m.t || 0) < BOT_WAIT_MS) {
         const w = document.createElement("div");
@@ -1733,11 +2130,15 @@ if (
       }
     });
     if (typing) botRow("bot", "Em đang xem thông tin…", "pd-bot-typing");
+    const last = h[h.length - 1];
     // Nút header chỉ dùng khi nhân viên trả lời trong chat nhân viên (support-admin)
     botHumanBtn.textContent = "💬 Xem trả lời (" + botUnread + ")";
     botHumanBtn.classList.toggle("pd-show", botUnread > 0);
     botHumanBtn.classList.toggle("pd-hot", botUnread > 0);
-    botMsgs.scrollTop = botMsgs.scrollHeight;
+    // Vừa trả lời xong → cuộn tới đầu câu trả lời (kèm câu khách vừa hỏi/chọn) để đọc từ đầu (khung chỉ cao 50% màn hình)
+    const n = h.length;
+    const top = !typing && last && last.role === "bot" ? rows[n >= 2 && h[n - 2].role === "user" ? n - 2 : n - 1] : null;
+    botMsgs.scrollTop = top ? top.offsetTop - 6 : botMsgs.scrollHeight;
   }
 
   async function botAsk(text) {
@@ -1873,6 +2274,7 @@ if (
     panel.classList.add("pd-bot-mode");
     openBtn.classList.remove("pd-bot-new");
     renderBot(false);
+    if (PDJ) pdjLoad().catch(function () {});
   }
 
   async function goHuman() {
@@ -2936,7 +3338,7 @@ if (
     const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
     const plan = {
       product: { wait: 18000, scroll: 0.45, minWait: 7000 },
-      shop: { wait: 30000, scroll: 0.6, minWait: 12000 },
+      shop: { wait: 5000, scroll: 0, minWait: 0 }, // vào Shop là tư vấn viên chào + hỏi nhu cầu
       academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
       all: { wait: 40000, scroll: 0, minWait: 0 }
     }[BOT_PAGE];
@@ -2954,7 +3356,9 @@ if (
       #pdTease.pd-on{opacity:1;transform:none}
       #pdTease b{color:#0f1d3a}
       #pdTease .pd-tease-go{display:inline-block;margin-top:6px;font-weight:800;color:#1a7f37}
-      #pdTease button{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
+      #pdTease .pd-tease-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+      #pdTease .pd-tease-chips span{padding:7px 11px;border-radius:999px;background:#0f1d3a;color:#d8ff45;font-size:12.5px;font-weight:800;white-space:nowrap}
+      #pdTease .pd-tease-x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
       #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
     `;
     document.head.appendChild(st);
@@ -2969,7 +3373,7 @@ if (
         product: short
           ? "Anh/chị đang cân nhắc <b>" + botEsc(short) + "</b>? Em tư vấn nhanh loại/màu phù hợp và phí ship ạ."
           : "Anh/chị cần tư vấn sản phẩm này? Em trả lời ngay ạ.",
-        shop: "Anh/chị cần chọn vợt hay phụ kiện phù hợp? Cho em biết trình độ và ngân sách, em gợi ý ngay ạ.",
+        shop: "👋 Anh/chị đang tìm gì hôm nay? Em tư vấn chọn đúng sản phẩm trong 30 giây:",
         academy: "Anh/chị muốn học 1 kèm 1 hay nhóm 2 người? Em tư vấn gói học phù hợp trình độ ạ.",
         all: "Anh/chị cần chọn vợt hay tìm khoá học Pickleball? Em tư vấn ngay ạ."
       }[BOT_PAGE];
@@ -2991,11 +3395,24 @@ if (
       const box = document.createElement("div");
       box.id = "pdTease";
       box.setAttribute("role", "status");
-      box.innerHTML = text() + '<br><span class="pd-tease-go">Hỏi ngay →</span><button type="button" aria-label="Đóng">×</button>';
+      const quick = PDJ && BOT_PAGE === "shop"
+        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["🟡 Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"]].map(function (c) {
+          return '<span role="button" data-act="' + c[1] + '">' + c[0] + "</span>";
+        }).join("") + "</div>"
+        : '<br><span class="pd-tease-go">Hỏi ngay →</span>';
+      box.innerHTML = text() + quick + '<button type="button" class="pd-tease-x" aria-label="Đóng">×</button>';
+      if (PDJ) pdjLoad().catch(function () {});
       openBtn.parentNode.insertBefore(box, openBtn);
       requestAnimationFrame(function () { box.classList.add("pd-on"); });
       const hide = function () { box.remove(); };
-      box.querySelector("button").addEventListener("click", function (e) {
+      box.querySelectorAll("[data-act]").forEach(function (c) {
+        c.addEventListener("click", function (e) {
+          e.stopPropagation();
+          hide();
+          openPanel().then(function () { pdjStep(c.getAttribute("data-act"), c.textContent); });
+        });
+      });
+      box.querySelector(".pd-tease-x").addEventListener("click", function (e) {
         e.stopPropagation();
         try { localStorage.setItem(OFF, String(Date.now())); } catch (_) {}
         hide();
