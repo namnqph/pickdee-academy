@@ -19,8 +19,18 @@
     "input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{transition:border-color .15s,box-shadow .15s}",
     "input:not([type=checkbox]):not([type=radio]):not([type=file]):focus,select:focus,textarea:focus{outline:none;border-color:#d8ff45 !important;box-shadow:0 0 0 3px rgba(216,255,69,.16) !important}",
     "::-webkit-scrollbar{width:0;height:0}",
-    "@keyframes pdAppIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}",
-    "main,.page,.container,.wrap{animation:pdAppIn .28s cubic-bezier(.2,.8,.2,1)}",
+    /* nhận diện PickDee: phông Be Vietnam Pro, số thẳng cột, nút chữ thường như app */
+    "body,button,input,select{font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,-apple-system,sans-serif !important}",
+    ":where(textarea){font-family:inherit}",
+    "body{font-variant-numeric:tabular-nums}",
+    "h1,h2,h3{letter-spacing:-.02em;text-wrap:balance}",
+    "button,a.btn,a[class*=btn],a[class*=button],.btn,.chip,.filter-chip,.tab,.tabs button{text-transform:none !important;letter-spacing:0 !important}",
+    /* ô số liệu: điện thoại xếp ngang gọn, không mỗi số 1 hàng */
+    "@media(max-width:759px){:is(section,div):has(>.summary-card+.summary-card),:is(section,div):has(>.card-stat+.card-stat){display:grid !important;grid-template-columns:repeat(auto-fit,minmax(104px,1fr)) !important;gap:8px !important}",
+    ".summary-card,.card-stat{padding:12px 14px !important;min-height:0 !important;box-shadow:none !important}",
+    ".summary-label,.card-stat-label{font-size:12px !important;line-height:1.3}",
+    ".summary-value,.card-stat-value{font-size:20px !important;margin-top:4px !important}}",
+    "@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}",
     /* đầu trang dính, mờ kính khi cuộn */
     "header.pd-app-sticky{position:sticky;top:0;z-index:800;transition:background .2s,box-shadow .2s}",
     "header.pd-app-scrolled{background:rgba(7,16,28,.84) !important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(255,255,255,.07)}",
@@ -41,20 +51,19 @@
     "#pdlBottom a,#pdlBottom .pdl-bt,#pdPortalNav a,#pdPortalNav .pdl-bt,#pdAdminNav a,#pdAdminNav .pdl-bt,#pdAppNav a,#pdAppNav .pdl-bt,#admBottomBar a,#admBottomBar .pdl-bt{color:rgba(255,255,255,.58) !important;transition:color .15s,transform .12s}",
     "#pdlBottom .active,#pdlBottom .is-active,#pdlBottom [aria-current],#pdPortalNav .active,#pdPortalNav .is-active,#pdPortalNav [aria-current],#pdAdminNav .active,#pdAdminNav .is-active,#pdAdminNav [aria-current],#pdAppNav .active,#pdAppNav .is-active,#pdAppNav [aria-current],#admBottomBar .active,#admBottomBar .is-active,#admBottomBar [aria-current]{color:#d8ff45 !important}",
     "#pdlBottom .active .pd-ic,#pdlBottom .is-active .pd-ic,#pdlBottom [aria-current] .pd-ic,#pdPortalNav .active .pd-ic,#pdPortalNav .is-active .pd-ic,#pdPortalNav [aria-current] .pd-ic,#pdAdminNav .active .pd-ic,#pdAdminNav .is-active .pd-ic,#pdAdminNav [aria-current] .pd-ic,#pdAppNav .active .pd-ic,#pdAppNav .is-active .pd-ic,#pdAppNav [aria-current] .pd-ic,#admBottomBar .active .pd-ic,#admBottomBar .is-active .pd-ic,#admBottomBar [aria-current] .pd-ic{background:rgba(216,255,69,.16)}",
-    "#pdlBottom .active svg,#pdlBottom [aria-current] svg,#pdPortalNav .active svg,#pdPortalNav [aria-current] svg,#pdAdminNav .active svg,#pdAdminNav [aria-current] svg,#pdAppNav .active svg,#pdAppNav [aria-current] svg,#admBottomBar .active svg,#admBottomBar [aria-current] svg{filter:drop-shadow(0 0 6px rgba(216,255,69,.45))}",
+    "#pdlBottom .active svg,#pdlBottom [aria-current] svg,#pdPortalNav .active svg,#pdPortalNav [aria-current] svg,#pdAdminNav .active svg,#pdAdminNav [aria-current] svg,#pdAppNav .active svg,#pdAppNav [aria-current] svg,#admBottomBar .active svg,#admBottomBar [aria-current] svg{filter:none}",
     "#pdlBottom,#pdPortalNav,#pdAdminNav,#pdAppNav,#admBottomBar{background:rgba(7,16,28,.88) !important;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-top:1px solid rgba(255,255,255,.08) !important}",
     "@media(max-width:760px){.tabs .tab:has(.pd-ic){display:flex !important;flex-direction:column;align-items:center !important;justify-content:center !important;text-align:center !important;min-width:0}",
     ".tabs .tab .pd-tl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center}}",
     ".tabs .tab .pd-ic{display:grid;place-items:center;width:44px;height:28px;margin:0 !important;padding:0 !important;border-radius:999px;font-size:0 !important;background:none}",
     ".tabs .tab .pd-ic svg{width:22px;height:22px}",
     ".tabs .tab.active .pd-ic{background:rgba(216,255,69,.16)}",
-    ".tabs .tab.active .pd-ic svg{filter:drop-shadow(0 0 6px rgba(216,255,69,.45))}",
     /* bảng → thẻ */
     "@media(max-width:759px){",
     "table.pd-cards{border-collapse:separate !important;border-spacing:0 !important;width:100% !important;min-width:0 !important;background:transparent !important}",
     "table.pd-cards thead{display:none !important}",
     "table.pd-cards,table.pd-cards tbody{display:block !important}",
-    "table.pd-cards tr{display:block !important;margin:0 0 10px !important;padding:12px 14px !important;border-radius:18px !important;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.025)) !important;border:1px solid rgba(255,255,255,.09) !important;box-shadow:0 8px 20px rgba(0,0,0,.22)}",
+    "table.pd-cards tr{display:block !important;margin:0 0 10px !important;padding:12px 14px !important;border-radius:18px !important;background:rgba(255,255,255,.045) !important;border:1px solid rgba(255,255,255,.09) !important;box-shadow:0 8px 20px rgba(0,0,0,.22)}",
     "table.pd-cards td{display:flex !important;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0 !important;border:0 !important;border-bottom:1px solid rgba(255,255,255,.06) !important;text-align:right !important;white-space:normal !important;min-width:0 !important;width:auto !important;font-size:14px}",
     "table.pd-cards td:last-child{border-bottom:0 !important}",
     "table.pd-cards td{flex-wrap:wrap;overflow-wrap:anywhere}",
@@ -75,6 +84,18 @@
   st.id = "pdAppCss";
   st.textContent = css;
   (document.head || document.documentElement).appendChild(st);
+  /* phông Be Vietnam Pro (Google Fonts, miễn phí) + màu thanh trạng thái điện thoại */
+  if (!document.getElementById("pdFont")) {
+    var fl = document.createElement("link");
+    fl.id = "pdFont"; fl.rel = "stylesheet";
+    fl.href = "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap";
+    (document.head || document.documentElement).appendChild(fl);
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    var tc = document.createElement("meta");
+    tc.name = "theme-color"; tc.content = "#07101c";
+    (document.head || document.documentElement).appendChild(tc);
+  }
 
   /* ---------- bảng → thẻ ---------- */
   function label(table) {
