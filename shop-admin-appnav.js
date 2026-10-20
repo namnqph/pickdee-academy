@@ -39,12 +39,12 @@
       "body{padding-bottom:calc(78px + env(safe-area-inset-bottom))!important}" +
       "#pdAppNav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:70;" +
       "padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.10);" +
-      "background:rgba(7,21,35,.97);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}" +
+      "background:rgba(15,15,15,.97);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}" +
       "#pdAppNav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;" +
       "color:rgba(255,255,255,.55);text-decoration:none;font-family:inherit;font-size:10.5px;font-weight:800;white-space:nowrap}" +
       "#pdAppNav .pd-ti{font-size:21px;line-height:1;padding:3px 12px;border-radius:999px}" +
-      "#pdAppNav a.active{color:#d8ff45}" +
-      "#pdAppNav a.active .pd-ti{background:rgba(216,255,69,.16)}" +
+      "#pdAppNav a.active{color:#ffc934}" +
+      "#pdAppNav a.active .pd-ti{background:rgba(255,201,52,.16)}" +
       /* đầu trang gọn hơn trên điện thoại */
       "main .intro,.page .intro{display:none!important}" +
       "main h1,.page h1{font-size:26px!important;margin-bottom:12px!important}" +

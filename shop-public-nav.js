@@ -48,7 +48,7 @@
           1px solid rgba(255,255,255,.08);
 
         background:
-          rgba(7,21,35,.96);
+          rgba(15,15,15,.96);
 
         backdrop-filter:
           blur(14px);
@@ -99,7 +99,7 @@
 
       #shopPublicHeader
       .pd-shop-brand span {
-        color: #d8ff45;
+        color: #ffc934;
       }
 
 
@@ -152,20 +152,20 @@
       .pd-shop-action.active {
 
         border-color:
-          rgba(216,255,69,.42);
+          rgba(255,201,52,.42);
 
         background:
-          rgba(216,255,69,.07);
+          rgba(255,201,52,.07);
       }
 
 
       #shopPublicHeader
       .pd-shop-cart {
 
-        color: #d8ff45;
+        color: #ffc934;
 
         border-color:
-          rgba(216,255,69,.30);
+          rgba(255,201,52,.30);
       }
 
 
@@ -186,9 +186,9 @@
 
         border-radius: 999px;
 
-        background: #d8ff45;
+        background: #ffc934;
 
-        color: #071523;
+        color: #0f0f0f;
 
         font-size: 10px;
         font-weight: 950;
@@ -265,7 +265,7 @@
         border:
           1px solid rgba(255,255,255,.12);
 
-        background: #0d1d2f;
+        background: #151515;
 
         box-shadow:
           0 18px 45px
@@ -310,9 +310,9 @@
       .pd-shop-menu-item.current {
 
         background:
-          rgba(216,255,69,.08);
+          rgba(255,201,52,.08);
 
-        color: #d8ff45;
+        color: #ffc934;
       }
 
 
@@ -329,7 +329,7 @@
       #shopPublicHeader
       .pd-shop-status {
 
-        color: #d8ff45;
+        color: #ffc934;
 
         font-size: 8px;
         font-weight: 950;
@@ -854,7 +854,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261020-aff1";
+      "/support-widget.js?v=20261020-gold1";
 
 
     script.async =

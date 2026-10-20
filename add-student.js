@@ -271,7 +271,7 @@ form.addEventListener(
     event.preventDefault();
 
     message.style.color =
-      "#b9ff18";
+      "#ffc118";
 
     message.textContent =
       "Đang lưu...";
@@ -385,7 +385,7 @@ form.addEventListener(
 
 
     message.style.color =
-      "#b9ff18";
+      "#ffc118";
 
     message.textContent =
       "Đã tạo học viên thành công.";

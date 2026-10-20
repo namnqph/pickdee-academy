@@ -150,7 +150,7 @@ function getExpiryText(endDate) {
 
     return {
       text: "Không giới hạn",
-      color: "#d8ff45"
+      color: "#ffc934"
     };
   }
 
@@ -190,7 +190,7 @@ function getExpiryText(endDate) {
   return {
     text:
       `Còn ${days} ngày`,
-    color: "#d8ff45"
+    color: "#ffc934"
   };
 }
 

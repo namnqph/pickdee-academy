@@ -174,7 +174,7 @@ function showMessage(
   message.style.color =
     isError
       ? "#ffb4b4"
-      : "#b9ff18";
+      : "#ffc118";
 
 }
 

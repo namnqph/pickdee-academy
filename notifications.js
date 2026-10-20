@@ -596,7 +596,7 @@
           );
 
         background:
-          #0b2342;
+          #1b1b1b;
 
         color:
           white;
@@ -628,7 +628,7 @@
       .pdn-bell:hover {
 
         border-color:
-          #d8ff45;
+          #ffc934;
 
       }
 
@@ -679,7 +679,7 @@
 
         border:
           2px solid
-          #041733;
+          #131313;
 
       }
 
@@ -718,7 +718,7 @@
           hidden;
 
         background:
-          #0d2038;
+          #181818;
 
         border:
           1px solid
@@ -797,7 +797,7 @@
           transparent;
 
         color:
-          #d8ff45;
+          #ffc934;
 
         font-weight:
           800;
@@ -845,10 +845,7 @@
       .pdn-item.unread {
 
         background:
-          rgba(
-            216,
-            255,
-            69,
+          rgba(255,201,52,
             .08
           );
 
@@ -894,7 +891,7 @@
       .pdn-item-message {
 
         color:
-          #b7c4d4;
+          #c6c6c6;
 
         font-size:
           13px;
@@ -911,7 +908,7 @@
       .pdn-item-time {
 
         color:
-          #71839b;
+          #868686;
 
         font-size:
           11px;
@@ -945,7 +942,7 @@
           30px 16px;
 
         color:
-          #94a4b8;
+          #a6a6a6;
 
         text-align:
           center;
@@ -3207,7 +3204,7 @@ async function mountPushUi() {
     [
       "padding:12px 14px",
       "border-bottom:1px solid rgba(255,255,255,.08)",
-      "background:rgba(216,255,69,.04)"
+      "background:rgba(255,201,52,.04)"
     ].join(";");
 
 
@@ -3221,8 +3218,8 @@ async function mountPushUi() {
         border:0;
         border-radius:10px;
         padding:0 12px;
-        background:#d8ff45;
-        color:#071426;
+        background:#ffc934;
+        color:#101010;
         font-size:12px;
         font-weight:900;
         cursor:pointer;
@@ -3235,7 +3232,7 @@ async function mountPushUi() {
       id="pickdeePushStatus"
       style="
         margin-top:8px;
-        color:#94a4b8;
+        color:#a6a6a6;
         font-size:11px;
         line-height:1.45;
       "
@@ -3440,7 +3437,7 @@ async function mountPushUi() {
 
 
     script.src =
-      "/support-widget.js?v=20261020-sales2";
+      "/support-widget.js?v=20261020-gold1";
 
 
     script.async =

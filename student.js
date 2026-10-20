@@ -826,7 +826,7 @@ function buildStudentProfileEditor() {
       border: 0;
       border-radius: 10px;
 
-      background: #d8ff45;
+      background: #ffc934;
       color: #172600;
 
       font-family: inherit;
@@ -888,7 +888,7 @@ function buildStudentProfileEditor() {
 
       outline: none;
 
-      background: #092653;
+      background: #202020;
       color: #ffffff;
 
       font-family: inherit;
@@ -899,7 +899,7 @@ function buildStudentProfileEditor() {
     .student-profile-field input:focus,
     .student-profile-field select:focus {
       border-color:
-        rgba(216,255,69,.65);
+        rgba(255,201,52,.65);
     }
 
 
@@ -952,7 +952,7 @@ function buildStudentProfileEditor() {
     #saveStudentProfileBtn {
       border: 0;
 
-      background: #d8ff45;
+      background: #ffc934;
       color: #172600;
     }
 
@@ -962,7 +962,7 @@ function buildStudentProfileEditor() {
 
       margin-top: 12px;
 
-      color: #d8ff45;
+      color: #ffc934;
 
       font-size: 12px;
       font-weight: 700;
@@ -1284,7 +1284,7 @@ function buildStudentProfileEditor() {
 
 
     formMessage.style.color =
-      "#d8ff45";
+      "#ffc934";
 
 
     formMessage.textContent =
@@ -1465,7 +1465,7 @@ function buildStudentProfileEditor() {
     async function () {
 
       formMessage.style.color =
-        "#d8ff45";
+        "#ffc934";
 
 
       formMessage.textContent =
@@ -1634,7 +1634,7 @@ function buildStudentProfileEditor() {
 
 
       formMessage.style.color =
-        "#d8ff45";
+        "#ffc934";
 
 
       formMessage.textContent =
@@ -1714,7 +1714,7 @@ function buildStudentProfileEditor() {
 
 
         formMessage.style.color =
-          "#d8ff45";
+          "#ffc934";
 
 
         formMessage.textContent =

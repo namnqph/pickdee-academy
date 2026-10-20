@@ -22,16 +22,16 @@
 
   const css = `
   #pdCoachGate{position:fixed;inset:0;z-index:999990;overflow:auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom));
-    background:rgba(3,10,20,.94);backdrop-filter:blur(6px);color:#fff;font-family:Arial,Helvetica,sans-serif}
-  #pdCoachGate .c{max-width:440px;margin:6vh auto 0;padding:22px 18px;border-radius:22px;background:linear-gradient(160deg,#0f2747,#0a1a30);border:1px solid rgba(216,255,69,.35)}
-  #pdCoachGate h2{margin:0 0 6px;font-size:20px;color:#d8ff45}
+    background:rgba(8,8,8,.94);backdrop-filter:blur(6px);color:#fff;font-family:Arial,Helvetica,sans-serif}
+  #pdCoachGate .c{max-width:440px;margin:6vh auto 0;padding:22px 18px;border-radius:22px;background:linear-gradient(160deg,#1e1e1e,#141414);border:1px solid rgba(255,201,52,.35)}
+  #pdCoachGate h2{margin:0 0 6px;font-size:20px;color:#ffc934}
   #pdCoachGate p{margin:0 0 14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.82)}
   #pdCoachGate .it{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;border-radius:12px;background:rgba(255,255,255,.06);font-size:14px}
   #pdCoachGate .it.ok{opacity:.6}
   #pdCoachGate .ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:13px;background:rgba(255,138,138,.2);color:#ff8a8a}
-  #pdCoachGate .it.ok .ic{background:#d8ff45;color:#071523}
+  #pdCoachGate .it.ok .ic{background:#ffc934;color:#0f0f0f}
   #pdCoachGate .it span.t{flex:1}
-  #pdCoachGate .go{flex:none;border:0;border-radius:10px;background:#d8ff45;color:#071523;font-weight:900;font-size:13px;padding:9px 12px;cursor:pointer}
+  #pdCoachGate .go{flex:none;border:0;border-radius:10px;background:#ffc934;color:#0f0f0f;font-weight:900;font-size:13px;padding:9px 12px;cursor:pointer}
   #pdCoachGate .hint{margin-top:10px;font-size:12px;line-height:1.5;color:rgba(255,255,255,.6)}
   #pdCoachGate .out{display:block;margin-top:14px;text-align:center;color:rgba(255,255,255,.55);font-size:13px}`;
 

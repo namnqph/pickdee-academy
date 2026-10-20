@@ -33,7 +33,7 @@
   .pdl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
   .pdl-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;
     padding:10px 2px 9px;border-radius:14px;min-width:0;color:#fff;text-decoration:none;
-    background:rgba(7,21,35,.55);border:1px solid rgba(255,255,255,.06);cursor:pointer;
+    background:rgba(15,15,15,.55);border:1px solid rgba(255,255,255,.06);cursor:pointer;
     font:inherit;transition:transform .12s ease,border-color .12s ease}
   .pdl-tile:hover{border-color:rgba(var(--acc),.55)}
   .pdl-tile:active{transform:scale(.96)}
@@ -43,8 +43,8 @@
     color:rgba(255,255,255,.9);overflow-wrap:anywhere}
   .pdl-badge{position:absolute;top:4px;right:6px;min-width:19px;height:19px;padding:0 5px;
     display:none;align-items:center;justify-content:center;border-radius:999px;
-    background:#ff5c69;color:#fff;font-size:10.5px;font-weight:900;box-shadow:0 0 0 2px #0d1d2f}
-  .pdl-badge.is-info{background:#d8ff45;color:#071523}
+    background:#ff5c69;color:#fff;font-size:10.5px;font-weight:900;box-shadow:0 0 0 2px #151515}
+  .pdl-badge.is-info{background:#ffc934;color:#0f0f0f}
   .has-count>.pdl-badge{display:flex}
   .pdl-tabs{display:grid;gap:6px;padding:5px;border-radius:16px;
     background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
@@ -52,7 +52,7 @@
     padding:8px 2px;border:0;border-radius:12px;background:transparent;
     color:rgba(255,255,255,.7);font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
   .pdl-tab span:first-child{font-size:18px;line-height:1.1}
-  .pdl-tab.is-active{background:rgba(216,255,69,.14);color:#d8ff45}
+  .pdl-tab.is-active{background:rgba(255,201,52,.14);color:#ffc934}
   .pdl-tab .pdl-badge{top:2px;right:calc(50% - 26px)}
   .pdl-group.is-tab{display:none}
   .pdl-group.is-tab.is-active{display:block}
@@ -61,26 +61,26 @@
     background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);font:inherit;
     font-size:14px;font-weight:800;cursor:pointer}
   .pdl-sum{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:20px;
-    color:#fff;text-decoration:none;border:1px solid rgba(216,255,69,.35);
-    background:linear-gradient(135deg,rgba(216,255,69,.16),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
+    color:#fff;text-decoration:none;border:1px solid rgba(255,201,52,.35);
+    background:linear-gradient(135deg,rgba(255,201,52,.16),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
     box-shadow:0 10px 30px rgba(0,0,0,.25)}
   .pdl-sum:active{transform:scale(.98)}
   .pdl-sum-icon{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;
-    border-radius:13px;background:rgba(216,255,69,.18);font-size:22px}
+    border-radius:13px;background:rgba(255,201,52,.18);font-size:22px}
   .pdl-sum-body{flex:1;min-width:0}
-  .pdl-sum-title{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#d8ff45}
+  .pdl-sum-title{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#ffc934}
   .pdl-sum-main{margin-top:2px;font-size:19px;font-weight:900;line-height:1.2;overflow-wrap:anywhere}
   .pdl-sum-sub{margin-top:3px;font-size:12px;line-height:1.35;color:rgba(255,255,255,.72)}
   .pdl-sum-refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
   .pdl-sum-ref{padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.07);
     font-size:11px;font-weight:700;color:rgba(255,255,255,.8)}
   .pdl-sum-ref b{color:#fff}
-  .pdl-sum-go{flex:0 0 auto;font-size:22px;color:rgba(216,255,69,.8)}
+  .pdl-sum-go{flex:0 0 auto;font-size:22px;color:rgba(255,201,52,.8)}
   .pdl-hide{display:none !important}
   .pdl-hide-focus{display:none !important}
   .pdl-back{position:sticky;top:8px;z-index:20;display:inline-flex;align-items:center;gap:6px;
-    margin:0 0 10px;padding:8px 14px;border-radius:999px;border:1px solid rgba(216,255,69,.35);
-    background:rgba(7,21,35,.92);color:#d8ff45;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+    margin:0 0 10px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,201,52,.35);
+    background:rgba(15,15,15,.92);color:#ffc934;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
   @media(min-width:900px){
     .pdl{grid-template-columns:1fr 1fr;align-items:start}
     .pdl-tabs{display:none}
@@ -92,7 +92,7 @@
   @media(max-width:759px){
     #pdlBottom{position:fixed;left:0;right:0;bottom:0;z-index:900;display:grid;
       padding:6px 6px calc(6px + env(safe-area-inset-bottom));
-      background:rgba(7,21,35,.97);border-top:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px)}
+      background:rgba(15,15,15,.97);border-top:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px)}
     #pdlBottom .pdl-bt{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
       padding:4px 0;border:0;background:transparent;color:rgba(255,255,255,.75);
       text-decoration:none;font:inherit;font-size:11px;font-weight:700;cursor:pointer}

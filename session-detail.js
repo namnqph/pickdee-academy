@@ -73,7 +73,7 @@ function message(text, error = false) {
   messageEl.textContent = text;
 
   messageEl.style.color =
-    error ? "#ff8a8a" : "#b7ff00";
+    error ? "#ff8a8a" : "#ffbb00";
 }
 
 

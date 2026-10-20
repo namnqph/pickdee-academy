@@ -533,13 +533,13 @@ function getStatusView(
         "📍 HÔM NAY · CHỜ HỌC",
 
       rowStyle:
-        "background:rgba(185,255,24,.055);",
+        "background:rgba(255,193,24,.055);",
 
       badgeStyle:
         `
-          background:rgba(185,255,24,.15);
-          color:#d8ff45;
-          border:1px solid rgba(185,255,24,.28);
+          background:rgba(255,193,24,.15);
+          color:#ffc934;
+          border:1px solid rgba(255,193,24,.28);
         `
 
     };
@@ -566,8 +566,8 @@ function getStatusView(
 
       badgeStyle:
         `
-          background:rgba(185,255,24,.11);
-          color:#d8ff45;
+          background:rgba(255,193,24,.11);
+          color:#ffc934;
         `
 
     };
@@ -595,7 +595,7 @@ function getStatusView(
       badgeStyle:
         `
           background:rgba(255,255,255,.08);
-          color:#aeb9c6;
+          color:#bababa;
         `
 
     };

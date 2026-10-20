@@ -320,9 +320,9 @@ function statusStyle(status) {
   ) {
 
     return `
-      background:rgba(216,255,69,.12);
-      color:#d8ff45;
-      border:1px solid rgba(216,255,69,.20);
+      background:rgba(255,201,52,.12);
+      color:#ffc934;
+      border:1px solid rgba(255,201,52,.20);
     `;
   }
 
@@ -1080,7 +1080,7 @@ let activeWorkFilter =
 
           btn.style.background =
             active
-              ? "#d8ff45"
+              ? "#ffc934"
               : "rgba(255,255,255,.06)";
 
 
@@ -1092,7 +1092,7 @@ let activeWorkFilter =
 
           btn.style.borderColor =
             active
-              ? "#d8ff45"
+              ? "#ffc934"
               : "rgba(255,255,255,.15)";
 
         }

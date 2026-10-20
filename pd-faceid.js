@@ -205,28 +205,28 @@
     st.textContent = `
       .pdf-box{margin:0 0 6px;text-align:center}
       .pdf-hello{margin:0 0 12px;color:#dfe8f2;font-size:15px;font-weight:700}
-      .pdf-btn{all:unset;box-sizing:border-box;width:100%;min-height:56px;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:12px;background:#b9ff18;color:#07101b;font:inherit;font-size:16px;font-weight:900;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+      .pdf-btn{all:unset;box-sizing:border-box;width:100%;min-height:56px;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:12px;background:#ffc118;color:#0c0c0c;font:inherit;font-size:16px;font-weight:900;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
       .pdf-btn:active{transform:scale(.98)}
       .pdf-btn[disabled]{opacity:.6;cursor:wait}
       .pdf-btn .pdf-ic{width:26px;height:26px;flex:0 0 26px}
-      .pdf-ghost{all:unset;box-sizing:border-box;width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;color:#aab6c5;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
-      .pdf-or{display:flex;align-items:center;gap:10px;margin:18px 0 0;color:#6f8096;font-size:12px;font-weight:700}
-      .pdf-or::before,.pdf-or::after{content:"";flex:1;height:1px;background:#26364b}
+      .pdf-ghost{all:unset;box-sizing:border-box;width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;color:#b8b8b8;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+      .pdf-or{display:flex;align-items:center;gap:10px;margin:18px 0 0;color:#828282;font-size:12px;font-weight:700}
+      .pdf-or::before,.pdf-or::after{content:"";flex:1;height:1px;background:#282828}
       .pdf-msg{min-height:18px;margin-top:8px;font-size:13px;line-height:1.4;color:#ffb4b4}
-      .pdf-msg.ok{color:#b9ff18}
+      .pdf-msg.ok{color:#ffc118}
       .pdf-card .pdf-msg:empty{display:none}
       .pdf-devs[hidden]{display:none!important}
-      .pdf-sheet-bg{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,8,18,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:pdfFade .18s}
-      .pdf-sheet{width:min(440px,100%);margin:0 8px max(8px,env(safe-area-inset-bottom));padding:26px 20px 14px;border-radius:22px;background:#0e1b2d;border:1px solid #26364b;color:#fff;text-align:center;font-family:Inter,system-ui,-apple-system,sans-serif;animation:pdfUp .22s ease-out}
+      .pdf-sheet-bg{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;background:rgba(7,7,7,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:pdfFade .18s}
+      .pdf-sheet{width:min(440px,100%);margin:0 8px max(8px,env(safe-area-inset-bottom));padding:26px 20px 14px;border-radius:22px;background:#151515;border:1px solid #282828;color:#fff;text-align:center;font-family:Inter,system-ui,-apple-system,sans-serif;animation:pdfUp .22s ease-out}
       @media(min-width:701px){.pdf-sheet-bg{align-items:center}}
-      .pdf-sheet .pdf-big{width:64px;height:64px;margin:0 auto 14px;color:#b9ff18}
+      .pdf-sheet .pdf-big{width:64px;height:64px;margin:0 auto 14px;color:#ffc118}
       .pdf-sheet h3{margin:0 0 8px;font-size:20px;line-height:1.3}
-      .pdf-sheet p{margin:0 0 18px;color:#aab6c5;font-size:14px;line-height:1.5}
+      .pdf-sheet p{margin:0 0 18px;color:#b8b8b8;font-size:14px;line-height:1.5}
       @keyframes pdfFade{from{opacity:0}}
       @keyframes pdfUp{from{transform:translateY(30px);opacity:0}}
       .pdf-card{margin:14px 0 22px;padding:16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);text-align:left}
       .pdf-row{display:flex;align-items:center;gap:12px}
-      .pdf-row .pdf-ic{width:34px;height:34px;flex:0 0 34px;color:#b9ff18}
+      .pdf-row .pdf-ic{width:34px;height:34px;flex:0 0 34px;color:#ffc118}
       .pdf-tt{flex:1;min-width:0}
       .pdf-tt b{display:block;font-size:15px}
       .pdf-tt small{display:block;margin-top:3px;color:rgba(255,255,255,.62);font-size:12px;line-height:1.4}
@@ -296,7 +296,7 @@
         console.warn("PickDee Face ID:", e);
         if (IN_APP && !(e && typeof e.code === "string")) { // lỗi trình duyệt (DOMException có code số), không phải lỗi máy chủ
           msg.innerHTML = LABEL + ' không chạy trong trình duyệt của ứng dụng này. ' +
-            (isIOS ? '<a href="x-safari-' + esc(location.href) + '" style="color:#b9ff18;font-weight:800">Mở bằng Safari</a> (hoặc bấm biểu tượng la bàn 🧭 ở góc dưới) rồi đăng nhập lại.'
+            (isIOS ? '<a href="x-safari-' + esc(location.href) + '" style="color:#ffc118;font-weight:800">Mở bằng Safari</a> (hoặc bấm biểu tượng la bàn 🧭 ở góc dưới) rồi đăng nhập lại.'
                    : 'Bấm ⋮ → "Mở bằng trình duyệt" rồi đăng nhập lại.');
           btn.disabled = false;
           return;

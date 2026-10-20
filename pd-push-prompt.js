@@ -21,20 +21,20 @@
 
   const css = `
   .pdp-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
-    padding:18px;background:rgba(3,10,20,.72);backdrop-filter:blur(6px)}
+    padding:18px;background:rgba(8,8,8,.72);backdrop-filter:blur(6px)}
   .pdp-card{width:min(420px,100%);padding:22px 18px 18px;border-radius:22px;text-align:center;
-    background:linear-gradient(160deg,#0f2747,#0a1a30);border:1px solid rgba(216,255,69,.35);
+    background:linear-gradient(160deg,#1e1e1e,#141414);border:1px solid rgba(255,201,52,.35);
     box-shadow:0 30px 80px rgba(0,0,0,.55);color:#fff;font-family:inherit}
   .pdp-icon{font-size:42px;line-height:1}
-  .pdp-title{margin:10px 0 6px;font-size:19px;font-weight:900;color:#d8ff45}
+  .pdp-title{margin:10px 0 6px;font-size:19px;font-weight:900;color:#ffc934}
   .pdp-text{margin:0 0 14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.82)}
   .pdp-steps{margin:0 0 16px;padding:0;list-style:none;text-align:left;display:grid;gap:8px}
   .pdp-steps li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;
     background:rgba(255,255,255,.06);font-size:14px;line-height:1.45}
-  .pdp-steps b{color:#d8ff45}
+  .pdp-steps b{color:#ffc934}
   .pdp-num{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    background:#d8ff45;color:#071523;font-size:12px;font-weight:900}
-  .pdp-btn{width:100%;min-height:50px;border:0;border-radius:14px;background:#d8ff45;color:#071523;
+    background:#ffc934;color:#0f0f0f;font-size:12px;font-weight:900}
+  .pdp-btn{width:100%;min-height:50px;border:0;border-radius:14px;background:#ffc934;color:#0f0f0f;
     font-size:15px;font-weight:900;cursor:pointer;font-family:inherit}
   .pdp-btn[disabled]{opacity:.6}
   .pdp-note{margin-top:10px;font-size:12px;color:rgba(255,255,255,.6)}
@@ -132,7 +132,7 @@
     b.type = "button";
     b.textContent = "📲 Cài app PickDee";
     b.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:9990;" +
-      "padding:11px 18px;border-radius:999px;border:0;background:#d8ff45;color:#071523;font:inherit;font-size:14px;font-weight:900;" +
+      "padding:11px 18px;border-radius:999px;border:0;background:#ffc934;color:#0f0f0f;font:inherit;font-size:14px;font-weight:900;" +
       "box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:pointer";
     b.addEventListener("click", async () => {
       if (!installEvent) return b.remove();

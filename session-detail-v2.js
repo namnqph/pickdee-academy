@@ -152,7 +152,7 @@ function setMessage(
 
       ? "#ff8a8a"
 
-      : "#b7ff00";
+      : "#ffbb00";
 
 }
 
@@ -192,7 +192,7 @@ function createPaymentGateUI() {
         linear-gradient(
           145deg,
           rgba(95,25,25,.42),
-          rgba(13,43,88,.88)
+          rgba(35,35,35,.88)
         );
     }
 
@@ -223,15 +223,15 @@ function createPaymentGateUI() {
 
     #paymentGateBox.test {
       border-color:
-        rgba(183,255,0,.30);
+        rgba(255,187,0,.30);
 
       background:
-        rgba(183,255,0,.06);
+        rgba(255,187,0,.06);
     }
 
     #paymentGateBox.test
     .payment-gate-title {
-      color: #b7ff00;
+      color: #ffbb00;
     }
 
   `;

@@ -793,7 +793,7 @@ async function requestCoachCover(
 
 
     messageEl.style.color =
-      "#d8ff45";
+      "#ffc934";
 
 
     messageEl.textContent =
@@ -1056,10 +1056,10 @@ function renderSessions(
                           display:block;
                           margin-top:8px;
                           padding:7px 9px;
-                          border:1px solid rgba(216,255,69,.35);
+                          border:1px solid rgba(255,201,52,.35);
                           border-radius:8px;
-                          background:rgba(216,255,69,.10);
-                          color:#d8ff45;
+                          background:rgba(255,201,52,.10);
+                          color:#ffc934;
                           font-size:11px;
                           font-weight:900;
                           cursor:pointer;

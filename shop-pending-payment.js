@@ -168,12 +168,12 @@
         border-radius: 14px;
 
         border:
-          1px solid rgba(216,255,69,.42);
+          1px solid rgba(255,201,52,.42);
 
         /* nền đặc: trang /shop nền sáng, trang khác nền tối */
         background:
-          linear-gradient(rgba(216,255,69,.08), rgba(216,255,69,.08)),
-          #0d1d2f;
+          linear-gradient(rgba(255,201,52,.08), rgba(255,201,52,.08)),
+          #151515;
 
         box-shadow:
           0 8px 22px rgba(0,0,0,.18);
@@ -237,8 +237,8 @@
 
         border-radius: 10px;
 
-        background: #d8ff45;
-        color: #071523;
+        background: #ffc934;
+        color: #0f0f0f;
 
         font-size: 10px;
         font-weight: 950;
@@ -252,7 +252,7 @@
 
         border: 0;
         border-left:
-          1px solid rgba(216,255,69,.18);
+          1px solid rgba(255,201,52,.18);
 
         background: transparent;
         color: rgba(255,255,255,.55);

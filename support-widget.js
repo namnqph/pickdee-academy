@@ -373,7 +373,7 @@ if (
       border: 0;
       border-radius: 999px;
 
-      background: #d8ff45;
+      background: #ffc934;
       color: #102300;
 
       box-shadow:
@@ -414,7 +414,7 @@ if (
       background: #ff5858;
       color: #ffffff;
 
-      border: 2px solid #071b38;
+      border: 2px solid #161616;
 
       font-size: 10px;
       font-weight: 900;
@@ -451,8 +451,8 @@ if (
       background:
         linear-gradient(
           160deg,
-          #092653,
-          #061a38
+          #202020,
+          #161616
         );
 
       color: #ffffff;
@@ -484,7 +484,7 @@ if (
         rgba(255,255,255,.10);
 
       background:
-        rgba(5,25,55,.88);
+        rgba(21,21,21,.88);
     }
 
 
@@ -501,11 +501,11 @@ if (
       border-radius: 13px;
 
       background:
-        rgba(216,255,69,.12);
+        rgba(255,201,52,.12);
 
       border:
         1px solid
-        rgba(216,255,69,.30);
+        rgba(255,201,52,.30);
 
       font-size: 21px;
     }
@@ -627,7 +627,7 @@ if (
 
     .pickdee-support-field input:focus {
       border-color:
-        rgba(216,255,69,.55);
+        rgba(255,201,52,.55);
     }
 
 
@@ -640,7 +640,7 @@ if (
       border: 0;
       border-radius: 11px;
 
-      background: #d8ff45;
+      background: #ffc934;
       color: #102300;
 
       cursor: pointer;
@@ -684,11 +684,11 @@ if (
       border-radius: 13px;
 
       background:
-        rgba(216,255,69,.07);
+        rgba(255,201,52,.07);
 
       border:
         1px solid
-        rgba(216,255,69,.16);
+        rgba(255,201,52,.16);
 
       color:
         rgba(255,255,255,.72);
@@ -739,7 +739,7 @@ if (
 
     .pickdee-support-message-row.user
     .pickdee-support-message {
-      background: #d8ff45;
+      background: #ffc934;
       color: #142300;
 
       border-bottom-right-radius:
@@ -787,7 +787,7 @@ if (
         rgba(255,255,255,.09);
 
       background:
-        rgba(3,17,38,.82);
+        rgba(14,14,14,.82);
     }
 
 
@@ -824,7 +824,7 @@ if (
 
     #pickdeeSupportInput:focus {
       border-color:
-        rgba(216,255,69,.48);
+        rgba(255,201,52,.48);
     }
 
 
@@ -841,7 +841,7 @@ if (
       border: 0;
       border-radius: 12px;
 
-      background: #d8ff45;
+      background: #ffc934;
       color: #102300;
 
       cursor: pointer;
@@ -1295,9 +1295,9 @@ if (
         justify-content:center;
         gap:5px;
         border-radius:10px;
-        border:1px solid rgba(216,255,69,.22);
-        background:rgba(216,255,69,.08);
-        color:#d8ff45;
+        border:1px solid rgba(255,201,52,.22);
+        background:rgba(255,201,52,.08);
+        color:#ffc934;
         text-decoration:none;
         font-family:inherit;
         font-size:10px;
@@ -1660,7 +1660,7 @@ if (
   }
 
   // Icon quả bóng pickleball (vàng chanh, có lỗ) — không có emoji tương ứng
-  const PDJ_BALL = '<svg class="pdj-ball" viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-0.22em;margin-right:5px"><defs><radialGradient id="pdjBallG" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#f4ff7a"/><stop offset=".6" stop-color="#cfe82a"/><stop offset="1" stop-color="#9dbb12"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#pdjBallG)" stroke="#7f9a0c" stroke-width=".6"/><g fill="#3f4f06" fill-opacity=".85"><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="6.2" r="1.5"/><circle cx="12" cy="17.8" r="1.5"/><circle cx="6.9" cy="9.1" r="1.45"/><circle cx="17.1" cy="9.1" r="1.45"/><circle cx="6.9" cy="14.9" r="1.45"/><circle cx="17.1" cy="14.9" r="1.45"/><ellipse cx="3.1" cy="12" rx=".6" ry="1.1"/><ellipse cx="20.9" cy="12" rx=".6" ry="1.1"/><ellipse cx="12" cy="2.6" rx="1.1" ry=".55"/><ellipse cx="12" cy="21.4" rx="1.1" ry=".55"/></g></svg>';
+  const PDJ_BALL = '<svg class="pdj-ball" viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-0.22em;margin-right:5px"><defs><radialGradient id="pdjBallG" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#ffdc7a"/><stop offset=".6" stop-color="#e8b52a"/><stop offset="1" stop-color="#bb8e12"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#pdjBallG)" stroke="#7f9a0c" stroke-width=".6"/><g fill="#3f4f06" fill-opacity=".85"><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="6.2" r="1.5"/><circle cx="12" cy="17.8" r="1.5"/><circle cx="6.9" cy="9.1" r="1.45"/><circle cx="17.1" cy="9.1" r="1.45"/><circle cx="6.9" cy="14.9" r="1.45"/><circle cx="17.1" cy="14.9" r="1.45"/><ellipse cx="3.1" cy="12" rx=".6" ry="1.1"/><ellipse cx="20.9" cy="12" rx=".6" ry="1.1"/><ellipse cx="12" cy="2.6" rx="1.1" ry=".55"/><ellipse cx="12" cy="21.4" rx="1.1" ry=".55"/></g></svg>';
   const pdjChipHtml = function (label, act) { return (act === "ball" ? PDJ_BALL : "") + botEsc(label); };
   const PDJ_HOME = [
     ["🏓 Chọn vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
@@ -1946,36 +1946,36 @@ if (
     st.textContent = `
       #pickdeeSupportBot{min-height:0;flex:1;display:none;flex-direction:column}
       #pdBotMsgs{min-height:0;flex:1;padding:15px 14px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;transform:translateZ(0)}
-      #pdBotMsgs a{color:#d8ff45;font-weight:800;word-break:break-all}
+      #pdBotMsgs a{color:#ffc934;font-weight:800;word-break:break-all}
       .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
-      .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(216,255,69,.3);background:rgba(216,255,69,.07);color:#d8ff45;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+      .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(255,201,52,.3);background:rgba(255,201,52,.07);color:#ffc934;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
       .pd-bot-typing{opacity:.6;font-style:italic}
       #pdBotMsgs{position:relative}
       .pdj-cards{display:flex;flex-direction:column;gap:7px;margin:-2px 0 10px}
       .pdj-card{display:flex;align-items:center;gap:8px;padding:7px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05)}
-      .pdj-card.pdj-star{border-color:rgba(216,255,69,.5);background:rgba(216,255,69,.07)}
+      .pdj-card.pdj-star{border-color:rgba(255,201,52,.5);background:rgba(255,201,52,.07)}
       #pdBotMsgs .pdj-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1;color:#fff;font-weight:400;text-decoration:none;word-break:normal}
       .pdj-main img,.pdj-noimg{flex:0 0 54px;width:54px;height:54px;border-radius:10px;object-fit:cover;background:#fff}
       .pdj-noimg{display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.08)}
       .pdj-info{display:flex;flex-direction:column;gap:2px;min-width:0}
       .pdj-info b{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-      .pdj-pr{color:#d8ff45;font-weight:900;font-size:13px}
+      .pdj-pr{color:#ffc934;font-weight:900;font-size:13px}
       .pdj-info small{font-size:11.5px;line-height:1.35;color:rgba(255,255,255,.66);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-      .pdj-tag{font-size:10.5px;font-weight:900;color:#d8ff45}
-      #pdBotMsgs .pdj-buy{flex:0 0 auto;min-height:36px;padding:0 11px;display:inline-flex;align-items:center;border-radius:999px;border:0;background:#d8ff45;color:#142300;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;text-decoration:none;word-break:normal;cursor:pointer}
-      #pdBotMsgs a.pdj-buy{background:transparent;color:#d8ff45;border:1px solid rgba(216,255,69,.45)}
+      .pdj-tag{font-size:10.5px;font-weight:900;color:#ffc934}
+      #pdBotMsgs .pdj-buy{flex:0 0 auto;min-height:36px;padding:0 11px;display:inline-flex;align-items:center;border-radius:999px;border:0;background:#ffc934;color:#142300;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;text-decoration:none;word-break:normal;cursor:pointer}
+      #pdBotMsgs a.pdj-buy{background:transparent;color:#ffc934;border:1px solid rgba(255,201,52,.45)}
       #pdBotMsgs .pdj-buy:disabled{opacity:.75}
-      .pd-bot-wait{margin:-4px 0 10px 4px;font-size:12px;font-weight:800;color:#d8ff45;opacity:.85}
-      .pd-bot-owner{border:1px solid rgba(216,255,69,.45)!important}
+      .pd-bot-wait{margin:-4px 0 10px 4px;font-size:12px;font-weight:800;color:#ffc934;opacity:.85}
+      .pd-bot-owner{border:1px solid rgba(255,201,52,.45)!important}
       #pickdeeSupportButton.pd-bot-new::after{content:"";position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#ff3b30;border:2px solid #fff}
       /* Nút "Gặp nhân viên" nằm trên thanh tiêu đề (cạnh nút ×), chỉ hiện khi đang ở trợ lý */
-      #pdBotHuman{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(216,255,69,.35);background:rgba(216,255,69,.08);color:#d8ff45;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
+      #pdBotHuman{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,201,52,.35);background:rgba(255,201,52,.08);color:#ffc934;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
       #pickdeeSupportPanel:not(.pd-bot-mode) #pdBotHuman,#pdBotHuman:not(.pd-show){display:none}
-      #pdBotHuman.pd-hot{background:#d8ff45;color:#142300;border-color:#d8ff45}
-      #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(3,17,38,.82)}
+      #pdBotHuman.pd-hot{background:#ffc934;color:#142300;border-color:#ffc934}
+      #pdBotComposer{padding:11px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.09);background:rgba(14,14,14,.82)}
       #pdBotInput{min-width:0;flex:1;min-height:44px;max-height:105px;padding:11px 12px;resize:none;outline:none;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:16px;line-height:1.4}
-      #pdBotInput:focus{border-color:rgba(216,255,69,.48)}
-      #pdBotSend{flex:0 0 44px;height:44px;border:0;border-radius:12px;background:#d8ff45;color:#142300;font-size:18px;font-weight:900;cursor:pointer}
+      #pdBotInput:focus{border-color:rgba(255,201,52,.48)}
+      #pdBotSend{flex:0 0 44px;height:44px;border:0;border-radius:12px;background:#ffc934;color:#142300;font-size:18px;font-weight:900;cursor:pointer}
       #pdBotSend:disabled{opacity:.5}
       /* Điện thoại: mọi chế độ (trợ lý, form nhân viên, chat nhân viên) là ngăn kéo gọn từ dưới lên,
          tối đa 50% màn hình, nút tròn ẩn khi đang mở, bàn phím bật thì bám ngay trên bàn phím */
@@ -3364,12 +3364,12 @@ if (
 
     const st = document.createElement("style");
     st.textContent = `
-      #pdTease{position:absolute;right:0;bottom:66px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#0f1d3a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(10,20,50,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
+      #pdTease{position:absolute;right:0;bottom:66px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(21,21,21,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
       #pdTease.pd-on{opacity:1;transform:none}
-      #pdTease b{color:#0f1d3a}
+      #pdTease b{color:#1a1a1a}
       #pdTease .pd-tease-go{display:inline-block;margin-top:6px;font-weight:800;color:#1a7f37}
       #pdTease .pd-tease-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-      #pdTease .pd-tease-chips span{padding:7px 11px;border-radius:999px;background:#0f1d3a;color:#d8ff45;font-size:12.5px;font-weight:800;white-space:nowrap}
+      #pdTease .pd-tease-chips span{padding:7px 11px;border-radius:999px;background:#1a1a1a;color:#ffc934;font-size:12.5px;font-weight:800;white-space:nowrap}
       #pdTease .pd-tease-x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
       #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
     `;
