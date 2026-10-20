@@ -98,6 +98,7 @@
         c.width = Math.round(img.naturalWidth * scale);
         c.height = Math.round(img.naturalHeight * scale);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        c.naturalW = img.naturalWidth;
         URL.revokeObjectURL(url);
         ok(c);
       };
@@ -137,6 +138,29 @@
     }
     ctx.putImageData(o, 0, 0);
     return c;
+  }
+
+  // Ảnh đại diện tròn đầu tin nhắn (Zalo/Messenger) hay bị đọc thành "9", "@", "®" đứng đầu dòng
+  //   → "9 Thôn Đông Thái" giả. Nhận ra: chữ đầu dòng ≤ 2 ký tự, gần vuông, cao ≥ 1.5 lần chữ còn lại của dòng → bỏ.
+  function dropIcons(data) {
+    const lines = String(data.text || "").split("\n");
+    let from = 0;
+    (data.lines || []).forEach(function (ln) {
+      const ws = ln.words || [];
+      if (ws.length < 2) return;
+      const w0 = ws[0], b = w0.bbox, h0 = b.y1 - b.y0, wd = b.x1 - b.x0;
+      const hs = ws.slice(1).map(function (w) { return w.bbox.y1 - w.bbox.y0; }).sort(function (a, c) { return a - c; });
+      const hm = hs[Math.floor(hs.length / 2)];
+      if (String(w0.text).trim().length > 2 || h0 < 1.5 * hm || wd < 0.6 * h0 || wd > 1.6 * h0) return;
+      const want = String(ln.text || "").trim();
+      for (let i = from; i < lines.length; i++) {
+        if (lines[i].trim() !== want) continue;
+        lines[i] = lines[i].replace(/^\s*\S+\s+/, "");
+        from = i + 1;
+        return;
+      }
+    });
+    return lines.join("\n");
   }
 
   // Ảnh gốc là chính (ảnh đen-trắng làm hỏng chữ nền sáng: "tran hung" → "tranhung", SĐT sai). Chỉ chèn dòng của ảnh
@@ -257,12 +281,82 @@
     }
     return value;
   }
+  /* ---------- Tên người nhận: giữ ĐÚNG chữ khách viết (không tự thêm/đổi dấu) ----------
+     Khách viết "Minh Duc" → giữ "Minh Duc" (AI/OCR không được biến thành "Minh Dục"/"Minh Đức"). */
+  function nameKeys(name) { return (String(name || "").match(/[\p{L}]+/gu) || []).map(wkey); }
+  // Chỗ trong dãy từ (ocrWords hoặc words của Tesseract) có đủ các từ của tên đứng liền nhau
+  function findName(list, keys, keyOf) {
+    const hits = [];
+    for (let j = 0; j + keys.length <= list.length; j++) {
+      let ok = true;
+      for (let t = 0; t < keys.length && ok; t++) ok = keyOf(list[j + t]) === keys[t];
+      if (ok) hits.push(j);
+    }
+    return hits;
+  }
+  // Thay dấu từng từ của tên theo chữ đọc được (raws), giữ kiểu viết hoa của tên hiện tại
+  function applyName(name, raws) {
+    let t = 0;
+    return String(name).replace(/[\p{L}]+/gu, function (tok) {
+      const r = String(raws[t++] || tok);
+      return tok[0] === tok[0].toUpperCase() ? r[0].toUpperCase() + r.slice(1).toLowerCase() : r.toLowerCase();
+    });
+  }
+  function nameAsWritten(o, words, out) {
+    const keys = nameKeys(o.customer_name);
+    if (!keys.length) return;
+    const forms = {};
+    findName(words, keys, function (w) { return w.k; }).forEach(function (j) {
+      const raws = words.slice(j, j + keys.length).map(function (w) { return w.raw; });
+      forms[raws.join(" ").toLowerCase()] = raws;
+    });
+    const all = Object.keys(forms);
+    if (all.length !== 1) return; // không thấy, hoặc ảnh có nhiều kiểu dấu khác nhau → giữ nguyên
+    const fixed = applyName(o.customer_name, forms[all[0]]);
+    if (fixed !== o.customer_name) { out.fixes.push("Tên: «" + o.customer_name + "» → «" + fixed + "» (đúng chữ khách viết)"); o.customer_name = fixed; }
+  }
+  // Ảnh thu nhỏ hay đọc sai dấu tên ("Duc" → "Dục"): cắt đúng vùng tên ở ảnh GỐC, phóng to, đọc lại → lấy dấu theo lần đọc này.
+  async function recheckName(o, read, idxs, out) {
+    const keys = nameKeys(o.customer_name);
+    if (!keys.length || !read.words) return;
+    const keyOf = function (w) { return wkey(String(w.text || "").replace(/[^\p{L}]/gu, "")); };
+    for (const n of idxs) {
+      const info = read.words[n];
+      if (!info) continue;
+      for (const list of info.lists) {
+        const j = findName(list, keys, keyOf)[0];
+        if (j === undefined) continue;
+        const bs = list.slice(j, j + keys.length).map(function (w) { return w.bbox; });
+        const x0 = Math.min.apply(null, bs.map(function (b) { return b.x0; })) / info.scale;
+        const x1 = Math.max.apply(null, bs.map(function (b) { return b.x1; })) / info.scale;
+        const y0 = Math.min.apply(null, bs.map(function (b) { return b.y0; })) / info.scale;
+        const y1 = Math.max.apply(null, bs.map(function (b) { return b.y1; })) / info.scale;
+        try {
+          const img = await createImageBitmap(read.files[n]);
+          const pad = (y1 - y0) * 0.6, k = Math.min(3, Math.max(1, 64 / (y1 - y0)));
+          const sx = Math.max(0, x0 - pad), sy = Math.max(0, y0 - pad);
+          const sw = Math.min(img.width, x1 + pad) - sx, sh = Math.min(img.height, y1 + pad) - sy;
+          const c = document.createElement("canvas");
+          c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+          c.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          const r = await (await worker()).recognize(c);
+          const ws = ocrWords(r.data.text);
+          const h = findName(ws, keys, function (w) { return w.k; })[0];
+          if (h === undefined) continue;
+          const fixed = applyName(o.customer_name, ws.slice(h, h + keys.length).map(function (w) { return w.raw; }));
+          if (fixed !== o.customer_name) { out.fixes.push("Tên: «" + o.customer_name + "» → «" + fixed + "» (đọc lại vùng tên ở ảnh gốc)"); o.customer_name = fixed; }
+          return;
+        } catch (e) { console.warn("PickDee đọc lại tên:", e); }
+      }
+    }
+  }
   // o = 1 đơn AI trả về; text = chữ các ảnh của đơn đó. Sửa tại chỗ, trả { fixes, untraced }
   function verifyParsed(o, text) {
     const words = ocrWords(text);
     const out = { fixes: [], untraced: [] };
     if (!words.length || !o) return out;
     o.customer_name = anchorField(o.customer_name, words, "Tên", out);
+    nameAsWritten(o, words, out);
     // Tên người Việt không có chữ 1 ký tự ("Nguyễn Văn T") → tên bị cắt/đọc thiếu
     String(o.customer_name || "").split(/\s+/).forEach(function (w) {
       if (w.length === 1) out.untraced.push("Tên: «" + o.customer_name + "» có chữ viết tắt «" + w + "», có thể đọc thiếu");
@@ -295,29 +389,34 @@
     say("Đang chuẩn bị bộ đọc chữ…");
     const w = await worker(say);
     const wEng = await worker(say, "eng").catch(function () { return null; });
-    const texts = [], doubts = [];
+    const texts = [], doubts = [], words = [];
     for (let i = 0; i < list.length; i++) {
       say("Đang đọc chữ ảnh " + (i + 1) + "/" + list.length + "…");
       const canvas = await shrink(list[i]);
       const r = await w.recognize(canvas);
       const re = wEng ? await wEng.recognize(canvas).catch(function () { return null; }) : null;
-      const base = re ? fixDigits(r.data.text, re.data.text) : { text: String(r.data.text || ""), doubts: [] };
+      const t1 = dropIcons(r.data);
+      const base = re ? fixDigits(t1, re.data.text) : { text: t1, doubts: [] };
+      const ws = [r.data.words || []];
       // Lượt 2: ảnh đen-trắng → lấy thêm dòng bị sót (chữ trắng trên bong bóng màu)
       let fixed = base;
       try {
         const nc = normalize(canvas);
         const r2 = await w.recognize(nc);
         const re2 = wEng ? await wEng.recognize(nc).catch(function () { return null; }) : null;
-        const extra = re2 ? fixDigits(r2.data.text, re2.data.text) : { text: String(r2.data.text || ""), doubts: [] };
+        const t2 = dropIcons(r2.data);
+        ws.push(r2.data.words || []);
+        const extra = re2 ? fixDigits(t2, re2.data.text) : { text: t2, doubts: [] };
         const merged = mergeLines(base.text, extra.text);
         fixed = { text: merged, doubts: base.doubts.concat(extra.doubts.filter(function (x) { return merged.indexOf(x.eng) >= 0; })) };
       } catch (e) { console.warn("PickDee OCR lượt 2:", e); }
       doubts.push(fixed.doubts);
+      words.push({ lists: ws, scale: canvas.width / canvas.naturalW });
       // Bỏ dòng nút quay lại app của iPhone ("< Facebook") – không phải nguồn chat
       const text = fixed.text.replace(/^\s*[<◀‹«]\s*(Facebook|Messenger|Zalo|TikTok|Instagram|Safari)\s*$/gim, "");
       texts.push((alwaysMark || list.length > 1 ? "--- Ảnh " + (i + 1) + " ---\n" : "") + text);
     }
-    return { files: list, texts: texts, doubts: doubts };
+    return { files: list, texts: texts, doubts: doubts, words: words };
   }
 
   async function parse(masked, multi, say) {
@@ -340,7 +439,8 @@
 
   async function run(files, progress) {
     const say = progress || function () {};
-    const texts = (await readImages(files, say, 4, false)).texts;
+    const read = await readImages(files, say, 4, false);
+    const texts = read.texts;
     const m = maskPhones(texts.join("\n"));
     const r = (await parse(m.masked, false, say)).result;
     const idx = Number(r.phone_ref) - 1;
@@ -348,6 +448,7 @@
     r.phones = m.phones;
     r.ocr_text = texts.join("\n");
     const chk = verifyParsed(r, r.ocr_text);
+    await recheckName(r, read, read.files.map(function (f, i) { return i; }), chk);
     r.fixes = chk.fixes;
     r.warnings = (r.warnings || []).concat(chk.untraced.map(function (x) { return "Kiểm tra lại – " + x; }));
     return r;
@@ -363,20 +464,22 @@
       return Array.from(new Set((chunk.match(/\[SĐT(\d+)\]/g) || []).map(function (t) { return m.phones[Number(t.match(/\d+/)[0]) - 1]; })));
     });
     const d = await parse(m.masked, true, say);
-    const orders = (d.orders || []).map(function (o) {
+    const orders = [];
+    for (const o of (d.orders || [])) {
       const imgs = (o.image_indexes || []).filter(function (n) { return n >= 1 && n <= read.files.length; });
       const own = Array.from(new Set(imgs.reduce(function (a, n) { return a.concat(perImage[n - 1] || []); }, [])));
       const ref = m.phones[Number(o.phone_ref) - 1];
       o.image_indexes = imgs;
       const chk = verifyParsed(o, imgs.map(function (n) { return read.texts[n - 1] || ""; }).join("\n"));
+      await recheckName(o, read, imgs.map(function (n) { return n - 1; }), chk);
       o.fixes = chk.fixes;
       o.warnings = (o.warnings || []).concat(chk.untraced.map(function (x) { return "Kiểm tra lại – " + x; }));
       // Số hai lượt đọc khác nhau (đã lấy theo "eng") → thẻ nhắc so với ảnh
       o.digit_doubts = imgs.reduce(function (a, n) { return a.concat(read.doubts[n - 1] || []); }, []);
       o.phones = own;
       o.phone = ref && (!own.length || own.includes(ref)) ? ref : (own.length === 1 ? own[0] : "");
-      return o;
-    });
+      orders.push(o);
+    }
     return { orders: orders, files: read.files, texts: read.texts };
   }
 
