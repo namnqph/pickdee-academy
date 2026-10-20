@@ -16,6 +16,7 @@
       "shop-admin-products": "products",
       "shop-admin-suppliers": "products",
       "shop-admin-promotions": "promotions",
+      "shop-admin-affiliate": "promotions",
       "shop-admin-stock-history": "inventory",
       "shop-admin-stock-receipts": "receiving",
       "shop-admin-stock-receipt-detail": "receiving"

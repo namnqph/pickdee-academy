@@ -9218,6 +9218,78 @@ render =
 
 </script>
 
+<script>
+/* Cộng tác viên (vợt): xem / gắn mã CTV cho đơn Zalo, điện thoại… (không giảm giá). RPC aff_admin_* */
+(function () {
+  const orderId = Number(new URLSearchParams(location.search).get("id") || 0);
+  if (!orderId) return;
+  const esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  const SRC = { code: "khách nhập mã", repeat: "khách cũ của CTV", admin: "Shop gắn" };
+  let info = null, busy = false;
+
+  async function load() {
+    if (!window.sb) return;
+    const r = await window.sb.rpc("aff_admin_order_info", { p_order_id: orderId });
+    if (r.error) return;
+    info = r.data || {};
+    render();
+  }
+
+  function render() {
+    const anchor = document.getElementById("orderDiscountInput");
+    let box = document.getElementById("affSection");
+    if (!info || !Number(info.qty) || !anchor) { if (box) box.remove(); return; }
+    const sec = anchor.closest("section");
+    if (!sec) return;
+    if (!box) {
+      box = document.createElement("section");
+      box.className = "section";
+      box.id = "affSection";
+      sec.after(box);
+    }
+    const locked = Number(info.discount) > 0;
+    const html =
+      '<div class="section-title">Cộng tác viên (vợt)</div>' +
+      '<div style="display:grid;gap:10px">' +
+      '<div style="font-size:14px;line-height:1.5;color:rgba(255,255,255,.85)">' +
+      (info.code
+        ? "Mã <b style=\"color:#d8ff45\">" + esc(info.code) + "</b> · " + esc(info.partner || "") + " · " + esc(SRC[info.source] || info.source || "") + " · " + Number(info.qty) + " vợt" +
+          (locked ? '<br><span style="color:rgba(255,255,255,.55)">Khách đã được giảm ' + Number(info.discount).toLocaleString("vi-VN") + "đ bằng mã này, không đổi được.</span>" : "")
+        : "Đơn chưa gắn mã cộng tác viên. Khách nói được ai giới thiệu thì nhập mã CTV (không giảm giá cho khách).") +
+      "</div>" +
+      (locked ? "" :
+        '<div style="display:flex;gap:8px">' +
+        '<input id="affAdminCode" maxlength="20" autocapitalize="characters" placeholder="Mã CTV, VD: PDTUAN" value="' + esc(info.code || "") + '" style="flex:1;min-width:0;min-height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#fff;font-size:16px;font-weight:800">' +
+        '<button type="button" id="affAdminSave" style="min-height:44px;padding:0 14px;border:0;border-radius:12px;background:#d8ff45;color:#071523;font-weight:900">Lưu</button>' +
+        (info.code ? '<button type="button" id="affAdminClear" style="min-height:44px;padding:0 12px;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:transparent;color:#fff;font-weight:800">Bỏ</button>' : "") +
+        "</div>") +
+      '<div id="affAdminMsg" style="font-size:13px;font-weight:700"></div></div>';
+    if (box.dataset.html !== html) { box.innerHTML = html; box.dataset.html = html; bind(); }
+  }
+
+  async function save(code) {
+    if (busy) return;
+    busy = true;
+    const m = document.getElementById("affAdminMsg");
+    m.style.color = ""; m.textContent = "Đang lưu…";
+    const r = await window.sb.rpc("aff_admin_set_order", { p_order_id: orderId, p_code: code });
+    busy = false;
+    if (r.data && r.data.ok) { await load(); const m2 = document.getElementById("affAdminMsg"); if (m2) { m2.style.color = "#d8ff45"; m2.textContent = r.data.cleared ? "✓ Đã bỏ mã" : "✓ Đã gắn mã " + r.data.code; } }
+    else { m.style.color = "#ffb3b3"; m.textContent = (r.data && r.data.reason) || (r.error && r.error.message) || "Chưa lưu được."; }
+  }
+
+  function bind() {
+    const s = document.getElementById("affAdminSave"), c = document.getElementById("affAdminClear");
+    if (s) s.onclick = function () { save(document.getElementById("affAdminCode").value); };
+    if (c) c.onclick = function () { save(""); };
+  }
+
+  // Trang vẽ lại nội dung đơn nhiều lần → giữ khung CTV sau khung chiết khấu
+  let t = null;
+  new MutationObserver(function () { clearTimeout(t); t = setTimeout(render, 150); }).observe(document.body, { childList: true, subtree: true });
+  load();
+})();
+</script>
 <script src="/shop-notifications.js?v=20261020-sales2"></script>
 
 <script src="/pd-app.js?v=20261020-nav1"></script>

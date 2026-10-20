@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <meta name="theme-color" content="#071523">
+  <title>Cộng tác viên | PickDee Shop</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #071523; color: #fff; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-text-size-adjust: 100%; }
+    button, input, a { font-family: inherit; touch-action: manipulation; }
+    .header { position: sticky; top: 0; z-index: 50; background: rgba(7,21,35,.97); border-bottom: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(15px); }
+    .header-inner { width: min(760px, calc(100% - 18px)); min-height: 60px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .brand { color: #fff; text-decoration: none; font-size: 20px; font-weight: 950; letter-spacing: -.04em; }
+    .brand span { color: #d8ff45; }
+    .back { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); text-decoration: none; font-size: 9px; font-weight: 950; }
+    main { width: min(760px, calc(100% - 18px)); margin: auto; padding: 18px 0 40px; }
+    .eyebrow { color: #d8ff45; font-size: 11px; font-weight: 950; letter-spacing: .14em; }
+    h1 { margin: 6px 0 14px; font-size: 30px; font-weight: 950; }
+    h2 { margin: 0 0 10px; font-size: 16px; font-weight: 900; }
+    .card { margin: 0 0 12px; padding: 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 16px; background: #0d2034; }
+    .muted { color: rgba(255,255,255,.55); font-size: 13px; line-height: 1.5; }
+    .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    input[type=month] { min-height: 42px; padding: 0 10px; border-radius: 11px; border: 1px solid rgba(255,255,255,.14); background: #071523; color: #fff; font-size: 16px; color-scheme: dark; }
+    .btn { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: #d8ff45; color: #071523; font-weight: 900; font-size: 13px; cursor: pointer; }
+    .btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.18); }
+    .total { font-size: 26px; font-weight: 950; color: #d8ff45; }
+    .row { padding: 12px 0; border-top: 1px solid rgba(255,255,255,.07); display: grid; gap: 6px; font-size: 14px; }
+    .row:first-child { border-top: 0; padding-top: 0; }
+    .row .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .row b.amt { color: #d8ff45; font-size: 17px; white-space: nowrap; }
+    .bank { padding: 9px 10px; border-radius: 10px; background: #071523; font-size: 13.5px; line-height: 1.5; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; background: rgba(255,255,255,.08); }
+    .tag.ok { background: rgba(216,255,69,.16); color: #d8ff45; }
+    .tag.bad { background: rgba(255,110,110,.14); color: #ffb3b3; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.07); text-align: left; vertical-align: top; }
+    th { color: rgba(255,255,255,.5); font-size: 11.5px; }
+    .hidden { display: none !important; }
+    #msg { margin: 0 0 12px; font-weight: 800; color: #ffb3b3; }
+  </style>
+  <link rel="manifest" href="/shop-admin.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Shop Admin">
+  <link rel="apple-touch-icon" href="/pickdee-shop-icon.png">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/shop-admin" class="brand">PickDee<span>Shop</span></a>
+    <a href="./shop-admin-promotions" class="back">← KHUYẾN MÃI</a>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">SHOP ADMIN</div>
+  <h1>Cộng tác viên vợt</h1>
+  <div id="msg"></div>
+
+  <div class="card">
+    <div class="bar">
+      <input type="month" id="month">
+      <span class="muted">Tháng hoàn tất đơn (đơn đủ 7 ngày sau khi khách nhận). Chuyển khoản ngày 5 tháng sau.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cần chuyển tháng <span id="mLabel"></span></h2>
+    <div class="total" id="mTotal">0đ</div>
+    <div class="muted" id="mSub"></div>
+    <div id="rows" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Đơn đang chờ (chưa đủ điều kiện)</h2>
+    <div id="pendEmpty" class="muted">Không có.</div>
+    <table id="pendTable" class="hidden">
+      <thead><tr><th>Đơn</th><th>Mã CTV</th><th>Vợt</th><th>Tình trạng</th></tr></thead>
+      <tbody id="pendBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Danh sách cộng tác viên (<span id="pCount">0</span>)</h2>
+    <div id="partners"></div>
+  </div>
+
+  <p class="muted">Trang cho cộng tác viên: <a href="/cong-tac-vien" style="color:#d8ff45">pickdee.vn/cong-tac-vien</a>. Gắn mã cho đơn Zalo/điện thoại: mở chi tiết đơn → mục "Cộng tác viên (vợt)".</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const sb = window.sb;
+  const $ = function (id) { return document.getElementById(id); };
+  const money = function (n) { return Number(n || 0).toLocaleString("vi-VN") + "đ"; };
+  const esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  const PAY = { paid: "đã thanh toán", unpaid: "chưa thanh toán", pending: "chờ" };
+  const ORD = { new: "đơn mới", confirmed: "đã xác nhận", packing: "đóng gói", shipping: "đang giao", completed: "hoàn tất" };
+
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - (now.getDate() <= 10 ? 1 : 0), 1);
+  $("month").value = prev.getFullYear() + "-" + String(prev.getMonth() + 1).padStart(2, "0");
+  $("month").addEventListener("change", load);
+
+  async function rpc(name, args) {
+    const r = await sb.rpc(name, args);
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  async function load() {
+    $("msg").textContent = "";
+    let d;
+    try { d = await rpc("aff_admin_month", { p_month: $("month").value + "-01" }); }
+    catch (e) {
+      $("msg").innerHTML = "Chỉ tài khoản chủ Shop xem được trang này. <a href=\"/login?next=%2Fshop-admin-affiliate\" style=\"color:#d8ff45\">Đăng nhập</a>";
+      return;
+    }
+    const m = $("month").value.split("-");
+    $("mLabel").textContent = m[1] + "/" + m[0];
+    const rows = d.rows || [];
+    const unpaid = rows.filter(function (r) { return !r.paid_at; });
+    $("mTotal").textContent = money(unpaid.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0));
+    $("mSub").textContent = rows.length
+      ? unpaid.length + " CTV chưa chuyển · " + (rows.length - unpaid.length) + " đã chuyển · tổng tháng " + money(rows.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0))
+      : "Tháng này chưa có vợt đủ điều kiện.";
+    $("rows").innerHTML = rows.map(function (r) {
+      const under = Number(r.amount) < 100000;
+      return '<div class="row"><div class="top"><div><b>' + esc(r.full_name) + "</b> · " + esc(r.code) + (r.kind === "coach" ? ' <span class="tag">Coach</span>' : "") +
+        '<div class="muted">' + Number(r.qty) + " vợt × " + money(r.rate) + " · " + esc(r.orders) + "</div></div>" +
+        '<b class="amt">' + money(r.amount) + "</b></div>" +
+        '<div class="bank">' + (r.bank_account
+          ? esc(r.bank_name) + " · <b>" + esc(r.bank_account) + "</b> · " + esc(r.bank_holder) + ' <button class="btn ghost" data-copy="' + esc(r.bank_account) + '" type="button" style="min-height:30px;margin-left:6px">Chép STK</button>'
+          : '<span class="tag bad">Chưa có tài khoản nhận tiền</span> SĐT ' + esc(r.phone)) + "</div>" +
+        (under ? '<div class="muted">Dưới 100.000đ → theo chính sách cộng dồn sang tháng sau.</div>' : "") +
+        "<div>" + (r.paid_at
+          ? '<span class="tag ok">Đã chuyển ' + new Date(r.paid_at).toLocaleDateString("vi-VN") + '</span> <button class="btn ghost" type="button" data-unpay="' + r.partner_id + '" style="min-height:30px">Bỏ đánh dấu</button>'
+          : '<button class="btn" type="button" data-pay="' + r.partner_id + '">Đánh dấu đã chuyển ' + money(r.amount) + "</button>") +
+        "</div></div>";
+    }).join("");
+
+    const pend = d.pending || [];
+    $("pendEmpty").classList.toggle("hidden", pend.length > 0);
+    $("pendTable").classList.toggle("hidden", !pend.length);
+    $("pendBody").innerHTML = pend.map(function (o) {
+      const st = o.payment_status !== "paid" ? PAY[o.payment_status] || o.payment_status
+        : o.order_status !== "completed" ? ORD[o.order_status] || o.order_status
+        : "chờ đủ 7 ngày";
+      return "<tr><td>" + esc(o.order_code) + "</td><td>" + esc(o.code) + "</td><td>" + Number(o.qty) + "</td><td>" + esc(st) + "</td></tr>";
+    }).join("");
+
+    const ps = d.partners || [];
+    $("pCount").textContent = ps.length;
+    $("partners").innerHTML = ps.length ? ps.map(function (p) {
+      return '<div class="row"><div class="top"><div><b>' + esc(p.full_name) + "</b> · " + esc(p.code) + (p.kind === "coach" ? ' <span class="tag">Coach</span>' : "") +
+        ' <span class="tag ' + (p.status === "active" ? "ok" : "bad") + '">' + (p.status === "active" ? "đang hoạt động" : "đã khoá") + "</span>" +
+        '<div class="muted">' + esc(p.phone) + " · " + Number(p.orders) + " đơn" + (p.channel ? " · " + esc(p.channel) : "") + "</div></div>" +
+        '<button class="btn ghost" type="button" data-status="' + p.id + '" data-to="' + (p.status === "active" ? "locked" : "active") + '">' + (p.status === "active" ? "Khoá mã" : "Mở mã") + "</button></div></div>";
+    }).join("") : '<div class="muted">Chưa có ai đăng ký.</div>';
+  }
+
+  document.addEventListener("click", async function (e) {
+    const b = e.target.closest("button");
+    if (!b) return;
+    try {
+      if (b.dataset.copy) {
+        await navigator.clipboard.writeText(b.dataset.copy);
+        b.textContent = "✓ Đã chép";
+        return;
+      }
+      if (b.dataset.pay || b.dataset.unpay) {
+        const paid = !!b.dataset.pay;
+        if (!paid && !confirm("Bỏ đánh dấu đã chuyển?")) return;
+        b.disabled = true;
+        const r = await rpc("aff_admin_mark_paid", { p_partner_id: Number(b.dataset.pay || b.dataset.unpay), p_month: $("month").value + "-01", p_paid: paid });
+        if (r && r.ok === false) $("msg").textContent = r.reason;
+        return load();
+      }
+      if (b.dataset.status) {
+        if (b.dataset.to === "locked" && !confirm("Khoá mã này? Khách nhập mã sẽ không được giảm, đơn mới không tính cho CTV.")) return;
+        b.disabled = true;
+        await rpc("aff_admin_set_status", { p_partner_id: Number(b.dataset.status), p_status: b.dataset.to });
+        return load();
+      }
+    } catch (err) { $("msg").textContent = err.message || "Lỗi, thử lại."; b.disabled = false; }
+  });
+
+  if (!sb) { $("msg").textContent = "Không tải được hệ thống."; return; }
+  load();
+})();
+</script>
+<script src="/shop-admin-appnav.js?v=20261020-aff1"></script>
+<script src="/pd-app.js?v=20261020-nav1"></script>
+</body>
+</html>
