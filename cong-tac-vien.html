@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+  <meta name="theme-color" content="#071523">
+  <title>Cộng tác viên bán vợt | PickDee</title>
+  <meta name="description" content="Giới thiệu khách mua vợt Pickleball tại PickDee, nhận 150.000đ mỗi vợt. Đăng ký miễn phí.">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #071523; color: #fff; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+    button, input, select, textarea, a { font-family: inherit; touch-action: manipulation; }
+    main { width: min(680px, calc(100% - 24px)); margin: 0 auto; padding: 18px 0 calc(40px + env(safe-area-inset-bottom)); }
+    .eyebrow { color: #d8ff45; font-size: 12px; font-weight: 900; letter-spacing: .14em; }
+    h1 { margin: 6px 0 8px; font-size: 28px; line-height: 1.15; font-weight: 950; }
+    h2 { margin: 0 0 10px; font-size: 17px; font-weight: 900; }
+    .intro { margin: 0 0 16px; color: rgba(255,255,255,.72); font-size: 15px; line-height: 1.55; }
+    .card { margin: 0 0 14px; padding: 16px; border: 1px solid rgba(255,255,255,.09); border-radius: 18px; background: #0d2034; }
+    .hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 14px; }
+    .hero div { padding: 12px 8px; border-radius: 14px; background: #0f2a43; text-align: center; font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.35; }
+    .hero b { display: block; color: #d8ff45; font-size: 19px; font-weight: 950; margin-bottom: 2px; }
+    ul.rules { margin: 0; padding-left: 18px; color: rgba(255,255,255,.8); font-size: 14px; line-height: 1.6; }
+    .field { margin: 0 0 12px; }
+    .field label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 900; letter-spacing: .06em; color: rgba(255,255,255,.75); }
+    .field input { width: 100%; padding: 13px 14px; border: 1px solid rgba(255,255,255,.14); border-radius: 13px; background: #071523; color: #fff; font-size: 16px; }
+    .field .hint { margin-top: 5px; font-size: 12px; color: rgba(255,255,255,.5); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .agree { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 14px; font-size: 14px; line-height: 1.45; color: rgba(255,255,255,.85); }
+    .agree input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: #d8ff45; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 50px; padding: 0 16px; border: 0; border-radius: 14px; background: #d8ff45; color: #071523; font-size: 15px; font-weight: 950; cursor: pointer; text-decoration: none; }
+    .btn.ghost { background: transparent; color: #d8ff45; border: 1px solid rgba(216,255,69,.5); }
+    .btn.sm { width: auto; min-height: 38px; padding: 0 14px; font-size: 13px; border-radius: 11px; }
+    .btn:disabled { opacity: .55; }
+    .msg { margin-top: 10px; font-size: 14px; font-weight: 700; line-height: 1.45; }
+    .msg.bad { color: #ffb3b3; } .msg.ok { color: #d8ff45; }
+    .code { font-size: 30px; font-weight: 950; color: #d8ff45; letter-spacing: .04em; }
+    .linkbox { margin: 8px 0 10px; padding: 11px 12px; border-radius: 12px; background: #071523; font-size: 14px; word-break: break-all; color: rgba(255,255,255,.85); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stats div { padding: 12px 8px; border-radius: 14px; background: #0f2a43; text-align: center; font-size: 12px; color: rgba(255,255,255,.65); }
+    .stats b { display: block; font-size: 20px; color: #fff; margin-bottom: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,.07); text-align: left; vertical-align: top; }
+    th { color: rgba(255,255,255,.5); font-weight: 800; font-size: 12px; }
+    td.r, th.r { text-align: right; }
+    .st { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: rgba(255,255,255,.08); white-space: nowrap; }
+    .st.eligible { background: rgba(216,255,69,.16); color: #d8ff45; }
+    .st.cancelled { background: rgba(255,110,110,.14); color: #ffb3b3; }
+    .warn { padding: 12px 14px; border-radius: 14px; background: rgba(255,190,60,.12); color: #ffd98a; font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
+    .muted { color: rgba(255,255,255,.55); font-size: 13px; line-height: 1.5; }
+    .tpl { white-space: pre-wrap; font-size: 14px; line-height: 1.5; padding: 12px; border-radius: 12px; background: #071523; color: rgba(255,255,255,.88); margin: 0 0 10px; }
+    details summary { cursor: pointer; font-weight: 900; font-size: 15px; }
+    details[open] summary { margin-bottom: 10px; }
+    .hidden { display: none !important; }
+    @media (min-width: 760px) { h1 { font-size: 34px; } main { padding-top: 28px; } }
+  </style>
+  <link rel="manifest" href="/shop.webmanifest">
+  <link rel="apple-touch-icon" href="/pickdee-shop-icon.png">
+</head>
+<body>
+
+<header class="header" id="shopPublicHeader"></header>
+<script src="./shop-public-nav.js?v=20261020-aff1"></script>
+
+<main>
+  <div class="eyebrow">PICKDEE · CỘNG TÁC VIÊN</div>
+  <h1>Giới thiệu vợt,<br>nhận 150.000đ mỗi vợt</h1>
+
+  <div id="loading" class="muted">Đang tải…</div>
+
+  <!-- ĐĂNG KÝ -->
+  <section id="joinView" class="hidden">
+    <p class="intro">Ai cũng tham gia được, miễn phí. Anh/chị nhận mã riêng, gửi cho người quen. Khách mua vợt bằng mã của anh/chị thì anh/chị nhận hoa hồng.</p>
+    <div class="hero">
+      <div><b>150k</b>mỗi vợt bán được</div>
+      <div><b>200k</b>từ vợt thứ 5 trong tháng (tính cả tháng)</div>
+      <div><b>−50k</b>cho khách mua vợt lần đầu</div>
+    </div>
+
+    <div class="card">
+      <h2>Chính sách gọn</h2>
+      <ul class="rules">
+        <li>Tính vợt khách đặt trên <b>pickdee.vn</b> bằng mã hoặc link của anh/chị (link được nhớ 30 ngày). Khách đã dùng mã của anh/chị thì đơn vợt tiếp theo trong 90 ngày vẫn tính cho anh/chị.</li>
+        <li>Không tính: tự mua bằng mã của mình, đơn huỷ/hoàn, đơn giá sỉ. Hiện chỉ áp dụng cho vợt, chưa áp dụng phụ kiện.</li>
+        <li>Hoa hồng được xác nhận <b>7 ngày sau khi khách nhận hàng</b>, chuyển khoản <b>ngày 5 hằng tháng</b>. Dưới 100.000đ thì cộng dồn sang tháng sau.</li>
+        <li>Giới thiệu đúng chính sách PickDee: vợt chuyển khoản trước, freeship; bảo hành 3 tháng lỗi nhà sản xuất; đồng kiểm, không cho thử; giao từ kho Bắc Giang (Hà Nội 1–2 ngày, tỉnh 2–3 ngày).</li>
+        <li><b>Không được:</b> tự hứa giảm giá/quà ngoài chính sách, chạy quảng cáo bằng tên "PickDee", giả làm PickDee, spam. Vi phạm: huỷ hoa hồng đơn đó; tái phạm khoá mã.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="coachBox">
+      <h2>Anh/chị là Coach PickDee?</h2>
+      <p class="muted" id="coachText">Đăng nhập tài khoản Coach, mã sẽ được cấp tự động khi hồ sơ Coach đầy đủ.</p>
+      <a class="btn ghost" id="coachLogin" href="/login?next=%2Fcong-tac-vien">Đăng nhập Coach</a>
+    </div>
+
+    <form class="card" id="joinForm" autocomplete="on">
+      <h2>Đăng ký cộng tác viên</h2>
+      <div class="field"><label for="fName">HỌ VÀ TÊN *</label><input id="fName" autocomplete="name" required maxlength="80" placeholder="Nguyễn Văn A"></div>
+      <div class="row2">
+        <div class="field"><label for="fPhone">SỐ ĐIỆN THOẠI *</label><input id="fPhone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="15" placeholder="09xxxxxxxx"></div>
+        <div class="field"><label for="fEmail">EMAIL</label><input id="fEmail" type="email" autocomplete="email" maxlength="120" placeholder="Không bắt buộc"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="fBank">NGÂN HÀNG *</label><input id="fBank" required maxlength="40" placeholder="VD: Vietcombank"></div>
+        <div class="field"><label for="fAcc">SỐ TÀI KHOẢN *</label><input id="fAcc" inputmode="numeric" required maxlength="25"></div>
+      </div>
+      <div class="field"><label for="fHolder">TÊN CHỦ TÀI KHOẢN *</label><input id="fHolder" required maxlength="80" placeholder="NGUYEN VAN A"><div class="hint">Tài khoản phải chính chủ, tên trùng họ tên ở trên.</div></div>
+      <div class="field"><label for="fChannel">ANH/CHỊ BÁN QUA ĐÂU?</label><input id="fChannel" maxlength="300" placeholder="Link Facebook/TikTok, nhóm Zalo, CLB, sân…"></div>
+      <div class="field"><label for="fWant">MÃ MONG MUỐN</label><input id="fWant" maxlength="12" autocapitalize="characters" placeholder="Không bắt buộc, VD: TUANPICKLE"><div class="hint">4–12 chữ/số. Để trống hệ thống tự tạo (VD: PDTUAN).</div></div>
+      <label class="agree"><input type="checkbox" id="fAgree" required><span>Tôi đã đọc và đồng ý chính sách cộng tác viên PickDee ở trên.</span></label>
+      <button class="btn" id="joinBtn" type="submit">ĐĂNG KÝ NHẬN MÃ</button>
+      <div class="msg" id="joinMsg"></div>
+    </form>
+  </section>
+
+  <!-- BẢNG ĐIỀU KHIỂN -->
+  <section id="dashView" class="hidden">
+    <div class="warn hidden" id="lockedWarn">Mã của anh/chị đang tạm khoá, khách nhập mã sẽ không được áp dụng. Liên hệ PickDee 0926 629 966.</div>
+
+    <div class="card">
+      <div class="muted" id="dName"></div>
+      <div class="code" id="dCode"></div>
+      <div class="muted">Khách nhập mã này khi đặt vợt (giảm 50.000đ cho khách mua vợt lần đầu), hoặc bấm link:</div>
+      <div class="linkbox" id="dLink"></div>
+      <div class="actions">
+        <button class="btn sm" id="copyLink" type="button">Sao chép link</button>
+        <button class="btn sm ghost" id="copyCode" type="button">Sao chép mã</button>
+        <button class="btn sm ghost hidden" id="shareBtn" type="button">Chia sẻ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Tháng này</h2>
+      <div class="stats">
+        <div><b id="sEligible">0</b>vợt đủ điều kiện</div>
+        <div><b id="sPending">0</b>vợt đang chờ</div>
+        <div><b id="sAmount">0đ</b>hoa hồng</div>
+      </div>
+      <div class="muted" id="sNote" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Đơn vợt của anh/chị</h2>
+      <div id="ordersEmpty" class="muted">Chưa có đơn nào. Gửi link cho người quen đang tìm vợt nhé!</div>
+      <table id="ordersTable" class="hidden">
+        <thead><tr><th>Đơn</th><th>Khách</th><th class="r">Vợt</th><th class="r">Trạng thái</th></tr></thead>
+        <tbody id="ordersBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="monthsCard">
+      <h2>Hoa hồng theo tháng</h2>
+      <table>
+        <thead><tr><th>Tháng</th><th class="r">Vợt</th><th class="r">Hoa hồng</th><th class="r">Chuyển khoản</th></tr></thead>
+        <tbody id="monthsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Tài khoản nhận tiền</h2>
+      <div id="bankShow" class="muted"></div>
+      <form id="bankForm" class="hidden" style="margin-top:10px">
+        <div class="row2">
+          <div class="field"><label for="bBank">NGÂN HÀNG</label><input id="bBank" maxlength="40" required></div>
+          <div class="field"><label for="bAcc">SỐ TÀI KHOẢN</label><input id="bAcc" inputmode="numeric" maxlength="25" required></div>
+        </div>
+        <div class="field"><label for="bHolder">TÊN CHỦ TÀI KHOẢN</label><input id="bHolder" maxlength="80" required></div>
+        <button class="btn" type="submit">LƯU TÀI KHOẢN</button>
+        <div class="msg" id="bankMsg"></div>
+      </form>
+      <button class="btn sm ghost" id="bankEdit" type="button" style="margin-top:10px">Đổi tài khoản</button>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Tin nhắn mẫu để gửi khách</summary>
+        <div class="tpl" id="tpl1"></div>
+        <button class="btn sm" type="button" data-copy="tpl1">Sao chép tin nhắn</button>
+        <p class="muted" style="margin-top:12px">Khách hỏi về hoá đơn VAT, nguồn gốc, chính hãng hay khuyến mãi khác thì anh/chị đừng tự trả lời. Gửi khách nhắn PickDee 0926 629 966 hoặc chat trên pickdee.vn.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Lưu link riêng của anh/chị</h2>
+      <p class="muted">Mở link này để xem lại đơn và hoa hồng trên máy khác. <b>Không gửi link này cho ai</b> (khác với link giới thiệu ở trên).</p>
+      <div class="linkbox" id="dPrivate"></div>
+      <button class="btn sm ghost" id="copyPrivate" type="button">Sao chép link riêng</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const sb = window.sb;
+  const TOKEN_KEY = "pickdee_aff_token";
+  const $ = function (id) { return document.getElementById(id); };
+  const money = function (n) { return Number(n || 0).toLocaleString("vi-VN") + "đ"; };
+  const esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  const ST = { unpaid: "Chờ khách thanh toán", processing: "Đang xử lý/giao", waiting: "Chờ đủ 7 ngày", eligible: "Đủ điều kiện", cancelled: "Đã huỷ" };
+  let token = "";
+
+  function show(view) {
+    $("loading").classList.add("hidden");
+    $("joinView").classList.toggle("hidden", view !== "join");
+    $("dashView").classList.toggle("hidden", view !== "dash");
+  }
+
+  function copy(text, btn) {
+    const done = function () { const t = btn.textContent; btn.textContent = "✓ Đã chép"; setTimeout(function () { btn.textContent = t; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () { prompt("Sao chép:", text); });
+    else prompt("Sao chép:", text);
+  }
+
+  function saveToken(t) {
+    token = t;
+    try { localStorage.setItem(TOKEN_KEY, t); } catch (_) {}
+    const u = new URL(location.href);
+    u.searchParams.set("t", t);
+    history.replaceState(null, "", u.pathname + u.search);
+  }
+
+  async function loadDash() {
+    const r = await sb.rpc("aff_dashboard", { p_token: token });
+    const d = r.data;
+    if (!d || !d.ok) {
+      try { localStorage.removeItem(TOKEN_KEY); } catch (_) {}
+      token = "";
+      return false;
+    }
+    const p = d.partner;
+    const link = location.origin + "/shop?ref=" + p.code;
+    $("dName").textContent = p.full_name + (p.kind === "coach" ? " · Coach PickDee" : "");
+    $("dCode").textContent = p.code;
+    $("dLink").textContent = link;
+    $("dPrivate").textContent = location.origin + "/cong-tac-vien?t=" + token;
+    $("lockedWarn").classList.toggle("hidden", p.status === "active");
+    $("copyLink").onclick = function () { copy(link, this); };
+    $("copyCode").onclick = function () { copy(p.code, this); };
+    $("copyPrivate").onclick = function () { copy($("dPrivate").textContent, this); };
+    if (navigator.share) {
+      $("shareBtn").classList.remove("hidden");
+      $("shareBtn").onclick = function () { navigator.share({ title: "Vợt Pickleball PickDee", text: "Nhập mã " + p.code + " giảm 50.000đ khi mua vợt lần đầu tại PickDee", url: link }).catch(function () {}); };
+    }
+    $("tpl1").textContent =
+      "Vợt Pickleball ESS/ON giá 2.200.000đ, tặng kèm áo, freeship toàn quốc (Hà Nội 1–2 ngày, tỉnh 2–3 ngày). Bảo hành 3 tháng lỗi nhà sản xuất, đồng kiểm khi nhận.\n" +
+      "Nhập mã " + p.code + " khi đặt để được giảm 50.000đ (khách mua vợt lần đầu tại PickDee).\n" +
+      "Đặt tại đây: " + link;
+
+    // Đơn
+    const orders = d.orders || [];
+    $("ordersEmpty").classList.toggle("hidden", orders.length > 0);
+    $("ordersTable").classList.toggle("hidden", !orders.length);
+    $("ordersBody").innerHTML = orders.map(function (o) {
+      const dt = new Date(o.created_at).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+      return "<tr><td>" + esc(o.order_code) + '<div class="muted">' + dt + (o.source === "repeat" ? " · khách cũ" : "") + "</div></td><td>" + esc(o.customer) +
+        '</td><td class="r">' + Number(o.qty || 0) + '</td><td class="r"><span class="st ' + esc(o.status) + '">' + esc(ST[o.status] || o.status) + "</span></td></tr>";
+    }).join("");
+
+    // Tháng này
+    const now = new Date();
+    const key = String(now.getMonth() + 1).padStart(2, "0") + "/" + now.getFullYear();
+    const cur = (d.months || []).find(function (m) { return m.month === key; }) || { qty: 0, amount: 0, rate: 150000 };
+    const pending = orders.filter(function (o) { return ["unpaid", "processing", "waiting"].indexOf(o.status) >= 0; })
+      .reduce(function (n, o) { return n + Number(o.qty || 0); }, 0);
+    $("sEligible").textContent = cur.qty;
+    $("sPending").textContent = pending;
+    $("sAmount").textContent = money(cur.amount);
+    $("sNote").textContent = cur.qty >= 5
+      ? "Đã đạt mức 200.000đ/vợt cho cả tháng."
+      : "Còn " + (5 - cur.qty) + " vợt nữa để mọi vợt trong tháng tính 200.000đ.";
+
+    // Theo tháng
+    const months = d.months || [];
+    $("monthsCard").classList.toggle("hidden", !months.length);
+    $("monthsBody").innerHTML = months.map(function (m) {
+      return "<tr><td>" + esc(m.month) + '</td><td class="r">' + m.qty + '</td><td class="r">' + money(m.amount) + '</td><td class="r">' +
+        (m.paid_at ? '<span class="st eligible">Đã chuyển</span>' : '<span class="st">Ngày 5 tháng sau</span>') + "</td></tr>";
+    }).join("");
+
+    // Ngân hàng
+    $("bankShow").textContent = p.bank ? p.bank : "Chưa có tài khoản nhận tiền. Anh/chị điền để PickDee chuyển hoa hồng.";
+    $("bankForm").classList.toggle("hidden", !!p.bank);
+    $("bankEdit").classList.toggle("hidden", !p.bank);
+    if (!p.bank) $("bHolder").placeholder = p.full_name.toUpperCase();
+    show("dash");
+    return true;
+  }
+
+  $("bankEdit").onclick = function () { $("bankForm").classList.remove("hidden"); this.classList.add("hidden"); };
+  $("bankForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const m = $("bankMsg");
+    m.className = "msg"; m.textContent = "Đang lưu…";
+    const r = await sb.rpc("aff_update_bank", { p_token: token, p_bank_name: $("bBank").value, p_bank_account: $("bAcc").value, p_bank_holder: $("bHolder").value });
+    if (r.data && r.data.ok) { m.className = "msg ok"; m.textContent = "✓ Đã lưu"; await loadDash(); }
+    else { m.className = "msg bad"; m.textContent = (r.data && r.data.reason) || "Chưa lưu được, anh/chị thử lại."; }
+  });
+
+  document.addEventListener("click", function (e) {
+    const b = e.target.closest("[data-copy]");
+    if (b) copy($(b.getAttribute("data-copy")).textContent, b);
+  });
+
+  $("joinForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const m = $("joinMsg"), btn = $("joinBtn");
+    if (!$("fAgree").checked) { m.className = "msg bad"; m.textContent = "Anh/chị cần đồng ý chính sách."; return; }
+    btn.disabled = true; m.className = "msg"; m.textContent = "Đang đăng ký…";
+    const r = await sb.rpc("aff_register", {
+      p_full_name: $("fName").value, p_phone: $("fPhone").value, p_email: $("fEmail").value,
+      p_bank_name: $("fBank").value, p_bank_account: $("fAcc").value, p_bank_holder: $("fHolder").value,
+      p_channel: $("fChannel").value, p_want_code: $("fWant").value
+    });
+    btn.disabled = false;
+    if (r.data && r.data.ok) { saveToken(r.data.token); await loadDash(); scrollTo(0, 0); }
+    else { m.className = "msg bad"; m.textContent = (r.data && r.data.reason) || (r.error && r.error.message) || "Chưa đăng ký được, anh/chị thử lại."; }
+  });
+  $("fName").addEventListener("blur", function () { if (!$("fHolder").value) $("fHolder").value = this.value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toUpperCase(); });
+
+  async function coachFlow() {
+    let s = null;
+    try { s = (await sb.auth.getSession()).data.session; } catch (_) {}
+    if (!s) return false;
+    const r = await sb.rpc("aff_my_partner");
+    const d = r.data || {};
+    if (d.ok) { saveToken(d.token); return loadDash(); }
+    if (d.reason === "coach_missing") {
+      $("coachText").innerHTML = "Hồ sơ Coach của anh/chị còn thiếu: <b>" + esc((d.missing || []).length) + " mục</b>. Hoàn tất hồ sơ là được cấp mã tự động.";
+      $("coachLogin").textContent = "Hoàn tất hồ sơ Coach";
+      $("coachLogin").href = "/coach";
+    } else if (d.reason === "not_coach") {
+      $("coachBox").classList.add("hidden");
+    }
+    return false;
+  }
+
+  (async function start() {
+    if (!sb) { $("loading").textContent = "Không tải được, anh/chị tải lại trang."; return; }
+    const q = new URLSearchParams(location.search).get("t");
+    try { token = q || localStorage.getItem(TOKEN_KEY) || ""; } catch (_) { token = q || ""; }
+    if (token) {
+      if (q) { try { localStorage.setItem(TOKEN_KEY, q); } catch (_) {} }
+      if (await loadDash()) return;
+    }
+    if (await coachFlow()) return;
+    show("join");
+  })();
+})();
+</script>
+</body>
+</html>
