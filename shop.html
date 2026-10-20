@@ -7942,7 +7942,26 @@ const resultCount =
         bar.style.top = top + "px";
         bar.style.paddingTop = top ? "" : "calc(9px + env(safe-area-inset-top))";
         bar.classList.toggle("show", categoriesBox.getBoundingClientRect().bottom < top);
+        spyChip(top + bar.offsetHeight);
       };
+      // Chế độ "Tất cả" chia khu: chip sáng theo khu đang cuộn tới (khu có đầu đã qua dưới thanh chip)
+      const spyChip = function (edge) {
+        if (!grid.classList.contains("is-grouped")) return;
+        let current = "";
+        grid.querySelectorAll(".shop-group").forEach(function (sec) {
+          if (sec.getBoundingClientRect().top <= edge + 24) current = sec.id.replace(/^group-/, "");
+        });
+        if (bar.dataset.spy === current) return;
+        bar.dataset.spy = current;
+        let lit = null;
+        bar.querySelectorAll(".shop-chip").forEach(function (chip) {
+          const on = chip.dataset.category === current;
+          chip.classList.toggle("active", on);
+          if (on) lit = chip;
+        });
+        if (lit && bar.classList.contains("show")) bar.scrollTo({ left: lit.offsetLeft - 12, behavior: "smooth" });
+      };
+      bar._spy = function () { bar.dataset.spy = "-"; place(); };
       const later = function () {
         if (!ticking) { ticking = true; requestAnimationFrame(place); }
       };
@@ -7971,6 +7990,7 @@ const resultCount =
 
     const active = bar.querySelector(".shop-chip.active");
     if (active) bar.scrollLeft = active.offsetLeft - 12;
+    if (bar._spy) bar._spy();
 
   }
 
