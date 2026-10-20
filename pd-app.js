@@ -67,7 +67,9 @@
     "table.pd-cards td[colspan]::before{display:none}",
     "table.pd-cards tr:has(td[colspan]){background:transparent !important;border-style:dashed !important;box-shadow:none}",
     ".table-wrap:has(table.pd-cards),div:has(>table.pd-cards){overflow:visible !important;background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important}",
-    "}"
+    "}",
+    /* cổng Coach/HV trên điện thoại: menu đáy đã có → ẩn hàng nút trùng ở đầu trang */
+    "@media(max-width:759px){body:has(#pdPortalNav) .coach-nav{display:none !important}}"
   ].join("\n");
   var st = document.createElement("style");
   st.id = "pdAppCss";
@@ -207,7 +209,25 @@
     });
   }
 
+  /* ---------- iPhone: bật vùng an toàn để menu đáy không bị thanh Home đè ---------- */
+  (function () {
+    var vp = document.querySelector('meta[name="viewport"]');
+    if (vp && !/viewport-fit/.test(vp.content)) vp.content += ", viewport-fit=cover";
+  })();
+
+  /* ---------- trang Coach/HV thiếu menu đáy → tự gắn pd-portal-appnav.js ---------- */
+  function portalNav() {
+    var page = location.pathname.replace(/^\/+|\/+$/g, "").replace(/\.html$/, "");
+    if (!/^(coach|student)-/.test(page) || /^(coach-(activate|detail|work)|student-(register|detail))$/.test(page)) return;
+    if (window.__pdPortalNav || document.getElementById("pdlBottom") || document.querySelector('script[src*="pd-portal-appnav"]')) return;
+    var s = document.createElement("script");
+    s.src = "/pd-portal-appnav.js?v=20261020-1";
+    s.onload = function () { setTimeout(upgradeNav, 0); };
+    document.head.appendChild(s);
+  }
+
   function boot() {
+    portalNav();
     var h = document.querySelector("header.topbar") || document.querySelector("body>header");
     if (h && getComputedStyle(h).position === "static") h.classList.add("pd-app-sticky");
     scan(); onScroll();

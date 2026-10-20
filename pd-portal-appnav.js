@@ -34,10 +34,10 @@
       "coach-session-requests": "sessions", "coach-cover-requests": "sessions",
       "coach-students": "students", "coach-student-detail": "students", "coach-student-notes": "students",
       "coach-my-work": "work",
-      "coach-profile": "me", "coach-change-password": "me",
+      "coach-profile": "me", "coach-change-password": "me", "coach-teach-courts": "me",
       "student-sessions": "sessions",
       "student-book-session": "book", "student-session-requests": "book",
-      "student-payments": "pay", "student-registrations": "pay"
+      "student-payments": "pay", "student-registrations": "pay", "student-payment-checkout": "pay"
     };
 
     var items = MENUS[isCoach ? "coach" : "student"];
