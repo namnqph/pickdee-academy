@@ -1650,8 +1650,11 @@ if (
     };
   }
 
+  // Icon quả bóng pickleball (vàng chanh, có lỗ) — không có emoji tương ứng
+  const PDJ_BALL = '<svg class="pdj-ball" viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" style="vertical-align:-0.22em;margin-right:5px"><defs><radialGradient id="pdjBallG" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#f4ff7a"/><stop offset=".6" stop-color="#cfe82a"/><stop offset="1" stop-color="#9dbb12"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="url(#pdjBallG)" stroke="#7f9a0c" stroke-width=".6"/><g fill="#3f4f06" fill-opacity=".85"><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="6.2" r="1.5"/><circle cx="12" cy="17.8" r="1.5"/><circle cx="6.9" cy="9.1" r="1.45"/><circle cx="17.1" cy="9.1" r="1.45"/><circle cx="6.9" cy="14.9" r="1.45"/><circle cx="17.1" cy="14.9" r="1.45"/><ellipse cx="3.1" cy="12" rx=".6" ry="1.1"/><ellipse cx="20.9" cy="12" rx=".6" ry="1.1"/><ellipse cx="12" cy="2.6" rx="1.1" ry=".55"/><ellipse cx="12" cy="21.4" rx="1.1" ry=".55"/></g></svg>';
+  const pdjChipHtml = function (label, act) { return (act === "ball" ? PDJ_BALL : "") + botEsc(label); };
   const PDJ_HOME = [
-    ["🏓 Chọn vợt", "paddle"], ["🟡 Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
+    ["🏓 Chọn vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
     ["🦵 Bảo hộ & phục hồi", "body"], ["🛡️ Phụ kiện cho vợt", "care"], ["🎁 Mua làm quà", "gift"],
     ["📦 Tra cứu đơn hàng", "lookup"]
   ];
@@ -1915,7 +1918,7 @@ if (
       const b = document.createElement("button");
       b.type = "button";
       b.className = "pd-bot-chip";
-      b.textContent = c[0];
+      b.innerHTML = pdjChipHtml(c[0], c[1]);
       b.addEventListener("click", function () { pdjStep(c[1], c[0]); });
       box.appendChild(b);
     });
@@ -3429,8 +3432,8 @@ if (
       box.id = "pdTease";
       box.setAttribute("role", "status");
       const quick = PDJ && BOT_PAGE === "shop"
-        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["🟡 Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"]].map(function (c) {
-          return '<span role="button" data-act="' + c[1] + '">' + c[0] + "</span>";
+        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"]].map(function (c) {
+          return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
         : '<br><span class="pd-tease-go">Hỏi ngay →</span>';
       box.innerHTML = text() + quick + '<button type="button" class="pd-tease-x" aria-label="Đóng">×</button>';
