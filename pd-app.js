@@ -27,8 +27,14 @@
     "body>header .brand,header.topbar .brand,body>header>a,header.topbar>a{white-space:nowrap}",
     /* nút "Cài app" nổi: ẩn khi cuộn xuống, hiện khi cuộn lên; chừa chỗ cuối trang */
     "#pdpInstall{transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1) !important}",
+    "#pickdeeSupportRoot{transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1)}",
+    "@media(max-width:760px){#pickdeeSupportRoot.pd-hide{opacity:0;pointer-events:none;transform:translateY(24px)}}",
     "#pdpInstall.pd-hide{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(24px) !important}",
     "@media(max-width:759px){body.pd-has-install{padding-bottom:calc(136px + env(safe-area-inset-bottom)) !important}}",
+    /* Shop Admin – Đơn hàng: 2 nút nổi (Thả ảnh đơn, Tạo đơn) → hàng nút dưới tiêu đề, không che nội dung */
+    "@media(max-width:760px){.pd-actbar{display:flex;gap:8px;margin:0 0 12px}",
+    ".pd-actbar>#pdDropFab,.pd-actbar>a.pd-fab{position:static !important;transform:none !important;opacity:1 !important;pointer-events:auto !important;flex:1 1 0;display:flex !important;align-items:center;justify-content:center;gap:6px;min-height:46px !important;margin:0 !important;padding:0 10px !important;font-size:14.5px !important;border-radius:14px !important;box-shadow:0 6px 16px rgba(0,0,0,.25) !important;white-space:nowrap}",
+    ".pd-actbar>#pdDropFab{background:rgba(216,255,69,.12) !important;color:#d8ff45 !important;border:1px solid rgba(216,255,69,.45) !important}}",
     /* nút quay lại trong đầu trang → nút tròn kiểu app (điện thoại) */
     "@media(max-width:759px){a.pd-back{order:-1;flex:none;display:grid !important;place-items:center;width:38px;height:38px;padding:0 !important;margin:0 !important;border-radius:50% !important;background:rgba(255,255,255,.07) !important;border:1px solid rgba(255,255,255,.12) !important;color:#fff !important;font-size:0 !important;text-decoration:none}",
     "a.pd-back svg{width:20px;height:20px}}",
@@ -41,7 +47,9 @@
     "#pdlBottom .active .pd-ic,#pdlBottom .is-active .pd-ic,#pdlBottom [aria-current] .pd-ic,#pdPortalNav .active .pd-ic,#pdPortalNav .is-active .pd-ic,#pdPortalNav [aria-current] .pd-ic,#pdAdminNav .active .pd-ic,#pdAdminNav .is-active .pd-ic,#pdAdminNav [aria-current] .pd-ic,#pdAppNav .active .pd-ic,#pdAppNav .is-active .pd-ic,#pdAppNav [aria-current] .pd-ic,#admBottomBar .active .pd-ic,#admBottomBar .is-active .pd-ic,#admBottomBar [aria-current] .pd-ic{background:rgba(216,255,69,.16)}",
     "#pdlBottom .active svg,#pdlBottom [aria-current] svg,#pdPortalNav .active svg,#pdPortalNav [aria-current] svg,#pdAdminNav .active svg,#pdAdminNav [aria-current] svg,#pdAppNav .active svg,#pdAppNav [aria-current] svg,#admBottomBar .active svg,#admBottomBar [aria-current] svg{filter:drop-shadow(0 0 6px rgba(216,255,69,.45))}",
     "#pdlBottom,#pdPortalNav,#pdAdminNav,#pdAppNav,#admBottomBar{background:rgba(7,16,28,.88) !important;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-top:1px solid rgba(255,255,255,.08) !important}",
-    ".tabs .tab .pd-ic{display:grid;place-items:center;width:44px;height:28px;margin:0 auto;padding:0 !important;border-radius:999px;font-size:0 !important;background:none}",
+    "@media(max-width:760px){.tabs .tab:has(.pd-ic){display:flex !important;flex-direction:column;align-items:center !important;justify-content:center !important;text-align:center !important;min-width:0}",
+    ".tabs .tab .pd-tl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center}}",
+    ".tabs .tab .pd-ic{display:grid;place-items:center;width:44px;height:28px;margin:0 !important;padding:0 !important;border-radius:999px;font-size:0 !important;background:none}",
     ".tabs .tab .pd-ic svg{width:22px;height:22px}",
     ".tabs .tab.active .pd-ic{background:rgba(216,255,69,.16)}",
     ".tabs .tab.active .pd-ic svg{filter:drop-shadow(0 0 6px rgba(216,255,69,.45))}",
@@ -90,7 +98,7 @@
   function scan() {
     pending = false;
     document.querySelectorAll("table").forEach(label);
-    upgradeNav(); backBtn(); dockBell();
+    upgradeNav(); backBtn(); dockBell(); dockFabs();
     document.body.classList.toggle("pd-has-install", !!document.getElementById("pdpInstall"));
   }
   function later() { if (!pending) { pending = true; requestAnimationFrame(scan); } }
@@ -149,7 +157,9 @@
     var y = window.scrollY || document.documentElement.scrollTop;
     var inst = document.getElementById("pdpInstall");
     document.body.classList.toggle("pd-has-install", !!inst);
-    if (inst) inst.classList.toggle("pd-hide", y > 80 && y > lastY + 2 ? true : y < lastY - 2 ? false : inst.classList.contains("pd-hide"));
+    [inst, document.getElementById("pickdeeSupportRoot")].forEach(function (el) {
+      if (el && !el.querySelector("[open],.open,.is-open")) el.classList.toggle("pd-hide", y > 80 && y > lastY + 2 ? true : y < lastY - 2 ? false : el.classList.contains("pd-hide"));
+    });
     lastY = y;
     var h = document.querySelector("header.topbar") || document.querySelector("body>header");
     if (h) h.classList.toggle("pd-app-scrolled", (window.scrollY || document.documentElement.scrollTop) > 6);
@@ -192,6 +202,23 @@
       if (brand) brand.style.marginRight = "auto";
       h.style.justifyContent = "flex-start";
     });
+  }
+
+  /* ---------- nút nổi Đơn hàng (Shop Admin) → hàng nút ---------- */
+  var MOBILE = window.matchMedia("(max-width:760px)");
+  function dockFabs() {
+    if (!MOBILE.matches) return;
+    var h1 = document.querySelector("#ordersView h1");
+    if (!h1) return;
+    var bar = document.getElementById("pdActBar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "pdActBar"; bar.className = "pd-actbar";
+      h1.insertAdjacentElement("afterend", bar);
+    }
+    var drop = document.getElementById("pdDropFab"), add = document.querySelector("#ordersView a.pd-fab, body > a.pd-fab");
+    if (drop && drop.parentNode !== bar) bar.insertBefore(drop, bar.firstChild);
+    if (add && add.parentNode !== bar) bar.appendChild(add);
   }
 
   function boot() {
