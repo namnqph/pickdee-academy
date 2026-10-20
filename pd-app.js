@@ -31,8 +31,6 @@
     ".summary-label,.card-stat-label{font-size:12px !important;line-height:1.3}",
     ".summary-value,.card-stat-value{font-size:20px !important;margin-top:4px !important}}",
     /* chuyển động PickDee (Emil): chuyển trang mờ chéo như app, thẻ hiện so le lúc mở trang, số đỏ nảy */
-    "@view-transition{navigation:auto}",
-    "::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}",
     "@keyframes pdRise{from{opacity:0;translate:0 10px;scale:.985}}",
     "html.pd-enter :is(.summary-card,.card-stat,.card,.module-card,.session-card,.course-card,table.pd-cards tr,.list-item){animation:pdRise .32s cubic-bezier(.23,1,.32,1) backwards}",
     "html.pd-enter :is(.summary-card,.card-stat,.card,.module-card,.session-card,.course-card,table.pd-cards tr,.list-item):nth-child(2){animation-delay:35ms}",
@@ -64,14 +62,14 @@
     "#pdlBottom .pd-ic svg,#pdPortalNav .pd-ic svg,#pdAdminNav .pd-ic svg,#pdAppNav .pd-ic svg,#admBottomBar .pd-ic svg{width:22px;height:22px}",
     "#pdlBottom a,#pdlBottom .pdl-bt,#pdPortalNav a,#pdPortalNav .pdl-bt,#pdAdminNav a,#pdAdminNav .pdl-bt,#pdAppNav a,#pdAppNav .pdl-bt,#admBottomBar a,#admBottomBar .pdl-bt{color:rgba(255,255,255,.58) !important;transition:color .15s,transform .12s}",
     "#pdlBottom .active,#pdlBottom .is-active,#pdlBottom [aria-current],#pdPortalNav .active,#pdPortalNav .is-active,#pdPortalNav [aria-current],#pdAdminNav .active,#pdAdminNav .is-active,#pdAdminNav [aria-current],#pdAppNav .active,#pdAppNav .is-active,#pdAppNav [aria-current],#admBottomBar .active,#admBottomBar .is-active,#admBottomBar [aria-current]{color:#ffc934 !important}",
-    "#pdlBottom .active .pd-ic,#pdlBottom .is-active .pd-ic,#pdlBottom [aria-current] .pd-ic,#pdPortalNav .active .pd-ic,#pdPortalNav .is-active .pd-ic,#pdPortalNav [aria-current] .pd-ic,#pdAdminNav .active .pd-ic,#pdAdminNav .is-active .pd-ic,#pdAdminNav [aria-current] .pd-ic,#pdAppNav .active .pd-ic,#pdAppNav .is-active .pd-ic,#pdAppNav [aria-current] .pd-ic,#admBottomBar .active .pd-ic,#admBottomBar .is-active .pd-ic,#admBottomBar [aria-current] .pd-ic{background:rgba(255,201,52,.16)}",
+    "#pdlBottom .active .pd-ic,#pdlBottom .is-active .pd-ic,#pdlBottom [aria-current] .pd-ic,#pdPortalNav .active .pd-ic,#pdPortalNav .is-active .pd-ic,#pdPortalNav [aria-current] .pd-ic,#pdAdminNav .active .pd-ic,#pdAdminNav .is-active .pd-ic,#pdAdminNav [aria-current] .pd-ic,#pdAppNav .active .pd-ic,#pdAppNav .is-active .pd-ic,#pdAppNav [aria-current] .pd-ic,#admBottomBar .active .pd-ic,#admBottomBar .is-active .pd-ic,#admBottomBar [aria-current] .pd-ic{background:rgba(255,255,255,.112)}",
     "#pdlBottom .active svg,#pdlBottom [aria-current] svg,#pdPortalNav .active svg,#pdPortalNav [aria-current] svg,#pdAdminNav .active svg,#pdAdminNav [aria-current] svg,#pdAppNav .active svg,#pdAppNav [aria-current] svg,#admBottomBar .active svg,#admBottomBar [aria-current] svg{filter:none}",
     "#pdlBottom,#pdPortalNav,#pdAdminNav,#pdAppNav,#admBottomBar{background:rgba(12,12,12,.88) !important;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-top:1px solid rgba(255,255,255,.08) !important}",
     "@media(max-width:760px){.tabs .tab:has(.pd-ic){display:flex !important;flex-direction:column;align-items:center !important;justify-content:center !important;text-align:center !important;min-width:0}",
     ".tabs .tab .pd-tl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center}}",
     ".tabs .tab .pd-ic{display:grid;place-items:center;width:44px;height:28px;margin:0 !important;padding:0 !important;border-radius:999px;font-size:0 !important;background:none}",
     ".tabs .tab .pd-ic svg{width:22px;height:22px}",
-    ".tabs .tab.active .pd-ic{background:rgba(255,201,52,.16)}",
+    ".tabs .tab.active .pd-ic{background:rgba(255,255,255,.112)}",
     /* bảng → thẻ */
     "@media(max-width:759px){",
     "table.pd-cards{border-collapse:separate !important;border-spacing:0 !important;width:100% !important;min-width:0 !important;background:transparent !important}",
@@ -266,7 +264,7 @@
     if (!/^(coach|student)-/.test(page) || /^(coach-(activate|detail|work)|student-(register|detail))$/.test(page)) return;
     if (window.__pdPortalNav || document.getElementById("pdlBottom") || document.querySelector('script[src*="pd-portal-appnav"]')) return;
     var s = document.createElement("script");
-    s.src = "/pd-portal-appnav.js?v=20261020-gold1";
+    s.src = "/pd-portal-appnav.js?v=20261020-gold2";
     s.onload = function () { setTimeout(upgradeNav, 0); };
     document.head.appendChild(s);
   }

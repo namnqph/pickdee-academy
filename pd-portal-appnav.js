@@ -58,7 +58,7 @@
         "color:rgba(255,255,255,.6);text-decoration:none;font-family:inherit;font-size:10.5px;font-weight:800;white-space:nowrap}" +
         "#pdPortalNav .pd-ti{font-size:21px;line-height:1;padding:3px 12px;border-radius:999px}" +
         "#pdPortalNav a.active{color:#ffc934}" +
-        "#pdPortalNav a.active .pd-ti{background:rgba(255,201,52,.16)}" +
+        "#pdPortalNav a.active .pd-ti{background:rgba(255,255,255,.112)}" +
         "}";
       document.head.appendChild(css);
 

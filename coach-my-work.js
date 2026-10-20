@@ -320,7 +320,7 @@ function statusStyle(status) {
   ) {
 
     return `
-      background:rgba(255,201,52,.12);
+      background:rgba(255,255,255,.084);
       color:#ffc934;
       border:1px solid rgba(255,201,52,.20);
     `;

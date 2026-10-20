@@ -845,9 +845,7 @@
       .pdn-item.unread {
 
         background:
-          rgba(255,201,52,
-            .08
-          );
+          rgba(255,255,255,.056);
 
       }
 
@@ -3204,7 +3202,7 @@ async function mountPushUi() {
     [
       "padding:12px 14px",
       "border-bottom:1px solid rgba(255,255,255,.08)",
-      "background:rgba(255,201,52,.04)"
+      "background:rgba(255,255,255,.028)"
     ].join(";");
 
 

@@ -52,7 +52,7 @@
     padding:8px 2px;border:0;border-radius:12px;background:transparent;
     color:rgba(255,255,255,.7);font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
   .pdl-tab span:first-child{font-size:18px;line-height:1.1}
-  .pdl-tab.is-active{background:rgba(255,201,52,.14);color:#ffc934}
+  .pdl-tab.is-active{background:rgba(255,255,255,.098);color:#ffc934}
   .pdl-tab .pdl-badge{top:2px;right:calc(50% - 26px)}
   .pdl-group.is-tab{display:none}
   .pdl-group.is-tab.is-active{display:block}
@@ -62,11 +62,11 @@
     font-size:14px;font-weight:800;cursor:pointer}
   .pdl-sum{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:20px;
     color:#fff;text-decoration:none;border:1px solid rgba(255,201,52,.35);
-    background:linear-gradient(135deg,rgba(255,201,52,.16),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
+    background:linear-gradient(135deg,rgba(255,255,255,.112),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
     box-shadow:0 10px 30px rgba(0,0,0,.25)}
   .pdl-sum:active{transform:scale(.98)}
   .pdl-sum-icon{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;
-    border-radius:13px;background:rgba(255,201,52,.18);font-size:22px}
+    border-radius:13px;background:rgba(255,255,255,.126);font-size:22px}
   .pdl-sum-body{flex:1;min-width:0}
   .pdl-sum-title{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#ffc934}
   .pdl-sum-main{margin-top:2px;font-size:19px;font-weight:900;line-height:1.2;overflow-wrap:anywhere}

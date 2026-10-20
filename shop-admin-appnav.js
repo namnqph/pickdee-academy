@@ -44,7 +44,7 @@
       "color:rgba(255,255,255,.55);text-decoration:none;font-family:inherit;font-size:10.5px;font-weight:800;white-space:nowrap}" +
       "#pdAppNav .pd-ti{font-size:21px;line-height:1;padding:3px 12px;border-radius:999px}" +
       "#pdAppNav a.active{color:#ffc934}" +
-      "#pdAppNav a.active .pd-ti{background:rgba(255,201,52,.16)}" +
+      "#pdAppNav a.active .pd-ti{background:rgba(255,255,255,.112)}" +
       /* đầu trang gọn hơn trên điện thoại */
       "main .intro,.page .intro{display:none!important}" +
       "main h1,.page h1{font-size:26px!important;margin-bottom:12px!important}" +

@@ -6,8 +6,6 @@
 
   var CARDS = ".ecosystem-card,.smart-card,.product-card,.promo-card,.ecosystem-item,.trust-item,.pda-card,.pda-tile,.pp-card,.pickdee-ecosystem-item,.court-card,.coach-card";
   var css = [
-    "@view-transition{navigation:auto}",
-    "::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}",
     "html.pd-js :is(" + CARDS + "):not(.pd-in){opacity:0;translate:0 14px;scale:.985}",
     ":is(" + CARDS + "){transition:opacity .45s cubic-bezier(.23,1,.32,1),translate .45s cubic-bezier(.23,1,.32,1),scale .45s cubic-bezier(.23,1,.32,1),border-color .2s}",
     "@media(hover:hover){:is(" + CARDS + "):hover{translate:0 -3px}}",

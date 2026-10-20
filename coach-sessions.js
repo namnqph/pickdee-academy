@@ -1058,7 +1058,7 @@ function renderSessions(
                           padding:7px 9px;
                           border:1px solid rgba(255,201,52,.35);
                           border-radius:8px;
-                          background:rgba(255,201,52,.10);
+                          background:rgba(255,255,255,.07);
                           color:#ffc934;
                           font-size:11px;
                           font-weight:900;
