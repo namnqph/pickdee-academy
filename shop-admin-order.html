@@ -1271,6 +1271,14 @@
         .filter(Boolean)
         .join(", ");
 
+    // Sửa thông tin khách được khi đơn chưa huỷ, chưa giao cho ĐVVC
+    const customerEditable =
+      o.order_status !== "cancelled"
+      &&
+      o.order_status !== "completed"
+      &&
+      o.shipping_status !== "shipped";
+
     const email =
       valueFrom(
         o,
@@ -2426,11 +2434,38 @@
 
       <section class="section">
 
-        <div class="section-title">
-          Khách hàng
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <span>Khách hàng</span>
+          ${
+            customerEditable
+              ?
+                `<button id="editCustomerBtn" type="button" style="min-height:30px;padding:0 12px;border-radius:9px;border:1px solid rgba(216,255,69,.45);background:transparent;color:#d8ff45;font-size:12px;font-weight:900;cursor:pointer;">✏️ SỬA</button>`
+              :
+                ""
+          }
         </div>
 
-        <div class="info-grid">
+        <div id="customerEditForm" style="display:none;">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="ceName">Người nhận</label>
+          <input id="ceName" type="text" autocomplete="off" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;" value="${escapeHtml(o.customer_name || "")}">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="cePhone">Điện thoại</label>
+          <input id="cePhone" type="tel" inputmode="numeric" autocomplete="off" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;" value="${escapeHtml(o.phone || "")}">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="ceLine">Số nhà, thôn/xóm, đường</label>
+          <input id="ceLine" type="text" autocomplete="off" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;" value="${escapeHtml(addressLine || "")}">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="ceWard">Xã / phường</label>
+          <input id="ceWard" type="text" autocomplete="off" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;" value="${escapeHtml(ward || "")}">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="ceProvince">Tỉnh / thành phố</label>
+          <input id="ceProvince" type="text" autocomplete="off" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;" value="${escapeHtml(province || "")}">
+          <label style="display:block;margin:10px 0 6px;color:rgba(255,255,255,.62);font-size:13px;font-weight:800;" for="ceLegacy">Địa chỉ cũ (trước sáp nhập, có thể bỏ trống)</label>
+          <textarea id="ceLegacy" rows="2" style="width:100%;min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#071523;color:#ffffff;outline:none;font-size:16px;box-sizing:border-box;resize:vertical;">${escapeHtml(legacyAddress || "")}</textarea>
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button id="ceCancelBtn" type="button" class="action-btn action-secondary" style="flex:1;min-height:44px;">HUỶ</button>
+            <button id="ceSaveBtn" type="button" class="action-btn" style="flex:1;min-height:44px;background:#d8ff45;color:#071523;font-weight:950;border:0;border-radius:12px;">LƯU THÔNG TIN</button>
+          </div>
+          <div id="customerEditMessage" class="message"></div>
+        </div>
+
+        <div class="info-grid" id="customerInfoGrid">
 
           <div class="info-row">
 
@@ -4322,6 +4357,8 @@
 
     }
 
+    setupCustomerEdit();
+
     setupCopyButton(
       "copyPhoneBtn",
       o.phone,
@@ -5894,6 +5931,63 @@
   /* =====================================================
      TRẠNG THÁI HÃNG VẬN CHUYỂN (bảng shop_order_carrier_tracking)
   ====================================================== */
+
+  // Sửa người nhận / SĐT / địa chỉ (đơn tạo từ ảnh đọc sai thì sửa tay ở đây)
+  function setupCustomerEdit() {
+    const btn = document.getElementById("editCustomerBtn");
+    const form = document.getElementById("customerEditForm");
+    const grid = document.getElementById("customerInfoGrid");
+    if (!btn || !form || !grid) return;
+    const msg = document.getElementById("customerEditMessage");
+    const val = function (id) { return String(document.getElementById(id).value || "").replace(/\s+/g, " ").trim(); };
+    const toggle = function (open) {
+      form.style.display = open ? "block" : "none";
+      grid.style.display = open ? "none" : "";
+      btn.style.display = open ? "none" : "";
+      msg.className = "message";
+      msg.textContent = "";
+      if (open) document.getElementById("ceName").focus();
+    };
+    btn.addEventListener("click", function () { toggle(true); });
+    document.getElementById("ceCancelBtn").addEventListener("click", function () { toggle(false); });
+    const save = document.getElementById("ceSaveBtn");
+    save.addEventListener("click", async function () {
+      const name = val("ceName");
+      const phone = val("cePhone").replace(/[\s.\-]/g, "").replace(/^\+?84/, "0");
+      const line = val("ceLine"), ward = val("ceWard"), province = val("ceProvince"), legacy = val("ceLegacy");
+      msg.className = "message";
+      try {
+        if (!name) throw new Error("Vui lòng nhập tên người nhận.");
+        if (!/^0\d{9}$/.test(phone)) throw new Error("Số điện thoại phải gồm 10 số, bắt đầu bằng 0.");
+        if (!line || !province) throw new Error("Vui lòng nhập địa chỉ và tỉnh/thành phố.");
+        save.disabled = true;
+        save.textContent = "ĐANG LƯU…";
+        const { data, error } = await sb
+          .from("shop_orders")
+          .update({ customer_name: name, phone: phone, address_line: line, ward: ward || null, province: province, legacy_address: legacy || null })
+          .eq("id", currentOrder.id)
+          .select("*")
+          .single();
+        if (error) throw error;
+        currentOrder = Object.assign({}, currentOrder, data);
+        render();
+        const m2 = document.getElementById("customerEditMessage");
+        const f2 = document.getElementById("customerEditForm");
+        if (m2 && f2) {
+          f2.parentNode.insertBefore(m2, f2.nextSibling);
+          m2.className = "message success";
+          m2.style.marginBottom = "12px";
+          m2.textContent = "✓ Đã lưu thông tin khách hàng.";
+        }
+      } catch (e) {
+        console.error("SAVE CUSTOMER ERROR:", e);
+        msg.className = "message error";
+        msg.textContent = e?.message || "Không lưu được, thử lại.";
+        save.disabled = false;
+        save.textContent = "LƯU THÔNG TIN";
+      }
+    });
+  }
 
   async function loadCarrierTrackingStatus() {
 
