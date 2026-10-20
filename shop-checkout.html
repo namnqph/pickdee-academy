@@ -951,6 +951,10 @@
     }
 
 
+    .aff-msg { margin-top: 6px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+    .aff-msg.ok { color: #d8ff45; }
+    .aff-msg.bad { color: #ffb3b3; }
+
     .message.error {
       display: block;
 
@@ -1654,7 +1658,7 @@
   id="shopPublicHeader"
 ></header>
 
-<script src="./shop-public-nav.js?v=20261020-sales2"></script>
+<script src="./shop-public-nav.js?v=20261020-aff1"></script>
 
 
 
@@ -1880,6 +1884,14 @@
           </div>
 
 
+          <div class="field" id="affField" style="display:none;">
+            <label for="affCode">MÃ GIỚI THIỆU (NẾU CÓ)</label>
+            <input id="affCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="Ví dụ: PDTUAN">
+            <div id="affMsg" class="aff-msg">Khách mua vợt lần đầu nhập mã được giảm 50.000đ/vợt.</div>
+          </div>
+
+
+
         </div>
 
       </section>
@@ -2029,6 +2041,13 @@
           </strong>
 
         </div>
+
+
+        <div id="affDiscountRow" class="summary-row" style="display:none;">
+          <span>Mã giới thiệu</span>
+          <strong id="affDiscountValue" style="color:#d8ff45;"></strong>
+        </div>
+
 
 
         <div
@@ -4545,6 +4564,7 @@
       );
 
 
+    affSetup(mustPrepay);
     if (mustPrepay) {
 
       if (codInput) {
@@ -4751,7 +4771,109 @@ Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì 
       ?.remove();
 
   }
-  function shippingQuote(
+  /* =====================================================
+     MÃ GIỚI THIỆU (CTV vợt): khách mua vợt lần đầu giảm 50k/vợt.
+     Server kiểm lại khi tạo đơn (shop_create_guest_order_with_shipping_v2).
+  ====================================================== */
+  const AFF = { code: "", ok: false, per: 0, msg: "", seq: 0, bound: false };
+
+  function affNorm(value) {
+    return String(value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  }
+
+  function cartPaddleQty(cart) {
+    return cart.reduce(function (n, item) {
+      return n + (cartHasPaddle([item]) ? Math.max(1, Number(item.quantity || 1)) : 0);
+    }, 0);
+  }
+
+  function affDiscount(cart) {
+    return AFF.ok ? AFF.per * cartPaddleQty(cart) : 0;
+  }
+
+  function affSavedRef() {
+    try {
+      const r = JSON.parse(localStorage.getItem("pickdee_aff_ref") || "null");
+      if (r && r.code && Date.now() - Number(r.ts || 0) < 30 * 864e5) return affNorm(r.code);
+    } catch (_) {}
+    return "";
+  }
+
+  function renderAffRow(cart) {
+    const row = document.getElementById("affDiscountRow");
+    if (!row) return;
+    const d = affDiscount(cart);
+    row.style.display = d ? "flex" : "none";
+    document.getElementById("affDiscountValue").textContent = "−" + money(d) + " (" + AFF.code + ")";
+  }
+
+  function affRefreshTotals() {
+    const cart = readCart();
+    const quote = shippingQuote(cart);
+    renderAffRow(cart);
+    if (/\d/.test(totalPrice.textContent)) {
+      totalPrice.textContent = money(quote.customerTotal);
+      bottomTotal.textContent = money(quote.customerTotal);
+    }
+    updatePaddlePayBox(cart);
+  }
+
+  async function affCheck() {
+    const input = document.getElementById("affCode");
+    const msg = document.getElementById("affMsg");
+    if (!input) return;
+    const code = affNorm(input.value);
+    const phone = String(document.getElementById("customerPhone")?.value || "").replace(/\D/g, "");
+    const my = ++AFF.seq;
+    AFF.code = code; AFF.ok = false; AFF.per = 0; AFF.msg = "";
+    if (!code) {
+      msg.className = "aff-msg";
+      msg.textContent = "Khách mua vợt lần đầu nhập mã được giảm 50.000đ/vợt.";
+      affRefreshTotals();
+      return;
+    }
+    msg.className = "aff-msg";
+    msg.textContent = "Đang kiểm tra mã…";
+    let res = null;
+    try {
+      const r = await sb.rpc("aff_check_code", { p_code: code, p_phone: phone });
+      res = r.data;
+    } catch (_) {}
+    if (my !== AFF.seq) return;
+    if (res && res.ok) {
+      AFF.ok = true;
+      AFF.per = Number(res.discount_per_paddle || 0);
+      msg.className = "aff-msg ok";
+      msg.textContent = "✓ Mã hợp lệ: giảm " + money(AFF.per) + "/vợt";
+    } else {
+      AFF.msg = (res && res.reason) || "Chưa kiểm tra được mã, anh/chị thử lại.";
+      msg.className = "aff-msg bad";
+      msg.textContent = AFF.msg;
+    }
+    affRefreshTotals();
+  }
+
+  function affSetup(show) {
+    const field = document.getElementById("affField");
+    const input = document.getElementById("affCode");
+    if (!field || !input) return;
+    field.style.display = show ? "" : "none";
+    if (!show) { AFF.ok = false; return; }
+    if (AFF.bound) return;
+    AFF.bound = true;
+    let t = null;
+    const later = function () { clearTimeout(t); t = setTimeout(affCheck, 500); };
+    input.addEventListener("input", later);
+    document.getElementById("customerPhone")?.addEventListener("input", function () {
+      if (input.value.trim()) later();
+    });
+    const saved = affSavedRef();
+    if (saved && !input.value) input.value = saved;
+    if (input.value) affCheck();
+  }
+
+  
+function shippingQuote(
     cart
   ) {
 
@@ -4807,8 +4929,10 @@ Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì 
           false,
         shippingFee:
           0,
+        affDiscount:
+          affDiscount(cart),
         customerTotal:
-          merchandiseTotal,
+          merchandiseTotal - affDiscount(cart),
         reason:
           "Đơn có vợt Pickleball thanh toán chuyển khoản trước: PickDee miễn phí vận chuyển."
       };
@@ -5719,6 +5843,7 @@ Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì 
           "flex"
         :
           "none";
+    renderAffRow(cart);
 
 
     shippingPolicyText.style.display =
@@ -6046,6 +6171,22 @@ Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì 
 
       }
 
+      // Mã giới thiệu: có nhập thì phải hợp lệ mới đặt (tránh khách CK số tiền đã giảm mà đơn không giảm)
+      if (
+        cartHasPaddle(currentCart)
+        &&
+        affNorm(document.getElementById("affCode")?.value)
+      ) {
+        if (AFF.code !== affNorm(document.getElementById("affCode").value) || !AFF.ok) {
+          await affCheck();
+        }
+        if (!AFF.ok) {
+          showMessage("Mã giới thiệu: " + (AFF.msg || "chưa hợp lệ.") + " Anh/chị xoá mã nếu không dùng.", "error");
+          document.getElementById("affCode").focus();
+          return;
+        }
+      }
+
 
       try {
 
@@ -6268,8 +6409,11 @@ Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì 
           error
         } =
           await sb.rpc(
-            "shop_create_guest_order_with_shipping_v1",
+            "shop_create_guest_order_with_shipping_v2",
             {
+              p_aff_code:
+                AFF.ok ? AFF.code : null,
+
 
               p_customer_name:
                 customerName,

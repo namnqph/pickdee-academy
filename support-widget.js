@@ -3,6 +3,15 @@
   "use strict";
 
 
+  // Link cộng tác viên ?ref=MÃ → nhớ 30 ngày; trang thanh toán vợt tự điền mã
+  try {
+    const ref = new URLSearchParams(location.search).get("ref");
+    if (ref && /^[A-Za-z0-9-]{3,20}$/.test(ref)) {
+      localStorage.setItem("pickdee_aff_ref", JSON.stringify({ code: ref.replace(/[^A-Za-z0-9]/g, "").toUpperCase(), ts: Date.now() }));
+    }
+  } catch (_) {}
+
+
   /* =====================================================
      PICKDEE SUPPORT WIDGET
   ====================================================== */
