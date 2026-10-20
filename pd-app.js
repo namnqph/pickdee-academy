@@ -31,10 +31,6 @@
     "@media(max-width:760px){#pickdeeSupportRoot.pd-hide{opacity:0;pointer-events:none;transform:translateY(24px)}}",
     "#pdpInstall.pd-hide{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(24px) !important}",
     "@media(max-width:759px){body.pd-has-install{padding-bottom:calc(136px + env(safe-area-inset-bottom)) !important}}",
-    /* Shop Admin – Đơn hàng: 2 nút nổi (Thả ảnh đơn, Tạo đơn) → hàng nút dưới tiêu đề, không che nội dung */
-    "@media(max-width:760px){.pd-actbar{display:flex;gap:8px;margin:0 0 12px}",
-    ".pd-actbar>#pdDropFab,.pd-actbar>a.pd-fab{position:static !important;transform:none !important;opacity:1 !important;pointer-events:auto !important;flex:1 1 0;display:flex !important;align-items:center;justify-content:center;gap:6px;min-height:46px !important;margin:0 !important;padding:0 10px !important;font-size:14.5px !important;border-radius:14px !important;box-shadow:0 6px 16px rgba(0,0,0,.25) !important;white-space:nowrap}",
-    ".pd-actbar>#pdDropFab{background:rgba(216,255,69,.12) !important;color:#d8ff45 !important;border:1px solid rgba(216,255,69,.45) !important}}",
     /* nút quay lại trong đầu trang → nút tròn kiểu app (điện thoại) */
     "@media(max-width:759px){a.pd-back{order:-1;flex:none;display:grid !important;place-items:center;width:38px;height:38px;padding:0 !important;margin:0 !important;border-radius:50% !important;background:rgba(255,255,255,.07) !important;border:1px solid rgba(255,255,255,.12) !important;color:#fff !important;font-size:0 !important;text-decoration:none}",
     "a.pd-back svg{width:20px;height:20px}}",
@@ -98,7 +94,7 @@
   function scan() {
     pending = false;
     document.querySelectorAll("table").forEach(label);
-    upgradeNav(); backBtn(); dockBell(); dockFabs();
+    upgradeNav(); backBtn(); dockBell();
     document.body.classList.toggle("pd-has-install", !!document.getElementById("pdpInstall"));
   }
   function later() { if (!pending) { pending = true; requestAnimationFrame(scan); } }
@@ -202,23 +198,6 @@
       if (brand) brand.style.marginRight = "auto";
       h.style.justifyContent = "flex-start";
     });
-  }
-
-  /* ---------- nút nổi Đơn hàng (Shop Admin) → hàng nút ---------- */
-  var MOBILE = window.matchMedia("(max-width:760px)");
-  function dockFabs() {
-    if (!MOBILE.matches) return;
-    var h1 = document.querySelector("#ordersView h1");
-    if (!h1) return;
-    var bar = document.getElementById("pdActBar");
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "pdActBar"; bar.className = "pd-actbar";
-      h1.insertAdjacentElement("afterend", bar);
-    }
-    var drop = document.getElementById("pdDropFab"), add = document.querySelector("#ordersView a.pd-fab, body > a.pd-fab");
-    if (drop && drop.parentNode !== bar) bar.insertBefore(drop, bar.firstChild);
-    if (add && add.parentNode !== bar) bar.appendChild(add);
   }
 
   function boot() {
