@@ -1664,6 +1664,43 @@
      HELPERS
   ====================================================== */
 
+  /* Ngày/khung giờ/sân HV chọn khi đăng ký (student-register) → 1 dòng cho Admin */
+
+  const STUDY_DAY_LABEL = { 1: "T2", 2: "T3", 3: "T4", 4: "T5", 5: "T6", 6: "T7", 7: "CN" };
+
+  const STUDY_SLOT_LABEL = { sang: "Sáng", chieu: "Chiều", toi: "Tối" };
+
+  async function attachStudyCourts(rows) {
+
+    const ids = [...new Set(rows.map(r => r.preferred_court_id).filter(Boolean))];
+
+    if (!ids.length) return;
+
+    const { data } = await paymentSb.from("court_directory").select("id, court_name, ward, province").in("id", ids);
+
+    const map = new Map((data || []).map(c => [Number(c.id), c]));
+
+    rows.forEach(r => { r._court = map.get(Number(r.preferred_court_id)) || null; });
+
+  }
+
+  function studyScheduleText(r) {
+
+    if (!r) return "—";
+
+    const days = (r.study_days || []).slice().sort((a, b) => a - b).map(d => STUDY_DAY_LABEL[d] || d).join(", ");
+
+    const slots = (r.study_slots || []).slice().sort((a, b) => Object.keys(STUDY_SLOT_LABEL).indexOf(a) - Object.keys(STUDY_SLOT_LABEL).indexOf(b)).map(v => STUDY_SLOT_LABEL[v] || v).join(", ");
+
+    const court = r._court ? [r._court.court_name, r._court.ward, r._court.province].filter(Boolean).join(" – ") : (r.preferred_court_id ? "Sân #" + r.preferred_court_id : "");
+
+    const parts = [days, slots, court].filter(Boolean);
+
+    return parts.length ? parts.join(" · ") : "Chưa chọn (đăng ký cũ)";
+
+  }
+
+
   function escapeHtml(value) {
 
     return String(
@@ -1983,7 +2020,10 @@
           package_name,
           student_id,
           tuition_fee,
-          is_test
+          is_test,
+          study_days,
+          study_slots,
+          preferred_court_id
         `)
         .in(
           "id",
@@ -2046,6 +2086,10 @@
           ]
         )
       );
+
+
+    // Tên sân HV chọn khi đăng ký (registrations.preferred_court_id → court_directory)
+    await attachStudyCourts(registrations || []);
 
 
     const studentMap =
@@ -2300,6 +2344,21 @@
                       ${escapeHtml(
                         registration.package_name
                         || "—"
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  <div>
+
+                    <div class="proof-info-label">
+                      Lịch học HV chọn
+                    </div>
+
+                    <div class="proof-info-value">
+                      ${escapeHtml(
+                        studyScheduleText(registration)
                       )}
                     </div>
 
