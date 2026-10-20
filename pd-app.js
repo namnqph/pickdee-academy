@@ -192,11 +192,13 @@
       a.classList.add("pd-back");
       a.setAttribute("aria-label", t.replace(/^[←‹]\s*/, "") || "Quay lại");
       a.insertAdjacentHTML("afterbegin", '<svg viewBox="0 0 24 24" ' + P + '><path d="M15 5l-7 7 7 7"/></svg>');
-      if (getComputedStyle(h).display !== "flex") { h.style.display = "flex"; h.style.alignItems = "center"; h.style.gap = "10px"; }
-      if (a.parentNode !== h) h.insertBefore(a, h.firstChild);
+      // Đặt nút ‹ đầu HÀNG chứa logo (vd .header-inner có lề 10px), không ra ngoài header → không mất lề, chuông bên phải không bị lẹm
       var brand = h.querySelector(".brand");
+      var row = brand && brand.parentNode && h.contains(brand.parentNode) ? brand.parentNode : h;
+      if (getComputedStyle(row).display !== "flex") { row.style.display = "flex"; row.style.alignItems = "center"; row.style.gap = "10px"; }
+      if (a.parentNode !== row || row.firstElementChild !== a) row.insertBefore(a, row.firstChild);
       if (brand) brand.style.marginRight = "auto";
-      h.style.justifyContent = "flex-start";
+      row.style.justifyContent = "flex-start";
     });
   }
 
