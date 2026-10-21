@@ -577,7 +577,21 @@
 
 
             <a
-              href="./"
+              href="/"
+              class="pd-shop-menu-item"
+            >
+              <span>
+                🏠 TRANG CHỦ PICKDEE
+              </span>
+
+              <span>
+                ›
+              </span>
+            </a>
+
+
+            <a
+              href="/academy"
               class="pd-shop-menu-item"
             >
               <span>
