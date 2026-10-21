@@ -1,7 +1,9 @@
 // Cloudflare Pages Function: /og/p/<id>-<imageId>.jpg
 // Ảnh xem trước (Open Graph) của sản phẩm, phục vụ ngay trên pickdee.vn với đường dẫn .jpg sạch,
-// vì Zalo không hiện ảnh khi og:image nằm ở domain ngoài có ?query (wsrv.nl).
-// Ảnh gốc .webp trên Supabase → JPG 800x800 nền trắng qua wsrv.nl (miễn phí), lưu cache Cloudflare 7 ngày.
+// vì Zalo không hiện ảnh khi og:image nằm ở domain ngoài có ?query.
+// Ảnh chính là JPG → đưa thẳng ảnh gốc. Ảnh .webp (Zalo không đọc) → bản JPG dựng sẵn
+// shop-products/og/<imageId>.jpg (pickdee-db/tools/og_jpg.sh). wsrv.nl chặn Cloudflare (403) nên không dùng.
+// Lưu cache Cloudflare 7 ngày.
 // imageId chỉ để đổi URL khi đổi ảnh chính (cache mới). Lỗi gì cũng trả ảnh thương hiệu og-shop.jpg.
 
 const SUPABASE_URL = "https://snxztjsluhdibrklougo.supabase.co";
@@ -70,35 +72,18 @@ export async function onRequestGet(context) {
       return fallback(context, "no image (product " + res.status + ")");
     }
 
-    const original = SUPABASE_URL + "/storage/v1/object/public/shop-products/" + image.storage_path;
+    const isJpg = /\.(jpe?g)$/i.test(image.storage_path);
+    const source = SUPABASE_URL + "/storage/v1/object/public/shop-products/"
+      + (isJpg ? image.storage_path : "og/" + image.id + ".jpg");
 
-    const img = await fetch(
-      "https://wsrv.nl/?url="
-        + encodeURIComponent(original.replace(/^https:\/\//, ""))
-        + "&w=800&h=800&fit=contain&cbg=white&output=jpg&q=85",
-      { headers: { "User-Agent": "PickDee-OG/1.0 (+https://pickdee.vn)", Accept: "image/jpeg,image/*" } }
-    );
+    const img = await fetch(source);
 
-    let response;
-
-    if (img.ok && (img.headers.get("content-type") || "").startsWith("image/")) {
-      response = imageResponse(img.body);
-      response.headers.set("X-OG", "wsrv");
+    if (!img.ok || !(img.headers.get("content-type") || "").startsWith("image/")) {
+      return fallback(context, (isJpg ? "original " : "og jpg missing ") + img.status);
     }
-    else if (/\.(jpe?g)$/i.test(image.storage_path)) {
-      // wsrv lỗi: ảnh gốc đã là JPG thì đưa thẳng ảnh gốc, Zalo vẫn hiện được.
-      const raw = await fetch(original);
 
-      if (!raw.ok) {
-        return fallback(context, "wsrv " + img.status + ", original " + raw.status);
-      }
-
-      response = imageResponse(raw.body);
-      response.headers.set("X-OG", "original (wsrv " + img.status + ")");
-    }
-    else {
-      return fallback(context, "wsrv " + img.status);
-    }
+    const response = imageResponse(img.body);
+    response.headers.set("X-OG", isJpg ? "original" : "og jpg");
 
     context.waitUntil(cache.put(cacheKey, response.clone()));
 
