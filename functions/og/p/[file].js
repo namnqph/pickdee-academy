@@ -2,7 +2,8 @@
 // Ảnh xem trước (Open Graph) của sản phẩm, phục vụ ngay trên pickdee.vn với đường dẫn .jpg sạch,
 // vì Zalo không hiện ảnh khi og:image nằm ở domain ngoài có ?query.
 // Ảnh chính là JPG → đưa thẳng ảnh gốc. Ảnh .webp (Zalo không đọc) → bản JPG dựng sẵn
-// shop-products/og/<imageId>.jpg (pickdee-db/tools/og_jpg.sh). wsrv.nl chặn Cloudflare (403) nên không dùng.
+// shop-products/og/<storage_path đổi đuôi .jpg>, trang quản trị tự dựng khi tải ảnh
+// (window.pdUploadOgJpg trong shop-image-compress.js; ảnh cũ: pickdee-db/tools/og_jpg.sh). wsrv.nl chặn Cloudflare (403) nên không dùng.
 // Lưu cache Cloudflare 7 ngày.
 // imageId chỉ để đổi URL khi đổi ảnh chính (cache mới). Lỗi gì cũng trả ảnh thương hiệu og-shop.jpg.
 
@@ -74,7 +75,7 @@ export async function onRequestGet(context) {
 
     const isJpg = /\.(jpe?g)$/i.test(image.storage_path);
     const source = SUPABASE_URL + "/storage/v1/object/public/shop-products/"
-      + (isJpg ? image.storage_path : "og/" + image.id + ".jpg");
+      + (isJpg ? image.storage_path : "og/" + image.storage_path.replace(/\.[^./]+$/, "") + ".jpg");
 
     const img = await fetch(source);
 
