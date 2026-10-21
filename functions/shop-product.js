@@ -35,8 +35,8 @@ export async function onRequestGet(context) {
     const api =
       SUPABASE_URL
       + "/rest/v1/shop_products"
-      + "?select=name,short_description,"
-      + "shop_product_variants(price,is_active),"
+      + "?select=name,short_description,brand,"
+      + "shop_product_variants(price,is_active,is_sold_out,sku),"
       + "shop_product_images(storage_path,is_primary,sort_order,id)"
       + "&status=eq.active&id=eq." + id;
 
@@ -58,9 +58,10 @@ export async function onRequestGet(context) {
       return response;
     }
 
-    const prices = (product.shop_product_variants || [])
-      .filter(v => v.is_active !== false && Number(v.price) > 0)
-      .map(v => Number(v.price));
+    const activeVariants = (product.shop_product_variants || [])
+      .filter(v => v.is_active !== false && Number(v.price) > 0);
+
+    const prices = activeVariants.map(v => Number(v.price));
 
     const minPrice = prices.length ? Math.min(...prices) : 0;
     const maxPrice = prices.length ? Math.max(...prices) : 0;
@@ -98,6 +99,32 @@ export async function onRequestGet(context) {
 
     const pageUrl = "https://pickdee.vn/shop-product?id=" + id;
 
+    // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.
+    const inStock = activeVariants.some(v => v.is_sold_out !== true);
+
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description: product.short_description || undefined,
+      image: imageUrl,
+      url: pageUrl,
+      sku: activeVariants.length === 1 ? activeVariants[0].sku || undefined : undefined,
+      brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+      offers: minPrice
+        ? {
+          "@type": "AggregateOffer",
+          priceCurrency: "VND",
+          lowPrice: minPrice,
+          highPrice: maxPrice,
+          offerCount: activeVariants.length,
+          availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          url: pageUrl,
+          seller: { "@type": "Organization", name: "PickDee Shop" }
+        }
+        : undefined
+    };
+
     const meta =
       `<meta property="og:type" content="product">`
       + `<meta property="og:site_name" content="PickDee Shop">`
@@ -117,7 +144,8 @@ export async function onRequestGet(context) {
       + `<meta name="description" content="${esc(description)}">`
       + `<meta name="twitter:card" content="summary_large_image">`
       + `<meta name="twitter:image" content="${esc(imageUrl)}">`
-      + `<link rel="canonical" href="${esc(pageUrl)}">`;
+      + `<link rel="canonical" href="${esc(pageUrl)}">`
+      + `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`;
 
     return new HTMLRewriter()
       .on("title", {
