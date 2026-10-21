@@ -8,16 +8,30 @@ const SUPABASE_URL = "https://snxztjsluhdibrklougo.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_DvbmLROzxKtDU_V9ACO4-Q_hUSDjmK0";
 const CACHE_SECONDS = 604800;
 
-async function fallback(context) {
+// why: lý do rơi về ảnh thương hiệu, trả trong header X-OG để soi lỗi bằng curl -I.
+async function fallback(context, why) {
   const url = new URL(context.request.url);
-  return context.env.ASSETS.fetch(new Request(url.origin + "/og-shop.jpg"));
+  const res = await context.env.ASSETS.fetch(new Request(url.origin + "/og-shop.jpg"));
+  const out = new Response(res.body, res);
+  out.headers.set("X-OG", "fallback: " + (why || "?"));
+  out.headers.set("Cache-Control", "no-store");
+  return out;
+}
+
+function imageResponse(body) {
+  return new Response(body, {
+    headers: {
+      "Content-Type": "image/jpeg",
+      "Cache-Control": "public, max-age=" + CACHE_SECONDS
+    }
+  });
 }
 
 export async function onRequestGet(context) {
   const match = /^(\d+)(?:-\d+)?\.jpg$/.exec(String(context.params.file || ""));
 
   if (!match) {
-    return fallback(context);
+    return fallback(context, "bad name");
   }
 
   const cache = caches.default;
@@ -53,35 +67,44 @@ export async function onRequestGet(context) {
       )[0];
 
     if (!image) {
-      return fallback(context);
+      return fallback(context, "no image (product " + res.status + ")");
     }
+
+    const original = SUPABASE_URL + "/storage/v1/object/public/shop-products/" + image.storage_path;
 
     const img = await fetch(
       "https://wsrv.nl/?url="
-        + encodeURIComponent(
-          SUPABASE_URL.replace(/^https:\/\//, "")
-          + "/storage/v1/object/public/shop-products/"
-          + image.storage_path
-        )
-        + "&w=800&h=800&fit=contain&cbg=white&output=jpg&q=85"
+        + encodeURIComponent(original.replace(/^https:\/\//, ""))
+        + "&w=800&h=800&fit=contain&cbg=white&output=jpg&q=85",
+      { headers: { "User-Agent": "PickDee-OG/1.0 (+https://pickdee.vn)", Accept: "image/jpeg,image/*" } }
     );
 
-    if (!img.ok || !(img.headers.get("content-type") || "").startsWith("image/")) {
-      return fallback(context);
-    }
+    let response;
 
-    const response = new Response(img.body, {
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=" + CACHE_SECONDS
+    if (img.ok && (img.headers.get("content-type") || "").startsWith("image/")) {
+      response = imageResponse(img.body);
+      response.headers.set("X-OG", "wsrv");
+    }
+    else if (/\.(jpe?g)$/i.test(image.storage_path)) {
+      // wsrv lỗi: ảnh gốc đã là JPG thì đưa thẳng ảnh gốc, Zalo vẫn hiện được.
+      const raw = await fetch(original);
+
+      if (!raw.ok) {
+        return fallback(context, "wsrv " + img.status + ", original " + raw.status);
       }
-    });
+
+      response = imageResponse(raw.body);
+      response.headers.set("X-OG", "original (wsrv " + img.status + ")");
+    }
+    else {
+      return fallback(context, "wsrv " + img.status);
+    }
 
     context.waitUntil(cache.put(cacheKey, response.clone()));
 
     return response;
   }
-  catch (_) {
-    return fallback(context);
+  catch (err) {
+    return fallback(context, "error " + String(err && err.message || err).slice(0, 80));
   }
 }
