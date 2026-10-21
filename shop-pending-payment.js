@@ -317,7 +317,7 @@
         </span>
 
         <span class="pd-ppb-cta">
-          XEM QR →
+          Xem QR →
         </span>
       </a>
 

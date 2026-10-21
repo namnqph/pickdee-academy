@@ -289,7 +289,7 @@
             class="pdsn-read-all"
             type="button"
           >
-            ĐÁNH DẤU ĐÃ ĐỌC
+            Đánh dấu đã đọc
           </button>
         </div>
 
@@ -748,7 +748,7 @@
         class="pdsn-push-btn is-checking"
         type="button"
       >
-        ĐANG KIỂM TRA THÔNG BÁO...
+        Đang kiểm tra thông báo...
       </button>
 
       <div
@@ -775,7 +775,7 @@
       }
 
       button.className = "pdsn-push-btn is-telegram";
-      button.textContent = "✓ THÔNG BÁO QUA TELEGRAM";
+      button.textContent = "✓ Thông báo qua Telegram";
       button.disabled = true;
 
       if (hint) {
@@ -792,7 +792,7 @@
 
       button.className = "pdsn-push-btn is-checking";
       button.disabled = true;
-      button.textContent = "ĐANG KIỂM TRA THÔNG BÁO...";
+      button.textContent = "Đang kiểm tra thông báo...";
 
       if (hint) {
         hint.textContent = "";
@@ -836,7 +836,7 @@
 
       if (permission === "granted" && subscription) {
         button.className = "pdsn-push-btn is-enabled";
-        button.textContent = "✓ THÔNG BÁO ĐÃ BẬT";
+        button.textContent = "✓ Thông báo đã bật";
         button.disabled = true;
 
         if (hint) {
@@ -847,7 +847,7 @@
       }
 
       button.className = "pdsn-push-btn";
-      button.textContent = "BẬT THÔNG BÁO";
+      button.textContent = "Bật thông báo";
       button.disabled = false;
 
       if (hint) {
@@ -873,7 +873,7 @@
 
       button.disabled = true;
       button.className = "pdsn-push-btn is-checking";
-      button.textContent = "ĐANG BẬT THÔNG BÁO...";
+      button.textContent = "Đang bật thông báo...";
 
       if (hint) {
         hint.textContent = "";

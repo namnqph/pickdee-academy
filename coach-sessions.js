@@ -758,7 +758,7 @@ async function requestCoachCover(
 
 
   button.textContent =
-    "⏳ ĐANG GỬI YÊU CẦU...";
+    "⏳ Đang gửi yêu cầu...";
 
 
   messageEl.textContent =
@@ -789,7 +789,7 @@ async function requestCoachCover(
 
 
     button.textContent =
-      "✓ ĐÃ NHỜ DẠY THAY";
+      "✓ Đã nhờ dạy thay";
 
 
     messageEl.style.color =
@@ -813,7 +813,7 @@ async function requestCoachCover(
 
 
     button.textContent =
-      "🔄 NHỜ COACH DẠY THAY";
+      "🔄 Nhờ Coach dạy thay";
 
 
     messageEl.style.color =
@@ -1066,7 +1066,7 @@ function renderSessions(
                           white-space:nowrap;
                         "
                       >
-                        🔄 NHỜ COACH DẠY THAY
+                        🔄 Nhờ Coach dạy thay
                       </button>
                     `
                     : ""

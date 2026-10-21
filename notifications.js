@@ -2850,7 +2850,7 @@
         true;
 
       button.textContent =
-        "THIẾT BỊ KHÔNG HỖ TRỢ PUSH";
+        "Thiết bị không hỗ trợ push";
 
       status.textContent =
         "Trình duyệt này chưa hỗ trợ Web Push.";
@@ -2870,7 +2870,7 @@
         true;
 
       button.textContent =
-        "MỞ PICKDEE TỪ MÀN HÌNH CHÍNH";
+        "Mở PickDee từ màn hình chính";
 
       status.textContent =
         "Trên iPhone, hãy mở PickDee bằng icon đã thêm vào Màn hình chính.";
@@ -2890,7 +2890,7 @@
         true;
 
       button.textContent =
-        "THÔNG BÁO ĐANG BỊ CHẶN";
+        "Thông báo đang bị chặn";
 
       status.textContent =
         "Hãy bật quyền thông báo cho PickDee trong Cài đặt iPhone.";
@@ -2922,7 +2922,7 @@ if (subscription) {
     false;
 
   button.textContent =
-    "✅ THÔNG BÁO ĐÃ BẬT";
+    "✅ Thông báo đã bật";
 
   status.textContent =
     "Thiết bị này đã đăng ký nhận thông báo PickDee.";
@@ -2946,7 +2946,7 @@ if (subscription) {
       false;
 
     button.textContent =
-      "📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI";
+      "📱 Bật thông báo trên điện thoại";
 
     status.textContent =
       "Nhận thông báo ngay khi có hoạt động mới.";
@@ -3079,7 +3079,7 @@ if (subscription) {
 
 
       button.textContent =
-        "✅ THÔNG BÁO ĐÃ BẬT";
+        "✅ Thông báo đã bật";
 
       status.textContent =
         "Thiết bị này đã được đăng ký nhận thông báo PickDee.";
@@ -3223,7 +3223,7 @@ async function mountPushUi() {
         cursor:pointer;
       "
     >
-      📱 BẬT THÔNG BÁO TRÊN ĐIỆN THOẠI
+      📱 Bật thông báo trên điện thoại
     </button>
 
     <div

@@ -1034,7 +1034,7 @@ function buildStudentProfileEditor() {
 
 
   editBtn.textContent =
-    "✏️ SỬA HỒ SƠ";
+    "✏️ Sửa hồ sơ";
 
 
   header.appendChild(
@@ -1187,7 +1187,7 @@ function buildStudentProfileEditor() {
         id="cancelStudentProfileBtn"
         type="button"
       >
-        HỦY
+        Hủy
       </button>
 
 
@@ -1195,7 +1195,7 @@ function buildStudentProfileEditor() {
         id="saveStudentProfileBtn"
         type="submit"
       >
-        LƯU HỒ SƠ
+        Lưu hồ sơ
       </button>
 
     </div>
@@ -1630,7 +1630,7 @@ function buildStudentProfileEditor() {
 
 
       saveBtn.textContent =
-        "ĐANG LƯU...";
+        "Đang lưu...";
 
 
       formMessage.style.color =
@@ -1774,7 +1774,7 @@ function buildStudentProfileEditor() {
 
 
         saveBtn.textContent =
-          "LƯU HỒ SƠ";
+          "Lưu hồ sơ";
 
       }
 
@@ -1797,7 +1797,7 @@ logoutBtn.addEventListener(
 
 
     logoutBtn.textContent =
-      "ĐANG ĐĂNG XUẤT...";
+      "Đang đăng xuất...";
 
 
     await supabaseClient

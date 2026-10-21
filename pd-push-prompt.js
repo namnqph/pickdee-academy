@@ -69,12 +69,12 @@
         <li><span class="pdp-num">2</span><span>Chọn <b>“Thêm vào MH chính”</b> rồi bấm <b>Thêm</b></span></li>
         <li><span class="pdp-num">3</span><span>Mở <b>PickDee</b> từ màn hình chính và bấm <b>Bật thông báo</b></span></li>
       </ol>
-      <button type="button" class="pdp-btn">ĐÃ HIỂU</button>
+      <button type="button" class="pdp-btn">Đã hiểu</button>
       <div class="pdp-note">Hướng dẫn này sẽ hiện mỗi lần vào trang cho tới khi PickDee được cài.</div>`);
     o.querySelector(".pdp-btn").addEventListener("click", () => o.remove());
   }
 
-  /* Nút trong chuông (notifications.js) đang ghi "KHÔNG HỖ TRỢ PUSH" và bị khoá trên iPhone chưa cài
+  /* Nút trong chuông (notifications.js) đang ghi "Không hỗ trợ push" và bị khoá trên iPhone chưa cài
      → đổi thành nút mở hướng dẫn cài. */
   function patchBellButtonForIOS() {
     document.addEventListener("click", e => {
@@ -88,7 +88,7 @@
       const b = document.getElementById("pickdeeEnablePushButton");
       if (b && !/CÀI PICKDEE/.test(b.textContent)) {
         b.disabled = false;
-        b.textContent = "📲 CÀI PICKDEE ĐỂ NHẬN THÔNG BÁO";
+        b.textContent = "📲 Cài PickDee để nhận thông báo";
         const st = document.getElementById("pickdeePushStatus");
         if (st) st.textContent = "iPhone cần thêm PickDee vào màn hình chính để nhận thông báo.";
       }
@@ -108,8 +108,8 @@
         <li><span class="pdp-num">1</span><span>Bấm nút <b>⋯</b> hoặc <b>⋮</b> ở góc màn hình</span></li>
         <li><span class="pdp-num">2</span><span>Chọn <b>“Mở bằng trình duyệt”</b>${isIOS ? " / <b>“Mở trong Safari”</b>" : " / <b>“Mở bằng Chrome”</b>"}</span></li>
       </ol>
-      ${isAndroid ? `<a class="pdp-btn" href="${chromeIntent}" style="display:flex;align-items:center;justify-content:center;text-decoration:none">🌐 MỞ BẰNG CHROME</a>` : ""}
-      <button type="button" class="pdp-btn pdp-copy" style="margin-top:10px">📋 SAO CHÉP LINK</button>
+      ${isAndroid ? `<a class="pdp-btn" href="${chromeIntent}" style="display:flex;align-items:center;justify-content:center;text-decoration:none">🌐 Mở bằng Chrome</a>` : ""}
+      <button type="button" class="pdp-btn pdp-copy" style="margin-top:10px">📋 Sao chép link</button>
       <button type="button" class="pdp-link">Để sau</button>`);
     o.querySelector(".pdp-copy").addEventListener("click", async e => {
       try { await navigator.clipboard.writeText(url); e.target.textContent = "✓ ĐÃ SAO CHÉP – dán vào trình duyệt"; }
@@ -188,7 +188,7 @@
       <p class="pdp-text">${cfg.role === "Học viên"
         ? "Bật thông báo để không lỡ lịch học, nhắc buổi học, xác nhận thanh toán và tin nhắn từ Coach."
         : "PickDee tự giao học viên gần bạn qua thông báo này. Chưa bật thông báo = chưa được mời nhận học viên mới."}</p>
-      <button type="button" class="pdp-btn">🔔 BẬT THÔNG BÁO</button>
+      <button type="button" class="pdp-btn">🔔 Bật thông báo</button>
       <div class="pdp-note">Khi trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div>`);
     const btn = o.querySelector(".pdp-btn");
 
@@ -204,14 +204,14 @@
       }
       if (Notification.permission === "denied") {
         btn.disabled = false;
-        btn.textContent = "ĐÃ HIỂU";
+        btn.textContent = "Đã hiểu";
         o.querySelector(".pdp-text").textContent =
           "Trình duyệt đang chặn thông báo của PickDee. Vào Cài đặt trình duyệt → Thông báo → cho phép pickdee.vn để không lỡ lịch học.";
         btn.onclick = () => { o.remove(); promptDone(); };
         return;
       }
       btn.disabled = false;
-      btn.textContent = "🔔 THỬ BẬT LẠI";
+      btn.textContent = "🔔 Thử bật lại";
     });
   }
 

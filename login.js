@@ -575,7 +575,7 @@ form.addEventListener(
 
 
       submitButton.textContent =
-        "ĐANG ĐĂNG NHẬP...";
+        "Đang đăng nhập...";
 
     }
 
@@ -697,7 +697,7 @@ form.addEventListener(
 
 
       submitButton.textContent =
-        "ĐĂNG NHẬP";
+        "Đăng nhập";
 
     }
 

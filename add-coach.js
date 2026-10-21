@@ -370,7 +370,7 @@ document
       saveBtn.disabled = true;
 
       saveBtn.textContent =
-        "ĐANG LƯU...";
+        "Đang lưu...";
 
       const {
         data,
@@ -426,7 +426,7 @@ document
         saveBtn.disabled = false;
 
         saveBtn.textContent =
-          "LƯU COACH";
+          "Lưu Coach";
 
         return;
       }

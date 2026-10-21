@@ -1502,7 +1502,7 @@ document
 
 
       saveBtn.textContent =
-        "ĐANG LƯU...";
+        "Đang lưu...";
 
 
       const {
@@ -1599,7 +1599,7 @@ document
 
 
         saveBtn.textContent =
-          "TẠO ĐĂNG KÝ HỌC";
+          "Tạo đăng ký học";
 
 
         return;

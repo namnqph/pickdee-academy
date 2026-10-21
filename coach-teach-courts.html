@@ -80,7 +80,7 @@
   <div id="list"></div>
   <div class="foot">Không thấy sân? <a href="/add-my-court">Gửi sân lên danh bạ →</a> (PickDee duyệt xong là chọn được).</div>
 </div>
-<div class="bar"><div class="in"><div class="msg" id="msg"></div><button class="btn" id="save" type="button">LƯU NƠI DẠY</button></div></div>
+<div class="bar"><div class="in"><div class="msg" id="msg"></div><button class="btn" id="save" type="button">Lưu nơi dạy</button></div></div>
 
 <script>
 (function () {
@@ -95,7 +95,7 @@
   function fmt(d) { return d ? d.slice(8, 10) + "/" + d.slice(5, 7) : ""; }
 
   function paintMine() {
-    $("mineTitle").textContent = "NƠI DẠY CỦA BẠN (" + mine.length + "/" + MAX + ")";
+    $("mineTitle").textContent = "Nơi dạy của bạn (" + mine.length + "/" + MAX + ")";
     if (!mine.length) { $("mine").innerHTML = '<div class="empty">Chưa có sân nào — học viên chưa thấy bạn chính xác trên bản đồ. Thêm sân ở bên dưới.</div>'; return; }
     $("mine").innerHTML = mine.map((c, i) => {
       const tmp = !!(c.date_from || c.date_to || c._tmp);
@@ -175,10 +175,10 @@
       if ((c.date_from || c._tmp) && (!c.date_from || !c.date_to)) return say("Nhập đủ ngày bắt đầu và kết thúc cho " + c.court_name + ".", "err");
       if (c.date_from && c.date_to && c.date_to < c.date_from) return say("Ngày kết thúc phải sau ngày bắt đầu (" + c.court_name + ").", "err");
     }
-    $("save").disabled = true; $("save").textContent = "ĐANG LƯU…";
+    $("save").disabled = true; $("save").textContent = "Đang lưu…";
     const items = mine.map(c => ({ id: c.id, days: c.days, from: c.date_from || null, to: c.date_to || null }));
     const { error } = await sb.rpc("save_my_teach_courts", { p_items: items });
-    $("save").disabled = false; $("save").textContent = "LƯU NƠI DẠY";
+    $("save").disabled = false; $("save").textContent = "Lưu nơi dạy";
     if (error) return say("Chưa lưu được: " + error.message, "err");
     dirty = false;
     say("✓ Đã lưu " + mine.length + " sân. Học viên gần các sân này sẽ thấy bạn trên bản đồ.", "ok");

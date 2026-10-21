@@ -66,7 +66,7 @@
           <input id="pw" type="password" autocomplete="new-password" placeholder="Mật khẩu mới (ít nhất 8 ký tự)" minlength="8" required>
           <button type="button" class="eye" id="eye">Hiện</button>
         </div>
-        <button class="btn" id="go" type="submit">TIẾP TỤC</button>
+        <button class="btn" id="go" type="submit">Tiếp tục</button>
       </form>
       <div class="msg" id="msg"></div>`;
     const pw = document.getElementById("pw"), go = document.getElementById("go"), msg = document.getElementById("msg");
@@ -78,7 +78,7 @@
       e.preventDefault();
       const v = pw.value;
       if (v.length < 8) { msg.className = "msg err"; msg.textContent = "Mật khẩu cần ít nhất 8 ký tự."; return; }
-      go.disabled = true; go.textContent = "ĐANG LƯU…"; msg.textContent = "";
+      go.disabled = true; go.textContent = "Đang lưu…"; msg.textContent = "";
       try {
         const { data: u } = await window.sb.auth.getUser();
         const { error } = await window.sb.auth.updateUser({
@@ -88,7 +88,7 @@
         msg.className = "msg ok"; msg.textContent = "✓ Xong! Đang mở khu vực Coach…";
         setTimeout(() => location.replace("/coach"), 800);
       } catch (err) {
-        go.disabled = false; go.textContent = "TIẾP TỤC";
+        go.disabled = false; go.textContent = "Tiếp tục";
         msg.className = "msg err"; msg.textContent = "Không lưu được mật khẩu: " + (err?.message || err);
       }
     };

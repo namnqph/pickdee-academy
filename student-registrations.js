@@ -577,7 +577,7 @@ logoutBtn.addEventListener(
     logoutBtn.disabled = true;
 
     logoutBtn.textContent =
-      "ĐANG ĐĂNG XUẤT...";
+      "Đang đăng xuất...";
 
 
     await sb.auth.signOut();

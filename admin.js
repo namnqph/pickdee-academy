@@ -70,7 +70,7 @@ document
           true;
 
         logoutBtn.textContent =
-          "ĐANG ĐĂNG XUẤT...";
+          "Đang đăng xuất...";
 
 
         await supabaseClient.auth
@@ -103,7 +103,7 @@ document
           false;
 
         logoutBtn.textContent =
-          "ĐĂNG XUẤT";
+          "Đăng xuất";
 
       }
 
