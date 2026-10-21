@@ -8981,54 +8981,48 @@ if (shopSearchButton) {
 </style>
 
 <style id="pdCartFab">
-/* Giỏ hàng nổi: viên thuốc vàng có chữ, nảy khi thêm SP (đè các lớp .floating-cart-* cũ) */
-html body .floating-cart-button{position:fixed !important;z-index:9998 !important;left:auto !important;right:max(18px,calc((100vw - 1180px)/2 + 18px)) !important;bottom:24px !important;width:auto !important;min-width:0 !important;height:56px !important;padding:0 8px 0 10px !important;display:inline-flex !important;align-items:center !important;gap:10px !important;border-radius:999px !important;background:#ffc934 !important;color:#0b0b0b !important;border:0 !important;text-decoration:none !important;box-shadow:0 10px 28px rgba(0,0,0,.28),0 0 0 4px rgba(255,201,52,.22) !important;-webkit-tap-highlight-color:transparent;overflow:hidden;transition:transform .16s cubic-bezier(.23,1,.32,1),box-shadow .2s;animation:pdcfIn .5s cubic-bezier(.23,1,.32,1) both}
-html body .floating-cart-button:active{transform:scale(.96)}
-@media(hover:hover){html body .floating-cart-button:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.32),0 0 0 6px rgba(255,201,52,.28) !important}}
-html body .floating-cart-icon{position:static !important;width:38px !important;height:38px !important;flex:0 0 38px;display:grid !important;place-items:center;border-radius:50% !important;background:#0b0b0b !important;color:#ffc934 !important;box-shadow:none !important}
-html body .floating-cart-icon svg{width:20px;height:20px}
-html body .floating-cart-text{display:inline !important;font-size:16px !important;font-weight:800 !important;letter-spacing:0 !important;text-transform:none !important;color:#0b0b0b !important;white-space:nowrap}
-html body .floating-cart-count{position:static !important;min-width:30px !important;height:30px !important;padding:0 8px !important;display:grid !important;place-items:center;border-radius:999px !important;background:#0b0b0b !important;color:#fff !important;font-size:14px !important;font-weight:800 !important;font-variant-numeric:tabular-nums;border:0 !important;box-shadow:none !important}
-html body .floating-cart-button::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-120%);pointer-events:none}
-html body .floating-cart-button.has-items::after{animation:pdcfShine 6s ease-in-out 1.5s infinite}
-html body .floating-cart-button.bump{animation:pdcfBump .5s cubic-bezier(.23,1,.32,1)}
-html body .floating-cart-button.bump .floating-cart-count{animation:pdcfPop .5s cubic-bezier(.23,1,.32,1)}
+/* Bỏ viên "Giỏ hàng" nổi (che thẻ SP) — số giỏ xem ở menu đáy (ĐT) / nút Giỏ hàng đầu trang (PC) */
+html body .floating-cart-button{display:none !important}
+@media(max-width:1020px){html body .shop-cart-toast{bottom:calc(100px + env(safe-area-inset-bottom)) !important}}
+/* Nút thêm giỏ trên thẻ SP: vàng + dấu "+" (trước là ô xám mờ), thêm xong hiện ✓ đen–vàng */
+html body button.product-action:not(:disabled){position:relative !important;overflow:visible !important;background:#ffc934 !important;color:#0b0b0b !important;box-shadow:0 4px 12px rgba(255,201,52,.45) !important}
+@media(hover:hover){html body button.product-action:not(:disabled):hover{background:#f5bb1c !important}}
+html body button.product-action:not(:disabled)::after{content:"";position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:linear-gradient(#ffc934,#ffc934) center/8px 2px no-repeat,linear-gradient(#ffc934,#ffc934) center/2px 8px no-repeat,#0b0b0b;box-shadow:0 0 0 2px #fff;pointer-events:none;transition:opacity .15s}
+html body button.product-action.pdca-ok,html body button.product-action.pdca-ok:hover{background:#0b0b0b !important;color:#ffc934 !important;box-shadow:none !important;animation:pdcaOk .35s cubic-bezier(.23,1,.32,1)}
+html body button.product-action.pdca-ok::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") !important;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") !important}
+html body button.product-action.pdca-ok::after{opacity:0}
+@keyframes pdcaOk{0%{transform:scale(.8)}}
 .pdcf-dot{position:fixed;z-index:9999;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#ffc934;box-shadow:0 0 0 3px #0b0b0b;pointer-events:none}
-@keyframes pdcfIn{from{opacity:0;transform:translateY(16px) scale(.96)}}
-@keyframes pdcfBump{30%{transform:scale(1.1)}60%{transform:scale(.97)}}
-@keyframes pdcfPop{30%{transform:scale(1.35)}}
-@keyframes pdcfShine{0%,80%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-@media(max-width:700px){
-  html body .shop-cart-toast{bottom:calc(162px + env(safe-area-inset-bottom)) !important}
-  html body .floating-cart-button{right:auto !important;left:50% !important;bottom:calc(98px + env(safe-area-inset-bottom)) !important;height:52px !important;translate:-50% 0}
-}
-@media(prefers-reduced-motion:reduce){html body .floating-cart-button,html body .floating-cart-button::after,html body .floating-cart-button.bump,html body .floating-cart-button.bump .floating-cart-count{animation:none !important}}
+html body .pdcf-bump{animation:pdcfPop .5s cubic-bezier(.23,1,.32,1)}
+@keyframes pdcfPop{30%{scale:1.4}}
+@media(prefers-reduced-motion:reduce){html body .pdcf-bump,html body button.product-action.pdca-ok{animation:none !important}}
 </style>
 <script>
 (function(){
-  var btn=document.querySelector(".floating-cart-button"),cnt=document.getElementById("floatingCartCount");
-  if(!btn||!cnt)return;
-  btn.setAttribute("aria-label","Mở giỏ hàng");
-  var last=null,tap=null,prev=parseInt(cnt.textContent,10)||0,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  document.addEventListener("pointerdown",function(e){tap={x:e.clientX,y:e.clientY,t:Date.now()};},true);
+  var cnt=document.getElementById("floatingCartCount");
+  if(!cnt)return;
+  var tap=null,prev=parseInt(cnt.textContent,10)||0,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.addEventListener("pointerdown",function(e){tap={x:e.clientX,y:e.clientY,t:Date.now(),el:e.target.closest&&e.target.closest("button.product-action")};},true);
+  function ok(el){el.classList.remove("pdca-ok");void el.offsetWidth;el.classList.add("pdca-ok");clearTimeout(el._pdcaT);el._pdcaT=setTimeout(function(){el.classList.remove("pdca-ok");},1400);}
+  function seen(el){if(!el)return null;var r=el.getBoundingClientRect();return r.width&&r.bottom>0&&r.top<innerHeight?el:null;}
+  function target(){return seen(document.getElementById("bottomCartCount"))||seen(document.getElementById("cartCount"));}
+  function bump(el){if(!el||reduce)return;el.classList.remove("pdcf-bump");void el.offsetWidth;el.classList.add("pdcf-bump");}
+  function fly(x,y,el){
+    var r=el.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2,d=document.createElement("div");
+    d.className="pdcf-dot";document.body.appendChild(d);
+    var a=d.animate([{transform:"translate("+x+"px,"+y+"px) scale(1)"},{transform:"translate("+((x+tx)/2)+"px,"+(Math.min(y,ty)-90)+"px) scale(1.1)",offset:.45},{transform:"translate("+tx+"px,"+ty+"px) scale(.4)",opacity:.6}],{duration:600,easing:"cubic-bezier(.5,0,.75,0)"});
+    a.onfinish=function(){d.remove();bump(el);};
+  }
   function sync(){
     var n=parseInt(cnt.textContent,10)||0;
-    btn.classList.toggle("has-items",n>0);
-    btn.setAttribute("aria-label","Mở giỏ hàng, "+n+" sản phẩm");
-    if(n>prev&&!reduce){
-      if(tap&&Date.now()-tap.t<2500)fly(tap.x,tap.y);else bump();
+    if(n>prev){
+      var t=target(),fresh=tap&&Date.now()-tap.t<2500;
+      if(fresh&&tap.el)ok(tap.el);
+      if(fresh&&t&&!reduce)fly(tap.x,tap.y,t);else bump(t);
     }
     prev=n;
   }
-  function bump(){btn.classList.remove("bump");void btn.offsetWidth;btn.classList.add("bump");}
-  function fly(x,y){
-    var r=btn.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2,d=document.createElement("div");
-    d.className="pdcf-dot";document.body.appendChild(d);
-    var a=d.animate([{transform:"translate("+x+"px,"+y+"px) scale(1)"},{transform:"translate("+((x+tx)/2)+"px,"+(Math.min(y,ty)-90)+"px) scale(1.1)",offset:.45},{transform:"translate("+tx+"px,"+ty+"px) scale(.4)",opacity:.6}],{duration:600,easing:"cubic-bezier(.5,0,.75,0)"});
-    a.onfinish=function(){d.remove();bump();};
-  }
   new MutationObserver(sync).observe(cnt,{childList:true,characterData:true,subtree:true});
-  sync();
 })();
 </script>
 </body>
