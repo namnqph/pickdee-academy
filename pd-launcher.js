@@ -373,6 +373,7 @@
     sync();
     setInterval(sync, 2000);
     openFromHash();
+    window.addEventListener("hashchange", openFromHash); // vd. màn hoàn tất hồ sơ đặt #ho-so khi trang đã mở
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
