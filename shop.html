@@ -8996,6 +8996,16 @@ html body button.product-action.pdca-ok::after{opacity:0}
 html body .pdcf-bump{animation:pdcfPop .5s cubic-bezier(.23,1,.32,1)}
 @keyframes pdcfPop{30%{scale:1.4}}
 @media(prefers-reduced-motion:reduce){html body .pdcf-bump,html body button.product-action.pdca-ok{animation:none !important}}
+/* PC: thanh danh mục dính có nút Giỏ hàng bên phải (đầu trang không dính → cuộn xuống vẫn thấy giỏ) */
+#pdChipCart{display:none}
+@media(min-width:1021px){
+html body #shopChipBar{padding-right:156px}
+#pdChipCart{position:fixed;right:16px;z-index:100;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 8px 0 14px;border-radius:999px;background:#0b0b0b;color:#fff;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .22s ease,transform .22s ease,visibility 0s .22s}
+#pdChipCart.show{opacity:1;visibility:visible;transform:none;transition:opacity .22s ease,transform .22s ease}
+#pdChipCart svg{color:#ffc934;flex:none}
+#pdChipCart b{min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ffc934;color:#0b0b0b;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+@media(hover:hover){#pdChipCart:hover{background:#222}}
+}
 </style>
 <script>
 (function(){
@@ -9005,7 +9015,22 @@ html body .pdcf-bump{animation:pdcfPop .5s cubic-bezier(.23,1,.32,1)}
   document.addEventListener("pointerdown",function(e){tap={x:e.clientX,y:e.clientY,t:Date.now(),el:e.target.closest&&e.target.closest("button.product-action")};},true);
   function ok(el){el.classList.remove("pdca-ok");void el.offsetWidth;el.classList.add("pdca-ok");clearTimeout(el._pdcaT);el._pdcaT=setTimeout(function(){el.classList.remove("pdca-ok");},1400);}
   function seen(el){if(!el)return null;var r=el.getBoundingClientRect();return r.width&&r.bottom>0&&r.top<innerHeight?el:null;}
-  function target(){return seen(document.getElementById("bottomCartCount"))||seen(document.getElementById("cartCount"));}
+  var chip=document.createElement("a");chip.id="pdChipCart";chip.href="./shop-cart";chip.setAttribute("aria-label","Giỏ hàng");
+  chip.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.6 11.6a1.6 1.6 0 0 0 1.6 1.2h8.4a1.6 1.6 0 0 0 1.6-1.2l1.6-7.1H6.4"/></svg>Giỏ hàng<b id="pdChipCartCount">0</b>';
+  document.body.appendChild(chip);
+  var chipN=document.getElementById("pdChipCartCount"),bar=null;
+  function place(){
+    var on=!!bar&&bar.classList.contains("show")&&innerWidth>1020;
+    chip.classList.toggle("show",on);
+    if(bar)chip.style.top=(parseFloat(bar.style.top)||0)+(bar.offsetHeight-36)/2+"px";
+    chip.tabIndex=on?0:-1;
+  }
+  function count(){chipN.textContent=parseInt(cnt.textContent,10)||0;}
+  count();
+  function hook(){bar=document.getElementById("shopChipBar");if(!bar)return false;new MutationObserver(place).observe(bar,{attributes:true,attributeFilter:["class","style"]});place();return true;}
+  if(!hook()){var mo=new MutationObserver(function(){if(hook())mo.disconnect();});mo.observe(document.body,{childList:true});}
+  addEventListener("resize",place,{passive:true});
+  function target(){return seen(document.getElementById("bottomCartCount"))||(chip.classList.contains("show")?chipN:null)||seen(document.getElementById("cartCount"));}
   function bump(el){if(!el||reduce)return;el.classList.remove("pdcf-bump");void el.offsetWidth;el.classList.add("pdcf-bump");}
   function fly(x,y,el){
     var r=el.getBoundingClientRect(),tx=r.left+r.width/2,ty=r.top+r.height/2,d=document.createElement("div");
@@ -9014,6 +9039,7 @@ html body .pdcf-bump{animation:pdcfPop .5s cubic-bezier(.23,1,.32,1)}
     a.onfinish=function(){d.remove();bump(el);};
   }
   function sync(){
+    count();
     var n=parseInt(cnt.textContent,10)||0;
     if(n>prev){
       var t=target(),fresh=tap&&Date.now()-tap.t<2500;
