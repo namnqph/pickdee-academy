@@ -2388,7 +2388,17 @@ async function redirectByRole(
         layer = L.layerGroup().addTo(map);
         map.on("dragstart zoomstart", function () { if (here) moved = true; });
         map.on("moveend", function () { $("pdaHere").classList.toggle("show", moved && !loading); save(); });
-        if (!restore()) locate();
+        /* Từ trang sân: /academy?near=lat,lng#coach → tìm Coach quanh sân đó */
+        var near = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(new URLSearchParams(location.search).get("near") || "");
+        if (near) {
+          var ll = [Number(near[1]), Number(near[2])];
+          map.setView(ll, 13, { animate: false });
+          $("pdaCenter").classList.add("show");
+          $("pdaLocText").textContent = "Quanh sân này";
+          data.coach.at = data.court.at = null;
+          search(ll, true);
+        }
+        else if (!restore()) locate();
       }).catch(function () {
         $("pdaSheetTitle").textContent = "Không tải được bản đồ";
         $("pdaList").innerHTML = '<div class="pda-empty">Mạng chập chờn. Bạn thử lại hoặc xem danh sách.<a class="pda-cta ghost" href="' + TXT[mode].all + '">XEM DANH SÁCH →</a></div>';
