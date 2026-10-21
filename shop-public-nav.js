@@ -528,7 +528,7 @@
           "
           ${lookupActive ? 'aria-current="page"' : ""}
         >
-          📦 TRA CỨU ĐƠN
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg> Tra cứu đơn
         </a>
 
 
@@ -543,11 +543,11 @@
         >
 
           <span class="pd-shop-cart-desktop">
-            🛒 GIỎ HÀNG
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg> Giỏ hàng
           </span>
 
           <span class="pd-shop-cart-mobile">
-            🛒
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
           </span>
 
           <span
@@ -569,7 +569,7 @@
             class="pd-shop-menu-toggle"
             aria-label="Mở hệ sinh thái PickDee"
           >
-            ☰
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
           </summary>
 
 
