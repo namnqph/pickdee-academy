@@ -103,8 +103,9 @@
               (t.closed ? '<span class="bot-closed">Đã đóng</span>' : "") +
               "<i>" + fmt(t.last.created_at) + "</i></div>" +
             '<div class="bot-prev">' + esc(t.last.question) + " · " + t.items.length + " câu</div>" +
+            (t.closed ? '<div class="bot-actions bot-actions-top">' + actions + "</div>" : "") +
           "</summary>" +
-          '<div class="bot-msgs">' + msgs + '<div class="bot-actions">' + actions + "</div></div>" +
+          '<div class="bot-msgs">' + msgs + (t.closed ? "" : '<div class="bot-actions">' + actions + "</div>") + "</div>" +
         "</details>"
       );
     }).join("") + toggle;
@@ -142,6 +143,7 @@
   list.addEventListener("click", async function (e) {
     const btn = e.target.closest("button[data-act]");
     if (!btn) return;
+    e.preventDefault();
     const act = btn.dataset.act;
 
     if (act === "toggle") {
