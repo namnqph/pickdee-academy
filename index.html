@@ -1137,12 +1137,26 @@ main{margin-top:0}
 
 /* hero: câu tách đôi, khung ảnh chạy giữa */
 .h2-hero{min-height:calc(100svh - 62px);display:flex;flex-direction:column;justify-content:center;gap:clamp(32px,6vh,72px);padding:24px 0 40px}
-.h2-sentence{margin:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,2vw,32px);font-size:var(--t-d);font-weight:800;letter-spacing:-.045em;line-height:.95}
+.h2-sentence{margin:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,2vw,32px);font-size:var(--t-d);font-weight:700;letter-spacing:-.05em;line-height:.95}
 .h2-left{justify-self:start}
 .h2-right{justify-self:end;text-align:right}
-.h2-reel{display:block;width:clamp(180px,30vw,460px);aspect-ratio:16/10;overflow:hidden;border-radius:6px;background:var(--surface)}
-.h2-strip{display:flex;flex-direction:column;height:500%;transition:transform .7s var(--ease)}
-.h2-strip img{display:block;width:100%;height:20%;min-height:0;object-fit:cover}
+.h2-reel{display:block;width:clamp(220px,38vw,580px);aspect-ratio:16/10;overflow:hidden;border-radius:6px;background:#111}
+.h2-reel{position:relative}
+.h2-court{display:block;width:100%;height:100%}
+.h2-rally{position:absolute;right:12px;top:10px;font-size:13px;font-weight:600;letter-spacing:0;line-height:1;color:rgba(255,255,255,.7)}
+.h2-rally b{color:#fff;font-variant-numeric:tabular-nums}
+.h2-court .bg{fill:#111}.h2-court .apron{fill:#151515}.h2-court .court{fill:#1d1d1d}.h2-court .kitchen{fill:#262626}
+.h2-court .ln{stroke:#f2f2f2;stroke-width:1.6;stroke-linecap:square}
+.h2-court .mesh{fill:rgba(255,255,255,.04)}.h2-court .mesh-v{stroke:rgba(255,255,255,.22);stroke-width:.6}
+.h2-court .tape{stroke:#fff;stroke-width:2.6}.h2-court .post{stroke:#8a8a8a;stroke-width:2.4}
+.h2-court .shadow ellipse{fill:rgba(0,0,0,.55)}
+.h2-court .ball circle{fill:#ffc934}.h2-court .ball .hole{fill:#b8860b}
+.h2-court .spin{animation:pdSpin .6s linear infinite}
+.h2-court .pad-near rect{fill:#ffc934}.h2-court .pad-far rect{fill:#f2f2f2}
+.h2-court .pad .grip{fill:#0b0b0b}.h2-court .pad .wrap{stroke:#f2f2f2;stroke-width:.7}
+.h2-court .pad text{font:800 3px 'Be Vietnam Pro',sans-serif;fill:#0b0b0b;letter-spacing:-.02em}
+.h2-court .swing{transform-box:fill-box;transform-origin:50% 100%}
+@keyframes pdSpin{to{transform:rotate(360deg)}}
 .h2-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
 .h2-lead{margin:0;max-width:30ch;font-size:var(--t-l);line-height:1.45;color:var(--ink)}
 .h2-actions{display:flex;align-items:center;gap:20px}
@@ -1229,7 +1243,8 @@ html.h2-js .rv.in{opacity:1;transform:none}
   .h2-legal{flex-direction:column;gap:6px}
 }
 @media(prefers-reduced-motion:reduce){
-  .h2-strip,.h2-pic-drift img,html.h2-js .rv{transition:none}
+  .h2-court .spin{animation:none}
+  .h2-pic-drift img,html.h2-js .rv{transition:none}
   html.h2-js .rv{opacity:1;transform:none}
 }
 </style>
@@ -1241,13 +1256,37 @@ addEventListener("DOMContentLoaded",function(){
   var io="IntersectionObserver" in window&&new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;var el=e.target,sib=[].indexOf.call(el.parentNode.children,el);el.style.transitionDelay=Math.min(sib,3)*80+"ms";el.classList.add("in");io.unobserve(el)})},{rootMargin:"0px 0px -8% 0px"});
   document.querySelectorAll(".rv").forEach(function(el){io?io.observe(el):el.classList.add("in")});
   setTimeout(function(){document.querySelectorAll(".rv").forEach(function(el){el.classList.add("in")})},4000);
-  if(rm)return;
-  /* khung ảnh trong tiêu đề chạy 4 ảnh rồi vòng lại */
-  var strip=document.querySelector(".h2-strip"),i=0;
-  if(strip)setInterval(function(){if(document.hidden)return;i++;strip.style.transform="translateY(-"+i*20+"%)";if(i===4)setTimeout(function(){strip.style.transition="none";strip.style.transform="none";i=0;strip.offsetHeight;strip.style.transition=""},750)},2600);
+  /* sân vẽ bằng code: hai vợt đánh qua lại, mỗi cú rơi một chỗ khác */
+  (function(){
+    var svg=document.querySelector(".h2-court");if(!svg||!svg.animate)return;
+    var ball=svg.querySelector("#pdBall"),sh=svg.querySelector("#pdShadow"),near=svg.querySelector("#pdNear"),far=svg.querySelector("#pdFar");
+    var P=function(x,z,h){return [320+1638*x/z,-410+49140/z-1638*(h||0)/z]};
+    var cnt=document.getElementById("pdRally"),n=0,ZN=66,ZF=100,pos={n:3,f:-2},run=true,timer;
+    var place=function(el,x,z,h,k){var p=P(x,z,h),s=k*72/z;return "translate("+p[0].toFixed(1)+"px,"+p[1].toFixed(1)+"px) scale("+s.toFixed(3)+")"};
+    near.style.transform=place(near,pos.n,ZN,2.5,1.7);far.style.transform=place(far,pos.f,ZF,1.8,1.7);
+    var EIO="cubic-bezier(0.77, 0, 0.175, 1)",EO="cubic-bezier(0.23, 1, 0.32, 1)";
+    function shot(fromNear){
+      if(!run)return;
+      var x0=fromNear?pos.n:pos.f,z0=fromNear?ZN:ZF,z1=fromNear?ZF:ZN,x1=Math.round((Math.random()*12-6)*2)/2,peak=3+Math.random()*3.5,dur=1050+Math.random()*250;
+      var hitter=fromNear?near:far,recv=fromNear?far:near,key=fromNear?"f":"n";
+      hitter.firstElementChild.animate([{transform:"rotate("+(fromNear?-28:24)+"deg)"},{transform:"rotate(0deg)"}],{duration:180,easing:EO});
+      recv.animate([{transform:recv.style.transform},{transform:place(recv,x1,z1,fromNear?1.8:2.5,1.7)}],{duration:dur*.7,easing:EIO,fill:"forwards"}).finished.then(function(){recv.style.transform=place(recv,x1,z1,fromNear?1.8:2.5,1.7)}).catch(function(){});
+      pos[key]=x1;
+      var kb=[],ks=[];for(var i=0;i<=24;i++){var s=i/24,x=x0+(x1-x0)*s,z=z0+(z1-z0)*s,hh=(fromNear?2.5:1.8)+((fromNear?1.8:2.5)-(fromNear?2.5:1.8))*s+peak*4*s*(1-s);kb.push({transform:place(ball,x,z,hh,1.35)});var g=P(x,z,0);ks.push({transform:"translate("+g[0].toFixed(1)+"px,"+g[1].toFixed(1)+"px) scale("+(97/z).toFixed(3)+")",opacity:Math.max(.25,1-hh/12)})}
+      ball.animate(kb,{duration:dur,fill:"forwards"});
+      sh.animate(ks,{duration:dur,fill:"forwards"});
+      timer=setTimeout(function(){cnt.textContent=++n;shot(!fromNear)},dur);
+    }
+    var start=function(){if(!run){run=true;shot(true)}};
+    run=false;
+    var m=P(0,85,6),g0=P(0,85,0);ball.style.transform="translate("+m[0]+"px,"+m[1]+"px) scale(.85)";sh.style.transform="translate("+g0[0]+"px,"+g0[1]+"px) scale(.85)";
+    if(rm)return;
+    var io2=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&!document.hidden)start();else{run=false;clearTimeout(timer)}})});io2.observe(svg);
+    document.addEventListener("visibilitychange",function(){if(document.hidden){run=false;clearTimeout(timer)}});
+  })();
   /* tên sân sáng lần lượt */
   var ns=document.querySelectorAll(".h2-n"),k=0;
-  if(ns.length)setInterval(function(){ns[k].classList.remove("lit");k=(k+1)%ns.length;ns[k].classList.add("lit")},1600),ns[0].classList.add("lit");
+  if(!rm&&ns.length)setInterval(function(){ns[k].classList.remove("lit");k=(k+1)%ns.length;ns[k].classList.add("lit")},1600),ns[0].classList.add("lit");
 });
 </script>
 </head>
@@ -1345,14 +1384,15 @@ addEventListener("DOMContentLoaded",function(){
   <section class="h2-hero" aria-labelledby="homeTitle">
     <h1 id="homeTitle" class="h2-sentence">
       <span class="h2-half h2-left">Vào sân</span>
-      <span class="h2-reel" aria-hidden="true">
-        <span class="h2-strip">
-          <img src="/img/home/court-miami.webp" alt="" width="720" height="480">
-          <img src="/img/home/paddle.jpg" alt="" width="1100" height="919">
-          <img src="/img/home/ball.webp" alt="" width="804" height="1000">
-          <img src="/img/home/court-baoson.webp" alt="" width="720" height="480">
-          <img src="/img/home/court-miami.webp" alt="" width="720" height="480">
-        </span>
+      <span class="h2-reel" role="img" aria-label="Minh hoạ: vợt vàng PickDee và vợt trắng đánh bóng qua lưới trên sân Pickleball">
+        <svg class="h2-court" viewBox="20 8 600 375" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect class="bg" width="640" height="400"/><polygon class="apron" points="-53.6,452.1 693.6,452.1 508.4,24.9 131.6,24.9"/><polygon class="court" points="60,370 580,370 473.1,49.3 166.9,49.3"/><polygon class="kitchen" points="110,220 530,220 498,124.1 142,124.1"/><line class="ln" x1="60" y1="370" x2="580" y2="370"/><line class="ln" x1="166.9" y1="49.3" x2="473.1" y2="49.3"/><line class="ln" x1="60" y1="370" x2="166.9" y2="49.3"/><line class="ln" x1="580" y1="370" x2="473.1" y2="49.3"/><line class="ln" x1="110" y1="220" x2="530" y2="220"/><line class="ln" x1="142" y1="124.1" x2="498" y2="124.1"/><line class="ln" x1="320" y1="370" x2="320" y2="220"/><line class="ln" x1="320" y1="124.1" x2="320" y2="49.3"/><g class="net"><polygon class="mesh" points="108,168.1 532,168.1 532,110.3 108,110.3"/><line class="mesh-v" x1="117.7" y1="168.1" x2="117.7" y2="110.3"/><line class="mesh-v" x1="132.1" y1="168.1" x2="132.1" y2="110.3"/><line class="mesh-v" x1="146.6" y1="168.1" x2="146.6" y2="110.3"/><line class="mesh-v" x1="161" y1="168.1" x2="161" y2="110.3"/><line class="mesh-v" x1="175.5" y1="168.1" x2="175.5" y2="110.3"/><line class="mesh-v" x1="189.9" y1="168.1" x2="189.9" y2="110.3"/><line class="mesh-v" x1="204.4" y1="168.1" x2="204.4" y2="110.3"/><line class="mesh-v" x1="218.8" y1="168.1" x2="218.8" y2="110.3"/><line class="mesh-v" x1="233.3" y1="168.1" x2="233.3" y2="110.3"/><line class="mesh-v" x1="247.7" y1="168.1" x2="247.7" y2="110.3"/><line class="mesh-v" x1="262.2" y1="168.1" x2="262.2" y2="110.3"/><line class="mesh-v" x1="276.6" y1="168.1" x2="276.6" y2="110.3"/><line class="mesh-v" x1="291.1" y1="168.1" x2="291.1" y2="110.3"/><line class="mesh-v" x1="305.5" y1="168.1" x2="305.5" y2="110.3"/><line class="mesh-v" x1="320" y1="168.1" x2="320" y2="110.3"/><line class="mesh-v" x1="334.5" y1="168.1" x2="334.5" y2="110.3"/><line class="mesh-v" x1="348.9" y1="168.1" x2="348.9" y2="110.3"/><line class="mesh-v" x1="363.4" y1="168.1" x2="363.4" y2="110.3"/><line class="mesh-v" x1="377.8" y1="168.1" x2="377.8" y2="110.3"/><line class="mesh-v" x1="392.3" y1="168.1" x2="392.3" y2="110.3"/><line class="mesh-v" x1="406.7" y1="168.1" x2="406.7" y2="110.3"/><line class="mesh-v" x1="421.2" y1="168.1" x2="421.2" y2="110.3"/><line class="mesh-v" x1="435.6" y1="168.1" x2="435.6" y2="110.3"/><line class="mesh-v" x1="450.1" y1="168.1" x2="450.1" y2="110.3"/><line class="mesh-v" x1="464.5" y1="168.1" x2="464.5" y2="110.3"/><line class="mesh-v" x1="479" y1="168.1" x2="479" y2="110.3"/><line class="mesh-v" x1="493.4" y1="168.1" x2="493.4" y2="110.3"/><line class="mesh-v" x1="507.9" y1="168.1" x2="507.9" y2="110.3"/><line class="mesh-v" x1="522.3" y1="168.1" x2="522.3" y2="110.3"/><line class="mesh-v" x1="108" y1="156.6" x2="532" y2="156.6"/><line class="mesh-v" x1="108" y1="145" x2="532" y2="145"/><line class="mesh-v" x1="108" y1="133.4" x2="532" y2="133.4"/><line class="mesh-v" x1="108" y1="121.9" x2="532" y2="121.9"/><line class="tape" x1="108" y1="110.3" x2="532" y2="110.3"/><line class="post" x1="108" y1="168.1" x2="108" y2="110.3"/><line class="post" x1="532" y1="168.1" x2="532" y2="110.3"/></g>
+          <g id="pdShadow" class="shadow"><ellipse rx="11" ry="3.2"/></g>
+          <g id="pdFar" class="pad pad-far"><g class="swing"><rect x="-7" y="-26" width="14" height="19" rx="6"/><rect class="grip" x="-1.8" y="-8" width="3.6" height="9" rx="1.5"/></g></g>
+          <g id="pdBall" class="ball"><g class="spin"><circle r="10"/><circle class="hole" cx="-3.5" cy="-3" r="1.6"/><circle class="hole" cx="3.2" cy="-4.2" r="1.6"/><circle class="hole" cx="4.6" cy="2.4" r="1.6"/><circle class="hole" cx="-1" cy="4.6" r="1.6"/><circle class="hole" cx="-5.6" cy="2" r="1.3"/><circle class="hole" cx="0.4" cy="-0.2" r="1.4"/><circle class="hole" cx="6.8" cy="-1.4" r="1"/></g></g>
+          <g id="pdNear" class="pad pad-near"><g class="swing"><rect x="-7" y="-26" width="14" height="19" rx="6"/><text x="0" y="-15.2" text-anchor="middle">PickDee</text><rect class="grip" x="-1.8" y="-8" width="3.6" height="9" rx="1.5"/><path class="wrap" d="M-1.8-5.5h3.6M-1.8-2.5h3.6"/></g></g>
+        </svg>
+        <span class="h2-rally" aria-hidden="true"><b id="pdRally">0</b> lượt qua lưới</span>
       </span>
       <span class="h2-half h2-right">cùng PickDee</span>
     </h1>
