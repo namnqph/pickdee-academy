@@ -3119,6 +3119,39 @@
 
         </div>
 
+        <div class="field">
+
+          <div class="switch-row">
+
+            <div class="switch-text">
+
+              <div class="switch-title">
+                Sticker "Bán chạy"
+              </div>
+
+              <div class="switch-desc">
+                Hiện nhãn vàng "Bán chạy" ở góc ảnh sản phẩm tại Shop.
+              </div>
+
+            </div>
+
+            <input
+              id="bestSellerInput"
+              class="check"
+              type="checkbox"
+              ${
+                product.is_best_seller
+                  ?
+                    "checked"
+                  :
+                    ""
+              }
+            >
+
+          </div>
+
+        </div>
+
       </div>
 
       <div class="card">
@@ -4899,7 +4932,7 @@
             "shop_products"
           )
           .select(
-            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,created_at,updated_at"
+            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,is_best_seller,created_at,updated_at"
           )
           .eq(
             "id",
@@ -5157,6 +5190,13 @@
       document
         .getElementById(
           "featuredInput"
+        )
+        .checked;
+
+    const bestSeller =
+      document
+        .getElementById(
+          "bestSellerInput"
         )
         .checked;
 
@@ -5619,6 +5659,32 @@
         throw error;
       }
 
+      if (
+        Boolean(product.is_best_seller)
+        !==
+        bestSeller
+      ) {
+
+        const {
+          error: bestSellerError
+        } =
+          await sb
+            .from("shop_products")
+            .update({
+              is_best_seller:
+                bestSeller
+            })
+            .eq(
+              "id",
+              product.id
+            );
+
+        if (bestSellerError) {
+          throw bestSellerError;
+        }
+
+      }
+
       product = {
         ...product,
 
@@ -5647,7 +5713,10 @@
           status,
 
         is_featured:
-          featured
+          featured,
+
+        is_best_seller:
+          bestSeller
       };
 
       variants =
