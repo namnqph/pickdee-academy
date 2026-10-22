@@ -2406,28 +2406,6 @@ function renderOrder(data) {
   }
 
 
-  let reached =
-    timelineState(
-      orderStatus,
-      shippingStatus
-    );
-
-  /*
-    Đã bàn giao hãng vận chuyển:
-    bước 4 xong, bước 5 "Đang giao đến bạn".
-  */
-
-  if (
-    isSpxHandoff
-    &&
-    reached < 5
-  ) {
-
-    reached = 5;
-
-  }
-
-
   const carrier =
     data.carrier_tracking
     ||
@@ -2446,6 +2424,91 @@ function renderOrder(data) {
         data.shipping_provider || ""
       ).toLowerCase()
     );
+
+
+  /*
+    22/10/2026: hành trình 7 mốc theo dữ liệu hãng thật.
+    "Giao thành công" CHỈ khi hãng báo đã giao
+    (shipping_status = delivered), không dựa vào order_status.
+    events hãng: mới nhất trước, milestone
+    Preparing to ship / In transit / Out for delivery / Delivered.
+  */
+
+  function latestEvent(milestone) {
+
+    return carrierEvents.find(function (ev) {
+      return ev.milestone === milestone;
+    }) || null;
+
+  }
+
+  const evPickup =
+    carrierEvents.slice().reverse().find(function (ev) {
+      return ev.milestone === "In transit";
+    }) || null;
+
+  const evTransit =
+    latestEvent("In transit");
+
+  const evOut =
+    latestEvent("Out for delivery");
+
+  const evDelivered =
+    latestEvent("Delivered");
+
+  const isDelivered =
+    shippingStatus === "delivered"
+    ||
+    Boolean(carrier && carrier.state === "delivered");
+
+
+  let reached =
+    timelineState(
+      orderStatus,
+      shippingStatus
+    );
+
+  if (reached >= 5) {
+    reached += 1;
+  }
+
+  if (orderStatus === "completed" && !isSpxHandoff) {
+    reached = 8;
+  }
+
+  if (isSpxHandoff) {
+
+    reached = 5;
+
+    if (
+      carrierEvents.length
+      &&
+      !evTransit
+      &&
+      !evOut
+      &&
+      !evDelivered
+    ) {
+      reached = 4;
+    }
+
+    if (evOut) {
+      reached = 6;
+    }
+
+  }
+
+  if (isDelivered) {
+    reached = 8;
+  }
+
+  function evLine(ev, fallback) {
+
+    return ev
+      ? (ev.text || "") + " • " + formatTime(ev.at)
+      : fallback;
+
+  }
 
 
   
@@ -2638,32 +2701,45 @@ function renderOrder(data) {
         ${timelineItem(
           4,
           reached,
-          "Đã giao cho đơn vị vận chuyển",
           isSpxHandoff
-            ?
-              "PickDee đã bàn giao đơn hàng cho " + carrierName + "."
-            :
-              "Đơn hàng đã được bàn giao cho đơn vị vận chuyển."
+            ? "Bàn giao " + carrierName
+            : "Đã giao cho đơn vị vận chuyển",
+          reached === 4
+            ? "PickDee đã gửi hàng, chờ " + carrierName + " đến lấy."
+            : evPickup
+              ? evLine(evPickup, "")
+              : "PickDee đã bàn giao đơn hàng cho " + (isSpxHandoff ? carrierName : "đơn vị vận chuyển") + "."
         )}
 
 
         ${timelineItem(
           5,
           reached,
-          reached >= 6
-            ? "Giao thành công"
-            : "Đang giao đến bạn",
-          reached >= 6
-            ? "Anh/chị đã nhận hàng. Cảm ơn anh/chị đã mua sắm tại PickDee!"
-            : (
-                carrier && carrier.status_text
-                  ? carrier.status_text
-                  : "Đơn hàng sẽ được giao đến địa chỉ của anh/chị."
-              )
+          "Đang vận chuyển",
+          evTransit
+            ? evLine(evTransit, "")
+            : "Đơn hàng đang trên đường đến khu vực của anh/chị."
         )}
 
 
-      
+        ${timelineItem(
+          6,
+          reached,
+          "Đang giao đến bạn",
+          evOut
+            ? "Shipper đang giao, anh/chị để ý điện thoại nhé • " + formatTime(evOut.at)
+            : "Shipper sẽ gọi trước khi giao."
+        )}
+
+
+        ${timelineItem(
+          7,
+          reached,
+          "Giao thành công",
+          isDelivered
+            ? (evDelivered ? formatTime(evDelivered.at) + " • " : "") + "Cảm ơn anh/chị đã mua sắm tại PickDee!"
+            : "Anh/chị nhận hàng và kiểm tra cùng shipper."
+        )}
 
       </div>
 
