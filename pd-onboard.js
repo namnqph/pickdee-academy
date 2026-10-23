@@ -187,6 +187,7 @@
     var collapsed = !!s['coach_collapsed'];
 
     var header = document.createElement('div');
+    header.id = 'pd-coach-header';
     header.style.cssText = 'padding:16px 18px 12px;cursor:pointer;user-select:none;';
     header.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:center;">' +
