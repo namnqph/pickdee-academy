@@ -1,4 +1,4 @@
-/* pd-tour.js — PickDee onboarding tour engine v1 */
+/* pd-tour.js — PickDee onboarding tour engine v2 */
 (function () {
   'use strict';
 
@@ -14,10 +14,57 @@
   function isDone(id) { return !!saved()[id]; }
 
   var els = null;
+  var fab = null;
+  var tourId, steps, idx;
+
+  /* ─ FAB "?" button ─────────────────────────────────── */
+
+  function showFab(onClick) {
+    if (fab) return;
+    fab = document.createElement('button');
+    fab.id = 'pd-tour-fab';
+    fab.textContent = '?';
+    fab.title = 'Hướng dẫn sử dụng';
+    fab.setAttribute('style', [
+      'position:fixed',
+      'z-index:9980',
+      'bottom:80px',
+      'right:14px',
+      'width:40px',
+      'height:40px',
+      'border-radius:50%',
+      'background:rgba(24,24,24,.92)',
+      'border:1.5px solid rgba(255,201,52,.55)',
+      'color:#ffc934',
+      'font-size:18px',
+      'font-weight:900',
+      'cursor:pointer',
+      'box-shadow:0 2px 12px rgba(0,0,0,.5)',
+      'font-family:system-ui,-apple-system,Arial,sans-serif',
+      'transition:transform .15s,opacity .15s',
+      'opacity:.72',
+      'line-height:1',
+      'display:flex',
+      'align-items:center',
+      'justify-content:center',
+    ].join(';'));
+    fab.onmouseenter = function () { fab.style.opacity = '1'; fab.style.transform = 'scale(1.1)'; };
+    fab.onmouseleave = function () { fab.style.opacity = '.72'; fab.style.transform = ''; };
+    fab.onclick = function () {
+      hideFab();
+      onClick();
+    };
+    document.body.appendChild(fab);
+  }
+
+  function hideFab() {
+    if (fab) { fab.remove(); fab = null; }
+  }
+
+  /* ─ Tour overlay ────────────────────────────────────── */
 
   function mount() {
     if (els) return;
-
     var spot = document.createElement('div');
     spot.id = 'pd-tour-spot';
     spot.setAttribute('style', [
@@ -61,13 +108,14 @@
     els.spot.remove();
     els.card.remove();
     els = null;
+    /* Show ? button again for replay */
+    if (tourId && steps) {
+      showFab(function () { runTour(); });
+    }
   }
 
-  var tourId, steps, idx;
-
   function getEl(step) {
-    if (!step.target) return null;
-    return document.querySelector(step.target);
+    return step.target ? document.querySelector(step.target) : null;
   }
 
   function go(i) {
@@ -75,10 +123,7 @@
     var step = steps[i];
     var total = steps.length;
     var target = getEl(step);
-
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     setTimeout(function () {
       if (!els) return;
@@ -93,27 +138,16 @@
         spot.style.width  = (r.width  + pad * 2) + 'px';
         spot.style.height = (r.height + pad * 2) + 'px';
         spot.style.opacity = '1';
-
-        /* Tooltip: bottom if element in top 55% of screen, else top */
         var midY = r.top + r.height / 2;
         var vh = window.innerHeight;
-        if (midY > vh * 0.55) {
-          card.style.bottom = 'auto';
-          card.style.top    = '20px';
-        } else {
-          card.style.top    = 'auto';
-          card.style.bottom = '20px';
-        }
+        if (midY > vh * 0.55) { card.style.bottom = 'auto'; card.style.top = '20px'; }
+        else { card.style.top = 'auto'; card.style.bottom = '20px'; }
       } else {
-        spot.style.top    = '0px';
-        spot.style.left   = '0px';
-        spot.style.width  = '0px';
-        spot.style.height = '0px';
-        card.style.top    = 'auto';
-        card.style.bottom = '20px';
+        spot.style.top = '0px'; spot.style.left = '0px';
+        spot.style.width = '0px'; spot.style.height = '0px';
+        card.style.top = 'auto'; card.style.bottom = '20px';
       }
 
-      /* Progress dots */
       var dots = steps.map(function (_, j) {
         var active = (j === i);
         return '<span style="display:inline-block;height:6px;border-radius:3px;transition:all .2s;' +
@@ -121,10 +155,8 @@
           'background:' + (active ? '#ffc934' : 'rgba(255,255,255,.28)') + ';"></span>';
       }).join('');
 
-      var eyebrow = step.eyebrow || ((i + 1) + ' / ' + total);
-      var prevBtn = i > 0
-        ? '<button onclick="window.pdTour.prev()" style="' + btnStyle('ghost') + '">← Lại</button>'
-        : '';
+      var eyebrow  = step.eyebrow || ((i + 1) + ' / ' + total);
+      var prevBtn  = i > 0 ? '<button onclick="window.pdTour.prev()" style="' + btnStyle('ghost') + '">← Lại</button>' : '';
       var nextLabel = i === total - 1 ? 'Hiểu rồi ✓' : 'Tiếp →';
 
       card.innerHTML =
@@ -136,8 +168,7 @@
         '<div style="color:rgba(255,255,255,.82);font-size:14px;line-height:1.65;">' + step.body + '</div>' +
         '<div style="margin-top:15px;display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
           '<div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">' + dots + '</div>' +
-          '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-            prevBtn +
+          '<div style="display:flex;gap:8px;flex-shrink:0;">' + prevBtn +
             '<button onclick="window.pdTour.next()" style="' + btnStyle('primary') + '">' + nextLabel + '</button>' +
           '</div>' +
         '</div>';
@@ -152,12 +183,28 @@
     return base;
   }
 
+  function runTour() {
+    mount();
+    go(0);
+  }
+
+  /* ─ PUBLIC ──────────────────────────────────────────── */
+
   window.pdTour = {
+    /* Auto-mở lần đầu (trang nhập môn: student-register, apply-coach) */
     start: function (id, tourSteps, force) {
-      if (!force && isDone(id)) return;
-      tourId = id; steps = tourSteps; idx = 0;
-      mount();
-      go(0);
+      tourId = id; steps = tourSteps;
+      if (!force && isDone(id)) {
+        /* Đã xem rồi → chỉ hiện nút ? để xem lại */
+        showFab(function () { runTour(); });
+        return;
+      }
+      runTour();
+    },
+    /* Chỉ hiện nút ? — không auto-mở (các trang còn lại) */
+    setup: function (id, tourSteps) {
+      tourId = id; steps = tourSteps;
+      showFab(function () { runTour(); });
     },
     next: function () {
       if (idx < steps.length - 1) go(idx + 1);

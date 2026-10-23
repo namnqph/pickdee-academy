@@ -65,50 +65,106 @@
     var s = loadStore();
     if (state.dismissable && s['sv_done']) return;
 
+    /* Track views — collapse to 1-line after 2nd view without action */
+    var views = (s['sv_views'] || 0) + 1;
+    s['sv_views'] = views; saveStore(s);
+    var compact = views > 2 && !s['sv_expanded'];
+
     var existing = document.getElementById('pd-next-step');
     if (existing) existing.remove();
 
     var wrap = document.createElement('div');
     wrap.id = 'pd-next-step';
-    wrap.style.cssText = [
-      'position:relative',
-      'margin:0 0 20px',
-      'padding:18px 20px 16px',
-      'border-radius:16px',
-      'background:#181818',
-      'border-left:4px solid ' + (state.accent || '#ffc934'),
-      'border-top:1px solid rgba(255,255,255,.09)',
-      'border-right:1px solid rgba(255,255,255,.09)',
-      'border-bottom:1px solid rgba(255,255,255,.09)',
-      'box-shadow:0 4px 20px rgba(0,0,0,.45)',
-      'font-family:system-ui,-apple-system,Arial,sans-serif',
-      'color:#fff',
-    ].join(';');
+    var accent = state.accent || '#ffc934';
 
-    var ctaHtml = (state.cta && state.href)
-      ? '<a href="' + state.href + '" style="display:inline-block;margin-top:12px;padding:10px 20px;border-radius:10px;background:' + state.accent + ';color:#111;font-size:14px;font-weight:900;text-decoration:none;">' + state.cta + ' →</a>'
-      : '';
+    if (compact) {
+      /* ── Thu gọn: 1 dòng ── */
+      wrap.style.cssText = [
+        'margin:0 0 16px',
+        'padding:11px 14px',
+        'border-radius:12px',
+        'background:#181818',
+        'border-left:3px solid ' + accent,
+        'border-top:1px solid rgba(255,255,255,.07)',
+        'border-right:1px solid rgba(255,255,255,.07)',
+        'border-bottom:1px solid rgba(255,255,255,.07)',
+        'font-family:system-ui,-apple-system,Arial,sans-serif',
+        'color:#fff',
+        'display:flex',
+        'align-items:center',
+        'gap:10px',
+        'cursor:pointer',
+      ].join(';');
 
-    wrap.innerHTML =
-      '<div style="font-size:10px;font-weight:900;letter-spacing:1.2px;color:' + (state.accent || '#ffc934') + ';margin-bottom:10px;">BƯỚC TIẾP THEO</div>' +
-      '<div style="display:flex;gap:13px;align-items:flex-start;">' +
-        '<div style="font-size:26px;flex-shrink:0;line-height:1.2;">' + state.icon + '</div>' +
-        '<div style="flex:1;">' +
-          '<div style="font-size:16px;font-weight:900;margin-bottom:5px;line-height:1.3;">' + state.title + '</div>' +
-          '<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">' + state.msg + '</div>' +
-          ctaHtml +
-        '</div>' +
-      '</div>';
+      var ctaCompact = (state.cta && state.href)
+        ? '<a href="' + state.href + '" onclick="event.stopPropagation()" style="margin-left:auto;flex-shrink:0;padding:6px 14px;border-radius:8px;background:' + accent + ';color:#111;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">' + state.cta + ' →</a>'
+        : '';
 
-    if (state.dismissable) {
-      var xBtn = document.createElement('button');
-      xBtn.textContent = '×';
-      xBtn.style.cssText = 'position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.38);cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;';
-      xBtn.onclick = function () {
-        var st = loadStore(); st['sv_done'] = 1; saveStore(st);
-        wrap.remove();
+      wrap.innerHTML =
+        '<span style="font-size:16px;flex-shrink:0;">' + state.icon + '</span>' +
+        '<span style="font-size:13px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + state.title + '</span>' +
+        ctaCompact +
+        '<span style="font-size:10px;color:rgba(255,255,255,.3);flex-shrink:0;margin-left:4px;">▾</span>';
+
+      wrap.onclick = function () {
+        var st = loadStore(); st['sv_expanded'] = 1; saveStore(st);
+        renderStudentBanner(state);
       };
-      wrap.appendChild(xBtn);
+    } else {
+      /* ── Đầy đủ ── */
+      wrap.style.cssText = [
+        'position:relative',
+        'margin:0 0 20px',
+        'padding:18px 20px 16px',
+        'border-radius:16px',
+        'background:#181818',
+        'border-left:4px solid ' + accent,
+        'border-top:1px solid rgba(255,255,255,.09)',
+        'border-right:1px solid rgba(255,255,255,.09)',
+        'border-bottom:1px solid rgba(255,255,255,.09)',
+        'box-shadow:0 4px 20px rgba(0,0,0,.45)',
+        'font-family:system-ui,-apple-system,Arial,sans-serif',
+        'color:#fff',
+      ].join(';');
+
+      var ctaHtml = (state.cta && state.href)
+        ? '<a href="' + state.href + '" style="display:inline-block;margin-top:12px;padding:10px 20px;border-radius:10px;background:' + accent + ';color:#111;font-size:14px;font-weight:900;text-decoration:none;">' + state.cta + ' →</a>'
+        : '';
+
+      wrap.innerHTML =
+        '<div style="font-size:10px;font-weight:900;letter-spacing:1.2px;color:' + accent + ';margin-bottom:10px;">BƯỚC TIẾP THEO</div>' +
+        '<div style="display:flex;gap:13px;align-items:flex-start;">' +
+          '<div style="font-size:26px;flex-shrink:0;line-height:1.2;">' + state.icon + '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="font-size:16px;font-weight:900;margin-bottom:5px;line-height:1.3;">' + state.title + '</div>' +
+            '<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">' + state.msg + '</div>' +
+            ctaHtml +
+          '</div>' +
+        '</div>';
+
+      /* Nút thu gọn ↑ nếu đang ở expanded */
+      if (views > 2) {
+        var colBtn = document.createElement('button');
+        colBtn.textContent = '↑';
+        colBtn.title = 'Thu gọn';
+        colBtn.style.cssText = 'position:absolute;top:12px;right:36px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;';
+        colBtn.onclick = function () {
+          var st = loadStore(); delete st['sv_expanded']; saveStore(st);
+          renderStudentBanner(state);
+        };
+        wrap.appendChild(colBtn);
+      }
+
+      if (state.dismissable) {
+        var xBtn = document.createElement('button');
+        xBtn.textContent = '×';
+        xBtn.style.cssText = 'position:absolute;top:12px;right:10px;background:none;border:none;color:rgba(255,255,255,.38);cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;';
+        xBtn.onclick = function () {
+          var st = loadStore(); st['sv_done'] = 1; saveStore(st);
+          wrap.remove();
+        };
+        wrap.appendChild(xBtn);
+      }
     }
 
     var grid = document.querySelector('.dashboard-grid');
