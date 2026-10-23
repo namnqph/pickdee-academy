@@ -2043,7 +2043,7 @@ if (
 
   // Trang nội bộ (admin, Coach, quản trị Shop/Support): vào thẳng chat nhân viên như cũ
   function botStaffPage() {
-    return /^\/(admin|coach|shop-admin|support-admin)/i.test(location.pathname);
+    return /^\/(admin|shop-admin|support-admin)/i.test(location.pathname);
   }
 
   // Có tin nhân viên chưa đọc → mở chat nhân viên để khách không bỏ lỡ
