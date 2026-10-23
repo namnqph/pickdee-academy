@@ -1201,6 +1201,7 @@ main.ap{margin:0 auto;padding-top:8px}
 .ap-tab a[aria-current]{color:var(--accent)}
 .ap-badge{position:absolute;top:8px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#0b0b0b;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 #pickdeeSupportRoot{bottom:calc(var(--tabh) + 12px + env(safe-area-inset-bottom)) !important}
+#pickdeeSupportRoot{transition:opacity .2s ease-out}#pickdeeSupportRoot.pd-dodge{opacity:0;pointer-events:none}
 
 @media(min-width:760px){
   :root{--pad:24px}
@@ -1293,7 +1294,7 @@ addEventListener("DOMContentLoaded",function(){
       [["n","fh","serve",[-3,FB],"fh",0],["f","fh","drive",[2.5,NB],"bh",[-2.5,FK]],["n","bh","drop",[-3,FK],"dink",[3,NM]],["f","dink","dink",[3.5,NK],"dink",0],["n","dink","dink",[-4,FK],"bh",0],["f","bh","dink",[2.5,NK],"dink",0],["n","dink","dink",[-3,FK],"dink",0],["f","dink","pop",[3,NK],"smash",0],["n","smash","smash",[2.5,FK],"reset",0]],
       [["f","fh","serve",[-3,NB],"fh",0],["n","fh","drive",[-2,FB],"fh",[3,NK]],["f","fh","drive",[3,NK],"volley",[-3,FM]],["n","volley","volley",[-3.5,FM],"bh",0],["f","bh","reset",[3.5,NK],"dink",[-3,FK]],["n","dink","dink",[-3.5,FK],"dink",0],["f","dink","pop",[2.5,NK],"smash",0],["n","smash","smash",[3,FK],"reset",0]]
     ];
-    var ARC={serve:[1250,2.2,1],drive:[950,.7,1],drop:[1550,4.6,1],dink:[1150,1.4,1],volley:[650,.4,0],reset:[1300,2.4,1],pop:[1450,4.6,0],smash:[430,0,1]};
+    var ARC={serve:[1250,2.2,1],drive:[950,.7,1],drop:[1550,4.6,1],dink:[1150,1.4,1],volley:[650,.4,0],reset:[1300,2.4,1],pop:[1450,3.6,0],smash:[430,0,1]};
     var pi=-1,si=0,cur=null,vt=0,last=0,run=false,raf,camZ=1,camTZ=1,camFX=320,camFY=190,shake=0,speed=1,gap=0;
     function nextPoint(){
       pi=(pi+1)%POINTS.length;si=0;
@@ -1363,6 +1364,21 @@ addEventListener("DOMContentLoaded",function(){
     new IntersectionObserver(function(es){es.forEach(function(e){seen=e.isIntersecting;if(seen)go();else stop()})}).observe(svg);
     document.addEventListener("visibilitychange",function(){if(document.hidden)stop();else go()});
   })();
+});
+</script>
+<link rel="preload" as="image" href="/img/home/rally/near-ready.webp"><link rel="preload" as="image" href="/img/home/rally/far-ready.webp">
+<script>
+/* bong bóng hỗ trợ: tự mờ khi đè lên link/nút tiêu đề mục (vd "Xem tất cả"), cuộn qua thì hiện lại */
+addEventListener("DOMContentLoaded",function(){
+  var raf=0,sel=".ap-head a,.ap-promo-btn";
+  function chk(){raf=0;var root=document.getElementById("pickdeeSupportRoot");if(!root)return;
+    var pn=document.getElementById("pickdeeSupportPanel");if(pn&&pn.classList.contains("open")){root.classList.remove("pd-dodge");return}
+    var b=root.getBoundingClientRect(),hit=false;if(!b.width)return;
+    document.querySelectorAll(sel).forEach(function(el){if(hit)return;var r=el.getBoundingClientRect();if(r.width&&r.right>b.left+4&&r.left<b.right-4&&r.bottom>b.top+4&&r.top<b.bottom-4)hit=true});
+    root.classList.toggle("pd-dodge",hit)}
+  var q=function(){if(!raf)raf=requestAnimationFrame(chk)};
+  addEventListener("scroll",q,{passive:true});addEventListener("resize",q);
+  new MutationObserver(q).observe(document.body,{childList:true});[600,2000,5000].forEach(function(t){setTimeout(q,t)});
 });
 </script>
 </head>
