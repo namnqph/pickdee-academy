@@ -1241,7 +1241,7 @@ main.ap{margin:0 auto;padding-top:8px}
 .h2-court .shadow ellipse{fill:rgba(0,0,0,.55)}
 .h2-court .ball circle{fill:url(#pdBallGrad)}.h2-court .ball .hole{fill:#b8860b}
 .h2-court .spin{animation:pdSpin .6s linear infinite}
-.h2-court .ply ellipse{fill:rgba(0,0,0,.45)}
+.h2-court .ply ellipse{fill:rgba(0,0,0,.45)}.h2-court .trail{fill:#ffc934;pointer-events:none}
 @keyframes pdSpin{to{transform:rotate(360deg)}}
 .h2-courts-h{margin:0 0 16px;font-size:var(--t-h);font-weight:800;letter-spacing:-.035em;line-height:1}
 .h2-courts-row{margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:4fr 4fr 3fr;gap:clamp(12px,1.6vw,20px);align-items:end}
@@ -1254,48 +1254,112 @@ main.ap{margin:0 auto;padding-top:8px}
 document.documentElement.classList.add("h2-js");
 addEventListener("DOMContentLoaded",function(){
   var rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  /* sân vẽ bằng code: hai người (ảnh ChatGPT) cầm vợt PickDee đánh bóng qua lại */
+  /* sân vẽ bằng code: hai người (ảnh ChatGPT) đánh một điểm pickleball thật — giao, trả, drop, dink, volley, reset, smash */
   (function(){
     var svg=document.querySelector(".h2-court");if(!svg)return;
+    var NS="http://www.w3.org/2000/svg",cam=svg.querySelector("#pdCam"),flash=svg.querySelector("#pdFlash");
     var ball=svg.querySelector("#pdBall"),sh=svg.querySelector("#pdShadow"),cnt=document.getElementById("pdRally"),n=0;
     var FX=1884,P=function(x,z,h){return [320+FX*x/z,-410+49140/z-1638*(h||0)/z]};
-    /* tư thế: w,h = kích thước ảnh (px), ax = tâm bàn chân, px/py = tâm mặt vợt (tỉ lệ trong ảnh) */
-    var PL={
-      n:{el:svg.querySelector("#pdNearP"),z:63,x:2,k:1.35*5.8/440,r:{w:214,h:440,ax:.49,px:.87,py:.25},h:{w:247,h:454,ax:.41,px:.885,py:.084}},
-      f:{el:svg.querySelector("#pdFarP"),z:94,x:-1,k:1.3*5.4/300,r:{w:150,h:300,ax:.5,px:.41,py:.43},h:{w:126,h:308,ax:.45,px:.79,py:.17}}
-    };
-    var imgs=function(p){return p.el.querySelectorAll("image")};
+    /* mỗi tư thế: w,h ảnh (px) · ax tâm bàn chân · px,py tâm mặt vợt · m hệ số cỡ người (bộ ảnh thứ 2 chụp xa hơn) */
+    var NP={ready:[214,440,.49,.87,.25,1],fh:[247,454,.41,.885,.084,1],split:[293,388,.5,.78,.26,.915],volley:[295,419,.35,.9,.1,.915],dink:[344,329,.41,.9,.65,.915],reset:[265,401,.5,.84,.29,.915],smash:[231,461,.47,.86,.06,.915],bh:[272,408,.69,.1,.18,.915]};
+    var FP={ready:[150,300,.5,.41,.43,1],fh:[126,308,.45,.79,.17,1],split:[236,292,.5,.52,.37,.857],volley:[166,302,.47,.13,.16,.857],dink:[190,268,.47,.86,.68,.857],reset:[189,295,.5,.7,.37,.857],smash:[158,321,.45,.49,.05,.857],bh:[224,293,.4,.88,.32,.857]};
+    var FILE={fh:"hit"};
+    function mk(id,side,tbl,k,x,z){
+      var el=svg.querySelector(id),p={el:el,k:k,x:x,z:z,tbl:tbl,img:{},pose:"ready",hold:0};
+      Object.keys(tbl).forEach(function(nm){var im=document.createElementNS(NS,"image");im.setAttribute("href","/img/home/rally/"+side+"-"+(FILE[nm]||nm)+".webp");im.setAttribute("visibility",nm==="ready"?"visible":"hidden");el.appendChild(im);p.img[nm]=im});
+      return p;
+    }
+    var N=mk("#pdNearP","near",NP,1.25*5.8/440,2,63.5),F=mk("#pdFarP","far",FP,1.2*5.4/300,-1,99);
     function layout(p){
-      var s=1638/p.z,g=P(p.x,p.z,0),im=imgs(p);
-      [p.r,p.h].forEach(function(q,i){var W=q.w*p.k*s,H=q.h*p.k*s;
-        im[i].setAttribute("width",W.toFixed(1));im[i].setAttribute("height",H.toFixed(1));
-        im[i].setAttribute("x",(g[0]-q.ax*W).toFixed(1));im[i].setAttribute("y",(g[1]-H).toFixed(1))});
+      var s=1638/p.z,g=P(p.x,p.z,0),q=p.tbl[p.pose],im=p.img[p.pose],W=q[0]*p.k*q[5]*s,H=q[1]*p.k*q[5]*s;
+      im.setAttribute("width",W.toFixed(1));im.setAttribute("height",H.toFixed(1));im.setAttribute("x",(g[0]-q[2]*W).toFixed(1));im.setAttribute("y",(g[1]-H).toFixed(1));
       var e=p.el.querySelector("ellipse");e.setAttribute("cx",g[0].toFixed(1));e.setAttribute("cy",g[1].toFixed(1));e.setAttribute("rx",(1.6*s).toFixed(1));e.setAttribute("ry",(.35*s).toFixed(1));
     }
-    function pose(p,hit){var im=imgs(p);im[0].setAttribute("visibility",hit?"hidden":"visible");im[1].setAttribute("visibility",hit?"visible":"hidden")}
-    /* tâm mặt vợt khi đánh, toạ độ sân (ft) */
-    function paddle(p,x){var q=p.h;return {x:x+(q.px-q.ax)*q.w*p.k*1638/FX,z:p.z,h:(1-q.py)*q.h*p.k}}
-    var place=function(x,z,h,k){var p=P(x,z,h),s=k*72/z;return "translate("+p[0].toFixed(1)+"px,"+p[1].toFixed(1)+"px) scale("+s.toFixed(3)+")"};
-    layout(PL.n);layout(PL.f);
-    var b0=paddle(PL.f,PL.f.x),g0=P(b0.x,b0.z,0);
-    ball.style.transform=place(b0.x,b0.z,b0.h,.8);sh.style.transform="translate("+g0[0]+"px,"+g0[1]+"px) scale(.5)";
-    if(rm||!svg.animate)return;
+    function pose(p,nm){if(p.pose===nm)return;p.img[p.pose].setAttribute("visibility","hidden");p.pose=nm;p.img[nm].setAttribute("visibility","visible");layout(p)}
+    /* tâm mặt vợt của tư thế nm khi đứng ở (x,z), toạ độ sân */
+    function pad(p,nm,x,z){var q=p.tbl[nm],k=p.k*q[5];return {x:x+(q[3]-q[2])*q[0]*k*1638/FX,z:z,h:(1-q[4])*q[1]*k}}
+    var place=function(x,z,h){var p=P(x,z,h),s=.8*72/z;return "translate("+p[0].toFixed(1)+"px,"+p[1].toFixed(1)+"px) scale("+s.toFixed(3)+")"};
+    layout(N);layout(F);
+    var b0=pad(N,"ready",N.x,N.z);ball.style.transform=place(b0.x,b0.z,b0.h);ball.style.opacity=0;
+    if(rm||!window.requestAnimationFrame)return;
 
-    var run=false,timer,move;
-    function shot(from){
-      if(!run)return;
-      var A=PL[from],B=PL[from==="n"?"f":"n"];
-      pose(A,true);setTimeout(function(){pose(A,false)},280);
-      var a=paddle(A,A.x),bx=Math.round((Math.random()*8-4)*2)/2,b=paddle(B,bx),peak=.6+Math.random()*1.2,dur=1100+Math.random()*300;
-      var x0=B.x,t0=performance.now();
-      cancelAnimationFrame(move);
-      (function step(t){var u=Math.min(1,(t-t0)/(dur*.7)),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;B.x=x0+(bx-x0)*e;layout(B);if(u<1&&run)move=requestAnimationFrame(step)})(t0);
-      var kb=[],ks=[];for(var i=0;i<=24;i++){var s=i/24,x=a.x+(b.x-a.x)*s,z=a.z+(b.z-a.z)*s,hh=a.h+(b.h-a.h)*s+peak*4*s*(1-s);kb.push({transform:place(x,z,hh,.8)});var g=P(x,z,0);ks.push({transform:"translate("+g[0].toFixed(1)+"px,"+g[1].toFixed(1)+"px) scale("+(40/z).toFixed(3)+")",opacity:Math.max(.25,1-hh/12)})}
-      ball.animate(kb,{duration:dur,fill:"forwards"});sh.animate(ks,{duration:dur,fill:"forwards"});
-      timer=setTimeout(function(){cnt.textContent=++n;shot(from==="n"?"f":"n")},dur);
+    /* trail: bóng mờ phía sau cú nhanh */
+    var trail=[];for(var i=0;i<5;i++){var c=document.createElementNS(NS,"circle");c.setAttribute("r","7");c.setAttribute("class","trail");c.style.opacity=0;ball.parentNode.insertBefore(c,ball);trail.push(c)}
+    var hist=[];
+
+    /* kịch bản: [người đánh, tư thế đánh, kiểu cú, người nhận đứng (x,z), tư thế đỡ, người đánh lùi/tiến tới (x,z)|0] */
+    var NB=63.5,NK=76.5,NM=70,FB=99,FK=93.5,FM=96.5;
+    var POINTS=[
+      [["n","fh","serve",[-3,FB],"fh",0],["f","fh","drive",[2.5,NB],"bh",[-2.5,FK]],["n","bh","drop",[-3,FK],"dink",[3,NM]],["f","dink","dink",[3.5,NK],"dink",0],["n","dink","dink",[-4,FK],"bh",0],["f","bh","dink",[2.5,NK],"dink",0],["n","dink","dink",[-3,FK],"dink",0],["f","dink","pop",[3,NK],"smash",0],["n","smash","smash",[2.5,FK],"reset",0]],
+      [["f","fh","serve",[-3,NB],"fh",0],["n","fh","drive",[-2,FB],"fh",[3,NK]],["f","fh","drive",[3,NK],"volley",[-3,FM]],["n","volley","volley",[-3.5,FM],"bh",0],["f","bh","reset",[3.5,NK],"dink",[-3,FK]],["n","dink","dink",[-3.5,FK],"dink",0],["f","dink","pop",[2.5,NK],"smash",0],["n","smash","smash",[3,FK],"reset",0]]
+    ];
+    var ARC={serve:[1250,2.2,1],drive:[950,.7,1],drop:[1550,4.6,1],dink:[1150,1.4,1],volley:[650,.4,0],reset:[1300,2.4,1],pop:[1450,4.6,0],smash:[430,0,1]};
+    var pi=-1,si=0,cur=null,vt=0,last=0,run=false,raf,camZ=1,camTZ=1,camFX=320,camFY=190,shake=0,speed=1,gap=0;
+    function nextPoint(){
+      pi=(pi+1)%POINTS.length;si=0;
+      var srv=POINTS[pi][0][0]==="n";
+      mv(N,srv?2:-2,NB,700);mv(F,srv?-2:2,FB,700);camTZ=1;camFY=200;ball.style.opacity=0;sh.style.opacity=0;gap=900;
     }
-    var stop=function(){run=false;clearTimeout(timer);cancelAnimationFrame(move)};
-    var seen=false,go=function(){if(seen&&!document.hidden&&!run){run=true;shot("f")}};
+    function mv(p,x,z,d){p.from=[p.x,p.z];p.to=[x,z];p.mt=vt;p.md=d}
+    function stepMove(p){if(!p.to)return;var u=Math.min(1,(vt-p.mt)/p.md),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;p.x=p.from[0]+(p.to[0]-p.from[0])*e;p.z=p.from[1]+(p.to[1]-p.from[1])*e;
+      var far=Math.abs(p.to[0]-p.from[0])+Math.abs(p.to[1]-p.from[1])>1.2;if(vt>p.hold)pose(p,u<1&&far?"split":"ready");if(u>=1)p.to=null;layout(p)}
+    function shoot(){
+      var sc=POINTS[pi][si];if(!sc){nextPoint();return}
+      var A=sc[0]==="n"?N:F,B=sc[0]==="n"?F:N,a=ARC[sc[2]];
+      pose(A,sc[1]);A.hold=vt+300;
+      var s0=pad(A,sc[1],A.x,A.z),rx=sc[3][0],rz=sc[3][1],e=pad(B,sc[4],rx,rz),dur=a[0];
+      mv(B,rx,rz,dur*.72);if(sc[5])A.next=sc[5];
+      var toward=B===N?1:-1,bz,bx;
+      if(sc[2]==="smash"){bz=B===N?72:96;bx=rx+(rx>0?1.5:-1.5)}else if(sc[2]==="dink"||sc[2]==="drop"||sc[2]==="reset"){bz=B===N?81.5:88.5;bx=e.x*.8}else{bz=rz+toward*7;bx=e.x*.9}
+      cur={A:A,B:B,sc:sc,t0:vt,dur:dur,s0:s0,e:e,bx:bx,bz:bz,bounce:a[2],peak:a[1],type:sc[2]};
+      camTZ=sc[2]==="dink"?1.1:sc[2]==="smash"||sc[2]==="pop"?1.14:sc[2]==="volley"?1.06:1;camFY=sc[2]==="dink"||sc[2]==="pop"?180:200;
+      ball.style.opacity=1;sh.style.opacity=1;
+      if(sc[2]==="smash"){flash.style.opacity=.32;shake=1}
+    }
+    /* độ cao bóng: parabol, đảm bảo qua lưới (h ≥ 3.4 tại z=85) */
+    function arc(p0,p1,pk,s,clear){
+      var hl=p0.h+(p1.h-p0.h)*s,sn=(85-p0.z)/(p1.z-p0.z);
+      if(clear&&sn>0&&sn<1){var need=(3.5-(p0.h+(p1.h-p0.h)*sn))/(4*sn*(1-sn));if(need>pk)pk=need}
+      return {x:p0.x+(p1.x-p0.x)*s,z:p0.z+(p1.z-p0.z)*s,h:hl+4*pk*s*(1-s)};
+    }
+    function ballAt(c,u){
+      if(!c.bounce)return arc(c.s0,c.e,c.peak,u,1);
+      var ub=c.type==="smash"?.55:.74,bp={x:c.bx,z:c.bz,h:0};
+      if(u<ub)return arc(c.s0,bp,c.peak,u/ub,1);
+      if(c.type==="smash"){var far={x:c.bx*1.6,z:c.B===N?55:118,h:5};return arc(bp,far,1.2,(u-ub)/(1-ub),0)}
+      return arc(bp,c.e,.5,(u-ub)/(1-ub),0);
+    }
+    function frame(t){
+      if(!run)return;
+      var dt=Math.min(50,t-(last||t));last=t;
+      var want=1;
+      if(cur){var u0=(vt-cur.t0)/cur.dur;if(cur.type==="pop"&&u0>.55)want=.32;if(cur.type==="smash"&&u0<.5)want=.4}
+      speed+=(want-speed)*.12;vt+=dt*speed;
+      if(gap>0){gap-=dt*speed;if(gap<=0)shoot()}
+      else if(cur){
+        var u=(vt-cur.t0)/cur.dur;
+        if(u>=1){
+          cnt.textContent=++n;
+          var c=cur;cur=null;
+          if(c.A.next){mv(c.A,c.A.next[0],c.A.next[1],c.dur*.9);c.A.next=null}
+          if(c.type==="smash"){pose(c.B,"reset");c.B.hold=vt+500;ball.style.opacity=0;sh.style.opacity=0;si=99;gap=1100}
+          else{si++;shoot()}
+        }else{
+          var b=ballAt(cur,u);ball.style.transform=place(b.x,b.z,b.h);var g=P(b.x,b.z,0);
+          sh.style.transform="translate("+g[0].toFixed(1)+"px,"+g[1].toFixed(1)+"px) scale("+(40/b.z).toFixed(3)+")";sh.style.opacity=Math.max(.2,1-b.h/12);
+          var sp=P(b.x,b.z,b.h);hist.unshift([sp[0],sp[1],.8*72/b.z*10]);hist.length=8;
+        }
+      }
+      var fast=cur&&(cur.type==="drive"||cur.type==="smash"||cur.type==="volley"||cur.type==="serve");
+      trail.forEach(function(c,i){var h=hist[i+1];if(fast&&h){c.setAttribute("cx",h[0].toFixed(1));c.setAttribute("cy",h[1].toFixed(1));c.setAttribute("r",(h[2]*(1-i*.14)).toFixed(1));c.style.opacity=(.28-i*.05).toFixed(2)}else c.style.opacity=0});
+      stepMove(N);stepMove(F);
+      /* máy quay: đẩy vào khi dink/smash, rung nhẹ lúc đập */
+      camZ+=(camTZ-camZ)*.06;var sx=0,sy=0;if(shake>0){sx=(Math.random()-.5)*6*shake;sy=(Math.random()-.5)*4*shake;shake=Math.max(0,shake-dt/260)}
+      cam.setAttribute("transform","translate("+(320+sx).toFixed(1)+","+(camFY+sy).toFixed(1)+") scale("+camZ.toFixed(4)+") translate(-320,"+(-camFY)+")");
+      var fo=+flash.style.opacity||0;if(fo>0)flash.style.opacity=Math.max(0,fo-dt/400).toFixed(3);
+      raf=requestAnimationFrame(frame);
+    }
+    var seen=false,go=function(){if(seen&&!document.hidden&&!run){run=true;last=0;if(pi<0)nextPoint();raf=requestAnimationFrame(frame)}},stop=function(){run=false;cancelAnimationFrame(raf)};
     new IntersectionObserver(function(es){es.forEach(function(e){seen=e.isIntersecting;if(seen)go();else stop()})}).observe(svg);
     document.addEventListener("visibilitychange",function(){if(document.hidden)stop();else go()});
   })();
@@ -1423,10 +1487,10 @@ addEventListener("DOMContentLoaded",function(){
             <radialGradient id="pdSpot" cx="50%" cy="0%" r="80%"><stop offset="0%" stop-color="#fff" stop-opacity=".16"/><stop offset="50%" stop-color="#fff" stop-opacity=".04"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
             <radialGradient id="pdBallGrad" cx="36%" cy="30%" r="75%"><stop offset="0%" stop-color="#fff5c9"/><stop offset="42%" stop-color="#ffc934"/><stop offset="100%" stop-color="#c88a00"/></radialGradient>
           </defs>
-          <rect class="bg" x="0" y="-30" width="640" height="420"/><polygon class="apron" points="-109.7,452.1 749.7,452.1 536.7,24.9 103.3,24.9"/><polygon class="court" points="21,370 619,370 496.1,49.3 143.9,49.3"/><polygon class="kitchen" points="78.5,220 561.5,220 524.8,124.1 115.2,124.1"/><ellipse class="spot" cx="320" cy="20" rx="470" ry="300"/><g class="courtmark" transform="translate(320,194.5) scale(1,.3)"><g class="cm-shadow" transform="translate(0,2.4)"><image href="/img/home/rally/court-logo.webp" x="-100" y="-64.1" width="200" height="128.1"/></g><g class="cm-main"><image href="/img/home/rally/court-logo.webp" x="-100" y="-64.1" width="200" height="128.1"/></g></g><line class="ln" x1="21" y1="370" x2="619" y2="370"/><line class="ln" x1="143.9" y1="49.3" x2="496.1" y2="49.3"/><line class="ln" x1="21" y1="370" x2="143.9" y2="49.3"/><line class="ln" x1="619" y1="370" x2="496.1" y2="49.3"/><line class="ln" x1="78.5" y1="220" x2="561.5" y2="220"/><line class="ln" x1="115.2" y1="124.1" x2="524.8" y2="124.1"/><line class="ln" x1="320" y1="370" x2="320" y2="220"/><line class="ln" x1="320" y1="124.1" x2="320" y2="49.3"/><g id="pdFarP" class="ply"><ellipse rx="1" ry="1"/><image data-k="r" href="/img/home/rally/far-ready.webp"/><image data-k="h" href="/img/home/rally/far-hit.webp" visibility="hidden"/></g><g class="net"><polygon class="mesh" points="76.2,168.1 563.8,168.1 563.8,110.3 76.2,110.3"/><line class="mesh-v" x1="92.4" y1="168.1" x2="92.4" y2="110.3"/><line class="mesh-v" x1="108.7" y1="168.1" x2="108.7" y2="110.3"/><line class="mesh-v" x1="125" y1="168.1" x2="125" y2="110.3"/><line class="mesh-v" x1="141.2" y1="168.1" x2="141.2" y2="110.3"/><line class="mesh-v" x1="157.5" y1="168.1" x2="157.5" y2="110.3"/><line class="mesh-v" x1="173.7" y1="168.1" x2="173.7" y2="110.3"/><line class="mesh-v" x1="190" y1="168.1" x2="190" y2="110.3"/><line class="mesh-v" x1="206.2" y1="168.1" x2="206.2" y2="110.3"/><line class="mesh-v" x1="222.5" y1="168.1" x2="222.5" y2="110.3"/><line class="mesh-v" x1="238.7" y1="168.1" x2="238.7" y2="110.3"/><line class="mesh-v" x1="255" y1="168.1" x2="255" y2="110.3"/><line class="mesh-v" x1="271.2" y1="168.1" x2="271.2" y2="110.3"/><line class="mesh-v" x1="287.5" y1="168.1" x2="287.5" y2="110.3"/><line class="mesh-v" x1="303.7" y1="168.1" x2="303.7" y2="110.3"/><line class="mesh-v" x1="320" y1="168.1" x2="320" y2="110.3"/><line class="mesh-v" x1="336.3" y1="168.1" x2="336.3" y2="110.3"/><line class="mesh-v" x1="352.5" y1="168.1" x2="352.5" y2="110.3"/><line class="mesh-v" x1="368.8" y1="168.1" x2="368.8" y2="110.3"/><line class="mesh-v" x1="385" y1="168.1" x2="385" y2="110.3"/><line class="mesh-v" x1="401.3" y1="168.1" x2="401.3" y2="110.3"/><line class="mesh-v" x1="417.5" y1="168.1" x2="417.5" y2="110.3"/><line class="mesh-v" x1="433.8" y1="168.1" x2="433.8" y2="110.3"/><line class="mesh-v" x1="450" y1="168.1" x2="450" y2="110.3"/><line class="mesh-v" x1="466.3" y1="168.1" x2="466.3" y2="110.3"/><line class="mesh-v" x1="482.5" y1="168.1" x2="482.5" y2="110.3"/><line class="mesh-v" x1="498.8" y1="168.1" x2="498.8" y2="110.3"/><line class="mesh-v" x1="515" y1="168.1" x2="515" y2="110.3"/><line class="mesh-v" x1="531.3" y1="168.1" x2="531.3" y2="110.3"/><line class="mesh-v" x1="547.6" y1="168.1" x2="547.6" y2="110.3"/><line class="mesh-v" x1="76.2" y1="156.6" x2="563.8" y2="156.6"/><line class="mesh-v" x1="76.2" y1="145" x2="563.8" y2="145"/><line class="mesh-v" x1="76.2" y1="133.4" x2="563.8" y2="133.4"/><line class="mesh-v" x1="76.2" y1="121.9" x2="563.8" y2="121.9"/><line class="tape" x1="76.2" y1="110.3" x2="563.8" y2="110.3"/><line class="post" x1="76.2" y1="168.1" x2="76.2" y2="110.3"/><line class="post" x1="563.8" y1="168.1" x2="563.8" y2="110.3"/></g>
+          <g id="pdCam"><rect class="bg" x="0" y="-30" width="640" height="420"/><polygon class="apron" points="-109.7,452.1 749.7,452.1 536.7,24.9 103.3,24.9"/><polygon class="court" points="21,370 619,370 496.1,49.3 143.9,49.3"/><polygon class="kitchen" points="78.5,220 561.5,220 524.8,124.1 115.2,124.1"/><ellipse class="spot" cx="320" cy="20" rx="470" ry="300"/><g class="courtmark" transform="translate(320,194.5) scale(1,.3)"><g class="cm-shadow" transform="translate(0,2.4)"><image href="/img/home/rally/court-logo.webp" x="-100" y="-64.1" width="200" height="128.1"/></g><g class="cm-main"><image href="/img/home/rally/court-logo.webp" x="-100" y="-64.1" width="200" height="128.1"/></g></g><line class="ln" x1="21" y1="370" x2="619" y2="370"/><line class="ln" x1="143.9" y1="49.3" x2="496.1" y2="49.3"/><line class="ln" x1="21" y1="370" x2="143.9" y2="49.3"/><line class="ln" x1="619" y1="370" x2="496.1" y2="49.3"/><line class="ln" x1="78.5" y1="220" x2="561.5" y2="220"/><line class="ln" x1="115.2" y1="124.1" x2="524.8" y2="124.1"/><line class="ln" x1="320" y1="370" x2="320" y2="220"/><line class="ln" x1="320" y1="124.1" x2="320" y2="49.3"/><g id="pdFarP" class="ply"><ellipse rx="1" ry="1"/></g><g class="net"><polygon class="mesh" points="76.2,168.1 563.8,168.1 563.8,110.3 76.2,110.3"/><line class="mesh-v" x1="92.4" y1="168.1" x2="92.4" y2="110.3"/><line class="mesh-v" x1="108.7" y1="168.1" x2="108.7" y2="110.3"/><line class="mesh-v" x1="125" y1="168.1" x2="125" y2="110.3"/><line class="mesh-v" x1="141.2" y1="168.1" x2="141.2" y2="110.3"/><line class="mesh-v" x1="157.5" y1="168.1" x2="157.5" y2="110.3"/><line class="mesh-v" x1="173.7" y1="168.1" x2="173.7" y2="110.3"/><line class="mesh-v" x1="190" y1="168.1" x2="190" y2="110.3"/><line class="mesh-v" x1="206.2" y1="168.1" x2="206.2" y2="110.3"/><line class="mesh-v" x1="222.5" y1="168.1" x2="222.5" y2="110.3"/><line class="mesh-v" x1="238.7" y1="168.1" x2="238.7" y2="110.3"/><line class="mesh-v" x1="255" y1="168.1" x2="255" y2="110.3"/><line class="mesh-v" x1="271.2" y1="168.1" x2="271.2" y2="110.3"/><line class="mesh-v" x1="287.5" y1="168.1" x2="287.5" y2="110.3"/><line class="mesh-v" x1="303.7" y1="168.1" x2="303.7" y2="110.3"/><line class="mesh-v" x1="320" y1="168.1" x2="320" y2="110.3"/><line class="mesh-v" x1="336.3" y1="168.1" x2="336.3" y2="110.3"/><line class="mesh-v" x1="352.5" y1="168.1" x2="352.5" y2="110.3"/><line class="mesh-v" x1="368.8" y1="168.1" x2="368.8" y2="110.3"/><line class="mesh-v" x1="385" y1="168.1" x2="385" y2="110.3"/><line class="mesh-v" x1="401.3" y1="168.1" x2="401.3" y2="110.3"/><line class="mesh-v" x1="417.5" y1="168.1" x2="417.5" y2="110.3"/><line class="mesh-v" x1="433.8" y1="168.1" x2="433.8" y2="110.3"/><line class="mesh-v" x1="450" y1="168.1" x2="450" y2="110.3"/><line class="mesh-v" x1="466.3" y1="168.1" x2="466.3" y2="110.3"/><line class="mesh-v" x1="482.5" y1="168.1" x2="482.5" y2="110.3"/><line class="mesh-v" x1="498.8" y1="168.1" x2="498.8" y2="110.3"/><line class="mesh-v" x1="515" y1="168.1" x2="515" y2="110.3"/><line class="mesh-v" x1="531.3" y1="168.1" x2="531.3" y2="110.3"/><line class="mesh-v" x1="547.6" y1="168.1" x2="547.6" y2="110.3"/><line class="mesh-v" x1="76.2" y1="156.6" x2="563.8" y2="156.6"/><line class="mesh-v" x1="76.2" y1="145" x2="563.8" y2="145"/><line class="mesh-v" x1="76.2" y1="133.4" x2="563.8" y2="133.4"/><line class="mesh-v" x1="76.2" y1="121.9" x2="563.8" y2="121.9"/><line class="tape" x1="76.2" y1="110.3" x2="563.8" y2="110.3"/><line class="post" x1="76.2" y1="168.1" x2="76.2" y2="110.3"/><line class="post" x1="563.8" y1="168.1" x2="563.8" y2="110.3"/></g>
           <g id="pdShadow" class="shadow"><ellipse rx="11" ry="3.2"/></g>
-          <g id="pdNearP" class="ply"><ellipse rx="1" ry="1"/><image data-k="r" href="/img/home/rally/near-ready.webp"/><image data-k="h" href="/img/home/rally/near-hit.webp" visibility="hidden"/></g>
-          <g id="pdBall" class="ball"><g class="spin"><circle r="10"/><circle class="hole" cx="-3.5" cy="-3" r="1.6"/><circle class="hole" cx="3.2" cy="-4.2" r="1.6"/><circle class="hole" cx="4.6" cy="2.4" r="1.6"/><circle class="hole" cx="-1" cy="4.6" r="1.6"/><circle class="hole" cx="-5.6" cy="2" r="1.3"/><circle class="hole" cx="0.4" cy="-0.2" r="1.4"/><circle class="hole" cx="6.8" cy="-1.4" r="1"/></g></g>
+          <g id="pdNearP" class="ply"><ellipse rx="1" ry="1"/></g>
+          <g id="pdBall" class="ball"><g class="spin"><circle r="10"/><circle class="hole" cx="-3.5" cy="-3" r="1.6"/><circle class="hole" cx="3.2" cy="-4.2" r="1.6"/><circle class="hole" cx="4.6" cy="2.4" r="1.6"/><circle class="hole" cx="-1" cy="4.6" r="1.6"/><circle class="hole" cx="-5.6" cy="2" r="1.3"/><circle class="hole" cx="0.4" cy="-0.2" r="1.4"/><circle class="hole" cx="6.8" cy="-1.4" r="1"/></g></g></g><rect id="pdFlash" x="0" y="-30" width="640" height="420" fill="#fff" style="opacity:0;pointer-events:none"/>
         </svg>
     </span>
     <span class="ap-promo-body">
