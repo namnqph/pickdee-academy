@@ -3348,14 +3348,16 @@ if (
   ====================================================== */
   (function botTeaser() {
     const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
-    const plan = {
-      product: { wait: 18000, scroll: 0.45, minWait: 7000 },
-      shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true }, // mỗi lần vào Shop: bong bóng hiện ngay; "ting" 1 lần/phiên
-      academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
-      all: { wait: 40000, scroll: 0, minWait: 0 }
-    }[BOT_PAGE];
-    // Chỉ trang khách đang chọn mua/chọn khoá (không làm phiền học viên, Coach, trang đăng nhập…)
-    const salesPage = /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
+    const isPortal = /^\/(student|coach|student-register|student-book-session|student-sessions|student-payment-checkout|student-session-requests|apply-coach|coach-sessions|coach-session-detail)(\.html)?\b/.test(location.pathname);
+    const plan = isPortal
+      ? { wait: 1000, minWait: 0 }
+      : {
+          product: { wait: 18000, scroll: 0.45, minWait: 7000 },
+          shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true },
+          academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
+          all: { wait: 40000, scroll: 0, minWait: 0 }
+        }[BOT_PAGE];
+    const salesPage = isPortal || /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
     if (!plan || !salesPage || botStaffPage()) return;
     try {
       if (!plan.every && sessionStorage.getItem(SEEN)) return;
@@ -3364,7 +3366,7 @@ if (
 
     const st = document.createElement("style");
     st.textContent = `
-      #pdTease{position:absolute;right:0;bottom:66px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(21,21,21,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
+      #pdTease{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:80px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(21,21,21,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;z-index:9970}
       #pdTease.pd-on{opacity:1;transform:none}
       #pdTease b{color:#1a1a1a}
       #pdTease .pd-tease-go{display:inline-block;margin-top:6px;font-weight:800;color:#1a7f37}
@@ -3412,6 +3414,17 @@ if (
     }
 
     function text() {
+      if (isPortal) {
+        const p = location.pathname;
+        if (/\/student-register/.test(p)) return "Còn thắc mắc gì về gói học không? Em giải thích ngay ạ.";
+        if (/\/student-book-session/.test(p)) return "Cần giúp đặt lịch hay chọn sân? Em hỗ trợ ngay.";
+        if (/\/student-payment-checkout/.test(p)) return "Cần hỗ trợ thanh toán hay hỏi về bill? Em ở đây ạ.";
+        if (/\/student/.test(p)) return "Cần giúp gì về lịch học, gói học hay Coach? Em hỗ trợ ngay ạ.";
+        if (/\/apply-coach/.test(p)) return "Có câu hỏi về hợp đồng hay quy trình Coach không? Em giải thích ngay.";
+        if (/\/coach-session-detail/.test(p)) return "Cần hỗ trợ xử lý buổi học này không? Em ở đây ạ.";
+        if (/\/coach/.test(p)) return "Cần hỗ trợ về lịch dạy, công hay học viên? Em ở đây ạ.";
+        return "Cần hỗ trợ gì không? Em ở đây ạ.";
+      }
       const name = botProductName();
       const short = name.length > 42 ? name.slice(0, 40).trim() + "…" : name;
       return {
