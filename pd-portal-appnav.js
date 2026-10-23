@@ -72,7 +72,22 @@
       document.body.appendChild(nav);
     }
 
-    if (document.body) mount();
-    else document.addEventListener("DOMContentLoaded", mount, { once: true });
+    // Trang công khai (khách xem hồ sơ Coach): chỉ hiện menu Coach khi người xem là Coach đã đăng nhập
+    var PUBLIC = { "coach-profile": 1 };
+    function start() {
+      if (!PUBLIC[page]) return mount();
+      var sb = window.sb;
+      if (!sb || !sb.auth) return;
+      sb.auth.getSession().then(function (r) {
+        var u = r && r.data && r.data.session && r.data.session.user;
+        if (!u) return;
+        return sb.from("profiles").select("role").eq("id", u.id).maybeSingle().then(function (p) {
+          if (p && p.data && p.data.role === "coach") mount();
+        });
+      }).catch(function () {});
+    }
+
+    if (document.body) start();
+    else document.addEventListener("DOMContentLoaded", start, { once: true });
   } catch (e) {}
 })();
