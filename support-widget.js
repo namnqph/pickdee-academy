@@ -3354,8 +3354,8 @@ if (
       : {
           product: { wait: 18000, scroll: 0.45, minWait: 7000 },
           shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true },
-          academy: { wait: 25000, scroll: 0.5, minWait: 10000 },
-          all: { wait: 40000, scroll: 0, minWait: 0 }
+          academy: { wait: 0, scroll: 0, minWait: 0 },
+          all: { wait: 0, scroll: 0, minWait: 0 }
         }[BOT_PAGE];
     const salesPage = isPortal || /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
     if (!plan || !salesPage || botStaffPage()) return;
