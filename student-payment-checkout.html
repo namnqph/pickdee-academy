@@ -1548,5 +1548,41 @@ if (
   <script src="./notifications.js?v=20261021-caps1"></script>
 
 <script src="/pd-app.js?v=20261020-gold2"></script>
+<script src="/pd-tour.js?v=20261023-1"></script>
+<script>
+(function () {
+  /* Tour: Thanh toán học phí */
+  /* Đợi checkout section hiện ra (sau khi load xong data) */
+  var t = setInterval(function () {
+    var co = document.getElementById('checkout');
+    if (!co || co.classList.contains('hidden')) return;
+    clearInterval(t);
+    window.pdTour && window.pdTour.start('sv-tt-v1', [
+      {
+        title: 'Gần xong rồi — 3 bước!',
+        body: 'Quét QR chuyển khoản → tải ảnh bill → gửi xác nhận. Bill rõ ràng là xác nhận ngay tự động.',
+        eyebrow: 'THANH TOÁN'
+      },
+      {
+        target: '#paymentSection',
+        title: 'Bước 1 · Quét mã QR',
+        body: 'Mở app ngân hàng → quét mã QR. Số tiền và nội dung chuyển khoản đã có sẵn, không cần gõ lại.'
+      },
+      {
+        target: '#proofSection',
+        title: 'Bước 2 · Tải ảnh bill',
+        body: 'Chụp màn hình bill giao dịch thành công và tải lên. Bill cần rõ: số tiền + nội dung + ngày giờ. App nhận JPG / PNG / PDF.'
+      },
+      {
+        target: '#policySection',
+        title: 'Bước 3 · Tích đồng ý → Gửi',
+        body: 'Đọc chính sách, tích vào ô đồng ý rồi bấm Gửi xác nhận. Sau vài phút bạn nhận thông báo Coach được ghép.',
+        eyebrow: 'CUỐI CÙNG'
+      }
+    ]);
+  }, 400);
+  setTimeout(function () { clearInterval(t); }, 10000);
+})();
+</script>
 </body>
 </html>
