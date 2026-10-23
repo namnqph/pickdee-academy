@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <meta name="theme-color" content="#0f0f0f">
+  <title>PickDee Game – Pickleball Mini</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      width:100%;height:100%;
+      background:#0f0f0f;
+      overflow:hidden;
+      font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,sans-serif;
+      color:#fff;
+      touch-action:none;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    canvas{
+      display:block;
+      margin:0 auto;
+      touch-action:none;
+    }
+
+    /* ── OVERLAY SCREENS ── */
+    .screen{
+      position:fixed;inset:0;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      z-index:20;
+      padding:32px 28px calc(32px + env(safe-area-inset-bottom));
+      text-align:center;
+      pointer-events:all;
+    }
+    .screen.hidden{display:none;}
+
+    /* start screen – translucent panel */
+    #screenStart{background:rgba(15,15,15,.97);}
+    #screenEnd{background:rgba(15,15,15,.96);}
+
+    .brand{
+      display:flex;align-items:center;gap:8px;
+      margin-bottom:6px;
+    }
+    .brand-logo{
+      width:36px;height:36px;
+      background:#ffc934;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:800;color:#0f0f0f;
+      letter-spacing:-.04em;
+    }
+    .brand-name{font-size:18px;font-weight:700;letter-spacing:-.02em;}
+    .brand-name span{color:#ffc934;}
+
+    .game-title{
+      font-size:28px;font-weight:800;letter-spacing:-.04em;
+      margin-bottom:4px;
+    }
+    .game-sub{
+      font-size:14px;color:rgba(255,255,255,.5);
+      margin-bottom:32px;
+    }
+
+    .how-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+      width:100%;max-width:320px;
+      margin-bottom:36px;
+    }
+    .how-card{
+      background:rgba(255,255,255,.05);border-radius:14px;
+      padding:14px 12px;
+      font-size:12px;line-height:1.5;color:rgba(255,255,255,.65);
+    }
+    .how-card strong{
+      display:block;font-size:20px;margin-bottom:6px;
+    }
+
+    .btn-main{
+      width:100%;max-width:280px;
+      padding:16px;border-radius:16px;
+      background:#ffc934;color:#0f0f0f;
+      font-size:16px;font-weight:700;
+      border:none;cursor:pointer;
+      letter-spacing:-.01em;
+      transition:transform .12s ease,filter .12s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn-main:active{transform:scale(.97);filter:brightness(.9);}
+
+    .btn-ghost{
+      width:100%;max-width:280px;
+      padding:14px;border-radius:16px;
+      background:transparent;color:rgba(255,255,255,.7);
+      font-size:15px;font-weight:600;
+      border:1.5px solid rgba(255,255,255,.15);cursor:pointer;
+      margin-top:12px;
+      transition:border-color .15s,color .15s;
+    }
+    .btn-ghost:active{border-color:rgba(255,255,255,.4);}
+
+    /* end screen */
+    .end-icon{font-size:64px;margin-bottom:8px;}
+    .end-title{font-size:30px;font-weight:800;letter-spacing:-.04em;margin-bottom:6px;}
+    .end-score{
+      font-size:52px;font-weight:800;letter-spacing:-.04em;
+      color:#ffc934;margin-bottom:6px;
+      font-variant-numeric:tabular-nums;
+    }
+    .end-msg{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;}
+
+    .reward-card{
+      width:100%;max-width:300px;
+      background:linear-gradient(135deg,rgba(255,201,52,.12),rgba(255,201,52,.05));
+      border:1px solid rgba(255,201,52,.3);
+      border-radius:16px;padding:16px 20px;
+      margin-bottom:20px;text-align:left;
+    }
+    .reward-card p{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px;line-height:1.5;}
+    .reward-title{font-size:14px;font-weight:700;color:#ffc934;}
+
+    /* serve hint */
+    #serveHint{
+      position:fixed;
+      bottom:calc(88px + env(safe-area-inset-bottom));
+      left:50%;transform:translateX(-50%);
+      background:rgba(255,201,52,.12);
+      border:1px solid rgba(255,201,52,.25);
+      border-radius:20px;padding:7px 18px;
+      font-size:13px;color:rgba(255,201,52,.9);
+      font-weight:600;pointer-events:none;
+      transition:opacity .3s;
+      white-space:nowrap;
+    }
+    #serveHint.hidden{opacity:0;}
+
+    /* score toast */
+    #scoreToast{
+      position:fixed;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      font-size:80px;font-weight:800;
+      color:#ffc934;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .15s;
+      text-shadow:0 0 40px rgba(255,201,52,.5);
+      z-index:15;
+    }
+    #scoreToast.show{opacity:1;}
+
+    .back-btn{
+      position:fixed;top:calc(14px + env(safe-area-inset-top));left:16px;
+      z-index:25;
+      background:rgba(255,255,255,.08);border-radius:50%;
+      width:38px;height:38px;
+      display:flex;align-items:center;justify-content:center;
+      text-decoration:none;color:#fff;font-size:20px;
+      -webkit-tap-highlight-color:transparent;
+      transition:background .15s;
+    }
+    .back-btn:active{background:rgba(255,255,255,.18);}
+  </style>
+</head>
+
+<body>
+
+<a href="/" class="back-btn" aria-label="Về trang chủ">‹</a>
+
+<!-- ── START SCREEN ── -->
+<div id="screenStart" class="screen">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <div class="brand-name">Pick<span>Dee</span></div>
+  </div>
+  <div class="game-title">Pickleball Mini</div>
+  <div class="game-sub">Thắng 11 điểm trước để đăng quang</div>
+
+  <div class="how-grid">
+    <div class="how-card"><strong>☝️</strong>Kéo ngón tay trái/phải để di chuyển vợt</div>
+    <div class="how-card"><strong>🏓</strong>Chạm màn hình để giao bóng</div>
+    <div class="how-card"><strong>🟨</strong>Vùng NVZ: zone cấm volley</div>
+    <div class="how-card"><strong>🏆</strong>Thắng 11 điểm — cách 2</div>
+  </div>
+
+  <button class="btn-main" id="btnStart">Bắt đầu chơi</button>
+</div>
+
+<!-- ── END SCREEN ── -->
+<div id="screenEnd" class="screen hidden">
+  <div class="end-icon" id="endIcon">🏆</div>
+  <div class="end-title" id="endTitle">Bạn thắng!</div>
+  <div class="end-score" id="endScore">11 – 7</div>
+  <div class="end-msg" id="endMsg">Tuyệt vời! Bạn có tài năng Pickleball!</div>
+
+  <div class="reward-card" id="rewardCard">
+    <div class="reward-title">🎁 Phần thưởng đang đến...</div>
+    <p>Đăng ký khoá học PickDee Academy để nhận ưu đãi dành riêng cho người chơi giỏi.</p>
+  </div>
+
+  <button class="btn-main" id="btnReplay">Chơi lại</button>
+  <button class="btn-ghost" id="btnHome">Về trang chủ</button>
+</div>
+
+<!-- serve hint -->
+<div id="serveHint" class="hidden">Chạm để giao bóng ▼</div>
+
+<!-- score toast -->
+<div id="scoreToast"></div>
+
+<!-- ── CANVAS ── -->
+<canvas id="c"></canvas>
+
+<script>
+// ================================================================
+// PICKDEE MINI — Pickleball Game
+// ================================================================
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+// ── PALETTE ──────────────────────────────────────────────────────
+const C = {
+  bg:         '#0f0f0f',
+  court:      '#14302a',
+  courtLine:  'rgba(255,255,255,.85)',
+  nvz:        '#0e2420',
+  nvzLine:    'rgba(255,255,255,.7)',
+  nvzLabel:   'rgba(255,255,255,.18)',
+  net:        'rgba(255,255,255,.9)',
+  netShadow:  'rgba(0,0,0,.4)',
+  ball:       '#ffc934',
+  ballGlow:   'rgba(255,201,52,.35)',
+  ballHole:   'rgba(180,130,0,.55)',
+  playerPad:  '#ffc934',
+  playerGlow: 'rgba(255,201,52,.45)',
+  aiPad:      '#8aacb8',
+  aiGlow:     'rgba(138,172,184,.25)',
+  score:      '#ffffff',
+  scoreDim:   'rgba(255,255,255,.45)',
+  trailCol:   'rgba(255,201,52,',
+};
+
+// ── LAYOUT (computed in resize) ───────────────────────────────────
+let W, H, CW, CX, CT, CB, NET, NVZ, PADW, PADH, PADR;
+
+function layout() {
+  W = Math.min(window.innerWidth, 440);
+  H = window.innerHeight;
+  canvas.width  = W;
+  canvas.height = H;
+
+  CW   = Math.round(W * 0.875);           // court width
+  CX   = Math.round((W - CW) / 2);        // court left edge
+  CT   = Math.round(H * 0.10);            // court top
+  CB   = Math.round(H * 0.90);            // court bottom
+  NET  = Math.round((CT + CB) / 2);       // net Y
+  NVZ  = Math.round((CB - NET) * 0.38);   // kitchen depth each side
+
+  PADW = Math.round(CW * 0.22);  // paddle width
+  PADH = 11;                      // paddle height
+  PADR = 6;                       // corner radius
+}
+
+// ── GAME STATE ────────────────────────────────────────────────────
+const BALL_R       = 9;
+const BASE_SPD     = 6.2;
+const MAX_SPD      = 15;
+const SPD_INC      = 0.28;
+const WIN_SCORE    = 11;
+
+let gs = {};  // game state
+let trail = [];  // ball trail positions
+
+function initState() {
+  const midX = CX + CW / 2;
+  gs = {
+    phase:   'start',  // start | serving | playing | scored | end
+    serving: 'player',
+    player: { x: midX, y: CB - 28, score: 0 },
+    ai:     { x: midX, y: CT + 28, score: 0 },
+    ball:   null,
+    lastScorer: null,
+  };
+  trail = [];
+}
+
+// ── AUDIO ─────────────────────────────────────────────────────────
+let aud;
+function ensureAudio() {
+  if (aud) return;
+  aud = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(freq, dur, type='square', vol=0.28) {
+  if (!aud) return;
+  try {
+    const o = aud.createOscillator();
+    const g = aud.createGain();
+    o.connect(g); g.connect(aud.destination);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, aud.currentTime);
+    g.gain.setValueAtTime(vol, aud.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, aud.currentTime + dur);
+    o.start(); o.stop(aud.currentTime + dur);
+  } catch(e){}
+}
+const sndHit   = () => beep(640, .07, 'square', .22);
+const sndWall  = () => beep(320, .05, 'square', .12);
+const sndScore = () => beep(220, .28, 'sine',   .25);
+const sndWin   = () => {
+  [600,760,940,1200].forEach((f,i) => setTimeout(()=>beep(f,.15,'sine',.28), i*90));
+};
+
+// ── DRAWING HELPERS ───────────────────────────────────────────────
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+// ── DRAW COURT ────────────────────────────────────────────────────
+function drawCourt() {
+  // court fill
+  ctx.fillStyle = C.court;
+  rrect(CX, CT, CW, CB - CT, 10);
+  ctx.fill();
+
+  // NVZ (kitchen) fill
+  ctx.fillStyle = C.nvz;
+  // top NVZ (AI side) — between kitchenTop line and net
+  ctx.fillRect(CX+2, NET-NVZ, CW-4, NVZ-2);
+  // bottom NVZ (player side) — between net and kitchenBottom line
+  ctx.fillRect(CX+2, NET+2,   CW-4, NVZ);
+
+  // NVZ labels
+  ctx.save();
+  ctx.fillStyle = C.nvzLabel;
+  ctx.font = '10px "Be Vietnam Pro",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('NVZ', CX + CW/2, NET - NVZ/2 + 4);
+  ctx.fillText('NVZ', CX + CW/2, NET + NVZ/2 + 4);
+  ctx.restore();
+
+  // boundary lines
+  ctx.strokeStyle = C.courtLine;
+  ctx.lineWidth = 2;
+  rrect(CX, CT, CW, CB - CT, 10);
+  ctx.stroke();
+
+  // kitchen lines
+  ctx.beginPath();
+  ctx.moveTo(CX, NET - NVZ); ctx.lineTo(CX + CW, NET - NVZ);
+  ctx.moveTo(CX, NET + NVZ); ctx.lineTo(CX + CW, NET + NVZ);
+  ctx.strokeStyle = C.nvzLine;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // center service line (inside NVZ only, faint)
+  ctx.beginPath();
+  ctx.moveTo(CX + CW/2, CT);  ctx.lineTo(CX + CW/2, NET - NVZ);
+  ctx.moveTo(CX + CW/2, NET + NVZ); ctx.lineTo(CX + CW/2, CB);
+  ctx.strokeStyle = 'rgba(255,255,255,.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // ── NET ──
+  // shadow
+  ctx.fillStyle = C.netShadow;
+  ctx.fillRect(CX, NET+4, CW, 5);
+
+  // posts
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(CX-4, NET-3, 7, 15);
+  ctx.fillRect(CX+CW-3, NET-3, 7, 15);
+
+  // net body
+  ctx.fillStyle = C.net;
+  ctx.fillRect(CX, NET, CW, 4);
+
+  // net grid lines
+  ctx.strokeStyle = 'rgba(180,180,180,.35)';
+  ctx.lineWidth = .7;
+  for (let x = CX+7; x < CX+CW; x += 7) {
+    ctx.beginPath();
+    ctx.moveTo(x, NET); ctx.lineTo(x, NET+4);
+    ctx.stroke();
+  }
+
+  // center strap (white band)
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(CX + CW/2 - 14, NET-1, 28, 6);
+}
+
+// ── DRAW PADDLE ───────────────────────────────────────────────────
+function drawPaddle(x, y, isPlayer) {
+  const fw = PADW, fh = PADH, fr = PADR;
+  const hw = Math.round(fw * 0.24);   // handle width
+  const hh = Math.round(fw * 0.24);   // handle height
+  const hDir = isPlayer ? 1 : -1;     // handle extends toward edge
+
+  ctx.save();
+
+  // ── GLOW ──
+  ctx.shadowColor = isPlayer ? C.playerGlow : C.aiGlow;
+  ctx.shadowBlur  = isPlayer ? 24 : 14;
+
+  // ── FACE (striking surface) ──
+  ctx.fillStyle = isPlayer ? C.playerPad : C.aiPad;
+  rrect(x - fw/2, y - fh/2, fw, fh, fr);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // Neck connector between face and handle
+  const neckW = hw + 6;
+  const neckY = hDir > 0 ? y + fh/2 - 2 : y - fh/2;
+  ctx.fillStyle = isPlayer ? '#c9980a' : '#6a8a96';
+  ctx.fillRect(x - neckW/2, neckY, neckW, 4);
+
+  // ── HANDLE (grip) ──
+  const handleY = hDir > 0 ? y + fh/2 + 2 : y - fh/2 - hh - 2;
+  ctx.fillStyle = '#141414';
+  rrect(x - hw/2, handleY, hw, hh, 3);
+  ctx.fill();
+
+  // Grip tape wrapping lines
+  ctx.strokeStyle = 'rgba(255,255,255,.18)';
+  ctx.lineWidth = 1;
+  const step = Math.round(hh / 3.5);
+  for (let i = 1; i <= 3; i++) {
+    const ty = handleY + i * step;
+    if (ty < handleY + hh - 2) {
+      ctx.beginPath();
+      ctx.moveTo(x - hw/2 + 2, ty);
+      ctx.lineTo(x + hw/2 - 2, ty);
+      ctx.stroke();
+    }
+  }
+
+  // Edge guard outline on face
+  ctx.strokeStyle = isPlayer ? 'rgba(0,0,0,.28)' : 'rgba(0,0,0,.2)';
+  ctx.lineWidth = 1.5;
+  rrect(x - fw/2, y - fh/2, fw, fh, fr);
+  ctx.stroke();
+
+  // Hole texture suggestion on face (faint dots near edges)
+  ctx.fillStyle = isPlayer ? 'rgba(0,0,0,.15)' : 'rgba(0,0,0,.1)';
+  const dotX = [fw/2 - 6, -fw/2 + 6, fw/4, -fw/4];
+  dotX.forEach(dx => {
+    ctx.beginPath();
+    ctx.arc(x + dx, y, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // ── PickDee BRAND on face (player paddle only) ──
+  if (isPlayer) {
+    ctx.save();
+    ctx.font = 'bold 6.5px "Be Vietnam Pro",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.letterSpacing = '-.02em';
+    ctx.fillText('PickDee', x, y + 0.5);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// ── DRAW BALL ─────────────────────────────────────────────────────
+function drawBall(x, y) {
+  // trail
+  trail.forEach((t, i) => {
+    const alpha = (i+1) / trail.length * 0.35;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, BALL_R * ((i+1)/trail.length), 0, Math.PI*2);
+    ctx.fillStyle = C.trailCol + alpha + ')';
+    ctx.fill();
+  });
+
+  // drop shadow
+  ctx.beginPath();
+  ctx.arc(x+2, y+3, BALL_R, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,.3)';
+  ctx.fill();
+
+  // glow
+  ctx.save();
+  ctx.shadowColor = C.ballGlow;
+  ctx.shadowBlur  = 22;
+
+  // ball body
+  ctx.beginPath();
+  ctx.arc(x, y, BALL_R, 0, Math.PI*2);
+  ctx.fillStyle = C.ball;
+  ctx.fill();
+  ctx.restore();
+
+  // specular highlight
+  ctx.beginPath();
+  ctx.arc(x-3, y-3, BALL_R*.38, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.45)';
+  ctx.fill();
+
+  // ball holes (wiffle ball pattern)
+  ctx.fillStyle = C.ballHole;
+  [[-3,2],[1,-3],[3,2]].forEach(([hx,hy]) => {
+    ctx.beginPath();
+    ctx.arc(x+hx, y+hy, 1.8, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+// ── DRAW SCORES ───────────────────────────────────────────────────
+function drawScores() {
+  ctx.save();
+  ctx.textAlign = 'center';
+
+  // player score – bottom left of canvas
+  ctx.font = '10px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = C.scoreDim;
+  ctx.fillText('BẠN', CX + CW * 0.22, CB + 22);
+  ctx.font = 'bold 38px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = C.score;
+  ctx.fillText(gs.player.score, CX + CW * 0.22, CB + 56);
+
+  // separator
+  ctx.font = 'bold 28px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.2)';
+  ctx.fillText('—', CX + CW * 0.5, CB + 50);
+
+  // AI score – bottom right of canvas
+  ctx.font = '10px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = C.scoreDim;
+  ctx.fillText('ĐỐI THỦ', CX + CW * 0.78, CB + 22);
+  ctx.font = 'bold 38px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.45)';
+  ctx.fillText(gs.ai.score, CX + CW * 0.78, CB + 56);
+
+  // win target indicator
+  ctx.font = '10px "Be Vietnam Pro",sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.2)';
+  ctx.textAlign = 'right';
+  ctx.fillText('first to ' + WIN_SCORE, CX + CW, CT - 8);
+
+  ctx.restore();
+}
+
+// ── PHYSICS ───────────────────────────────────────────────────────
+function updateBall() {
+  if (!gs.ball || gs.phase !== 'playing') return;
+
+  const b = gs.ball;
+
+  // trail
+  trail.push({ x: b.x, y: b.y });
+  if (trail.length > 6) trail.shift();
+
+  b.x += b.vx;
+  b.y += b.vy;
+
+  // left/right walls
+  if (b.x - BALL_R < CX) {
+    b.x = CX + BALL_R; b.vx = Math.abs(b.vx); sndWall();
+  }
+  if (b.x + BALL_R > CX + CW) {
+    b.x = CX + CW - BALL_R; b.vx = -Math.abs(b.vx); sndWall();
+  }
+
+  // scoring (ball exits top/bottom)
+  if (b.y > CB + BALL_R * 3) { doScore('ai'); return; }
+  if (b.y < CT - BALL_R * 3) { doScore('player'); return; }
+
+  // paddle collisions
+  hitPaddle(gs.player, 'player');
+  hitPaddle(gs.ai,     'ai');
+}
+
+function hitPaddle(pad, who) {
+  const b = gs.ball;
+  const inX = b.x >= pad.x - PADW/2 - BALL_R && b.x <= pad.x + PADW/2 + BALL_R;
+  if (!inX) return;
+
+  const inY = who === 'player'
+    ? (b.y + BALL_R >= pad.y - PADH/2 && b.y - BALL_R <= pad.y + PADH/2)
+    : (b.y + BALL_R >= pad.y - PADH/2 && b.y - BALL_R <= pad.y + PADH/2);
+  if (!inY) return;
+
+  const goingToward = who === 'player' ? b.vy > 0 : b.vy < 0;
+  if (!goingToward) return;
+
+  const offset = (b.x - pad.x) / (PADW / 2);     // –1…+1
+  const angle  = offset * (Math.PI * 0.36);
+
+  const curSpd = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+  const newSpd = Math.min(curSpd + SPD_INC, MAX_SPD);
+
+  b.vx = Math.sin(angle) * newSpd;
+  b.vy = who === 'player' ? -Math.abs(Math.cos(angle)*newSpd) : Math.abs(Math.cos(angle)*newSpd);
+
+  // push out of paddle
+  b.y = who === 'player' ? pad.y - PADH/2 - BALL_R : pad.y + PADH/2 + BALL_R;
+
+  sndHit();
+}
+
+// ── AI ────────────────────────────────────────────────────────────
+function updateAI() {
+  if (gs.phase !== 'playing' || !gs.ball) return;
+
+  const ai = gs.ai;
+  const b  = gs.ball;
+
+  const total    = gs.player.score + gs.ai.score;
+  const spd      = Math.min(2.8 + total * 0.18, 8);     // 2.8 → 8
+  const errFact  = Math.max(0.7 - total * 0.025, 0.2);  // prediction error
+
+  if (b.vy < 0) {
+    // ball heading toward AI – track with slight error
+    const targetX = b.x + (Math.random() - 0.5) * 28 * errFact;
+    const diff = targetX - ai.x;
+    ai.x += Math.sign(diff) * Math.min(Math.abs(diff), spd);
+  } else {
+    // center slowly
+    const mid  = CX + CW / 2;
+    const diff = mid - ai.x;
+    ai.x += Math.sign(diff) * Math.min(Math.abs(diff), 1.8);
+  }
+
+  ai.x = clamp(ai.x, CX + PADW/2, CX + CW - PADW/2);
+}
+
+// ── SCORE / SERVE ─────────────────────────────────────────────────
+function doScore(scorer) {
+  trail = [];
+  sndScore();
+  gs[scorer].score++;
+  gs.phase = 'scored';
+
+  // flash toast
+  const toast = document.getElementById('scoreToast');
+  toast.textContent = scorer === 'player' ? '+1 🏓' : '•';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 600);
+
+  const ps = gs.player.score, as = gs.ai.score;
+  if ((ps >= WIN_SCORE || as >= WIN_SCORE) && Math.abs(ps - as) >= 2) {
+    setTimeout(() => endGame(scorer === 'player'), 900);
+  } else {
+    gs.serving = scorer;
+    setTimeout(() => prepServe(scorer), 900);
+  }
+}
+
+function prepServe(server) {
+  gs.phase   = 'serving';
+  gs.serving = server;
+
+  const servX = server === 'player' ? gs.player.x : gs.ai.x;
+  const servY = server === 'player'
+    ? gs.player.y - PADH/2 - BALL_R - 4
+    : gs.ai.y    + PADH/2 + BALL_R + 4;
+
+  gs.ball = { x: servX, y: servY, vx: 0, vy: 0 };
+
+  const hint = document.getElementById('serveHint');
+  if (server === 'player') {
+    hint.textContent = 'Chạm để giao bóng ▼';
+    hint.classList.remove('hidden');
+    setTimeout(() => hint.classList.add('hidden'), 3000);
+  } else {
+    hint.classList.add('hidden');
+    // AI serves automatically
+    setTimeout(() => {
+      if (gs.phase === 'serving' && gs.serving === 'ai') launchBall('ai');
+    }, 900);
+  }
+}
+
+function launchBall(server) {
+  if (gs.phase !== 'serving') return;
+  ensureAudio();
+
+  const angle = (Math.random() - 0.5) * Math.PI * 0.30;
+  const spd   = BASE_SPD;
+  gs.ball.vx  = Math.sin(angle) * spd;
+  gs.ball.vy  = server === 'player' ? -Math.cos(angle) * spd : Math.cos(angle) * spd;
+
+  gs.phase = 'playing';
+  document.getElementById('serveHint').classList.add('hidden');
+  sndHit();
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────
+let targetX = null;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  ensureAudio();
+  const t   = e.changedTouches[0];
+  const scl = canvas.getBoundingClientRect();
+  const tx  = (t.clientX - scl.left) * (W / scl.width);
+
+  if (gs.phase === 'start')   { document.getElementById('btnStart').click(); return; }
+  if (gs.phase === 'end')     { document.getElementById('btnReplay').click(); return; }
+  if (gs.phase === 'serving' && gs.serving === 'player') { launchBall('player'); return; }
+
+  targetX = clamp(tx, CX + PADW/2, CX + CW - PADW/2);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t   = e.changedTouches[0];
+  const scl = canvas.getBoundingClientRect();
+  const tx  = (t.clientX - scl.left) * (W / scl.width);
+  targetX = clamp(tx, CX + PADW/2, CX + CW - PADW/2);
+}, { passive: false });
+
+canvas.addEventListener('mousemove', e => {
+  const scl = canvas.getBoundingClientRect();
+  const mx  = (e.clientX - scl.left) * (W / scl.width);
+  targetX = clamp(mx, CX + PADW/2, CX + CW - PADW/2);
+});
+
+canvas.addEventListener('click', e => {
+  ensureAudio();
+  if (gs.phase === 'start')   { document.getElementById('btnStart').click(); return; }
+  if (gs.phase === 'end')     { document.getElementById('btnReplay').click(); return; }
+  if (gs.phase === 'serving' && gs.serving === 'player') launchBall('player');
+});
+
+function updatePlayer() {
+  if (targetX === null) return;
+  const p    = gs.player;
+  const diff = targetX - p.x;
+  p.x += Math.sign(diff) * Math.min(Math.abs(diff), 11);
+  p.x  = clamp(p.x, CX + PADW/2, CX + CW - PADW/2);
+}
+
+// ── GAME FLOW ─────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('screenStart').classList.add('hidden');
+  document.getElementById('screenEnd').classList.add('hidden');
+  gs.player.score = 0;
+  gs.ai.score     = 0;
+  gs.player.x     = CX + CW / 2;
+  gs.ai.x         = CX + CW / 2;
+  targetX         = null;
+  trail           = [];
+  prepServe('player');
+}
+
+function endGame(playerWon) {
+  gs.phase = 'end';
+  playerWon ? sndWin() : sndScore();
+
+  document.getElementById('endIcon').textContent  = playerWon ? '🏆' : '😅';
+  document.getElementById('endTitle').textContent = playerWon ? 'Bạn thắng!' : 'Lần sau nhé!';
+  document.getElementById('endScore').textContent = gs.player.score + ' – ' + gs.ai.score;
+  document.getElementById('endMsg').textContent   = playerWon
+    ? 'Tuyệt vời! Bạn có tài năng Pickleball thật sự!'
+    : 'Đừng nản — luyện thêm là thắng thôi!';
+  document.getElementById('rewardCard').style.display = playerWon ? '' : 'none';
+
+  document.getElementById('screenEnd').classList.remove('hidden');
+}
+
+document.getElementById('btnStart').addEventListener('click', () => {
+  ensureAudio();
+  startGame();
+});
+document.getElementById('btnReplay').addEventListener('click', () => {
+  document.getElementById('screenEnd').classList.add('hidden');
+  startGame();
+});
+document.getElementById('btnHome').addEventListener('click', () => {
+  window.location.href = '/';
+});
+
+// ── MAIN LOOP ─────────────────────────────────────────────────────
+let lastTs = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+
+  // Background
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  drawCourt();
+
+  if (gs.ball) drawBall(gs.ball.x, gs.ball.y);
+  drawPaddle(gs.player.x, gs.player.y, true);
+  drawPaddle(gs.ai.x,     gs.ai.y,     false);
+  drawScores();
+
+  // Update
+  if (gs.phase === 'playing') {
+    updatePlayer();
+    updateAI();
+    updateBall();
+  } else if (gs.phase === 'serving') {
+    updatePlayer();
+    // ball follows server's paddle until launched
+    if (gs.serving === 'player' && gs.ball) {
+      gs.ball.x = gs.player.x;
+    }
+  }
+}
+
+// ── UTIL ──────────────────────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  layout();
+  if (gs.player) {
+    gs.player.y = CB - 28;
+    gs.ai.y     = CT + 28;
+    gs.player.x = clamp(gs.player.x || CX+CW/2, CX+PADW/2, CX+CW-PADW/2);
+    gs.ai.x     = clamp(gs.ai.x     || CX+CW/2, CX+PADW/2, CX+CW-PADW/2);
+  }
+});
+
+layout();
+initState();
+gs.player.y = CB - 28;
+gs.ai.y     = CT + 28;
+gs.player.x = CX + CW / 2;
+gs.ai.x     = CX + CW / 2;
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
