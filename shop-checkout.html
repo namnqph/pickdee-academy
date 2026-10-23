@@ -1692,6 +1692,7 @@
 
     <form
       id="checkoutForm"
+      novalidate
     >
 
 
@@ -5032,6 +5033,10 @@ function shippingQuote(
     message.textContent =
       text;
 
+    if (type === "error" && text) {
+      message.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
   }
   function normalizeCustomerPhone(value) {
 
@@ -6114,27 +6119,44 @@ function shippingQuote(
         null;
 
 
-      if (
-        !customerName
-        ||
-        !phone
-        ||
-        !addressLine
-        ||
-        !ward
-        ||
-        !province
-        ||
-        !legacyAddress
-      ) {
+      const missingField =
+        [
+          ["customerName", customerName, "Họ và tên"],
+          ["customerPhone", phone, "Số điện thoại"],
+          ["addressLine", addressLine, "Số nhà / đường / thôn / xóm"],
+          ["province", province, "Tỉnh / thành"],
+          ["ward", ward, "Phường / xã"],
+          ["legacyAddress", legacyAddress, "Địa chỉ trước sáp nhập"]
+        ].find(function (f) { return !f[1]; });
+
+      if (missingField) {
 
         showMessage(
-          "Vui lòng nhập đầy đủ thông tin bắt buộc.",
+          "Anh/chị vui lòng nhập: " + missingField[2] + ".",
           "error"
         );
 
-        return;
+        const missingEl =
+          document.getElementById(missingField[0]);
 
+        if (missingEl) {
+          let hint = document.getElementById("pdMissingHint");
+          if (!hint) {
+            hint = document.createElement("div");
+            hint.id = "pdMissingHint";
+            hint.style.cssText = "margin-top:6px;color:#ff6b6b;font-size:12px;font-weight:700";
+          }
+          hint.textContent = "Anh/chị vui lòng nhập " + missingField[2].toLowerCase() + ".";
+          missingEl.insertAdjacentElement("afterend", hint);
+          missingEl.style.outline = "2px solid #ff6b6b";
+          const clearMissing = function () { missingEl.style.outline = ""; hint.remove(); };
+          missingEl.addEventListener("input", clearMissing, { once: true });
+          missingEl.addEventListener("change", clearMissing, { once: true });
+          missingEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(function () { try { missingEl.focus({ preventScroll: true }); } catch (e) {} }, 350);
+        }
+
+        return;
       }
 
 
