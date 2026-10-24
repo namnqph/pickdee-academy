@@ -1838,7 +1838,8 @@ if (
     if (act === "checkout") {
       const items = pdjCartItems();
       if (!items.length) return { html: "Giỏ hàng của anh/chị đang trống ạ. Anh/chị chọn sản phẩm trước, em gợi ý nhé:", chips: PDJ_HOME };
-      return { go: "/shop-cart" };
+      // Giỏ chỉ có đúng 1 sản phẩm (vừa thêm từ chat) → bỏ bước xem giỏ, vào thẳng thanh toán
+      return { go: items.length === 1 ? "/shop-checkout" : "/shop-cart" };
     }
 
     if (act === "lookup") return {
