@@ -1652,7 +1652,7 @@ function renderWards() {
 
   function coreName(value) {
     return normalize(value)
-      .replace(/^(thành phố|tp\.?|tỉnh)\s+/i, "")
+      .replace(/^(thành phố|tp\.?|tỉnh|phường|xã|thị trấn|quận|huyện)\s+/i, "")
       .trim();
   }
 
@@ -1690,10 +1690,17 @@ function renderWards() {
 
           const res = await fetch(
             "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="
-              + lat + "&lon=" + lon + "&accept-language=vi&zoom=14"
+              + lat + "&lon=" + lon + "&accept-language=vi&zoom=18&addressdetails=1"
           );
           const data = await res.json();
           const addr = (data && data.address) || {};
+          const addrBlob =
+            normalize(
+              [data.display_name, addr.suburb, addr.quarter, addr.city_district,
+               addr.neighbourhood, addr.town, addr.village, addr.hamlet, addr.county]
+                .filter(Boolean)
+                .join(" | ")
+            );
 
           const areaOptions =
             uniqueSorted(allAreas.map(function (item) { return item.tinh_thanh; }));
@@ -1727,13 +1734,25 @@ function renderWards() {
           );
 
           const wardCandidates =
-            [addr.suburb, addr.city_district, addr.quarter, addr.town, addr.village]
+            [addr.suburb, addr.quarter, addr.neighbourhood, addr.city_district,
+             addr.town, addr.village, addr.hamlet]
               .filter(Boolean);
 
           let matchedWard = "";
           for (const cand of wardCandidates) {
             matchedWard = matchOption(cand, wardOptions);
             if (matchedWard) break;
+          }
+
+          // Nominatim còn dùng tên phường/xã trước sáp nhập, có thể không khớp
+          // field nào ở trên → dò tên (đã bỏ tiền tố) có xuất hiện trong toàn bộ
+          // địa chỉ Nominatim trả về không, ưu tiên tên dài nhất khớp được.
+          if (!matchedWard) {
+            const hits = wardOptions
+              .map(function (o) { return { o: o, oc: coreName(o) }; })
+              .filter(function (x) { return x.oc.length >= 3 && addrBlob.indexOf(x.oc) !== -1; })
+              .sort(function (a, b) { return b.oc.length - a.oc.length; });
+            if (hits.length) matchedWard = hits[0].o;
           }
 
           if (matchedWard) wardSelect.value = matchedWard;
