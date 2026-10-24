@@ -1562,7 +1562,11 @@ if (
       academy: /^\/find-coach/.test(location.pathname)
         ? "Chào anh/chị 👋 Anh/chị đang tìm Coach khu vực nào ạ? Cho em biết trình độ, em gợi ý Coach phù hợp."
         : "Chào anh/chị 👋 Anh/chị muốn học Pickleball hay muốn làm Coach cho PickDee ạ? Em tư vấn đúng phần của mình.",
-      all: "Chào anh/chị 👋 Anh/chị cần tìm khoá học, Coach, hay muốn đăng ký làm Coach ạ? Em giúp luôn."
+      all: /^\/add-my-court/.test(location.pathname)
+        ? "Chào anh/chị 👋 Anh/chị đang đưa sân lên PickDee ạ. Cần hỗ trợ điền thông tin gì không, em giúp luôn."
+        : /^\/court-claim/.test(location.pathname)
+        ? "Chào anh/chị 👋 Anh/chị muốn xác minh mình là chủ sân ạ? Em giải thích quy trình ngay."
+        : "Chào anh/chị 👋 Anh/chị cần tìm khoá học, Coach, muốn làm Coach, hay đưa sân lên PickDee ạ? Em giúp luôn."
     }[BOT_PAGE];
   }
   const BOT_SUGGEST = {
@@ -1573,7 +1577,11 @@ if (
     academy: /^\/find-coach/.test(location.pathname)
       ? ["Tìm Coach 1 kèm 1 gần tôi", "Học nhóm 2 người được không?", "Học phí 1 buổi học?", "Đặt lịch học thử thế nào?"]
       : ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người như thế nào?", "Muốn làm Coach PickDee thì sao?"],
-    all: ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Muốn làm Coach PickDee thì sao?", "Cần mua vợt Pickleball"]
+    all: /^\/add-my-court/.test(location.pathname)
+      ? ["Đưa sân lên có mất phí không?", "Cần điền những thông tin gì?", "Bao lâu thì sân được duyệt?"]
+      : /^\/court-claim/.test(location.pathname)
+      ? ["Xác minh chủ sân cần giấy tờ gì?", "Bao lâu thì được xác nhận?", "Sân chưa có trên PickDee thì sao?"]
+      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -3353,7 +3361,7 @@ if (
   ====================================================== */
   (function botTeaser() {
     const SEEN = "pickdee_bot_teased", OFF = "pickdee_bot_tease_off";
-    const isPortal = /^\/(student|coach|student-register|student-book-session|student-sessions|student-payment-checkout|student-session-requests|apply-coach|coach-sessions|coach-session-detail)(\.html)?\b/.test(location.pathname);
+    const isPortal = /^\/(student|coach|student-register|student-book-session|student-sessions|student-payment-checkout|student-session-requests|apply-coach|coach-sessions|coach-session-detail|add-my-court|court-claim)(\.html)?\b/.test(location.pathname);
     const plan = isPortal
       ? { wait: 1000, minWait: 0 }
       : {
@@ -3429,6 +3437,8 @@ if (
         if (/\/student-payment-checkout/.test(p)) return "Cần hỗ trợ thanh toán hay hỏi về bill? Em ở đây ạ.";
         if (/\/student/.test(p)) return "Cần giúp gì về lịch học, gói học hay Coach? Em hỗ trợ ngay ạ.";
         if (/\/apply-coach/.test(p)) return "Có câu hỏi về hợp đồng hay quy trình Coach không? Em giải thích ngay.";
+        if (/\/add-my-court/.test(p)) return "Cần hỗ trợ điền thông tin sân hay có thắc mắc gì không? Em giúp luôn ạ.";
+        if (/\/court-claim/.test(p)) return "Cần hỗ trợ xác minh chủ sân không? Em giải thích quy trình ngay ạ.";
         if (/\/coach-session-detail/.test(p)) return "Cần hỗ trợ xử lý buổi học này không? Em ở đây ạ.";
         if (/\/coach/.test(p)) return "Cần hỗ trợ về lịch dạy, công hay học viên? Em ở đây ạ.";
         return "Cần hỗ trợ gì không? Em ở đây ạ.";
@@ -3443,7 +3453,7 @@ if (
         academy: /^\/find-coach/.test(location.pathname)
           ? "Anh/chị muốn <b>tìm Coach gần mình</b>? Em gợi ý Coach phù hợp trình độ và khu vực ngay ạ."
           : "Anh/chị muốn học Pickleball hay muốn làm Coach cho PickDee ạ?",
-        all: "Anh/chị cần tìm khoá học, Coach, hay muốn đăng ký làm Coach ạ? Em giúp luôn nè."
+        all: "Anh/chị cần tìm khoá học, Coach, muốn làm Coach, hay đưa sân lên PickDee ạ? Em giúp luôn nè."
       }[BOT_PAGE];
     }
 
