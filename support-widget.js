@@ -1561,8 +1561,8 @@ if (
       shop: "Chào anh/chị 👋 Hôm nay anh/chị tìm vợt hay phụ kiện gì ạ? Chọn bên dưới, em gợi ý ngay.",
       academy: /^\/find-coach/.test(location.pathname)
         ? "Chào anh/chị 👋 Anh/chị đang tìm Coach khu vực nào ạ? Cho em biết trình độ, em gợi ý Coach phù hợp."
-        : "Chào anh/chị 👋 Anh/chị đang quan tâm khoá nào vậy ạ? Cho em biết trình độ với lịch rảnh, em tư vấn gói phù hợp.",
-      all: "Chào anh/chị 👋 Anh/chị cần tìm khoá học hay Coach Pickleball ạ? Em giúp luôn."
+        : "Chào anh/chị 👋 Anh/chị muốn học Pickleball hay muốn làm Coach cho PickDee ạ? Em tư vấn đúng phần của mình.",
+      all: "Chào anh/chị 👋 Anh/chị cần tìm khoá học, Coach, hay muốn đăng ký làm Coach ạ? Em giúp luôn."
     }[BOT_PAGE];
   }
   const BOT_SUGGEST = {
@@ -1572,8 +1572,8 @@ if (
     shop: ["Tư vấn vợt cho người mới", "Vợt cho người chơi lâu năm", "Phí ship thế nào?", "Tra cứu đơn hàng"],
     academy: /^\/find-coach/.test(location.pathname)
       ? ["Tìm Coach 1 kèm 1 gần tôi", "Học nhóm 2 người được không?", "Học phí 1 buổi học?", "Đặt lịch học thử thế nào?"]
-      : ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người như thế nào?", "Đổi lịch hoặc nghỉ học được không?"],
-    all: ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Học phí thế nào?", "Cần mua vợt Pickleball"]
+      : ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người như thế nào?", "Muốn làm Coach PickDee thì sao?"],
+    all: ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Muốn làm Coach PickDee thì sao?", "Cần mua vợt Pickleball"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -3442,8 +3442,8 @@ if (
         shop: "👋 Anh/chị đang tìm gì hôm nay? Em tư vấn chọn đúng sản phẩm trong 30 giây:",
         academy: /^\/find-coach/.test(location.pathname)
           ? "Anh/chị muốn <b>tìm Coach gần mình</b>? Em gợi ý Coach phù hợp trình độ và khu vực ngay ạ."
-          : "Anh/chị muốn học 1 kèm 1 hay nhóm vậy ạ? Em tư vấn gói phù hợp cho mình.",
-        all: "Anh/chị đang cần tìm khoá học hay Coach Pickleball ạ? Em giúp luôn nè."
+          : "Anh/chị muốn học Pickleball hay muốn làm Coach cho PickDee ạ?",
+        all: "Anh/chị cần tìm khoá học, Coach, hay muốn đăng ký làm Coach ạ? Em giúp luôn nè."
       }[BOT_PAGE];
     }
 
