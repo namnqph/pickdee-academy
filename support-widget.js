@@ -1559,8 +1559,10 @@ if (
       cart: "Chào anh/chị 👋 Em hỗ trợ anh/chị hoàn tất đơn hàng: phí ship, thanh toán, thời gian giao. Đặt hàng không cần tạo tài khoản ạ.",
       order: "Chào anh/chị 👋 Em hỗ trợ tra cứu và giải đáp mọi thắc mắc về đơn hàng của anh/chị ạ.",
       shop: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Shop</b>. Anh/chị đang tìm gì hôm nay ạ? Chọn bên dưới, em gợi ý đúng sản phẩm trong 30 giây.",
-      academy: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Academy</b>. Anh/chị cho em biết trình độ và muốn học 1 kèm 1 hay nhóm 2 người, em tư vấn gói học phù hợp ạ.",
-      all: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Anh/chị đang cần chọn vợt, phụ kiện hay tìm khoá học Pickleball ạ?"
+      academy: /^\/find-coach/.test(location.pathname)
+        ? "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee</b>. Anh/chị muốn tìm Coach phù hợp trình độ và khu vực không? Em gợi ý ngay, anh/chị chỉ cần chọn bên dưới ạ."
+        : "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee Academy</b>. Anh/chị đang quan tâm đến khoá học Pickleball? Em tư vấn gói học phù hợp trình độ và lịch của anh/chị ạ.",
+      all: "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee</b>. Anh/chị cần tư vấn khoá học Pickleball hay tìm Coach phù hợp không? Em hỗ trợ ngay ạ."
     }[BOT_PAGE];
   }
   const BOT_SUGGEST = {
@@ -1568,8 +1570,10 @@ if (
     cart: ["Phí ship thế nào?", "Thanh toán thế nào?", "Bao lâu nhận hàng?", "Bảo hành vợt?"],
     order: ["Tra cứu đơn hàng", "Bao lâu nhận hàng?", "Bảo hành vợt?"],
     shop: ["Tư vấn vợt cho người mới", "Vợt cho người chơi lâu năm", "Phí ship thế nào?", "Tra cứu đơn hàng"],
-    academy: ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người?", "Nghỉ / đổi lịch học?"],
-    all: ["Tư vấn vợt cho người mới", "Học phí các gói học?", "Phí ship thế nào?", "Tra cứu đơn hàng"]
+    academy: /^\/find-coach/.test(location.pathname)
+      ? ["Tìm Coach 1 kèm 1 gần tôi", "Học nhóm 2 người được không?", "Học phí 1 buổi học?", "Đặt lịch học thử thế nào?"]
+      : ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người như thế nào?", "Đổi lịch hoặc nghỉ học được không?"],
+    all: ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Học phí thế nào?", "Cần mua vợt Pickleball"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -3354,8 +3358,8 @@ if (
       : {
           product: { wait: 18000, scroll: 0.45, minWait: 7000 },
           shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true },
-          academy: { wait: 0, scroll: 0, minWait: 0 },
-          all: { wait: 0, scroll: 0, minWait: 0 }
+          academy: { wait: 0, scroll: 0, minWait: 0, every: true },
+          all: { wait: 0, scroll: 0, minWait: 0, every: true }
         }[BOT_PAGE];
     const salesPage = isPortal || /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
     if (!plan || !salesPage || botStaffPage()) return;
@@ -3366,12 +3370,15 @@ if (
 
     const st = document.createElement("style");
     st.textContent = `
-      #pdTease{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:80px;width:max-content;max-width:min(270px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(21,21,21,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;z-index:9970}
+      #pdTease{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:80px;width:max-content;max-width:min(290px,calc(100vw - 32px));padding:12px 34px 12px 14px;border-radius:16px 16px 4px 16px;background:#fff;color:#1a1a1a;font-size:14px;line-height:1.4;box-shadow:0 10px 30px rgba(21,21,21,.28);cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;z-index:9970}
       #pdTease.pd-on{opacity:1;transform:none}
       #pdTease b{color:#1a1a1a}
       #pdTease .pd-tease-go{display:inline-block;margin-top:6px;font-weight:800;color:#1a7f37}
       #pdTease .pd-tease-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
       #pdTease .pd-tease-chips span{padding:7px 11px;border-radius:999px;background:#1a1a1a;color:#ffc934;font-size:12.5px;font-weight:800;white-space:nowrap}
+      #pdTease .pd-tease-q{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+      #pdTease .pd-tease-q span{display:block;padding:9px 12px;border-radius:12px;background:#f2f2f2;color:#1a1a1a;font-size:12.5px;font-weight:700;line-height:1.3}
+      #pdTease .pd-tease-q span:active{background:#e6e6e6}
       #pdTease .pd-tease-x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
       #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
     `;
@@ -3432,8 +3439,10 @@ if (
           ? "Anh/chị đang cân nhắc <b>" + botEsc(short) + "</b>? Em tư vấn nhanh loại/màu phù hợp và phí ship ạ."
           : "Anh/chị cần tư vấn sản phẩm này? Em trả lời ngay ạ.",
         shop: "👋 Anh/chị đang tìm gì hôm nay? Em tư vấn chọn đúng sản phẩm trong 30 giây:",
-        academy: "Anh/chị muốn học 1 kèm 1 hay nhóm 2 người? Em tư vấn gói học phù hợp trình độ ạ.",
-        all: "Anh/chị cần chọn vợt hay tìm khoá học Pickleball? Em tư vấn ngay ạ."
+        academy: /^\/find-coach/.test(location.pathname)
+          ? "Anh/chị muốn <b>tìm Coach gần mình</b>? Em gợi ý Coach phù hợp trình độ và khu vực ngay ạ."
+          : "Em là tư vấn viên <b>PickDee Academy</b>. Anh/chị muốn học 1 kèm 1 hay nhóm 2 người? Em tư vấn gói phù hợp ạ.",
+        all: "Em là tư vấn viên <b>PickDee</b>. Anh/chị cần tìm khoá học hay Coach Pickleball không? Em hỗ trợ ngay ạ."
       }[BOT_PAGE];
     }
 
@@ -3457,7 +3466,11 @@ if (
         ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"]].map(function (c) {
           return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
-        : '<br><span class="pd-tease-go">Hỏi ngay →</span>';
+        : BOT_SUGGEST && BOT_SUGGEST.length
+          ? '<div class="pd-tease-q">' + BOT_SUGGEST.slice(0, 4).map(function (q) {
+            return '<span role="button" data-q="' + botEsc(q) + '">' + botEsc(q) + "</span>";
+          }).join("") + "</div>"
+          : '<br><span class="pd-tease-go">Hỏi ngay →</span>';
       box.innerHTML = text() + quick + '<button type="button" class="pd-tease-x" aria-label="Đóng">×</button>';
       if (PDJ) pdjLoad().catch(function () {});
       openBtn.parentNode.insertBefore(box, openBtn);
@@ -3471,6 +3484,14 @@ if (
           e.stopPropagation();
           hide();
           openPanel().then(function () { pdjStep(c.getAttribute("data-act"), c.textContent); });
+        });
+      });
+      box.querySelectorAll("[data-q]").forEach(function (c) {
+        c.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const q = c.getAttribute("data-q");
+          hide();
+          openPanel().then(function () { botAsk(q); });
         });
       });
       box.querySelector(".pd-tease-x").addEventListener("click", function (e) {
