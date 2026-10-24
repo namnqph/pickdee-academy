@@ -177,6 +177,88 @@
     }
 
 
+    .filter-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+
+      margin-bottom: 16px;
+    }
+
+
+    .filter-title-row .filter-title {
+      margin-bottom: 0;
+    }
+
+
+    .locate-btn {
+      flex: 0 0 auto;
+
+      min-height: 38px;
+
+      padding: 0 13px;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+
+      border-radius: 999px;
+
+      border:
+        1px solid
+        rgba(255,201,52,.35);
+
+      background:
+        rgba(255,201,52,.08);
+
+      color: #ffc934;
+
+      cursor: pointer;
+
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 900;
+
+      white-space: nowrap;
+    }
+
+
+    .locate-btn:disabled {
+      opacity: .55;
+
+      cursor: default;
+    }
+
+
+    .locate-status {
+      margin: -8px 0 14px;
+
+      display: none;
+
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+
+    .locate-status.show {
+      display: block;
+    }
+
+
+    .locate-status.ok {
+      color: #7fd87f;
+    }
+
+
+    .locate-status.err {
+      color: #ff9b9b;
+    }
+
+
     .filters {
       display: grid;
 
@@ -540,11 +622,27 @@
   <section class="filter-card">
 
 
-    <div class="filter-title">
+    <div class="filter-title-row">
 
-      📍 Bạn muốn học ở đâu?
+      <div class="filter-title">
+
+        📍 Bạn muốn học ở đâu?
+
+      </div>
+
+
+      <button
+        type="button"
+        id="locateMeBtn"
+        class="locate-btn"
+      >
+        📍 Dùng vị trí của tôi
+      </button>
 
     </div>
+
+
+    <div id="locateStatus" class="locate-status"></div>
 
 
     <div class="filters">
@@ -1531,6 +1629,146 @@ function renderWards() {
     "change",
     renderCoaches
   );
+
+
+  /* ===============================================
+     ĐỊNH VỊ (dùng vị trí hiện tại của khách)
+     Geolocation (trình duyệt) → toạ độ → reverse geocode qua
+     Nominatim (OpenStreetMap, miễn phí) → khớp tên Tỉnh/Thành
+     và Phường/Xã với danh mục đang có, tự chọn vào 2 ô lọc.
+  ================================================ */
+
+  const locateMeBtn =
+    document.getElementById("locateMeBtn");
+
+  const locateStatus =
+    document.getElementById("locateStatus");
+
+  function setLocateStatus(text, cls) {
+    locateStatus.textContent = text || "";
+    locateStatus.className =
+      "locate-status" + (text ? " show" : "") + (cls ? " " + cls : "");
+  }
+
+  function coreName(value) {
+    return normalize(value)
+      .replace(/^(thành phố|tp\.?|tỉnh)\s+/i, "")
+      .trim();
+  }
+
+  function matchOption(name, options) {
+    if (!name) return "";
+    const core = coreName(name);
+    if (!core) return "";
+    let hit = options.find(function (o) { return coreName(o) === core; });
+    if (hit) return hit;
+    hit = options.find(function (o) {
+      const oc = coreName(o);
+      return oc && (core.indexOf(oc) !== -1 || oc.indexOf(core) !== -1);
+    });
+    return hit || "";
+  }
+
+  function locateMe() {
+    if (!navigator.geolocation) {
+      setLocateStatus(
+        "Trình duyệt không hỗ trợ định vị. Anh/chị chọn Tỉnh/Thành bên dưới giúp em nhé.",
+        "err"
+      );
+      return;
+    }
+
+    locateMeBtn.disabled = true;
+    locateMeBtn.textContent = "📍 Đang định vị...";
+    setLocateStatus("Đang xác định vị trí của anh/chị...", "");
+
+    navigator.geolocation.getCurrentPosition(
+      async function (pos) {
+        try {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+
+          const res = await fetch(
+            "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="
+              + lat + "&lon=" + lon + "&accept-language=vi&zoom=14"
+          );
+          const data = await res.json();
+          const addr = (data && data.address) || {};
+
+          const areaOptions =
+            uniqueSorted(allAreas.map(function (item) { return item.tinh_thanh; }));
+
+          const provinceCandidates =
+            [addr.state, addr.city, addr.region].filter(Boolean);
+
+          let matchedArea = "";
+          for (const cand of provinceCandidates) {
+            matchedArea = matchOption(cand, areaOptions);
+            if (matchedArea) break;
+          }
+
+          if (!matchedArea) {
+            setLocateStatus(
+              "Không xác định được Tỉnh/Thành gần anh/chị. Vui lòng chọn thủ công bên dưới.",
+              "err"
+            );
+            return;
+          }
+
+          areaSelect.value = matchedArea;
+          renderWards();
+
+          const wardOptions = uniqueSorted(
+            allWards
+              .filter(function (item) {
+                return normalize(item.tinh_thanh) === normalize(matchedArea);
+              })
+              .map(function (item) { return item.ten_xa_phuong; })
+          );
+
+          const wardCandidates =
+            [addr.suburb, addr.city_district, addr.quarter, addr.town, addr.village]
+              .filter(Boolean);
+
+          let matchedWard = "";
+          for (const cand of wardCandidates) {
+            matchedWard = matchOption(cand, wardOptions);
+            if (matchedWard) break;
+          }
+
+          if (matchedWard) wardSelect.value = matchedWard;
+
+          renderCoaches();
+
+          setLocateStatus(
+            "📍 Đã định vị: " + matchedArea + (matchedWard ? ", " + matchedWard : "") + ".",
+            "ok"
+          );
+        } catch (e) {
+          console.warn("PickDee locate:", e);
+          setLocateStatus(
+            "Không xác định được vị trí. Anh/chị vui lòng chọn thủ công bên dưới.",
+            "err"
+          );
+        } finally {
+          locateMeBtn.disabled = false;
+          locateMeBtn.textContent = "📍 Dùng vị trí của tôi";
+        }
+      },
+      function (err) {
+        locateMeBtn.disabled = false;
+        locateMeBtn.textContent = "📍 Dùng vị trí của tôi";
+        const msg =
+          err && err.code === 1
+            ? "Anh/chị chưa cho phép truy cập vị trí. Vui lòng bật quyền vị trí hoặc chọn thủ công bên dưới."
+            : "Không lấy được vị trí. Anh/chị vui lòng chọn thủ công bên dưới.";
+        setLocateStatus(msg, "err");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  }
+
+  locateMeBtn.addEventListener("click", locateMe);
 
 
   await loadCoaches();
