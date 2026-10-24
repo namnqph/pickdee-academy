@@ -3502,7 +3502,6 @@ if (
       });
       box.addEventListener("click", function () { hide(); openPanel(); });
       openBtn.addEventListener("click", hide, { once: true });
-      setTimeout(hide, 25000); // tự ẩn, không che trang lâu
     }
 
     function onScroll() {
