@@ -1502,7 +1502,9 @@ function renderWards() {
           ma_xa_phuong,
           ma_khu_vuc,
           tinh_thanh,
-          ten_xa_phuong
+          ten_xa_phuong,
+          lat,
+          lng
         `)
         .eq(
           "dang_hoat_dong",
@@ -1633,9 +1635,11 @@ function renderWards() {
 
   /* ===============================================
      ĐỊNH VỊ (dùng vị trí hiện tại của khách)
-     Geolocation (trình duyệt) → toạ độ → reverse geocode qua
-     Nominatim (OpenStreetMap, miễn phí) → khớp tên Tỉnh/Thành
-     và Phường/Xã với danh mục đang có, tự chọn vào 2 ô lọc.
+     Geolocation (trình duyệt) → toạ độ → tìm xã/phường có toạ độ
+     tâm (lat/lng, cột trong dm_xa_phuong) GẦN NHẤT bằng công thức
+     Haversine → suy ra luôn Tỉnh/Thành của xã/phường đó. Chính xác
+     tuyệt đối theo dữ liệu hành chính thật (sau sáp nhập 2025),
+     không phụ thuộc dịch vụ bên ngoài, không lệch tên gọi.
   ================================================ */
 
   const locateMeBtn =
@@ -1650,23 +1654,27 @@ function renderWards() {
       "locate-status" + (text ? " show" : "") + (cls ? " " + cls : "");
   }
 
-  function coreName(value) {
-    return normalize(value)
-      .replace(/^(thành phố|tp\.?|tỉnh|phường|xã|thị trấn|quận|huyện)\s+/i, "")
-      .trim();
+  // Khoảng cách 2 điểm trên mặt cầu (km), đủ chính xác cho việc so
+  // sánh "xã/phường nào gần khách nhất" ở quy mô Việt Nam.
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  function matchOption(name, options) {
-    if (!name) return "";
-    const core = coreName(name);
-    if (!core) return "";
-    let hit = options.find(function (o) { return coreName(o) === core; });
-    if (hit) return hit;
-    hit = options.find(function (o) {
-      const oc = coreName(o);
-      return oc && (core.indexOf(oc) !== -1 || oc.indexOf(core) !== -1);
-    });
-    return hit || "";
+  function nearestWard(lat, lon) {
+    let best = null, bestDist = Infinity;
+    for (const w of allWards) {
+      if (typeof w.lat !== "number" || typeof w.lng !== "number") continue;
+      const d = haversineKm(lat, lon, w.lat, w.lng);
+      if (d < bestDist) { bestDist = d; best = w; }
+    }
+    return best ? { ward: best, distanceKm: bestDist } : null;
   }
 
   function locateMe() {
@@ -1683,84 +1691,29 @@ function renderWards() {
     setLocateStatus("Đang xác định vị trí của anh/chị...", "");
 
     navigator.geolocation.getCurrentPosition(
-      async function (pos) {
+      function (pos) {
         try {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
 
-          const res = await fetch(
-            "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="
-              + lat + "&lon=" + lon + "&accept-language=vi&zoom=18&addressdetails=1"
-          );
-          const data = await res.json();
-          const addr = (data && data.address) || {};
-          const addrBlob =
-            normalize(
-              [data.display_name, addr.suburb, addr.quarter, addr.city_district,
-               addr.neighbourhood, addr.town, addr.village, addr.hamlet, addr.county]
-                .filter(Boolean)
-                .join(" | ")
-            );
+          const hit = nearestWard(lat, lon);
 
-          const areaOptions =
-            uniqueSorted(allAreas.map(function (item) { return item.tinh_thanh; }));
-
-          const provinceCandidates =
-            [addr.state, addr.city, addr.region].filter(Boolean);
-
-          let matchedArea = "";
-          for (const cand of provinceCandidates) {
-            matchedArea = matchOption(cand, areaOptions);
-            if (matchedArea) break;
-          }
-
-          if (!matchedArea) {
+          if (!hit) {
             setLocateStatus(
-              "Không xác định được Tỉnh/Thành gần anh/chị. Vui lòng chọn thủ công bên dưới.",
+              "Chưa có dữ liệu toạ độ để định vị. Anh/chị vui lòng chọn thủ công bên dưới.",
               "err"
             );
             return;
           }
 
-          areaSelect.value = matchedArea;
+          areaSelect.value = hit.ward.tinh_thanh;
           renderWards();
-
-          const wardOptions = uniqueSorted(
-            allWards
-              .filter(function (item) {
-                return normalize(item.tinh_thanh) === normalize(matchedArea);
-              })
-              .map(function (item) { return item.ten_xa_phuong; })
-          );
-
-          const wardCandidates =
-            [addr.suburb, addr.quarter, addr.neighbourhood, addr.city_district,
-             addr.town, addr.village, addr.hamlet]
-              .filter(Boolean);
-
-          let matchedWard = "";
-          for (const cand of wardCandidates) {
-            matchedWard = matchOption(cand, wardOptions);
-            if (matchedWard) break;
-          }
-
-          // Nominatim còn dùng tên phường/xã trước sáp nhập, có thể không khớp
-          // field nào ở trên → dò tên (đã bỏ tiền tố) có xuất hiện trong toàn bộ
-          // địa chỉ Nominatim trả về không, ưu tiên tên dài nhất khớp được.
-          if (!matchedWard) {
-            const hits = wardOptions
-              .map(function (o) { return { o: o, oc: coreName(o) }; })
-              .filter(function (x) { return x.oc.length >= 3 && addrBlob.indexOf(x.oc) !== -1; })
-              .sort(function (a, b) { return b.oc.length - a.oc.length; });
-            if (hits.length) matchedWard = hits[0].o;
-          }
-
-          if (matchedWard) wardSelect.value = matchedWard;
-
+          wardSelect.value = hit.ward.ten_xa_phuong;
           renderCoaches();
 
           setLocateStatus(
-            "📍 Đã định vị: " + matchedArea + (matchedWard ? ", " + matchedWard : "") + ".",
+            "📍 Đã định vị: " + hit.ward.ten_xa_phuong + ", " + hit.ward.tinh_thanh
+              + " (cách khoảng " + hit.distanceKm.toFixed(1) + " km).",
             "ok"
           );
         } catch (e) {
