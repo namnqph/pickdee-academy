@@ -3449,7 +3449,7 @@ if (
 
     function busy() {
       if (panel.classList.contains("open")) return true;
-      if (botHistory().length) return true; // đã chat trong phiên → không làm phiền
+      if (!plan.every && botHistory().length) return true;
       const a = document.activeElement;
       return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); // đang gõ/điền form
     }
