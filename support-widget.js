@@ -1554,15 +1554,15 @@ if (
     const name = botProductName();
     return {
       product: name
-        ? "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Anh/chị đang xem <b>" + botEsc(name) + "</b>, em tư vấn ngay loại/màu phù hợp, phí ship và thời gian nhận hàng ạ."
-        : "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee</b>. Em tư vấn ngay loại/màu phù hợp, phí ship và thời gian nhận hàng ạ.",
-      cart: "Chào anh/chị 👋 Em hỗ trợ anh/chị hoàn tất đơn hàng: phí ship, thanh toán, thời gian giao. Đặt hàng không cần tạo tài khoản ạ.",
-      order: "Chào anh/chị 👋 Em hỗ trợ tra cứu và giải đáp mọi thắc mắc về đơn hàng của anh/chị ạ.",
-      shop: "Chào anh/chị 👋 Em là <b>chuyên viên tư vấn PickDee Shop</b>. Anh/chị đang tìm gì hôm nay ạ? Chọn bên dưới, em gợi ý đúng sản phẩm trong 30 giây.",
+        ? "Dạ chào anh/chị 👋 Anh/chị đang xem <b>" + botEsc(name) + "</b> ạ. Để em tư vấn loại/màu hợp với mình, kèm phí ship và ngày nhận hàng luôn nhé."
+        : "Dạ chào anh/chị 👋 Anh/chị cần tư vấn mẫu nào không ạ? Nói nhu cầu, em gợi ý liền.",
+      cart: "Chào anh/chị 👋 Anh/chị cần hỏi gì về phí ship, thanh toán hay thời gian giao không ạ? Đặt hàng không cần tạo tài khoản đâu nhé.",
+      order: "Chào anh/chị 👋 Anh/chị cho em xin mã đơn với số điện thoại, em tra giúp ạ.",
+      shop: "Chào anh/chị 👋 Hôm nay anh/chị tìm vợt hay phụ kiện gì ạ? Chọn bên dưới, em gợi ý ngay.",
       academy: /^\/find-coach/.test(location.pathname)
-        ? "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee</b>. Anh/chị muốn tìm Coach phù hợp trình độ và khu vực không? Em gợi ý ngay, anh/chị chỉ cần chọn bên dưới ạ."
-        : "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee Academy</b>. Anh/chị đang quan tâm đến khoá học Pickleball? Em tư vấn gói học phù hợp trình độ và lịch của anh/chị ạ.",
-      all: "Chào anh/chị 👋 Em là <b>tư vấn viên PickDee</b>. Anh/chị cần tư vấn khoá học Pickleball hay tìm Coach phù hợp không? Em hỗ trợ ngay ạ."
+        ? "Chào anh/chị 👋 Anh/chị đang tìm Coach khu vực nào ạ? Cho em biết trình độ, em gợi ý Coach phù hợp."
+        : "Chào anh/chị 👋 Anh/chị đang quan tâm khoá nào vậy ạ? Cho em biết trình độ với lịch rảnh, em tư vấn gói phù hợp.",
+      all: "Chào anh/chị 👋 Anh/chị cần tìm khoá học hay Coach Pickleball ạ? Em giúp luôn."
     }[BOT_PAGE];
   }
   const BOT_SUGGEST = {
@@ -3442,8 +3442,8 @@ if (
         shop: "👋 Anh/chị đang tìm gì hôm nay? Em tư vấn chọn đúng sản phẩm trong 30 giây:",
         academy: /^\/find-coach/.test(location.pathname)
           ? "Anh/chị muốn <b>tìm Coach gần mình</b>? Em gợi ý Coach phù hợp trình độ và khu vực ngay ạ."
-          : "Em là tư vấn viên <b>PickDee Academy</b>. Anh/chị muốn học 1 kèm 1 hay nhóm 2 người? Em tư vấn gói phù hợp ạ.",
-        all: "Em là tư vấn viên <b>PickDee</b>. Anh/chị cần tìm khoá học hay Coach Pickleball không? Em hỗ trợ ngay ạ."
+          : "Anh/chị muốn học 1 kèm 1 hay nhóm vậy ạ? Em tư vấn gói phù hợp cho mình.",
+        all: "Anh/chị đang cần tìm khoá học hay Coach Pickleball ạ? Em giúp luôn nè."
       }[BOT_PAGE];
     }
 
