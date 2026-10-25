@@ -1346,8 +1346,8 @@ if (
 <div id="pickdeeSupportGuest">
 
         <div class="pickdee-support-intro">
-          Anh/chị để lại tên và số điện thoại.
-          Sau đó có thể nhắn trực tiếp với PickDee ngay tại đây.
+          Anh/chị để lại tên và số điện thoại trước khi chat,
+          để PickDee hỗ trợ đúng người ạ.
         </div>
 
         <div class="pickdee-support-field">
@@ -2059,6 +2059,11 @@ if (
     return /^\/(admin|shop-admin|support-admin)/i.test(location.pathname);
   }
 
+  // Đã biết khách là ai (đăng nhập hoặc đã để lại tên/SĐT) → được hỏi bot/chat ngay
+  function isIdentified() {
+    return !!(currentSession || (localStorage.getItem(STORAGE_NAME) && localStorage.getItem(STORAGE_PHONE)));
+  }
+
   // Có tin nhân viên chưa đọc → mở chat nhân viên để khách không bỏ lỡ
   async function botUnreadCount() {
     try {
@@ -2190,6 +2195,8 @@ if (
         body: JSON.stringify({
           message: q,
           visitor_id: botVisitor(),
+          guest_name: localStorage.getItem(STORAGE_NAME) || null,
+          guest_phone: localStorage.getItem(STORAGE_PHONE) || null,
           page: location.pathname + (BOT_PAGE === "product" ? location.search : ""), // ?id= → bot biết khách đang xem SP nào
           history: prev.slice(-6).map(function (m) { return { role: m.role, text: m.text }; })
         })
@@ -2767,20 +2774,9 @@ if (
      PREPARE CHAT
   ====================================================== */
 
-  async function prepareChat() {
-
-    showError(
-      ""
-    );
-
-
-    await loadSession();
-
-
-    /*
-      TRỢ LÝ PICKDEE TRẢ LỜI TRƯỚC (mọi người, kể cả đã đăng nhập / từng chat).
-      Chỉ vào chat nhân viên khi khách bấm nút (bot không trả lời được hoặc PickDee đã trả lời).
-    */
+  // Trợ lý PickDee (bot) hay chat nhân viên: đều cần biết khách là ai trước →
+  // dùng chung 1 bước sau khi đã xác định danh tính (đăng nhập hoặc đã để lại tên/SĐT).
+  async function enterChat(guestName, guestPhone) {
 
     if (
       botEnabled()
@@ -2800,20 +2796,31 @@ if (
 
     }
 
+    await openConversation(guestName, guestPhone);
+    await showChat();
+
+  }
+
+
+  async function prepareChat() {
+
+    showError(
+      ""
+    );
+
+
+    await loadSession();
+
 
     /*
-      TÀI KHOẢN ĐÃ ĐĂNG NHẬP
+      TÀI KHOẢN ĐÃ ĐĂNG NHẬP → đã biết khách là ai, vào bot/chat ngay.
     */
 
     if (
       currentSession
     ) {
 
-      await openConversation();
-
-
-      await showChat();
-
+      await enterChat();
 
       return;
 
@@ -2821,14 +2828,8 @@ if (
 
 
     /*
-      GUEST ĐÃ TỪNG CHAT
+      GUEST ĐÃ TỪNG ĐỂ LẠI TÊN/SĐT → vào bot/chat ngay, khỏi hỏi lại.
     */
-
-    const storedToken =
-      localStorage.getItem(
-        STORAGE_TOKEN
-      );
-
 
     const storedName =
       localStorage.getItem(
@@ -2843,8 +2844,6 @@ if (
 
 
     if (
-      storedToken
-      &&
       storedName
       &&
       storedPhone
@@ -2852,13 +2851,10 @@ if (
 
       try {
 
-        await openConversation(
+        await enterChat(
           storedName,
           storedPhone
         );
-
-
-        await showChat();
 
 
         return;
@@ -2879,10 +2875,14 @@ if (
 
 
     /*
-      GUEST MỚI
+      GUEST MỚI → chưa biết là ai, bắt nhập tên/SĐT trước khi cho chat (bot hoặc người thật).
     */
 
     chatBox.style.display =
+      "none";
+
+
+    botBox.style.display =
       "none";
 
 
@@ -2890,6 +2890,7 @@ if (
       "block";
 
     panel.classList.remove("pd-staff-chat");
+    panel.classList.remove("pd-bot-mode");
 
 
     guestNameInput.value =
@@ -3002,13 +3003,13 @@ if (
       );
 
 
-      await openConversation(
+      await enterChat(
         name,
         phone
       );
 
 
-      await showChat();
+      return;
 
     }
     catch (
@@ -3494,7 +3495,7 @@ if (
         c.addEventListener("click", function (e) {
           e.stopPropagation();
           hide();
-          openPanel().then(function () { pdjStep(c.getAttribute("data-act"), c.textContent); });
+          openPanel().then(function () { if (isIdentified()) pdjStep(c.getAttribute("data-act"), c.textContent); });
         });
       });
       box.querySelectorAll("[data-q]").forEach(function (c) {
@@ -3502,7 +3503,7 @@ if (
           e.stopPropagation();
           const q = c.getAttribute("data-q");
           hide();
-          openPanel().then(function () { botAsk(q); });
+          openPanel().then(function () { if (isIdentified()) botAsk(q); });
         });
       });
       box.querySelector(".pd-tease-x").addEventListener("click", function (e) {

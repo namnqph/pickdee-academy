@@ -868,7 +868,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261020-gold1";
+      "/support-widget.js?v=20261025-guestgate1";
 
 
     script.async =
