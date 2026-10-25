@@ -3771,7 +3771,7 @@ function bindProductEvents() {
 
         button.addEventListener(
           "click",
-          function () {
+          function (event) {
 
             const url =
               button.dataset.image;
@@ -3817,6 +3817,74 @@ function bindProductEvents() {
             button.classList.add(
               "active"
             );
+
+
+            // Chọn ảnh = chọn luôn phân loại, khỏi kéo xuống chọn lại
+            if (
+              !event
+              ||
+              !event.isTrusted
+            ) {
+              return;
+            }
+
+            const variantId =
+              button.dataset.variantId;
+
+            if (!variantId) {
+              return;
+            }
+
+            const legacyBtn =
+              document.querySelector(
+                `.legacy-variant-btn[data-variant-id="${CSS.escape(variantId)}"]`
+              );
+
+            if (legacyBtn) {
+              legacyBtn.click();
+              return;
+            }
+
+            const variant =
+              variants.find(
+                function (item) {
+                  return (
+                    String(item.id)
+                    ===
+                    String(variantId)
+                  );
+                }
+              );
+
+            if (!variant) {
+              return;
+            }
+
+            if (variant.option1_value) {
+
+              const opt1Btn =
+                document.querySelector(
+                  `[data-option-index="1"][data-option-value="${CSS.escape(variant.option1_value)}"]`
+                );
+
+              if (opt1Btn) {
+                opt1Btn.click();
+              }
+
+            }
+
+            if (variant.option2_value) {
+
+              const opt2Btn =
+                document.querySelector(
+                  `[data-option-index="2"][data-option-value="${CSS.escape(variant.option2_value)}"]`
+                );
+
+              if (opt2Btn) {
+                opt2Btn.click();
+              }
+
+            }
 
           }
         );
