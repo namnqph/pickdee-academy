@@ -1505,7 +1505,7 @@
     );
 
   }
-  function imageUrl(path) {
+  function imageUrl(path, transform) {
 
     if (!path) {
       return "";
@@ -1520,12 +1520,35 @@
           "shop-products"
         )
         .getPublicUrl(
-          path
+          path,
+          transform
+            ? { transform }
+            : undefined
         );
 
 
     return (
       data?.publicUrl || ""
+    );
+
+  }
+
+
+  /*
+    Ảnh nhỏ (gallery, nút chọn màu) dùng bản đã resize của Supabase
+    thay vì ảnh gốc (300-400KB) — tránh lẹm/đen khi mạng yếu vì ảnh
+    tải chưa xong. Ảnh to (xem phóng) vẫn dùng imageUrl() gốc.
+  */
+  function thumbUrl(path, size) {
+
+    return imageUrl(
+      path,
+      {
+        width: size || 120,
+        height: size || 120,
+        resize: "contain",
+        quality: 70
+      }
     );
 
   }
@@ -1572,7 +1595,7 @@
           );
 
         if (image) {
-          return imageUrl(image.storage_path);
+          return thumbUrl(image.storage_path, 80);
         }
       }
     }
@@ -2284,6 +2307,11 @@ function updateCartCount() {
               image.storage_path
             );
 
+          const thumbSrc =
+            thumbUrl(
+              image.storage_path
+            );
+
           const isSoldOut =
             Boolean(image.variant_id)
             &&
@@ -2319,12 +2347,13 @@ function updateCartCount() {
             >
 
               <img
-                src="${escapeHtml(url)}"
+                src="${escapeHtml(thumbSrc)}"
                 alt="${escapeHtml(
                   image.alt_text
                   ||
                   product.name
                 )}"
+                loading="lazy"
               >
 
               ${
