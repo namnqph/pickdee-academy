@@ -1566,7 +1566,7 @@ if (
         ? "Chào anh/chị 👋 Anh/chị đang đưa sân lên PickDee ạ. Cần hỗ trợ điền thông tin gì không, em giúp luôn."
         : /^\/court-claim/.test(location.pathname)
         ? "Chào anh/chị 👋 Anh/chị muốn xác minh mình là chủ sân ạ? Em giải thích quy trình ngay."
-        : "Chào anh/chị 👋 Anh/chị cần tìm khoá học, Coach, muốn làm Coach, hay đưa sân lên PickDee ạ? Em giúp luôn."
+        : "Chào anh/chị 👋 Anh/chị cần tìm khoá học, Coach, mua vợt/phụ kiện Shop, hay đưa sân lên PickDee ạ? Em giúp luôn."
     }[BOT_PAGE];
   }
   const BOT_SUGGEST = {
@@ -1581,7 +1581,7 @@ if (
       ? ["Đưa sân lên có mất phí không?", "Cần điền những thông tin gì?", "Bao lâu thì sân được duyệt?"]
       : /^\/court-claim/.test(location.pathname)
       ? ["Xác minh chủ sân cần giấy tờ gì?", "Bao lâu thì được xác nhận?", "Sân chưa có trên PickDee thì sao?"]
-      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
+      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Mua vợt, bóng, phụ kiện Shop", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -3453,7 +3453,7 @@ if (
         academy: /^\/find-coach/.test(location.pathname)
           ? "Anh/chị muốn <b>tìm Coach gần mình</b>? Em gợi ý Coach phù hợp trình độ và khu vực ngay ạ."
           : "Anh/chị muốn học Pickleball hay muốn làm Coach cho PickDee ạ?",
-        all: "Anh/chị cần tìm khoá học, Coach, muốn làm Coach, hay đưa sân lên PickDee ạ? Em giúp luôn nè."
+        all: "Anh/chị cần tìm khoá học, Coach, mua vợt/phụ kiện Shop, hay đưa sân lên PickDee ạ? Em giúp luôn nè."
       }[BOT_PAGE];
     }
 
