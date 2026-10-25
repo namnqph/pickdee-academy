@@ -348,6 +348,27 @@
     }
 
 
+    .thumb-label {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      padding: 2px 0;
+
+      background: rgba(0,0,0,.72);
+
+      color: #fff;
+      font-size: 8px;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
     /* =====================================================
        INFO
     ====================================================== */
@@ -2268,6 +2289,20 @@ function updateCartCount() {
             &&
             soldOutVariantIds.has(String(image.variant_id));
 
+          const imageVariant =
+            image.variant_id
+              ?
+                variants.find(
+                  v => String(v.id) === String(image.variant_id)
+                )
+              :
+                null;
+
+          const colorLabel =
+            imageVariant?.option1_value
+            ||
+            "";
+
 
           return `
             <button
@@ -2291,6 +2326,14 @@ function updateCartCount() {
                   product.name
                 )}"
               >
+
+              ${
+                colorLabel && !isSoldOut
+                  ?
+                    `<span class="thumb-label">${escapeHtml(colorLabel)}</span>`
+                  :
+                    ""
+              }
 
             </button>
           `;
