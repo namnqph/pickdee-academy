@@ -285,6 +285,8 @@
 
 
     .thumb {
+      position: relative;
+
       flex: 0 0 60px;
 
       width: 60px;
@@ -309,6 +311,32 @@
     .thumb.active {
       border-color:
         #ffc934;
+    }
+
+
+    .thumb.sold-out img {
+      filter: grayscale(1);
+      opacity: .45;
+    }
+
+
+    .thumb.sold-out::after {
+      content: "Tạm hết";
+
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      padding: 2px 0;
+
+      background: rgba(0,0,0,.72);
+
+      color: #ff9b9b;
+      font-size: 8px;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.2;
     }
 
 
@@ -2220,6 +2248,11 @@ function updateCartCount() {
     =====================================================
   */
 
+  const soldOutVariantIds =
+    new Set(
+      soldOutVariants.map(item => String(item.variant_id))
+    );
+
   const thumbnails =
     sortedImages
       .map(
@@ -2229,6 +2262,11 @@ function updateCartCount() {
             imageUrl(
               image.storage_path
             );
+
+          const isSoldOut =
+            Boolean(image.variant_id)
+            &&
+            soldOutVariantIds.has(String(image.variant_id));
 
 
           return `
@@ -2240,7 +2278,7 @@ function updateCartCount() {
                     "active"
                   :
                     ""
-              }"
+              } ${isSoldOut ? "sold-out" : ""}"
               data-image="${escapeHtml(url)}"
               data-variant-id="${escapeHtml(String(image.variant_id || ""))}"
             >
