@@ -12,6 +12,7 @@ const STATIC_PAGES = [
   ["/academy", "0.9"],
   ["/shop", "0.9"],
   ["/courts", "0.9"],
+  ["/coaches", "0.8"],
   ["/find-coach", "0.8"],
   ["/dang-ky", "0.6"],
   ["/student-register", "0.6"],
