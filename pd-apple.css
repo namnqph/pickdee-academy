@@ -1,0 +1,85 @@
+/* PickDee — lớp thiết kế kiểu Apple cho trang con (WWDC: Designing Fluid Interfaces, Details of UI Typography).
+   Nạp bằng <link rel="stylesheet" href="/pd-apple.css?v=..."> ở từng trang đã kiểm. Chỉ đổi cách trình bày/chuyển động, không đổi nội dung hay logic.
+   Spring tắt dần (không nảy): chạm xuống đổi ngay 80ms, thả ra về mượt 320ms. Bắt đầu từ Sân và Tra đơn; thêm trang khác sau khi kiểm từng trang. */
+:root{--ap-ease:cubic-bezier(.23,1,.32,1);--ap-glass:rgba(16,16,16,.58);--ap-edge:rgba(255,255,255,.12);--ap-accent:#ffc934}
+
+/* 1. Phản hồi tức thì trên mọi nút/liên kết dạng nút */
+:is(a,button,summary,[role=button]){-webkit-tap-highlight-color:transparent}
+:is(.home-btn,.action-btn,.submit-btn,.btn,.cta,.back-btn):not(:disabled,.disabled){transition:transform .32s var(--ap-ease),background-color .2s var(--ap-ease),border-color .2s var(--ap-ease),opacity .2s var(--ap-ease)}
+:is(.home-btn,.action-btn,.submit-btn,.btn,.cta,.back-btn):not(:disabled,.disabled):active{transform:scale(.96);transition-duration:.08s}
+@media(hover:hover){:is(.home-btn,.action-btn):not(.disabled):hover{background-color:rgba(255,255,255,.1)}}
+
+/* 2. Ô nhập: viền vàng + vòng sáng mềm khi focus (không giật), bàn phím vẫn thấy vòng focus rõ */
+:is(input,select,textarea){transition:border-color .2s var(--ap-ease),box-shadow .2s var(--ap-ease),background-color .2s var(--ap-ease)}
+:is(input,select,textarea):focus{border-color:var(--ap-accent);box-shadow:0 0 0 4px rgba(255,201,52,.16)}
+:focus-visible{outline:2px solid var(--ap-accent);outline-offset:2px}
+:is(input,select,textarea):focus-visible{outline:0}
+
+/* 3. Chất liệu: thanh đầu trang mờ kính, thẻ nổi bằng cạnh sáng thay vì viền đậm */
+:is(.header,.topbar-sticky){background:var(--ap-glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom-color:transparent}
+:is(.card,.court-card){border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+:is(.home-btn,.action-btn){border-radius:14px}
+.submit-btn{border-radius:16px;min-height:52px;letter-spacing:-.005em}
+
+/* 4. Chữ: tracking theo cỡ, leading ngược cỡ; tiếng Việt chồng dấu nên không ép dòng dưới 1.15 */
+h1{letter-spacing:-.03em;line-height:1.16;text-wrap:balance}
+h2,h3{letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
+:is(.intro p,.hero p,.helper,.note,.label){letter-spacing:.008em}
+
+/* 5. Trợ năng */
+@media(prefers-reduced-motion:reduce){
+  :is(.home-btn,.action-btn,.submit-btn,.btn,.cta,.back-btn):not(:disabled,.disabled):active{transform:none;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){
+  :is(.header,.topbar-sticky){-webkit-backdrop-filter:none;backdrop-filter:none;background:#141414}
+}
+@media(prefers-contrast:more){
+  :is(.header,.topbar-sticky){-webkit-backdrop-filter:none;backdrop-filter:none;background:#0b0b0b}
+  :is(.card,.court-card){outline:1px solid rgba(255,255,255,.35);outline-offset:-1px}
+}
+
+/* ===== PickDee Academy (body.pda): 5 tab Trang chủ · Khoá học · Gần bạn · Hợp tác · Tài khoản =====
+   Các luật bên dưới ghi "html body" để thắng khối <style> nằm trong thân trang. */
+
+/* A. Thanh tab dưới: kính, cạnh sáng trên; vạch vàng trượt theo tab đang chọn (spring tắt dần, theo đúng thứ tự tab) */
+html body .pda-tabs{position:relative;background:rgba(14,14,14,.86);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-top:1px solid var(--ap-edge)}
+html body .pda-tabs::before{content:"";position:absolute;top:0;left:4px;width:calc((100% - 8px) / 5);height:3px;pointer-events:none;
+  background:linear-gradient(var(--ap-accent),var(--ap-accent)) center top/28px 3px no-repeat;border-radius:0 0 3px 3px;
+  transform:translateX(calc(var(--pda-i,0) * 100%));transition:transform .38s var(--ap-ease),opacity .2s var(--ap-ease)}
+html body .pda-tabs[data-i="2"]::before{opacity:0}              /* nút giữa đã nổi bật sẵn */
+html body .pda-tabs a{transition:color .2s var(--ap-ease),transform .32s var(--ap-ease),filter .32s var(--ap-ease)}
+html body .pda-tabs a:active{transform:scale(.9);filter:none;transition-duration:.08s}
+
+/* B. Phản hồi bấm: xuống = tức thì, thả = mượt */
+html body .pda-app :is(a,button,summary,.pda-tile,.pda-radar-card,.pp-card,.pda-coach){transition:transform .32s var(--ap-ease),filter .32s var(--ap-ease),background-color .2s var(--ap-ease),border-color .2s var(--ap-ease)}
+html body .pda-app :is(a,button,summary,.pda-tile,.pda-radar-card,.pp-card,.pda-coach):active{transform:scale(.97);filter:none;transition-duration:.08s}
+
+/* C. Thanh đầu trang: hết đường kẻ cứng khi cuộn, thay bằng bóng đổ mềm */
+html body .pda-top.pda-scrolled{background:rgba(14,14,14,.7);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 10px 24px -14px rgba(0,0,0,.7)}
+
+/* D. Chữ: tiếng Việt chồng dấu, leading 1.02 làm cắt dấu → 1.14; chữ phụ thoáng nhẹ */
+html body .pda-h1{line-height:1.14}
+html body .pda-sub{letter-spacing:.004em}
+html body .pda-sheet-head b{line-height:1.25}
+
+/* E. Hình khối */
+html body .pda-radar-card{border-radius:22px}
+html body .pda-tile{border-radius:20px}
+
+/* F. Sheet Gần bạn kéo được (pd-sheet.js): vùng chạm tay nắm đủ 44px, đỡ trôi ngoài ý muốn */
+html body .pda-handle{padding:16px 0 10px}
+html body .pda-sheet{overscroll-behavior:contain;box-shadow:0 -18px 44px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
+html body .pda-sheet-head{cursor:grab}
+
+/* G. Giảm chuyển động: chuyển tab = mờ dần, không trượt; nhấn = mờ nhẹ */
+@media(prefers-reduced-motion:reduce){
+  html body .pda-view.active.pda-from-r,html body .pda-view.active.pda-from-l{animation:pdaIn .2s ease}
+  html body .pda-tabs::before{transition:none}
+  html body .pda-tabs a:active,html body .pda-app :is(a,button,summary,.pda-tile,.pda-radar-card,.pp-card,.pda-coach):active{transform:none;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){
+  html body .pda-tabs,html body .pda-top.pda-scrolled{-webkit-backdrop-filter:none;backdrop-filter:none;background:#141414}
+}
+@media(prefers-contrast:more){
+  html body .pda-tabs{background:#0b0b0b;border-top-color:rgba(255,255,255,.4)}
+}
