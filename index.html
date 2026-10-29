@@ -1256,6 +1256,87 @@ main.ap{margin:0 auto;padding-top:8px}
 .h2-courts-cta .h2-soon{margin:20px 0 0;color:var(--muted);font-size:var(--t-s)}
 @media(prefers-reduced-motion:reduce){.h2-court .spin,.ap-sk{animation:none}}
 </style>
+<style id="pdApple">
+/* Lớp thiết kế kiểu Apple (WWDC: Designing Fluid Interfaces) — chỉ đổi cách trình bày/chuyển động, không đổi nội dung hay logic.
+   Spring tắt dần (damping 1.0) cho mọi thứ người dùng chạm; không nảy vì không có động lượng. Bấm = phản hồi tức thì, thả = về mượt. */
+:root{--ease:cubic-bezier(.23,1,.32,1);--glass:rgba(16,16,16,.58);--glass-edge:rgba(255,255,255,.12)}
+
+/* 1. Phản hồi tức thì: nhấn xuống đổi ngay (80ms), thả ra mới chạy mượt */
+.ap-quick a,.ap-card,.ap-promo,.ap-promo-btn,.ap-list a,.ap-tab a svg,.account-button{transition:transform .32s var(--ease),background-color .2s var(--ease),opacity .2s var(--ease)}
+.ap-quick a:active,.ap-card:active,.ap-promo:active,.ap-promo-btn:active,.account-button:active{transition-duration:.08s}
+.ap-quick a:active{transform:scale(.95)}
+.ap-card:active{transform:scale(.965)}
+.ap-promo:active{transform:scale(.99)}
+.ap-promo-btn:active,.account-button:active{transform:scale(.96)}
+.ap-list a:active{background:var(--surface2);transition-duration:.08s}
+
+/* 2. Chất liệu kính: thanh trên/dưới mờ, nội dung cuộn xuôi bên dưới; không kẻ đường cứng */
+.header{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom:0}
+.header::after{content:"";position:absolute;left:0;right:0;top:100%;height:18px;pointer-events:none;opacity:0;transition:opacity .3s var(--ease);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);background:linear-gradient(to bottom,rgba(11,11,11,.45),transparent);
+  -webkit-mask-image:linear-gradient(to bottom,#000,transparent);mask-image:linear-gradient(to bottom,#000,transparent)}
+.header.scrolled::after{opacity:1}
+.ap-tab{background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-top:1px solid var(--glass-edge)}
+@media(min-width:760px){.ap-tab{border:1px solid var(--glass-edge);box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}}
+
+/* 3. Menu tài khoản: mọc ra từ nút bấm (gốc ở góc phải trên), hiện vật liệu = scale + blur cùng lúc */
+.account-menu{transform-origin:calc(100% - 28px) 0;background:rgba(24,24,24,.99) !important;border:1px solid var(--glass-edge) !important;
+  /* menu nằm trong .header đã có backdrop-filter → blur lồng nhau không thấy được trang, nên dùng nền gần đặc để chữ luôn đọc được */
+  box-shadow:0 28px 70px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08) !important;
+  opacity:1;transform:none;filter:none;
+  transition:opacity .22s var(--ease),transform .3s var(--ease),filter .22s var(--ease),display .3s allow-discrete}
+.account-menu[hidden]{display:none;opacity:0;transform:scale(.9) translateY(-6px);filter:blur(6px)}
+@starting-style{.account-menu{opacity:0;transform:scale(.9) translateY(-6px);filter:blur(6px)}}
+
+/* 4. Chữ: tracking theo cỡ (to → chặt, nhỏ → thoáng), leading ngược cỡ; tiếng Việt chồng dấu nên không ép dòng dưới 1.15 */
+.ap-hi{padding:20px 0 22px}
+.ap-hello{font-size:15px;letter-spacing:.005em}
+.ap-title{font-size:clamp(30px,8.4vw,46px);line-height:1.15;letter-spacing:-.032em;font-weight:800}
+.ap-head h2{font-size:22px;line-height:1.25;letter-spacing:-.022em}
+.ap-promo-t{font-size:24px;line-height:1.2;letter-spacing:-.026em;text-wrap:balance}
+.ap-promo-d{font-size:15px;line-height:1.5;letter-spacing:.003em}
+.ap-promo-k,.ap-card-s,.ap-note,.ap-list small,.ap-legal,.h2-rally{letter-spacing:.012em}
+.ap-card-p{letter-spacing:-.01em}
+@media(min-width:760px){.ap-title{font-size:clamp(40px,4.6vw,56px);letter-spacing:-.038em}.ap-promo-t{font-size:34px;letter-spacing:-.032em;line-height:1.15}}
+
+/* 5. Hình khối: bo góc lớn, tầng nổi bằng sáng cạnh trên thay vì viền đậm */
+.ap-quick a,.ap-card,.ap-list,.continue-card,.smart-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.ap-quick a{border-radius:20px}
+.ap-promo{border-radius:28px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 18px 50px rgba(0,0,0,.35)}
+.ap-card{border-radius:20px}
+.ap-list{border-radius:22px}
+.ap-promo-btn{min-height:48px;padding:0 24px;letter-spacing:-.005em}
+.ap-promo-btn2{border:0;background:rgba(255,255,255,.09);color:var(--ink)}
+@media(hover:hover){.ap-promo-btn2:hover{background:rgba(255,255,255,.14)}}
+
+/* 6. Cuộn: khối hiện dần theo đúng vị trí cuộn (kéo ngược là lùi ngược, không hẹn giờ) */
+@supports (animation-timeline:view()){
+  @media(prefers-reduced-motion:no-preference){
+    .ap-sec,.ap-promo{animation:apRise linear both;animation-timeline:view();animation-range:entry 0% entry 35%}
+    @keyframes apRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  }
+}
+
+/* 7. Trợ năng: giảm chuyển động → mờ dần, không trượt/co; giảm trong suốt → đặc; tương phản cao → viền rõ */
+@media(prefers-reduced-motion:reduce){
+  .ap-quick a:active,.ap-card:active,.ap-promo:active,.ap-promo-btn:active,.account-button:active{transform:none;opacity:.72}
+  .account-menu,.account-menu[hidden]{transform:none;filter:none}
+  .header::after{transition:none}
+}
+@media(prefers-reduced-transparency:reduce){
+  .header,.ap-tab,.account-menu{-webkit-backdrop-filter:none;backdrop-filter:none;background:#141414 !important}
+  .header::after{display:none}
+}
+@media(prefers-contrast:more){
+  .header,.ap-tab,.account-menu{background:#0b0b0b !important;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .ap-card,.ap-quick a,.ap-promo,.ap-list{outline:1px solid rgba(255,255,255,.35);outline-offset:-1px}
+  .ap-promo-btn2{background:transparent;outline:1px solid rgba(255,255,255,.6);outline-offset:-1px}
+}
+</style>
+<script>
+/* iOS Safari chỉ áp :active khi trang có trình nghe touchstart — bật để phản hồi hiện ngay lúc chạm */
+document.addEventListener("touchstart",function(){},{passive:true});
+</script>
 <script>
 document.documentElement.classList.add("h2-js");
 addEventListener("DOMContentLoaded",function(){
