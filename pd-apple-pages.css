@@ -1,0 +1,26 @@
+/* PickDee — lớp Apple dùng chung cho các trang con của Academy (học viên, Coach, Admin, sân, đăng ký, đăng nhập).
+   Đi kèm pd-apple.css. Chỉ đổi hình thức/chuyển động, không đổi nội dung hay logic.
+   Nhấn nút dùng thuộc tính scale (không dùng transform), selector có "html body" để thắng khối <style> trong trang. */
+html body :is(button,.btn,.back,.back-btn,.logout,.action,.add,[role=button],a[class*=btn],a[class*=button]):not(:disabled,#pickdeeSupportRoot *){transition:scale .32s var(--ap-ease),background-color .2s var(--ap-ease),border-color .2s var(--ap-ease),opacity .2s var(--ap-ease)}
+html body :is(button,.btn,.back,.back-btn,.logout,.action,.add,[role=button],a[class*=btn],a[class*=button]):not(:disabled,#pickdeeSupportRoot *):active{scale:.96;transition-duration:.08s}
+
+/* Chất liệu: thanh đầu trang mờ kính, thẻ nổi bằng cạnh sáng */
+html body :is(.topbar,header):not(.card *){background-color:var(--ap-glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom-color:transparent}
+html body :is(.card,.panel,.summary-card,.summary-box,.request-card,.item-card){border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+html body :is(.card,.panel,.summary-card){border-color:transparent}
+
+/* Ô nhập: viền vàng + vòng sáng mềm khi focus */
+html body :is(input,select,textarea){border-radius:14px;transition:border-color .2s var(--ap-ease),box-shadow .2s var(--ap-ease),background-color .2s var(--ap-ease)}
+html body :is(input,select,textarea):focus{border-color:var(--ap-accent);box-shadow:0 0 0 4px rgba(255,201,52,.16)}
+
+/* Bảng và chữ */
+html body tbody tr{transition:background-color .2s var(--ap-ease)}
+html body :is(h1){letter-spacing:-.03em;line-height:1.16}
+html body :is(h2,h3,.section-title,.coach-name){letter-spacing:-.02em;line-height:1.25}
+
+/* Trợ năng */
+@media(prefers-reduced-motion:reduce){
+  html body :is(button,.btn,.back,.back-btn,.logout,.action,.add,[role=button],a[class*=btn],a[class*=button]):not(:disabled,#pickdeeSupportRoot *):active{scale:none;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){html body :is(.topbar,header){-webkit-backdrop-filter:none;backdrop-filter:none;background-color:#141414}}
+@media(prefers-contrast:more){html body :is(.topbar,header){-webkit-backdrop-filter:none;backdrop-filter:none;background-color:#0b0b0b}html body :is(.card,.panel,.summary-card){outline:1px solid rgba(255,255,255,.35);outline-offset:-1px}}
