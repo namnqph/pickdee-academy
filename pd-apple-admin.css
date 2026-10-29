@@ -1,0 +1,27 @@
+/* PickDee Shop Admin — lớp thiết kế kiểu Apple, MỎNG: pd-app.js đã lo menu đáy kính mờ và thanh trên dính.
+   Chỉ thêm: phản hồi bấm tức thì, chuyển màu mượt cho chip/lọc, vòng focus, chống chữ cắt dấu, trợ năng.
+   Không đổi cỡ chữ, bố cục, dữ liệu hay logic. Dùng thuộc tính `scale` riêng để không đè transform định vị của nút nổi. Dùng cùng pd-apple.css. */
+:root{--aa-ease:cubic-bezier(.23,1,.32,1)}
+
+/* 1. Phản hồi bấm: nhấn xuống tức thì (80ms), thả ra về mượt (320ms). Trừ khung chat hỗ trợ */
+html body :is(button,[role=button],summary,a[class*=btn],a[class*=chip],a[class*=action],.action-chip,.product-filter-btn,.product-action-link,.tab):not(:disabled,#pickdeeSupportRoot *){
+  transition:scale .32s var(--aa-ease),background-color .2s var(--aa-ease),border-color .2s var(--aa-ease),color .2s var(--aa-ease),opacity .2s var(--aa-ease);-webkit-tap-highlight-color:transparent}
+html body :is(button,[role=button],summary,a[class*=btn],a[class*=chip],a[class*=action],.action-chip,.product-filter-btn,.product-action-link,.tab):not(:disabled,#pickdeeSupportRoot *):active{scale:.96;transition-duration:.08s}
+
+/* 2. Thanh trên: khi cuộn bớt đường kẻ cứng, thay bằng bóng mềm; blur mạnh hơn */
+html body header.pd-app-scrolled{-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 10px 24px -14px rgba(0,0,0,.7) !important}
+
+/* 3. Chữ: tiêu đề không ép dòng thấp (dấu tiếng Việt), số liệu thẳng cột */
+html body :is(h1,h2,h3){line-height:1.25;text-wrap:balance}
+html body :is(.stat-value,.stock-value,.cost,td,th){font-variant-numeric:tabular-nums}
+
+/* 4. Trợ năng */
+@media(prefers-reduced-motion:reduce){
+  html body :is(button,[role=button],summary,a[class*=btn],a[class*=chip],a[class*=action],.action-chip,.product-filter-btn,.product-action-link,.tab):not(:disabled,#pickdeeSupportRoot *):active{scale:none;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){
+  html body header.pd-app-scrolled{-webkit-backdrop-filter:none;backdrop-filter:none;background:#141414 !important}
+}
+@media(prefers-contrast:more){
+  html body header.pd-app-scrolled{-webkit-backdrop-filter:none;backdrop-filter:none;background:#000 !important}
+}
