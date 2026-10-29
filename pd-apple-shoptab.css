@@ -1,0 +1,31 @@
+/* PickDee Shop — các tab của khách (sản phẩm · giỏ · thanh toán · theo dõi · huỷ đơn). Dùng cùng pd-apple.css. Tách riêng để không lan sang trang chính Shop. */
+:root{--as-ease:cubic-bezier(.23,1,.32,1)}
+
+/* ===== Tab Shop của khách: sản phẩm · giỏ · thanh toán · theo dõi · huỷ đơn =====
+   Dùng chung với pd-apple.css (ô nhập focus, tiêu đề). Các trang này nền tối, có thanh dưới dính (#buyBar / #checkoutBar / #bottomBar). */
+
+/* T1. Nút: nhấn xuống tức thì, thả ra mượt. Trừ nút của khung chat hỗ trợ */
+html body :is(button,.checkout-btn,.submit-btn,.cart-back-shop-btn,.pd-shop-action,.pd-shop-cart,.pd-shop-menu-item,.back,.btn,.secondary-link):not(:disabled,#pickdeeSupportRoot *){
+  transition:transform .32s var(--as-ease),background-color .2s var(--as-ease),border-color .2s var(--as-ease),color .2s var(--as-ease),opacity .2s var(--as-ease);-webkit-tap-highlight-color:transparent}
+html body :is(button,.checkout-btn,.submit-btn,.cart-back-shop-btn,.pd-shop-action,.pd-shop-cart,.pd-shop-menu-item,.back,.btn,.secondary-link):not(:disabled,#pickdeeSupportRoot *):active{transform:scale(.96);transition-duration:.08s}
+
+/* T2. Kính mờ: header và thanh dưới dính — nội dung cuộn xuôi bên dưới */
+html body .header{background:rgba(15,15,15,.88);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom-color:rgba(255,255,255,.06)}
+html body :is(#buyBar,#checkoutBar,#bottomBar){background:rgba(15,15,15,.82) !important;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-top:1px solid rgba(255,255,255,.12) !important;box-shadow:0 -14px 36px -16px rgba(0,0,0,.6) !important}
+
+/* T3. Hình khối + chữ */
+html body .card{border-radius:22px}
+html body :is(.variant-btn,.option-btn,.thumb){border-radius:14px}
+html body :is(.checkout-btn,.submit-btn,.cart-back-shop-btn){border-radius:16px;letter-spacing:-.005em}
+html body :is(h1,h2,h3){text-wrap:balance}
+
+/* T4. Trợ năng */
+@media(prefers-reduced-motion:reduce){
+  html body :is(button,.checkout-btn,.submit-btn,.cart-back-shop-btn,.pd-shop-action,.pd-shop-cart,.pd-shop-menu-item,.back,.btn,.secondary-link):not(:disabled,#pickdeeSupportRoot *):active{transform:none;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){
+  html body .header,html body :is(#buyBar,#checkoutBar,#bottomBar){-webkit-backdrop-filter:none;backdrop-filter:none;background:#0f0f0f !important}
+}
+@media(prefers-contrast:more){
+  html body .header,html body :is(#buyBar,#checkoutBar,#bottomBar){-webkit-backdrop-filter:none;backdrop-filter:none;background:#000 !important;border-color:rgba(255,255,255,.4) !important}
+}
