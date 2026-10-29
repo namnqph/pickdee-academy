@@ -1,0 +1,44 @@
+/* PickDee Shop (khách) — lớp thiết kế kiểu Apple: phản hồi bấm tức thì, kính mờ, chữ theo cỡ, hình khối bo lớn, trợ năng.
+   Nạp ở CUỐI <head> từng trang Shop đã kiểm. Chỉ đổi cách trình bày/chuyển động; không đổi nội dung, giá, đơn hàng hay logic.
+   Trang Shop dùng nhiều !important nên mọi luật ở đây ghi "html body" + !important khi cần để thắng. */
+:root{--as-ease:cubic-bezier(.23,1,.32,1);--as-edge:rgba(255,255,255,.12);--as-accent:#ffc934}
+
+/* 1. Phản hồi tức thì: nhấn xuống đổi ngay (80ms), thả ra về mượt (320ms). Không cho cả thẻ co lại khi chỉ bấm nút bên trong */
+html body :is(.product-buy-now-btn,.product-action,.hero-primary,.favorite-btn,.category-btn,.shop-chip,.shop-group-more,.cart-button,.menu-button,.shop-search-button,.header-link,.app-bottom-nav a){
+  transition:transform .32s var(--as-ease),background-color .2s var(--as-ease),color .2s var(--as-ease),border-color .2s var(--as-ease),opacity .2s var(--as-ease) !important;-webkit-tap-highlight-color:transparent}
+html body :is(.product-buy-now-btn,.product-action,.hero-primary,.favorite-btn,.category-btn,.shop-chip,.shop-group-more,.cart-button,.menu-button,.shop-search-button,.header-link,.app-bottom-nav a):active{transform:scale(.95) !important;transition-duration:.08s !important}
+html body .product-card{transition:transform .32s var(--as-ease) !important}
+html body .product-card:not(:has(.product-card-actions:active,.favorite-btn:active)):active{transform:scale(.985) !important;transition-duration:.08s !important}
+
+/* 2. Kính mờ: thanh đầu trang, thanh chip dính, menu đáy — nội dung cuộn xuôi bên dưới */
+/* đủ đặc để ở đầu trang (nền trắng phía sau) vẫn gần đen; vẫn mờ kính khi ảnh/thẻ chạy bên dưới */
+html body .shop-header{background:rgba(11,11,11,.9) !important;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:inset 0 -1px 0 rgba(255,255,255,.06) !important}
+html body #shopChipBar{background:rgba(255,255,255,.74) !important;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 12px 32px -14px rgba(0,0,0,.28) !important;transition:transform .34s var(--as-ease),opacity .22s var(--as-ease) !important}
+html body .app-bottom-nav{background:rgba(14,14,14,.64) !important;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 16px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.1) !important}
+
+/* 3. Hình khối: bo góc lớn hơn, chip và danh mục chọn bằng chuyển màu mượt */
+html body .product-card{border-radius:20px !important}
+html body .hero.has-photo{border-radius:26px !important}
+html body .shop-chip{font-weight:700;letter-spacing:.003em}
+html body .shop-group-more{font-weight:700}
+
+/* 4. Chữ: tiêu đề nhóm chữ thường, đậm vừa, tracking chặt theo cỡ (uppercase + weight 1000 làm mất phân cấp); leading ≥1.2 cho dấu tiếng Việt */
+html body :is(.shop-group-title,.section-title,.best-seller-title){text-transform:none !important;font-weight:800 !important;letter-spacing:-.024em !important;line-height:1.22 !important}
+html body .section-title{font-size:clamp(24px,6.4vw,34px) !important}
+html body .product-card .product-name{letter-spacing:-.006em !important}
+html body .product-card :is(.product-price,.product-compare-price){letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+
+/* 5. Trợ năng: giảm chuyển động → mờ nhẹ không co; giảm trong suốt → đặc; tương phản cao → nền đặc có viền */
+@media(prefers-reduced-motion:reduce){
+  html body :is(.product-buy-now-btn,.product-action,.hero-primary,.favorite-btn,.category-btn,.shop-chip,.shop-group-more,.cart-button,.menu-button,.shop-search-button,.header-link,.app-bottom-nav a):active,
+  html body .product-card:not(:has(.product-card-actions:active,.favorite-btn:active)):active{transform:none !important;opacity:.72}
+}
+@media(prefers-reduced-transparency:reduce){
+  html body .shop-header,html body .app-bottom-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:#0b0b0b !important}
+  html body #shopChipBar{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff !important}
+}
+@media(prefers-contrast:more){
+  html body .shop-header,html body .app-bottom-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:#000 !important}
+  html body #shopChipBar{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff !important}
+  html body .product-card{outline:1px solid rgba(0,0,0,.4);outline-offset:-1px}
+}
