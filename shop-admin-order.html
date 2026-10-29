@@ -5846,6 +5846,13 @@
       status === "shipping"
     ) {
 
+      const autoTrackedProvider =
+        ["spx", "ghn"].includes(
+          String(
+            currentOrder.shipping_provider || ""
+          ).toLowerCase()
+        );
+
       html = `
 
         <div
@@ -5857,7 +5864,11 @@
             line-height:1.45;
           "
         >
-          🚚 Đang giao – hệ thống tự hoàn tất khi khách nhận.
+          ${
+            autoTrackedProvider
+              ? "🚚 Đang giao – hệ thống tự hoàn tất khi khách nhận."
+              : "🚚 " + String(currentOrder.shipping_provider || "Hãng vận chuyển").toUpperCase() + " chưa tra cứu tự động được – anh bấm \"Khách đã nhận\" (hoặc \"Hủy\") khi biết kết quả giao hàng."
+          }
         </div>
 
         <button
