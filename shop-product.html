@@ -283,6 +283,66 @@
     }
 
 
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+
+      transform: translateY(-50%);
+
+      width: 34px;
+      height: 34px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 50%;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      background: rgba(10,10,10,.45);
+      backdrop-filter: blur(10px) saturate(160%);
+      -webkit-backdrop-filter: blur(10px) saturate(160%);
+
+      color: #fff;
+
+      cursor: pointer;
+
+      transition: opacity 150ms ease-out, transform 150ms ease-out;
+
+      z-index: 2;
+    }
+
+
+    .gallery-arrow svg {
+      width: 18px;
+      height: 18px;
+    }
+
+
+    .gallery-arrow:active {
+      transform: translateY(-50%) scale(.92);
+    }
+
+
+    .gallery-arrow.prev {
+      left: 10px;
+    }
+
+
+    .gallery-arrow.next {
+      right: 10px;
+    }
+
+
+    .gallery-arrow[disabled] {
+      opacity: 0;
+
+      pointer-events: none;
+    }
+
+
 
     .image-placeholder {
       color:
@@ -2775,6 +2835,36 @@ function updateCartCount() {
                 >
                   ${slides}
                 </div>
+
+                ${
+                  sortedImages.length > 1
+                  ?
+                    `
+                      <button
+                        type="button"
+                        id="galleryPrev"
+                        class="gallery-arrow prev"
+                        aria-label="Ảnh trước"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M15 6l-6 6 6 6"/>
+                        </svg>
+                      </button>
+
+                      <button
+                        type="button"
+                        id="galleryNext"
+                        class="gallery-arrow next"
+                        aria-label="Ảnh sau"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M9 6l6 6-6 6"/>
+                        </svg>
+                      </button>
+                    `
+                  :
+                    ""
+                }
               `
             :
               `
@@ -4565,6 +4655,28 @@ function bindProductEvents() {
 
     }
 
+    const prevArrow =
+      document.getElementById(
+        "galleryPrev"
+      );
+
+    const nextArrow =
+      document.getElementById(
+        "galleryNext"
+      );
+
+    function updateArrows(i) {
+
+      if (prevArrow) {
+        prevArrow.disabled = i <= 0;
+      }
+
+      if (nextArrow) {
+        nextArrow.disabled = i >= thumbs.length - 1;
+      }
+
+    }
+
     function applyActiveThumb(i) {
 
       thumbs.forEach(
@@ -4577,6 +4689,8 @@ function bindProductEvents() {
 
         }
       );
+
+      updateArrows(i);
 
     }
 
@@ -4740,10 +4854,56 @@ function bindProductEvents() {
       }
     );
 
+    // Nút mũi tên — báo có nhiều ảnh/biến thể, bấm trượt mượt y như thumbnail
+    function goToIndexByArrow(delta) {
+
+      return function (event) {
+
+        const nextIndex = index + delta;
+
+        if (
+          nextIndex < 0
+          ||
+          nextIndex > thumbs.length - 1
+        ) {
+          return;
+        }
+
+        springTo(nextIndex, 0, false);
+
+        if (
+          !event
+          ||
+          !event.isTrusted
+        ) {
+          return;
+        }
+
+        selectVariantForIndex(nextIndex);
+
+      };
+
+    }
+
+    if (prevArrow) {
+      prevArrow.addEventListener(
+        "click",
+        goToIndexByArrow(-1)
+      );
+    }
+
+    if (nextArrow) {
+      nextArrow.addEventListener(
+        "click",
+        goToIndexByArrow(1)
+      );
+    }
+
     measure();
     setTransform(
       targetXFor(index)
     );
+    updateArrows(index);
 
     window.addEventListener(
       "resize",
@@ -4783,6 +4943,15 @@ function bindProductEvents() {
           event.pointerType === "mouse"
           &&
           event.button !== 0
+        ) {
+          return;
+        }
+
+        // Bấm vào nút mũi tên: để nguyên click bình thường, không bắt pointer (kẻo click bị chặn)
+        if (
+          event.target.closest
+          &&
+          event.target.closest(".gallery-arrow")
         ) {
           return;
         }
