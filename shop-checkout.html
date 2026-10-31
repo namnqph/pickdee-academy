@@ -4533,14 +4533,62 @@
   }
 
 
+  function cartHasShoe(
+    cart
+  ) {
+
+    /*
+      Cùng quy tắc với DB (shop_order_has_shoe): tên sản phẩm
+      hoặc biến thể BẮT ĐẦU bằng "giày".
+    */
+    return cart.some(
+      function (item) {
+
+        return [
+          item.product_name,
+          item.variant_name
+        ].some(
+          function (name) {
+
+            return /^\s*gi[aà]y/.test(
+              String(
+                name || ""
+              )
+                .normalize(
+                  "NFC"
+                )
+                .toLocaleLowerCase(
+                  "vi-VN"
+                )
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
   function applyPaddlePaymentRule(
     cart
   ) {
 
-    const mustPrepay =
+    const hasPaddleItem =
       cartHasPaddle(
         cart
       );
+
+    const hasShoeItem =
+      cartHasShoe(
+        cart
+      );
+
+    const mustPrepay =
+      hasPaddleItem
+      ||
+      hasShoeItem;
 
     const codInput =
       document.querySelector(
@@ -4602,6 +4650,13 @@
         !oldNote
       ) {
 
+        const prepayNoteText =
+          hasPaddleItem
+            ?
+              "Đơn có vợt Pickleball cần thanh toán chuyển khoản trước và được PickDee miễn phí vận chuyển.\nAnh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì mới đặt được đơn."
+            :
+              "Đơn có giày Pickleball cần thanh toán chuyển khoản trước.\nAnh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì mới đặt được đơn.";
+
         paymentOptions.insertAdjacentHTML(
           "beforebegin",
           `
@@ -4609,8 +4664,7 @@
               id="paddlePrepayNote"
               class="paddle-prepay-note"
             >
-              Đơn có vợt Pickleball cần thanh toán chuyển khoản trước và được PickDee miễn phí vận chuyển.
-Anh/chị chuyển khoản theo QR bên dưới và đính kèm ảnh bill thì mới đặt được đơn.
+              ${escapeHtml(prepayNoteText).replace(/\n/g, "<br>")}
             </div>
           `
         );
@@ -4903,6 +4957,12 @@ function shippingQuote(
       );
 
 
+    const hasShoe =
+      cartHasShoe(
+        cart
+      );
+
+
     const selectedPaymentMethod =
       document.querySelector(
         'input[name="paymentMethod"]:checked'
@@ -4943,6 +5003,39 @@ function shippingQuote(
           merchandiseTotal - affDiscount(cart),
         reason:
           "Đơn có vợt Pickleball thanh toán chuyển khoản trước: PickDee miễn phí vận chuyển."
+      };
+
+    }
+
+
+    /*
+      Đơn có giày Pickleball Kaitashi: bắt buộc chuyển khoản trước,
+      phí ship cố định 35.000đ (không áp dụng freeship theo mốc đơn hàng).
+    */
+    if (
+      hasShoe
+      &&
+      selectedPaymentMethod === "bank_transfer"
+    ) {
+
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        hasPaddle,
+        hasShoe:
+          true,
+        freeShipping:
+          false,
+        shippingPending:
+          false,
+        shippingFee:
+          35000,
+        affDiscount:
+          affDiscount(cart),
+        customerTotal:
+          merchandiseTotal + 35000 - affDiscount(cart),
+        reason:
+          "Đơn có giày Pickleball: phí vận chuyển 35.000đ."
       };
 
     }
