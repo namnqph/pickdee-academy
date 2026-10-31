@@ -233,6 +233,8 @@
 
       background:
         #151515;
+
+      touch-action: pan-y;
     }
 
 
@@ -4575,6 +4577,104 @@ function bindProductEvents() {
 
       }
        );
+
+
+    /*
+      =====================================================
+      VUỐT TRÁI/PHẢI ĐỔI ẢNH (mobile)
+      =====================================================
+    */
+
+    (function () {
+
+      const mainImageEl =
+        document.getElementById(
+          "mainImage"
+        );
+
+      if (!mainImageEl) {
+        return;
+      }
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchActive = false;
+
+      mainImageEl.addEventListener(
+        "touchstart",
+        function (event) {
+
+          if (event.touches.length !== 1) {
+            touchActive = false;
+            return;
+          }
+
+          touchStartX = event.touches[0].clientX;
+          touchStartY = event.touches[0].clientY;
+          touchActive = true;
+
+        },
+        { passive: true }
+      );
+
+      mainImageEl.addEventListener(
+        "touchend",
+        function (event) {
+
+          if (!touchActive) {
+            return;
+          }
+
+          touchActive = false;
+
+          const touch = event.changedTouches[0];
+
+          if (!touch) {
+            return;
+          }
+
+          const deltaX = touch.clientX - touchStartX;
+          const deltaY = touch.clientY - touchStartY;
+
+          // Chỉ coi là vuốt ngang khi đủ xa và trội hơn hẳn chiều dọc (khỏi chặn cuộn trang)
+          if (
+            Math.abs(deltaX) < 40
+            ||
+            Math.abs(deltaX) < Math.abs(deltaY) * 1.5
+          ) {
+            return;
+          }
+
+          const thumbs =
+            Array.from(
+              document.querySelectorAll(".thumb")
+            );
+
+          if (thumbs.length < 2) {
+            return;
+          }
+
+          const activeIndex =
+            thumbs.findIndex(
+              item => item.classList.contains("active")
+            );
+
+          if (activeIndex === -1) {
+            return;
+          }
+
+          const nextIndex =
+            deltaX < 0
+              ? (activeIndex + 1) % thumbs.length
+              : (activeIndex - 1 + thumbs.length) % thumbs.length;
+
+          thumbs[nextIndex].click();
+
+        },
+        { passive: true }
+      );
+
+    })();
 
   }
 
