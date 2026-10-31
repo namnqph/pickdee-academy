@@ -587,6 +587,183 @@
 
 
     /* =====================================================
+       SIZE GUIDE (áo tặng kèm)
+    ====================================================== */
+
+    .size-guide-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+
+      width: 100%;
+
+      margin-bottom: 18px;
+      padding: 11px 13px;
+
+      border-radius: 10px;
+      border: 1px solid rgba(255,201,52,.35);
+
+      background: rgba(255,201,52,.07);
+
+      color: #ffc934;
+
+      font-size: 12px;
+      font-weight: 800;
+      text-align: left;
+
+      cursor: pointer;
+    }
+
+    .size-guide-toggle-arrow {
+      flex: none;
+      transition: transform .2s ease-out;
+    }
+
+    .size-guide-toggle.open .size-guide-toggle-arrow {
+      transform: rotate(180deg);
+    }
+
+    .size-guide {
+      margin-top: -10px;
+      margin-bottom: 18px;
+      padding: 14px;
+
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.1);
+
+      background: rgba(255,255,255,.03);
+    }
+
+    .size-suggest-row {
+      display: flex;
+      gap: 10px;
+
+      margin-bottom: 10px;
+    }
+
+    .size-suggest-row label {
+      flex: 1;
+
+      display: block;
+
+      color: rgba(255,255,255,.55);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .size-suggest-row input {
+      display: block;
+      width: 100%;
+      margin-top: 5px;
+
+      padding: 10px 11px;
+
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.14);
+
+      background: rgba(255,255,255,.04);
+
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+
+      box-sizing: border-box;
+    }
+
+    .size-suggest-btn {
+      width: 100%;
+
+      padding: 11px;
+
+      border-radius: 9px;
+      border: none;
+
+      background: #ffc934;
+
+      color: #0f0f0f;
+      font-size: 12px;
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .size-guide-result {
+      margin-top: 10px;
+
+      font-size: 12px;
+      font-weight: 800;
+      color: #ffc934;
+
+      min-height: 1px;
+    }
+
+    .size-guide-table {
+      width: 100%;
+      margin-top: 14px;
+
+      border-collapse: collapse;
+
+      font-size: 12px;
+    }
+
+    .size-guide-table th {
+      padding: 7px 6px;
+
+      color: rgba(255,255,255,.45);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-align: left;
+
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+
+    .size-guide-row {
+      cursor: pointer;
+    }
+
+    .size-guide-row td {
+      padding: 10px 6px;
+
+      color: rgba(255,255,255,.75);
+      font-weight: 700;
+
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .size-guide-row .size-guide-size {
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .size-guide-row:last-child td {
+      border-bottom: none;
+    }
+
+    .size-guide-row.active {
+      background: rgba(255,201,52,.1);
+    }
+
+    .size-guide-row.active td {
+      color: #ffc934;
+    }
+
+    .size-guide-row.active .size-guide-size {
+      color: #ffc934;
+    }
+
+    .size-guide-note {
+      margin-top: 12px;
+
+      color: rgba(255,255,255,.4);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+
+    /* =====================================================
        QUANTITY
     ====================================================== */
 
@@ -1270,6 +1447,141 @@
   let currentRequiresLegacyVariantChoice = false;
 
   let currentRequiresGiftShirtSize = false;
+
+  // Bảng thông số thật của áo ESS/ON tặng kèm (option2_name = "Size áo tặng kèm").
+  const SHIRT_SIZE_CHART = [
+    { size: "M", heightLabel: "155 - 165", height: 160, weightLabel: "50 - 62", weight: 56 },
+    { size: "L", heightLabel: "165 - 170", height: 167.5, weightLabel: "63 - 69", weight: 66 },
+    { size: "XL", heightLabel: "170 - 175", height: 172.5, weightLabel: "70 - 75", weight: 72.5 },
+    { size: "XXL", heightLabel: "175 - 180", height: 177.5, weightLabel: "76 - 82", weight: 79 },
+    { size: "NC1", heightLabel: "> 175", height: 183, weightLabel: "82 - 90", weight: 86 }
+  ];
+
+
+  function shirtSizeGuideHtml(option2Values) {
+
+    const rows =
+      SHIRT_SIZE_CHART.filter(
+        function (row) {
+
+          return option2Values.includes(
+            row.size
+          );
+
+        }
+      );
+
+
+    if (!rows.length) {
+      return "";
+    }
+
+
+    return `
+      <button
+        type="button"
+        id="sizeGuideToggle"
+        class="size-guide-toggle"
+      >
+        <span>📏 Chưa biết chọn size nào? Xem bảng size + gợi ý theo chiều cao</span>
+        <span class="size-guide-toggle-arrow">⌄</span>
+      </button>
+
+      <div
+        id="sizeGuidePanel"
+        class="size-guide"
+        hidden
+      >
+
+        <div class="size-suggest">
+
+          <div class="size-suggest-row">
+
+            <label>
+              Chiều cao (cm)
+              <input
+                type="number"
+                inputmode="numeric"
+                id="sizeGuideHeight"
+                placeholder="VD: 172"
+              >
+            </label>
+
+            <label>
+              Cân nặng (kg)
+              <input
+                type="number"
+                inputmode="numeric"
+                id="sizeGuideWeight"
+                placeholder="VD: 68"
+              >
+            </label>
+
+          </div>
+
+          <button
+            type="button"
+            id="sizeGuideSuggestBtn"
+            class="size-suggest-btn"
+          >
+            ✨ Gợi ý size phù hợp
+          </button>
+
+          <div
+            id="sizeGuideResult"
+            class="size-guide-result"
+          ></div>
+
+        </div>
+
+        <table class="size-guide-table">
+
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Chiều cao</th>
+              <th>Cân nặng</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rows
+              .map(
+                function (row) {
+
+                  return `
+                    <tr
+                      class="size-guide-row ${
+                        selectedOption2Value === row.size
+                          ?
+                            "active"
+                          :
+                            ""
+                      }"
+                      data-size-row="${escapeHtml(row.size)}"
+                    >
+                      <td class="size-guide-size">${escapeHtml(row.size)}</td>
+                      <td>${escapeHtml(row.heightLabel)} cm</td>
+                      <td>${escapeHtml(row.weightLabel)} kg</td>
+                    </tr>
+                  `;
+
+                }
+              )
+              .join("")}
+          </tbody>
+
+        </table>
+
+        <div class="size-guide-note">
+          Đo chiều cao/cân nặng thực tế gần nhất với mốc trong bảng. Chưa chắc chắn → nhắn PickDee để được tư vấn.
+        </div>
+
+      </div>
+    `;
+
+  }
+
 
   let quantity = 1;
 
@@ -2231,6 +2543,14 @@ function updateCartCount() {
         <div class="variants">
           ${option2Buttons}
         </div>
+
+        ${
+          option2Name === "Size áo tặng kèm"
+            ?
+              shirtSizeGuideHtml(option2Values)
+            :
+              ""
+        }
       `;
 
     }
@@ -3378,6 +3698,32 @@ function bindProductEvents() {
         }
       );
 
+
+    document
+      .querySelectorAll(
+        ".size-guide-row"
+      )
+      .forEach(
+        function (row) {
+
+          row.classList.toggle(
+            "active",
+            String(
+              row.dataset.sizeRow
+              ||
+              ""
+            )
+            ===
+            String(
+              selectedOption2Value
+              ||
+              ""
+            )
+          );
+
+        }
+      );
+
   }
 
 
@@ -3760,6 +4106,270 @@ function bindProductEvents() {
 
       }
     );
+
+
+  /*
+    =====================================================
+    BẢNG SIZE ÁO + GỢI Ý THEO CHIỀU CAO/CÂN NẶNG
+    =====================================================
+  */
+
+  (function () {
+
+    const toggleBtn =
+      document.getElementById(
+        "sizeGuideToggle"
+      );
+
+    const panel =
+      document.getElementById(
+        "sizeGuidePanel"
+      );
+
+    if (
+      toggleBtn
+      &&
+      panel
+    ) {
+
+      toggleBtn.addEventListener(
+        "click",
+        function () {
+
+          const willOpen =
+            panel.hidden;
+
+          panel.hidden =
+            !willOpen;
+
+          toggleBtn.classList.toggle(
+            "open",
+            willOpen
+          );
+
+        }
+      );
+
+    }
+
+
+    function selectShirtSize(size) {
+
+      const optionBtn =
+        document.querySelector(
+          `[data-option-index="2"][data-option-value="${CSS.escape(size)}"]`
+        );
+
+      if (optionBtn) {
+        optionBtn.click();
+      }
+
+    }
+
+
+    document
+      .querySelectorAll(
+        ".size-guide-row"
+      )
+      .forEach(
+        function (row) {
+
+          row.addEventListener(
+            "click",
+            function () {
+
+              selectShirtSize(
+                row.dataset.sizeRow
+                ||
+                ""
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    const suggestBtn =
+      document.getElementById(
+        "sizeGuideSuggestBtn"
+      );
+
+    const heightInput =
+      document.getElementById(
+        "sizeGuideHeight"
+      );
+
+    const weightInput =
+      document.getElementById(
+        "sizeGuideWeight"
+      );
+
+    const resultBox =
+      document.getElementById(
+        "sizeGuideResult"
+      );
+
+    if (
+      suggestBtn
+      &&
+      heightInput
+      &&
+      weightInput
+      &&
+      resultBox
+    ) {
+
+      suggestBtn.addEventListener(
+        "click",
+        function () {
+
+          const heightCm =
+            parseFloat(
+              heightInput.value
+            );
+
+          const weightKg =
+            parseFloat(
+              weightInput.value
+            );
+
+          const hasHeight =
+            Number.isFinite(heightCm)
+            &&
+            heightCm > 0;
+
+          const hasWeight =
+            Number.isFinite(weightKg)
+            &&
+            weightKg > 0;
+
+          if (
+            !hasHeight
+            &&
+            !hasWeight
+          ) {
+
+            resultBox.textContent =
+              "Nhập chiều cao hoặc cân nặng để em gợi ý size nhé.";
+
+            return;
+
+          }
+
+
+          const availableSizes =
+            new Set(
+              Array.from(
+                document.querySelectorAll(
+                  ".size-guide-row"
+                )
+              ).map(
+                function (row) {
+
+                  return (
+                    row.dataset.sizeRow
+                    ||
+                    ""
+                  );
+
+                }
+              )
+            );
+
+
+          let best = null;
+          let bestScore = Infinity;
+
+          SHIRT_SIZE_CHART
+            .filter(
+              function (row) {
+
+                return availableSizes.has(
+                  row.size
+                );
+
+              }
+            )
+            .forEach(
+            function (row) {
+
+              let score = 0;
+
+              if (hasHeight) {
+                score +=
+                  Math.pow(
+                    (heightCm - row.height) / 20,
+                    2
+                  );
+              }
+
+              if (hasWeight) {
+                score +=
+                  Math.pow(
+                    (weightKg - row.weight) / 15,
+                    2
+                  );
+              }
+
+              if (score < bestScore) {
+                bestScore = score;
+                best = row;
+              }
+
+            }
+          );
+
+
+          if (!best) {
+            return;
+          }
+
+
+          selectShirtSize(
+            best.size
+          );
+
+
+          resultBox.textContent =
+            "👉 Gợi ý: Size "
+            +
+            best.size
+            +
+            " (cao "
+            +
+            best.heightLabel
+            +
+            "cm, nặng "
+            +
+            best.weightLabel
+            +
+            "kg)";
+
+
+          const matchedRow =
+            document.querySelector(
+              `.size-guide-row[data-size-row="${CSS.escape(best.size)}"]`
+            );
+
+          if (matchedRow) {
+
+            matchedRow.scrollIntoView(
+              {
+                behavior: "smooth",
+                block: "nearest"
+              }
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+  })();
 
 
   /*
