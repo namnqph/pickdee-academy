@@ -3016,6 +3016,37 @@
 
         </div>
 
+        <div class="field">
+
+          <label>
+            Video review TikTok (dán link, kể cả link rút gọn)
+          </label>
+
+          <input
+            id="reviewVideoInput"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            placeholder="https://vt.tiktok.com/..."
+            value="${escapeHtml(
+              product.review_video_id
+              ||
+              ""
+            )}"
+          >
+
+          <div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;">
+            ${
+              product.review_video_id
+              ?
+                "Đang gắn video (mã " + escapeHtml(product.review_video_id) + "). Dán link mới để đổi; xoá trống để gỡ video."
+              :
+                "Chưa có video. Dán link TikTok rồi bấm Lưu, khung video sẽ hiện ở cuối trang sản phẩm."
+            }
+          </div>
+
+        </div>
+
         <div class="grid-2">
 
           <div class="field">
@@ -4934,7 +4965,7 @@
             "shop_products"
           )
           .select(
-            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,is_best_seller,created_at,updated_at"
+            "id,product_code,category_id,name,slug,brand,short_description,description,status,is_featured,is_best_seller,review_video_id,created_at,updated_at"
           )
           .eq(
             "id",
@@ -5586,6 +5617,83 @@
 
     try {
 
+      /* Video review: link TikTok (kể cả rút gọn) → mã số video, đọc qua Edge tiktok-resolve */
+      const reviewVideoRaw =
+        (document.getElementById("reviewVideoInput")?.value || "").trim();
+
+      let reviewVideoId =
+        null;
+
+      if (reviewVideoRaw) {
+
+        if (reviewVideoRaw === String(product.review_video_id || "")) {
+
+          reviewVideoId =
+            reviewVideoRaw;
+
+        }
+        else {
+
+          saveBtn.textContent =
+            "Đang đọc link video...";
+
+          const {
+            data: resolved,
+            error: resolveError
+          } =
+            await sb.functions.invoke(
+              "tiktok-resolve",
+              {
+                body: {
+                  url: reviewVideoRaw
+                }
+              }
+            );
+
+          if (
+            resolveError
+            ||
+            !resolved?.ok
+          ) {
+
+            let reason =
+              resolved?.error
+              ||
+              "";
+
+            if (!reason && resolveError?.context?.json) {
+
+              try {
+                reason =
+                  (await resolveError.context.json()).error
+                  ||
+                  "";
+              }
+              catch (e) {}
+
+            }
+
+            showMessage(
+              "Link video TikTok chưa dùng được: "
+              + (reason || "không đọc được link.")
+              + " (Các thay đổi khác chưa được lưu.)",
+              "error"
+            );
+
+            return;
+
+          }
+
+          reviewVideoId =
+            String(resolved.video_id);
+
+        }
+
+        saveBtn.textContent =
+          "Đang lưu...";
+
+      }
+
       const {
         data,
         error
@@ -5687,6 +5795,32 @@
 
       }
 
+      if (
+        (product.review_video_id || null)
+        !==
+        reviewVideoId
+      ) {
+
+        const {
+          error: reviewVideoError
+        } =
+          await sb
+            .from("shop_products")
+            .update({
+              review_video_id:
+                reviewVideoId
+            })
+            .eq(
+              "id",
+              product.id
+            );
+
+        if (reviewVideoError) {
+          throw reviewVideoError;
+        }
+
+      }
+
       product = {
         ...product,
 
@@ -5718,7 +5852,10 @@
           featured,
 
         is_best_seller:
-          bestSeller
+          bestSeller,
+
+        review_video_id:
+          reviewVideoId
       };
 
       variants =
