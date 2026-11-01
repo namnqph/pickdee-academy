@@ -990,6 +990,92 @@
     }
 
 
+    .review-video {
+      margin-top: 18px;
+
+      padding-top: 17px;
+
+      border-top:
+        1px solid rgba(255,255,255,.08);
+    }
+
+    .review-video-title {
+      margin-bottom: 10px;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .review-video-frame {
+      position: relative;
+
+      width: min(100%, 300px);
+      aspect-ratio: 9 / 16;
+
+      margin: 0 auto;
+
+      border-radius: 18px;
+      overflow: hidden;
+
+      background:
+        #0b0b0b;
+
+      border:
+        1px solid rgba(255,255,255,.1);
+    }
+
+    .review-video-play {
+      position: absolute;
+      inset: 0;
+
+      width: 100%;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+
+      border: 0;
+
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255,201,52,.16), rgba(0,0,0,0) 62%),
+        #0b0b0b;
+
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+      font-size: 14px;
+
+      cursor: pointer;
+    }
+
+    .review-video-play-icon {
+      width: 64px;
+      height: 64px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 50%;
+
+      background: #ffc934;
+      color: #111;
+
+      font-size: 24px;
+      padding-left: 4px;
+    }
+
+    .review-video-frame iframe {
+      position: absolute;
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      border: 0;
+    }
+
     .description-title {
       margin-bottom: 8px;
 
@@ -3175,6 +3261,39 @@ function updateCartCount() {
         }
 
 
+        ${
+          /^[0-9]{8,25}$/.test(String(product.review_video_id || ""))
+          ?
+            `
+              <div class="review-video">
+
+                <div class="review-video-title">
+                  🎬 Xem review thực tế
+                </div>
+
+                <div
+                  class="review-video-frame"
+                  id="reviewVideoFrame"
+                  data-video-id="${escapeHtml(String(product.review_video_id))}"
+                >
+                  <button
+                    type="button"
+                    class="review-video-play"
+                    id="reviewVideoPlay"
+                    aria-label="Phát video review"
+                  >
+                    <span class="review-video-play-icon">▶</span>
+                    <span>Bấm để xem review</span>
+                  </button>
+                </div>
+
+              </div>
+            `
+          :
+            ""
+        }
+
+
       </section>
 
 
@@ -3193,6 +3312,38 @@ function updateCartCount() {
   updateDisplayedPrice();
 
   bindProductEvents();
+
+  const reviewVideoPlay =
+    document.getElementById(
+      "reviewVideoPlay"
+    );
+
+  if (reviewVideoPlay) {
+    reviewVideoPlay.addEventListener(
+      "click",
+      function () {
+        const frame =
+          document.getElementById(
+            "reviewVideoFrame"
+          );
+
+        const videoId =
+          frame
+            ?.dataset
+            .videoId;
+
+        if (!frame || !/^[0-9]{8,25}$/.test(videoId || "")) {
+          return;
+        }
+
+        frame.innerHTML =
+          '<iframe src="https://www.tiktok.com/player/v1/' + videoId +
+          '?autoplay=1&controls=1&progress_bar=1&play_button=1&volume_control=1&fullscreen_button=1&timestamp=0&music_info=0&description=0&rewind=0&loop=0&closed_caption=0&native_context_menu=0"' +
+          ' title="Video review sản phẩm" loading="lazy" allow="autoplay; fullscreen; encrypted-media"' +
+          ' referrerpolicy="origin"></iframe>';
+      }
+    );
+  }
 
 }
 
@@ -6045,7 +6196,7 @@ function bindProductEvents() {
               "shop_products"
             )
             .select(
-              "id,name,slug,brand,short_description,description,status"
+              "id,name,slug,brand,short_description,description,status,review_video_id"
             )
             .eq(
               "id",
