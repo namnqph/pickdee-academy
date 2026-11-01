@@ -6735,6 +6735,7 @@ const resultCount =
   const PRODUCT_GROUPS = [
     { id: "", name: "TẤT CẢ" },
     { id: "paddles", name: "VỢT PICKLEBALL" },
+    { id: "shoes", name: "GIÀY PICKLEBALL" },
     { id: "balls", name: "BÓNG PICKLEBALL" },
     { id: "grips", name: "QUẤN CÁN / GRIP" },
     { id: "care", name: "PHỤ KIỆN VỢT" },
@@ -6747,7 +6748,8 @@ const resultCount =
   const PRODUCT_GROUP_MAP = {
     paddles: "paddles", balls: "balls", grips: "grips",
     paddle_upgrade: "care", care: "care",
-    training: "training", recovery: "recovery", other: "other"
+    training: "training", recovery: "recovery", other: "other",
+    shoes: "shoes", giay: "shoes"
   };
 
   function groupCount(groupId) {
@@ -7545,8 +7547,13 @@ const resultCount =
 
   function productGroup(product) {
 
-    if (PRODUCT_GROUP_MAP[product?.product_group]) {
-      return PRODUCT_GROUP_MAP[product.product_group];
+    const rawGroup =
+      String(product?.product_group || "")
+        .trim()
+        .toLowerCase();
+
+    if (PRODUCT_GROUP_MAP[rawGroup]) {
+      return PRODUCT_GROUP_MAP[rawGroup];
     }
 
     const categoryName =
@@ -7576,6 +7583,14 @@ const resultCount =
       Ưu tiên category trước.
       Nếu Admin đã chọn "Phụ kiện khác" thì không cho tên sản phẩm kéo nhầm sang Vợt.
     */
+
+    if (
+      categoryText.includes("giay")
+      ||
+      categoryText.includes("shoe")
+    ) {
+      return "shoes";
+    }
 
     if (
       categoryText.includes("phu kien khac")
@@ -7696,6 +7711,14 @@ const resultCount =
       text.includes("khan")
     ) {
       return "care";
+    }
+
+    if (
+      text.includes("giay")
+      ||
+      text.includes("shoe")
+    ) {
+      return "shoes";
     }
 
     if (
