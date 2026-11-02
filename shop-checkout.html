@@ -4979,6 +4979,43 @@ function shippingQuote(
 
 
     /*
+      Combo Vợt ESS/ON + Giày Kaitashi Shinkai (01/11/2026, anh Nam chốt):
+      đơn có cả vợt và giày, ship gộp cố định 50.000đ (không miễn phí như đơn chỉ có vợt,
+      không theo mức 35.000đ của đơn chỉ có giày). Thiếu/thừa so với 2 nhãn hàng anh tự bù tay.
+    */
+    if (
+      hasPaddle
+      &&
+      hasShoe
+      &&
+      selectedPaymentMethod === "bank_transfer"
+    ) {
+
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        hasPaddle:
+          true,
+        hasShoe:
+          true,
+        freeShipping:
+          false,
+        shippingPending:
+          false,
+        shippingFee:
+          50000,
+        affDiscount:
+          affDiscount(cart),
+        customerTotal:
+          merchandiseTotal + 50000 - affDiscount(cart),
+        reason:
+          "Đơn combo vợt + giày Pickleball: phí vận chuyển gộp 50.000đ."
+      };
+
+    }
+
+
+    /*
       Đơn có vợt Pickleball bắt buộc chuyển khoản trước.
       Khi chuyển khoản trước, PickDee miễn phí vận chuyển cho đơn vợt.
     */

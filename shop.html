@@ -6741,8 +6741,12 @@ const resultCount =
     { id: "care", name: "PHỤ KIỆN VỢT" },
     { id: "recovery", name: "BẢO HỘ / PHỤC HỒI" },
     { id: "training", name: "TẬP LUYỆN" },
-    { id: "other", name: "PHỤ KIỆN KHÁC" }
+    { id: "other", name: "PHỤ KIỆN KHÁC" },
+    { id: "combo", name: "COMBO HÀNG TUYỂN" }
   ];
+
+  /* Combo Vợt ESS/ON + Giày Kaitashi Shinkai (01/11/2026, anh Nam chốt giá cộng nguyên, ship gộp 50k) */
+  const COMBO_PRODUCT_IDS = [34, 37];
 
   /* Nhóm do Admin chọn cho từng sản phẩm (shop_products.product_group) được ưu tiên */
   const PRODUCT_GROUP_MAP = {
@@ -6753,6 +6757,11 @@ const resultCount =
   };
 
   function groupCount(groupId) {
+    if (groupId === "combo") {
+      return products.filter(function (product) {
+        return COMBO_PRODUCT_IDS.includes(product.id);
+      }).length;
+    }
     return products.filter(function (product) {
       return !groupId || productGroup(product) === groupId;
     }).length;
@@ -7785,6 +7794,28 @@ const resultCount =
       return null;
     }
 
+    if (groupId === "combo") {
+
+      return (
+        products.find(
+          function (product) {
+            return (
+              COMBO_PRODUCT_IDS.includes(product.id)
+              &&
+              Boolean(
+                getProductImage(
+                  product.id
+                )
+              )
+            );
+          }
+        )
+        ||
+        null
+      );
+
+    }
+
     if (groupId === "paddles") {
 
       return (
@@ -8383,7 +8414,11 @@ const resultCount =
                    const matchesCategory =
             !selectedCategory
             ||
-            group === selectedCategory;
+            (
+              selectedCategory === "combo"
+                ? COMBO_PRODUCT_IDS.includes(product.id)
+                : group === selectedCategory
+            );
 
           const matchesFavorite =
             !showFavoritesOnly
