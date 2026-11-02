@@ -651,6 +651,34 @@ html body .pda-radar-card i svg{vertical-align:-2px}
 @media(max-height:700px){html body .pda-h1{font-size:28px}.pda-sub{font-size:15px}}
 html body .pickdee-ecosystem-status{font-size:11px}
 </style>
+<style id="pdaSelfRate">
+.pda-selfrate-card{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:14px;text-align:left;border:1px solid rgba(255,201,52,.35);background:linear-gradient(160deg,rgba(255,201,52,.14),rgba(255,255,255,.02));cursor:pointer;font:inherit;color:inherit}
+.pda-selfrate-card .psr-ic{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:rgba(255,201,52,.18)}
+.pda-selfrate-card .psr-txt{flex:1;min-width:0}
+.pda-selfrate-card .psr-txt b{display:block;font-size:14.5px;font-weight:900}
+.pda-selfrate-card .psr-txt small{display:block;margin-top:2px;color:#b8b8b8;font-size:12.5px;line-height:1.4}
+.pda-selfrate-card .psr-go{flex:none;color:#ffc934;font-size:12.5px;font-weight:900}
+.psr-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.psr-overlay.show{display:flex}
+.psr-modal{width:100%;max-width:520px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);border-radius:22px 22px 0 0;background:#121212;border:1px solid rgba(255,255,255,.1);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
+@media(min-width:600px){.psr-overlay{align-items:center}.psr-modal{border-radius:22px;max-height:84vh}}
+.psr-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.psr-head b{font-size:18px;font-weight:900}
+.psr-head button{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:#fff;font-size:18px;line-height:1;cursor:pointer}
+.psr-sub{margin:8px 0 14px;color:#a3a3a3;font-size:13px;line-height:1.5}
+.psr-score{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;margin-bottom:14px;border-radius:14px;background:rgba(255,201,52,.1);border:1px solid rgba(255,201,52,.3)}
+.psr-score span{font-size:12.5px;font-weight:800;color:#ffc934}
+.psr-score b{font-size:20px;font-weight:900;color:#ffc934}
+.psr-field{margin-bottom:12px}
+.psr-field label{display:block;margin-bottom:6px;font-size:12px;font-weight:900;color:rgba(255,255,255,.72)}
+.psr-field select,.psr-field input{width:100%;min-height:48px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;font-size:13.5px}
+.psr-field select:focus,.psr-field input:focus{border-color:rgba(255,201,52,.7);outline:none}
+.psr-msg{min-height:18px;margin:4px 0 10px;font-size:12.5px;font-weight:700;line-height:1.5}
+.psr-msg.error{color:#ff9f9f}
+.psr-msg.success{color:#8bf0a8}
+.psr-modal .pda-cta{width:100%;border:0;cursor:pointer}
+.psr-modal .pda-cta:disabled{opacity:.6;cursor:wait}
+</style>
 </head>
 
 
@@ -1028,6 +1056,13 @@ html,body.pda{overscroll-behavior:none}
     <div class="pda-view" id="v-learn" data-view="hoc">
       <div class="pda-eyebrow">LỘ TRÌNH RÕ RÀNG</div>
       <div class="pda-h2">Chương trình đào tạo</div>
+
+      <button type="button" id="pdaSelfRateBtn" class="pda-selfrate-card">
+        <span class="psr-ic">🎯</span>
+        <span class="psr-txt"><b>Chưa biết trình độ của mình?</b><small>Tự chấm nhanh 6 kỹ năng, PickDee tính điểm trình độ tham khảo</small></span>
+        <span class="psr-go">Chấm ngay ›</span>
+      </button>
+
       <div class="pl-seg" id="plSeg" role="tablist">
         <button type="button" data-i="0" class="on">Cơ bản</button><button type="button" data-i="1">Nâng cao</button><button type="button" data-i="2">Theo yêu cầu</button>
       </div>
@@ -1148,6 +1183,28 @@ html,body.pda{overscroll-behavior:none}
 
   </div>
 
+  <div class="psr-overlay" id="psrOverlay">
+    <div class="psr-modal">
+      <div class="psr-head">
+        <b>Tự chấm trình độ</b>
+        <button type="button" id="psrClose" aria-label="Đóng">×</button>
+      </div>
+      <p class="psr-sub">Chọn mức phù hợp nhất với bạn ở từng kỹ năng. PickDee tự tính điểm trình độ tham khảo.</p>
+      <div class="psr-score"><span>TRÌNH ĐỘ THAM KHẢO</span><b id="psrScore">3,00</b></div>
+      <div id="psrFields"></div>
+      <div class="psr-field">
+        <label for="psrName">Tên hiển thị (bắt buộc)</label>
+        <input id="psrName" type="text" placeholder="VD: Tuấn Anh, Minh Nguyễn…" maxlength="60" autocomplete="name">
+      </div>
+      <div class="psr-field">
+        <label for="psrPhone">Số điện thoại (không bắt buộc)</label>
+        <input id="psrPhone" type="tel" inputmode="tel" placeholder="Để PickDee gợi ý Coach phù hợp" autocomplete="tel">
+      </div>
+      <div id="psrMsg" class="psr-msg"></div>
+      <button type="button" id="psrSave" class="pda-cta">Lưu kết quả</button>
+    </div>
+  </div>
+
   <nav class="pda-tabs" id="pdaTabs">
     <a href="#" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/></svg>Trang chủ</a>
     <a href="#hoc" data-tab="hoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg>Khoá học</a>
@@ -1170,7 +1227,7 @@ html,body.pda{overscroll-behavior:none}
 
 <script src="config.js?v=20261019-keep30"></script>
 
-<script src="/pd-faceid.js?v=20261020-gold1"></script>
+<script src="/pd-faceid.js?v=20261028-safari1"></script>
 
 
 <!-- GIỮ APP.JS ĐỂ FORM ĐĂNG KÝ HIỆN TẠI VẪN CHẠY -->
@@ -2698,6 +2755,163 @@ async function redirectByRole(
   v.classList.add("pl-tabbed");
   seg.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (!b) return; pick(Number(b.dataset.i)); if (navigator.vibrate) try { navigator.vibrate(6); } catch (x) {} });
   pick(0);
+})();
+</script>
+
+<script>
+/* Tự chấm trình độ — khách vãng lai, không cần đăng nhập */
+(function () {
+  var openBtn = document.getElementById("pdaSelfRateBtn");
+  var overlay = document.getElementById("psrOverlay");
+  var closeBtn = document.getElementById("psrClose");
+  var fieldsRoot = document.getElementById("psrFields");
+  var scoreEl = document.getElementById("psrScore");
+  var nameInput = document.getElementById("psrName");
+  var phoneInput = document.getElementById("psrPhone");
+  var msgEl = document.getElementById("psrMsg");
+  var saveBtn = document.getElementById("psrSave");
+  if (!openBtn || !overlay || !fieldsRoot) return;
+
+  var SKILLS = [
+    { key: "serve_return", label: "1. Giao & Trả giao", opts: [
+      [2.0, "Giao bóng còn lỗi, trả giao ngắn"],
+      [2.5, "Giao ổn định hơn, trả giao chưa sâu"],
+      [3.0, "Giao ổn định, trả giao qua lưới chắc chắn"],
+      [3.5, "Giao sâu có xoáy, trả giao sâu cuối sân"],
+      [4.0, "Giao/trả sát baseline, nhắm điểm yếu đối thủ"],
+      [4.5, "Giao biến hoá, trả giao ép đối thủ bị động"]
+    ] },
+    { key: "third_shot_drop", label: "2. Bỏ nhỏ quả thứ 3", opts: [
+      [2.0, "Chưa biết đánh Drop, hay đánh mạnh (Drive)"],
+      [2.5, "Bắt đầu làm quen Drop nhưng hay rúc lưới"],
+      [3.0, "Drop sang bếp được một nửa, còn rúc lưới hoặc nảy cao"],
+      [3.5, "Kết hợp Drop & Drive linh hoạt, tỉ lệ Drop vào bếp khá"],
+      [4.0, "Drop chuẩn vào bếp 7-8/10 quả"],
+      [4.5, "Drop chuẩn xác mọi vị trí, luôn chiếm được bếp"]
+    ] },
+    { key: "dinking", label: "3. Dink trên bếp", opts: [
+      [2.0, "Ngại lên bếp, hay bị Smash khi đứng bếp"],
+      [2.5, "Giữ được vài nhịp dink nhưng dễ nóng vội"],
+      [3.0, "Dink ổn định, phân biệt được bóng để tấn công"],
+      [3.5, "Dink chéo sân ổn định nhiều nhịp"],
+      [4.0, "Dink linh hoạt 2 tay, ép góc chờ bóng nổi"],
+      [4.5, "Dink xoáy, giấu tay, kết hợp Speed-up bất ngờ"]
+    ] },
+    { key: "volley", label: "4. Volley & Phản xạ", opts: [
+      [2.0, "Đứng chôn chân, giật mình khi bị bắn bóng"],
+      [2.5, "Volley được bóng vừa tầm nhưng mở vợt khiến bóng cao"],
+      [3.0, "Vợt luôn để trước ngực, bắt Volley gọn"],
+      [3.5, "Phản xạ tay nhanh, đấu súng được 3-4 nhịp"],
+      [4.0, "Phản xạ điều hướng trái/phải, biết né bóng nổi"],
+      [4.5, "Kiểm soát hoàn toàn trên lưới, phản công Counter"]
+    ] },
+    { key: "reset_defense", label: "5. Phòng thủ & Reset", opts: [
+      [2.0, "Đứng giữa sân hay bị bắn vào chân, đỡ bóng văng ra ngoài"],
+      [2.5, "Biết lùi phòng thủ khi bị Smash nhưng bóng đẩy ra còn cao"],
+      [3.0, "Biết mở mặt vợt hãm lực (Block/Reset) giữa sân"],
+      [3.5, "Giữ Reset ổn định, bóng rơi gần bếp"],
+      [4.0, "Reset êm ngay cả khi bị đập mạnh, tiến lên bếp được"],
+      [4.5, "Phòng thủ bền bỉ, hoá giải mọi Smash, chuyển thủ sang công mượt"]
+    ] },
+    { key: "footwork_iq", label: "6. Di chuyển & IQ", opts: [
+      [2.0, "Chạy tự phát, hay đứng nhìn bóng ở cuối sân sau khi trả giao"],
+      [2.5, "Biết tiến lên lưới sau trả giao nhưng còn rời rạc"],
+      [3.0, "Di chuyển đồng bộ (Split-step) cùng đồng đội"],
+      [3.5, "Đọc tình huống nhanh, biết Poach, đánh vào chỗ yếu"],
+      [4.0, "Kiểm soát nhịp độ, bày chiến thuật, phối Stacking"],
+      [4.5, "Kiểm soát nhịp độ trận đấu, bẫy chiến thuật tinh vi"]
+    ] }
+  ];
+
+  SKILLS.forEach(function (skill) {
+    var field = document.createElement("div");
+    field.className = "psr-field";
+    var label = document.createElement("label");
+    label.setAttribute("for", "psr_" + skill.key);
+    label.textContent = skill.label;
+    var select = document.createElement("select");
+    select.id = "psr_" + skill.key;
+    skill.opts.forEach(function (opt) {
+      var o = document.createElement("option");
+      o.value = opt[0];
+      o.textContent = opt[0].toFixed(1) + " (" + opt[1] + ")";
+      if (opt[0] === 3.0) o.selected = true;
+      select.appendChild(o);
+    });
+    select.addEventListener("change", updateScore);
+    field.appendChild(label);
+    field.appendChild(select);
+    fieldsRoot.appendChild(field);
+  });
+
+  function getScore() {
+    var total = 0;
+    SKILLS.forEach(function (skill) {
+      total += parseFloat(document.getElementById("psr_" + skill.key).value);
+    });
+    return total / SKILLS.length;
+  }
+
+  function updateScore() {
+    scoreEl.textContent = getScore().toFixed(2).replace(".", ",");
+  }
+
+  function showMsg(kind, text) {
+    msgEl.textContent = text;
+    msgEl.className = "psr-msg" + (kind ? " " + kind : "");
+  }
+
+  function open() {
+    overlay.classList.add("show");
+    document.body.style.overflow = "hidden";
+    updateScore();
+    showMsg("", "");
+  }
+
+  function close() {
+    overlay.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  openBtn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+
+  saveBtn.addEventListener("click", function () {
+    var name = (nameInput.value || "").trim();
+    if (name.length < 2) {
+      showMsg("error", "Nhập tên hiển thị (ít nhất 2 ký tự).");
+      nameInput.focus();
+      return;
+    }
+    if (!window.sb) {
+      showMsg("error", "Không kết nối được hệ thống, thử lại sau.");
+      return;
+    }
+
+    var avg = Math.round(getScore() * 100) / 100;
+    var payload = {
+      display_name: name,
+      phone: (phoneInput.value || "").trim() || null,
+      elo_base: avg
+    };
+    SKILLS.forEach(function (skill) {
+      payload[skill.key] = parseFloat(document.getElementById("psr_" + skill.key).value);
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Đang lưu…";
+
+    window.sb.from("academy_guest_self_assessments").insert(payload).then(function (res) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Lưu kết quả";
+      if (res.error) {
+        showMsg("error", "Có lỗi, thử lại giúp em.");
+        return;
+      }
+      showMsg("success", "✅ Đã lưu! Trình độ tham khảo của bạn: " + avg.toFixed(2).replace(".", ",") + ". PickDee sẽ gợi ý Coach và lộ trình phù hợp khi bạn đăng ký học.");
+    });
+  });
 })();
 </script>
 </body>
