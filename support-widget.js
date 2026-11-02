@@ -3391,6 +3391,7 @@ if (
       #pdTease .pd-tease-q span:active{background:#e6e6e6}
       #pdTease .pd-tease-x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
       #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
+      @media(max-width:700px){body:has(.app-bottom-nav) #pdTease{bottom:calc(98px + env(safe-area-inset-bottom))}}
     `;
     document.head.appendChild(st);
 
