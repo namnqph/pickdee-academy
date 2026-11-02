@@ -160,21 +160,136 @@
       color: rgba(255,255,255,.72);
     }
 
-    select {
-      width: 100%;
-      min-height: 50px;
-      padding: 0 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: #161616;
-      color: #fff;
-      font-size: 15px;
-      font-family: inherit;
+    .pick-label {
+      margin: 14px 0 8px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: rgba(255,255,255,.72);
     }
 
-    select:focus {
-      outline: none;
-      border-color: rgba(255,201,52,.55);
+    .pick-label b {
+      color: #ffc934;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .tiles.four {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .tile {
+      position: relative;
+      padding: 0;
+      border-radius: 14px;
+      border: 2px solid rgba(255,255,255,.12);
+      background: #161616;
+      color: #fff;
+      font-family: inherit;
+      cursor: pointer;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .tile img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #1d1d1d;
+    }
+
+    .tile span {
+      display: block;
+      padding: 7px 4px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tile.on {
+      border-color: #ffc934;
+      box-shadow: 0 0 0 3px rgba(255,201,52,.22);
+    }
+
+    .tile.on::after {
+      content: "✓";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffc934;
+      color: #0f0f0f;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 22px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chips.two .chip {
+      flex: 1 1 0;
+    }
+
+    .chip {
+      min-width: 56px;
+      min-height: 46px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.14);
+      background: #161616;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .chip small {
+      display: block;
+      margin-top: 2px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,.55);
+    }
+
+    .chip.on {
+      border-color: #ffc934;
+      background: rgba(255,201,52,.14);
+      color: #ffc934;
+    }
+
+    .chip.on small {
+      color: rgba(255,201,52,.8);
+    }
+
+    .chip:disabled {
+      opacity: .3;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+
+    .summary {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,201,52,.08);
+      border: 1px solid rgba(255,201,52,.3);
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    .summary .miss {
+      color: rgba(255,255,255,.55);
     }
 
     .gift-note {
@@ -237,7 +352,6 @@
 
   <div class="eyebrow">COMBO HÀNG TUYỂN</div>
   <h1>Combo Vợt ESS/ON + Giày Kaitashi</h1>
-  <p class="intro">Chọn đúng phân loại vợt và giày, PickDee tự tách đơn gửi đúng nhãn hàng — khách chỉ cần đặt 1 lần.</p>
 
   <div class="combo-hero">
     <img
@@ -254,21 +368,21 @@
 
   <div id="comboBody">
 
-    <div class="section-title">Chọn vợt ESS/ON</div>
-    <div class="field">
-      <label for="paddleSelect">Dáng / màu / size áo tặng *</label>
-      <select id="paddleSelect">
-        <option value="">— Chọn phân loại vợt —</option>
-      </select>
-    </div>
+    <div class="section-title">1 · Vợt ESS/ON</div>
+    <div class="pick-label">Dáng vợt</div>
+    <div class="chips two" id="shapeChips"></div>
+    <div class="pick-label">Màu vợt</div>
+    <div class="tiles" id="paddleColorTiles"></div>
+    <div class="pick-label">Size áo tặng kèm</div>
+    <div class="chips" id="shirtChips"></div>
 
-    <div class="section-title">Chọn giày Kaitashi Shinkai</div>
-    <div class="field">
-      <label for="shoeSelect">Màu / size *</label>
-      <select id="shoeSelect">
-        <option value="">— Chọn phân loại giày —</option>
-      </select>
-    </div>
+    <div class="section-title">2 · Giày Kaitashi Shinkai</div>
+    <div class="pick-label">Màu giày</div>
+    <div class="tiles four" id="shoeColorTiles"></div>
+    <div class="pick-label">Size giày</div>
+    <div class="chips" id="shoeSizeChips"></div>
+
+    <div class="summary" id="comboSummary"></div>
 
     <div class="gift-note">
       🎽 Tặng kèm 1 áo ESS/ON chính hãng (đúng size đã chọn ở trên).<br>
@@ -282,7 +396,7 @@
       type="button"
       disabled
     >
-      CHỌN ĐỦ PHÂN LOẠI
+      CHỌN ĐỦ ĐỂ MUA COMBO
     </button>
 
     <div class="cta-note">Thanh toán chuyển khoản trước (như đơn vợt/giày thường), không cần tạo tài khoản.</div>
@@ -315,8 +429,11 @@
   const PADDLE_PRODUCT_ID = 34;
   const SHOE_PRODUCT_ID = 37;
 
-  const paddleSelect = document.getElementById("paddleSelect");
-  const shoeSelect = document.getElementById("shoeSelect");
+  const STORAGE = cfg.SUPABASE_URL + "/storage/v1/object/public/shop-products/";
+  const SHIRT_INFO = {
+    M: "155-165cm", L: "165-170cm", XL: "170-175cm", XXL: "175-180cm", NC1: "trên 175cm"
+  };
+  const sel = { shape: "", color: "", shirt: "", shoeColor: "", shoeSize: "" };
   const comboPriceEl = document.getElementById("comboPrice");
   const buyBtn = document.getElementById("comboBuyBtn");
 
@@ -366,18 +483,14 @@
     });
   }
 
-  function fillSelect(select, product, variants) {
-    select.innerHTML =
-      '<option value="">— Chọn phân loại —</option>' +
-      variants.map(function (v) {
-        return '<option value="' + v.id + '">' + v.variant_name + ' — ' + vnd(v.price) + '</option>';
-      }).join("");
+  function esc(t) {
+    return String(t).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
   }
 
-  function syncState() {
-    const ok = paddleSelect.value && shoeSelect.value;
-    buyBtn.disabled = !ok;
-    buyBtn.textContent = ok ? "MUA COMBO NGAY" : "CHỌN ĐỦ PHÂN LOẠI";
+  function uniq(arr) {
+    return arr.filter(function (v, i) { return arr.indexOf(v) === i; });
   }
 
   try {
@@ -412,19 +525,134 @@
       return;
     }
 
-    fillSelect(paddleSelect, paddle, paddleVariants);
-    fillSelect(shoeSelect, shoe, shoeVariants);
+    const imgs = (await sb.from("shop_product_images")
+      .select("storage_path,alt_text")
+      .in("product_id", [PADDLE_PRODUCT_ID, SHOE_PRODUCT_ID])).data || [];
 
-    const comboTotal = Number(paddleVariants[0].price) + Number(shoeVariants[0].price);
-    comboPriceEl.textContent = vnd(comboTotal);
+    function imgFor(text) {
+      const hit = imgs.find(function (i) { return (i.alt_text || "").indexOf(text) >= 0; });
+      return hit ? STORAGE + hit.storage_path : "";
+    }
 
-    paddleSelect.addEventListener("change", syncState);
-    shoeSelect.addEventListener("change", syncState);
+    paddleVariants.forEach(function (v) {
+      const parts = String(v.option1_value).split(" / ");
+      v._shape = (parts[0] || "").trim();
+      v._color = (parts[1] || "").trim();
+      v._shirt = String(v.option2_value).trim();
+    });
+
+    const shapes = uniq(paddleVariants.map(function (v) { return v._shape; }));
+    const shirts = uniq(paddleVariants.map(function (v) { return v._shirt; }));
+    const shoeColors = uniq(shoeVariants.map(function (v) { return v.option1_value; }));
+
+    comboPriceEl.textContent =
+      vnd(Number(paddleVariants[0].price) + Number(shoeVariants[0].price));
+
+    function colorsOfShape(shape) {
+      return uniq(paddleVariants.filter(function (v) { return v._shape === shape; })
+        .map(function (v) { return v._color; }));
+    }
+
+    function pickedPaddle() {
+      return paddleVariants.find(function (v) {
+        return v._shape === sel.shape && v._color === sel.color && v._shirt === sel.shirt;
+      });
+    }
+
+    function pickedShoe() {
+      return shoeVariants.find(function (v) {
+        return v.option1_value === sel.shoeColor && String(v.option2_value) === sel.shoeSize;
+      });
+    }
+
+    function chip(value, on, extra, disabled) {
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-v="' + esc(value) + '"' +
+        (disabled ? " disabled" : "") + '>' + esc(value) + (extra ? "<small>" + esc(extra) + "</small>" : "") + "</button>";
+    }
+
+    function tile(value, on, img) {
+      return '<button type="button" class="tile' + (on ? " on" : "") + '" data-v="' + esc(value) + '">' +
+        (img ? '<img src="' + esc(img) + '" alt="' + esc(value) + '">' : "") +
+        "<span>" + esc(value) + "</span></button>";
+    }
+
+    function render() {
+
+      document.getElementById("shapeChips").innerHTML =
+        shapes.map(function (x) { return chip(x, x === sel.shape); }).join("");
+
+      const colors = sel.shape ? colorsOfShape(sel.shape) : colorsOfShape(shapes[0]);
+      document.getElementById("paddleColorTiles").innerHTML =
+        colors.map(function (c) {
+          return tile(c, c === sel.color, imgFor(shapes.indexOf(sel.shape) >= 0 ? sel.shape + " " + c : (shapes[0] + " " + c)));
+        }).join("");
+
+      document.getElementById("shirtChips").innerHTML =
+        shirts.map(function (x) { return chip(x, x === sel.shirt, SHIRT_INFO[x]); }).join("");
+
+      document.getElementById("shoeColorTiles").innerHTML =
+        shoeColors.map(function (c) { return tile(c, c === sel.shoeColor, imgFor("màu " + c)); }).join("");
+
+      const sizes = uniq(shoeVariants.map(function (v) { return String(v.option2_value); }));
+      document.getElementById("shoeSizeChips").innerHTML =
+        sizes.map(function (z) {
+          const has = shoeVariants.some(function (v) {
+            return String(v.option2_value) === z && (!sel.shoeColor || v.option1_value === sel.shoeColor);
+          });
+          return chip(z, z === sel.shoeSize, "", !has);
+        }).join("");
+
+      const missing = [];
+      if (!sel.shape) missing.push("dáng vợt");
+      if (!sel.color) missing.push("màu vợt");
+      if (!sel.shirt) missing.push("size áo");
+      if (!sel.shoeColor) missing.push("màu giày");
+      if (!sel.shoeSize) missing.push("size giày");
+
+      const summary = document.getElementById("comboSummary");
+      if (missing.length) {
+        summary.innerHTML = '<span class="miss">Còn thiếu: ' + missing.join(", ") + "</span>";
+      } else {
+        summary.innerHTML =
+          "🏓 Vợt " + esc(sel.shape) + " · " + esc(sel.color) + "<br>" +
+          "🎽 Áo tặng size " + esc(sel.shirt) + "<br>" +
+          "👟 Giày " + esc(sel.shoeColor) + " · size " + esc(sel.shoeSize);
+      }
+
+      buyBtn.disabled = missing.length > 0;
+      buyBtn.textContent = missing.length ? "CHỌN ĐỦ ĐỂ MUA COMBO" : "MUA COMBO NGAY";
+
+    }
+
+    function bind(id, key, after) {
+      document.getElementById(id).addEventListener("click", function (e) {
+        const btn = e.target.closest("[data-v]");
+        if (!btn || btn.disabled) return;
+        sel[key] = btn.getAttribute("data-v");
+        if (after) after();
+        render();
+      });
+    }
+
+    bind("shapeChips", "shape", function () {
+      if (colorsOfShape(sel.shape).indexOf(sel.color) < 0) sel.color = "";
+    });
+    bind("paddleColorTiles", "color");
+    bind("shirtChips", "shirt");
+    bind("shoeColorTiles", "shoeColor", function () {
+      const ok = shoeVariants.some(function (v) {
+        return v.option1_value === sel.shoeColor && String(v.option2_value) === sel.shoeSize;
+      });
+      if (!ok) sel.shoeSize = "";
+    });
+    bind("shoeSizeChips", "shoeSize");
+
+    render();
 
     buyBtn.addEventListener("click", function () {
 
-      const paddleVariant = paddleVariants.find(function (v) { return String(v.id) === String(paddleSelect.value); });
-      const shoeVariant = shoeVariants.find(function (v) { return String(v.id) === String(shoeSelect.value); });
+      const paddleVariant = pickedPaddle();
+      const shoeVariant = pickedShoe();
 
       if (!paddleVariant || !shoeVariant) {
         return;
