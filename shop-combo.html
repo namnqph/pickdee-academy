@@ -132,6 +132,33 @@
       color: #ffc934;
     }
 
+    .price-box .list-line {
+      margin-top: 4px;
+      font-size: 13px;
+      color: rgba(255,255,255,.6);
+    }
+
+    .price-box .list-line s {
+      color: rgba(255,255,255,.55);
+      font-weight: 700;
+    }
+
+    .price-box .list-line .save {
+      margin-left: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255,201,52,.16);
+      color: #ffc934;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .price-box .list-detail {
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: rgba(255,255,255,.5);
+    }
+
     .price-box .note {
       margin-top: 6px;
       font-size: 12.5px;
@@ -458,7 +485,9 @@
 
   <div class="price-box">
     <div class="label">GIÁ COMBO</div>
+    <div class="list-line" id="comboListLine" hidden></div>
     <div class="value" id="comboPrice">—</div>
+    <div class="list-detail" id="comboListDetail" hidden></div>
     <div class="note">Miễn phí vận chuyển (PickDee chịu ship cho combo). Tặng kèm áo ESS/ON + tất Kaitashi chính hãng.</div>
   </div>
 
@@ -686,8 +715,17 @@
     const shirts = uniq(paddleVariants.map(function (v) { return v._shirt; }));
     const shoeColors = uniq(shoeVariants.map(function (v) { return v.option1_value; }));
 
-    comboPriceEl.textContent =
-      vnd(Number(paddleVariants[0].price) + Number(shoeVariants[0].price));
+    const comboTotal = Number(paddleVariants[0].price) + Number(shoeVariants[0].price);
+    comboPriceEl.textContent = vnd(comboTotal);
+
+    // Giá niêm yết của hãng (ESS/ON 2.599k + Kaitashi 2.199k), chỉ hiện khi giá combo thấp hơn
+    const LIST_PADDLE = 2599000, LIST_SHOE = 2199000, listTotal = LIST_PADDLE + LIST_SHOE;
+    if (comboTotal > 0 && comboTotal < listTotal) {
+      const lineEl = document.getElementById("comboListLine"), detailEl = document.getElementById("comboListDetail");
+      lineEl.innerHTML = "Giá niêm yết: <s>" + vnd(listTotal) + "</s><span class=\"save\">Giảm " + vnd(listTotal - comboTotal) + "</span>";
+      detailEl.textContent = "Vợt ESS/ON " + vnd(LIST_PADDLE) + " + Giày Kaitashi " + vnd(LIST_SHOE) + " (giá niêm yết hãng)";
+      lineEl.hidden = false; detailEl.hidden = false;
+    }
 
     function colorsOfShape(shape) {
       return uniq(paddleVariants.filter(function (v) { return v._shape === shape; })
