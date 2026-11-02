@@ -278,6 +278,102 @@
       cursor: not-allowed;
     }
 
+    .guide {
+      margin-top: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      font-size: 13px;
+    }
+
+    .guide summary {
+      padding: 12px 14px;
+      font-weight: 800;
+      color: #ffc934;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .guide summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .guide-body {
+      padding: 0 14px 14px;
+    }
+
+    .guide-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .guide-row label {
+      flex: 1;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: rgba(255,255,255,.65);
+    }
+
+    .guide-row input {
+      width: 100%;
+      min-height: 44px;
+      margin-top: 4px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: #161616;
+      color: #fff;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .guide-btn {
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-radius: 10px;
+      background: #ffc934;
+      color: #0f0f0f;
+      font-size: 14px;
+      font-weight: 900;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .guide-result {
+      margin-top: 8px;
+      font-weight: 800;
+      color: #ffc934;
+      min-height: 18px;
+    }
+
+    .guide table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .guide th,
+    .guide td {
+      padding: 7px 6px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .guide th {
+      color: rgba(255,255,255,.6);
+      font-weight: 700;
+    }
+
+    .guide-note {
+      margin-top: 8px;
+      font-size: 11.5px;
+      line-height: 1.55;
+      color: rgba(255,255,255,.55);
+    }
+
     .summary {
       margin-top: 16px;
       padding: 12px 14px;
@@ -375,12 +471,45 @@
     <div class="tiles" id="paddleColorTiles"></div>
     <div class="pick-label">Size áo tặng kèm</div>
     <div class="chips" id="shirtChips"></div>
+    <details class="guide">
+      <summary>📏 Chưa biết chọn size nào? Nhập chiều cao + cân nặng</summary>
+      <div class="guide-body">
+        <div class="guide-row">
+          <label>Chiều cao (cm)<input type="number" inputmode="numeric" id="gHeight" placeholder="VD: 170"></label>
+          <label>Cân nặng (kg)<input type="number" inputmode="numeric" id="gWeight" placeholder="VD: 68"></label>
+        </div>
+        <button type="button" class="guide-btn" id="gShirtBtn">✨ Gợi ý size áo</button>
+        <div class="guide-result" id="gShirtResult"></div>
+        <table>
+          <thead><tr><th>Size</th><th>Cao (cm)</th><th>Nặng (kg)</th></tr></thead>
+          <tbody id="shirtTable"></tbody>
+        </table>
+        <div class="guide-note">Nằm giữa 2 size thì chọn size lớn hơn nếu thích mặc rộng thoải mái. Chưa chắc chắn → nhắn PickDee để được tư vấn.</div>
+      </div>
+    </details>
+
 
     <div class="section-title">2 · Giày Kaitashi Shinkai</div>
     <div class="pick-label">Màu giày</div>
     <div class="tiles four" id="shoeColorTiles"></div>
     <div class="pick-label">Size giày</div>
     <div class="chips" id="shoeSizeChips"></div>
+    <details class="guide">
+      <summary>📏 Chưa biết chọn size nào? Nhập chiều dài bàn chân</summary>
+      <div class="guide-body">
+        <div class="guide-row">
+          <label>Chiều dài bàn chân (cm)<input type="number" inputmode="decimal" step="0.1" id="gFoot" placeholder="VD: 25.5"></label>
+        </div>
+        <button type="button" class="guide-btn" id="gShoeBtn">✨ Gợi ý size giày</button>
+        <div class="guide-result" id="gShoeResult"></div>
+        <table>
+          <thead><tr><th>Size</th><th>US</th><th>Dài chân (cm)</th></tr></thead>
+          <tbody id="shoeTable"></tbody>
+        </table>
+        <div class="guide-note">Cách đo: đặt bàn chân sát tường trên tờ giấy, đánh dấu điểm xa nhất của gót tới ngón dài nhất rồi đo (cm).<br>Mẹo PickDee: chân bè ngang hoặc hay đi tất dày thì chọn tăng 0.5 – 1 size.<br>Theo bảng size chính hãng Kaitashi (36 – 44). Size 45 là số đo tham khảo — chưa chắc thì nhắn PickDee tư vấn để tránh đổi trả.</div>
+      </div>
+    </details>
+
 
     <div class="summary" id="comboSummary"></div>
 
@@ -430,9 +559,20 @@
   const SHOE_PRODUCT_ID = 37;
 
   const STORAGE = cfg.SUPABASE_URL + "/storage/v1/object/public/shop-products/";
-  const SHIRT_INFO = {
-    M: "155-165cm", L: "165-170cm", XL: "170-175cm", XXL: "175-180cm", NC1: "trên 175cm"
-  };
+  const SHIRT_CHART = [
+    { size: "M", hl: "155 - 165", h: 160, wl: "50 - 62", w: 56 },
+    { size: "L", hl: "165 - 170", h: 167.5, wl: "63 - 69", w: 66 },
+    { size: "XL", hl: "170 - 175", h: 172.5, wl: "70 - 75", w: 72.5 },
+    { size: "XXL", hl: "175 - 180", h: 177.5, wl: "76 - 82", w: 79 },
+    { size: "NC1", hl: "> 175", h: 183, wl: "82 - 90", w: 86 }
+  ];
+  const SHOE_CHART = [
+    { size: "36", us: "4.5", cm: 23 }, { size: "37", us: "5", cm: 23.5 },
+    { size: "38", us: "5.5", cm: 24 }, { size: "39", us: "6", cm: 24.5 },
+    { size: "40", us: "7", cm: 25 }, { size: "41", us: "7.5", cm: 25.5 },
+    { size: "42", us: "8.5", cm: 26 }, { size: "43", us: "9", cm: 26.5 },
+    { size: "44", us: "10", cm: 27 }, { size: "45", us: "10.5", cm: 27.5, est: true }
+  ];
   const sel = { shape: "", color: "", shirt: "", shoeColor: "", shoeSize: "" };
   const comboPriceEl = document.getElementById("comboPrice");
   const buyBtn = document.getElementById("comboBuyBtn");
@@ -588,7 +728,10 @@
         }).join("");
 
       document.getElementById("shirtChips").innerHTML =
-        shirts.map(function (x) { return chip(x, x === sel.shirt, SHIRT_INFO[x]); }).join("");
+        shirts.map(function (x) {
+          const r = SHIRT_CHART.find(function (c) { return c.size === x; });
+          return chip(x, x === sel.shirt, r ? r.hl + "cm · " + r.wl + "kg" : "");
+        }).join("");
 
       document.getElementById("shoeColorTiles").innerHTML =
         shoeColors.map(function (c) { return tile(c, c === sel.shoeColor, imgFor("màu " + c)); }).join("");
@@ -599,7 +742,8 @@
           const has = shoeVariants.some(function (v) {
             return String(v.option2_value) === z && (!sel.shoeColor || v.option1_value === sel.shoeColor);
           });
-          return chip(z, z === sel.shoeSize, "", !has);
+          const r = SHOE_CHART.find(function (c) { return c.size === z; });
+          return chip(z, z === sel.shoeSize, r ? r.cm + "cm" : "", !has);
         }).join("");
 
       const missing = [];
@@ -646,6 +790,49 @@
       if (!ok) sel.shoeSize = "";
     });
     bind("shoeSizeChips", "shoeSize");
+
+    document.getElementById("shirtTable").innerHTML = SHIRT_CHART.map(function (r) {
+      return "<tr><td><b>" + r.size + "</b></td><td>" + r.hl + "</td><td>" + r.wl + "</td></tr>";
+    }).join("");
+
+    document.getElementById("shoeTable").innerHTML = SHOE_CHART.map(function (r) {
+      return "<tr><td><b>" + r.size + "</b></td><td>" + r.us + "</td><td>" + r.cm + (r.est ? "*" : "") + "</td></tr>";
+    }).join("");
+
+    document.getElementById("gShirtBtn").addEventListener("click", function () {
+      const h = Number(document.getElementById("gHeight").value);
+      const w = Number(document.getElementById("gWeight").value);
+      const out = document.getElementById("gShirtResult");
+      if (!h && !w) { out.textContent = "Nhập chiều cao và/hoặc cân nặng nhé."; return; }
+      let best = null, bestScore = Infinity;
+      SHIRT_CHART.filter(function (r) { return shirts.indexOf(r.size) >= 0; }).forEach(function (r) {
+        const sc = (h ? Math.pow((h - r.h) / 20, 2) : 0) + (w ? Math.pow((w - r.w) / 15, 2) : 0);
+        if (sc < bestScore) { bestScore = sc; best = r; }
+      });
+      if (!best) return;
+      sel.shirt = best.size;
+      out.textContent = "👉 Gợi ý: size " + best.size + " (cao " + best.hl + "cm, nặng " + best.wl + "kg)";
+      render();
+    });
+
+    document.getElementById("gShoeBtn").addEventListener("click", function () {
+      const f = Number(document.getElementById("gFoot").value);
+      const out = document.getElementById("gShoeResult");
+      if (!f) { out.textContent = "Nhập chiều dài bàn chân (cm) nhé."; return; }
+      const avail = SHOE_CHART.filter(function (r) {
+        return shoeVariants.some(function (v) {
+          return String(v.option2_value) === r.size && (!sel.shoeColor || v.option1_value === sel.shoeColor);
+        });
+      });
+      let best = null;
+      avail.forEach(function (r) {
+        if (r.cm >= f - 0.01 && (!best || r.cm < best.cm)) best = r;
+      });
+      if (!best) { out.textContent = "Chân dài hơn bảng size — nhắn PickDee để được tư vấn."; return; }
+      sel.shoeSize = best.size;
+      out.textContent = "👉 Gợi ý: size " + best.size + " (dài chân " + best.cm + "cm)";
+      render();
+    });
 
     render();
 
