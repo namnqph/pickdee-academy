@@ -1995,6 +1995,7 @@ if (
       @media(max-width:700px){
         #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pickdeeSupportButton{display:none}
         #pickdeeSupportPanel.open{left:6px;right:6px;bottom:calc(var(--pd-kb,0px) + max(8px,env(safe-area-inset-bottom)));height:auto;max-height:min(50dvh,calc(var(--pd-vvh,100dvh) - 16px));border-radius:18px}
+        body:has(.app-bottom-nav,.ap-tab,#pdlBottom,#pdPortalNav) #pickdeeSupportPanel.open{bottom:calc(var(--pd-kb,0px) + 98px + env(safe-area-inset-bottom))}
         #pickdeeSupportPanel.open.pd-kb{max-height:calc(var(--pd-vvh,100dvh) - 16px)}
         #pickdeeSupportPanel.pd-kb #pickdeeContactQuick,#pickdeeSupportPanel.pd-kb .pd-bot-chips{display:none!important}
         #pickdeeSupportPanel .pickdee-support-head{min-height:46px;padding:7px 10px;gap:8px}
@@ -3391,7 +3392,7 @@ if (
       #pdTease .pd-tease-q span:active{background:#e6e6e6}
       #pdTease .pd-tease-x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:#667;font-size:16px;cursor:pointer}
       #pickdeeSupportRoot:has(#pickdeeSupportPanel.open) #pdTease{display:none}
-      @media(max-width:700px){body:has(.app-bottom-nav) #pdTease{bottom:calc(98px + env(safe-area-inset-bottom))}}
+      @media(max-width:700px){body:has(.app-bottom-nav,.ap-tab,#pdlBottom,#pdPortalNav) #pdTease{bottom:calc(98px + env(safe-area-inset-bottom))}}
     `;
     document.head.appendChild(st);
 
