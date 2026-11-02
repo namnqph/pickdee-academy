@@ -8410,6 +8410,33 @@ const resultCount =
   }
 
 
+  /* Combo = 1 thẻ duy nhất dẫn sang shop-combo.html (chọn đủ vợt+giày, 1 lần bấm, 1 lần nhập thông tin) */
+  function comboCardHtml() {
+
+    return `
+      <article class="product-card">
+        <a class="product-main-link" href="./shop-combo">
+          <div class="product-image">
+            <span class="pd-best-badge">Hàng tuyển</span>
+            <img
+              src="https://snxztjsluhdibrklougo.supabase.co/storage/v1/object/public/shop-products/products/combo/combo-premium.png"
+              alt="Combo Vợt ESS/ON + Giày Kaitashi Shinkai"
+              loading="lazy"
+            >
+          </div>
+          <div class="product-body">
+            <div class="product-brand">PickDee Combo</div>
+            <div class="product-name">Combo Vợt ESS/ON + Giày Kaitashi Shinkai</div>
+            <div>
+              <span class="product-price">3.850.000đ</span>
+            </div>
+          </div>
+        </a>
+      </article>
+    `;
+
+  }
+
   function renderProducts() {
 
     const keyword =
@@ -8418,6 +8445,22 @@ const resultCount =
       );
 
     renderBestSellers(keyword);
+
+    if (
+      selectedCategory === "combo"
+      &&
+      !showFavoritesOnly
+      &&
+      !normalizeText(searchInput.value)
+    ) {
+
+      resultCount.textContent = "1 combo";
+      grid.classList.remove("is-grouped");
+      grid.innerHTML = comboCardHtml();
+      renderChipBar();
+      return;
+
+    }
 
     const filtered =
       products.filter(
