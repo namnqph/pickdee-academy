@@ -99,6 +99,11 @@ export async function onRequestGet(context) {
 
     const pageUrl = "https://pickdee.vn/shop-product?id=" + id;
 
+    // Facebook/Messenger lưu cache thẻ theo og:url: nếu link từng bị lưu lỗi (chưa có ảnh) thì gửi lại kèm &v=2
+    // (hoặc &v=3…) để được quét lại. canonical/JSON-LD vẫn giữ pageUrl sạch.
+    const vParam = url.searchParams.get("v") || "";
+    const shareUrl = /^[A-Za-z0-9_-]{1,12}$/.test(vParam) ? pageUrl + "&v=" + vParam : pageUrl;
+
     // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.
     const inStock = activeVariants.some(v => v.is_sold_out !== true);
 
@@ -130,7 +135,7 @@ export async function onRequestGet(context) {
       + `<meta property="og:site_name" content="PickDee Shop">`
       + `<meta property="og:title" content="${esc(title)}">`
       + `<meta property="og:description" content="${esc(description)}">`
-      + `<meta property="og:url" content="${esc(pageUrl)}">`
+      + `<meta property="og:url" content="${esc(shareUrl)}">`
       + `<meta property="og:image" content="${esc(imageUrl)}">`
       + `<meta property="og:image:secure_url" content="${esc(imageUrl)}">`
       + `<meta property="og:image:type" content="image/jpeg">`
