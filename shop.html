@@ -6799,7 +6799,13 @@ const resultCount =
             }
           )
           .reduce(
-            function (total,item) {
+            function (total,item,idx,arr) {
+
+              if (item.combo_id) {
+                // combo = 1 sản phẩm: chỉ tính dòng đầu của mỗi combo
+                const first = arr.findIndex(function (x) { return x.combo_id === item.combo_id; });
+                if (first !== idx) return total;
+              }
 
               return (
                 total
