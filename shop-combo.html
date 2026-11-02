@@ -439,6 +439,28 @@
       cursor: pointer;
     }
 
+    .cta-ghost {
+      margin-top: 10px;
+      background: transparent;
+      color: #ffc934;
+      border: 2px solid #ffc934;
+    }
+
+    .cart-msg {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(60,200,120,.12);
+      border: 1px solid rgba(60,200,120,.4);
+      font-size: 13.5px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .cart-msg a {
+      color: #ffc934;
+    }
+
     .cta:disabled {
       opacity: .55;
       cursor: not-allowed;
@@ -557,6 +579,17 @@
       CHỌN ĐỦ ĐỂ MUA COMBO
     </button>
 
+    <button
+      class="cta cta-ghost"
+      id="comboAddBtn"
+      type="button"
+      disabled
+    >
+      THÊM VÀO GIỎ HÀNG
+    </button>
+
+    <div class="cart-msg" id="cartMsg" hidden></div>
+
     <div class="cta-note">Thanh toán chuyển khoản trước (như đơn vợt/giày thường), không cần tạo tài khoản.</div>
 
   </div>
@@ -605,6 +638,7 @@
   const sel = { shape: "", color: "", shirt: "", shoeColor: "", shoeSize: "" };
   const comboPriceEl = document.getElementById("comboPrice");
   const buyBtn = document.getElementById("comboBuyBtn");
+  const addBtn = document.getElementById("comboAddBtn");
 
   function vnd(n) {
     return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ";
@@ -805,6 +839,7 @@
       }
 
       buyBtn.disabled = missing.length > 0;
+      addBtn.disabled = missing.length > 0;
       buyBtn.textContent = missing.length ? "CHỌN ĐỦ ĐỂ MUA COMBO" : "MUA COMBO NGAY";
 
     }
@@ -877,17 +912,14 @@
 
     render();
 
-    buyBtn.addEventListener("click", function () {
+    function saveCombo() {
 
       const paddleVariant = pickedPaddle();
       const shoeVariant = pickedShoe();
 
       if (!paddleVariant || !shoeVariant) {
-        return;
+        return false;
       }
-
-      buyBtn.disabled = true;
-      buyBtn.textContent = "ĐANG THÊM...";
 
       const COMBO_ID = "paddle-shoe";
       const cart = readCart().filter(function (x) { return x.combo_id !== COMBO_ID; });
@@ -896,7 +928,36 @@
 
       localStorage.setItem("pickdee_shop_cart", JSON.stringify(cart));
 
+      return true;
+
+    }
+
+    buyBtn.addEventListener("click", function () {
+
+      if (!saveCombo()) {
+        return;
+      }
+
+      buyBtn.disabled = true;
+      buyBtn.textContent = "ĐANG CHUYỂN...";
+
       window.location.href = "./shop-checkout";
+
+    });
+
+    addBtn.addEventListener("click", function () {
+
+      if (!saveCombo()) {
+        return;
+      }
+
+      const msg = document.getElementById("cartMsg");
+      msg.innerHTML = '✓ Đã thêm combo vào giỏ hàng. <a href="./shop-cart">Xem giỏ hàng →</a>';
+      msg.hidden = false;
+
+      if (window.PickDeeShopNav) {
+        window.PickDeeShopNav.refreshCartCount();
+      }
 
     });
 
