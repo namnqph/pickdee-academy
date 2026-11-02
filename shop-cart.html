@@ -1734,6 +1734,55 @@
      RENDER
   ====================================================== */
 
+  const COMBO_IMG =
+    "https://snxztjsluhdibrklougo.supabase.co/storage/v1/object/public/shop-products/products/combo/combo-premium.png";
+
+  function comboGroup(cart, comboId) {
+    return cart.filter(function (x) { return x.combo_id === comboId; });
+  }
+
+  function isComboGroup(cart, item) {
+    return !!item.combo_id && comboGroup(cart, item.combo_id).length >= 2;
+  }
+
+  function comboCardHtml(cart, comboId) {
+
+    const lines = comboGroup(cart, comboId);
+    const qty = Math.max(1, Number(lines[0].quantity || 1));
+    const unit = lines.reduce(function (sum, x) { return sum + Number(x.price || 0); }, 0);
+    const id = escapeHtml(comboId);
+
+    return `
+      <div class="cart-item">
+        <a class="item-image" href="./shop-combo">
+          <img src="${COMBO_IMG}" alt="Combo Vợt ESS/ON + Giày Kaitashi">
+        </a>
+        <div class="item-info">
+          <a class="item-name" href="./shop-combo" style="display:inline-block;color:#ffffff;text-decoration:none;">
+            🎁 COMBO Vợt ESS/ON + Giày Kaitashi
+          </a>
+          ${lines.map(function (x) {
+            return `<div class="variant-name">${escapeHtml(x.product_name)}: ${escapeHtml(x.variant_name || "")}</div>`;
+          }).join("")}
+          <div class="variant-name" style="margin-top:5px;color:#ffc934;">✓ Freeship • Tặng áo ESS/ON + tất Kaitashi</div>
+          <div class="item-price">${money(unit)}</div>
+          <div class="item-bottom">
+            <div class="quantity">
+              <button type="button" data-action="combo-minus" data-combo="${id}">−</button>
+              <input class="quantity-input" type="number" value="${qty}" readonly aria-label="Số lượng combo">
+              <button type="button" data-action="combo-plus" data-combo="${id}">+</button>
+            </div>
+            <button class="remove-btn" type="button" data-action="combo-remove" data-combo="${id}">XÓA</button>
+          </div>
+          <a href="./shop-combo" style="width:100%;min-height:34px;margin-top:9px;display:flex;align-items:center;justify-content:center;border-radius:9px;border:1px solid rgba(255,201,52,.22);background:rgba(255,201,52,.055);color:#ffc934;text-decoration:none;font-size:10px;font-weight:950;letter-spacing:.025em;">
+            ↩ ĐỔI PHÂN LOẠI COMBO
+          </a>
+        </div>
+      </div>
+    `;
+
+  }
+
   async function render() {
 
     let cart =
@@ -1872,7 +1921,15 @@
 
     const totalQuantity =
       cart.reduce(
-        function (sum,item) {
+        function (sum,item,idx) {
+
+          if (
+            isComboGroup(cart, item)
+            &&
+            cart.findIndex(function (x) { return x.combo_id === item.combo_id; }) !== idx
+          ) {
+            return sum;
+          }
 
           return (
             sum
@@ -1891,6 +1948,11 @@
       cart
         .map(
           function (item,index) {
+
+            if (isComboGroup(cart, item)) {
+              const first = cart.findIndex(function (x) { return x.combo_id === item.combo_id; });
+              return first === index ? comboCardHtml(cart, item.combo_id) : "";
+            }
 
                         const hasPromotion =
               item.promotion_id
@@ -2465,6 +2527,29 @@ bindQuantityInputs();
 
               const cart =
                 readCart();
+
+
+              if (action.indexOf("combo-") === 0) {
+
+                const comboId = button.dataset.combo;
+                let next = cart;
+
+                if (action === "combo-remove") {
+                  next = cart.filter(function (x) { return x.combo_id !== comboId; });
+                } else {
+                  cart.forEach(function (x) {
+                    if (x.combo_id === comboId) {
+                      const q = Number(x.quantity || 1) + (action === "combo-plus" ? 1 : -1);
+                      x.quantity = Math.max(1, Math.min(9999, q));
+                    }
+                  });
+                }
+
+                saveCart(next);
+                await render();
+                return;
+
+              }
 
 
               const item =

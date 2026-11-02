@@ -590,9 +590,9 @@
     }
   }
 
-  function addVariantToCart(cart, product, variant) {
+  function addVariantToCart(cart, product, variant, comboId, imageUrl) {
     const existing = cart.find(function (item) {
-      return String(item.variant_id) === String(variant.id);
+      return item.combo_id === comboId && String(item.variant_id) === String(variant.id);
     });
 
     if (existing) {
@@ -619,7 +619,8 @@
       promotion_name: "",
       original_price: Number(variant.price),
       quantity: 1,
-      image_url: ""
+      image_url: imageUrl || "",
+      combo_id: comboId
     });
   }
 
@@ -848,9 +849,10 @@
       buyBtn.disabled = true;
       buyBtn.textContent = "ĐANG THÊM...";
 
-      const cart = readCart();
-      addVariantToCart(cart, paddle, paddleVariant);
-      addVariantToCart(cart, shoe, shoeVariant);
+      const COMBO_ID = "paddle-shoe";
+      const cart = readCart().filter(function (x) { return x.combo_id !== COMBO_ID; });
+      addVariantToCart(cart, paddle, paddleVariant, COMBO_ID, imgFor(paddleVariant._shape + " " + paddleVariant._color));
+      addVariantToCart(cart, shoe, shoeVariant, COMBO_ID, imgFor("màu " + shoeVariant.option1_value));
 
       localStorage.setItem("pickdee_shop_cart", JSON.stringify(cart));
 

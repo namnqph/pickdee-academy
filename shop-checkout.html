@@ -5778,7 +5778,41 @@ function shippingQuote(
     orderItems.innerHTML =
       cart
         .map(
-          function (item) {
+          function (item, itemIndex) {
+
+            if (item.combo_id) {
+
+              const grp = cart.filter(function (x) { return x.combo_id === item.combo_id; });
+
+              if (grp.length >= 2) {
+
+                if (cart.indexOf(grp[0]) !== itemIndex) {
+                  return "";
+                }
+
+                const gQty = Math.max(1, Number(grp[0].quantity || 1));
+                const gPrice = grp.reduce(function (sum, x) { return sum + Number(x.price || 0); }, 0);
+
+                return `
+                  <div class="order-item">
+                    <div class="order-image">
+                      <img src="https://snxztjsluhdibrklougo.supabase.co/storage/v1/object/public/shop-products/products/combo/combo-premium.png" alt="Combo Vợt ESS/ON + Giày Kaitashi">
+                    </div>
+                    <div>
+                      <div class="order-name">🎁 COMBO Vợt ESS/ON + Giày Kaitashi</div>
+                      ${grp.map(function (x) {
+                        return `<div class="order-variant">${escapeHtml(x.product_name)}: ${escapeHtml(x.variant_name || "")}</div>`;
+                      }).join("")}
+                      <div class="order-variant" style="color:#ffc934;">✓ Freeship • Tặng áo ESS/ON + tất Kaitashi</div>
+                      <div class="order-qty">Số lượng: ${gQty}</div>
+                    </div>
+                    <div class="order-price">${money(gPrice * gQty)}</div>
+                  </div>
+                `;
+
+              }
+
+            }
 
                      const hasPromotion =
               item.promotion_id

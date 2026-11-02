@@ -700,9 +700,11 @@
             .map(
               function (item) {
 
-                return String(
-                  item.variant_id
-                );
+                return item.combo_id
+                  ? "combo:" + item.combo_id
+                  : String(
+                    item.variant_id
+                  );
 
               }
             )
