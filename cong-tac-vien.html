@@ -114,6 +114,15 @@
       <a class="btn ghost" id="coachLogin" href="/login?next=%2Fcong-tac-vien">Đăng nhập Coach</a>
     </div>
 
+    <div class="card">
+      <details id="recoverBox">
+        <summary>Đã đăng ký rồi mà mất link? Bấm để lấy lại</summary>
+        <div class="field" style="margin-top:10px"><label for="rPhone">SỐ ĐIỆN THOẠI ĐÃ ĐĂNG KÝ</label><input id="rPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="15" placeholder="09xxxxxxxx"></div>
+        <button class="btn ghost sm" id="recoverBtn" type="button">Lấy lại link</button>
+        <div class="msg" id="recoverMsg"></div>
+      </details>
+    </div>
+
     <form class="card" id="joinForm" autocomplete="on">
       <h2>Đăng ký cộng tác viên</h2>
       <div class="field"><label for="fName">HỌ VÀ TÊN *</label><input id="fName" autocomplete="name" required maxlength="80" placeholder="Nguyễn Văn A"></div>
@@ -338,6 +347,15 @@
     else { m.className = "msg bad"; m.textContent = (r.data && r.data.reason) || (r.error && r.error.message) || "Chưa đăng ký được, anh/chị thử lại."; }
   });
   $("fName").addEventListener("blur", function () { if (!$("fHolder").value) $("fHolder").value = this.value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toUpperCase(); });
+
+  $("recoverBtn").addEventListener("click", async function () {
+    const m = $("recoverMsg"), btn = this;
+    btn.disabled = true; m.className = "msg"; m.textContent = "Đang tìm…";
+    const r = await sb.rpc("aff_recover", { p_phone: $("rPhone").value });
+    btn.disabled = false;
+    if (r.data && r.data.ok) { saveToken(r.data.token); await loadDash(); scrollTo(0, 0); }
+    else { m.className = "msg bad"; m.textContent = (r.data && r.data.reason) || (r.error && r.error.message) || "Chưa tìm được, anh/chị thử lại."; }
+  });
 
   async function coachFlow() {
     let s = null;
