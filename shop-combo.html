@@ -706,6 +706,8 @@
       });
     }
 
+    const SHAPE_HINT = { "Elongate": "Đầu vuông", "Hybrid": "Đầu tròn" };
+
     function chip(value, on, extra, disabled) {
       return '<button type="button" class="chip' + (on ? " on" : "") + '" data-v="' + esc(value) + '"' +
         (disabled ? " disabled" : "") + '>' + esc(value) + (extra ? "<small>" + esc(extra) + "</small>" : "") + "</button>";
@@ -720,7 +722,7 @@
     function render() {
 
       document.getElementById("shapeChips").innerHTML =
-        shapes.map(function (x) { return chip(x, x === sel.shape); }).join("");
+        shapes.map(function (x) { return chip(x, x === sel.shape, SHAPE_HINT[x] || ""); }).join("");
 
       const colors = sel.shape ? colorsOfShape(sel.shape) : colorsOfShape(shapes[0]);
       document.getElementById("paddleColorTiles").innerHTML =
