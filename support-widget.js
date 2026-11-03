@@ -1632,7 +1632,7 @@ if (
       ? ["Đưa sân lên có mất phí không?", "Cần điền những thông tin gì?", "Bao lâu thì sân được duyệt?"]
       : /^\/court-claim/.test(location.pathname)
       ? ["Xác minh chủ sân cần giấy tờ gì?", "Bao lâu thì được xác nhận?", "Sân chưa có trên PickDee thì sao?"]
-      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Mua vợt, bóng, phụ kiện Shop", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
+      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Mua vợt, bóng, phụ kiện Shop", "Làm CTV bán vợt, hoa hồng hấp dẫn", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -3538,7 +3538,7 @@ if (
           return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
         : BOT_SUGGEST && BOT_SUGGEST.length
-          ? '<div class="pd-tease-q">' + BOT_SUGGEST.slice(0, 4).map(function (q) {
+          ? '<div class="pd-tease-q">' + BOT_SUGGEST.slice(0, 5).map(function (q) {
             return '<span role="button" data-q="' + botEsc(q) + '">' + botEsc(q) + "</span>";
           }).join("") + "</div>"
           : '<br><span class="pd-tease-go">Hỏi ngay →</span>';
