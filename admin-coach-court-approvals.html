@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <title>Sân Coach đề xuất | PickDee Admin</title>
+  <meta name="theme-color" content="#0e0e0e">
+  <meta name="robots" content="noindex">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:#fff;background:radial-gradient(circle at top,#262626,#0e0e0e 60%);padding:16px 16px 60px}
+    .wrap{max-width:640px;margin:0 auto}
+    .back{display:inline-block;color:#ffc934;text-decoration:none;font-weight:800;font-size:14px;margin-bottom:12px}
+    h1{margin:0 0 6px;font-size:22px;color:#ffc934}
+    .lead{margin:0 0 16px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.8)}
+    .card{padding:14px;margin-bottom:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,201,52,.4)}
+    .card b{display:block;font-size:16px;margin-bottom:2px}
+    .card .row{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#cecece;margin-top:4px}
+    .card .label{color:#a3a3a3}
+    .price{color:#ffc934;font-weight:900;font-size:15px;margin-top:8px}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    .call{flex:1;text-align:center;padding:12px;border-radius:10px;background:rgba(255,255,255,.08);color:#fff;text-decoration:none;font-weight:800;font-size:14px}
+    .ok-btn{flex:1;border:0;border-radius:10px;background:#ffc934;color:#0f0f0f;font-weight:900;font-size:14px;padding:12px}
+    .no-btn{flex:1;border:0;border-radius:10px;background:rgba(255,255,255,.08);color:#ff8a8a;font-weight:800;font-size:14px;padding:12px}
+    .ok-btn[disabled],.no-btn[disabled]{opacity:.5}
+    .empty{color:#a3a3a3;font-size:14px;line-height:1.5;padding:20px 2px;text-align:center}
+    .msg{font-size:13px;margin-bottom:12px;line-height:1.4}
+    .err{color:#ff8a8a}.ok{color:#9dff9d}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/admin">← Về Admin</a>
+  <h1>📍 Sân Coach đề xuất</h1>
+  <p class="lead">Coach khai báo sân mới (hoặc lần đầu ghép vào sân đã có). Sân <b>chưa hiện cho học viên</b> tới khi anh duyệt — anh là người gọi book sân + trả tiền.</p>
+  <div class="msg" id="msg"></div>
+  <div id="list"><div class="empty">Đang tải…</div></div>
+</div>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const vnd = n => n == null ? "-" : Number(n).toLocaleString("vi-VN") + "đ";
+  let rows = [];
+
+  function say(t, cls) { $("msg").textContent = t || ""; $("msg").className = "msg" + (cls ? " " + cls : ""); }
+
+  function paint() {
+    if (!rows.length) { $("list").innerHTML = '<div class="empty">Không có sân nào đang chờ duyệt.</div>'; return; }
+    $("list").innerHTML = rows.map((r, i) => '<div class="card" data-i="' + i + '">'
+      + '<b>' + esc(r.court_name) + '</b>'
+      + '<div class="row"><span class="label">Địa chỉ</span><span>' + esc(r.court_address || r.court_province || "-") + '</span></div>'
+      + '<div class="row"><span class="label">Coach</span><span>' + esc(r.coach_name) + ' • ' + esc(r.coach_phone || "-") + '</span></div>'
+      + '<div class="row"><span class="label">SĐT liên hệ sân</span><span>' + esc(r.contact_phone || "-") + '</span></div>'
+      + (r.court_existing_phone && r.court_existing_phone !== r.contact_phone ? '<div class="row"><span class="label">SĐT trong danh bạ</span><span>' + esc(r.court_existing_phone) + '</span></div>' : "")
+      + '<div class="price">' + vnd(r.price_per_hour) + '/giờ</div>'
+      + '<div class="actions">'
+      + '<a class="call" href="tel:' + esc(r.contact_phone || "") + '">📞 Gọi sân</a>'
+      + '<button class="ok-btn" type="button" data-ok="1">✓ Duyệt</button>'
+      + '<button class="no-btn" type="button" data-no="1">✗ Từ chối</button>'
+      + '</div></div>').join("");
+    $("list").querySelectorAll(".card").forEach(el => {
+      const r = rows[Number(el.dataset.i)];
+      el.querySelector("[data-ok]").onclick = () => review(r, true, el);
+      el.querySelector("[data-no]").onclick = () => {
+        const note = prompt("Lý do từ chối (Coach sẽ thấy):", "") || "";
+        review(r, false, el, note);
+      };
+    });
+  }
+
+  async function review(r, approve, el, note) {
+    el.querySelectorAll("button").forEach(b => b.disabled = true);
+    const { error } = await sb.rpc("pd_admin_review_teach_court", { p_coach_id: r.coach_id, p_directory_id: r.directory_id, p_approve: approve, p_note: note || null });
+    if (error) { say("Lỗi: " + error.message, "err"); el.querySelectorAll("button").forEach(b => b.disabled = false); return; }
+    say(approve ? "✓ Đã duyệt " + r.court_name + "." : "Đã từ chối " + r.court_name + ".", "ok");
+    await load();
+  }
+
+  async function load() {
+    const { data, error } = await sb.rpc("pd_admin_pending_teach_courts");
+    if (error) { $("list").innerHTML = '<div class="empty">Không tải được: ' + esc(error.message) + '</div>'; return; }
+    rows = data || [];
+    paint();
+  }
+
+  (async () => {
+    const { data } = await sb.auth.getUser();
+    if (!data || !data.user) { location.replace("/login?next=" + encodeURIComponent("/admin-coach-court-approvals")); return; }
+    const { data: profile } = await sb.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+    if (String(profile?.role || "").trim().toLowerCase() !== "admin") { location.replace("/"); return; }
+    load();
+  })();
+})();
+</script>
+<script src="/pd-app.js?v=20261020-gold2"></script>
+</body>
+</html>

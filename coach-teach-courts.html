@@ -45,6 +45,13 @@
     .dates{display:flex;gap:8px;margin-top:8px;align-items:center;font-size:13px;color:#a3a3a3}
     .dates input{flex:1;min-width:0;min-height:40px;font-size:15px}
     .tag{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:8px;background:rgba(255,209,102,.15);color:#ffd166;font-size:11px;font-weight:800}
+    .tag.pending{background:rgba(255,201,52,.18);color:#ffc934}
+    .tag.rejected{background:rgba(255,100,100,.18);color:#ff8a8a}
+    .neg{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.15)}
+    .neg .hint{font-size:12px;color:#a3a3a3;line-height:1.45;margin-bottom:8px}
+    .neg .r2{display:flex;gap:8px}
+    .neg input{flex:1;min-width:0;min-height:44px;font-size:15px}
+    .note{margin-top:8px;font-size:12px;color:#a3a3a3;line-height:1.45}
     .court{display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
     .court .i{flex:1;min-width:0}
     .court b{display:block;font-size:15px}
@@ -68,7 +75,7 @@
 <div class="wrap">
   <a class="back" href="/coach">← Về trang Coach</a>
   <h1>📍 Nơi bạn dạy</h1>
-  <p class="lead">Thêm <b>từng sân</b> bạn dạy và <b>ngày</b> bạn có mặt ở đó. Dạy nhiều nơi (đi học, đi làm, công tác) thì thêm sân ở mỗi nơi. Học viên ở gần sân nào sẽ thấy bạn ở sân đó, kèm ngày dạy.</p>
+  <p class="lead">Thêm <b>từng sân</b> bạn dạy và <b>ngày</b> bạn có mặt ở đó. Dạy nhiều nơi (đi học, đi làm, công tác) thì thêm sân ở mỗi nơi. Học viên ở gần sân nào sẽ thấy bạn ở sân đó, kèm ngày dạy. Sân <b>mới</b> cần nhập giá đã thoả thuận (tối đa 120.000đ/giờ) và SĐT người liên hệ tại sân — PickDee sẽ là người gọi book sân và trả tiền, sân chỉ hiện cho học viên sau khi được duyệt.</p>
 
   <div class="sec" id="mineTitle">NƠI DẠY CỦA BẠN</div>
   <div id="mine"><div class="empty">Đang tải…</div></div>
@@ -103,11 +110,19 @@
       const tmp = !!(c.date_from || c.date_to || c._tmp);
       const old = c.date_to && c.date_to < today;
       return '<div class="mine' + (old ? " old" : "") + '" data-i="' + i + '"><div class="top"><div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || c.province || "") + '</small>'
-        + (old ? '<span class="tag">ĐÃ HẾT HẠN ' + fmt(c.date_to) + '</span>' : tmp && c.date_to ? '<span class="tag">TẠM THỜI ' + fmt(c.date_from) + '–' + fmt(c.date_to) + '</span>' : '')
+        + (old ? '<span class="tag">ĐÃ HẾT HẠN ' + fmt(c.date_to) + '</span>'
+          : c.approval_status === 'pending' ? '<span class="tag pending">⏳ Đang chờ PickDee duyệt</span>'
+          : c.approval_status === 'rejected' ? '<span class="tag rejected">❌ Chưa được duyệt</span>'
+          : tmp && c.date_to ? '<span class="tag">TẠM THỜI ' + fmt(c.date_from) + '–' + fmt(c.date_to) + '</span>' : '')
+        + (c.approval_status === 'rejected' && c.admin_note ? '<div class="note">Lý do: ' + esc(c.admin_note) + '</div>' : '')
+        + (c.approval_status === 'pending' ? '<div class="note">Chưa hiện cho học viên tới khi PickDee duyệt giá/SĐT.</div>' : '')
         + '</div><button class="rm" type="button" data-rm="' + i + '">Bỏ</button></div>'
         + '<div class="days">' + DAY.map((d, k) => '<button type="button" data-day="' + (k + 1) + '" class="' + (c.days.includes(k + 1) ? "on" : "") + '">' + d + '</button>').join("") + '</div>'
         + '<label class="tmp"><input type="checkbox" data-tmp="1"' + (tmp ? " checked" : "") + '> Chỉ dạy tạm thời (công tác, đi xa)</label>'
         + (tmp ? '<div class="dates">Từ <input type="date" data-from="1" value="' + esc(c.date_from || "") + '" min="' + today + '"> đến <input type="date" data-to="1" value="' + esc(c.date_to || "") + '" min="' + today + '"></div>' : '')
+        + (c._isNew ? '<div class="neg"><div class="hint">Sân mới — nhập giá đã thoả thuận với sân (tối đa 120.000đ/giờ, 1 giờ/buổi) và SĐT người liên hệ tại sân để PickDee gọi book + trả tiền.</div>'
+          + '<div class="r2"><input type="number" inputmode="numeric" min="1" max="120000" step="1000" placeholder="Giá đ/giờ (tối đa 120.000)" data-price value="' + esc(c._price || "") + '">'
+          + '<input type="tel" placeholder="SĐT người liên hệ sân" data-phone value="' + esc(c._phone || "") + '"></div></div>' : '')
         + '</div>';
     }).join("");
     $("mine").querySelectorAll(".mine").forEach(el => {
@@ -126,6 +141,9 @@
       const f = el.querySelector("[data-from]"), t = el.querySelector("[data-to]");
       if (f) f.onchange = () => { c.date_from = f.value || null; touch(); };
       if (t) t.onchange = () => { c.date_to = t.value || null; touch(); paintMine(); };
+      const pr = el.querySelector("[data-price]"), ph = el.querySelector("[data-phone]");
+      if (pr) pr.oninput = () => { c._price = pr.value; touch(); };
+      if (ph) ph.oninput = () => { c._phone = ph.value; touch(); };
     });
   }
 
@@ -140,9 +158,9 @@
     $("list").querySelectorAll("[data-id]").forEach(b => b.onclick = () => {
       if (mine.length >= MAX) return say("Tối đa " + MAX + " sân.", "err");
       const c = rows.find(x => x.id === Number(b.dataset.id));
-      mine.push({ id: c.id, court_name: c.court_name, address: c.address, province: c.province, days: [1, 2, 3, 4, 5, 6, 7], date_from: null, date_to: null });
+      mine.push({ id: c.id, court_name: c.court_name, address: c.address, province: c.province, days: [1, 2, 3, 4, 5, 6, 7], date_from: null, date_to: null, _isNew: true, _price: "", _phone: "" });
       touch(); paintMine(); paintList();
-      say("Đã thêm " + c.court_name + " — chọn ngày bạn dạy ở sân này rồi bấm LƯU.", "ok");
+      say("Đã thêm " + c.court_name + " — chọn ngày dạy, nhập giá + SĐT liên hệ sân rồi bấm LƯU.", "ok");
       $("mine").lastElementChild.scrollIntoView({ block: "center", behavior: "smooth" });
     });
   }
@@ -176,14 +194,25 @@
       if (!c.days.length) return say("Chọn ngày dạy cho " + c.court_name + ".", "err");
       if ((c.date_from || c._tmp) && (!c.date_from || !c.date_to)) return say("Nhập đủ ngày bắt đầu và kết thúc cho " + c.court_name + ".", "err");
       if (c.date_from && c.date_to && c.date_to < c.date_from) return say("Ngày kết thúc phải sau ngày bắt đầu (" + c.court_name + ").", "err");
+      if (c._isNew) {
+        const price = Number(c._price);
+        if (!c._price || !(price > 0)) return say("Nhập giá đã thoả thuận cho " + c.court_name + ".", "err");
+        if (price > 120000) return say("Giá sân tối đa 120.000đ/giờ (" + c.court_name + ") — thoả thuận lại với sân.", "err");
+        const phoneDigits = String(c._phone || "").replace(/[\s.-]/g, "");
+        if (!/^(?:\+?84|0)\d{9}$/.test(phoneDigits)) return say("Nhập đúng SĐT người liên hệ tại sân (" + c.court_name + ").", "err");
+      }
     }
     $("save").disabled = true; $("save").textContent = "Đang lưu…";
-    const items = mine.map(c => ({ id: c.id, days: c.days, from: c.date_from || null, to: c.date_to || null }));
+    const items = mine.map(c => ({ id: c.id, days: c.days, from: c.date_from || null, to: c.date_to || null, price: c._isNew ? Number(c._price) : undefined, phone: c._isNew ? c._phone : undefined }));
+    const hadNew = mine.some(c => c._isNew);
     const { error } = await sb.rpc("save_my_teach_courts", { p_items: items });
     $("save").disabled = false; $("save").textContent = "Lưu nơi dạy";
     if (error) return say("Chưa lưu được: " + error.message, "err");
     dirty = false;
-    say("✓ Đã lưu " + mine.length + " sân. Học viên gần các sân này sẽ thấy bạn trên bản đồ.", "ok");
+    const { data } = await sb.rpc("get_my_teach_courts");
+    mine = (data || []).map(c => ({ ...c, days: (c.days || []).map(Number) }));
+    paintMine(); paintList();
+    say(hadNew ? "✓ Đã lưu " + mine.length + " sân. Sân mới đang chờ PickDee duyệt giá/SĐT trước khi hiện cho học viên." : "✓ Đã lưu " + mine.length + " sân. Học viên gần các sân này sẽ thấy bạn trên bản đồ.", "ok");
   };
   window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
