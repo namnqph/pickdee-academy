@@ -1908,9 +1908,9 @@ if (
     };
 
     if (act === "aff") return {
-      text: "Chương trình CTV vợt PickDee: chia sẻ mã riêng, khách mua là có hoa hồng 250.000đ/vợt (bán từ 5 vợt/tháng → 300.000đ/vợt). Không ôm hàng, không cần vốn, đăng ký 1 phút tại pickdee.vn/cong-tac-vien.",
-      html: "Làm CTV vợt PickDee: chia sẻ mã riêng của anh/chị, khách mua là có <b>hoa hồng 250.000đ/vợt</b> (bán từ 5 vợt/tháng → <b>300.000đ/vợt</b>). Không ôm hàng, không cần vốn, đăng ký 1 phút ạ.",
-      chips: [["🤝 Đăng ký làm CTV", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
+      text: "Chương trình CTV vợt PickDee: chia sẻ mã riêng của bạn cho bạn bè, hội nhóm pickleball — khách mua là có hoa hồng, không ôm hàng, không cần vốn, đăng ký 1 phút tại pickdee.vn/cong-tac-vien để xem chi tiết.",
+      html: "Anh/chị có muốn <b>kiếm thêm thu nhập</b> từ pickleball không ạ? 🏓 Chỉ cần chia sẻ mã riêng cho bạn bè, hội nhóm — khách mua là có hoa hồng, không ôm hàng, không cần vốn. Anh/chị xem chi tiết hoa hồng & đăng ký (1 phút) tại đây nhé:",
+      chips: [["🤝 Xem chi tiết & đăng ký", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
     };
     return null;
   }
