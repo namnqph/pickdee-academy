@@ -3435,7 +3435,7 @@ async function mountPushUi() {
 
 
     script.src =
-      "/support-widget.js?v=20261103-affteaser2";
+      "/support-widget.js?v=20261104-affctv1";
 
 
     script.async =

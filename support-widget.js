@@ -1728,7 +1728,7 @@ if (
   const PDJ_HOME = [
     ["🏓 Chọn vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
     ["🦵 Bảo hộ & phục hồi", "body"], ["🛡️ Phụ kiện cho vợt", "care"], ["🎁 Mua làm quà", "gift"],
-    ["📦 Tra cứu đơn hàng", "lookup"], ["🤝 Làm CTV, nhận hoa hồng", "aff"]
+    ["📦 Tra cứu đơn hàng", "lookup"], ["🤝 Làm CTV (hoa hồng hấp dẫn)", "aff"]
   ];
   const PDJ_CLOSE = [["🛒 Đặt hàng ngay", "checkout"], ["🚚 Giao hàng & thanh toán", "policy"], ["💬 Hỏi thêm", "ask"]];
 
@@ -1908,9 +1908,9 @@ if (
     };
 
     if (act === "aff") return {
-      text: "Chương trình CTV vợt PickDee: chia sẻ mã riêng của bạn cho bạn bè, hội nhóm pickleball — khách mua là có hoa hồng, không ôm hàng, không cần vốn, đăng ký 1 phút tại pickdee.vn/cong-tac-vien để xem chi tiết.",
-      html: "Anh/chị có muốn <b>kiếm thêm thu nhập</b> từ pickleball không ạ? 🏓 Chỉ cần chia sẻ mã riêng cho bạn bè, hội nhóm — khách mua là có hoa hồng, không ôm hàng, không cần vốn. Anh/chị xem chi tiết hoa hồng & đăng ký (1 phút) tại đây nhé:",
-      chips: [["🤝 Xem chi tiết & đăng ký", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
+      text: "Chương trình CTV vợt PickDee: đăng ký miễn phí tại pickdee.vn/cong-tac-vien, có ngay mã/link riêng gửi bạn bè, hội nhóm pickleball. Khách mua vợt qua mã của bạn là bạn nhận 250.000đ/vợt, bán từ vợt thứ 5 trong tháng thì lên 300.000đ/vợt — không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút.",
+      html: "Dạ có ạ, hợp đó anh/chị! 🏓 Đăng ký làm CTV <b>miễn phí</b>, có ngay mã/link riêng để gửi bạn bè, hội nhóm pickleball — khách đặt vợt qua mã của anh/chị là anh/chị nhận <b>250.000đ/vợt</b>, bán từ vợt thứ 5 trong tháng thì lên <b>300.000đ/vợt</b>. Không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút là có mã dùng ngay. Anh/chị bấm đăng ký bên dưới nhé, có gì chưa rõ em hỗ trợ thêm ạ:",
+      chips: [["🤝 Đăng ký làm CTV ngay", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
     };
     return null;
   }
@@ -3534,7 +3534,7 @@ if (
       box.id = "pdTease";
       box.setAttribute("role", "status");
       const quick = PDJ && BOT_PAGE === "shop"
-        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"], ["🤝 Làm CTV", "aff"]].map(function (c) {
+        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"], ["🤝 Làm CTV (hoa hồng hấp dẫn)", "aff"]].map(function (c) {
           return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
         : BOT_SUGGEST && BOT_SUGGEST.length
