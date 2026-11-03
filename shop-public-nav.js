@@ -870,7 +870,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261025-guestgate1";
+      "/support-widget.js?v=20261103-affteaser1";
 
 
     script.async =

@@ -37,6 +37,57 @@
   }
 
 
+  /* =====================================================
+     THEO DÕI LƯỢT TRUY CẬP
+     Fire-and-forget; dedupe 30 phút / trang / thiết bị.
+     Bỏ qua trang nội bộ (admin/coach/shop-admin).
+  ====================================================== */
+  try {
+    var _pvPath = location.pathname;
+    if (
+      !_pvPath.startsWith("/admin") &&
+      !_pvPath.startsWith("/coach") &&
+      !_pvPath.startsWith("/shop-admin") &&
+      !_pvPath.startsWith("/support-admin")
+    ) {
+      var _pvSidKey = "pd_sid";
+      var _pvSid = localStorage.getItem(_pvSidKey);
+      if (!_pvSid) {
+        try { _pvSid = crypto.randomUUID(); }
+        catch (_) { _pvSid = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2); }
+        localStorage.setItem(_pvSidKey, _pvSid);
+      }
+      var _pvPageKey = "pd_pv|" + _pvPath.slice(0, 50);
+      var _pvNow = Date.now();
+      if (_pvNow - Number(localStorage.getItem(_pvPageKey) || 0) >= 1800000) {
+        localStorage.setItem(_pvPageKey, _pvNow);
+        var _pvUa = navigator.userAgent || "";
+        var _pvDevice = /Mobi|Android/i.test(_pvUa) ? "mobile"
+          : /iPad|Tablet/i.test(_pvUa) ? "tablet" : "desktop";
+        var _pvRef = null;
+        try {
+          if (document.referrer && !document.referrer.includes(location.hostname))
+            _pvRef = new URL(document.referrer).hostname.slice(0, 100);
+        } catch (_) {}
+        fetch(cfg.SUPABASE_URL + "/rest/v1/pd_page_views", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": cfg.SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY
+          },
+          body: JSON.stringify({
+            page: _pvPath,
+            session_id: _pvSid,
+            referrer: _pvRef,
+            device: _pvDevice
+          })
+        }).catch(function () {});
+      }
+    }
+  } catch (_) {}
+
+
   const sb =
     window.PICKDEE_SUPABASE
     ||
@@ -1677,7 +1728,7 @@ if (
   const PDJ_HOME = [
     ["🏓 Chọn vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
     ["🦵 Bảo hộ & phục hồi", "body"], ["🛡️ Phụ kiện cho vợt", "care"], ["🎁 Mua làm quà", "gift"],
-    ["📦 Tra cứu đơn hàng", "lookup"]
+    ["📦 Tra cứu đơn hàng", "lookup"], ["🤝 Làm CTV, nhận hoa hồng", "aff"]
   ];
   const PDJ_CLOSE = [["🛒 Đặt hàng ngay", "checkout"], ["🚚 Giao hàng & thanh toán", "policy"], ["💬 Hỏi thêm", "ask"]];
 
@@ -1854,6 +1905,12 @@ if (
       text: "Tra cứu đơn tại https://pickdee.vn/shop-order-lookup bằng mã đơn + số điện thoại.",
       html: "Anh/chị tra cứu đơn bằng <b>mã đơn + số điện thoại</b> đặt hàng ạ.",
       chips: [["🔎 Mở trang tra cứu đơn", "href:/shop-order-lookup"], ["💬 Hỏi thêm", "ask"]]
+    };
+
+    if (act === "aff") return {
+      text: "Chương trình CTV vợt PickDee: chia sẻ mã riêng, khách mua là có hoa hồng 250.000đ/vợt (bán từ 5 vợt/tháng → 300.000đ/vợt). Không ôm hàng, không cần vốn, đăng ký 1 phút tại pickdee.vn/cong-tac-vien.",
+      html: "Làm CTV vợt PickDee: chia sẻ mã riêng của anh/chị, khách mua là có <b>hoa hồng 250.000đ/vợt</b> (bán từ 5 vợt/tháng → <b>300.000đ/vợt</b>). Không ôm hàng, không cần vốn, đăng ký 1 phút ạ.",
+      chips: [["🤝 Đăng ký làm CTV", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
     };
     return null;
   }
@@ -3477,7 +3534,7 @@ if (
       box.id = "pdTease";
       box.setAttribute("role", "status");
       const quick = PDJ && BOT_PAGE === "shop"
-        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"]].map(function (c) {
+        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"], ["🤝 Làm CTV", "aff"]].map(function (c) {
           return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
         : BOT_SUGGEST && BOT_SUGGEST.length
