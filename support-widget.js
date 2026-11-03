@@ -1775,9 +1775,10 @@ if (
       const wantLong = a[2] === "attack" || (a[2] === "any" && a[1] === "pro");
       let shape = "";
       if (/elongate/.test(shapes) && /hybrid/.test(shapes)) {
-        shape = wantLong
+        shape = (wantLong
           ? "Nên chọn dáng <b>Elongate</b> (đầu dài): tầm với xa, lực đánh mạnh, hợp lối tấn công; điểm ngọt nhỏ hơn nên cần cú đánh ổn định."
-          : "Nên chọn dáng <b>Hybrid</b>: cân bằng giữa tầm với và điểm ngọt, dễ làm quen, đánh chắc tay" + (a[1] === "new" ? " – hợp nhất cho người mới." : ".");
+          : "Nên chọn dáng <b>Hybrid</b>: nhanh, linh hoạt, đánh êm tay, trợ lực khá, dễ làm quen.") +
+          " Cả 2 dáng đều hợp mọi trình độ từ mới chơi tới Pro, chọn theo lối chơi mình thích hơn là theo trình độ.";
       }
       const who = PDJ_LV[a[1]] + ", " + PDJ_ST[a[2]];
       const cards = list.map(function (p, i) { return pdjCard(p, "", i === 0); });
