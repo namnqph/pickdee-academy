@@ -2678,10 +2678,7 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
     }
 
 
-    const {
-      data,
-      error
-    } =
+    const legacyResult =
       await sb
         .storage
         .from("profile-photos")
@@ -2690,16 +2687,40 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
           3600
         );
 
+    if (legacyResult.data?.signedUrl) {
 
-    if (
-      error
-      ||
-      !data?.signedUrl
-    ) {
+      avatarImage.src =
+        legacyResult.data.signedUrl
+        +
+        "&t="
+        +
+        Date.now();
+
+      avatarImage.onerror =
+        null;
+
+      avatarImage.style.display =
+        "block";
+
+      avatarPlaceholder.style.display =
+        "none";
+
+      return;
+    }
+
+
+    const publicAvatar =
+      sb
+        .storage
+        .from("avatars")
+        .getPublicUrl(
+          path
+        );
+
+    if (!publicAvatar.data?.publicUrl) {
 
       console.error(
-        "Avatar:",
-        error
+        "Avatar: not found in avatars or profile-photos bucket"
       );
 
       avatarImage.style.display =
@@ -2713,9 +2734,9 @@ window.PICKDEE_NOTIFICATION_ROLE = "coach";
 
 
     avatarImage.src =
-      data.signedUrl
+      publicAvatar.data.publicUrl
       +
-      "&t="
+      "?t="
       +
       Date.now();
 

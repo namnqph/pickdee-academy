@@ -688,10 +688,7 @@
     }
 
 
-    const {
-      data,
-      error
-    } =
+    const legacyResult =
       await identitySb
         .storage
         .from("profile-photos")
@@ -700,15 +697,35 @@
           3600
         );
 
+    if (legacyResult.data?.signedUrl) {
 
-    if (
-      error ||
-      !data?.signedUrl
-    ) {
+      avatarImage.src =
+        legacyResult.data.signedUrl +
+        "&t=" +
+        Date.now();
+
+      avatarImage.style.display =
+        "block";
+
+      avatarPlaceholder.style.display =
+        "none";
+
+      return;
+    }
+
+
+    const publicAvatar =
+      identitySb
+        .storage
+        .from("avatars")
+        .getPublicUrl(
+          path
+        );
+
+    if (!publicAvatar.data?.publicUrl) {
 
       console.error(
-        "Không tải được ảnh Coach:",
-        error
+        "Không tải được ảnh Coach: not found in avatars or profile-photos bucket"
       );
 
 
@@ -725,8 +742,8 @@
 
 
     avatarImage.src =
-      data.signedUrl +
-      "&t=" +
+      publicAvatar.data.publicUrl +
+      "?t=" +
       Date.now();
 
 
