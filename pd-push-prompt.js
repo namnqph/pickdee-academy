@@ -145,7 +145,7 @@
   }
   window.addEventListener("appinstalled", () => document.getElementById("pdpInstall")?.remove());
 
-  /* ---------- Mời bật thông báo (không có "Để sau") ---------- */
+  /* ---------- Mời bật thông báo (có "Để sau" để tránh kẹt khi trình duyệt không hiện được hộp xin quyền) ---------- */
   async function waitPushButton() {
     for (let i = 0; i < 100; i++) {
       const b = document.getElementById("pickdeeEnablePushButton");
@@ -189,8 +189,10 @@
         ? "Bật thông báo để không lỡ lịch học, nhắc buổi học, xác nhận thanh toán và tin nhắn từ Coach."
         : "PickDee tự giao học viên gần bạn qua thông báo này. Chưa bật thông báo = chưa được mời nhận học viên mới."}</p>
       <button type="button" class="pdp-btn">🔔 Bật thông báo</button>
-      <div class="pdp-note">Khi trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div>`);
+      <div class="pdp-note">Khi trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div>
+      <button type="button" class="pdp-link">Để sau</button>`);
     const btn = o.querySelector(".pdp-btn");
+    o.querySelector(".pdp-link").addEventListener("click", () => { o.remove(); promptDone(); });
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
