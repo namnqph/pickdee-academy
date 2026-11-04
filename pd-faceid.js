@@ -263,7 +263,7 @@
   async function mountLogin(host, onUser, opts) {
     opts = opts || {};
     const h = hint();
-    if (!host || !(IN_APP || await supported())) return;
+    if (!host || !h || !(IN_APP || await supported())) return; // chỉ hiện khi máy này đã từng bật passkey PickDee
     authPrep();
     const form = opts.form || null;
     const collapse = !!(h && form && !IN_APP);
