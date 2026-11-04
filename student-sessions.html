@@ -1063,6 +1063,12 @@
   let currentSessions =
     [];
 
+  let currentRegistrationUnpaid =
+    false;
+
+  let unpaidRegistrationId =
+    null;
+
   let reviewMap =
     new Map();
 
@@ -1954,6 +1960,12 @@
       sessionBody.innerHTML =
         "";
 
+      emptyEl.innerHTML =
+        currentRegistrationUnpaid
+          ? `Gói học đã duyệt nhưng chưa thanh toán học phí nên chưa thể đặt lịch.
+             <a href="./student-payment-checkout?id=${unpaidRegistrationId}" style="color:#ffc934;font-weight:900">Thanh toán ngay →</a>`
+          : "Bạn chưa có lịch học nào.";
+
       emptyEl.style.display =
         "block";
 
@@ -2414,6 +2426,43 @@
       approvedRegistrations[0]
       ||
       registrationRows[0];
+
+
+    currentRegistrationUnpaid =
+      false;
+
+    unpaidRegistrationId =
+      currentRegistration
+        ? Number(currentRegistration.id)
+        : null;
+
+    if (
+      currentRegistration
+      &&
+      String(
+        currentRegistration.status || ""
+      ).trim()
+      ===
+      "Đã duyệt"
+    ) {
+
+      const {
+        data: paymentReady
+      } =
+        await sb.rpc(
+          "student_registration_payment_ready",
+          {
+            p_registration_id:
+              Number(
+                currentRegistration.id
+              )
+          }
+        );
+
+      currentRegistrationUnpaid =
+        paymentReady !== true;
+
+    }
 
 
     const registrationIds =
