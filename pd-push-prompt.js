@@ -1,7 +1,7 @@
 /* =========================================================
    PICKDEE – Bắt buộc bật thông báo (dùng chung)
    window.PD_PUSH_PROMPT = { mode: "full" | "ios-install", role: "Học viên" }
-   - full:        mời bật thông báo (không có "Để sau") + hướng dẫn iPhone cài vào màn hình chính.
+   - full:        mời bật thông báo ("Để sau" = 3 ngày sau mới hỏi lại) + hướng dẫn iPhone cài vào màn hình chính.
    - ios-install: chỉ hướng dẫn iPhone cài vào màn hình chính (trang đã có hộp bật thông báo riêng).
    - installText: (tuỳ chọn) câu giải thích riêng trong hướng dẫn cài iPhone.
    Đăng ký Push vẫn do notifications.js (#pickdeeEnablePushButton) thực hiện.
@@ -18,6 +18,14 @@
   const pushSupported = "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
   const isAndroid = /Android/i.test(ua);
   const inApp = /Zalo|FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|TikTok|musical_ly|; wv\)/i.test(ua);
+  const PUSH_LATER = "pd_push_later"; // bấm "Để sau" → 3 ngày sau mới hỏi lại (tránh hỏi mỗi lần chuyển trang)
+  const PUSH_LATER_MS = 3 * 864e5;
+  function pushedLaterRecently() {
+    try { return Date.now() - Number(localStorage.getItem(PUSH_LATER) || 0) < PUSH_LATER_MS; } catch (_) { return false; }
+  }
+  function setPushedLater() {
+    try { localStorage.setItem(PUSH_LATER, String(Date.now())); } catch (_) {}
+  }
 
   const css = `
   .pdp-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
@@ -181,6 +189,7 @@
     await new Promise(r => setTimeout(r, 1500)); // để notifications.js kiểm tra trạng thái
     for (let i = 0; i < 60 && pushButton.disabled && !enabledText(pushButton); i++) await new Promise(r => setTimeout(r, 200));
     if (enabledText(pushButton) || await hasSubscription()) return promptDone();
+    if (pushedLaterRecently()) return promptDone();
 
     const o = overlay(`
       <div class="pdp-icon">🔔</div>
@@ -192,7 +201,7 @@
       <div class="pdp-note">Khi trình duyệt hỏi, hãy chọn <b>Cho phép</b>.</div>
       <button type="button" class="pdp-link">Để sau</button>`);
     const btn = o.querySelector(".pdp-btn");
-    o.querySelector(".pdp-link").addEventListener("click", () => { o.remove(); promptDone(); });
+    o.querySelector(".pdp-link").addEventListener("click", () => { setPushedLater(); o.remove(); promptDone(); });
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
