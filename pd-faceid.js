@@ -458,6 +458,9 @@
       if (window.PDPushPromptDone) await Promise.race([window.PDPushPromptDone, new Promise(function (r) { setTimeout(r, 30000); })]);
       for (let i = 0; i < 600 && document.querySelector(".pdp-overlay"); i++) await new Promise(function (r) { setTimeout(r, 500); });
       if (document.querySelector(".pdp-overlay")) return;
+      // Để người dùng thấy trang chủ một chút trước khi mời Face ID, tránh cảm giác 2 màn chặn liên tiếp
+      await new Promise(function (r) { setTimeout(r, 900); });
+      if (document.querySelector(".pdp-overlay")) return; // lỡ màn bật thông báo hiện lại trong lúc chờ (hiếm)
       await offer(user, session);
     } catch (e) { console.warn("PickDee Face ID:", e); }
   }
