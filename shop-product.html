@@ -1293,6 +1293,58 @@
 
 
     /* =====================================================
+       SELECTION ERROR TOAST
+    ====================================================== */
+
+    .selection-error-toast {
+      position: fixed;
+
+      left: 50%;
+      bottom:
+        calc(84px + env(safe-area-inset-bottom));
+
+      z-index: 200;
+
+      transform:
+        translate(-50%,20px);
+
+      width:
+        calc(100% - 30px);
+      max-width: 390px;
+
+      padding:
+        11px 16px;
+
+      border-radius: 13px;
+
+      background: #1a1408;
+      border: 1px solid #ffc934;
+
+      color: #ffffff;
+
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align: center;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition:
+        .2s ease;
+    }
+
+
+    .selection-error-toast.show {
+      opacity: 1;
+
+      transform:
+        translate(-50%,0);
+    }
+
+
+    /* =====================================================
        MOBILE
     ====================================================== */
 
@@ -1517,6 +1569,11 @@
   ✓ Đã thêm vào giỏ hàng
 </div>
 
+<div
+  id="selectionErrorToast"
+  class="selection-error-toast"
+></div>
+
 
 
 <script>
@@ -1568,6 +1625,11 @@
   const toast =
     document.getElementById(
       "toast"
+    );
+
+  const selectionErrorToast =
+    document.getElementById(
+      "selectionErrorToast"
     );
 
 
@@ -2399,6 +2461,49 @@ function updateCartCount() {
 
         },
         1800
+      );
+
+  }
+
+
+  let selectionErrorTimer = null;
+
+
+  function showSelectionError(message) {
+
+    if (
+      !selectionErrorToast
+    ) {
+
+      return;
+
+    }
+
+
+    clearTimeout(
+      selectionErrorTimer
+    );
+
+
+    selectionErrorToast.textContent =
+      "⚠ " + message;
+
+
+    selectionErrorToast.classList.add(
+      "show"
+    );
+
+
+    selectionErrorTimer =
+      setTimeout(
+        function () {
+
+          selectionErrorToast.classList.remove(
+            "show"
+          );
+
+        },
+        2600
       );
 
   }
@@ -5561,7 +5666,7 @@ function bindProductEvents() {
       missing.length
     ) {
 
-      window.alert(
+      showSelectionError(
         "Vui lòng chọn đầy đủ: "
         +
         missing.join(", ")
@@ -6136,7 +6241,7 @@ function bindProductEvents() {
       );
 
 
-      alert(
+      showSelectionError(
         "Chưa thêm được sản phẩm vào giỏ. Anh vui lòng thử lại."
       );
 
