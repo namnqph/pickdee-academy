@@ -2021,6 +2021,11 @@ if (
       .pd-bot-chips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
       .pd-bot-chip{padding:8px 11px;border-radius:999px;border:1px solid rgba(255,201,52,.3);background:rgba(255,201,52,.07);color:#ffc934;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
       .pd-bot-typing{opacity:.6;font-style:italic}
+      .pd-bot-dots{display:inline-flex;gap:4px;padding:2px 0}
+      .pd-bot-dots i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.3;animation:pdBotDot 1.1s ease-in-out infinite}
+      .pd-bot-dots i:nth-child(2){animation-delay:.15s}
+      .pd-bot-dots i:nth-child(3){animation-delay:.3s}
+      @keyframes pdBotDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
       #pdBotMsgs{position:relative}
       .pdj-cards{display:flex;flex-direction:column;gap:7px;margin:-2px 0 10px}
       .pdj-card{display:flex;align-items:center;gap:8px;padding:7px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05)}
@@ -2218,7 +2223,7 @@ if (
         botMsgs.appendChild(w);
       }
     });
-    if (typing) botRow("bot", "Em đang xem thông tin…", "pd-bot-typing");
+    if (typing) botRow("bot", '<span class="pd-bot-dots"><i></i><i></i><i></i></span>', "pd-bot-typing");
     const last = h[h.length - 1];
     // Nút header chỉ dùng khi nhân viên trả lời trong chat nhân viên (support-admin)
     botHumanBtn.textContent = "💬 Xem trả lời (" + botUnread + ")";
@@ -3427,8 +3432,8 @@ if (
       : {
           product: { wait: 18000, scroll: 0.45, minWait: 7000 },
           shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true },
-          academy: { wait: 0, scroll: 0, minWait: 0, every: true },
-          all: { wait: 0, scroll: 0, minWait: 0, every: true }
+          academy: { wait: 1800, scroll: 0, minWait: 0, every: true },
+          all: { wait: 1800, scroll: 0, minWait: 0, every: true }
         }[BOT_PAGE];
     const salesPage = isPortal || /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
     if (!plan || !salesPage || botStaffPage()) return;
