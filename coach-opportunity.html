@@ -20,6 +20,8 @@
       padding:14px 16px;background:rgba(19,19,19,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
     .brand{color:#fff;text-decoration:none;font-weight:900;font-size:18px}.brand span{color:#ffc934}
     .back{color:#ffc934;text-decoration:none;font-weight:900;font-size:12px}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .logout-btn{border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-weight:800;font-size:12px;padding:7px 10px;cursor:pointer;font-family:inherit}
     main{max-width:520px;margin:0 auto;padding:18px 16px 110px}
     .eyebrow{color:#ffc934;font-size:12px;font-weight:900;letter-spacing:.08em}
     h1{margin:6px 0 4px;font-size:26px}
@@ -67,7 +69,10 @@
 <body>
 <header class="topbar">
   <a class="brand" href="/coach">PickDee <span>Academy</span></a>
-  <a class="back" href="/coach">← Dashboard</a>
+  <div class="topbar-actions">
+    <a class="back" href="/coach">← Dashboard</a>
+    <button id="logoutBtn" class="logout-btn" type="button">Đăng xuất</button>
+  </div>
 </header>
 <main>
   <div class="eyebrow">TỰ GIAO HỌC VIÊN</div>
@@ -83,6 +88,7 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const money = n => Number(n || 0).toLocaleString("vi-VN") + "đ";
   const qs = new URLSearchParams(location.search);
+  $("logoutBtn").addEventListener("click", async () => { $("logoutBtn").disabled = true; await sb.auth.signOut(); location.replace("/login"); });
   const focusOffer = Number(qs.get("offer")) || null;
   let offers = [], sb, busy = false;
 
@@ -209,6 +215,25 @@
 })();
 </script>
 <script src="./notifications.js?v=20261021-caps1"></script>
+<script>
+/* PICKDEE COACH - chuông nằm cạnh nút Đăng xuất (không đè chữ) */
+(function () {
+  let n = 0;
+  const t = setInterval(function () {
+    const root = document.getElementById("pickdeeNotificationRoot");
+    const logout = document.getElementById("logoutBtn");
+    if (root && logout && logout.parentNode) {
+      clearInterval(t);
+      logout.parentNode.insertBefore(root, logout);
+      root.style.cssText += ";position:relative !important;top:auto !important;right:auto !important;left:auto !important;bottom:auto !important;margin:0 !important;";
+      logout.parentNode.style.display = "flex";
+      logout.parentNode.style.alignItems = "center";
+      logout.parentNode.style.gap = "8px";
+    }
+    if (++n > 100) clearInterval(t);
+  }, 150);
+})();
+</script>
 <script src="/pd-portal-appnav.js?v=20261023-pubnav1"></script>
 <script src="/pd-coach-gate.js?v=20261021-help1"></script>
 <script src="/pd-app.js?v=20261020-gold2"></script>

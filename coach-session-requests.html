@@ -110,6 +110,56 @@
     }
 
 
+    .topbar-actions {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+    }
+
+
+    .logout-btn {
+
+      padding: 9px 12px;
+
+      border: 1px solid rgba(255,255,255,.22);
+
+      border-radius: 10px;
+
+      background: rgba(255,255,255,.06);
+
+      color: white;
+
+      font-weight: 800;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+    }
+
+
+    .logout-btn:hover {
+
+      background: rgba(255,255,255,.12);
+
+    }
+
+
+    .logout-btn:disabled {
+
+      opacity: .55;
+
+      cursor: wait;
+
+    }
+
+
     main {
 
       width:
@@ -632,11 +682,17 @@
   </div>
 
 
-  <a href="./coach">
+  <div class="topbar-actions">
 
-    ← Khu vực Coach
+    <a href="./coach">
 
-  </a>
+      ← Khu vực Coach
+
+    </a>
+
+    <button id="logoutBtn" class="logout-btn" type="button">Đăng xuất</button>
+
+  </div>
 
 </header>
 
@@ -709,6 +765,27 @@
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY
     );
+
+
+  const logoutBtn =
+    document.getElementById(
+      "logoutBtn"
+    );
+
+  logoutBtn.addEventListener(
+    "click",
+    async () => {
+
+      logoutBtn.disabled = true;
+
+      await sb.auth.signOut();
+
+      location.replace(
+        "./login.html"
+      );
+
+    }
+  );
 
 
   const listEl =
@@ -2750,6 +2827,25 @@ const detailLine =
 </script>
 
 <script src="./notifications.js?v=20261021-caps1"></script>
+<script>
+/* PICKDEE COACH - chuông nằm cạnh nút Đăng xuất (không đè chữ) */
+(function () {
+  let n = 0;
+  const t = setInterval(function () {
+    const root = document.getElementById("pickdeeNotificationRoot");
+    const logout = document.getElementById("logoutBtn");
+    if (root && logout && logout.parentNode) {
+      clearInterval(t);
+      logout.parentNode.insertBefore(root, logout);
+      root.style.cssText += ";position:relative !important;top:auto !important;right:auto !important;left:auto !important;bottom:auto !important;margin:0 !important;";
+      logout.parentNode.style.display = "flex";
+      logout.parentNode.style.alignItems = "center";
+      logout.parentNode.style.gap = "8px";
+    }
+    if (++n > 100) clearInterval(t);
+  }, 150);
+})();
+</script>
 <script src="/pd-portal-appnav.js?v=20261023-pubnav1"></script>
 <script src="/pd-coach-gate.js?v=20261021-help1"></script>
 <script src="/pd-app.js?v=20261020-gold2"></script>

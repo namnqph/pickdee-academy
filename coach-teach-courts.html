@@ -73,7 +73,10 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="/coach">← Về trang Coach</a>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <a class="back" href="/coach" style="margin-bottom:0;margin-right:auto">← Về trang Coach</a>
+    <button id="logoutBtn" type="button" style="flex:none;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-weight:800;font-size:13px;padding:7px 10px;cursor:pointer">Đăng xuất</button>
+  </div>
   <h1>📍 Nơi bạn dạy</h1>
   <p class="lead">Thêm <b>từng sân</b> bạn dạy và <b>ngày</b> bạn có mặt ở đó. Dạy nhiều nơi (đi học, đi làm, công tác) thì thêm sân ở mỗi nơi. Học viên ở gần sân nào sẽ thấy bạn ở sân đó, kèm ngày dạy. Sân <b>mới</b> cần nhập giá đã thoả thuận (tối đa 120.000đ/giờ) và SĐT người liên hệ tại sân — PickDee sẽ là người gọi book sân và trả tiền, sân chỉ hiện cho học viên sau khi được duyệt.</p>
 
@@ -215,6 +218,7 @@
     say(hadNew ? "✓ Đã lưu " + mine.length + " sân. Sân mới đang chờ PickDee duyệt giá/SĐT trước khi hiện cho học viên." : "✓ Đã lưu " + mine.length + " sân. Học viên gần các sân này sẽ thấy bạn trên bản đồ.", "ok");
   };
   window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  $("logoutBtn").addEventListener("click", async () => { $("logoutBtn").disabled = true; await sb.auth.signOut(); location.replace("/login"); });
 
   (async () => {
     const { data } = await sb.auth.getUser();
@@ -230,6 +234,25 @@
 })();
 </script>
 <script src="./notifications.js?v=20261021-caps1"></script>
+<script>
+/* PICKDEE COACH - chuông nằm cạnh nút Đăng xuất (không đè chữ) */
+(function () {
+  let n = 0;
+  const t = setInterval(function () {
+    const root = document.getElementById("pickdeeNotificationRoot");
+    const logout = document.getElementById("logoutBtn");
+    if (root && logout && logout.parentNode) {
+      clearInterval(t);
+      logout.parentNode.insertBefore(root, logout);
+      root.style.cssText += ";position:relative !important;top:auto !important;right:auto !important;left:auto !important;bottom:auto !important;margin:0 !important;";
+      logout.parentNode.style.display = "flex";
+      logout.parentNode.style.alignItems = "center";
+      logout.parentNode.style.gap = "8px";
+    }
+    if (++n > 100) clearInterval(t);
+  }, 150);
+})();
+</script>
 <script src="/pd-app.js?v=20261020-gold2"></script>
 </body>
 </html>
