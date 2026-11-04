@@ -27,6 +27,12 @@
   // Trình duyệt nhúng trong app (Telegram, Zalo, Facebook...): passkey thường bị iOS chặn → hướng dẫn mở Safari
   const STANDALONE = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
   const IN_APP = !STANDALONE && (/Telegram|Zalo|FBAN|FBAV|FB_IAB|Instagram|Line\//i.test(ua) || (isIOS && !/Safari\//.test(ua)));
+  // Link thoát ra Safari (iOS) / Chrome (Android) từ trình duyệt nhúng để dùng được Face ID + session đã lưu
+  function extHref() {
+    if (isIOS) return "x-safari-" + location.href;
+    if (/Android/.test(ua)) return location.href.replace(/^https?:\/\//, "intent://") + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end";
+    return location.href;
+  }
   function deviceName() {
     const dev = /iPad/.test(ua) || (isIOS && !/iPhone|iPod/.test(ua)) ? "iPad"
       : /iPhone|iPod/.test(ua) ? "iPhone"
@@ -264,6 +270,7 @@
     const box = el(
       '<div class="pdf-box">' +
         (h ? '<p class="pdf-hello">Chào ' + esc(h.name || "bạn") + ' 👋</p>' : '') +
+        (IN_APP ? '<a href="' + esc(extHref()) + '" style="display:block;margin:0 0 12px;color:#ffc118;font-weight:800;font-size:14px">Mở bằng ' + (isIOS ? "Safari" : "Chrome") + ' (dùng được ' + LABEL + ')</a>' : '') +
         '<button type="button" class="pdf-btn" id="pdFaceIdLoginBtn"><span class="pdf-ic">' + ICON + '</span>Đăng nhập bằng ' + LABEL + '</button>' +
         '<div class="pdf-msg" role="status"></div>' +
         (collapse
@@ -296,8 +303,7 @@
         console.warn("PickDee Face ID:", e);
         if (IN_APP && !(e && typeof e.code === "string")) { // lỗi trình duyệt (DOMException có code số), không phải lỗi máy chủ
           msg.innerHTML = LABEL + ' không chạy trong trình duyệt của ứng dụng này. ' +
-            (isIOS ? '<a href="x-safari-' + esc(location.href) + '" style="color:#ffc118;font-weight:800">Mở bằng Safari</a> (hoặc bấm biểu tượng la bàn 🧭 ở góc dưới) rồi đăng nhập lại.'
-                   : 'Bấm ⋮ → "Mở bằng trình duyệt" rồi đăng nhập lại.');
+            '<a href="' + esc(extHref()) + '" style="color:#ffc118;font-weight:800">Mở bằng ' + (isIOS ? "Safari" : "Chrome") + '</a> rồi đăng nhập lại.';
           btn.disabled = false;
           return;
         }
