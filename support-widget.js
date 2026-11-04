@@ -3432,7 +3432,7 @@ if (
       : {
           product: { wait: 18000, scroll: 0.45, minWait: 7000 },
           shop: { wait: 0, scroll: 0, minWait: 0, chime: true, every: true },
-          academy: { wait: 1800, scroll: 0, minWait: 0, every: true },
+          academy: { wait: 5000, scroll: 0.3, minWait: 3000, every: true },
           all: { wait: 1800, scroll: 0, minWait: 0, every: true }
         }[BOT_PAGE];
     const salesPage = isPortal || /^\/(shop-product|shop|academy|find-coach|index)?(\.html)?\/?$/.test(location.pathname);
