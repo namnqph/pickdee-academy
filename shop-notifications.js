@@ -555,6 +555,26 @@
     );
   }
 
+  async function isShopPushRegistered(endpoint) {
+    if (!client || !endpoint) {
+      return false;
+    }
+
+    const { data, error } = await client.rpc(
+      "shop_push_subscription_registered",
+      {
+        p_endpoint: endpoint
+      }
+    );
+
+    if (error) {
+      console.warn("PickDee Shop Push check error:", error);
+      return false;
+    }
+
+    return !!data;
+  }
+
   async function saveShopPushSubscription(subscription) {
     if (!client || !subscription) {
       return false;
@@ -649,6 +669,25 @@
           console.warn("PickDee Shop Push: không tạo được Push subscription.", error);
           return false;
         }
+      }
+
+      if (requestPermission) {
+        return await saveShopPushSubscription(subscription);
+      }
+
+      /* ================================================
+         GỌI ÂM THẦM (mở trang, focus, tự kiểm 30s):
+         CHỈ giữ nóng thiết bị đã từng bật rõ ràng trước đó.
+         KHÔNG tự đăng ký role=shop mới cho thiết bị lần đầu
+         ghé trang (vd icon Academy ghé /shop-admin qua nút nổi)
+         — tránh báo trùng trên thiết bị người dùng không bật.
+      ================================================= */
+
+      const alreadyRegistered =
+        await isShopPushRegistered(subscription.endpoint);
+
+      if (!alreadyRegistered) {
+        return false;
       }
 
       return await saveShopPushSubscription(subscription);
@@ -835,12 +874,30 @@
       }
 
       if (permission === "granted" && subscription) {
-        button.className = "pdsn-push-btn is-enabled";
-        button.textContent = "✓ Thông báo đã bật";
-        button.disabled = true;
+        const alreadyRegistered =
+          await isShopPushRegistered(subscription.endpoint);
+
+        if (alreadyRegistered) {
+          button.className = "pdsn-push-btn is-enabled";
+          button.textContent = "✓ Thông báo đã bật";
+          button.disabled = true;
+
+          if (hint) {
+            hint.textContent = "Thiết bị này đang nhận thông báo PickDee Shop.";
+          }
+
+          return;
+        }
+
+        /* Quyền trình duyệt đã cấp (có thể từ trang Admin Academy)
+           nhưng thiết bị này CHƯA bật thông báo Shop rõ ràng — vẫn
+           hiện nút để người dùng tự quyết có bật hay không. */
+        button.className = "pdsn-push-btn";
+        button.textContent = "Bật thông báo";
+        button.disabled = false;
 
         if (hint) {
-          hint.textContent = "Thiết bị này đang nhận thông báo PickDee Shop.";
+          hint.textContent = "Nhấn để nhận thông báo đơn Shop mới trên thiết bị này.";
         }
 
         return;
