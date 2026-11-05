@@ -40,12 +40,15 @@
 
     const threads = Array.from(groups.entries()).map(function (entry) {
       const items = entry[1].sort(function (a, b) { return a.id - b.id; });
+      const withName = items.find(function (r) { return r.guest_name; });
       return {
         visitor: entry[0],
         items: items,
         last: items[items.length - 1],
         pending: items.filter(isPending).length,
-        closed: items.every(function (r) { return r.admin_closed_at; })
+        closed: items.every(function (r) { return r.admin_closed_at; }),
+        guestName: withName ? withName.guest_name : null,
+        guestPhone: withName ? withName.guest_phone : null
       };
     }).sort(function (a, b) {
       return a.closed - b.closed || (b.pending > 0) - (a.pending > 0) || b.last.id - a.last.id;
@@ -95,10 +98,14 @@
           '<button class="status-btn bot-del" type="button" data-act="delete" data-v="' + v + '">Xóa</button>'
         : '<button class="status-btn close" type="button" data-act="close" data-v="' + v + '">Đóng chat</button>';
 
+      const label = t.guestName
+        ? esc(t.guestName) + (t.guestPhone ? " · " + esc(t.guestPhone) : "")
+        : "Khách " + esc(t.visitor.slice(0, 6));
+
       return (
         '<details class="bot-thread' + (t.closed ? " is-closed" : "") + '" data-v="' + v + '"' + (opened.has(t.visitor) ? " open" : "") + ">" +
           "<summary>" +
-            '<div class="bot-top"><b>Khách ' + esc(t.visitor.slice(0, 6)) + "</b>" +
+            '<div class="bot-top"><b>' + label + "</b>" +
               (t.pending && !t.closed ? '<span class="bot-badge">Chờ anh</span>' : "") +
               (t.closed ? '<span class="bot-closed">Đã đóng</span>' : "") +
               "<i>" + fmt(t.last.created_at) + "</i></div>" +
@@ -123,7 +130,7 @@
     const since = new Date(Date.now() - 30 * 864e5).toISOString();
     const { data, error } = await sb
       .from("bot_logs")
-      .select("id,created_at,visitor_id,page,question,answer,handoff,owner_answer,admin_closed_at")
+      .select("id,created_at,visitor_id,page,question,answer,handoff,owner_answer,admin_closed_at,guest_name,guest_phone")
       .gte("created_at", since)
       .not("visitor_id", "like", "claude-test%")
       .order("id", { ascending: false })
