@@ -431,6 +431,19 @@
     );
 
 
+  const {
+    data:
+      currentUserData
+  } =
+    await sb.auth.getUser();
+
+
+  const currentUserId =
+    currentUserData?.user?.id
+    ||
+    null;
+
+
   const content =
     document.getElementById(
       "content"
@@ -735,6 +748,7 @@
           booking_url,
           verified,
           owner_claimed,
+          owner_user_id,
           status,
           photo_path,
           photo_credit,
@@ -1061,6 +1075,22 @@
                 href="./court-claim?id=${encodeURIComponent(row.id)}"
               >
                 👤 Đây là sân của tôi
+              </a>
+            `
+
+            :
+            currentUserId
+            &&
+            row.owner_user_id === currentUserId
+
+            ?
+
+            `
+              <a
+                class="action-btn primary"
+                href="./my-court?id=${encodeURIComponent(row.id)}"
+              >
+                ✏️ Quản lý sân của tôi
               </a>
             `
 

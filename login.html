@@ -573,6 +573,23 @@ html body .back{font-size:15px}
     }
 
 
+    function safeCourtOwnerNext(
+      next
+    ) {
+
+      return (
+        next.startsWith(
+          "/court-claim?"
+        )
+        ||
+        next.startsWith(
+          "/my-court"
+        )
+      );
+
+    }
+
+
     async function getShopRoles(
       userId
     ) {
@@ -798,6 +815,27 @@ if (
     normalizeRole(
       profile?.role
     );
+
+
+  /* =================================================
+     LINK RIÊNG CHỦ SÂN (claim / tự quản lý sân)
+     — không phụ thuộc role Academy, ai đăng nhập cũng
+     được quay lại đúng trang đang làm dở.
+  ================================================== */
+
+  if (
+    safeCourtOwnerNext(
+      next
+    )
+  ) {
+
+    window.location.replace(
+      next
+    );
+
+    return;
+
+  }
 
 
   /* =================================================

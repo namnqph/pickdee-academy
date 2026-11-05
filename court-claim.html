@@ -311,6 +311,38 @@
       color: #ffaaaa;
     }
 
+    .login-hint {
+      margin-bottom: 12px;
+
+      padding: 12px 14px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid
+        rgba(255,201,52,.20);
+
+      background:
+        rgba(255,255,255,.025);
+
+      color:
+        rgba(255,255,255,.65);
+
+      font-size: 12.5px;
+      line-height: 1.55;
+
+      display: none;
+    }
+
+    .login-hint.show {
+      display: block;
+    }
+
+    .login-hint a {
+      color: #ffc934;
+      font-weight: 800;
+    }
+
     .notice {
       margin-top: 16px;
 
@@ -565,6 +597,12 @@
     </div>
 
 
+    <div
+      id="loginHint"
+      class="login-hint"
+    ></div>
+
+
     <button
       id="submitBtn"
       class="submit"
@@ -709,6 +747,61 @@
       encodeURIComponent(
         courtId
       );
+
+
+  /* =========================================
+     GỢI Ý ĐĂNG NHẬP ĐỂ SAU NÀY TỰ QUẢN LÝ SÂN
+  ========================================== */
+
+  (async function showLoginHint() {
+
+    const loginHint =
+      document.getElementById(
+        "loginHint"
+      );
+
+    if (!loginHint) return;
+
+    const {
+      data:
+        userData
+    } =
+      await sb.auth.getUser();
+
+    if (userData?.user) {
+
+      loginHint.classList.add(
+        "show"
+      );
+
+      loginHint.innerHTML =
+        "✅ Đã đăng nhập — sau khi được duyệt, sân sẽ gắn với tài khoản này để bạn tự sửa giá/giờ/tiện ích.";
+
+    } else {
+
+      loginHint.classList.add(
+        "show"
+      );
+
+      const nextUrl =
+        "/court-claim?id="
+        +
+        encodeURIComponent(
+          courtId
+        );
+
+      loginHint.innerHTML =
+        "💡 <a href=\"/login?next="
+        +
+        encodeURIComponent(
+          nextUrl
+        )
+        +
+        "\">Đăng nhập</a> trước khi gửi để sau này tự sửa thông tin sân (không bắt buộc).";
+
+    }
+
+  })();
 
 
   /* =========================================
@@ -999,6 +1092,13 @@
 
 
         const {
+          data:
+            userData
+        } =
+          await sb.auth.getUser();
+
+
+        const {
           error
         } =
           await sb
@@ -1009,6 +1109,11 @@
 
               court_id:
                 courtId,
+
+              claimant_user_id:
+                userData?.user?.id
+                ||
+                null,
 
               claimant_name:
                 claimantName,

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}</style>
+
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1"
+  >
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+
+  <title>Quản lý sân của tôi | PickDee</title>
+
+  <script
+    src="/supabase-js.js?v=20261104-self1"
+  ></script>
+
+  <script src="./config.js?v=20261019-keep30"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080808;
+      color: #ffffff;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width:
+        min(
+          720px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        24px 0
+        70px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .brand span {
+      color: #ffc934;
+    }
+
+    .back {
+      min-height: 42px;
+
+      padding: 0 14px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.12);
+
+      background:
+        rgba(255,255,255,.04);
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+
+      color: #ffc934;
+
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .07em;
+    }
+
+    h1 {
+      margin:
+        0 0 10px;
+
+      font-size:
+        clamp(
+          28px,
+          6vw,
+          40px
+        );
+
+      line-height: 1.12;
+    }
+
+    .lead {
+      margin: 0;
+
+      color:
+        rgba(255,255,255,.62);
+
+      line-height: 1.6;
+    }
+
+    .court-card {
+      margin:
+        20px 0;
+
+      padding: 16px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid
+        rgba(255,201,52,.20);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .court-name {
+      margin-bottom: 6px;
+
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .court-location {
+      color:
+        rgba(255,255,255,.55);
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .card {
+      padding: 18px;
+
+      border-radius: 16px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .section-title {
+      margin:
+        0 0 14px;
+
+      color: #ffc934;
+
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color:
+        rgba(255,255,255,.68);
+
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+
+      min-height: 48px;
+
+      padding:
+        0 13px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.13);
+
+      outline: none;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color: #ffffff;
+
+      font-size: 15px;
+    }
+
+    .field textarea {
+      min-height: 90px;
+
+      padding:
+        12px 13px;
+
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color:
+        rgba(255,201,52,.7);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(255,255,255,.042);
+    }
+
+    .row2 {
+      display: grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap: 12px;
+    }
+
+    .hint {
+      margin-top: 6px;
+
+      color:
+        rgba(255,255,255,.40);
+
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .submit {
+      width: 100%;
+
+      min-height: 52px;
+
+      border: 0;
+      border-radius: 11px;
+
+      cursor: pointer;
+
+      background: #ffc934;
+      color: #071000;
+
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .submit:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .message {
+      margin-top: 14px;
+
+      padding: 13px;
+
+      border-radius: 10px;
+
+      display: none;
+
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .message.success {
+      display: block;
+
+      background:
+        rgba(70,255,130,.10);
+
+      color: #9cffb5;
+    }
+
+    .message.error {
+      display: block;
+
+      background:
+        rgba(255,90,90,.10);
+
+      color: #ffaaaa;
+    }
+
+    .loading {
+      padding:
+        45px 15px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,.55);
+    }
+
+    .pick-list a {
+      display: block;
+
+      margin-bottom: 10px;
+
+      padding: 14px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+
+      background:
+        rgba(255,255,255,.03);
+
+      font-weight: 800;
+    }
+
+  </style>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PickDee">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link id="pdFont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"><style id="pdFontCss">html body{font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}:where(button,input,select){font-family:inherit}h1,h2,h3{text-wrap:balance}</style>
+<script src="/pd-motion.js?v=20261020-gold2"></script>
+<link rel="stylesheet" href="/pd-apple.css?v=20261029-a3">
+<link rel="stylesheet" href="/pd-apple-pages.css?v=20261029-a1">
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+  <div class="topbar">
+
+    <a
+      href="/"
+      class="brand"
+    >
+      PickDee
+      <span>Academy</span>
+    </a>
+
+
+    <a
+      href="/courts"
+      class="back"
+    >
+      ← Danh bạ sân
+    </a>
+
+  </div>
+
+
+  <section class="hero">
+
+    <div class="eyebrow">
+      CHỦ SÂN
+    </div>
+
+    <h1>
+      🏟 Quản lý sân của tôi
+    </h1>
+
+    <p class="lead">
+      Tự cập nhật SĐT, giờ mở cửa, giá, tiện ích và các link
+      đặt sân/Facebook/Website. Tên sân, địa chỉ và vị trí
+      do PickDee kiểm soát để đảm bảo chính xác — cần sửa thì
+      liên hệ qua form xác minh chủ sân.
+    </p>
+
+  </section>
+
+
+  <div id="content">
+
+    <div class="loading">
+      Đang tải...
+    </div>
+
+  </div>
+
+
+</div>
+
+
+<script>
+
+(async function () {
+
+
+  /* =========================================
+     CONFIG
+  ========================================== */
+
+  const cfg =
+    window.PICKDEE_CONFIG || {};
+
+
+  const content =
+    document.getElementById(
+      "content"
+    );
+
+
+  if (
+    !window.supabase
+    ||
+    !cfg.SUPABASE_URL
+    ||
+    !cfg.SUPABASE_PUBLISHABLE_KEY
+  ) {
+
+    content.innerHTML =
+      "Không tải được hệ thống.";
+
+    return;
+
+  }
+
+
+  const sb =
+    window.supabase.createClient(
+      cfg.SUPABASE_URL,
+      cfg.SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================================
+     ESCAPE
+  ========================================== */
+
+  function esc(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  /* =========================================
+     BẮT BUỘC ĐĂNG NHẬP
+  ========================================== */
+
+  const {
+    data:
+      userData
+  } =
+    await sb.auth.getUser();
+
+
+  const user =
+    userData?.user;
+
+
+  if (!user) {
+
+    const params =
+      new URLSearchParams(
+        location.search
+      );
+
+    const courtIdParam =
+      params.get(
+        "id"
+      );
+
+    const nextUrl =
+      "/my-court"
+      +
+      (
+        courtIdParam
+          ? "?id=" + encodeURIComponent(courtIdParam)
+          : ""
+      );
+
+    window.location.replace(
+      "/login?next="
+      +
+      encodeURIComponent(
+        nextUrl
+      )
+    );
+
+    return;
+
+  }
+
+
+  /* =========================================
+     LẤY DANH SÁCH SÂN CỦA TÔI
+  ========================================== */
+
+  const {
+    data:
+      myCourts,
+    error:
+      listError
+  } =
+    await sb.rpc(
+      "court_owner_my_courts"
+    );
+
+
+  if (listError) {
+
+    content.innerHTML = `
+      <div class="loading">
+        Không tải được danh sách sân. Thử lại sau.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  if (
+    !myCourts
+    ||
+    myCourts.length === 0
+  ) {
+
+    content.innerHTML = `
+      <div class="card">
+
+        Bạn chưa có sân nào được PickDee xác nhận là chủ sân.
+
+        <br><br>
+
+        Tìm sân của bạn trong
+        <a href="/courts" style="color:#ffc934;font-weight:800">danh bạ sân</a>
+        và bấm "Đây là sân của tôi" để gửi yêu cầu xác minh.
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const params =
+    new URLSearchParams(
+      location.search
+    );
+
+
+  const requestedId =
+    Number(
+      params.get(
+        "id"
+      )
+    );
+
+
+  let court =
+    myCourts.find(
+      function (c) {
+        return c.id === requestedId;
+      }
+    );
+
+
+  if (
+    !court
+    &&
+    myCourts.length === 1
+  ) {
+
+    court =
+      myCourts[0];
+
+  }
+
+
+  if (!court) {
+
+    content.innerHTML = `
+      <div class="card">
+
+        <div class="section-title">
+          Chọn sân bạn muốn quản lý
+        </div>
+
+        <div class="pick-list">
+          ${
+            myCourts
+              .map(
+                function (c) {
+                  return `
+                    <a href="/my-court?id=${encodeURIComponent(c.id)}">
+                      ${esc(c.court_name)}
+                    </a>
+                  `;
+                }
+              )
+              .join("")
+          }
+        </div>
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  /* =========================================
+     RENDER FORM
+  ========================================== */
+
+  content.innerHTML = `
+
+    <div class="court-card">
+
+      <div class="court-name">
+        🏓 ${esc(court.court_name)}
+      </div>
+
+      <div class="court-location">
+        ${esc(court.address || "")}
+        ${
+          court.ward
+            ? ", " + esc(court.ward)
+            : ""
+        }
+        ${
+          court.province
+            ? ", " + esc(court.province)
+            : ""
+        }
+      </div>
+
+    </div>
+
+
+    <form
+      id="editForm"
+      class="card"
+    >
+
+      <div class="section-title">
+        ✏️ Thông tin bạn có thể tự sửa
+      </div>
+
+      <div class="field">
+        <label>SỐ ĐIỆN THOẠI</label>
+        <input id="fPhone" type="tel" inputmode="tel" value="${esc(court.phone)}">
+      </div>
+
+      <div class="field">
+        <label>ZALO</label>
+        <input id="fZalo" type="tel" inputmode="tel" value="${esc(court.zalo)}">
+      </div>
+
+      <div class="field">
+        <label>GIỜ MỞ CỬA</label>
+        <input id="fHours" placeholder="VD: 05:00-23:00" value="${esc(court.opening_hours)}">
+      </div>
+
+      <div class="field row2">
+
+        <div>
+          <label>GIÁ THẤP NHẤT / GIỜ</label>
+          <input id="fPriceMin" type="number" min="0" value="${esc(court.price_min)}">
+        </div>
+
+        <div>
+          <label>GIÁ CAO NHẤT / GIỜ</label>
+          <input id="fPriceMax" type="number" min="0" value="${esc(court.price_max)}">
+        </div>
+
+      </div>
+
+      <div class="field">
+        <label>TIỆN ÍCH</label>
+        <textarea id="fAmenities" placeholder="Bãi xe; WC; Nước uống; Thuê vợt/bóng; Phòng tắm...">${esc(court.amenities)}</textarea>
+      </div>
+
+      <div class="field">
+        <label>FACEBOOK SÂN</label>
+        <input id="fFacebook" placeholder="https://facebook.com/..." value="${esc(court.facebook_url)}">
+      </div>
+
+      <div class="field">
+        <label>WEBSITE</label>
+        <input id="fWebsite" placeholder="https://..." value="${esc(court.website_url)}">
+      </div>
+
+      <div class="field">
+        <label>LINK ĐẶT SÂN</label>
+        <input id="fBooking" placeholder="https://..." value="${esc(court.booking_url)}">
+        <div class="hint">
+          Tên sân, địa chỉ, tỉnh/phường và vị trí trên bản đồ
+          không tự sửa được ở đây — cần đúng, PickDee kiểm tra tay.
+        </div>
+      </div>
+
+      <button
+        id="submitBtn"
+        class="submit"
+        type="submit"
+      >
+        💾 Lưu thay đổi
+      </button>
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+    </form>
+
+  `;
+
+
+  const editForm =
+    document.getElementById(
+      "editForm"
+    );
+
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+
+  editForm.addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "Đang lưu...";
+
+      message.className =
+        "message";
+
+
+      try {
+
+        const {
+          error
+        } =
+          await sb.rpc(
+            "court_owner_update_court",
+            {
+              p_court_id:
+                court.id,
+
+              p_phone:
+                document.getElementById("fPhone").value.trim(),
+
+              p_zalo:
+                document.getElementById("fZalo").value.trim(),
+
+              p_opening_hours:
+                document.getElementById("fHours").value.trim(),
+
+              p_price_min:
+                Number(
+                  document.getElementById("fPriceMin").value
+                )
+                ||
+                null,
+
+              p_price_max:
+                Number(
+                  document.getElementById("fPriceMax").value
+                )
+                ||
+                null,
+
+              p_amenities:
+                document.getElementById("fAmenities").value.trim(),
+
+              p_facebook_url:
+                document.getElementById("fFacebook").value.trim(),
+
+              p_website_url:
+                document.getElementById("fWebsite").value.trim(),
+
+              p_booking_url:
+                document.getElementById("fBooking").value.trim()
+
+            }
+          );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        message.className =
+          "message success";
+
+        message.textContent =
+          "Đã lưu! Thông tin sân đã được cập nhật.";
+
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "💾 Lưu thay đổi";
+
+      } catch (err) {
+
+        message.className =
+          "message error";
+
+        message.textContent =
+          "Lưu thất bại: "
+          +
+          (
+            err?.message
+            ||
+            "Thử lại sau."
+          );
+
+
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          "💾 Lưu thay đổi";
+
+      }
+
+    }
+  );
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>
