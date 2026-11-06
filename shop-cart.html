@@ -1639,6 +1639,47 @@
         cart
       );
 
+    // Khớp shop-checkout.html: có vợt → freeship (chuyển khoản trước); chỉ có giày → ship cố định 35.000đ
+    const cartHasPaddleItem =
+      cart.some(function (item) {
+        return itemRequiresGiftShirtSize(item);
+      });
+    const cartHasShoeItem =
+      cart.some(function (item) {
+        return [item.product_name, item.variant_name].some(function (n) {
+          return /^\s*giày/.test(
+            String(n || "").normalize("NFC").toLocaleLowerCase("vi-VN")
+          );
+        });
+      });
+
+    if (cartHasPaddleItem) {
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        freeShipping: true,
+        shippingPending: false,
+        shippingFee: 0,
+        customerTotal: merchandiseTotal,
+        reason:
+          "Đơn có vợt Pickleball thanh toán chuyển khoản trước: PickDee miễn phí vận chuyển."
+      };
+    }
+
+    if (cartHasShoeItem) {
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        freeShipping: false,
+        shippingPending: false,
+        shippingFee: 35000,
+        customerTotal: merchandiseTotal + 35000,
+        reason:
+          "Đơn có giày Pickleball: phí vận chuyển 35.000đ."
+      };
+    }
+
+
 
     /*
       Bóng Pickleball là hàng cồng kềnh.
