@@ -88,6 +88,14 @@
     .pdl-group.is-tab .pdl-head{display:flex}
     .pdl-more,.pdl-sum{grid-column:1/-1}
   }
+  .pdl-acc-card{min-height:0 !important}
+  .pdl-acc-head{display:flex;align-items:center;cursor:pointer;user-select:none;margin-bottom:0 !important}
+  .pdl-acc-card.pdl-acc-open>.pdl-acc-head{margin-bottom:14px !important}
+  .pdl-acc-chev{font-size:16px;color:rgba(255,255,255,.4);transition:transform .2s ease-out;flex:0 0 auto;margin-left:8px}
+  .pdl-acc-card.pdl-acc-open .pdl-acc-chev{transform:rotate(90deg);color:#ffc934}
+  .pdl-acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s ease-out}
+  .pdl-acc-card.pdl-acc-open .pdl-acc-body{grid-template-rows:1fr}
+  .pdl-acc-body-inner{min-height:0;overflow:hidden}
   #pdlBottom{display:none}
   @media(max-width:759px){
     #pdlBottom{position:fixed;left:0;right:0;bottom:0;z-index:900;display:grid;
@@ -267,7 +275,9 @@
     const head0 = [...block.querySelectorAll("h1,h2,h3,h4,[class*='title'],[class*='heading']")]
       .filter(el => el.textContent.trim().toLowerCase().includes(want0))
       .sort((a, b) => a.textContent.length - b.textContent.length)[0] || block;
-    isolate(cardOf(head0, block), block);
+    const card = cardOf(head0, block);
+    isolate(card, block);
+    if (card.classList.contains("pdl-acc-card")) card.classList.add("pdl-acc-open");
     focusBlock = block;
     expanded = false;
     if (!backBtn) {
@@ -314,6 +324,48 @@
     });
   }
 
+  /* ---------- gập các thẻ dashboard-grid thành accordion (thu gọn mặc định) ----------
+     Khối đầu tiên bên trong mỗi thẻ (thường là .dashboard-title, có khi là một hàng
+     tiêu đề phức tạp hơn như .coach-benefits-head) luôn hiện; phần còn lại gập lại. */
+  function buildCardAccordion() {
+    document.querySelectorAll(".dashboard-grid > .dashboard-card").forEach(card => {
+      if (card.dataset.pdlAcc) return;
+      const head = card.firstElementChild;
+      if (!head) return;
+      card.dataset.pdlAcc = "1";
+      card.classList.add("pdl-acc-card");
+      head.classList.add("pdl-acc-head");
+      const chevTarget = head.querySelector(".dashboard-title, .dashboard-card-title") || head;
+      const chev = document.createElement("span");
+      chev.className = "pdl-acc-chev";
+      chev.textContent = "›";
+      chevTarget.appendChild(chev);
+      head.setAttribute("role", "button");
+      head.setAttribute("tabindex", "0");
+      head.setAttribute("aria-expanded", "false");
+      const body = document.createElement("div");
+      body.className = "pdl-acc-body";
+      const inner = document.createElement("div");
+      inner.className = "pdl-acc-body-inner";
+      body.appendChild(inner);
+      let sib = head.nextSibling;
+      while (sib) {
+        const next = sib.nextSibling;
+        inner.appendChild(sib);
+        sib = next;
+      }
+      card.appendChild(body);
+      const toggle = () => {
+        const open = card.classList.toggle("pdl-acc-open");
+        head.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      head.addEventListener("click", toggle);
+      head.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
   /* ---------- số đếm ---------- */
   function readCount(id) {
     const el = document.getElementById(id);
@@ -324,6 +376,7 @@
 
   function sync() {
     if (!document.getElementById("pdLauncher") && !mount()) return;
+    buildCardAccordion();
     document.querySelectorAll("#pdLauncher [data-count-from], #pdlBottom [data-count-from]").forEach(t => {
       const n = readCount(t.dataset.countFrom);
       const b = t.querySelector(".pdl-badge");
