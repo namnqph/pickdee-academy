@@ -6104,6 +6104,39 @@
 
     }
 
+    /* Luật: đơn chuyển khoản phải được xác nhận ĐÃ NHẬN TIỀN trước khi xác nhận đơn */
+    if (
+      nextStatus === "confirmed"
+      &&
+      currentOrder.payment_method === "bank_transfer"
+      &&
+      currentOrder.payment_status !== "paid"
+    ) {
+
+      const blockMsg =
+        document.getElementById(
+          "message"
+        );
+
+      if (blockMsg) {
+
+        blockMsg.className =
+          "message error";
+
+        blockMsg.textContent =
+          "Khách chưa chuyển khoản. Hãy bấm \"Xác nhận đã thanh toán\" khi thấy tiền vào tài khoản, rồi mới xác nhận đơn.";
+
+        blockMsg.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+
+      }
+
+      return;
+
+    }
+
     actions
       .querySelectorAll(
         "button"
