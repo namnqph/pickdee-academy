@@ -14,10 +14,9 @@
     phone: { t: "Số điện thoại", a: "profile" },
     bio: { t: "Giới thiệu bản thân (ít nhất 20 ký tự)", a: "profile" },
     specialties: { t: "Chuyên môn giảng dạy", a: "profile" },
-    teach_courts: { t: "Nơi dạy + ngày dạy", a: "courts" },
     push: { t: "Bật thông báo trên điện thoại", a: "push" }
   };
-  const ORDER = ["teach_courts", "bio", "specialties", "avatar", "phone", "push"];
+  const ORDER = ["bio", "specialties", "avatar", "phone", "push"];
   let overlay = null, watching = false, gated = false;
   /* Thông báo chỉ bật được ở Safari/Chrome thật; iPhone phải thêm vào MH chính trước */
   const ua = navigator.userAgent || "";
@@ -68,7 +67,7 @@
       + ORDER.map(k => {
         const bad = missing.includes(k), it = ITEMS[k];
         return '<div class="it' + (bad ? "" : " ok") + '"><span class="ic">' + (bad ? "!" : "✓") + '</span><span class="t">' + it.t + '</span>'
-          + (bad ? '<button class="go" type="button" data-k="' + k + '" data-a="' + it.a + '">' + (it.a === "courts" ? "Khai" : it.a === "push" ? (pushHelp ? "Cách bật" : "Bật") : "Điền") + '</button>' : '') + '</div>';
+          + (bad ? '<button class="go" type="button" data-k="' + k + '" data-a="' + it.a + '">' + (it.a === "push" ? (pushHelp ? "Cách bật" : "Bật") : "Điền") + '</button>' : '') + '</div>';
       }).join("")
       + (pushHelp && inApp ? '<div class="hint" id="pdGateHint"><b>Bạn đang mở trong Zalo/Facebook</b>, ở đây không bật được thông báo. Bấm <b>⋯</b> ở góc màn hình → <b>' + (isIOS ? "Mở trong Safari" : "Mở bằng trình duyệt") + '</b>, đăng nhập rồi bấm <b>Bật</b>.'
           + '<div class="row">' + (isAndroid ? '<a href="intent://' + location.host + '/coach#Intent;scheme=https;package=com.android.chrome;end">Mở bằng Chrome</a>' : '') + '<button type="button" id="pdGateCopy">Sao chép link</button></div></div>' : '')
@@ -86,7 +85,6 @@
 
   const FIELD = { bio: "coachEditBio", specialties: "coachEditSpecialties", phone: "coachEditPhone" };
   function act(a, btn, k) {
-    if (a === "courts") { location.href = "/coach-teach-courts"; return; }
     if (a === "profile") {
       overlay.style.display = "none";
       document.documentElement.classList.add("pd-gate-edit"); // màn mời bật thông báo (pd-push-prompt) không che form hồ sơ
