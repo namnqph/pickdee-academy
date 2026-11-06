@@ -1793,17 +1793,51 @@ if (!selectedCoachId) {
     ${
       allowedPackages
         .map(
-          item => `
+          item => {
+
+            const code =
+              String(
+                item.package_code || ""
+              )
+                .trim()
+                .toUpperCase();
+
+            const priceText =
+              code === "TYC"
+                ?
+                  "550.000đ - 600.000đ/người/buổi"
+                :
+                  (
+                    item.price
+                      ?
+                        money(item.price)
+                      :
+                        (
+                          item.unit_price
+                            ?
+                              money(
+                                item.unit_price
+                              )
+                              +
+                              "/người/buổi"
+                            :
+                              "Liên hệ"
+                        )
+                  );
+
+            return `
 
             <option
               value="${Number(item.id)}"
             >
               ${escapeHtml(
                 item.package_name
-              )}
+              )} - ${escapeHtml(priceText)}
             </option>
 
-          `
+          `;
+
+          }
         )
         .join("")
     }
