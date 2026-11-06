@@ -327,10 +327,40 @@
   /* ---------- gập các thẻ dashboard-grid thành accordion (thu gọn mặc định) ----------
      Khối đầu tiên bên trong mỗi thẻ (thường là .dashboard-title, có khi là một hàng
      tiêu đề phức tạp hơn như .coach-benefits-head) luôn hiện; phần còn lại gập lại. */
+  /* Gắn 1 lần duy nhất trên document (uỷ quyền sự kiện): vài trang (coach.html)
+     có code cũ tự cloneNode+replaceWith thẻ "Lịch dạy"/"Buổi dạy tiếp theo" sau khi
+     tải dữ liệu xong (cloneNode KHÔNG chép listener) — gắn thẳng listener vào head
+     từng thẻ sẽ mất tác dụng khi đó; uỷ quyền qua document thì vẫn bắt được sự kiện
+     bubble lên từ node mới vì class/role vẫn được cloneNode chép lại đầy đủ. */
+  let accDelegationWired = false;
+  function wireAccordionDelegation() {
+    if (accDelegationWired) return;
+    accDelegationWired = true;
+    const toggle = head => {
+      const card = head.closest(".pdl-acc-card");
+      if (!card) return;
+      const open = card.classList.toggle("pdl-acc-open");
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    document.addEventListener("click", e => {
+      const head = e.target.closest(".pdl-acc-head");
+      if (head) toggle(head);
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const head = e.target.closest(".pdl-acc-head");
+      if (!head) return;
+      e.preventDefault();
+      toggle(head);
+    });
+  }
+
   function buildCardAccordion() {
+    wireAccordionDelegation();
     document.querySelectorAll(".dashboard-grid > .dashboard-card").forEach(card => {
       if (card.dataset.pdlAcc) return;
-      const head = card.firstElementChild;
+      /* tiêu đề có thể không phải con đầu tiên (vd thẻ có badge số đứng trước tiêu đề) */
+      const head = card.querySelector(":scope > .dashboard-title, :scope > .dashboard-card-title") || card.firstElementChild;
       if (!head) return;
       card.dataset.pdlAcc = "1";
       card.classList.add("pdl-acc-card");
@@ -355,14 +385,6 @@
         sib = next;
       }
       card.appendChild(body);
-      const toggle = () => {
-        const open = card.classList.toggle("pdl-acc-open");
-        head.setAttribute("aria-expanded", open ? "true" : "false");
-      };
-      head.addEventListener("click", toggle);
-      head.addEventListener("keydown", e => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
-      });
     });
   }
 
