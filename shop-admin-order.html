@@ -6397,37 +6397,65 @@ if (
       return;
     }
 
-    const {
-      data,
-      error
-    } =
-      await sb
-        .from(
-          "shop_product_images"
-        )
-        .select(
-          "product_id,variant_id,storage_path,sort_order,is_primary"
-        )
-        .in(
-          "product_id",
-          productIds
-        )
-        .order(
-          "is_primary",
-          { ascending: false }
-        )
-        .order(
-          "sort_order",
-          { ascending: true }
-        );
+    const [
+      imagesRes,
+      variantsRes
+    ] =
+      await Promise.all([
+        sb
+          .from(
+            "shop_product_images"
+          )
+          .select(
+            "product_id,variant_id,storage_path,sort_order,is_primary"
+          )
+          .in(
+            "product_id",
+            productIds
+          )
+          .order(
+            "is_primary",
+            { ascending: false }
+          )
+          .order(
+            "sort_order",
+            { ascending: true }
+          ),
+        sb
+          .from(
+            "shop_product_variants"
+          )
+          .select(
+            "id,product_id,option1_value"
+          )
+          .in(
+            "product_id",
+            productIds
+          )
+      ]);
 
-    if (error) {
-      console.warn("shop order item images:", error);
+    if (imagesRes.error) {
+      console.warn("shop order item images:", imagesRes.error);
       return;
     }
 
+    if (variantsRes.error) {
+      console.warn("shop order item image variants:", variantsRes.error);
+    }
+
     const rows =
-      data || [];
+      imagesRes.data || [];
+
+    /*
+      Ảnh chỉ gắn vào 1 size đại diện cho mỗi màu/model (VD "Xanh dương - Size 40"),
+      không gắn đủ mọi size. Khớp đúng variant_id trước, không có thì khớp theo
+      màu/model (option1_value) qua bảng biến thể, tránh rơi về ảnh sai màu.
+    */
+    const variantColorMap =
+      new Map(
+        (variantsRes.data || [])
+          .map(v => [v.id, v.option1_value])
+      );
 
     items.forEach(function (item) {
 
@@ -6436,8 +6464,21 @@ if (
         ??
         item.stock_variant_id;
 
+      const itemColor =
+        variantColorMap.get(variantId);
+
       const row =
         rows.find(r => variantId && r.variant_id === variantId)
+        ||
+        (itemColor &&
+          rows.find(
+            r =>
+              r.product_id === item.product_id
+              &&
+              r.variant_id
+              &&
+              variantColorMap.get(r.variant_id) === itemColor
+          ))
         ||
         rows.find(r => r.product_id === item.product_id && !r.variant_id)
         ||
