@@ -2733,6 +2733,26 @@ function updateCartCount() {
     );
 
 
+  // Đồng nhất: ảnh đầu (thumbnail đang sáng) là màu nào thì nút MÀU cũng chọn sẵn màu đó,
+  // tránh cảnh thumbnail sáng "Trắng" nhưng bấm Mua ngay lại bị bắt chọn màu.
+  if (!selectedOption1Value && option1Values.length) {
+    const firstImgVariant =
+      sortedImages[0]?.variant_id
+        ? variants.find(v => String(v.id) === String(sortedImages[0].variant_id))
+        : null;
+    const preColor =
+      firstImgVariant?.option1_value
+      || selectedVariant?.option1_value
+      || "";
+    if (preColor && option1Values.map(String).includes(String(preColor))) {
+      selectedOption1Value = String(preColor);
+      const pv = variants.find(
+        v => String(v.option1_value || "") === selectedOption1Value
+      );
+      if (pv) selectedVariant = pv;
+    }
+  }
+
   const option1Buttons =
     option1Values
       .map(
