@@ -1372,6 +1372,19 @@
 
   </section>
 
+  <script>
+    /* Ẩn (không xoá) các thẻ dashboard-grid trùng với trang riêng mà tile đã trỏ thẳng tới
+       (Gói học hiện tại, Coach phụ trách, Buổi học tiếp theo, Học phí) để màn hình chính
+       chỉ còn lưới icon, không kéo dài — số đếm/badge trên tile vẫn đọc nguyên id bên trong. */
+    (function () {
+      ["dashboardPackageName", "dashboardCoachName", "dashboardNextSession", "dashboardPaymentStatus"].forEach(id => {
+        document.getElementById(id)?.closest(".dashboard-card")?.classList.add("pdl-legacy-hide");
+      });
+    })();
+  </script>
+  <style>
+    .dashboard-grid > .dashboard-card.pdl-legacy-hide { display: none !important; }
+  </style>
 
   <div id="dashboardMessage"></div>
 
@@ -7103,7 +7116,6 @@ window.PD_LAUNCHER = {
   heroSelector: "main > .eyebrow, #studentName, #studentCode",
   hashSections: { "#ho-so": "Hồ sơ của tôi" },
   storageKey: "pd_student_home",
-  moreLabel: "📋 Xem tất cả thông tin",
   summary: { icon: "🎯", title: "Trình độ của tôi", section: "Trình độ của tôi",
     main: "studentSkillLevel", sub: "studentSkillScore",
     refs: [{ label: "SportConnect", from: "studentSportconnectReference" }, { label: "DUPR", from: "studentDuprReference" }] },

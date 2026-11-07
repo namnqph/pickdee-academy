@@ -57,9 +57,6 @@
   .pdl-group.is-tab{display:none}
   .pdl-group.is-tab.is-active{display:block}
   .pdl-group.is-tab .pdl-head{display:none}
-  .pdl-more{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.04);color:rgba(255,255,255,.85);font:inherit;
-    font-size:14px;font-weight:800;cursor:pointer}
   .pdl-sum{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:20px;
     color:#fff;text-decoration:none;border:1px solid rgba(255,201,52,.35);
     background:linear-gradient(135deg,rgba(255,255,255,.112),rgba(64,224,176,.06) 60%,rgba(255,255,255,.02));
@@ -86,7 +83,7 @@
     .pdl-tabs{display:none}
     .pdl-group.is-tab{display:block}
     .pdl-group.is-tab .pdl-head{display:flex}
-    .pdl-more,.pdl-sum{grid-column:1/-1}
+    .pdl-sum{grid-column:1/-1}
   }
   .pdl-acc-card{min-height:0 !important}
   .pdl-acc-head{display:flex;align-items:center;cursor:pointer;user-select:none;margin-bottom:0 !important}
@@ -153,7 +150,7 @@
       <section class="pdl-group c-${g.color || "lime"}${g.urgent ? " is-urgent" : ""}">
         <div class="pdl-head"><span class="pdl-head-icon">${g.icon}</span><span class="pdl-head-title">${esc(g.title)}</span></div>
         <div class="pdl-tiles">${g.tiles.map(tileHtml).join("")}</div>
-      </section>`).join("") + `<button type="button" class="pdl-more" id="pdlMore"></button>`;
+      </section>`).join("");
     anchor.parentNode.insertBefore(box, anchor);
 
     const tabGroups = [...box.querySelectorAll(".pdl-group:not(.is-urgent)")];
@@ -193,8 +190,9 @@
     return true;
   }
 
-  /* ---------- thu gọn phần chi tiết ---------- */
-  let expanded = store.get("more") === "1";
+  /* ---------- màn hình chính = chỉ lưới icon; bấm icon mới ra đúng 1 khối ----------
+     Không còn "Xem tất cả thông tin" dồn hết các khối lại — luôn chỉ 1 khối hiện tại
+     một lúc, đúng kiểu app, không kéo dài như landing page. */
   let focusBlock = null;
   let backBtn = null;
 
@@ -217,14 +215,12 @@
     if (!box) return;
     const { out } = detailNodes();
     out.forEach(el => {
-      const show = expanded || (focusBlock && (el === focusBlock || el.contains(focusBlock)));
+      const show = focusBlock && (el === focusBlock || el.contains(focusBlock));
       el.classList.toggle("pdl-hide", !show);
     });
-    box.classList.toggle("pdl-hide", !!focusBlock && !expanded);
-    if (cfg.heroSelector) document.querySelectorAll(cfg.heroSelector).forEach(h => h.classList.toggle("pdl-hide", !!focusBlock && !expanded));
-    if (backBtn) backBtn.classList.toggle("pdl-hide", !focusBlock || expanded);
-    const more = document.getElementById("pdlMore");
-    if (more) more.textContent = expanded ? "▲ Thu gọn" : (cfg.moreLabel || "📋 Xem tất cả thông tin");
+    box.classList.toggle("pdl-hide", !!focusBlock);
+    if (cfg.heroSelector) document.querySelectorAll(cfg.heroSelector).forEach(h => h.classList.toggle("pdl-hide", !!focusBlock));
+    if (backBtn) backBtn.classList.toggle("pdl-hide", !focusBlock);
   }
 
   function findSection(text) {
@@ -279,7 +275,6 @@
     isolate(card, block);
     if (card.classList.contains("pdl-acc-card")) card.classList.add("pdl-acc-open");
     focusBlock = block;
-    expanded = false;
     if (!backBtn) {
       backBtn = document.createElement("button");
       backBtn.type = "button";
@@ -314,13 +309,6 @@
       e.preventDefault();
       if (a.dataset.top) return goHome();
       if (!openSection(a.dataset.section)) a.classList.add("pdl-hide");
-    });
-    document.getElementById("pdlMore").addEventListener("click", () => {
-      expanded = !expanded;
-      focusBlock = null;
-      clearFocusIsolation();
-      store.set("more", expanded ? "1" : "0");
-      applyCollapse();
     });
   }
 
