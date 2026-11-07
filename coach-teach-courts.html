@@ -52,10 +52,18 @@
     .neg .r2{display:flex;gap:8px}
     .neg input{flex:1;min-width:0;min-height:44px;font-size:15px}
     .note{margin-top:8px;font-size:12px;color:#a3a3a3;line-height:1.45}
-    .court{display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+    .court{padding:12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+    .court .top{display:flex;align-items:center;gap:10px}
+    .court .thumb{flex:none;width:52px;height:52px;border-radius:10px;object-fit:cover;background:rgba(255,255,255,.08)}
     .court .i{flex:1;min-width:0}
     .court b{display:block;font-size:15px}
     .court .km{flex:none;color:#ffc934;font-weight:900;font-size:13px}
+    .court .meta{margin-top:8px;font-size:12.5px;color:#cecece;line-height:1.5}
+    .court .meta .price{color:#ffc934;font-weight:800}
+    .court .meta .amen{color:#8f8f8f;display:block;margin-top:2px}
+    .court .act{display:flex;gap:8px;margin-top:10px}
+    .court .map{flex:1;text-align:center;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:#cecece;font-weight:800;font-size:12.5px;padding:9px 10px;text-decoration:none}
+    .court .add{flex:1}
     .add{flex:none;border:0;border-radius:10px;background:#ffc934;color:#0f0f0f;font-weight:900;font-size:13px;padding:9px 12px}
     .empty{color:#a3a3a3;font-size:14px;line-height:1.5;padding:8px 2px}
     .empty a,.foot a{color:#ffc934}
@@ -123,7 +131,7 @@
         + '<div class="days">' + DAY.map((d, k) => '<button type="button" data-day="' + (k + 1) + '" class="' + (c.days.includes(k + 1) ? "on" : "") + '">' + d + '</button>').join("") + '</div>'
         + '<label class="tmp"><input type="checkbox" data-tmp="1"' + (tmp ? " checked" : "") + '> Chỉ dạy tạm thời (công tác, đi xa)</label>'
         + (tmp ? '<div class="dates">Từ <input type="date" data-from="1" value="' + esc(c.date_from || "") + '" min="' + today + '"> đến <input type="date" data-to="1" value="' + esc(c.date_to || "") + '" min="' + today + '"></div>' : '')
-        + (c._isNew ? '<div class="neg"><div class="hint">Sân mới — nhập giá đã thoả thuận với sân (tối đa 120.000đ/giờ, 1 giờ/buổi) và SĐT người liên hệ tại sân để PickDee gọi book + trả tiền.</div>'
+        + (c._isNew ? '<div class="neg"><div class="hint">Sân mới — nhập giá đã thoả thuận với sân (tối đa 120.000đ/giờ, 1 giờ/buổi) và SĐT người liên hệ tại sân để PickDee gọi book + trả tiền. Lưu ít nhất <b>24 giờ</b> trước buổi dạy đầu tiên để PickDee kịp liên hệ đặt sân.</div>'
           + '<div class="r2"><input type="number" inputmode="numeric" min="1" max="120000" step="1000" placeholder="Giá đ/giờ (tối đa 120.000)" data-price value="' + esc(c._price || "") + '">'
           + '<input type="tel" placeholder="SĐT người liên hệ sân" data-phone value="' + esc(c._phone || "") + '"></div></div>' : '')
         + '</div>';
@@ -150,13 +158,33 @@
     });
   }
 
+  function photoUrl(p) { return p && window.sb ? sb.storage.from("court-photos").getPublicUrl(p).data.publicUrl : ""; }
+  function fmtVnd(n) { return Number(n).toLocaleString("vi-VN") + "đ"; }
+
   function paintList() {
     const has = new Set(mine.map(c => c.id));
     const rest = rows.filter(c => !has.has(c.id));
     const q = $("q").value.trim();
-    $("list").innerHTML = rest.length ? rest.map(c => '<div class="court"><div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || [c.ward, c.province].filter(Boolean).join(", ")) + '</small></div>'
-      + (c.distance_km != null ? '<span class="km">' + Number(c.distance_km).toLocaleString("vi-VN") + ' km</span>' : '')
-      + '<button class="add" type="button" data-id="' + c.id + '">+ Thêm</button></div>').join("")
+    $("list").innerHTML = rest.length ? rest.map(c => {
+      const photo = photoUrl(c.photo_path);
+      const price = c.price_min != null ? '<span class="price">' + fmtVnd(c.price_min) + (c.price_max != null && c.price_max !== c.price_min ? "–" + fmtVnd(c.price_max) : "") + "/giờ</span> (giá công khai, có thể thoả thuận riêng)" : "Chưa rõ giá — gọi hỏi trực tiếp";
+      const mapHref = c.latitude != null && c.longitude != null ? "https://www.google.com/maps?q=" + c.latitude + "," + c.longitude : "";
+      return '<div class="court">'
+        + '<div class="top">'
+        + (photo ? '<img class="thumb" src="' + esc(photo) + '" alt="" loading="lazy">' : '<div class="thumb"></div>')
+        + '<div class="i"><b>' + esc(c.court_name) + '</b><small>' + esc(c.address || [c.ward, c.province].filter(Boolean).join(", ")) + '</small></div>'
+        + (c.distance_km != null ? '<span class="km">' + Number(c.distance_km).toLocaleString("vi-VN") + ' km</span>' : '')
+        + '</div>'
+        + '<div class="meta">' + price
+        + (c.opening_hours ? ' · Giờ mở: ' + esc(c.opening_hours) : '')
+        + (c.phone ? ' · ' + esc(c.phone) : '')
+        + (c.amenities ? '<span class="amen">' + esc(c.amenities) + '</span>' : '')
+        + '</div>'
+        + '<div class="act">'
+        + (mapHref ? '<a class="map" href="' + esc(mapHref) + '" target="_blank" rel="noopener">📍 Xem bản đồ</a>' : '')
+        + '<button class="add" type="button" data-id="' + c.id + '">+ Thêm</button>'
+        + '</div></div>';
+    }).join("")
       : '<div class="empty">' + (q ? 'Không thấy sân "' + esc(q) + '" ở khu vực này. Thử chọn tỉnh khác, bấm "Gần tôi" khi bạn đang ở đó, hoặc tìm theo tên đường.' : $("prov").value || ll ? "Chưa có sân ở khu vực này." : 'Chưa có sân trong khu vực bạn đăng ký — chọn tỉnh nơi bạn dạy ở ô bên trên.') + '</div>';
     $("list").querySelectorAll("[data-id]").forEach(b => b.onclick = () => {
       if (mine.length >= MAX) return say("Tối đa " + MAX + " sân.", "err");
