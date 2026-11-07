@@ -830,7 +830,11 @@ window.PICKDEE_NOTIFICATION_ROLE =
     st.textContent = rows.map(r => {
       const name = r.student_name || "Học viên";
       const at = hhmm(new Date(r.confirmed_at));
-      return "✅ " + name + " · " + at;
+      let gps = "";
+      if (!r.has_gps) gps = " · chưa bật vị trí";
+      else if (r.within_range) gps = " · cách sân " + distText(r.distance_m);
+      else gps = " · ⚠️ cách sân " + distText(r.distance_m) + ", ngoài phạm vi";
+      return "✅ " + name + " · " + at + gps;
     }).join("\n");
     st.style.whiteSpace = "pre-line";
   }
