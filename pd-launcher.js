@@ -439,6 +439,9 @@
     window.addEventListener("hashchange", openFromHash); // vd. màn hoàn tất hồ sơ đặt #ho-so khi trang đã mở
   }
 
+  /* Cho code khác (vd. menu ☰ cũ) mở đúng 1 khối theo tiêu đề, giống bấm tile */
+  window.pdOpenSection = text => openSection(text);
+
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
 
