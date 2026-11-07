@@ -354,6 +354,32 @@
       font-size: 12px;
     }
 
+    .confirm-cell {
+      min-width: 150px;
+    }
+
+    .confirm-btn {
+      border: 1px solid rgba(255,201,52,.5);
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(255,201,52,.08);
+      color: #ffc934;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .confirm-btn:hover {
+      background: rgba(255,201,52,.16);
+    }
+
+    .confirmed-box {
+      color: #ffc934;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     /* =====================================================
        MODAL ĐÁNH GIÁ
     ====================================================== */
@@ -687,6 +713,7 @@
 
   <div class="sub">
     Theo dõi các buổi học thuộc gói học của bạn.
+    Xác nhận có mặt để giúp PickDee đối soát buổi học.
     Buổi đã hoàn thành có thể đánh giá Coach 1–5 sao.
   </div>
 
@@ -765,6 +792,7 @@
             <th>Coach</th>
             <th>Sân</th>
             <th>Trạng thái</th>
+            <th>Xác nhận đã học</th>
             <th>Đánh giá Coach</th>
 
           </tr>
@@ -775,7 +803,7 @@
 
           <tr>
 
-            <td colspan="8">
+            <td colspan="9">
               Đang tải lịch học...
             </td>
 
@@ -1071,6 +1099,12 @@
 
   let reviewMap =
     new Map();
+
+  let confirmMap =
+    new Map();
+
+  let confirmBusy =
+    new Set();
 
   let selectedSession =
     null;
@@ -1525,6 +1559,155 @@
   /* =====================================================
      LOAD REVIEW CŨ
   ====================================================== */
+
+  /* =====================================================
+     XÁC NHẬN ĐÃ HỌC (tín hiệu chống gian lận, không chặn
+     lương/hoàn thành buổi) — gọi RPC riêng cho từng buổi
+     vì bảng student_session_confirmations không mở RLS,
+     chỉ đọc được qua get_student_session_confirmation.
+  ====================================================== */
+
+  async function loadMyConfirmations(
+    sessionIds
+  ) {
+
+    confirmMap =
+      new Map();
+
+    if (
+      !Array.isArray(sessionIds)
+      || sessionIds.length === 0
+    ) {
+
+      return;
+
+    }
+
+    await Promise.all(
+      sessionIds.map(
+        async id => {
+
+          const { data, error } =
+            await sb.rpc(
+              "get_student_session_confirmation",
+              { p_session_id: id }
+            );
+
+          if (!error && data) {
+
+            confirmMap.set(
+              Number(id),
+              data
+            );
+
+          }
+
+        }
+      )
+    );
+
+  }
+
+  function getGeolocationBestEffort() {
+
+    return new Promise(
+      resolve => {
+
+        if (
+          !navigator.geolocation
+        ) {
+
+          resolve(null);
+          return;
+
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve(pos.coords),
+          () => resolve(null),
+          { timeout: 6000 }
+        );
+
+      }
+    );
+
+  }
+
+  async function submitMyConfirmation(
+    sessionId,
+    button
+  ) {
+
+    if (
+      !sessionId
+      ||
+      confirmBusy.has(sessionId)
+    ) {
+
+      return;
+
+    }
+
+    confirmBusy.add(
+      sessionId
+    );
+
+    const oldText =
+      button.textContent;
+
+    button.disabled = true;
+    button.textContent =
+      "⏳ Đang xác nhận...";
+
+    const coords =
+      await getGeolocationBestEffort();
+
+    const { data, error } =
+      await sb.rpc(
+        "student_session_checkin",
+        {
+          p_session_id: sessionId,
+          p_lat: coords
+            ? coords.latitude
+            : null,
+          p_lng: coords
+            ? coords.longitude
+            : null,
+          p_accuracy: coords
+            ? coords.accuracy
+            : null
+        }
+      );
+
+    confirmBusy.delete(
+      sessionId
+    );
+
+    if (
+      error
+    ) {
+
+      button.disabled = false;
+      button.textContent = oldText;
+
+      alert(
+        error.message
+        ||
+        "Không xác nhận được. Thử lại sau."
+      );
+
+      return;
+
+    }
+
+    confirmMap.set(
+      Number(sessionId),
+      data
+    );
+
+    renderSessions();
+
+  }
 
   async function loadExistingReviews(
     sessionIds
@@ -2005,6 +2188,65 @@
                 Number(item.id)
               );
 
+            const existingConfirm =
+              confirmMap.get(
+                Number(item.id)
+              );
+
+            let confirmHtml =
+              `
+                <span class="not-reviewable">
+                  —
+                </span>
+              `;
+
+            if (
+              existingConfirm
+              &&
+              existingConfirm.confirmed_at
+            ) {
+
+              confirmHtml =
+                `
+                  <div class="confirmed-box">
+                    ✅ Đã xác nhận
+                  </div>
+                `;
+
+            }
+            else if (
+              status === "Chờ học"
+              ||
+              status === "Đã hoàn thành"
+            ) {
+
+              confirmHtml =
+                `
+                  <button
+                    type="button"
+                    class="confirm-btn"
+                    data-confirm-session="${Number(
+                      item.id
+                    )}"
+                  >
+                    ✅ Xác nhận có mặt
+                  </button>
+                `;
+
+            }
+            else if (
+              status === "Vắng"
+            ) {
+
+              confirmHtml =
+                `
+                  <span class="not-reviewable">
+                    Không áp dụng
+                  </span>
+                `;
+
+            }
+
 
             let reviewHtml =
               `
@@ -2164,6 +2406,10 @@
 
                 </td>
 
+                <td class="confirm-cell">
+                  ${confirmHtml}
+                </td>
+
                 <td class="review-cell">
                   ${reviewHtml}
                 </td>
@@ -2174,6 +2420,32 @@
           }
         )
         .join("");
+
+
+    document
+      .querySelectorAll(
+        "[data-confirm-session]"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            function () {
+
+              submitMyConfirmation(
+                Number(
+                  button.dataset
+                    .confirmSession
+                ),
+                button
+              );
+
+            }
+          );
+
+        }
+      );
 
 
     document
@@ -2551,7 +2823,7 @@
       sessionBody.innerHTML =
         `
           <tr>
-            <td colspan="8">
+            <td colspan="9">
               Không tải được dữ liệu lịch học.
             </td>
           </tr>
@@ -2672,7 +2944,7 @@
        REVIEW ĐÃ CÓ
     ====================================================== */
 
-    await loadExistingReviews(
+    const visibleSessionIds =
       currentSessions
         .map(
           item =>
@@ -2680,7 +2952,14 @@
               item.id
             )
         )
-        .filter(Boolean)
+        .filter(Boolean);
+
+    await loadExistingReviews(
+      visibleSessionIds
+    );
+
+    await loadMyConfirmations(
+      visibleSessionIds
     );
 
 

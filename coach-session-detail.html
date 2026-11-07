@@ -586,6 +586,13 @@
         <button id="checkinBtn" class="checkin" type="button" hidden>📍 Check-in tại sân</button>
       </div>
 
+      <div class="item" id="studentConfirmItem" hidden>
+        <div class="label">
+          Học viên tự xác nhận
+        </div>
+        <div class="value" id="studentConfirmStatus">—</div>
+      </div>
+
 
     </div>
 
@@ -804,6 +811,28 @@ window.PICKDEE_NOTIFICATION_ROLE =
     st.textContent = text + (note ? "\n" + note : "");
     st.style.whiteSpace = "pre-line";
     btn.hidden = !(inWindow && !(ck && (ck.within_range || !ck.court_has_location)));
+  }
+
+  /* Tín hiệu chống gian lận: học viên tự xác nhận "đã học" ở phía họ,
+     chỉ hiển thị cho Coach xem, KHÔNG chặn nút Hoàn thành/trả lương. */
+  async function showStudentConfirm() {
+    const item = document.getElementById("studentConfirmItem");
+    const st = document.getElementById("studentConfirmStatus");
+    const s = currentSession;
+    if (!item || !s || !sb) return;
+    if (["Đã hủy", "Hủy", "Đã huỷ", "Huỷ"].includes(String(s.status || ""))) { item.hidden = true; return; }
+    const { data: rows } = await sb.rpc("coach_get_session_student_confirmations", { p_session_id: sessionId });
+    item.hidden = false;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      st.textContent = "Chưa xác nhận";
+      return;
+    }
+    st.textContent = rows.map(r => {
+      const name = r.student_name || "Học viên";
+      const at = hhmm(new Date(r.confirmed_at));
+      return "✅ " + name + " · " + at;
+    }).join("\n");
+    st.style.whiteSpace = "pre-line";
   }
 
   document.addEventListener("click", e => {
@@ -1675,6 +1704,7 @@ else {
 
     showCourtBooking();
     showCheckin();
+    showStudentConfirm();
 
 
     noteInput.value =
