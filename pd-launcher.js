@@ -75,7 +75,7 @@
   .pdl-sum-go{flex:0 0 auto;font-size:22px;color:rgba(255,201,52,.8)}
   .pdl-hide{display:none !important}
   .pdl-hide-focus{display:none !important}
-  .pdl-back{position:sticky;top:8px;z-index:20;display:inline-flex;align-items:center;gap:6px;
+  .pdl-back{position:sticky;top:80px;z-index:20;display:inline-flex;align-items:center;gap:6px;
     margin:0 0 10px;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,201,52,.35);
     background:rgba(15,15,15,.92);color:#ffc934;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
   @media(min-width:900px){
@@ -289,8 +289,11 @@
     const want = text.toLowerCase();
     const head = [...block.querySelectorAll("h1,h2,h3,h4,[class*='title'],[class*='heading']")]
       .find(el => el.textContent.trim().toLowerCase().includes(want)) || block;
-    head.style.scrollMarginTop = "64px";
-    setTimeout(() => head.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    head.style.scrollMarginTop = "130px";
+    /* Nhảy thẳng (không cuộn mượt) — cuộn mượt qua phần vừa ẩn/hiện dễ trông như
+       có khối nào đó "hiện lên rồi tắt" giữa chừng animation. Đợi 1 khung hình để
+       layout của phần vừa ẩn/hiện ổn định trước khi tính vị trí cuộn. */
+    requestAnimationFrame(() => head.scrollIntoView({ behavior: "instant", block: "start" }));
     return true;
   }
 
