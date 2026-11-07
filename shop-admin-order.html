@@ -1704,6 +1704,15 @@
 
                   </div>
 
+                  ${
+                    (isShopManager
+                      && ["new","confirmed","packing"].includes(o.order_status)
+                      && !o.tracking_code
+                      && item.variant_id)
+                      ? `<button type="button" data-swap-item="${item.id}" style="margin-top:8px;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,201,52,.5);background:transparent;color:#ffc934;font-weight:800;font-size:13px;cursor:pointer">🔄 Đổi màu / size</button>`
+                      : ""
+                  }
+
                 </div>
 
                 <div class="item-total">
@@ -9293,9 +9302,56 @@ render =
     mountSupplierSettlementUI();
 
   };
+
+  /* ===== Admin đổi màu/size/biến thể của dòng hàng ===== */
+  document.addEventListener("click", async function (ev) {
+    const btn = ev.target.closest("[data-swap-item]");
+    if (!btn) return;
+    const item = currentItems.find(i => String(i.id) === btn.dataset.swapItem);
+    if (!item) return;
+    btn.disabled = true;
+    try {
+      const { data, error } = await sb.from("shop_product_variants")
+        .select("id,variant_name,sku,price,is_sold_out")
+        .eq("product_id", item.product_id).eq("is_active", true)
+        .order("sort_order", { ascending: true }).order("id", { ascending: true });
+      if (error) throw error;
+      const opts = (data || []).filter(v => Number(v.id) !== Number(item.variant_id));
+      const ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;padding:12px";
+      const rows = opts.map(v => {
+        const diff = Number(v.price) !== Number(item.unit_price);
+        const off = v.is_sold_out || diff;
+        return `<button type="button" ${off ? "disabled" : ""} data-pick="${v.id}" style="display:block;width:100%;text-align:left;margin:6px 0;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:${off ? "rgba(255,255,255,.04)" : "rgba(255,201,52,.12)"};color:${off ? "rgba(255,255,255,.4)" : "#fff"};font-size:15px;font-weight:700;cursor:${off ? "not-allowed" : "pointer"}">${escapeHtml(v.variant_name || "Mặc định")}${v.is_sold_out ? " · hết hàng" : diff ? " · khác giá" : ""}</button>`;
+      }).join("") || '<div style="color:rgba(255,255,255,.6);padding:8px 0">Sản phẩm này không có biến thể khác.</div>';
+      ov.innerHTML = `<div style="width:100%;max-width:460px;max-height:80vh;overflow:auto;background:#161616;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px;color:#fff"><div style="font-weight:900;font-size:17px">Đổi biến thể</div><div style="color:rgba(255,255,255,.6);font-size:13px;margin:4px 0 10px">${escapeHtml(item.product_name || "")} — hiện tại: <b>${escapeHtml(item.variant_name || "")}</b>. Chỉ đổi được sang loại cùng giá còn hàng; tồn kho tự cập nhật.</div>${rows}<button type="button" data-close style="margin-top:8px;width:100%;padding:12px;border-radius:12px;border:0;background:rgba(255,255,255,.1);color:#fff;font-weight:800;cursor:pointer">Đóng</button></div>`;
+      document.body.appendChild(ov);
+      ov.addEventListener("click", async function (e) {
+        if (e.target === ov || e.target.closest("[data-close]")) { ov.remove(); return; }
+        const pick = e.target.closest("[data-pick]");
+        if (!pick || pick.disabled) return;
+        ov.querySelectorAll("button").forEach(b => b.disabled = true);
+        const { data: r, error: err } = await sb.rpc("shop_admin_change_order_item_variant", {
+          p_item_id: item.id, p_new_variant_id: Number(pick.dataset.pick)
+        });
+        ov.remove();
+        if (err) { alert("Không đổi được: " + (err.message || err)); return; }
+        let msg = "Đã đổi: " + r.old_variant + " → " + r.new_variant + ".";
+        if (r.supplier_already_sent) msg += "\n⚠️ Đã gửi tin cho hãng/nhà cung cấp — nhớ báo lại họ biến thể mới.";
+        await loadOrder();
+        alert(msg);
+      });
+    } catch (e) {
+      alert("Không tải được danh sách biến thể: " + (e.message || e));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
   loadOrder();
 
 })();
+
 
 </script>
 
