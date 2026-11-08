@@ -14254,7 +14254,7 @@ else {
   }
 
 
-  async function updateMapPreview(wardCode) {
+  async function updateMapPreview(wardCode, exactLatLng) {
 
     const ward =
       allWards.find(
@@ -14262,7 +14262,17 @@ else {
       );
 
 
-    if (!ward || ward.lat == null || ward.lng == null) {
+    const ll =
+      exactLatLng
+      ||
+      (
+        ward && ward.lat != null && ward.lng != null
+          ? [ward.lat, ward.lng]
+          : null
+      );
+
+
+    if (!ll) {
 
       mapWrap.style.display = "none";
 
@@ -14271,12 +14281,15 @@ else {
     }
 
 
+    const zoom =
+      exactLatLng
+        ? 16
+        : 13;
+
+
     mapWrap.style.display = "block";
 
     await loadLeaflet();
-
-
-    const ll = [ward.lat, ward.lng];
 
 
     if (!areaMap) {
@@ -14289,7 +14302,7 @@ else {
             attributionControl: true
           }
         )
-        .setView(ll, 14);
+        .setView(ll, zoom);
 
       L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -14305,7 +14318,7 @@ else {
     }
     else {
 
-      areaMap.setView(ll, 14);
+      areaMap.setView(ll, zoom);
       areaMapMarker.setLatLng(ll);
 
       setTimeout(
@@ -14398,7 +14411,7 @@ else {
 
           wardSelect.value = nearest.ma_xa_phuong;
 
-          await updateMapPreview(nearest.ma_xa_phuong);
+          await updateMapPreview(nearest.ma_xa_phuong, [myLat, myLng]);
 
 
           showMessage(
