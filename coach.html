@@ -13531,6 +13531,14 @@ else {
 
     <div class="coach-area-form">
 
+      <button
+        id="coachAreaGpsBtn"
+        type="button"
+        style="margin-bottom:10px;"
+      >
+        📍 Dùng vị trí hiện tại
+      </button>
+
       <div class="coach-area-field">
 
         <label>
@@ -13610,6 +13618,12 @@ else {
   const addBtn =
     document.getElementById(
       "coachAddAreaBtn"
+    );
+
+
+  const gpsBtn =
+    document.getElementById(
+      "coachAreaGpsBtn"
     );
 
 
@@ -13696,7 +13710,9 @@ else {
           .select(`
             ma_xa_phuong,
             ma_khu_vuc,
-            ten_xa_phuong
+            ten_xa_phuong,
+            lat,
+            lng
           `)
           .eq(
             "dang_hoat_dong",
@@ -14116,6 +14132,124 @@ else {
       );
 
   }
+
+
+  /* =====================================================
+     DÙNG VỊ TRÍ HIỆN TẠI (GPS) ĐỂ TÌM KHU VỰC GẦN NHẤT
+  ====================================================== */
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+
+    const toRad = v => (v * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2
+      +
+      Math.cos(toRad(lat1))
+      *
+      Math.cos(toRad(lat2))
+      *
+      Math.sin(dLng / 2) ** 2;
+
+    return R * 2 * Math.asin(Math.sqrt(a));
+
+  }
+
+
+  gpsBtn.addEventListener(
+    "click",
+    function () {
+
+      if (!navigator.geolocation) {
+
+        showMessage(
+          "Máy không hỗ trợ lấy vị trí — chọn Tỉnh / Phường ở bên dưới.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      gpsBtn.disabled = true;
+      gpsBtn.textContent = "Đang lấy vị trí...";
+
+
+      navigator.geolocation.getCurrentPosition(
+        async function (pos) {
+
+          gpsBtn.disabled = false;
+          gpsBtn.textContent = "📍 Dùng vị trí hiện tại";
+
+
+          const myLat = pos.coords.latitude;
+          const myLng = pos.coords.longitude;
+
+
+          let nearest = null;
+          let nearestDist = Infinity;
+
+          for (const w of allWards) {
+
+            if (w.lat == null || w.lng == null) continue;
+
+            const d = haversineKm(myLat, myLng, w.lat, w.lng);
+
+            if (d < nearestDist) {
+              nearestDist = d;
+              nearest = w;
+            }
+
+          }
+
+
+          if (!nearest) {
+
+            showMessage(
+              "Không tìm được khu vực gần vị trí này — chọn Tỉnh / Phường ở bên dưới.",
+              true
+            );
+
+            return;
+
+          }
+
+
+          areaSelect.value = nearest.ma_khu_vuc;
+
+          await renderWards();
+
+          wardSelect.value = nearest.ma_xa_phuong;
+
+
+          showMessage(
+            "📍 Đã chọn " + nearest.ten_xa_phuong + " — kiểm tra lại rồi bấm Thêm khu vực."
+          );
+
+        },
+        function () {
+
+          gpsBtn.disabled = false;
+          gpsBtn.textContent = "📍 Dùng vị trí hiện tại";
+
+          showMessage(
+            "Chưa lấy được vị trí — chọn Tỉnh / Phường ở bên dưới.",
+            true
+          );
+
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 120000
+        }
+      );
+
+    }
+  );
 
 
   /* =====================================================
