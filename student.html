@@ -6352,20 +6352,62 @@
     if (k === "avatar") {
       document.getElementById("changeAvatarBtn")?.scrollIntoView({ block: "center", behavior: "smooth" });
       setTimeout(() => document.getElementById("changeAvatarBtn")?.click(), 400);
+      poll();
     } else if (k === "phone") {
-      document.getElementById("editStudentProfileBtn")?.click();
-      setTimeout(() => {
-        const el = document.getElementById("studentEditPhone");
-        if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); el.focus({ preventScroll: true }); }
-      }, 300);
+      showPhoneInput(btn);
     } else if (k === "push") {
       const pb = document.getElementById("pickdeeEnablePushButton");
       if (!pb) return;
       btn.disabled = true; btn.textContent = "Đang bật…";
       pb.click();
+      poll();
     }
+  }
+
+  function showPhoneInput(btn) {
+    const row = btn.parentElement;
+    if (!row) return;
+    row.innerHTML = '<input type="tel" inputmode="numeric" placeholder="SĐT (VD: 0912345678)" style="flex:1;min-width:0;min-height:36px;font-size:13px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;padding:0 10px;font-family:inherit" id="pdStudentPhoneInput">'
+      + '<button type="button" id="pdStudentPhoneSave" style="flex:none;border:0;border-radius:8px;background:#ffc934;color:#0f0f0f;font-weight:900;font-size:12px;padding:7px 10px;cursor:pointer;font-family:inherit">Lưu</button>';
+    const input = row.querySelector("#pdStudentPhoneInput");
+    input.focus();
+    row.querySelector("#pdStudentPhoneSave").onclick = () => savePhone(input.value.trim(), row);
+  }
+
+  async function savePhone(phone, row) {
+    const saveBtn = row.querySelector("#pdStudentPhoneSave");
+    row.querySelectorAll(".pdPhoneErr").forEach(e => e.remove());
+    if (!/^0\d{9}$/.test(phone)) {
+      row.insertAdjacentHTML("beforeend", '<span class="pdPhoneErr" style="color:#ffaaaa;font-size:11px;flex:none">SĐT không hợp lệ</span>');
+      return;
+    }
+    saveBtn.disabled = true; saveBtn.textContent = "...";
+    const cur = await window.sb.from("students").select("full_name,gender,preferred_area,preferred_ward").maybeSingle();
+    const c = cur.data || {};
+    const r = await window.sb.rpc("update_my_student_profile", {
+      p_full_name: c.full_name || null, p_phone: phone, p_gender: c.gender || null,
+      p_preferred_area: c.preferred_area || null, p_preferred_ward: c.preferred_ward || null
+    });
+    if (r.error) {
+      saveBtn.disabled = false; saveBtn.textContent = "Lưu";
+      row.insertAdjacentHTML("beforeend", '<span class="pdPhoneErr" style="color:#ffaaaa;font-size:11px;flex:none">' + esc(r.error.message || "Lỗi, thử lại") + '</span>');
+      return;
+    }
+    loadProfileFields();
     poll();
   }
+
+  async function loadProfileFields() {
+    if (!window.sb) return;
+    const s = await window.sb.auth.getSession();
+    if (!s.data || !s.data.session) return;
+    const r = await window.sb.from("students").select("phone,email,gender,preferred_area,preferred_ward").maybeSingle();
+    if (r.error || !r.data) return;
+    const map = { phone: r.data.phone, email: r.data.email, gender: r.data.gender, area: r.data.preferred_area, ward: r.data.preferred_ward };
+    Object.keys(map).forEach(id => { const el = document.getElementById(id); if (el) el.textContent = map[id] || "—"; });
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  loadProfileFields();
 
   let polling = false;
   function poll() {
