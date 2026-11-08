@@ -13576,6 +13576,21 @@ else {
       </div>
 
 
+      <div
+        id="coachAreaMapWrap"
+        style="display:none;margin:10px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,201,52,.28);"
+      >
+
+        <iframe
+          id="coachAreaMapFrame"
+          style="width:100%;height:220px;border:0;display:block;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+
+      </div>
+
+
       <button
         id="coachAddAreaBtn"
         type="button"
@@ -13624,6 +13639,18 @@ else {
   const gpsBtn =
     document.getElementById(
       "coachAreaGpsBtn"
+    );
+
+
+  const mapWrap =
+    document.getElementById(
+      "coachAreaMapWrap"
+    );
+
+
+  const mapFrame =
+    document.getElementById(
+      "coachAreaMapFrame"
     );
 
 
@@ -14158,6 +14185,52 @@ else {
   }
 
 
+  function updateMapPreview(wardCode) {
+
+    const ward =
+      allWards.find(
+        w => w.ma_xa_phuong === wardCode
+      );
+
+
+    if (!ward || ward.lat == null || ward.lng == null) {
+
+      mapWrap.style.display = "none";
+      mapFrame.src = "";
+
+      return;
+
+    }
+
+
+    mapFrame.src =
+      "https://www.google.com/maps?q="
+      +
+      ward.lat
+      +
+      ","
+      +
+      ward.lng
+      +
+      "&z=14&output=embed";
+
+    mapWrap.style.display = "block";
+
+  }
+
+
+  wardSelect.addEventListener(
+    "change",
+    function () {
+
+      updateMapPreview(
+        wardSelect.value
+      );
+
+    }
+  );
+
+
   gpsBtn.addEventListener(
     "click",
     function () {
@@ -14224,6 +14297,8 @@ else {
 
           wardSelect.value = nearest.ma_xa_phuong;
 
+          updateMapPreview(nearest.ma_xa_phuong);
+
 
           showMessage(
             "📍 Đã chọn " + nearest.ten_xa_phuong + " — kiểm tra lại rồi bấm Thêm khu vực."
@@ -14259,6 +14334,9 @@ else {
 areaSelect.addEventListener(
   "change",
   async function () {
+
+    mapWrap.style.display = "none";
+    mapFrame.src = "";
 
     await renderWards();
 
@@ -14333,6 +14411,10 @@ areaSelect.addEventListener(
 
         areaSelect.value =
           "";
+
+
+        mapWrap.style.display = "none";
+        mapFrame.src = "";
 
 
         renderWards();
