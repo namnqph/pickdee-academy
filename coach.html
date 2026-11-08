@@ -13308,6 +13308,40 @@ else {
 <script>
 (async function () {
 
+  if (
+    !document.getElementById(
+      "coachAreaMapStyle"
+    )
+  ) {
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+    style.id = "coachAreaMapStyle";
+
+    style.textContent = `
+      #coachAreaMap .leaflet-tile-pane {
+        filter: invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.55);
+      }
+      #coachAreaMap .leaflet-control-attribution {
+        background: rgba(12,12,12,.7);
+        color: #8c8c8c;
+        font-size: 9px;
+      }
+      #coachAreaMap .leaflet-control-attribution a {
+        color: #b2b2b2;
+      }
+    `;
+
+    document.head.appendChild(
+      style
+    );
+
+  }
+
+
   const sb =
     window.PICKDEE_SUPABASE
     ||
@@ -13578,15 +13612,13 @@ else {
 
       <div
         id="coachAreaMapWrap"
-        style="display:none;margin:10px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,201,52,.28);"
+        style="display:none;position:relative;margin:10px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,201,52,.28);"
       >
 
-        <iframe
-          id="coachAreaMapFrame"
-          style="width:100%;height:220px;border:0;display:block;"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-        ></iframe>
+        <div
+          id="coachAreaMap"
+          style="width:100%;height:220px;background:#121212;"
+        ></div>
 
       </div>
 
@@ -13648,10 +13680,47 @@ else {
     );
 
 
-  const mapFrame =
+  const mapEl =
     document.getElementById(
-      "coachAreaMapFrame"
+      "coachAreaMap"
     );
+
+
+  let areaMap = null;
+  let areaMapMarker = null;
+
+
+  function loadLeaflet() {
+
+    if (window.L) return Promise.resolve();
+
+    return new Promise(function (ok, fail) {
+
+      const css =
+        document.createElement(
+          "link"
+        );
+
+      css.rel = "stylesheet";
+      css.href = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css";
+
+      document.head.appendChild(css);
+
+
+      const s =
+        document.createElement(
+          "script"
+        );
+
+      s.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+      s.onload = ok;
+      s.onerror = fail;
+
+      document.head.appendChild(s);
+
+    });
+
+  }
 
 
   const messageEl =
@@ -14185,7 +14254,7 @@ else {
   }
 
 
-  function updateMapPreview(wardCode) {
+  async function updateMapPreview(wardCode) {
 
     const ward =
       allWards.find(
@@ -14196,25 +14265,57 @@ else {
     if (!ward || ward.lat == null || ward.lng == null) {
 
       mapWrap.style.display = "none";
-      mapFrame.src = "";
 
       return;
 
     }
 
 
-    mapFrame.src =
-      "https://www.google.com/maps?q="
-      +
-      ward.lat
-      +
-      ","
-      +
-      ward.lng
-      +
-      "&z=14&output=embed";
-
     mapWrap.style.display = "block";
+
+    await loadLeaflet();
+
+
+    const ll = [ward.lat, ward.lng];
+
+
+    if (!areaMap) {
+
+      areaMap =
+        L.map(
+          mapEl,
+          {
+            zoomControl: false,
+            attributionControl: true
+          }
+        )
+        .setView(ll, 14);
+
+      L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 18,
+          attribution: "© OpenStreetMap"
+        }
+      ).addTo(areaMap);
+
+      areaMapMarker =
+        L.marker(ll).addTo(areaMap);
+
+    }
+    else {
+
+      areaMap.setView(ll, 14);
+      areaMapMarker.setLatLng(ll);
+
+      setTimeout(
+        function () {
+          areaMap.invalidateSize();
+        },
+        50
+      );
+
+    }
 
   }
 
@@ -14297,7 +14398,7 @@ else {
 
           wardSelect.value = nearest.ma_xa_phuong;
 
-          updateMapPreview(nearest.ma_xa_phuong);
+          await updateMapPreview(nearest.ma_xa_phuong);
 
 
           showMessage(
@@ -14336,7 +14437,6 @@ areaSelect.addEventListener(
   async function () {
 
     mapWrap.style.display = "none";
-    mapFrame.src = "";
 
     await renderWards();
 
@@ -14414,7 +14514,6 @@ areaSelect.addEventListener(
 
 
         mapWrap.style.display = "none";
-        mapFrame.src = "";
 
 
         renderWards();
