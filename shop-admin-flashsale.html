@@ -51,15 +51,20 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .hint { margin-top: 5px; color: rgba(255,255,255,.32); font-size: 8px; line-height: 1.4; }
 
-    .product-search { margin-bottom: 8px; }
-    .product-list { border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: #1a1a1a; }
+    .product-search { position: relative; margin-bottom: 8px; }
+    .product-search input { padding-right: 36px; }
+    .product-search-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; background: transparent; color: rgba(255,255,255,.5); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .product-search-toggle svg { transition: transform .15s ease-out; }
+    .product-picker.open .product-search-toggle svg { transform: rotate(180deg); }
+    .product-list { display: none; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: #1a1a1a; max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .product-picker.open .product-list { display: block; }
     .product-row { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px; cursor: pointer; }
     .product-row:last-child { border-bottom: 0; }
     .product-row:active { background: rgba(255,255,255,.04); }
     .product-row input[type=checkbox] { width: 17px; height: 17px; min-height: 0; flex: none; accent-color: #ffc934; }
     .product-row .pname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .product-row .pprice { flex: none; color: rgba(255,255,255,.4); font-size: 10px; }
-    .selected-count { margin-top: 7px; font-size: 9px; color: #ffc934; font-weight: 800; }
+    .selected-count { margin-top: 7px; font-size: 9px; color: #ffc934; font-weight: 800; cursor: pointer; }
 
     .discount-type { display: flex; gap: 8px; margin-bottom: 11px; }
     .discount-type label { display: flex; align-items: center; gap: 6px; flex: 1; min-height: 44px; padding: 0 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; margin: 0; text-transform: none; font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); cursor: pointer; }
@@ -122,11 +127,16 @@
   <div class="card">
     <div class="card-title">1. Chọn sản phẩm</div>
     <div class="card-subtitle">Chọn 1 hoặc nhiều sản phẩm áp dụng chung 1 chương trình.</div>
-    <div class="field product-search">
-      <input id="productSearch" type="text" placeholder="Tìm sản phẩm theo tên...">
-    </div>
-    <div id="productList" class="product-list">
-      <div class="state">Đang tải sản phẩm...</div>
+    <div id="productPicker" class="product-picker">
+      <div class="field product-search">
+        <input id="productSearch" type="text" placeholder="Tìm sản phẩm theo tên...">
+        <button id="productSearchToggle" class="product-search-toggle" type="button" aria-label="Mở/thu gọn danh sách">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+      <div id="productList" class="product-list">
+        <div class="state">Đang tải sản phẩm...</div>
+      </div>
     </div>
     <div id="selectedCount" class="selected-count">Chưa chọn sản phẩm nào</div>
   </div>
@@ -428,6 +438,19 @@
     loadCampaigns();
 
     document.getElementById("productSearch").addEventListener("input", renderProductList);
+
+    var picker = document.getElementById("productPicker");
+    function openPicker() { picker.classList.add("open"); }
+    function closePicker() { picker.classList.remove("open"); }
+    document.getElementById("productSearch").addEventListener("focus", openPicker);
+    document.getElementById("productSearchToggle").addEventListener("click", function () {
+      picker.classList.toggle("open");
+      if (picker.classList.contains("open")) document.getElementById("productSearch").focus();
+    });
+    document.getElementById("selectedCount").addEventListener("click", openPicker);
+    document.addEventListener("click", function (e) {
+      if (!picker.contains(e.target) && e.target.id !== "selectedCount") closePicker();
+    });
     Array.prototype.forEach.call(document.querySelectorAll('input[name=discountType]'), function (r) {
       r.addEventListener("change", function () {
         document.getElementById("pctLabel").classList.toggle("active", r.value === "percent" && r.checked);
