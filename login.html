@@ -573,6 +573,21 @@ html body .back{font-size:15px}
     }
 
 
+    function safeInboxNext(
+      next
+    ) {
+
+      return (
+        next === "/inbox"
+        ||
+        next.startsWith(
+          "/inbox?"
+        )
+      );
+
+    }
+
+
     function safeCourtOwnerNext(
       next
     ) {
@@ -750,6 +765,37 @@ const isShopOperator =
   shopRoles.includes(
     "shop_staff"
   );
+
+
+/* =================================================
+   HỘP THƯ BÌNH LUẬN /inbox
+   (owner/shop_admin, không tính shop_staff),
+   kiểm trước nhánh Shop Operator để không bị cướp.
+================================================== */
+
+if (
+  safeInboxNext(
+    next
+  )
+  &&
+  (
+    shopRoles.includes(
+      "owner"
+    )
+    ||
+    shopRoles.includes(
+      "shop_admin"
+    )
+  )
+) {
+
+  window.location.replace(
+    next
+  );
+
+  return;
+
+}
 
 
 if (

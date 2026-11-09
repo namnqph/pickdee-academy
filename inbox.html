@@ -124,7 +124,7 @@
   async function requireAccess() {
     var { data: sessionData } = await sb.auth.getSession();
     var user = sessionData && sessionData.session && sessionData.session.user;
-    if (!user) { location.href = "./"; return false; }
+    if (!user) { location.href = "/login?next=/inbox"; return false; }
     return true;
   }
 
@@ -184,8 +184,28 @@
       var ta = document.getElementById("replyText" + id);
       var text = ta ? ta.value.trim() : "";
       if (!text) { showMsg("Nhập nội dung trả lời trước đã.", false); return; }
-      setStatus(id, "replied", text);
+      var item = items.find(function (it) { return it.id === id; });
+      if (item && item.platform === "facebook") {
+        sendFacebookReply(id, text);
+      } else {
+        setStatus(id, "replied", text);
+      }
       return;
+    }
+  }
+
+  async function sendFacebookReply(id, text) {
+    showMsg("Đang gửi lên Facebook...", true);
+    try {
+      var { data, error } = await sb.functions.invoke("pickdee-fb-reply-comment", {
+        body: { interaction_id: id, reply_text: text },
+      });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+      showMsg("Đã gửi trả lời lên Facebook.", true);
+      await load();
+    } catch (e) {
+      showMsg("Lỗi gửi Facebook: " + (e.message || e), false);
     }
   }
 
