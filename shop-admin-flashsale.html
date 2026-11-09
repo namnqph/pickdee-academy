@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}</style>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover, maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <meta name="theme-color" content="#0f0f0f">
+  <title>Flash Sale | PickDee Shop</title>
+  <script src="/supabase-js.js?v=20261104-self1"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <script src="/pd-flashsale.js?v=20261109-1"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; width: 100%; max-width: 100%; overflow-x: hidden;
+      background: #0f0f0f; color: #fff;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;
+    }
+    body { min-height: 100vh; padding-bottom: 95px; }
+    button, input, select, textarea, a { touch-action: manipulation; }
+
+    .header { position: sticky; top: 0; z-index: 60; background: rgba(15,15,15,.97); border-bottom: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
+    .header-inner { width: min(760px,calc(100% - 18px)); min-height: 60px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .brand { color: #fff; text-decoration: none; font-size: 20px; font-weight: 950; letter-spacing: -.04em; }
+    .brand span { color: #ffc934; }
+    .back { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); text-decoration: none; font-size: 9px; font-weight: 950; white-space: nowrap; }
+
+    main { width: min(760px,calc(100% - 18px)); margin: 15px auto 30px; }
+    .eyebrow { margin-bottom: 5px; color: #ffc934; font-size: 10px; font-weight: 950; letter-spacing: .1em; }
+    h1 { margin: 0 0 5px; font-size: clamp(29px,7vw,40px); line-height: 1; letter-spacing: -.045em; }
+    .intro { margin: 0 0 14px; color: rgba(255,255,255,.48); font-size: 11px; line-height: 1.45; }
+
+    .message { display: none; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .message.show { display: block; }
+    .message.ok { border: 1px solid rgba(255,201,52,.25); background: rgba(255,255,255,.049); color: #ffc934; }
+    .message.error { border: 1px solid rgba(255,100,100,.24); background: rgba(255,100,100,.07); color: #ffaaaa; }
+
+    .card { margin-bottom: 10px; padding: 13px; border-radius: 15px; border: 1px solid rgba(255,255,255,.08); background: #151515; }
+    .card-title { margin-bottom: 4px; font-size: 12px; font-weight: 950; letter-spacing: -.01em; }
+    .card-subtitle { margin: 0 0 11px; color: rgba(255,255,255,.4); font-size: 9px; line-height: 1.45; }
+
+    .field { margin-bottom: 11px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; margin-bottom: 5px; color: rgba(255,255,255,.58); font-size: 8px; font-weight: 950; text-transform: uppercase; letter-spacing: .03em; }
+    input, select, textarea { width: 100%; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; outline: none; background: #1a1a1a; color: #fff; font-family: inherit; font-size: 16px; }
+    input, select { min-height: 44px; padding: 0 11px; }
+    input:focus, select:focus { border-color: rgba(255,201,52,.6); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hint { margin-top: 5px; color: rgba(255,255,255,.32); font-size: 8px; line-height: 1.4; }
+
+    .product-search { margin-bottom: 8px; }
+    .product-list { max-height: 260px; overflow-y: auto; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: #1a1a1a; }
+    .product-row { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px; cursor: pointer; }
+    .product-row:last-child { border-bottom: 0; }
+    .product-row:active { background: rgba(255,255,255,.04); }
+    .product-row input[type=checkbox] { width: 17px; height: 17px; min-height: 0; flex: none; accent-color: #ffc934; }
+    .product-row .pname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .product-row .pprice { flex: none; color: rgba(255,255,255,.4); font-size: 10px; }
+    .selected-count { margin-top: 7px; font-size: 9px; color: #ffc934; font-weight: 800; }
+
+    .discount-type { display: flex; gap: 8px; margin-bottom: 11px; }
+    .discount-type label { display: flex; align-items: center; gap: 6px; flex: 1; min-height: 44px; padding: 0 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; margin: 0; text-transform: none; font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); cursor: pointer; }
+    .discount-type label.active { border-color: #ffc934; color: #ffc934; background: rgba(255,201,52,.06); }
+    .discount-type input[type=radio] { width: 16px; height: 16px; min-height: 0; accent-color: #ffc934; }
+
+    .preview-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .preview-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; padding: 7px 9px; border-radius: 8px; background: rgba(255,255,255,.03); }
+    .preview-row .old { color: rgba(255,255,255,.4); text-decoration: line-through; margin-right: 6px; }
+    .preview-row .new { color: #ffc934; font-weight: 900; }
+
+    .badge-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(110px,1fr)); gap: 7px; }
+    .badge-pick { border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 8px; background: #1a1a1a; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .12s ease-out, background .12s ease-out; }
+    .badge-pick:active { transform: scale(.97); }
+    .badge-pick.active { border-color: #ffc934; background: rgba(255,201,52,.08); }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; }
+    .toggle-row label { margin: 0; text-transform: none; font-size: 11px; font-weight: 700; color: #fff; }
+    .toggle-row input[type=checkbox] { width: 40px; height: 24px; min-height: 0; accent-color: #ffc934; flex: none; }
+
+    .sticky-save { position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; padding: 8px 9px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,.08); background: rgba(15,15,15,.97); backdrop-filter: blur(16px); }
+    .sticky-inner { width: min(760px,100%); margin: auto; }
+    .save-btn { width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: #ffc934; color: #0f0f0f; font-family: inherit; font-size: 11px; font-weight: 950; cursor: pointer; transition: transform .1s ease-out; }
+    .save-btn:active { transform: scale(.98); }
+    .save-btn:disabled { opacity: .45; cursor: default; }
+
+    .campaign-row { padding: 11px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: #1a1a1a; margin-bottom: 8px; }
+    .campaign-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+    .campaign-name { font-size: 12px; font-weight: 900; }
+    .campaign-status { font-size: 8px; font-weight: 950; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+    .campaign-status.running { background: rgba(80,220,120,.14); color: #6ee89a; }
+    .campaign-status.upcoming { background: rgba(255,201,52,.14); color: #ffc934; }
+    .campaign-status.ended { background: rgba(255,255,255,.06); color: rgba(255,255,255,.4); }
+    .campaign-meta { font-size: 10px; color: rgba(255,255,255,.5); line-height: 1.6; }
+    .campaign-actions { display: flex; gap: 7px; margin-top: 9px; }
+    .campaign-actions button { flex: 1; min-height: 36px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.75); font-family: inherit; font-size: 9px; font-weight: 900; cursor: pointer; }
+    .campaign-actions button.danger { border-color: rgba(255,100,100,.25); color: #ffaaaa; }
+    .state { padding: 20px 0; text-align: center; color: rgba(255,255,255,.4); font-size: 11px; }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="./shop-admin">PickDee<span>Shop</span></a>
+    <a class="back" href="./shop-admin">← Shop Admin</a>
+  </div>
+</header>
+
+<main>
+
+  <div class="eyebrow">SHOP ADMIN</div>
+  <h1>Flash Sale</h1>
+  <p class="intro">Chọn sản phẩm, giảm giá, chọn sticker, chọn ngày — lưu là chạy. Giá tự cập nhật trong vài phút và tự trả về giá gốc khi hết hạn, không cần nhắn ai.</p>
+
+  <div id="message" class="message"></div>
+
+  <div class="card">
+    <div class="card-title">1. Chọn sản phẩm</div>
+    <div class="card-subtitle">Chọn 1 hoặc nhiều sản phẩm áp dụng chung 1 chương trình.</div>
+    <div class="field product-search">
+      <input id="productSearch" type="text" placeholder="Tìm sản phẩm theo tên...">
+    </div>
+    <div id="productList" class="product-list">
+      <div class="state">Đang tải sản phẩm...</div>
+    </div>
+    <div id="selectedCount" class="selected-count">Chưa chọn sản phẩm nào</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. Giảm giá</div>
+    <div class="discount-type">
+      <label id="pctLabel"><input type="radio" name="discountType" value="percent" checked>Giảm theo %</label>
+      <label id="fixedLabel"><input type="radio" name="discountType" value="fixed_price">Giá cố định</label>
+    </div>
+    <div class="field" id="discountValueField">
+      <label id="discountValueLabel">Phần trăm giảm (%)</label>
+      <input id="discountValue" type="number" min="0" placeholder="VD: 25">
+    </div>
+    <div id="previewList" class="preview-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3. Chọn sticker</div>
+    <div class="card-subtitle">Hiện trên ảnh sản phẩm ở trang Shop và trên banner đầu trang.</div>
+    <div id="badgeGrid" class="badge-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">4. Tên & thời gian</div>
+    <div class="field">
+      <label>Tên chương trình</label>
+      <input id="campaignName" type="text" placeholder="VD: Flash Sale cuối tuần">
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Bắt đầu</label>
+        <input id="startAt" type="datetime-local">
+      </div>
+      <div class="field">
+        <label>Kết thúc</label>
+        <input id="endAt" type="datetime-local">
+      </div>
+    </div>
+    <div class="toggle-row">
+      <label for="showBanner">Hiện banner đầu trang chủ/Shop</label>
+      <input id="showBanner" type="checkbox" checked>
+    </div>
+    <p class="hint">Giá sản phẩm sẽ tự cập nhật trong vòng 5 phút sau khi lưu (hệ thống chạy kiểm tra định kỳ), và tự trả về giá gốc ngay khi hết hạn.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Chương trình hiện có</div>
+    <div id="campaignList"><div class="state">Đang tải...</div></div>
+  </div>
+
+</main>
+
+<div class="sticky-save">
+  <div class="sticky-inner">
+    <button id="saveBtn" class="save-btn" type="button" disabled>Lưu &amp; Kích hoạt</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var sb, products = [], variants = [], selectedIds = new Set(), selectedBadge = null;
+
+  function money(n) { return Number(n || 0).toLocaleString("vi-VN") + "đ"; }
+  function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function showMsg(text, ok) {
+    var el = document.getElementById("message");
+    el.textContent = text;
+    el.className = "message show " + (ok ? "ok" : "error");
+  }
+
+  function minPrice(productId) {
+    var vs = variants.filter(function (v) { return v.product_id === productId; });
+    if (!vs.length) return null;
+    return vs.reduce(function (m, v) { return Math.min(m, v.price); }, vs[0].price);
+  }
+
+  async function requireShopAccess() {
+    var { data: sessionData } = await sb.auth.getSession();
+    var user = sessionData && sessionData.session && sessionData.session.user;
+    if (!user) { location.href = "./"; return false; }
+    var { data, error } = await sb.from("shop_user_roles").select("role,is_active").eq("user_id", user.id).eq("is_active", true);
+    if (error) throw new Error("Không kiểm tra được quyền Shop.");
+    var allowed = (data || []).some(function (r) { return ["owner", "shop_admin"].includes(r.role); });
+    if (!allowed) throw new Error("Tài khoản chưa có quyền cài Flash Sale (cần quyền owner hoặc shop_admin).");
+    return true;
+  }
+
+  function renderProductList() {
+    var q = document.getElementById("productSearch").value.trim().toLowerCase();
+    var list = products.filter(function (p) { return !q || p.name.toLowerCase().includes(q); });
+    var el = document.getElementById("productList");
+    if (!list.length) { el.innerHTML = '<div class="state">Không tìm thấy sản phẩm</div>'; return; }
+    el.innerHTML = list.map(function (p) {
+      var price = minPrice(p.id);
+      return (
+        '<label class="product-row">' +
+        '<input type="checkbox" data-id="' + p.id + '" ' + (selectedIds.has(p.id) ? "checked" : "") + ">" +
+        '<span class="pname">' + escapeHtml(p.name) + "</span>" +
+        '<span class="pprice">' + (price != null ? money(price) : "") + "</span>" +
+        "</label>"
+      );
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll('input[type=checkbox]'), function (cb) {
+      cb.addEventListener("change", function () {
+        var id = Number(cb.dataset.id);
+        if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+        updateSelectedCount();
+        updatePreview();
+        updateSaveState();
+      });
+    });
+  }
+
+  function updateSelectedCount() {
+    document.getElementById("selectedCount").textContent =
+      selectedIds.size ? "Đã chọn " + selectedIds.size + " sản phẩm" : "Chưa chọn sản phẩm nào";
+  }
+
+  function currentDiscountType() {
+    return document.querySelector('input[name=discountType]:checked').value;
+  }
+
+  function updatePreview() {
+    var type = currentDiscountType();
+    var val = Number(document.getElementById("discountValue").value || 0);
+    var el = document.getElementById("previewList");
+    if (!selectedIds.size || !val) { el.innerHTML = ""; return; }
+    el.innerHTML = Array.from(selectedIds).map(function (id) {
+      var p = products.find(function (x) { return x.id === id; });
+      var price = minPrice(id);
+      if (!p || price == null) return "";
+      var newPrice = type === "percent" ? Math.max(0, Math.round(price * (1 - val / 100))) : val;
+      return (
+        '<div class="preview-row"><span>' + escapeHtml(p.name) + '</span>' +
+        '<span><span class="old">' + money(price) + '</span><span class="new">' + money(newPrice) + "</span></span></div>"
+      );
+    }).join("");
+  }
+
+  function renderBadgeGrid() {
+    var el = document.getElementById("badgeGrid");
+    el.innerHTML = (window.PD_FLASH_BADGES || []).map(function (b) {
+      return '<button type="button" class="badge-pick" data-slug="' + b.slug + '">' + pdFlashBadgeHtml(b.slug, { inline: true }) + "</button>";
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".badge-pick"), function (btn) {
+      btn.addEventListener("click", function () {
+        selectedBadge = btn.dataset.slug;
+        Array.prototype.forEach.call(el.querySelectorAll(".badge-pick"), function (b) { b.classList.toggle("active", b === btn); });
+        updateSaveState();
+      });
+    });
+  }
+
+  function updateSaveState() {
+    var name = document.getElementById("campaignName").value.trim();
+    var startAt = document.getElementById("startAt").value;
+    var endAt = document.getElementById("endAt").value;
+    var val = Number(document.getElementById("discountValue").value || 0);
+    var ok = selectedIds.size > 0 && selectedBadge && name && startAt && endAt && val > 0 && new Date(endAt) > new Date(startAt);
+    document.getElementById("saveBtn").disabled = !ok;
+  }
+
+  function campaignStatus(p) {
+    var now = Date.now(), s = new Date(p.start_at).getTime(), e = new Date(p.end_at).getTime();
+    if (!p.is_active && e < now) return { cls: "ended", label: "Đã kết thúc" };
+    if (!p.is_active) return { cls: "ended", label: "Đã dừng" };
+    if (now < s) return { cls: "upcoming", label: "Sắp chạy" };
+    if (now > e) return { cls: "ended", label: "Đã kết thúc" };
+    return { cls: "running", label: "Đang chạy" };
+  }
+
+  async function loadCampaigns() {
+    var el = document.getElementById("campaignList");
+    var { data: promos, error } = await sb
+      .from("shop_promotions")
+      .select("id,name,discount_type,discount_value,badge_slug,start_at,end_at,is_active")
+      .eq("promotion_type", "product_discount")
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (error || !promos || !promos.length) { el.innerHTML = '<div class="state">Chưa có chương trình nào</div>'; return; }
+
+    var ids = promos.map(function (p) { return p.id; });
+    var { data: targets } = await sb.from("shop_promotion_targets").select("promotion_id,target_id,applied_at").in("promotion_id", ids);
+    var targetsByPromo = {};
+    (targets || []).forEach(function (t) { (targetsByPromo[t.promotion_id] = targetsByPromo[t.promotion_id] || []).push(t); });
+
+    el.innerHTML = promos.map(function (p) {
+      var st = campaignStatus(p);
+      var ts = targetsByPromo[p.id] || [];
+      var names = ts.map(function (t) {
+        var prod = products.find(function (x) { return x.id === t.target_id; });
+        return prod ? prod.name : ("#" + t.target_id);
+      }).join(", ");
+      var discountLabel = p.discount_type === "percent" ? "Giảm " + p.discount_value + "%" : "Giá " + money(p.discount_value);
+      var fmt = function (iso) { return new Date(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+      var canDelete = ts.every(function (t) { return !t.applied_at; });
+      return (
+        '<div class="campaign-row">' +
+        '<div class="campaign-top"><span class="campaign-name">' + escapeHtml(p.name) + '</span><span class="campaign-status ' + st.cls + '">' + st.label + "</span></div>" +
+        '<div class="campaign-meta">' + discountLabel + " · " + escapeHtml(names || "—") + "<br>" + fmt(p.start_at) + " → " + fmt(p.end_at) + "</div>" +
+        '<div class="campaign-actions">' +
+        (p.is_active ? '<button type="button" data-stop="' + p.id + '">Dừng ngay</button>' : "") +
+        (canDelete ? '<button type="button" class="danger" data-del="' + p.id + '">Xoá</button>' : "") +
+        "</div></div>"
+      );
+    }).join("");
+
+    Array.prototype.forEach.call(el.querySelectorAll("[data-stop]"), function (btn) {
+      btn.addEventListener("click", async function () {
+        btn.disabled = true;
+        await sb.from("shop_promotions").update({ is_active: false }).eq("id", Number(btn.dataset.stop));
+        showMsg("Đã dừng. Giá sẽ tự trả về gốc trong vài phút.", true);
+        loadCampaigns();
+      });
+    });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function (btn) {
+      btn.addEventListener("click", async function () {
+        if (!confirm("Xoá chương trình này?")) return;
+        btn.disabled = true;
+        var id = Number(btn.dataset.del);
+        await sb.from("shop_promotion_targets").delete().eq("promotion_id", id);
+        await sb.from("shop_promotions").delete().eq("id", id);
+        showMsg("Đã xoá chương trình.", true);
+        loadCampaigns();
+      });
+    });
+  }
+
+  async function save() {
+    var saveBtn = document.getElementById("saveBtn");
+    saveBtn.disabled = true;
+    try {
+      var type = currentDiscountType();
+      var val = Number(document.getElementById("discountValue").value || 0);
+      var name = document.getElementById("campaignName").value.trim();
+      var startAt = new Date(document.getElementById("startAt").value).toISOString();
+      var endAt = new Date(document.getElementById("endAt").value).toISOString();
+      var showBanner = document.getElementById("showBanner").checked;
+
+      var { data: promo, error: e1 } = await sb.from("shop_promotions").insert({
+        name: name,
+        promotion_type: "product_discount",
+        discount_type: type,
+        discount_value: val,
+        badge_slug: selectedBadge,
+        show_banner: showBanner,
+        start_at: startAt,
+        end_at: endAt,
+        is_active: true,
+      }).select("id").single();
+      if (e1) throw e1;
+
+      var rows = Array.from(selectedIds).map(function (pid) { return { promotion_id: promo.id, target_type: "product", target_id: pid }; });
+      var { error: e2 } = await sb.from("shop_promotion_targets").insert(rows);
+      if (e2) throw e2;
+
+      showMsg("Đã lưu & kích hoạt \"" + name + "\". Giá sẽ tự cập nhật trong vài phút.", true);
+
+      selectedIds = new Set(); selectedBadge = null;
+      document.getElementById("campaignName").value = "";
+      document.getElementById("discountValue").value = "";
+      document.getElementById("startAt").value = "";
+      document.getElementById("endAt").value = "";
+      renderProductList();
+      renderBadgeGrid();
+      updateSelectedCount();
+      updatePreview();
+      updateSaveState();
+      loadCampaigns();
+    } catch (e) {
+      showMsg("Lỗi: " + (e.message || e), false);
+    } finally {
+      updateSaveState();
+    }
+  }
+
+  async function init() {
+    sb = window.sb;
+    try {
+      await requireShopAccess();
+    } catch (e) {
+      showMsg(e.message, false);
+      return;
+    }
+
+    var [{ data: productData, error: pe }, { data: variantData, error: ve }] = await Promise.all([
+      sb.from("shop_products").select("id,name").eq("status", "active").order("name", { ascending: true }),
+      sb.from("shop_product_variants").select("id,product_id,price").eq("is_active", true),
+    ]);
+    if (pe || ve) { showMsg("Không tải được danh sách sản phẩm.", false); return; }
+    products = productData || [];
+    variants = variantData || [];
+
+    renderProductList();
+    renderBadgeGrid();
+    loadCampaigns();
+
+    document.getElementById("productSearch").addEventListener("input", renderProductList);
+    Array.prototype.forEach.call(document.querySelectorAll('input[name=discountType]'), function (r) {
+      r.addEventListener("change", function () {
+        document.getElementById("pctLabel").classList.toggle("active", r.value === "percent" && r.checked);
+        document.getElementById("fixedLabel").classList.toggle("active", r.value === "fixed_price" && r.checked);
+        document.getElementById("discountValueLabel").textContent = currentDiscountType() === "percent" ? "Phần trăm giảm (%)" : "Giá bán sau giảm (đ)";
+        updatePreview();
+        updateSaveState();
+      });
+    });
+    document.getElementById("pctLabel").classList.add("active");
+    document.getElementById("discountValue").addEventListener("input", function () { updatePreview(); updateSaveState(); });
+    document.getElementById("campaignName").addEventListener("input", updateSaveState);
+    document.getElementById("startAt").addEventListener("input", updateSaveState);
+    document.getElementById("endAt").addEventListener("input", updateSaveState);
+    document.getElementById("saveBtn").addEventListener("click", save);
+  }
+
+  function go() {
+    if (!window.sb) return setTimeout(go, 150);
+    init();
+  }
+  go();
+})();
+</script>
+
+</body>
+</html>
