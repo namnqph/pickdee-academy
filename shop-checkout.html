@@ -2177,6 +2177,23 @@
     300000;
 
 
+  /*
+    Flash Sale Vợt ESS/ON 9-11/11/2026 (anh Nam chốt 09/11):
+    trong khung giờ này, đơn có vợt thanh toán chuyển khoản trước
+    thu phí ship cố định 30.000đ (không freeship như bình thường).
+    Hết 23:59 11/11 tự quay lại freeship cũ, không cần sửa code.
+  */
+  const ESSON_FLASH_SALE_SHIP_FEE =
+    30000;
+
+  const ESSON_FLASH_SALE_END =
+    new Date("2026-11-11T23:59:59+07:00").getTime();
+
+  function essonFlashSaleActive() {
+    return Date.now() <= ESSON_FLASH_SALE_END;
+  }
+
+
   const BANK_ID =
     "Techcombank";
 
@@ -5019,6 +5036,34 @@ function shippingQuote(
       Đơn có vợt Pickleball bắt buộc chuyển khoản trước.
       Khi chuyển khoản trước, PickDee miễn phí vận chuyển cho đơn vợt.
     */
+    if (
+      isPaddlePrepaid
+      &&
+      essonFlashSaleActive()
+    ) {
+
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        hasPaddle:
+          true,
+        freeShipping:
+          false,
+        shippingPending:
+          false,
+        shippingFee:
+          ESSON_FLASH_SALE_SHIP_FEE,
+        affDiscount:
+          affDiscount(cart),
+        customerTotal:
+          merchandiseTotal + ESSON_FLASH_SALE_SHIP_FEE - affDiscount(cart),
+        reason:
+          "Chương trình Flash Sale 9-11/11: phí vận chuyển 30.000đ."
+      };
+
+    }
+
+
     if (
       isPaddlePrepaid
     ) {
