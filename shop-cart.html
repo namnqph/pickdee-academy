@@ -1653,6 +1653,29 @@
         });
       });
 
+    // Flash Sale Vợt ESS/ON 9-11/11/2026 (anh Nam chốt 09/11): đơn CHỈ có vợt
+    // (không kèm giày) trong khung giờ này thu ship 30.000đ, không freeship.
+    // Combo vợt+giày không đổi, vẫn freeship. Hết 23:59 11/11 tự quay lại freeship cũ.
+    const ESSON_FLASH_SALE_END = new Date("2026-11-11T23:59:59+07:00").getTime();
+    if (
+      cartHasPaddleItem
+      &&
+      !cartHasShoeItem
+      &&
+      Date.now() <= ESSON_FLASH_SALE_END
+    ) {
+      return {
+        merchandiseTotal,
+        hasPickleballBall,
+        freeShipping: false,
+        shippingPending: false,
+        shippingFee: 30000,
+        customerTotal: merchandiseTotal + 30000,
+        reason:
+          "Chương trình Flash Sale 9-11/11: phí vận chuyển 30.000đ."
+      };
+    }
+
     if (cartHasPaddleItem) {
       return {
         merchandiseTotal,

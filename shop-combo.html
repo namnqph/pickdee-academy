@@ -96,6 +96,42 @@
       letter-spacing: .04em;
     }
 
+    .flash-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(90deg,#d6102c,#ff2d47);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      animation: flashRibbonPulse 1.6s ease-in-out infinite;
+    }
+
+    .flash-ribbon.is-ended {
+      display: none;
+    }
+
+    @keyframes flashRibbonPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,45,71,.55); }
+      50% { box-shadow: 0 0 0 5px rgba(255,45,71,0); }
+    }
+
+    .combo-save-line {
+      color: #ffc934;
+      font-size: 13px;
+      font-weight: 800;
+      margin: 2px 0 0;
+    }
+
+    .combo-save-line s {
+      color: rgba(255,255,255,.45);
+      font-weight: 600;
+    }
+
     h1 {
       margin: 6px 0 4px;
       font-size: 24px;
@@ -510,6 +546,7 @@
 <main>
 
   <div class="eyebrow">COMBO HÀNG TUYỂN</div>
+  <div class="flash-ribbon" id="comboFlashRibbon">⚡ FLASH SALE 9–11/11</div>
   <h1>Combo Vợt ESS/ON + Giày Kaitashi</h1>
 
   <div class="combo-hero">
@@ -521,6 +558,7 @@
 
   <div class="price-box">
     <div class="label">GIÁ COMBO</div>
+    <div class="combo-save-line" id="comboSaveLine" hidden></div>
     <div class="list-line" id="comboListLine" hidden></div>
     <div class="value" id="comboPrice">—</div>
     <div class="list-detail" id="comboListDetail" hidden></div>
@@ -765,6 +803,24 @@
 
     const comboTotal = Number(paddleVariants[0].price) + Number(shoeVariants[0].price);
     comboPriceEl.textContent = vnd(comboTotal);
+
+    // Flash Sale 9-11/11/2026: giá vợt thường 2.200.000đ, trong chương trình giảm còn 1.900.000đ
+    // nên combo cũng rẻ hơn 300.000đ. Ribbon + dòng tiết kiệm tự ẩn sau 23:59 11/11.
+    const NORMAL_PADDLE_PRICE = 2200000;
+    const ESSON_FLASH_SALE_END = new Date("2026-11-11T23:59:59+07:00").getTime();
+    const normalComboTotal = NORMAL_PADDLE_PRICE + Number(shoeVariants[0].price);
+    const flashSaleActive = Date.now() <= ESSON_FLASH_SALE_END && comboTotal < normalComboTotal;
+
+    const ribbonEl = document.getElementById("comboFlashRibbon");
+    const saveLineEl = document.getElementById("comboSaveLine");
+
+    if (flashSaleActive) {
+      saveLineEl.innerHTML = "Giá thường <s>" + vnd(normalComboTotal) + "</s> · Giảm " + vnd(normalComboTotal - comboTotal);
+      saveLineEl.hidden = false;
+    } else {
+      if (ribbonEl) ribbonEl.classList.add("is-ended");
+      if (saveLineEl) saveLineEl.hidden = true;
+    }
 
     // Giá niêm yết của hãng (ESS/ON 2.599k + Kaitashi 2.199k), chỉ hiện khi giá combo thấp hơn
     const LIST_PADDLE = 2599000, LIST_SHOE = 2199000, listTotal = LIST_PADDLE + LIST_SHOE;
