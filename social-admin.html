@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}</style>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover, maximum-scale=1">
+  <style id="pd-no-zoom">html{touch-action:manipulation}</style>
+  <meta name="theme-color" content="#0f0f0f">
+  <title>Hộp thư bình luận | PickDee</title>
+  <script src="/supabase-js.js?v=20261104-self1"></script>
+  <script src="./config.js?v=20261019-keep30"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; width: 100%; max-width: 100%; overflow-x: hidden;
+      background: #0f0f0f; color: #fff;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;
+    }
+    body { min-height: 100vh; padding-bottom: 30px; }
+    button, input, select, textarea, a { touch-action: manipulation; }
+
+    .header { position: sticky; top: 0; z-index: 60; background: rgba(15,15,15,.97); border-bottom: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
+    .header-inner { width: min(760px,calc(100% - 18px)); min-height: 60px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .brand { color: #fff; text-decoration: none; font-size: 20px; font-weight: 950; letter-spacing: -.04em; }
+    .brand span { color: #ffc934; }
+    .back { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); text-decoration: none; font-size: 9px; font-weight: 950; white-space: nowrap; }
+
+    main { width: min(760px,calc(100% - 18px)); margin: 15px auto 30px; }
+    .eyebrow { margin-bottom: 5px; color: #ffc934; font-size: 10px; font-weight: 950; letter-spacing: .1em; }
+    h1 { margin: 0 0 5px; font-size: clamp(29px,7vw,40px); line-height: 1; letter-spacing: -.045em; }
+    .intro { margin: 0 0 14px; color: rgba(255,255,255,.48); font-size: 11px; line-height: 1.45; }
+
+    .message { display: none; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .message.show { display: block; }
+    .message.ok { border: 1px solid rgba(255,201,52,.25); background: rgba(255,255,255,.049); color: #ffc934; }
+    .message.error { border: 1px solid rgba(255,100,100,.24); background: rgba(255,100,100,.07); color: #ffaaaa; }
+
+    .pills { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
+    .pill { flex: none; min-height: 34px; padding: 0 13px; display: flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: #1a1a1a; color: rgba(255,255,255,.65); font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+    .pill.active { border-color: #ffc934; color: #ffc934; background: rgba(255,201,52,.08); }
+
+    .card { margin-bottom: 10px; padding: 13px; border-radius: 15px; border: 1px solid rgba(255,255,255,.08); background: #151515; }
+    .state { padding: 24px 0; text-align: center; color: rgba(255,255,255,.4); font-size: 11px; }
+
+    .item { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: #1a1a1a; margin-bottom: 8px; }
+    .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .item-plat { font-size: 9px; font-weight: 950; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); text-transform: uppercase; }
+    .item-plat.facebook { background: rgba(68,120,255,.16); color: #7fa6ff; }
+    .item-plat.youtube { background: rgba(255,60,60,.16); color: #ff8080; }
+    .item-plat.tiktok { background: rgba(255,255,255,.12); color: #fff; }
+    .item-status { font-size: 9px; font-weight: 800; color: rgba(255,255,255,.4); }
+    .item-author { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
+    .item-content { font-size: 12px; color: rgba(255,255,255,.82); line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap; }
+    .item-meta { font-size: 9px; color: rgba(255,255,255,.35); margin-bottom: 8px; }
+    .item-reply { font-size: 11px; color: #ffc934; background: rgba(255,201,52,.06); border: 1px solid rgba(255,201,52,.2); border-radius: 8px; padding: 8px 9px; margin-bottom: 8px; white-space: pre-wrap; }
+    .item-actions { display: flex; gap: 7px; }
+    .item-actions button { flex: 1; min-height: 38px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.75); font-family: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .item-actions button.primary { border-color: #ffc934; color: #0f0f0f; background: #ffc934; }
+    .item-actions button.ghost-danger { border-color: rgba(255,100,100,.25); color: #ffaaaa; }
+    .reply-box { display: none; margin-top: 8px; }
+    .reply-box.open { display: block; }
+    .reply-box textarea { width: 100%; min-height: 70px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: #0f0f0f; color: #fff; font-family: inherit; font-size: 13px; padding: 9px 11px; resize: vertical; }
+    .reply-box .reply-save { margin-top: 7px; width: 100%; min-height: 40px; border: 0; border-radius: 9px; background: #ffc934; color: #0f0f0f; font-family: inherit; font-size: 11px; font-weight: 950; cursor: pointer; }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="./shop-admin">PickDee<span>Social</span></a>
+    <a class="back" href="./shop-admin">← Shop Admin</a>
+  </div>
+</header>
+
+<main>
+
+  <div class="eyebrow">QUẢN TRỊ</div>
+  <h1>Hộp thư bình luận</h1>
+  <p class="intro">Tổng hợp bình luận &amp; tin nhắn từ Facebook, YouTube, TikTok về 1 chỗ. Giai đoạn 1: chưa nối nền tảng nào, chỉ xem/ghi trạng thái.</p>
+
+  <div id="message" class="message"></div>
+
+  <div class="pills" id="statusPills">
+    <div class="pill active" data-v="new">Mới</div>
+    <div class="pill" data-v="replied">Đã trả lời</div>
+    <div class="pill" data-v="ignored">Đã bỏ qua</div>
+    <div class="pill" data-v="">Tất cả</div>
+  </div>
+
+  <div class="pills" id="platformPills">
+    <div class="pill active" data-v="">Mọi nền tảng</div>
+    <div class="pill" data-v="facebook">Facebook</div>
+    <div class="pill" data-v="youtube">YouTube</div>
+    <div class="pill" data-v="tiktok">TikTok</div>
+  </div>
+
+  <div id="list"><div class="state">Đang tải...</div></div>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var sb, items = [];
+  var statusFilter = "new", platformFilter = "";
+
+  function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function showMsg(text, ok) {
+    var el = document.getElementById("message");
+    el.textContent = text;
+    el.className = "message show " + (ok ? "ok" : "error");
+  }
+  function fmtTime(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleString("vi-VN");
+  }
+  var PLAT_LABEL = { facebook: "Facebook", youtube: "YouTube", tiktok: "TikTok" };
+  var STATUS_LABEL = { new: "Mới", replied: "Đã trả lời", ignored: "Đã bỏ qua" };
+
+  async function requireAccess() {
+    var { data: sessionData } = await sb.auth.getSession();
+    var user = sessionData && sessionData.session && sessionData.session.user;
+    if (!user) { location.href = "./"; return false; }
+    return true;
+  }
+
+  function render() {
+    var el = document.getElementById("list");
+    if (!items.length) {
+      el.innerHTML = '<div class="state">Chưa có bình luận/tin nhắn nào phù hợp bộ lọc.</div>';
+      return;
+    }
+    el.innerHTML = items.map(function (it) {
+      var plat = escapeHtml(it.platform);
+      var statusLabel = STATUS_LABEL[it.status] || it.status;
+      var replyBlock = it.status === "replied" && it.reply_text
+        ? '<div class="item-reply">↩ ' + escapeHtml(it.reply_text) + "</div>"
+        : "";
+      var actions = it.status === "new"
+        ? (
+          '<div class="item-actions">' +
+          '<button type="button" class="primary" data-act="reply" data-id="' + it.id + '">Soạn trả lời</button>' +
+          '<button type="button" class="ghost-danger" data-act="ignore" data-id="' + it.id + '">Bỏ qua</button>' +
+          "</div>" +
+          '<div class="reply-box" id="replyBox' + it.id + '">' +
+          '<textarea id="replyText' + it.id + '" placeholder="Nhập nội dung trả lời..."></textarea>' +
+          '<button type="button" class="reply-save" data-act="save-reply" data-id="' + it.id + '">Lưu trả lời</button>' +
+          "</div>"
+        )
+        : "";
+      return (
+        '<div class="item">' +
+        '<div class="item-top"><span class="item-plat ' + plat + '">' + (PLAT_LABEL[it.platform] || plat) + "</span>" +
+        '<span class="item-status">' + statusLabel + "</span></div>" +
+        '<div class="item-author">' + escapeHtml(it.author_name || "Ẩn danh") + "</div>" +
+        '<div class="item-content">' + escapeHtml(it.content) + "</div>" +
+        '<div class="item-meta">' + fmtTime(it.created_at) + "</div>" +
+        replyBlock +
+        actions +
+        "</div>"
+      );
+    }).join("");
+
+    Array.prototype.forEach.call(el.querySelectorAll("button[data-act]"), function (btn) {
+      btn.addEventListener("click", function () { onAction(btn.dataset.act, Number(btn.dataset.id)); });
+    });
+  }
+
+  function onAction(act, id) {
+    if (act === "reply") {
+      var box = document.getElementById("replyBox" + id);
+      if (box) box.classList.toggle("open");
+      return;
+    }
+    if (act === "ignore") {
+      setStatus(id, "ignored", null);
+      return;
+    }
+    if (act === "save-reply") {
+      var ta = document.getElementById("replyText" + id);
+      var text = ta ? ta.value.trim() : "";
+      if (!text) { showMsg("Nhập nội dung trả lời trước đã.", false); return; }
+      setStatus(id, "replied", text);
+      return;
+    }
+  }
+
+  async function setStatus(id, status, replyText) {
+    try {
+      var { error } = await sb.rpc("pd_social_set_status", { p_id: id, p_status: status, p_reply_text: replyText });
+      if (error) throw error;
+      showMsg(status === "replied" ? "Đã lưu trả lời." : "Đã đánh dấu bỏ qua.", true);
+      await load();
+    } catch (e) {
+      showMsg("Lỗi: " + (e.message || e), false);
+    }
+  }
+
+  async function load() {
+    document.getElementById("list").innerHTML = '<div class="state">Đang tải...</div>';
+    try {
+      var { data, error } = await sb.rpc("pd_social_list", {
+        p_status: statusFilter || null,
+        p_platform: platformFilter || null,
+        p_limit: 100,
+      });
+      if (error) throw error;
+      items = data || [];
+      render();
+    } catch (e) {
+      document.getElementById("list").innerHTML = "";
+      showMsg("Lỗi tải dữ liệu: " + (e.message || e), false);
+    }
+  }
+
+  function setupPills(containerId, onChange) {
+    var container = document.getElementById(containerId);
+    container.addEventListener("click", function (e) {
+      var pill = e.target.closest(".pill");
+      if (!pill) return;
+      Array.prototype.forEach.call(container.querySelectorAll(".pill"), function (p) { p.classList.remove("active"); });
+      pill.classList.add("active");
+      onChange(pill.dataset.v);
+      load();
+    });
+  }
+
+  async function init() {
+    sb = window.sb;
+    try {
+      await requireAccess();
+    } catch (e) {
+      showMsg(e.message, false);
+      return;
+    }
+    setupPills("statusPills", function (v) { statusFilter = v; });
+    setupPills("platformPills", function (v) { platformFilter = v; });
+    load();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
