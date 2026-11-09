@@ -290,6 +290,19 @@
         rgba(255,201,52,.35);
     }
 
+    .cancel {
+      grid-column:
+        1 / -1;
+
+      background: rgba(255,90,90,.1);
+
+      color: #ff8a8a;
+
+      border:
+        1px solid
+        rgba(255,90,90,.4);
+    }
+
     #coachNoteInput {
       width: 100%;
 
@@ -653,6 +666,16 @@
     </button>
 
 
+    <button
+      id="cancelBtn"
+      class="cancel"
+      type="button"
+      disabled
+    >
+      🚫 Huỷ buổi (trước giờ học)
+    </button>
+
+
 <button
   id="coverBtn"
   class="cover"
@@ -705,6 +728,12 @@ window.PICKDEE_NOTIFICATION_ROLE =
   const absentBtn =
     document.getElementById(
       "absentBtn"
+    );
+
+
+  const cancelBtn =
+    document.getElementById(
+      "cancelBtn"
     );
 
 
@@ -1103,8 +1132,55 @@ window.PICKDEE_NOTIFICATION_ROLE =
     absentBtn.disabled =
       true;
 
+    cancelBtn.disabled =
+      true;
+
     coverBtn.disabled =
       true;
+
+  }
+
+
+  function getSessionStartAt() {
+
+    if (
+      !currentSession?.session_date
+      ||
+      !currentSession?.start_time
+    ) {
+
+      return null;
+
+    }
+
+
+    const time =
+      String(
+        currentSession.start_time
+      ).slice(
+        0,
+        8
+      );
+
+
+    const startAt =
+      new Date(
+        `${currentSession.session_date}T${time}+07:00`
+      );
+
+
+    if (
+      Number.isNaN(
+        startAt.getTime()
+      )
+    ) {
+
+      return null;
+
+    }
+
+
+    return startAt;
 
   }
 
@@ -1328,6 +1404,21 @@ else {
       );
 
       return;
+
+    }
+
+
+    const startAt =
+      getSessionStartAt();
+
+    if (
+      startAt
+      &&
+      Date.now() < startAt.getTime()
+    ) {
+
+      cancelBtn.disabled =
+        false;
 
     }
 
@@ -3885,6 +3976,148 @@ updateControls();
   }
 
 
+  async function cancelSessionByCoach() {
+
+    if (
+      !currentSession
+    ) {
+      return;
+    }
+
+
+    if (
+      String(
+        currentSession.status || ""
+      ).trim()
+      !==
+      "Chờ học"
+    ) {
+
+      setMessage(
+        "Buổi học này đã được xử lý hoặc không còn ở trạng thái Chờ học.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const reason =
+      window.prompt(
+        "Lý do huỷ buổi (bắt buộc, ví dụ: thời tiết xấu, Coach bận đột xuất...):",
+        ""
+      );
+
+
+    if (
+      !reason
+      ||
+      !reason.trim()
+    ) {
+
+      return;
+
+    }
+
+
+    const ok =
+      window.confirm(
+        "Xác nhận HUỶ buổi học này? Học viên sẽ KHÔNG mất buổi (không trừ số buổi đã mua)."
+      );
+
+
+    if (!ok) {
+      return;
+    }
+
+
+    lockAllButtons();
+
+
+    setMessage(
+      "Đang huỷ buổi...",
+      "info"
+    );
+
+
+    const {
+      data,
+      error
+    } =
+      await sb.rpc(
+        "coach_cancel_session",
+        {
+          p_session_id:
+            Number(
+              currentSession.id
+            ),
+
+          p_reason:
+            reason.trim()
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        "COACH CANCEL SESSION:",
+        error
+      );
+
+
+      updateControls();
+
+
+      setMessage(
+        "Không huỷ được buổi học: "
+        +
+        (
+          error.message
+          ||
+          error
+        ),
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const newStatus =
+      data?.new_status
+      ||
+      "Đã hủy";
+
+
+    currentSession.status =
+      newStatus;
+
+
+    show(
+      "status",
+      newStatus
+    );
+
+
+    updateBadge(
+      newStatus
+    );
+
+
+    updateControls();
+
+
+    setMessage(
+      "✓ Đã huỷ buổi học. Học viên không mất buổi.",
+      "success"
+    );
+
+  }
+
+
   completeBtn.addEventListener(
     "click",
     function () {
@@ -3904,6 +4137,16 @@ updateControls();
       markSession(
         "absent"
       );
+
+    }
+  );
+
+
+  cancelBtn.addEventListener(
+    "click",
+    function () {
+
+      cancelSessionByCoach();
 
     }
   );
