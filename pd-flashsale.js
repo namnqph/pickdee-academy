@@ -161,7 +161,8 @@
       if (!product || !variants || !variants.length) return;
 
       var v = variants[0];
-      var img = images && images[0] ? images[0].storage_path : "";
+      var imgPath = images && images[0] ? images[0].storage_path : "";
+      var img = imgPath ? sb.storage.from("shop-products").getPublicUrl(imgPath).data.publicUrl : "";
       var badge = PD_FLASH_BADGES_BY_SLUG[promo.badge_slug] || PD_FLASH_BADGES[0];
       injectStyleOnce();
 
