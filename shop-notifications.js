@@ -609,6 +609,27 @@
     return true;
   }
 
+  async function unregisterShopPushSubscription(endpoint) {
+    if (!client || !endpoint) {
+      return false;
+    }
+
+    const { error } = await client.rpc(
+      "unregister_shop_push_subscription",
+      {
+        p_endpoint: endpoint
+      }
+    );
+
+    if (error) {
+      console.warn("PickDee Shop Push unregister error:", error);
+      return false;
+    }
+
+    console.log("PickDee Shop Push: thiết bị đã tắt thông báo role shop.");
+    return true;
+  }
+
   async function ensureShopPushSubscription(requestPermission = false) {
     try {
       if (!client || !supportsShopWebPush()) {
@@ -741,7 +762,7 @@
           border-color:rgba(91,226,155,.45);
           background:rgba(91,226,155,.12);
           color:#5be29b;
-          cursor:default;
+          cursor:pointer;
         }
 
         .pdsn-push-btn.is-telegram {
@@ -879,11 +900,11 @@
 
         if (alreadyRegistered) {
           button.className = "pdsn-push-btn is-enabled";
-          button.textContent = "✓ Thông báo đã bật";
-          button.disabled = true;
+          button.textContent = "✓ Thông báo đã bật — nhấn để tắt";
+          button.disabled = false;
 
           if (hint) {
-            hint.textContent = "Thiết bị này đang nhận thông báo PickDee Shop.";
+            hint.textContent = "Thiết bị này đang nhận thông báo PickDee Shop. Nhấn nút để tắt trên thiết bị này.";
           }
 
           return;
@@ -924,6 +945,33 @@
       }
 
       if (Notification.permission === "denied") {
+        await refreshPushButton();
+        return;
+      }
+
+      if (button.classList.contains("is-enabled")) {
+        button.disabled = true;
+        button.className = "pdsn-push-btn is-checking";
+        button.textContent = "Đang tắt thông báo...";
+
+        if (hint) {
+          hint.textContent = "";
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          const subscription = registration
+            ? await registration.pushManager.getSubscription()
+            : null;
+
+          if (subscription) {
+            await unregisterShopPushSubscription(subscription.endpoint);
+          }
+        }
+        catch (error) {
+          console.warn("PickDee Shop Push unregister:", error);
+        }
+
         await refreshPushButton();
         return;
       }
