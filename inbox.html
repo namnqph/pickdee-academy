@@ -7,7 +7,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover, maximum-scale=1">
   <style id="pd-no-zoom">html{touch-action:manipulation}</style>
   <meta name="theme-color" content="#0f0f0f">
+  <link rel="manifest" href="/inbox.webmanifest">
   <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PD Inbox">
   <title>Hộp thư bình luận | PickDee</title>
   <script src="/supabase-js.js?v=20261104-self1"></script>
   <script src="./config.js?v=20261019-keep30"></script>
@@ -305,6 +309,7 @@
       document.getElementById("list").innerHTML = "";
       showMsg("Lỗi tải dữ liệu: " + (e.message || e), false);
     }
+    syncBadge();
   }
 
   function setupPills(containerId, onChange) {
@@ -317,6 +322,16 @@
       onChange(pill.dataset.v);
       load();
     });
+  }
+
+  async function syncBadge() {
+    if (!("setAppBadge" in navigator)) return;
+    try {
+      var { data, error } = await sb.rpc("pd_social_new_count");
+      if (error) throw error;
+      var n = Number(data) || 0;
+      if (n > 0) navigator.setAppBadge(n); else navigator.clearAppBadge();
+    } catch (_) { /* chấm đỏ là tiện ích phụ, lỗi thì bỏ qua, không chặn trang */ }
   }
 
   async function init() {

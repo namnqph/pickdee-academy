@@ -11769,12 +11769,17 @@ document.addEventListener(
 
   function sync() {
     hideIntro();
+    let totalCount = 0;
     document.querySelectorAll("[data-count-from]").forEach(tile => {
       const n = readCount(tile.dataset.countFrom);
+      totalCount += n;
       const badge = tile.querySelector(".adm-tile-badge");
       if (badge) badge.textContent = n > 99 ? "99+" : String(n);
       tile.classList.toggle("has-count", n > 0);
     });
+    if ("setAppBadge" in navigator) {
+      if (totalCount > 0) navigator.setAppBadge(totalCount); else navigator.clearAppBadge();
+    }
     launch.querySelectorAll(".adm-group").forEach(g => {
       let sum = 0;
       g.querySelectorAll(".adm-tile.has-count").forEach(tl => { sum += readCount(tl.dataset.countFrom); });
