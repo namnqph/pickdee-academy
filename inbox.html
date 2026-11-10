@@ -117,7 +117,7 @@
 
   <div class="eyebrow">QUẢN TRỊ</div>
   <h1>Hộp thư</h1>
-  <p class="intro">Facebook: mọi bình luận và tin nhắn Fanpage đều báo về đây. Bot tự trả lời khi chắc chắn; câu khó giữ ở mục Mới để anh/chị tự trả lời. TikTok: bình luận quét định kỳ, trả lời ở đây sẽ tự đăng lên TikTok. YouTube chưa nối.</p>
+  <p class="intro">Facebook: mọi bình luận và tin nhắn Fanpage đều báo về đây. Bot tự trả lời khi chắc chắn; câu khó giữ ở mục Mới để anh/chị tự trả lời. TikTok, YouTube: bình luận quét định kỳ, trả lời ở đây sẽ tự đăng lên nền tảng gốc.</p>
 
   <div id="message" class="message"><div></div></div>
 
@@ -223,7 +223,7 @@
     });
   }
 
-  var ORDER_SOURCE = { facebook: "facebook", tiktok: "tiktok" };
+  var ORDER_SOURCE = { facebook: "facebook", tiktok: "tiktok", youtube: "youtube" };
 
   function onAction(act, id, btn) {
     if (act === "order") {
@@ -260,6 +260,8 @@
         sendFacebookReply(id, text, btn);
       } else if (item && item.platform === "tiktok") {
         queueTiktokReply(id, text, btn);
+      } else if (item && item.platform === "youtube") {
+        queueYoutubeReply(id, text, btn);
       } else {
         setStatus(id, "replied", text, btn);
       }
@@ -274,6 +276,20 @@
       var { error } = await sb.rpc("pd_queue_tiktok_reply", { p_id: id, p_reply_text: text });
       if (error) throw error;
       showMsg("Đã lưu, hệ thống sẽ tự đăng lên TikTok trong ít phút.", true);
+      await load();
+    } catch (e) {
+      showMsg("Lỗi: " + (e.message || e), false);
+      if (btn) { btn.disabled = false; btn.textContent = prevLabel; }
+    }
+  }
+
+  async function queueYoutubeReply(id, text, btn) {
+    var prevLabel = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Đang lưu..."; }
+    try {
+      var { error } = await sb.rpc("pd_queue_youtube_reply", { p_id: id, p_reply_text: text });
+      if (error) throw error;
+      showMsg("Đã lưu, hệ thống sẽ tự đăng lên YouTube trong ít phút.", true);
       await load();
     } catch (e) {
       showMsg("Lỗi: " + (e.message || e), false);
