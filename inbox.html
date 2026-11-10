@@ -140,6 +140,9 @@
 </main>
 
 <script src="/pd-app.js?v=20261020-gold2"></script>
+<!-- Chuông + nút "Bật thông báo": iPhone chỉ cho hiện chấm đỏ trên icon khi app này đã được cấp quyền thông báo -->
+<script>window.PICKDEE_NOTIFICATION_ROLE = "admin";</script>
+<script src="./notifications.js?v=20261021-caps1"></script>
 <script>
 (function () {
   "use strict";
@@ -323,6 +326,12 @@
       load();
     });
   }
+
+  // Vừa bấm "Bật thông báo" xong hoặc quay lại app → cập nhật chấm đỏ ngay.
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.closest && e.target.closest("#pickdeeEnablePushButton")) setTimeout(syncBadge, 4000);
+  }, true); // capture: notifications.js chặn nổi bọt ở nút này
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) syncBadge(); });
 
   async function syncBadge() {
     if (!("setAppBadge" in navigator)) return;
