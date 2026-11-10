@@ -77,6 +77,10 @@
     .item-actions button.ghost-danger { border-color: rgba(255,100,100,.25); color: #ffaaaa; }
     .item-actions button:disabled { opacity: .55; cursor: default; transform: none !important; }
 
+    .item-order-btn { margin-top: 8px; width: 100%; min-height: 36px; border-radius: 9px; border: 1px dashed rgba(255,255,255,.18); background: transparent; color: rgba(255,255,255,.55); font-family: inherit; font-size: 10px; font-weight: 800; cursor: pointer; transition: border-color .15s, color .15s, transform .12s ease; }
+    .item-order-btn:active { transform: scale(.97); }
+    @media (hover: hover) { .item-order-btn:hover { border-color: #ffc934; color: #ffc934; } }
+
     .reply-box { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s cubic-bezier(.23,1,.32,1); }
     .reply-box-inner { overflow: hidden; min-height: 0; opacity: 0; transition: opacity .18s ease-out; }
     .reply-box.open { grid-template-rows: 1fr; }
@@ -108,7 +112,7 @@
 
   <div class="eyebrow">QUẢN TRỊ</div>
   <h1>Hộp thư bình luận</h1>
-  <p class="intro">Tổng hợp bình luận &amp; tin nhắn từ Facebook, YouTube, TikTok về 1 chỗ. Giai đoạn 1: chưa nối nền tảng nào, chỉ xem/ghi trạng thái.</p>
+  <p class="intro">Facebook: bình luận mới được bot tự trả lời công khai khi chắc chắn; câu khó hiện ở đây để anh/chị tự trả lời. YouTube, TikTok chưa nối.</p>
 
   <div id="message" class="message"><div></div></div>
 
@@ -173,7 +177,8 @@
     }
     el.innerHTML = items.map(function (it, idx) {
       var plat = escapeHtml(it.platform);
-      var statusLabel = STATUS_LABEL[it.status] || it.status;
+      var byBot = it.status === "replied" && it.replied_by === "bot";
+      var statusLabel = (STATUS_LABEL[it.status] || it.status) + (byBot ? " · Bot" : "");
       var replyBlock = it.status === "replied" && it.reply_text
         ? '<div class="item-reply">↩ ' + escapeHtml(it.reply_text) + "</div>"
         : "";
@@ -200,6 +205,7 @@
         '<div class="item-meta">' + fmtTime(it.created_at) + "</div>" +
         replyBlock +
         actions +
+        '<button type="button" class="item-order-btn" data-act="order" data-id="' + it.id + '">🧾 Tạo đơn từ tin này</button>' +
         "</div>"
       );
     }).join("");
@@ -209,7 +215,18 @@
     });
   }
 
+  var ORDER_SOURCE = { facebook: "facebook", tiktok: "tiktok" };
+
   function onAction(act, id, btn) {
+    if (act === "order") {
+      var item = items.find(function (it) { return it.id === id; });
+      if (!item) return;
+      var paste = "Tên: " + (item.author_name || "") + "\n" + item.content;
+      var url = "./shop-admin-create-order?source=" + encodeURIComponent(ORDER_SOURCE[item.platform] || "other") +
+        "&paste=" + encodeURIComponent(paste);
+      window.open(url, "_blank");
+      return;
+    }
     if (act === "reply") {
       var box = document.getElementById("replyBox" + id);
       if (!box) return;

@@ -3421,6 +3421,30 @@
 
 
   /* =====================================================
+     TẠO ĐƠN TỪ /inbox (10/11): nút "🧾 Tạo đơn" trên 1 bình luận/tin nhắn
+     mở trang này với ?source=facebook&paste=<tên khách + nội dung>.
+     Điền sẵn ô dán + chọn nguồn + tự chạy TỰ ĐIỀN ĐƠN, admin soát lại trước khi bấm TẠO ĐƠN.
+  ====================================================== */
+
+  async function fillFromQuery() {
+
+    const qs = new URLSearchParams(location.search);
+    const source = qs.get("source");
+    const paste = qs.get("paste");
+    if (!source && !paste) return;
+
+    if (source) {
+      const b = document.querySelector('.source-btn[data-source="' + source + '"]');
+      if (b) b.click();
+    }
+    if (paste) {
+      document.getElementById("pasteText").value = paste;
+      await smartFill();
+    }
+
+  }
+
+  /* =====================================================
      START
   ====================================================== */
 
@@ -3450,6 +3474,8 @@
       await loadAddressData();
 
       await loadCatalog();
+
+      await fillFromQuery();
 
     }
     catch (error) {
