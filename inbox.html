@@ -15,54 +15,83 @@
     html, body {
       margin: 0; width: 100%; max-width: 100%; overflow-x: hidden;
       background: #0f0f0f; color: #fff;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Be Vietnam Pro", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;
     }
     body { min-height: 100vh; padding-bottom: 30px; }
-    button, input, select, textarea, a { touch-action: manipulation; }
+    button, input, select, textarea, a { touch-action: manipulation; font-family: inherit; }
 
-    .header { position: sticky; top: 0; z-index: 60; background: rgba(15,15,15,.97); border-bottom: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
+    .header { position: sticky; top: 0; z-index: 60; background: rgba(15,15,15,.97); border-bottom: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); transition: box-shadow .25s ease-out; }
+    .header.pd-app-scrolled { box-shadow: 0 10px 24px rgba(0,0,0,.28); }
     .header-inner { width: min(760px,calc(100% - 18px)); min-height: 60px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .brand { color: #fff; text-decoration: none; font-size: 20px; font-weight: 950; letter-spacing: -.04em; }
     .brand span { color: #ffc934; }
-    .back { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); text-decoration: none; font-size: 9px; font-weight: 950; white-space: nowrap; }
+    .back { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); text-decoration: none; font-size: 9px; font-weight: 950; white-space: nowrap; transition: border-color .15s, color .15s; }
 
     main { width: min(760px,calc(100% - 18px)); margin: 15px auto 30px; }
     .eyebrow { margin-bottom: 5px; color: #ffc934; font-size: 10px; font-weight: 950; letter-spacing: .1em; }
-    h1 { margin: 0 0 5px; font-size: clamp(29px,7vw,40px); line-height: 1; letter-spacing: -.045em; }
+    h1 { margin: 0 0 5px; font-size: clamp(29px,7vw,40px); line-height: 1.02; letter-spacing: -.045em; }
     .intro { margin: 0 0 14px; color: rgba(255,255,255,.48); font-size: 11px; line-height: 1.45; }
 
-    .message { display: none; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; }
-    .message.show { display: block; }
+    .message { display: grid; grid-template-rows: 0fr; opacity: 0; margin-bottom: 0; border-radius: 10px; font-size: 11px; font-weight: 700; transition: grid-template-rows .3s cubic-bezier(.23,1,.32,1), opacity .22s ease-out, margin-bottom .3s cubic-bezier(.23,1,.32,1); }
+    .message > div { overflow: hidden; min-height: 0; padding: 0 12px; }
+    .message.show { grid-template-rows: 1fr; opacity: 1; margin-bottom: 10px; }
+    .message.show > div { padding: 10px 12px; }
     .message.ok { border: 1px solid rgba(255,201,52,.25); background: rgba(255,255,255,.049); color: #ffc934; }
     .message.error { border: 1px solid rgba(255,100,100,.24); background: rgba(255,100,100,.07); color: #ffaaaa; }
 
     .pills { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
-    .pill { flex: none; min-height: 34px; padding: 0 13px; display: flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: #1a1a1a; color: rgba(255,255,255,.65); font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; }
-    .pill.active { border-color: #ffc934; color: #ffc934; background: rgba(255,201,52,.08); }
+    .pill { flex: none; min-height: 34px; padding: 0 13px; display: flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: #1a1a1a; color: rgba(255,255,255,.65); font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: border-color .18s cubic-bezier(.23,1,.32,1), color .18s cubic-bezier(.23,1,.32,1), background-color .18s cubic-bezier(.23,1,.32,1), transform .12s ease, box-shadow .18s; }
+    .pill:active { transform: scale(.95); }
+    .pill.active { border-color: #ffc934; color: #ffc934; background: rgba(255,201,52,.08); box-shadow: 0 0 0 3px rgba(255,201,52,.08); }
 
-    .card { margin-bottom: 10px; padding: 13px; border-radius: 15px; border: 1px solid rgba(255,255,255,.08); background: #151515; }
-    .state { padding: 24px 0; text-align: center; color: rgba(255,255,255,.4); font-size: 11px; }
+    .state { padding: 34px 0; text-align: center; color: rgba(255,255,255,.4); font-size: 11px; }
+    .state svg { display: block; margin: 0 auto 10px; opacity: .35; }
+    .state .state-title { color: rgba(255,255,255,.6); font-size: 13px; font-weight: 800; margin-bottom: 3px; }
+    .state .state-sub { font-size: 11px; color: rgba(255,255,255,.35); }
+    .spin { width: 22px; height: 22px; margin: 0 auto 10px; border-radius: 50%; border: 2px solid rgba(255,255,255,.14); border-top-color: #ffc934; animation: pdSpin .75s linear infinite; }
+    @keyframes pdSpin { to { transform: rotate(360deg); } }
 
-    .item { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: #1a1a1a; margin-bottom: 8px; }
-    .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    @keyframes pdItemIn { from { opacity: 0; translate: 0 9px; scale: .985; } }
+    .item { padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: #1a1a1a; margin-bottom: 8px; animation: pdItemIn .34s cubic-bezier(.23,1,.32,1) backwards; transition: border-color .18s, translate .18s cubic-bezier(.23,1,.32,1); }
+    .item.is-new { border-left: 3px solid #ffc934; }
+    @media (hover: hover) { .item:hover { border-color: rgba(255,255,255,.16); } }
+    .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
     .item-plat { font-size: 9px; font-weight: 950; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); text-transform: uppercase; }
     .item-plat.facebook { background: rgba(68,120,255,.16); color: #7fa6ff; }
     .item-plat.youtube { background: rgba(255,60,60,.16); color: #ff8080; }
     .item-plat.tiktok { background: rgba(255,255,255,.12); color: #fff; }
-    .item-status { font-size: 9px; font-weight: 800; color: rgba(255,255,255,.4); }
+    .item-status { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 800; color: rgba(255,255,255,.4); }
+    .item-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.25); }
+    .item.is-new .item-status { color: #ffc934; }
+    .item.is-new .item-status::before { background: #ffc934; }
     .item-author { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
     .item-content { font-size: 12px; color: rgba(255,255,255,.82); line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap; }
     .item-meta { font-size: 9px; color: rgba(255,255,255,.35); margin-bottom: 8px; }
     .item-reply { font-size: 11px; color: #ffc934; background: rgba(255,201,52,.06); border: 1px solid rgba(255,201,52,.2); border-radius: 8px; padding: 8px 9px; margin-bottom: 8px; white-space: pre-wrap; }
     .item-actions { display: flex; gap: 7px; }
-    .item-actions button { flex: 1; min-height: 38px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.75); font-family: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .item-actions button { flex: 1; min-height: 38px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.75); font-family: inherit; font-size: 10px; font-weight: 900; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s, transform .12s ease, filter .12s ease; }
+    .item-actions button:active { transform: scale(.96); filter: brightness(.94); }
     .item-actions button.primary { border-color: #ffc934; color: #0f0f0f; background: #ffc934; }
+    .item-actions button.primary.is-open { background: rgba(255,201,52,.08); color: #ffc934; }
     .item-actions button.ghost-danger { border-color: rgba(255,100,100,.25); color: #ffaaaa; }
-    .reply-box { display: none; margin-top: 8px; }
-    .reply-box.open { display: block; }
-    .reply-box textarea { width: 100%; min-height: 70px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: #0f0f0f; color: #fff; font-family: inherit; font-size: 13px; padding: 9px 11px; resize: vertical; }
-    .reply-box .reply-save { margin-top: 7px; width: 100%; min-height: 40px; border: 0; border-radius: 9px; background: #ffc934; color: #0f0f0f; font-family: inherit; font-size: 11px; font-weight: 950; cursor: pointer; }
+    .item-actions button:disabled { opacity: .55; cursor: default; transform: none !important; }
+
+    .reply-box { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s cubic-bezier(.23,1,.32,1); }
+    .reply-box-inner { overflow: hidden; min-height: 0; opacity: 0; transition: opacity .18s ease-out; }
+    .reply-box.open { grid-template-rows: 1fr; }
+    .reply-box.open .reply-box-inner { opacity: 1; transition: opacity .22s ease-out .1s; }
+    .reply-box textarea { width: 100%; min-height: 70px; margin-top: 8px; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: #0f0f0f; color: #fff; font-family: inherit; font-size: 13px; padding: 9px 11px; resize: vertical; transition: border-color .15s, box-shadow .15s; }
+    .reply-box textarea:focus { outline: none; border-color: #ffc934; box-shadow: 0 0 0 3px rgba(255,201,52,.16); }
+    .reply-box .reply-save { margin-top: 7px; width: 100%; min-height: 40px; border: 0; border-radius: 9px; background: #ffc934; color: #0f0f0f; font-family: inherit; font-size: 11px; font-weight: 950; cursor: pointer; transition: transform .12s ease, filter .12s ease, opacity .15s; }
+    .reply-box .reply-save:active { transform: scale(.97); filter: brightness(.94); }
+    .reply-box .reply-save:disabled { opacity: .6; cursor: default; transform: none !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .item { animation: none; }
+      .message, .reply-box, .reply-box-inner, .pill, .item-actions button, .reply-box .reply-save { transition: opacity .12s linear !important; }
+      .spin { animation-duration: 1.4s; }
+    }
   </style>
 </head>
 
@@ -81,7 +110,7 @@
   <h1>Hộp thư bình luận</h1>
   <p class="intro">Tổng hợp bình luận &amp; tin nhắn từ Facebook, YouTube, TikTok về 1 chỗ. Giai đoạn 1: chưa nối nền tảng nào, chỉ xem/ghi trạng thái.</p>
 
-  <div id="message" class="message"></div>
+  <div id="message" class="message"><div></div></div>
 
   <div class="pills" id="statusPills">
     <div class="pill active" data-v="new">Mới</div>
@@ -97,22 +126,26 @@
     <div class="pill" data-v="tiktok">TikTok</div>
   </div>
 
-  <div id="list"><div class="state">Đang tải...</div></div>
+  <div id="list"><div class="state"><div class="spin"></div>Đang tải...</div></div>
 
 </main>
 
+<script src="/pd-app.js?v=20261020-gold2"></script>
 <script>
 (function () {
   "use strict";
 
   var sb, items = [];
   var statusFilter = "new", platformFilter = "";
+  var EMPTY_ICON = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 01-11.6 7.1L4 20l1-4A8 8 0 1120 12z"/></svg>';
 
   function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function showMsg(text, ok) {
     var el = document.getElementById("message");
-    el.textContent = text;
+    clearTimeout(el.__hideTimer);
+    el.querySelector("div").textContent = text;
     el.className = "message show " + (ok ? "ok" : "error");
+    if (ok) el.__hideTimer = setTimeout(function () { el.classList.remove("show"); }, 3200);
   }
   function fmtTime(iso) {
     if (!iso) return "";
@@ -131,10 +164,14 @@
   function render() {
     var el = document.getElementById("list");
     if (!items.length) {
-      el.innerHTML = '<div class="state">Chưa có bình luận/tin nhắn nào phù hợp bộ lọc.</div>';
+      el.innerHTML =
+        '<div class="state">' + EMPTY_ICON +
+        '<div class="state-title">Chưa có bình luận/tin nhắn nào</div>' +
+        '<div class="state-sub">Phù hợp bộ lọc hiện tại — thử đổi bộ lọc hoặc quay lại sau.</div>' +
+        "</div>";
       return;
     }
-    el.innerHTML = items.map(function (it) {
+    el.innerHTML = items.map(function (it, idx) {
       var plat = escapeHtml(it.platform);
       var statusLabel = STATUS_LABEL[it.status] || it.status;
       var replyBlock = it.status === "replied" && it.reply_text
@@ -147,13 +184,15 @@
           '<button type="button" class="ghost-danger" data-act="ignore" data-id="' + it.id + '">Bỏ qua</button>' +
           "</div>" +
           '<div class="reply-box" id="replyBox' + it.id + '">' +
+          '<div class="reply-box-inner">' +
           '<textarea id="replyText' + it.id + '" placeholder="Nhập nội dung trả lời..."></textarea>' +
           '<button type="button" class="reply-save" data-act="save-reply" data-id="' + it.id + '">Lưu trả lời</button>' +
-          "</div>"
+          "</div></div>"
         )
         : "";
+      var delay = Math.min(idx, 6) * 40;
       return (
-        '<div class="item">' +
+        '<div class="item' + (it.status === "new" ? " is-new" : "") + '" style="animation-delay:' + delay + 'ms">' +
         '<div class="item-top"><span class="item-plat ' + plat + '">' + (PLAT_LABEL[it.platform] || plat) + "</span>" +
         '<span class="item-status">' + statusLabel + "</span></div>" +
         '<div class="item-author">' + escapeHtml(it.author_name || "Ẩn danh") + "</div>" +
@@ -166,14 +205,21 @@
     }).join("");
 
     Array.prototype.forEach.call(el.querySelectorAll("button[data-act]"), function (btn) {
-      btn.addEventListener("click", function () { onAction(btn.dataset.act, Number(btn.dataset.id)); });
+      btn.addEventListener("click", function () { onAction(btn.dataset.act, Number(btn.dataset.id), btn); });
     });
   }
 
-  function onAction(act, id) {
+  function onAction(act, id, btn) {
     if (act === "reply") {
       var box = document.getElementById("replyBox" + id);
-      if (box) box.classList.toggle("open");
+      if (!box) return;
+      var open = box.classList.toggle("open");
+      btn.classList.toggle("is-open", open);
+      btn.textContent = open ? "Thu gọn" : "Soạn trả lời";
+      if (open) {
+        var ta = document.getElementById("replyText" + id);
+        setTimeout(function () { if (ta) ta.focus(); }, 120);
+      }
       return;
     }
     if (act === "ignore") {
@@ -181,20 +227,22 @@
       return;
     }
     if (act === "save-reply") {
-      var ta = document.getElementById("replyText" + id);
-      var text = ta ? ta.value.trim() : "";
-      if (!text) { showMsg("Nhập nội dung trả lời trước đã.", false); return; }
+      var ta2 = document.getElementById("replyText" + id);
+      var text = ta2 ? ta2.value.trim() : "";
+      if (!text) { showMsg("Nhập nội dung trả lời trước đã.", false); if (ta2) ta2.focus(); return; }
       var item = items.find(function (it) { return it.id === id; });
       if (item && item.platform === "facebook") {
-        sendFacebookReply(id, text);
+        sendFacebookReply(id, text, btn);
       } else {
-        setStatus(id, "replied", text);
+        setStatus(id, "replied", text, btn);
       }
       return;
     }
   }
 
-  async function sendFacebookReply(id, text) {
+  async function sendFacebookReply(id, text, btn) {
+    var prevLabel = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Đang gửi..."; }
     showMsg("Đang gửi lên Facebook...", true);
     try {
       var { data, error } = await sb.functions.invoke("pickdee-fb-reply-comment", {
@@ -206,10 +254,13 @@
       await load();
     } catch (e) {
       showMsg("Lỗi gửi Facebook: " + (e.message || e), false);
+      if (btn) { btn.disabled = false; btn.textContent = prevLabel; }
     }
   }
 
-  async function setStatus(id, status, replyText) {
+  async function setStatus(id, status, replyText, btn) {
+    var prevLabel = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = status === "replied" ? "Đang lưu..." : prevLabel; }
     try {
       var { error } = await sb.rpc("pd_social_set_status", { p_id: id, p_status: status, p_reply_text: replyText });
       if (error) throw error;
@@ -217,11 +268,12 @@
       await load();
     } catch (e) {
       showMsg("Lỗi: " + (e.message || e), false);
+      if (btn) { btn.disabled = false; btn.textContent = prevLabel; }
     }
   }
 
   async function load() {
-    document.getElementById("list").innerHTML = '<div class="state">Đang tải...</div>';
+    document.getElementById("list").innerHTML = '<div class="state"><div class="spin"></div>Đang tải...</div>';
     try {
       var { data, error } = await sb.rpc("pd_social_list", {
         p_status: statusFilter || null,
