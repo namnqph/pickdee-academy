@@ -12,7 +12,7 @@
 ========================================================= */
 
 const PICKDEE_SW_VERSION =
-  "pickdee-push-20261109-flashsale3";
+  "pickdee-push-20261110-notifyscope";
 
 
 /* =========================================================
@@ -516,9 +516,26 @@ self.addEventListener(
 
 
             /*
-              Nếu PickDee đang mở sẵn,
-              dùng tab PickDee hiện tại.
+              Mỗi app PickDee (Shop/Academy/Admin/Inbox...) có
+              start_url riêng (/shop, /admin, /inbox...) dù dùng
+              chung scope "/". Nếu dùng lại BẤT KỲ tab PickDee nào
+              đang mở (vd tab Shop) rồi navigate() sang app khác,
+              trang mới bị ghép vào lịch sử của tab đó -> bấm Back
+              lại văng về app cũ thay vì thoát app mới.
+
+              Chỉ dùng lại tab hiện có khi nó CÙNG app (cùng
+              segment đầu của đường dẫn) với thông báo; khác app
+              thì mở cửa sổ/app mới, lịch sử tách biệt.
             */
+
+            const targetTopPath =
+              new URL(
+                targetUrl,
+                self.location.origin
+              )
+                .pathname
+                .split("/")[1]
+              || "";
 
             for (
               const client
@@ -538,6 +555,26 @@ self.addEventListener(
                   currentUrl.origin
                   !==
                   self.location.origin
+                ) {
+
+                  continue;
+
+                }
+
+
+
+                const currentTopPath =
+                  currentUrl
+                    .pathname
+                    .split("/")[1]
+                  || "";
+
+
+
+                if (
+                  currentTopPath
+                  !==
+                  targetTopPath
                 ) {
 
                   continue;
