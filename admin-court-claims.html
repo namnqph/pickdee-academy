@@ -812,6 +812,7 @@
         .select(`
           id,
           court_id,
+          claimant_user_id,
           claimant_name,
           claimant_phone,
           claimant_zalo,
@@ -1295,6 +1296,25 @@
                   }
 
 
+                  ${
+                    (!claim.claimant_user_id && claim.claim_status === "pending")
+
+                      ?
+
+                      `
+                        <div class="item full" style="color:#ff8a8a;font-weight:700">
+                          ⚠️ Người gửi CHƯA ĐĂNG NHẬP — chưa có tài khoản gắn sẵn.
+                          Duyệt claim này sẽ xác nhận chủ sân nhưng KHÔNG ai đăng nhập được vào /my-court để tự sửa thông tin sân.
+                          Nhắn Zalo bảo họ đăng nhập/đăng ký bằng đúng SĐT này rồi gửi lại yêu cầu, hoặc tự sửa giúp qua admin-court-detail.
+                        </div>
+                      `
+
+                      :
+
+                      ""
+                  }
+
+
                 </div>
 
 
@@ -1384,9 +1404,23 @@
     ) {
 
 
+      const target =
+        claims.find(
+          c => c.id === claimId
+        );
+
+
+      const noAccount =
+        target
+        &&
+        !target.claimant_user_id;
+
+
       const ok =
         confirm(
-          "Bạn đã xác minh đúng chủ sân qua Zalo và muốn DUYỆT claim này?"
+          noAccount
+            ? "Người gửi CHƯA ĐĂNG NHẬP khi gửi yêu cầu này — duyệt xong sẽ không ai đăng nhập được vào /my-court cho sân này. Vẫn DUYỆT?"
+            : "Bạn đã xác minh đúng chủ sân qua Zalo và muốn DUYỆT claim này?"
         );
 
 
