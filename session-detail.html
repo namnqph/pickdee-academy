@@ -1687,6 +1687,138 @@ if (!confirmed) {
   }
 );
 </script>
+<script>
+/* Admin override gate lương: mở lại điều kiện check-in GPS Coach / xác nhận HV khi lỡ khung.
+   Chỉ admin thấy, chỉ buổi "Chờ học" từ 14/11. RPC admin_override_session_gate ghi vết session_gate_overrides. */
+window.addEventListener(
+  "DOMContentLoaded",
+  async function () {
+
+    if (!window.supabase || !window.PICKDEE_CONFIG) return;
+
+    const sbOverride =
+      window.supabase.createClient(
+        window.PICKDEE_CONFIG.SUPABASE_URL,
+        window.PICKDEE_CONFIG.SUPABASE_PUBLISHABLE_KEY
+      );
+
+    const overrideSessionId =
+      Number(new URLSearchParams(window.location.search).get("id"));
+
+    if (!overrideSessionId) return;
+
+    try {
+
+      const { data: userData } = await sbOverride.auth.getUser();
+      const userId = userData && userData.user && userData.user.id;
+      if (!userId) return;
+
+      const { data: prof } = await sbOverride
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!prof || String(prof.role || "").trim().toLowerCase() !== "admin") return;
+
+      const { data: sRow } = await sbOverride
+        .from("class_sessions")
+        .select("id,status,session_date")
+        .eq("id", overrideSessionId)
+        .maybeSingle();
+
+      if (
+        !sRow ||
+        String(sRow.status || "").trim() !== "Chờ học" ||
+        String(sRow.session_date || "") < "2026-11-14"
+      ) return;
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.marginTop = "18px";
+      card.innerHTML = `
+        <h2>🔓 Mở gate buổi học (Admin)</h2>
+        <div style="color:#adadad;line-height:1.5;margin-bottom:14px;">
+          Dùng khi buổi kẹt gate lương vì lỡ khung thời gian:
+          Coach quên check-in GPS (khung đóng 30 phút sau giờ kết thúc)
+          hoặc Học viên quên bấm "Xác nhận có mặt" (khung đóng sau 7 ngày).
+          Mở gate xong, Coach vẫn tự bấm "Hoàn thành buổi" như thường.
+          Mọi lần mở đều lưu vết kèm lý do.
+        </div>
+        <div class="item">
+          <div class="label">Phần cần mở</div>
+          <select id="ovPart" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#171717;color:#fff;font-size:15px;">
+            <option value="both">Cả hai (check-in Coach + xác nhận HV)</option>
+            <option value="student_confirm">Chỉ xác nhận Học viên</option>
+            <option value="coach_checkin">Chỉ check-in GPS Coach</option>
+          </select>
+        </div>
+        <div class="item">
+          <div class="label">Lý do (bắt buộc, ≥10 ký tự — lưu vết kiểm tra)</div>
+          <input id="ovReason" type="text" maxlength="300"
+            placeholder="VD: HV hỏng điện thoại, đã gọi xác nhận qua Zalo"
+            style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#171717;color:#fff;font-size:15px;" />
+        </div>
+        <button id="ovBtn" type="button" style="background:#ffbb00;color:#0e0e0e;width:100%;">
+          🔓 Mở gate buổi này
+        </button>
+        <div id="ovMsg" style="margin-top:12px;font-weight:700;"></div>
+      `;
+
+      document.querySelector("main.container").appendChild(card);
+
+      const ovBtn = card.querySelector("#ovBtn");
+      const ovMsg = card.querySelector("#ovMsg");
+
+      ovBtn.addEventListener("click", async function () {
+
+        const reason = card.querySelector("#ovReason").value.trim();
+        const part = card.querySelector("#ovPart").value;
+
+        if (reason.length < 10) {
+          ovMsg.style.color = "#ff9d9d";
+          ovMsg.textContent = "Lý do phải cụ thể, ít nhất 10 ký tự.";
+          return;
+        }
+
+        ovBtn.disabled = true;
+        ovMsg.style.color = "#c8c8c8";
+        ovMsg.textContent = "Đang mở gate...";
+
+        const { data, error } = await sbOverride.rpc(
+          "admin_override_session_gate",
+          {
+            p_session_id: overrideSessionId,
+            p_part: part,
+            p_reason: reason
+          }
+        );
+
+        if (error) {
+          ovBtn.disabled = false;
+          ovMsg.style.color = "#ff9d9d";
+          ovMsg.textContent = error.message || "Không mở được gate.";
+          return;
+        }
+
+        ovMsg.style.color = "#ffbb00";
+        ovMsg.textContent =
+          "✅ Đã mở gate" +
+          (data && data.student_confirms_added
+            ? " · thêm " + data.student_confirms_added + " xác nhận HV"
+            : "") +
+          (data && data.coach_checkin_overridden
+            ? " · mở check-in Coach"
+            : "") +
+          ". Coach bấm \"Hoàn thành buổi\" được rồi.";
+
+      });
+
+    } catch (_) {}
+
+  }
+);
+</script>
 <script src="/academy-admin-appnav.js?v=20261020-gold2"></script>
 <script src="/pd-app.js?v=20261020-gold2"></script>
 </body>
