@@ -24,7 +24,8 @@
         "01 quấn cán",
         "01 dán viền"
       ],
-      banner_image: "/img/shop/mvp-pro-banner.webp"
+      banner_image: "/img/shop/mvp-pro-banner.webp",
+      banner_image_wide: "/img/shop/mvp-pro-banner-wide.webp"
     }
   ];
 
@@ -77,8 +78,8 @@
     var css =
       ".pd-pre-banner{width:min(1100px,calc(100% - 28px));margin:14px auto 0;border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#131313 0%,#0b0b0b 55%,#1b1608 100%);border:1px solid rgba(255,201,52,.45);box-shadow:0 14px 34px rgba(0,0,0,.35)}" +
       ".pd-pre-link{display:flex;align-items:stretch;text-decoration:none;color:#fff}" +
-      ".pd-pre-photo{flex:0 0 118px;background:#000;position:relative}" +
-      ".pd-pre-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;display:block}" +
+      ".pd-pre-photo{flex:0 0 124px;background:#000;position:relative;min-height:177px}" +
+      ".pd-pre-photo::after{content:\"\";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(11,11,11,0) 58%,rgba(11,11,11,.9) 100%)}.pd-pre-photo picture{display:block}.pd-pre-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}" +
       ".pd-pre-body{flex:1;min-width:0;padding:14px 16px;display:flex;flex-direction:column;gap:7px;justify-content:center}" +
       ".pd-pre-tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:900;letter-spacing:.06em;color:#0b0b0b;background:#ffc934;padding:4px 10px;border-radius:999px;animation:pdPrePulse 1.8s ease-in-out infinite}" +
       ".pd-pre-title{margin:0;font-size:19px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:.01em}" +
@@ -92,8 +93,8 @@
       ".pd-pre-cta{align-self:flex-start;margin-top:2px;font-size:13px;font-weight:900;color:#0b0b0b;background:#ffc934;padding:9px 16px;border-radius:999px;transition:transform .2s ease-out,box-shadow .2s ease-out;box-shadow:0 6px 16px rgba(255,201,52,.25)}" +
       ".pd-pre-link:hover .pd-pre-cta{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,201,52,.35)}" +
       "@keyframes pdPrePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,201,52,.5)}50%{box-shadow:0 0 0 6px rgba(255,201,52,0)}}" +
-      "@media (min-width:701px){.pd-pre-photo{flex-basis:190px}.pd-pre-body{padding:20px 24px;gap:9px}.pd-pre-title{font-size:26px}.pd-pre-sub{font-size:14px}.pd-pre-now{font-size:30px}.pd-pre-meta{font-size:13px}}" +
-      "@media (max-width:420px){.pd-pre-photo{flex-basis:98px}.pd-pre-body{padding:12px 13px;gap:6px}.pd-pre-title{font-size:17px}.pd-pre-now{font-size:20px}}" +
+      "@media (min-width:701px){.pd-pre-photo{flex-basis:234px;min-height:334px}.pd-pre-body{padding:20px 24px;gap:9px}.pd-pre-title{font-size:26px}.pd-pre-sub{font-size:14px}.pd-pre-now{font-size:30px}.pd-pre-meta{font-size:13px}}" +
+      "@media (max-width:420px){.pd-pre-photo{flex-basis:96px}.pd-pre-body{padding:12px 13px;gap:6px}.pd-pre-title{font-size:17px}.pd-pre-now{font-size:20px}}" +
       /* Thẻ trên trang sản phẩm */
       ".pd-pre-card{margin:14px 0 4px;border-radius:16px;background:linear-gradient(135deg,#141414,#0b0b0b);border:1px solid rgba(255,201,52,.4);padding:14px 15px;color:#fff}" +
       ".pd-pre-card h3{margin:8px 0 4px;font-size:16px;font-weight:900;color:#ffc934}" +
@@ -131,7 +132,10 @@
       '<div class="pd-pre-banner">' +
         '<a class="pd-pre-link" href="./shop-product?id=' + encodeURIComponent(p.product_id) + '">' +
           '<div class="pd-pre-photo">' +
-            '<img src="' + escapeHtml(p.banner_image) + '" alt="' + escapeHtml(p.title) + '" loading="eager" decoding="async">' +
+            "<picture>" +
+              '<source media="(min-width:701px)" srcset="' + escapeHtml(p.banner_image_wide || p.banner_image) + '">' +
+              '<img src="' + escapeHtml(p.banner_image) + '" alt="' + escapeHtml(p.title) + '" loading="eager" decoding="async">' +
+            "</picture>" +
           "</div>" +
           '<div class="pd-pre-body">' +
             '<span class="pd-pre-tag">⚡ MỞ ĐẶT TRƯỚC</span>' +
