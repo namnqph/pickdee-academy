@@ -12,7 +12,7 @@
 ========================================================= */
 
 const PICKDEE_SW_VERSION =
-  "pickdee-push-20261114-preorder2";
+  "pickdee-push-20261114-badge1";
 
 
 /* =========================================================
@@ -465,15 +465,53 @@ self.addEventListener(
 
 
     event.waitUntil(
-      self.registration
-        .showNotification(
-          title,
-          options
-        )
+      Promise.all([
+        self.registration
+          .showNotification(
+            title,
+            options
+          ),
+        pickdeeBumpBadge(payload)
+      ])
     );
 
   }
 );
+
+
+/* =========================================================
+   BADGE TRÊN ICON APP
+   Số trên icon phải = số chưa đọc trên chuông trong app.
+   - App đang mở (thấy trên màn hình): báo trang tự đếm lại số thật.
+   - App đóng: cộng 1 vào số đã lưu (trang đã ghi số thật lần mở cuối).
+   - Payload có "badge" (số) thì dùng luôn số đó.
+   Trang ghi số thật vào cache "pd-badge" mỗi lần đếm (pdSyncAppBadge).
+========================================================= */
+
+async function pickdeeBumpBadge(payload) {
+  try {
+    if (!self.navigator || !("setAppBadge" in self.navigator)) return;
+
+    const windowClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const visible = windowClients.filter(function (c) { return c.visibilityState === "visible"; });
+    if (visible.length) {
+      visible.forEach(function (c) { try { c.postMessage({ type: "PICKDEE_BADGE_RESYNC" }); } catch (_) {} });
+      return;
+    }
+
+    const cache = await caches.open("pd-badge");
+    let n;
+    if (payload && Number.isFinite(Number(payload.badge)) && payload.badge !== "" && payload.badge !== null) {
+      n = Math.max(0, Number(payload.badge));
+    } else {
+      const res = await cache.match("/__pd_badge");
+      const cur = res ? Number(await res.text()) || 0 : 0;
+      n = cur + 1;
+    }
+    await cache.put("/__pd_badge", new Response(String(n)));
+    if (n > 0) await self.navigator.setAppBadge(n); else await self.navigator.clearAppBadge();
+  } catch (_) { /* badge là phụ, lỗi thì bỏ qua để không chặn hiện thông báo */ }
+}
 
 
 /* =========================================================

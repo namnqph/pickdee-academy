@@ -431,6 +431,20 @@
     });
   }
 
+  // Số trên icon app = đúng số chưa đọc trên chuông. Ghi kèm vào cache "pd-badge"
+  // để Service Worker cộng tiếp khi có push lúc app đang đóng (sw.js pickdeeBumpBadge).
+  function syncAppBadge(count) {
+    const n = Math.max(0, Number(count) || 0);
+    try {
+      if ("setAppBadge" in navigator) {
+        if (n > 0) navigator.setAppBadge(n); else navigator.clearAppBadge();
+      }
+      if (window.caches) {
+        caches.open("pd-badge").then(c => c.put("/__pd_badge", new Response(String(n)))).catch(() => {});
+      }
+    } catch (_) {}
+  }
+
   async function loadUnreadCount() {
     if (!client) {
       return;
@@ -447,6 +461,7 @@
     }
 
     renderBadge(data || 0);
+    syncAppBadge(data || 0);
   }
 
   async function loadNotifications() {
@@ -539,6 +554,7 @@
 
     renderNotifications();
     renderBadge(0);
+    syncAppBadge(0);
   }
 
   function urlBase64ToUint8Array(base64String) {
@@ -1034,6 +1050,21 @@
       ensureShopPushSubscription(false);
       loadUnreadCount();
     });
+
+    // iOS PWA mở lại từ nền thường không bắn "focus" → đếm lại khi app hiện lên.
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) loadUnreadCount();
+    });
+
+    // Có push khi app đang mở → SW báo đếm lại số thật.
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener("message", function (event) {
+        if (event.data && event.data.type === "PICKDEE_BADGE_RESYNC") {
+          loadUnreadCount();
+          if (panelOpen) loadNotifications();
+        }
+      });
+    }
 
     window.PickDeeShopNotifications = {
       refresh: async function () {

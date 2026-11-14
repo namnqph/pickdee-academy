@@ -364,6 +364,9 @@
     if (e.target && e.target.closest && e.target.closest("#pickdeeEnablePushButton")) setTimeout(syncBadge, 4000);
   }, true); // capture: notifications.js chặn nổi bọt ở nút này
   document.addEventListener("visibilitychange", function () { if (!document.hidden) syncBadge(); });
+  if (navigator.serviceWorker) navigator.serviceWorker.addEventListener("message", function (e) {
+    if (e.data && e.data.type === "PICKDEE_BADGE_RESYNC") syncBadge();
+  });
 
   async function syncBadge() {
     if (!("setAppBadge" in navigator)) return;
@@ -372,6 +375,7 @@
       if (error) throw error;
       var n = Number(data) || 0;
       if (n > 0) navigator.setAppBadge(n); else navigator.clearAppBadge();
+      if (window.caches) caches.open("pd-badge").then(function (c) { return c.put("/__pd_badge", new Response(String(n))); }).catch(function () {});
     } catch (_) { /* chấm đỏ là tiện ích phụ, lỗi thì bỏ qua, không chặn trang */ }
   }
 
