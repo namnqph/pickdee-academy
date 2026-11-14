@@ -755,18 +755,109 @@
 
   // 14/11/2026: đơn ĐẶT TRƯỚC — hiện rõ số tiền cọc cần nhận (cùng công thức DB shop_order_preorder_info:
   // cọc 70% = làm tròn lên 1.000đ của 70% tổng đơn; số tiền tự tính, không đọc con số trong ghi chú).
-  function preorderBanner(o) {
+  /* Thông tin cọc của đơn đặt trước (dùng chung cho khung cảnh báo + khối
+     Thanh toán). Không phải đơn đặt trước → null. */
+  function preorderPay(o) {
     const note = String(o?.customer_note || "");
-    if (!/\[ĐẶT TRƯỚC\]/.test(note)) return "";
+    if (!/\[ĐẶT TRƯỚC\]/.test(note)) return null;
     const total = Number(o?.total_amount || 0);
-    const is70 = /cọc\s*70\s*%/i.test(note);
-    const deposit = is70 ? Math.ceil(total * 0.7 / 1000) * 1000 : total;
-    const remaining = Math.max(total - deposit, 0);
+    const match = note.match(/cọc\s*([0-9]+)\s*%/i);
+    const percent = match ? Number(match[1]) || 100 : 100;
+    const deposit =
+      percent >= 100
+        ? total
+        : Math.ceil(total * percent / 100 / 1000) * 1000;
+    return {
+      percent: percent,
+      total: total,
+      deposit: deposit,
+      remaining: Math.max(total - deposit, 0)
+    };
+  }
+
+  function preorderBanner(o) {
+    const pre = preorderPay(o);
+    if (!pre) return "";
+    const total = pre.total;
+    const is70 = pre.percent < 100;
+    const deposit = pre.deposit;
+    const remaining = pre.remaining;
     return `<section style="margin:12px 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,201,52,.55);background:rgba(255,201,52,.10);color:#fff;line-height:1.5">
-      <div style="font-weight:950;color:#ffc934;font-size:15px">⚠️ ĐƠN ĐẶT TRƯỚC · ${is70 ? "CỌC 70%" : "TRẢ ĐỦ 100%"}</div>
+      <div style="font-weight:950;color:#ffc934;font-size:15px">⚠️ ĐƠN ĐẶT TRƯỚC · ${is70 ? "CỌC " + pre.percent + "%" : "TRẢ ĐỦ 100%"}</div>
       <div style="font-size:17px;font-weight:950;margin-top:4px">Cần nhận: ${money(deposit)}</div>
       ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · còn lại ${money(remaining)} thu trước khi giao</div>` : ""}
     </section>`;
+  }
+
+  /* Đơn đặt trước mới cọc: khối Thanh toán phải nói rõ ĐÃ NHẬN bao nhiêu và
+     CÒN THU bao nhiêu, thay vì chỉ một con số tổng đơn dễ hiểu nhầm là đã
+     thu đủ. Gọi lại được nhiều lần (sau render và sau khi sửa phí ship). */
+  function applyPreorderPaymentView() {
+
+    const pre =
+      preorderPay(currentOrder);
+
+    const paidRow =
+      document.getElementById("preorderPaidRow");
+
+    const restRow =
+      document.getElementById("preorderRestRow");
+
+    if (!paidRow || !restRow) {
+      return;
+    }
+
+    if (
+      !pre
+      ||
+      pre.percent >= 100
+    ) {
+
+      paidRow.style.display = "none";
+      restRow.style.display = "none";
+      return;
+
+    }
+
+    const received =
+      currentOrder?.payment_status === "paid";
+
+    const totalLabel =
+      document.getElementById("paymentCustomerTotalLabel");
+
+    if (totalLabel) {
+      totalLabel.textContent = "Tổng đơn";
+    }
+
+    document.getElementById("preorderPaidLabel")
+      .textContent =
+        received
+          ?
+            "Đã nhận cọc " + pre.percent + "%"
+          :
+            "Cọc " + pre.percent + "% cần nhận";
+
+    const paidText =
+      document.getElementById("preorderPaidText");
+
+    paidText.textContent =
+      money(pre.deposit);
+
+    paidText.style.color =
+      received
+        ?
+          "#53d769"
+        :
+          "#ffc934";
+
+    document.getElementById("preorderRestText")
+      .textContent =
+        money(pre.remaining)
+        + " (thu trước khi giao)";
+
+    paidRow.style.display = "";
+    restRow.style.display = "";
+
   }
 
   function money(value) {
@@ -2032,9 +2123,19 @@
 
             <div class="info-value">
               ${escapeHtml(
-                paymentStatusLabel(
-                  o.payment_status
-                )
+                preorderPay(o) && preorderPay(o).percent < 100
+                  ?
+                    (
+                      o.payment_status === "paid"
+                        ?
+                          "Đã nhận cọc " + preorderPay(o).percent + "%"
+                        :
+                          "Chưa nhận cọc"
+                    )
+                  :
+                    paymentStatusLabel(
+                      o.payment_status
+                    )
               )}
             </div>
 
@@ -2147,6 +2248,49 @@
                     customerTotal
               )}
             </div>
+
+          </div>
+
+          <div
+            class="info-row"
+            id="preorderPaidRow"
+            style="display:none"
+          >
+
+            <div
+              id="preorderPaidLabel"
+              class="info-label"
+            >
+              Đã nhận (cọc)
+            </div>
+
+            <div
+              id="preorderPaidText"
+              class="info-value"
+              style="
+                color:#53d769;
+                font-size:17px;
+                font-weight:950;
+              "
+            ></div>
+
+          </div>
+
+          <div
+            class="info-row"
+            id="preorderRestRow"
+            style="display:none"
+          >
+
+            <div class="info-label">
+              Còn thu khi giao
+            </div>
+
+            <div
+              id="preorderRestText"
+              class="info-value"
+              style="font-weight:900"
+            ></div>
 
           </div>
 
@@ -5452,6 +5596,8 @@
 
       }
 
+      applyPreorderPaymentView();
+
     }
 
 
@@ -5468,6 +5614,8 @@
 
 
     updateSimpleShippingView();
+
+    applyPreorderPaymentView();
 
 
     if (
