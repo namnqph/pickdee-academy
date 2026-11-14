@@ -18,6 +18,71 @@ function vnd(n) {
   return Math.round(Number(n) || 0).toLocaleString("vi-VN").replace(/,/g, ".") + "đ";
 }
 
+// Đọc kích thước thật của ảnh xem trước (JPEG/PNG/WebP) để khai báo og:image:width/height cho đúng.
+// Facebook dựng thẻ ảnh lớn ngay từ lần quét đầu khi biết kích thước; khai sai hoặc thiếu dễ ra thẻ ảnh nhỏ.
+function readImageSize(buf) {
+  const d = new DataView(buf);
+  const len = d.byteLength;
+
+  // PNG
+  if (len > 24 && d.getUint32(0) === 0x89504e47) {
+    return { width: d.getUint32(16), height: d.getUint32(20) };
+  }
+
+  // WebP (RIFF....WEBP)
+  if (len > 30 && d.getUint32(0) === 0x52494646 && d.getUint32(8) === 0x57454250) {
+    const fourcc = d.getUint32(12);
+    if (fourcc === 0x56503858) { // VP8X
+      return {
+        width: 1 + (d.getUint8(24) | (d.getUint8(25) << 8) | (d.getUint8(26) << 16)),
+        height: 1 + (d.getUint8(27) | (d.getUint8(28) << 8) | (d.getUint8(29) << 16))
+      };
+    }
+    if (fourcc === 0x56503820) { // VP8
+      return { width: d.getUint16(26, true) & 0x3fff, height: d.getUint16(28, true) & 0x3fff };
+    }
+    if (fourcc === 0x5650384c) { // VP8L
+      const b = d.getUint32(21, true);
+      return { width: (b & 0x3fff) + 1, height: ((b >> 14) & 0x3fff) + 1 };
+    }
+  }
+
+  // JPEG: đi qua các segment tới SOF
+  if (len > 4 && d.getUint16(0) === 0xffd8) {
+    let i = 2;
+    while (i + 9 < len) {
+      if (d.getUint8(i) !== 0xff) { i++; continue; }
+      const marker = d.getUint8(i + 1);
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+      const size = d.getUint16(i + 2);
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        return { height: d.getUint16(i + 5), width: d.getUint16(i + 7) };
+      }
+      i += 2 + size;
+    }
+  }
+
+  return null;
+}
+
+async function imageSize(imageUrl) {
+  try {
+    const res = await fetch(imageUrl, {
+      headers: { Range: "bytes=0-65535" },
+      cf: { cacheTtl: 604800, cacheEverything: true }
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    return readImageSize(await res.arrayBuffer());
+  }
+  catch (_) {
+    return null;
+  }
+}
+
 export async function onRequestGet(context) {
   const response = await context.next();
 
@@ -87,7 +152,7 @@ export async function onRequestGet(context) {
       ? "https://pickdee.vn/og/p/" + id + "-" + image.id + ".jpg"
       : "https://pickdee.vn/og-shop.jpg";
 
-    const imageSize = image ? 800 : 0;
+    const size = (image ? await imageSize(imageUrl) : null) || { width: 1200, height: 630 };
 
     const title =
       product.name
@@ -101,8 +166,11 @@ export async function onRequestGet(context) {
 
     // Facebook/Messenger lưu cache thẻ theo og:url: nếu link từng bị lưu lỗi (chưa có ảnh) thì gửi lại kèm &v=2
     // (hoặc &v=3…) để được quét lại. canonical/JSON-LD vẫn giữ pageUrl sạch.
+    // Dấu phiên bản theo ảnh chính + giá: đổi ảnh hoặc đổi giá là og:url đổi theo, nên Facebook/Messenger
+    // buộc phải dựng thẻ mới thay vì dùng lại thẻ đã nhớ từ lần quét trước (nguồn gốc lỗi "chỉ hiện logo").
     const vParam = url.searchParams.get("v") || "";
-    const shareUrl = /^[A-Za-z0-9_-]{1,12}$/.test(vParam) ? pageUrl + "&v=" + vParam : pageUrl;
+    const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000);
+    const shareUrl = pageUrl + "&v=" + (/^[A-Za-z0-9_-]{1,16}$/.test(vParam) ? vParam : stamp);
 
     // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.
     const inStock = activeVariants.some(v => v.is_sold_out !== true);
@@ -139,8 +207,8 @@ export async function onRequestGet(context) {
       + `<meta property="og:image" content="${esc(imageUrl)}">`
       + `<meta property="og:image:secure_url" content="${esc(imageUrl)}">`
       + `<meta property="og:image:type" content="image/jpeg">`
-      + `<meta property="og:image:width" content="${imageSize || 1200}">`
-      + `<meta property="og:image:height" content="${imageSize || 630}">`
+      + `<meta property="og:image:width" content="${size.width}">`
+      + `<meta property="og:image:height" content="${size.height}">`
       + `<meta property="og:image:alt" content="${esc(product.name)}">`
       + (minPrice
         ? `<meta property="product:price:amount" content="${minPrice}">`
