@@ -4505,15 +4505,18 @@
 
           }
 
-          if (
-            !window.confirm(
-              "Xác nhận PickDee đã nhận đủ tiền đơn "
-              +
-              (currentOrder?.order_code || "")
-              +
-              "?"
-            )
-          ) {
+          const received =
+            await askReceivedAmount(
+              currentOrder,
+              function (text) {
+                messageBox.className = "message";
+                messageBox.textContent = text;
+              }
+            );
+
+          messageBox.textContent = "";
+
+          if (!received) {
 
             return;
 
@@ -4587,6 +4590,23 @@
             currentOrder =
               refreshedOrder;
 
+            try {
+
+              await saveReceivedAmount(
+                received.amount,
+                received.source
+              );
+
+            }
+            catch (amountError) {
+
+              console.error(
+                "SAVE RECEIVED AMOUNT ERROR:",
+                amountError
+              );
+
+            }
+
             render();
 
             const refreshedMessage =
@@ -4602,7 +4622,9 @@
                 "message success";
 
               refreshedMessage.textContent =
-                "✓ Đã xác nhận nhận tiền. Ghi chú đã lưu vào ghi chú nội bộ.";
+                "✓ Đã xác nhận nhận "
+                + money(received.amount)
+                + ". Ghi chú đã lưu vào ghi chú nội bộ.";
 
             }
 

@@ -2263,7 +2263,7 @@ s
 Đọc ghi chú đơn để hiện đúng số đã cọc / còn phải thu. */
 function preorderInfo(o){
 
-return(
+const pre=
 window.pdPreorder
 &&
 window.pdPreorder.parseOrderNote
@@ -2274,8 +2274,60 @@ o
 o.customer_note
 )
 :
-null
+null;
+
+
+if(!pre){
+return null;
+}
+
+
+/* Khách cọc TỐI THIỂU theo mức đã chọn, có thể chuyển nhiều hơn.
+Đã ghi nhận số thực nhận thì lấy số đó làm chuẩn. */
+const recorded=
+Number(
+o
+&&
+o.amount_received
 );
+
+
+if(
+!Number.isFinite(recorded)
+||
+recorded<=0
+){
+return pre;
+}
+
+
+const total=
+Number(
+o.total_amount
+||
+0
+);
+
+
+return{
+percent:
+total>0
+?
+Math.min(
+Math.round(
+recorded/total*100
+),
+100
+)
+:
+pre.percent,
+paid:recorded,
+rest:
+Math.max(
+total-recorded,
+0
+)
+};
 
 }
 
@@ -2949,7 +3001,7 @@ await sb
 "shop_orders"
 )
 .select(
-"id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,customer_note,created_at"
+"id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,amount_received,customer_note,created_at"
 )
 .order(
 "created_at",
