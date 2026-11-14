@@ -1650,7 +1650,7 @@
   <meta name="apple-mobile-web-app-title" content="PickDee Shop">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link id="pdFont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"><style id="pdFontCss">html body{font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}:where(button,input,select){font-family:inherit}h1,h2,h3{text-wrap:balance}</style>
 <script src="/pd-motion.js?v=20261020-gold2"></script>
-<script src="/pd-preorder.js?v=20261114-1"></script>
+<script src="/pd-preorder.js?v=20261114-2"></script>
 <link rel="stylesheet" href="/pd-apple.css?v=20261029-a3">
 <link rel="stylesheet" href="/pd-apple-shoptab.css?v=20261029-t2">
 </head>
@@ -3145,6 +3145,104 @@
         );
 
     }
+
+    applyPreorderTotals(cart);
+
+  }
+
+
+  /* Đơn đặt trước cọc <100%: đáy trang hiện SỐ TIỀN CỌC phải chuyển hôm nay
+     (khớp QR), kèm tổng đơn + phần còn lại. Chỉ đổi hiển thị — giá trị đơn
+     lưu DB vẫn là tổng đầy đủ. */
+  function applyPreorderTotals(cart) {
+
+    const note =
+      document.getElementById(
+        "preorderRestNote"
+      );
+
+    if (
+      !totalPrice
+      ||
+      !bottomTotal
+      ||
+      !/\d/.test(totalPrice.textContent)
+    ) {
+      if (note) note.style.display = "none";
+      return;
+    }
+
+    const info =
+      preorderPayAmount(cart);
+
+    const isDeposit =
+      cartHasPreorder(cart)
+      &&
+      info.percent < 100
+      &&
+      info.rest > 0;
+
+    const totalLabel =
+      document.querySelector(
+        ".total-label"
+      );
+
+    const bottomLabel =
+      bottomBar.querySelector(
+        ".bottom-label"
+      );
+
+    if (!isDeposit) {
+      if (note) note.style.display = "none";
+      if (cartHasPreorder(cart)) {
+        if (totalLabel) totalLabel.textContent = "TỔNG THANH TOÁN";
+        if (bottomLabel) bottomLabel.textContent = "TỔNG THANH TOÁN";
+        totalPrice.textContent = money(info.total);
+        bottomTotal.textContent = money(info.total);
+      }
+      return;
+    }
+
+    if (totalLabel) {
+      totalLabel.textContent =
+        "CHUYỂN CỌC HÔM NAY (" + info.percent + "%)";
+    }
+
+    totalPrice.textContent =
+      money(info.pay);
+
+    let restNote = note;
+
+    if (!restNote) {
+      restNote =
+        document.createElement("div");
+      restNote.id =
+        "preorderRestNote";
+      restNote.style.cssText =
+        "margin-top:4px;color:rgba(255,255,255,.6);font-size:11px;line-height:1.45;";
+      totalPrice.insertAdjacentElement(
+        "afterend",
+        restNote
+      );
+    }
+
+    restNote.style.display =
+      "block";
+
+    restNote.textContent =
+      "Tổng đơn "
+      + money(info.total)
+      + " • còn lại "
+      + money(info.rest)
+      + " thanh toán khi hàng về";
+
+    if (bottomLabel) {
+      bottomLabel.textContent =
+        "CỌC " + info.percent + "% • CÒN " + money(info.rest) + " KHI HÀNG VỀ";
+    }
+
+    bottomTotal.textContent =
+      money(info.pay);
 
   }
 
@@ -6452,6 +6550,11 @@ function shippingQuote(
           money(
             shipping.customerTotal
           );
+
+
+    if (!hasInvalidSelections) {
+      applyPreorderTotals(cart);
+    }
 
 
     submitBtn.disabled =
