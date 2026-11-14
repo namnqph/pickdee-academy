@@ -83,6 +83,26 @@ async function imageSize(imageUrl) {
   }
 }
 
+// Bot đọc thẻ xem trước của Facebook/Messenger/Zalo/Telegram… (không phải người xem trang).
+function isCrawler(request) {
+  const ua = (request.headers.get("user-agent") || "").toLowerCase();
+  return /facebookexternalhit|facebookcatalog|meta-externalagent|messenger|zalo|twitterbot|telegrambot|whatsapp|linkedinbot|skypeuripreview|discordbot|slackbot|pinterest|viber/.test(ua);
+}
+
+// Sản phẩm chưa sẵn sàng (chưa mở bán / chưa có ảnh): KHÔNG trả thẻ logo cho bot, mà báo 404.
+// Facebook nhớ thẻ rất lâu — thà để nó "chưa đọc được" rồi quét lại sau, còn hơn nhớ thẻ logo
+// rồi link đó hiện logo mãi dù sau này sản phẩm đã có ảnh.
+function notReadyForCrawler(request) {
+  if (!isCrawler(request)) {
+    return null;
+  }
+
+  return new Response("San pham chua san sang de chia se.", {
+    status: 404,
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" }
+  });
+}
+
 export async function onRequestGet(context) {
   const response = await context.next();
 
@@ -114,13 +134,13 @@ export async function onRequestGet(context) {
     });
 
     if (!res.ok) {
-      return response;
+      return notReadyForCrawler(context.request) || response;
     }
 
     const product = (await res.json())[0];
 
     if (!product) {
-      return response;
+      return notReadyForCrawler(context.request) || response;
     }
 
     const activeVariants = (product.shop_product_variants || [])
@@ -151,6 +171,13 @@ export async function onRequestGet(context) {
     const imageUrl = image
       ? "https://pickdee.vn/og/p/" + id + "-" + image.id + ".jpg"
       : "https://pickdee.vn/og-shop.jpg";
+
+    if (!image) {
+      const blocked = notReadyForCrawler(context.request);
+      if (blocked) {
+        return blocked;
+      }
+    }
 
     const size = (image ? await imageSize(imageUrl) : null) || { width: 1200, height: 630 };
 
