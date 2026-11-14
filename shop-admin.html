@@ -1195,7 +1195,7 @@ class="stat-value"
 
 <div class="stat">
 <div class="stat-label">
-TỔNG TIỀN TÍNH DOANH THU
+TIỀN THỰC NHẬN
 </div>
 <div
 id="statFilteredTotal"
@@ -2280,6 +2280,46 @@ null
 }
 
 
+/* Tiền THỰC NHẬN của 1 đơn: đơn huỷ = 0; chưa thanh toán (COD chưa thu,
+CK chưa chuyển) = 0; đơn đặt trước mới cọc = chỉ tính số đã cọc. */
+function receivedAmount(o){
+
+if(
+!o
+||
+o.order_status==="cancelled"
+||
+o.payment_status!=="paid"
+){
+return 0;
+}
+
+
+const pre=
+preorderInfo(o);
+
+
+return(
+pre
+&&
+pre.rest>0
+?
+Number(
+pre.paid
+||
+0
+)
+:
+Number(
+o.total_amount
+||
+0
+)
+);
+
+}
+
+
 function payStatusLabel(o){
 
 const pre=
@@ -2608,16 +2648,8 @@ o
 )=>
 s
 +
-(
-o.order_status==="cancelled"
-?
-0
-:
-Number(
-o.total_amount
-||
-0
-)
+receivedAmount(
+o
 ),
 0
 )
