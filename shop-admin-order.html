@@ -753,6 +753,22 @@
 
   }
 
+  // 14/11/2026: đơn ĐẶT TRƯỚC — hiện rõ số tiền cọc cần nhận (cùng công thức DB shop_order_preorder_info:
+  // cọc 70% = làm tròn lên 1.000đ của 70% tổng đơn; số tiền tự tính, không đọc con số trong ghi chú).
+  function preorderBanner(o) {
+    const note = String(o?.customer_note || "");
+    if (!/\[ĐẶT TRƯỚC\]/.test(note)) return "";
+    const total = Number(o?.total_amount || 0);
+    const is70 = /cọc\s*70\s*%/i.test(note);
+    const deposit = is70 ? Math.ceil(total * 0.7 / 1000) * 1000 : total;
+    const remaining = Math.max(total - deposit, 0);
+    return `<section style="margin:12px 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,201,52,.55);background:rgba(255,201,52,.10);color:#fff;line-height:1.5">
+      <div style="font-weight:950;color:#ffc934;font-size:15px">⚠️ ĐƠN ĐẶT TRƯỚC · ${is70 ? "CỌC 70%" : "TRẢ ĐỦ 100%"}</div>
+      <div style="font-size:17px;font-weight:950;margin-top:4px">Cần nhận: ${money(deposit)}</div>
+      ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · còn lại ${money(remaining)} thu trước khi giao</div>` : ""}
+    </section>`;
+  }
+
   function money(value) {
 
     return new Intl.NumberFormat(
@@ -1812,6 +1828,8 @@
         </div>
 
       </section>
+
+      ${preorderBanner(o)}
 
       <section class="section">
 
