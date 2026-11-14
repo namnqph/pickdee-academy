@@ -1148,6 +1148,8 @@
 
             const variantName =
               String(
+                item._variantNameNow
+                ||
                 item.variant_name
                 ||
                 ""
@@ -6453,7 +6455,7 @@ if (
             "shop_product_variants"
           )
           .select(
-            "id,product_id,option1_value"
+            "id,product_id,option1_value,variant_name"
           )
           .in(
             "product_id",
@@ -6484,6 +6486,18 @@ if (
           .map(v => [v.id, v.option1_value])
       );
 
+    /*
+      Tên biến thể HIỆN TẠI theo variant_id. Đơn giữ snapshot variant_name lúc đặt
+      (trigger shop_prepare_order_item khoá cố ý), nên đơn đặt trước đầu tiên của
+      MVP Pro chỉ ghi "Áo tặng kèm size L", thiếu dáng vợt Elongate/Hybrid.
+      Chỉ dùng cho TIN GỬI HÃNG để hãng giao đúng dáng; phần hiển thị đơn vẫn giữ snapshot.
+    */
+    const variantNameMap =
+      new Map(
+        (variantsRes.data || [])
+          .map(v => [v.id, v.variant_name])
+      );
+
     items.forEach(function (item) {
 
       const variantId =
@@ -6493,6 +6507,11 @@ if (
 
       const itemColor =
         variantColorMap.get(variantId);
+
+      item._variantNameNow =
+        variantNameMap.get(variantId)
+        ||
+        "";
 
       const row =
         rows.find(r => variantId && r.variant_id === variantId)
