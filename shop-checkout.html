@@ -1650,6 +1650,7 @@
   <meta name="apple-mobile-web-app-title" content="PickDee Shop">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link id="pdFont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"><style id="pdFontCss">html body{font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}:where(button,input,select){font-family:inherit}h1,h2,h3{text-wrap:balance}</style>
 <script src="/pd-motion.js?v=20261020-gold2"></script>
+<script src="/pd-preorder.js?v=20261114-1"></script>
 <link rel="stylesheet" href="/pd-apple.css?v=20261029-a3">
 <link rel="stylesheet" href="/pd-apple-shoptab.css?v=20261029-t2">
 </head>
@@ -2818,6 +2819,187 @@
   }
 
 
+  /*
+    ĐẶT TRƯỚC (pre-order): khách chọn cọc 70% hoặc thanh toán 100%.
+    QR + số tiền phải khớp đúng mức khách chọn.
+  */
+  function cartHasPreorder(cart) {
+    return !!(
+      window.pdPreorder
+      &&
+      window.pdPreorder.cartHas(cart)
+    );
+  }
+
+
+  function selectedDepositPercent() {
+
+    const checked =
+      document.querySelector(
+        'input[name="preorderDeposit"]:checked'
+      );
+
+    return Number(
+      checked?.value
+      ||
+      100
+    );
+
+  }
+
+
+  function preorderPayAmount(cart) {
+
+    const total =
+      shippingQuote(
+        cart
+      ).customerTotal;
+
+    if (
+      !cartHasPreorder(cart)
+      ||
+      !window.pdPreorder
+    ) {
+      return { total: total, pay: total, rest: 0, percent: 100 };
+    }
+
+    const percent =
+      selectedDepositPercent();
+
+    const pay =
+      window.pdPreorder.deposit(
+        total,
+        percent
+      );
+
+    return {
+      total: total,
+      pay: pay,
+      rest: Math.max(
+        0,
+        total - pay
+      ),
+      percent: percent
+    };
+
+  }
+
+
+  function preorderNoteLine(cart) {
+
+    const info =
+      preorderPayAmount(cart);
+
+    if (
+      !cartHasPreorder(cart)
+    ) {
+      return "";
+    }
+
+    const eta =
+      (
+        window.pdPreorder?.items(cart)[0]
+        &&
+        window.pdPreorder.find(
+          window.pdPreorder.items(cart)[0].product_id
+        )?.eta_text
+      )
+      ||
+      "";
+
+    if (info.percent >= 100) {
+      return "[ĐẶT TRƯỚC] Khách thanh toán 100%: "
+        + money(info.total)
+        + (eta ? " — " + eta : "");
+    }
+
+    return "[ĐẶT TRƯỚC] Khách cọc "
+      + info.percent
+      + "%: "
+      + money(info.pay)
+      + " — còn lại "
+      + money(info.rest)
+      + " thu trước khi giao"
+      + (eta ? " — " + eta : "");
+
+  }
+
+
+  function preorderDepositHtml(cart) {
+
+    if (!cartHasPreorder(cart)) {
+      return "";
+    }
+
+    window.pdPreorder.injectStyle();
+
+    const total =
+      shippingQuote(
+        cart
+      ).customerTotal;
+
+    const dep70 =
+      window.pdPreorder.deposit(
+        total,
+        70
+      );
+
+    return `
+      <div class="pd-pre-deposit">
+
+        <div class="pd-pre-deposit-title">
+          ⚡ ĐƠN ĐẶT TRƯỚC • CHỌN MỨC THANH TOÁN
+        </div>
+
+        <div class="pd-pre-deposit-opts">
+
+          <label class="pd-pre-deposit-opt is-on">
+            <input
+              type="radio"
+              name="preorderDeposit"
+              value="70"
+              checked
+            >
+            <span>
+              <span class="pd-pre-opt-main">
+                Cọc 70% — <span id="pdDep70Amount">${escapeHtml(money(dep70))}</span>
+              </span>
+              <span class="pd-pre-opt-sub">
+                Còn lại <span id="pdDep70Rest">${escapeHtml(money(total - dep70))}</span>
+                thanh toán khi PickDee báo hàng về, trước lúc giao.
+              </span>
+            </span>
+          </label>
+
+          <label class="pd-pre-deposit-opt">
+            <input
+              type="radio"
+              name="preorderDeposit"
+              value="100"
+            >
+            <span>
+              <span class="pd-pre-opt-main">
+                Thanh toán 100% — <span id="pdDep100Amount">${escapeHtml(money(total))}</span>
+              </span>
+              <span class="pd-pre-opt-sub">
+                Trả đủ một lần, nhận hàng là xong.
+              </span>
+            </span>
+          </label>
+
+        </div>
+
+        <div class="pd-pre-deposit-note">
+          Chuyển khoản đúng số tiền ở mức đã chọn rồi đính kèm ảnh bill.
+          Hàng đặt trước dự kiến giao từ 28/11/2026.
+        </div>
+
+      </div>
+    `;
+
+  }
+
+
   function updatePaddlePayBox(
     cart
   ) {
@@ -2831,10 +3013,11 @@
       return;
     }
 
+    const payInfo =
+      preorderPayAmount(cart);
+
     const amount =
-      shippingQuote(
-        cart
-      ).customerTotal;
+      payInfo.pay;
 
     const reference =
       transferReference(
@@ -2872,6 +3055,96 @@
       "paddlePayRef"
     ).textContent =
       reference;
+
+
+    const restRow =
+      document.getElementById(
+        "paddlePayRest"
+      );
+
+    if (restRow) {
+
+      restRow.style.display =
+        payInfo.rest > 0
+          ?
+            ""
+          :
+            "none";
+
+      restRow.innerHTML =
+        payInfo.rest > 0
+          ?
+            "Cọc "
+            + payInfo.percent
+            + "% • còn lại <strong>"
+            + money(payInfo.rest)
+            + "</strong> thanh toán khi PickDee báo hàng về"
+          :
+            "";
+
+    }
+
+
+    if (cartHasPreorder(cart)) {
+
+      const dep70 =
+        window.pdPreorder.deposit(
+          payInfo.total,
+          70
+        );
+
+      const el70 =
+        document.getElementById(
+          "pdDep70Amount"
+        );
+
+      const el70Rest =
+        document.getElementById(
+          "pdDep70Rest"
+        );
+
+      const el100 =
+        document.getElementById(
+          "pdDep100Amount"
+        );
+
+      if (el70) {
+        el70.textContent =
+          money(dep70);
+      }
+
+      if (el70Rest) {
+        el70Rest.textContent =
+          money(
+            payInfo.total - dep70
+          );
+      }
+
+      if (el100) {
+        el100.textContent =
+          money(
+            payInfo.total
+          );
+      }
+
+      document
+        .querySelectorAll(
+          ".pd-pre-deposit-opt"
+        )
+        .forEach(
+          function (label) {
+
+            label.classList.toggle(
+              "is-on",
+              !!label.querySelector(
+                "input:checked"
+              )
+            );
+
+          }
+        );
+
+    }
 
   }
 
@@ -4694,6 +4967,8 @@
               id="paddlePayBox"
               class="paddle-pay-box"
             >
+              ${preorderDepositHtml(cart)}
+
               <div class="bank-transfer-title">
                 🏦 BƯỚC 1 • CHUYỂN KHOẢN ${escapeHtml(
                   PADDLE_BANK_ID
@@ -4716,6 +4991,7 @@
                 )}<br>
                 Số tiền: <strong id="paddlePayAmount"></strong><br>
                 Nội dung: <strong id="paddlePayRef"></strong><br>
+                <span id="paddlePayRest" class="paddle-pay-hint" style="display:none"></span>
                 <span class="paddle-pay-hint">Đặt trên điện thoại: chụp màn hình QR → app ngân hàng → Quét QR → chọn ảnh.</span>
               </div>
 
@@ -4816,6 +5092,25 @@
               updatePaddlePayBox(
                 cart
               );
+            }
+          );
+
+        document
+          .querySelectorAll(
+            'input[name="preorderDeposit"]'
+          )
+          .forEach(
+            function (input) {
+
+              input.addEventListener(
+                "change",
+                function () {
+                  updatePaddlePayBox(
+                    readCart()
+                  );
+                }
+              );
+
             }
           );
 
@@ -6674,7 +6969,16 @@ function shippingQuote(
                 paymentMethod,
 
               p_customer_note:
-                customerNote || null,
+                [
+                  preorderNoteLine(
+                    currentCart
+                  ),
+                  customerNote
+                ]
+                  .filter(Boolean)
+                  .join("\n")
+                ||
+                null,
 
               p_items:
                 rpcItems
