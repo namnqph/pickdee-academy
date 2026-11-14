@@ -20,6 +20,7 @@
     src="/supabase-js.js?v=20261104-self1"
   ></script>
   <script src="./config.js?v=20261019-keep30"></script>
+  <script src="/shop-bill-amount.js?v=20261114-ocr1"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -762,15 +763,37 @@
     if (!/\[ĐẶT TRƯỚC\]/.test(note)) return null;
     const total = Number(o?.total_amount || 0);
     const match = note.match(/cọc\s*([0-9]+)\s*%/i);
-    const percent = match ? Number(match[1]) || 100 : 100;
-    const deposit =
-      percent >= 100
+    const chosen = match ? Number(match[1]) || 100 : 100;
+
+    /* Mức cọc khách CHỌN lúc đặt (tối thiểu). Khách có thể chuyển nhiều hơn,
+       nên nếu đã ghi nhận số tiền thực nhận thì lấy số đó làm chuẩn. */
+    const expected =
+      chosen >= 100
         ? total
-        : Math.ceil(total * percent / 100 / 1000) * 1000;
+        : Math.ceil(total * chosen / 100 / 1000) * 1000;
+
+    const recorded = Number(o?.amount_received);
+
+    const hasRecorded =
+      Number.isFinite(recorded)
+      &&
+      recorded > 0;
+
+    const deposit = hasRecorded ? recorded : expected;
+
+    const percent =
+      total > 0
+        ? Math.round(deposit / total * 100)
+        : chosen;
+
     return {
-      percent: percent,
+      chosenPercent: chosen,
+      percent: Math.min(percent, 100),
       total: total,
+      expected: expected,
       deposit: deposit,
+      recorded: hasRecorded ? recorded : null,
+      source: String(o?.amount_received_source || ""),
       remaining: Math.max(total - deposit, 0)
     };
   }
@@ -800,6 +823,188 @@
       ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · ${received ? "CÒN THU" : "còn lại"} ${money(remaining)} trước khi giao</div>` : ""}
     </section>`;
   }
+
+  /* Hỏi SỐ TIỀN THỰC NHẬN: tự đọc số trên ảnh bill khách gửi, anh chỉ duyệt
+     lại (OCR đọc nhầm được). Trả về {amount, source} hoặc null nếu anh bỏ. */
+  async function askReceivedAmount(order, say) {
+
+    const total =
+      Number(order?.total_amount || 0);
+
+    const pre =
+      preorderPay(order);
+
+    const fallback =
+      pre
+        ?
+          pre.expected
+        :
+          total;
+
+    const proofPath =
+      String(order?.payment_proof_path || "").trim();
+
+    let scanned = null;
+
+    if (
+      proofPath
+      &&
+      window.PDBillAmount
+    ) {
+
+      try {
+
+        const result =
+          await window.PDBillAmount.read(
+            sb,
+            proofPath,
+            total,
+            say
+          );
+
+        scanned = result?.amount || null;
+
+      }
+      catch (error) {
+
+        console.error("BILL OCR ERROR:", error);
+
+      }
+
+    }
+
+    const suggested =
+      scanned || fallback;
+
+    const head =
+      scanned
+        ?
+          "Bill ghi: " + money(scanned)
+        :
+          "Không đọc được số tiền trên bill.";
+
+    const hint =
+      pre
+        ?
+          "\nĐơn đặt trước · tổng đơn " + money(total)
+          + " · cọc " + pre.chosenPercent + "% = " + money(pre.expected)
+        :
+          "\nTổng đơn " + money(total);
+
+    const typed =
+      window.prompt(
+        head
+        + hint
+        + "\n\nSố tiền PickDee THỰC NHẬN (đồng):",
+        String(suggested)
+      );
+
+    if (typed === null) {
+      return null;
+    }
+
+    const amount =
+      Number(String(typed).replace(/[^0-9]/g, ""));
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return null;
+    }
+
+    return {
+      amount: amount,
+      source:
+        scanned && amount === scanned
+          ?
+            "ocr"
+          :
+            "manual"
+    };
+
+  }
+
+
+  async function saveReceivedAmount(amount, source) {
+
+    const { data, error } =
+      await sb
+        .from("shop_orders")
+        .update({
+          amount_received: amount,
+          amount_received_source: source
+        })
+        .eq("id", currentOrder.id)
+        .select("*")
+        .single();
+
+    if (error) {
+      throw error;
+    }
+
+    currentOrder = data;
+
+  }
+
+
+  window.pdEditReceivedAmount = async function () {
+
+    const box =
+      document.getElementById("paymentProofAdminMessage")
+      ||
+      document.getElementById("message");
+
+    try {
+
+      if (box) {
+        box.className = "message";
+        box.textContent = "Đang đọc số tiền trên bill...";
+      }
+
+      const received =
+        await askReceivedAmount(
+          currentOrder,
+          function (text) {
+            if (box) box.textContent = text;
+          }
+        );
+
+      if (!received) {
+        if (box) box.textContent = "";
+        return;
+      }
+
+      await saveReceivedAmount(
+        received.amount,
+        received.source
+      );
+
+      render();
+
+      const after =
+        document.getElementById("paymentProofAdminMessage")
+        ||
+        document.getElementById("message");
+
+      if (after) {
+        after.className = "message success";
+        after.textContent =
+          "✓ Đã ghi nhận thực nhận " + money(received.amount) + ".";
+      }
+
+    }
+    catch (error) {
+
+      console.error("EDIT RECEIVED AMOUNT ERROR:", error);
+
+      if (box) {
+        box.className = "message error";
+        box.textContent =
+          error?.message || "Không lưu được số tiền đã nhận.";
+      }
+
+    }
+
+  };
+
 
   /* Đơn đặt trước mới cọc: khối Thanh toán phải nói rõ ĐÃ NHẬN bao nhiêu và
      CÒN THU bao nhiêu, thay vì chỉ một con số tổng đơn dễ hiểu nhầm là đã
@@ -2357,6 +2562,31 @@
           </div>
 
         </div>
+
+        ${
+          o.payment_status === "paid"
+            ?
+              `
+                <button
+                  type="button"
+                  onclick="pdEditReceivedAmount()"
+                  style="
+                    margin-top:10px;
+                    min-height:34px;
+                    padding:0 12px;
+                    border-radius:10px;
+                    border:1px solid rgba(255,201,52,.45);
+                    background:transparent;
+                    color:#ffc934;
+                    font-size:12px;
+                    font-weight:900;
+                    cursor:pointer;
+                  "
+                >🔎 Sửa số tiền đã nhận (đọc lại bill)</button>
+              `
+            :
+              ""
+        }
 
         ${
           o.payment_method === "bank_transfer"
@@ -4016,12 +4246,32 @@
         return;
 
       }
-      const ok =
-        window.confirm(
-          "Xác nhận PickDee đã nhận đúng tiền của đơn này?"
+      if (messageBox) {
+
+        messageBox.className = "message";
+
+        messageBox.textContent =
+          "Đang đọc số tiền trên bill...";
+
+      }
+
+      const received =
+        await askReceivedAmount(
+          currentOrder,
+          function (text) {
+
+            if (messageBox) {
+              messageBox.textContent = text;
+            }
+
+          }
         );
 
-      if (!ok) {
+      if (messageBox) {
+        messageBox.textContent = "";
+      }
+
+      if (!received) {
 
         return;
 
@@ -4107,6 +4357,23 @@
 
         currentOrder =
           refreshedOrder;
+
+        try {
+
+          await saveReceivedAmount(
+            received.amount,
+            received.source
+          );
+
+        }
+        catch (amountError) {
+
+          console.error(
+            "SAVE RECEIVED AMOUNT ERROR:",
+            amountError
+          );
+
+        }
 
         const oldFloating =
           document.getElementById(
