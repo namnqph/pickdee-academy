@@ -10,6 +10,7 @@
 <title>Quản lý Shop | PickDee</title>
 <script src="/supabase-js.js?v=20261104-self1"></script>
 <script src="./config.js?v=20261019-keep30"></script>
+<script src="/pd-preorder.js?v=20261114-deposit1"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -2258,6 +2259,113 @@ s
 }
 
 
+/* Đơn ĐẶT TRƯỚC: khách mới chuyển tiền cọc, không phải cả đơn.
+Đọc ghi chú đơn để hiện đúng số đã cọc / còn phải thu. */
+function preorderInfo(o){
+
+return(
+window.pdPreorder
+&&
+window.pdPreorder.parseOrderNote
+?
+window.pdPreorder.parseOrderNote(
+o
+&&
+o.customer_note
+)
+:
+null
+);
+
+}
+
+
+function payStatusLabel(o){
+
+const pre=
+preorderInfo(o);
+
+
+if(
+o.payment_status!=="paid"
+){
+return(
+pre
+&&
+pre.rest>0
+?
+"Chưa cọc"
+:
+"Chưa thanh toán"
+);
+}
+
+
+return(
+pre
+&&
+pre.rest>0
+?
+"Đã cọc"
+:
+"Đã thanh toán"
+);
+
+}
+
+
+/* Dòng tiền của thẻ đơn: đơn thường hiện tổng; đơn cọc hiện SỐ ĐÃ CỌC
+to, kèm tổng đơn + số còn lại bên dưới. */
+function moneyBlock(o){
+
+const pre=
+preorderInfo(o);
+
+
+if(
+!pre
+||
+!(pre.rest>0)
+){
+return`
+<div class="money">
+${money(
+o.total_amount
+)}
+</div>
+`;
+}
+
+
+return`
+<div style="text-align:right">
+<div class="money">
+${money(
+pre.paid
+)}
+</div>
+<div
+class="muted"
+style="font-size:12px;margin-top:2px"
+>
+cọc ${pre.percent}% / ${money(
+o.total_amount
+)}
+</div>
+<div
+class="muted"
+style="font-size:12px"
+>
+còn thu ${money(
+pre.rest
+)}
+</div>
+</div>
+`;
+
+}
+
+
 function orderStats(){
 
 $("statNew").textContent=
@@ -2660,23 +2768,17 @@ o.payment_method==="bank_transfer"
 •
 
 ${
-o.payment_status==="paid"
-?
-"Đã thanh toán"
-:
-"Chưa thanh toán"
+payStatusLabel(
+o
+)
 }
 
 </div>
 
 
-<div class="money">
-
-${money(
-o.total_amount
+${moneyBlock(
+o
 )}
-
-</div>
 
 </div>
 
@@ -2815,7 +2917,7 @@ await sb
 "shop_orders"
 )
 .select(
-"id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,created_at"
+"id,order_code,order_source,customer_name,phone,order_status,payment_method,payment_status,shipping_status,total_amount,customer_note,created_at"
 )
 .order(
 "created_at",

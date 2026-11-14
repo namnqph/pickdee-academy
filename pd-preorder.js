@@ -187,12 +187,32 @@
       "</div>";
   }
 
+  /* Đọc ghi chú "[ĐẶT TRƯỚC] ..." của đơn để Admin hiện ĐÚNG số tiền khách
+     đã cọc và số còn phải thu. Không phải đơn đặt trước → null. */
+  function parseOrderNote(note) {
+    var s = String(note == null ? "" : note);
+    if (s.indexOf("[ĐẶT TRƯỚC]") < 0) return null;
+    function num(x) {
+      return Number(String(x).replace(/[^0-9]/g, "")) || 0;
+    }
+    var full = s.match(/Khách thanh toán\s*100\s*%\s*:\s*([0-9.,]+)\s*đ/);
+    if (full) {
+      return { percent: 100, paid: num(full[1]), rest: 0 };
+    }
+    var m = s.match(
+      /Khách cọc\s*([0-9]+)\s*%\s*:\s*([0-9.,]+)\s*đ[^0-9]*còn lại\s*([0-9.,]+)\s*đ/
+    );
+    if (!m) return null;
+    return { percent: Number(m[1]) || 0, paid: num(m[2]), rest: num(m[3]) };
+  }
+
   global.pdPreorder = {
     list: PD_PREORDERS,
     find: findPreorder,
     items: preorderItems,
     cartHas: cartHasPreorder,
     deposit: depositAmount,
+    parseOrderNote: parseOrderNote,
     money: money,
     injectStyle: injectStyle,
     renderBanner: renderBanner,
