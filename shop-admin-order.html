@@ -782,10 +782,22 @@
     const is70 = pre.percent < 100;
     const deposit = pre.deposit;
     const remaining = pre.remaining;
-    return `<section style="margin:12px 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,201,52,.55);background:rgba(255,201,52,.10);color:#fff;line-height:1.5">
-      <div style="font-weight:950;color:#ffc934;font-size:15px">⚠️ ĐƠN ĐẶT TRƯỚC · ${is70 ? "CỌC " + pre.percent + "%" : "TRẢ ĐỦ 100%"}</div>
-      <div style="font-size:17px;font-weight:950;margin-top:4px">Cần nhận: ${money(deposit)}</div>
-      ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · còn lại ${money(remaining)} thu trước khi giao</div>` : ""}
+    const received = o?.payment_status === "paid";
+    const tone = received ? "83,215,105" : "255,201,52";
+    const head =
+      is70
+        ?
+          (received
+            ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ NHẬN CỌC " + pre.percent + "%"
+            : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ CỌC " + pre.percent + "%")
+        :
+          (received
+            ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ TRẢ ĐỦ 100%"
+            : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ TRẢ ĐỦ 100%");
+    return `<section style="margin:12px 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(${tone},.55);background:rgba(${tone},.10);color:#fff;line-height:1.5">
+      <div style="font-weight:950;color:rgb(${tone});font-size:15px">${head}</div>
+      <div style="font-size:17px;font-weight:950;margin-top:4px">${received ? "Đã nhận" : "Cần nhận"}: ${money(deposit)}</div>
+      ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · ${received ? "CÒN THU" : "còn lại"} ${money(remaining)} trước khi giao</div>` : ""}
     </section>`;
   }
 
@@ -815,6 +827,14 @@
 
       paidRow.style.display = "none";
       restRow.style.display = "none";
+
+      const plainNote =
+        document.getElementById("preorderTopNote");
+
+      if (plainNote) {
+        plainNote.style.display = "none";
+      }
+
       return;
 
     }
@@ -827,6 +847,37 @@
 
     if (totalLabel) {
       totalLabel.textContent = "Tổng đơn";
+    }
+
+    /* Thẻ tóm tắt đầu trang: số to phải là số tiền ĐÃ NHẬN, không phải
+       tổng đơn, kẻo tưởng khách trả đủ rồi. */
+    const topLabel =
+      document.getElementById("orderCustomerTotalLabel");
+
+    const topText =
+      document.getElementById("orderCustomerTotalTop");
+
+    const topNote =
+      document.getElementById("preorderTopNote");
+
+    if (topLabel) {
+      topLabel.textContent =
+        received
+          ?
+            "Đã nhận cọc " + pre.percent + "%"
+          :
+            "Cọc " + pre.percent + "% cần nhận";
+    }
+
+    if (topText) {
+      topText.textContent = money(pre.deposit);
+    }
+
+    if (topNote) {
+      topNote.textContent =
+        "Tổng đơn " + money(pre.total)
+        + " · còn thu " + money(pre.remaining);
+      topNote.style.display = "";
     }
 
     document.getElementById("preorderPaidLabel")
@@ -1898,6 +1949,17 @@
                   customerTotal
             )}
           </div>
+
+          <div
+            id="preorderTopNote"
+            style="
+              display:none;
+              margin-top:4px;
+              color:rgba(255,255,255,.52);
+              font-size:12px;
+              line-height:1.35;
+            "
+          ></div>
 
           <div
             id="orderShippingPendingNote"
