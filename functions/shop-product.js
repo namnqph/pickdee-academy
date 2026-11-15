@@ -103,12 +103,46 @@ function notReadyForCrawler(request) {
   });
 }
 
+// Bot đọc thẻ phải nhận trang THẬT NHANH: Messenger chỉ dựng thẻ xem trước nếu Facebook quét xong
+// trước khi anh bấm Gửi, mà Facebook quét 2 lần (lần 2 theo og:url có dấu phiên bản). Dựng trang 1 lần
+// rồi giữ ở biên Cloudflare → lần quét sau chỉ còn vài chục ms.
+const CARD_CACHE_TTL = 600;
+
+function cardCacheKey(id, vParam) {
+  return new Request(
+    "https://pickdee.vn/__og-card/" + id + (vParam ? "?v=" + encodeURIComponent(vParam) : ""),
+    { headers: { "accept": "text/html" } }
+  );
+}
+
 export async function onRequestGet(context) {
+  const reqUrl = new URL(context.request.url);
+  const reqId = reqUrl.searchParams.get("id") || "";
+  const rawV = reqUrl.searchParams.get("v") || "";
+  const safeV = /^[A-Za-z0-9_-]{1,16}$/.test(rawV) ? rawV : "";
+  const crawler = isCrawler(context.request) && /^\d+$/.test(reqId);
+
+  let cardCache = null;
+
+  if (crawler) {
+    try {
+      cardCache = caches.default;
+      const hit = await cardCache.match(cardCacheKey(reqId, safeV));
+
+      if (hit) {
+        return hit;
+      }
+    }
+    catch (_) {
+      cardCache = null;
+    }
+  }
+
   const response = await context.next();
 
   try {
-    const url = new URL(context.request.url);
-    const id = url.searchParams.get("id") || "";
+    const url = reqUrl;
+    const id = reqId;
 
     if (
       !/^\d+$/.test(id)
@@ -195,9 +229,8 @@ export async function onRequestGet(context) {
     // (hoặc &v=3…) để được quét lại. canonical/JSON-LD vẫn giữ pageUrl sạch.
     // Dấu phiên bản theo ảnh chính + giá: đổi ảnh hoặc đổi giá là og:url đổi theo, nên Facebook/Messenger
     // buộc phải dựng thẻ mới thay vì dùng lại thẻ đã nhớ từ lần quét trước (nguồn gốc lỗi "chỉ hiện logo").
-    const vParam = url.searchParams.get("v") || "";
     const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000);
-    const shareUrl = pageUrl + "&v=" + (/^[A-Za-z0-9_-]{1,16}$/.test(vParam) ? vParam : stamp);
+    const shareUrl = pageUrl + "&v=" + (safeV || stamp);
 
     // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.
     const inStock = activeVariants.some(v => v.is_sold_out !== true);
@@ -247,7 +280,7 @@ export async function onRequestGet(context) {
       + `<link rel="canonical" href="${esc(pageUrl)}">`
       + `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`;
 
-    return new HTMLRewriter()
+    const out = new HTMLRewriter()
       .on("title", {
         element(el) {
           el.setInnerContent(product.name + " | PickDee Shop");
@@ -260,6 +293,29 @@ export async function onRequestGet(context) {
         }
       })
       .transform(response);
+
+    if (!cardCache) {
+      return out;
+    }
+
+    // Chỉ bot mới đi nhánh này: giữ bản đã dựng ở biên để lần quét kế tiếp (Facebook quét lại theo
+    // og:url, Zalo/Telegram/khách khác dán lại cùng link) nhận thẻ gần như tức thì.
+    const html = await out.text();
+
+    const cached = new Response(html, {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=" + CARD_CACHE_TTL,
+        "x-og-card": "miss"
+      }
+    });
+
+    const store = cached.clone();
+    store.headers.set("x-og-card", "hit");
+    context.waitUntil(cardCache.put(cardCacheKey(id, safeV), store));
+
+    return cached;
   }
   catch (_) {
     return response;
