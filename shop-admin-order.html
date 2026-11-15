@@ -821,7 +821,72 @@
       <div style="font-weight:950;color:rgb(${tone});font-size:15px">${head}</div>
       <div style="font-size:17px;font-weight:950;margin-top:4px">${received ? "Đã nhận" : "Cần nhận"}: ${money(deposit)}</div>
       ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · ${received ? "CÒN THU" : "còn lại"} ${money(remaining)} trước khi giao</div>` : ""}
+      ${balanceCollectBlock(o, pre)}
     </section>`;
+  }
+
+  /* 15/11/2026 — Khối THU NỐT phần còn lại (luật: thu đủ mới chuyển hàng).
+     Chỉ hiện khi đã nhận cọc mà vẫn còn thiếu tiền. */
+  function balanceCollectBlock(o, pre) {
+
+    if (
+      !pre
+      ||
+      pre.remaining <= 0
+      ||
+      o?.payment_status !== "paid"
+      ||
+      ["cancelled"].includes(String(o?.order_status || ""))
+    ) {
+      return "";
+    }
+
+    const review =
+      String(o?.balance_review_status || "not_submitted");
+
+    const submitted =
+      review === "submitted";
+
+    return `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14)">
+
+        ${
+          submitted
+            ?
+              `<div style="font-weight:900;color:#ffc934;margin-bottom:8px">
+                 📨 Khách đã gửi bill THU NỐT ${money(pre.remaining)} · kiểm rồi xác nhận
+               </div>`
+            :
+              `<div style="font-size:13px;opacity:.85;margin-bottom:8px">
+                 Gửi khách link thanh toán nốt — khách quét QR đúng ${money(pre.remaining)} rồi gửi bill ngay trên trang đó.
+               </div>`
+        }
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+
+          <button
+            type="button"
+            onclick="pdCopyBalanceMessage()"
+            style="flex:1 1 180px;padding:11px 14px;border-radius:11px;border:0;font-weight:900;background:#2d7dff;color:#fff"
+          >
+            📋 COPY TIN NHẮN THU NỐT
+          </button>
+
+          <button
+            type="button"
+            onclick="pdConfirmBalancePaid()"
+            style="flex:1 1 180px;padding:11px 14px;border-radius:11px;border:0;font-weight:900;background:${submitted ? "#53d76a" : "rgba(255,255,255,.14)"};color:${submitted ? "#04210a" : "#fff"}"
+          >
+            ✅ XÁC NHẬN ĐÃ NHẬN ĐỦ
+          </button>
+
+        </div>
+
+        <div id="balanceCollectMessage" class="message" style="margin-top:8px"></div>
+
+      </div>
+    `;
+
   }
 
   /* Hỏi SỐ TIỀN THỰC NHẬN: tự đọc số trên ảnh bill khách gửi, anh chỉ duyệt
@@ -943,6 +1008,251 @@
     currentOrder = data;
 
   }
+
+
+  /* 15/11/2026 — THU NỐT phần còn lại của đơn đặt trước. */
+
+  function balanceMessageBox() {
+
+    return (
+      document.getElementById("balanceCollectMessage")
+      ||
+      document.getElementById("message")
+    );
+
+  }
+
+
+  function trackLinkForOrder(o) {
+
+    const token =
+      String(o?.public_tracking_token || "").trim();
+
+    if (!token) {
+      return "";
+    }
+
+    return (
+      "https://pickdee.vn/shop-track?token="
+      + encodeURIComponent(token)
+    );
+
+  }
+
+
+  window.pdCopyBalanceMessage = async function () {
+
+    const box =
+      balanceMessageBox();
+
+    const pre =
+      preorderPay(currentOrder);
+
+    const link =
+      trackLinkForOrder(currentOrder);
+
+    if (!pre || pre.remaining <= 0) {
+      if (box) {
+        box.className = "message error";
+        box.textContent = "Đơn này không còn tiền phải thu.";
+      }
+      return;
+    }
+
+    if (!link) {
+      if (box) {
+        box.className = "message error";
+        box.textContent = "Đơn này chưa có link theo dõi (thiếu public_tracking_token).";
+      }
+      return;
+    }
+
+    const text =
+      [
+        "PickDee xin phép gửi anh/chị link thanh toán nốt đơn "
+        + String(currentOrder?.order_code || "#" + currentOrder?.id) + " ạ.",
+        "",
+        "Đã nhận: " + money(pre.deposit) + " / tổng " + money(pre.total),
+        "Còn lại: " + money(pre.remaining),
+        "",
+        "Anh/chị mở link này là có sẵn mã QR đúng số tiền, chuyển xong gửi luôn ảnh bill ngay trên trang:",
+        link,
+        "",
+        "PickDee nhận đủ là gửi hàng đi ngay ạ. Cảm ơn anh/chị!"
+      ].join("\n");
+
+    try {
+
+      await navigator.clipboard.writeText(text);
+
+    }
+    catch (_) {
+
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.focus();
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+
+    }
+
+    if (box) {
+      box.className = "message success";
+      box.textContent = "✓ Đã copy tin nhắn thu nốt — dán vào Zalo/SMS gửi khách.";
+    }
+
+  };
+
+
+  window.pdConfirmBalancePaid = async function () {
+
+    const box =
+      balanceMessageBox();
+
+    const pre =
+      preorderPay(currentOrder);
+
+    if (!pre || pre.remaining <= 0) {
+      if (box) {
+        box.className = "message error";
+        box.textContent = "Đơn này không còn tiền phải thu.";
+      }
+      return;
+    }
+
+    const total =
+      Number(currentOrder?.total_amount || 0);
+
+    const proofPath =
+      String(currentOrder?.balance_proof_path || "").trim();
+
+    let scanned = null;
+
+    if (proofPath && window.PDBillAmount) {
+
+      if (box) {
+        box.className = "message";
+        box.textContent = "Đang đọc số tiền trên bill thu nốt...";
+      }
+
+      try {
+
+        const result =
+          await window.PDBillAmount.read(
+            sb,
+            proofPath,
+            total,
+            function (text) {
+              if (box) {
+                box.textContent = text;
+              }
+            }
+          );
+
+        scanned = result?.amount || null;
+
+      }
+      catch (error) {
+
+        console.error("BALANCE BILL OCR ERROR:", error);
+
+      }
+
+    }
+
+    const typed =
+      window.prompt(
+        (
+          scanned
+            ? "Bill ghi: " + money(scanned)
+            : (proofPath ? "Không đọc được số tiền trên bill." : "Khách chưa gửi bill trên web.")
+        )
+        + "\nĐã nhận trước đó " + money(pre.deposit)
+        + " · còn lại " + money(pre.remaining)
+        + "\n\nSố tiền NHẬN THÊM lần này (đồng):",
+        String(scanned || pre.remaining)
+      );
+
+    if (typed === null) {
+      if (box) {
+        box.className = "message";
+        box.textContent = "";
+      }
+      return;
+    }
+
+    const extra =
+      Number(String(typed).replace(/[^0-9]/g, ""));
+
+    if (!Number.isFinite(extra) || extra <= 0) {
+      if (box) {
+        box.className = "message error";
+        box.textContent = "Số tiền không hợp lệ.";
+      }
+      return;
+    }
+
+    const received =
+      Math.min(pre.deposit + extra, total);
+
+    try {
+
+      const { data, error } =
+        await sb
+          .from("shop_orders")
+          .update({
+            amount_received: received,
+            amount_received_source:
+              scanned && extra === scanned ? "ocr" : "manual",
+            balance_review_status:
+              received >= total ? "confirmed" : "submitted",
+            balance_confirmed_at:
+              received >= total ? new Date().toISOString() : null
+          })
+          .eq("id", currentOrder.id)
+          .select("*")
+          .single();
+
+      if (error) {
+        throw error;
+      }
+
+      currentOrder =
+        Object.assign({}, currentOrder, data);
+
+      render();
+
+      const after =
+        balanceMessageBox();
+
+      if (after) {
+
+        after.className = "message success";
+
+        after.textContent =
+          received >= total
+            ? "✓ Đã nhận đủ " + money(received) + " — được phép gửi hàng cho khách."
+            : "✓ Đã ghi nhận " + money(received) + " · còn thiếu " + money(total - received) + " — CHƯA gửi hàng.";
+
+      }
+
+    }
+    catch (error) {
+
+      console.error("CONFIRM BALANCE ERROR:", error);
+
+      if (box) {
+        box.className = "message error";
+        box.textContent = error?.message || "Không lưu được, thử lại.";
+      }
+
+    }
+
+  };
 
 
   window.pdEditReceivedAmount = async function () {

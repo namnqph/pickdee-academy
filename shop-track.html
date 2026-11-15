@@ -1263,6 +1263,30 @@
   */
   function paymentState(data) {
 
+    /*
+      15/11/2026 - Đơn ĐẶT TRƯỚC đã nhận cọc nhưng CHƯA đủ 100%:
+      hiện khung THU NỐT (QR đúng số còn lại) thay cho khung
+      "đã thanh toán". Luật: thu đủ mới chuyển hàng.
+    */
+    const balance =
+      data.balance || null;
+
+    if (
+      balance
+      &&
+      balance.is_preorder === true
+      &&
+      Number(balance.balance_due || 0) > 0
+      &&
+      !["cancelled", "completed"].includes(data.order_status)
+    ) {
+
+      return balance.review_status === "submitted"
+        ? "balance_submitted"
+        : "balance_due";
+
+    }
+
     if (
       data.payment_method !== "bank_transfer"
       ||
@@ -1320,8 +1344,42 @@
         ? PADDLE_BANK
         : SHOP_BANK;
 
+    const balance =
+      data.balance || null;
+
+    const isBalance =
+      state === "balance_due"
+      ||
+      state === "balance_submitted";
+
+    /*
+      Đơn ĐẶT TRƯỚC chưa chuyển cọc: QR phải mang đúng SỐ TIỀN CỌC
+      (trước 15/11 hiện nguyên tổng đơn → khách chuyển sai số).
+    */
+    const depositDue =
+      balance
+      &&
+      balance.is_preorder === true
+      &&
+      balance.deposit_paid === false
+        ? Number(balance.deposit_due || 0)
+        : 0;
+
+    /* Thu nốt thì QR mang đúng SỐ CÒN LẠI, không phải tổng đơn. */
     const amount =
-      Number(data.customer_total || 0);
+      isBalance
+        ? Number(balance?.balance_due || 0)
+        : (
+            depositDue > 0
+              ? depositDue
+              : Number(data.customer_total || 0)
+          );
+
+    /* Nội dung CK riêng cho lần thu nốt để anh Nam soi sao kê không lẫn với tiền cọc. */
+    const reference =
+      isBalance
+        ? transferReference(data.order_code) + "CL"
+        : transferReference(data.order_code);
 
 
     if (state === "paid") {
@@ -1401,7 +1459,7 @@
       "bank-transfer-box";
 
 
-    if (state === "submitted") {
+    if (state === "submitted" || state === "balance_submitted") {
 
       box.innerHTML = `
         <div class="bank-transfer-title">
@@ -1429,8 +1487,45 @@
 
       box.innerHTML = `
         <div class="bank-transfer-title">
-          🏦 CHƯA THANH TOÁN • CHUYỂN KHOẢN
+          ${
+            isBalance
+              ?
+                "💵 THANH TOÁN NỐT TRƯỚC KHI GIAO"
+              :
+                "🏦 CHƯA THANH TOÁN • CHUYỂN KHOẢN"
+          }
         </div>
+
+        ${
+          !isBalance && depositDue > 0
+            ?
+              `
+                <div class="bank-transfer-note">
+                  Đơn ĐẶT TRƯỚC: anh/chị chuyển cọc
+                  <b>${escapeHtml(money(depositDue))}</b>
+                  (${escapeHtml(String(balance?.pct || 70))}% của ${escapeHtml(money(Number(balance?.total || 0)))}),
+                  phần còn lại thanh toán trước khi PickDee gửi hàng.
+                </div>
+              `
+            :
+              ""
+        }
+
+        ${
+          isBalance
+            ?
+              `
+                <div class="bank-transfer-note">
+                  Đơn đặt trước của anh/chị đã nhận
+                  <b>${escapeHtml(money(Number(balance?.received || 0)))}</b>
+                  trên tổng ${escapeHtml(money(Number(balance?.total || 0)))}.
+                  PickDee gửi hàng ngay khi nhận đủ phần còn lại
+                  <b>${escapeHtml(money(amount))}</b>.
+                </div>
+              `
+            :
+              ""
+        }
 
         ${
           state === "rejected"
@@ -1448,14 +1543,14 @@
 
         <div class="bank-transfer-note">
           Quét QR bên dưới. Số tiền và nội dung chuyển khoản
-          đã được điền theo đúng đơn hàng này.
+          đã được điền theo đúng ${isBalance ? "phần còn lại của" : ""} đơn hàng này.
         </div>
 
         <div class="bank-qr-wrap">
           <img
             class="bank-qr"
             src="${escapeHtml(
-              vietQrUrl(amount, data.order_code, bank)
+              vietQrUrl(amount, reference, bank)
             )}"
             alt="QR chuyển khoản ${escapeHtml(bank.bankId)}"
           >
@@ -1508,12 +1603,12 @@
           <div class="bank-row">
             <div>
               <div class="bank-row-label">NỘI DUNG CHUYỂN KHOẢN</div>
-              <div class="bank-row-value">${escapeHtml(transferReference(data.order_code))}</div>
+              <div class="bank-row-value">${escapeHtml(reference)}</div>
             </div>
             <button
               type="button"
               class="copy-mini"
-              data-copy="${escapeHtml(transferReference(data.order_code))}"
+              data-copy="${escapeHtml(reference)}"
             >
               COPY
             </button>
@@ -1718,9 +1813,14 @@
             throw uploadError;
           }
 
+          /* Thu nốt đơn đặt trước đi RPC riêng: không đụng trạng thái tiền cọc. */
           const { data: proofData, error: proofError } =
             await sb.rpc(
-              "shop_submit_bank_transfer_proof",
+              isBalance
+                ?
+                  "shop_submit_preorder_balance_proof"
+                :
+                  "shop_submit_bank_transfer_proof",
               {
                 p_tracking_token: token,
                 p_payment_proof_path: objectPath
@@ -1738,7 +1838,11 @@
           forgetPendingPayment();
 
           showProofMessage(
-            "✓ Đã gửi bill thành công. PickDee sẽ kiểm tra và xác nhận đơn hàng.",
+            isBalance
+              ?
+                "✓ Đã gửi bill thành công. PickDee kiểm tra tiền rồi gửi hàng cho anh/chị ngay."
+              :
+                "✓ Đã gửi bill thành công. PickDee sẽ kiểm tra và xác nhận đơn hàng.",
             "success"
           );
 
@@ -1827,6 +1931,7 @@
       [
         state,
         data.customer_total,
+        data.balance?.balance_due || 0,
         data.has_paddle,
         data.has_shoe
       ].join("|");
