@@ -315,6 +315,15 @@ export async function onRequestGet(context) {
     store.headers.set("x-og-card", "hit");
     context.waitUntil(cardCache.put(cardCacheKey(id, safeV), store));
 
+    // Facebook quét link gốc rồi quét TIẾP og:url (cùng id, thêm &v=<dấu phiên bản>). Hai lần quét đó
+    // cho ra đúng một trang như nhau, nên lưu luôn cho khoá kia để lần 2 không phải dựng lại từ đầu —
+    // đây mới là lần quyết định Messenger có kịp gắn thẻ ảnh hay không.
+    if (!safeV) {
+      const twin = cached.clone();
+      twin.headers.set("x-og-card", "hit");
+      context.waitUntil(cardCache.put(cardCacheKey(id, stamp), twin));
+    }
+
     return cached;
   }
   catch (_) {
