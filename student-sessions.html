@@ -2345,18 +2345,78 @@
               status === "Đã hoàn thành"
             ) {
 
-              confirmHtml =
-                `
-                  <button
-                    type="button"
-                    class="confirm-btn"
-                    data-confirm-session="${Number(
-                      item.id
-                    )}"
-                  >
-                    ✅ Xác nhận có mặt
-                  </button>
-                `;
+              /*
+                16/11/2026 - Khung xác nhận của server:
+                từ 30 phút trước giờ học tới 7 ngày sau khi buổi kết thúc.
+                Trước đây nút hiện cho cả buổi còn xa / quá hạn,
+                học viên bấm vào chỉ nhận thông báo lỗi.
+              */
+              const confirmStart =
+                item.session_date && item.start_time
+                  ? new Date(
+                      `${item.session_date}T${item.start_time}`
+                    )
+                  : null;
+
+              const confirmOpenAt =
+                confirmStart
+                  ? confirmStart.getTime() - 30 * 60000
+                  : null;
+
+              const confirmCloseAt =
+                confirmStart
+                  ? confirmStart.getTime()
+                    + Number(item.duration_minutes || 60) * 60000
+                    + 7 * 86400000
+                  : null;
+
+              const confirmNow =
+                Date.now();
+
+              if (
+                confirmOpenAt !== null
+                &&
+                confirmNow < confirmOpenAt
+              ) {
+
+                confirmHtml =
+                  `
+                    <span class="not-reviewable">
+                      Mở 30 phút trước giờ học
+                    </span>
+                  `;
+
+              }
+              else if (
+                confirmCloseAt !== null
+                &&
+                confirmNow > confirmCloseAt
+              ) {
+
+                confirmHtml =
+                  `
+                    <span class="not-reviewable">
+                      Đã quá hạn xác nhận
+                    </span>
+                  `;
+
+              }
+              else {
+
+                confirmHtml =
+                  `
+                    <button
+                      type="button"
+                      class="confirm-btn"
+                      data-confirm-session="${Number(
+                        item.id
+                      )}"
+                    >
+                      ✅ Xác nhận có mặt
+                    </button>
+                  `;
+
+              }
 
             }
             else if (
