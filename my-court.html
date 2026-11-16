@@ -801,6 +801,59 @@
       event.preventDefault();
 
 
+      /*
+        16/11/2026 - Chặn giá thấp nhất > giá cao nhất.
+        Trước đây lưu được, danh bạ sân hiện "200.000đ-120.000đ/giờ".
+      */
+      const priceMinValue =
+        Number(
+          document.getElementById("fPriceMin").value
+        )
+        ||
+        0;
+
+      const priceMaxValue =
+        Number(
+          document.getElementById("fPriceMax").value
+        )
+        ||
+        0;
+
+      if (
+        priceMinValue < 0
+        ||
+        priceMaxValue < 0
+      ) {
+
+        message.className =
+          "message error";
+
+        message.textContent =
+          "Giá không được là số âm.";
+
+        return;
+
+      }
+
+      if (
+        priceMinValue > 0
+        &&
+        priceMaxValue > 0
+        &&
+        priceMinValue > priceMaxValue
+      ) {
+
+        message.className =
+          "message error";
+
+        message.textContent =
+          "Giá thấp nhất phải nhỏ hơn hoặc bằng giá cao nhất.";
+
+        return;
+
+      }
+
+
       submitBtn.disabled =
         true;
 
