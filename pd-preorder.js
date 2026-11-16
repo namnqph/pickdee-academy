@@ -20,7 +20,7 @@
       deposit_percents: [70, 100],
       gifts: [
         "01 áo chính hãng ESS/ON",
-        "01 đôi tất ESS/ON",
+        "01 khăn ESS/ON",
         "01 quấn cán",
         "01 dán viền"
       ],
@@ -149,7 +149,7 @@
                 : "") +
             "</div>" +
             '<div class="pd-pre-meta">' +
-              "🎁 <b>Tặng " + p.gifts.length + " món</b>: áo + tất + quấn cán + dán viền<br>" +
+              "🎁 <b>Tặng " + p.gifts.length + " món</b>: áo + khăn + quấn cán + dán viền<br>" +
               "📦 <b>" + escapeHtml(p.eta_text) + "</b> • cọc 70% hoặc 100%" +
             "</div>" +
             '<span class="pd-pre-cta">ĐẶT TRƯỚC NGAY →</span>' +
