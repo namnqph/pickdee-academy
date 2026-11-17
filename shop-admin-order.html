@@ -4910,11 +4910,55 @@
 
           }
 
+          const offwebButtonLabel =
+            button.textContent;
+
           button.disabled =
             true;
 
           button.textContent =
             "Đang xác nhận...";
+
+          /* 17/11/2026 — GHI SỐ TIỀN THẬT TRÊN BILL TRƯỚC khi đánh dấu đã thanh toán,
+             giống luồng "Xác nhận đã thanh toán" trên web. Trigger Telegram/Zalo đọc
+             amount_received ngay lúc đơn sang "paid"; ghi sau thì tin báo ra số tiền
+             theo mức khách CHỌN, không phải tiền thật (lỗi PD-000169 ngày 17/11).
+             Ghi lỗi thì DỪNG, không xác nhận. */
+
+          try {
+
+            await saveReceivedAmount(
+              received.amount,
+              received.source
+            );
+
+          }
+          catch (amountError) {
+
+            console.error(
+              "SAVE RECEIVED AMOUNT BEFORE OFFWEB CONFIRM ERROR:",
+              amountError
+            );
+
+            button.disabled =
+              false;
+
+            button.textContent =
+              offwebButtonLabel
+              ||
+              "Xác nhận đã thanh toán";
+
+            messageBox.className =
+              "message error";
+
+            messageBox.textContent =
+              "CHƯA xác nhận: không ghi được số tiền thật trên bill ("
+              + (amountError?.message || "lỗi không rõ")
+              + "). Thử lại, vì xác nhận lúc này sẽ báo khách/hãng sai số tiền.";
+
+            return;
+
+          }
 
           try {
 
