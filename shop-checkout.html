@@ -4337,7 +4337,7 @@
                   "shop_product_variants"
                 )
                 .select(
-                  "id,variant_name,option1_name,option1_value,option2_name,option2_value"
+                  "id,variant_name,option1_name,option1_value,option2_name,option2_value,is_sold_out"
                 )
                 .eq(
                   "id",
@@ -4570,6 +4570,10 @@
               ||
               "retail",
 
+            backend_sold_out:
+              variantData.is_sold_out
+              ===
+              true,
             backend_variant_name:
               variantData.variant_name
               ||
@@ -4794,6 +4798,20 @@
 
 
     return missing;
+
+  }
+
+
+  // Phân loại admin vừa bấm "Tạm hết hàng" khi hàng còn trong giỏ: không cho đặt đơn
+  function getSoldOutCheckoutItems(cart) {
+
+    return cart.filter(
+      function (item) {
+
+        return item.backend_sold_out === true;
+
+      }
+    );
 
   }
 
@@ -6848,6 +6866,32 @@ function shippingQuote(
           "Không kiểm tra được phân loại sản phẩm. Anh/chị vui lòng quay lại giỏ hàng và thử lại.",
           "error"
         );
+
+        return;
+
+      }
+
+
+      const soldOutCheckoutItems =
+        getSoldOutCheckoutItems(
+          currentCart
+        );
+
+
+      if (
+        soldOutCheckoutItems.length
+      ) {
+
+        showMessage(
+          "Sản phẩm " + (soldOutCheckoutItems[0].product_name || "") + " (" + (soldOutCheckoutItems[0].backend_variant_name || soldOutCheckoutItems[0].variant_name || "") + ") đã tạm hết hàng. Anh/chị quay lại giỏ hàng xoá sản phẩm này hoặc chọn phân loại khác rồi đặt lại.",
+          "error"
+        );
+
+        submitBtn.disabled =
+          true;
+
+        submitBtn.textContent =
+          "CÓ SP TẠM HẾT HÀNG";
 
         return;
 

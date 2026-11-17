@@ -1065,7 +1065,7 @@
                     "shop_product_variants"
                   )
                   .select(
-                    "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value"
+                    "id,product_id,variant_name,option1_name,option1_value,option2_name,option2_value,is_sold_out"
                   )
                   .eq(
                     "id",
@@ -1305,6 +1305,10 @@
                   quantity
                 ),
 
+              backend_sold_out:
+                variantData.is_sold_out
+                ===
+                true,
               backend_variant_name:
                 variantData.variant_name
                 ||
@@ -1537,6 +1541,20 @@
 
 
     return missing;
+
+  }
+
+
+  // Phân loại admin vừa bấm "Tạm hết hàng" khi hàng còn trong giỏ: chặn đặt đơn
+  function getSoldOutCartItems(cart) {
+
+    return cart.filter(
+      function (item) {
+
+        return item.backend_sold_out === true;
+
+      }
+    );
 
   }
 
@@ -1965,18 +1983,32 @@
       );
 
 
+    const soldOutCartItems =
+      getSoldOutCartItems(
+        cart
+      );
+
+
     const hasInvalidSelections =
       invalidCartItems.length
+      >
+      0
+      ||
+      soldOutCartItems.length
       >
       0;
 
 
     checkoutBlockedMessage =
-      hasInvalidSelections
+      soldOutCartItems.length
         ?
-          "Có sản phẩm trong giỏ hàng chưa chọn đủ phân loại. Anh/chị vui lòng quay lại sản phẩm để chọn đủ trước khi đặt hàng."
+          "Sản phẩm " + (soldOutCartItems[0].product_name || "") + " (" + (soldOutCartItems[0].backend_variant_name || soldOutCartItems[0].variant_name || "") + ") đã tạm hết hàng. Anh/chị xoá khỏi giỏ hoặc chọn phân loại khác trước khi đặt hàng."
         :
-          "";
+          hasInvalidSelections
+            ?
+              "Có sản phẩm trong giỏ hàng chưa chọn đủ phân loại. Anh/chị vui lòng quay lại sản phẩm để chọn đủ trước khi đặt hàng."
+            :
+              "";
 
 
     const total =
@@ -2504,7 +2536,11 @@
         );
 
         checkoutBtn.textContent =
-          "CHỌN ĐỦ PHÂN LOẠI";
+          soldOutCartItems.length
+            ?
+              "CÓ SP TẠM HẾT HÀNG"
+            :
+              "CHỌN ĐỦ PHÂN LOẠI";
 
         checkoutBtn.style.opacity =
           ".65";
