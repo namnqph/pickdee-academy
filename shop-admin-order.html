@@ -4610,6 +4610,27 @@
 
       try {
 
+        /* 17/11/2026 — GHI SỐ TIỀN THẬT TRÊN BILL TRƯỚC khi đánh dấu đã thanh toán.
+           Trigger Telegram/Zalo đọc amount_received ngay lúc đơn chuyển sang "paid";
+           ghi sau thì tin báo ra số tiền theo mức khách CHỌN, không phải tiền thật
+           (lỗi đơn PD-000169 ngày 17/11: khách cọc 1.750.000đ, tin báo 2.499.000đ). */
+        try {
+
+          await saveReceivedAmount(
+            received.amount,
+            received.source
+          );
+
+        }
+        catch (amountError) {
+
+          console.error(
+            "SAVE RECEIVED AMOUNT BEFORE CONFIRM ERROR:",
+            amountError
+          );
+
+        }
+
         const {
           data,
           error
