@@ -4587,6 +4587,23 @@
 
       }
 
+      /* 17/11/2026 — nhớ nhãn gốc để trả lại nút nếu phải dừng giữa đường. */
+      const confirmButtonLabels =
+        [
+          button,
+          floatingButton
+        ].map(
+          function (btn) {
+
+            return btn
+              ?
+                btn.textContent
+              :
+                "";
+
+          }
+        );
+
       [
         button,
         floatingButton
@@ -4624,10 +4641,50 @@
         }
         catch (amountError) {
 
+          /* 17/11/2026 — GHI SỐ TIỀN THẬT LỖI THÌ DỪNG, KHÔNG đánh dấu đã thanh toán.
+             Luật cứng 17/11: mọi con số tiền trên đơn/Telegram/Zalo phải khớp bill thật.
+             Trigger đọc amount_received ngay lúc đơn sang "paid", nên cứ xác nhận tiếp
+             là tin báo ra số tiền theo mức khách CHỌN (lỗi PD-000169). */
+
           console.error(
             "SAVE RECEIVED AMOUNT BEFORE CONFIRM ERROR:",
             amountError
           );
+
+          [
+            button,
+            floatingButton
+          ].forEach(
+            function (btn, index) {
+
+              if (btn) {
+
+                btn.disabled =
+                  false;
+
+                btn.textContent =
+                  confirmButtonLabels[index]
+                  ||
+                  "Xác nhận đã thanh toán";
+
+              }
+
+            }
+          );
+
+          if (messageBox) {
+
+            messageBox.className =
+              "message error";
+
+            messageBox.textContent =
+              "CHƯA xác nhận: không ghi được số tiền thật trên bill ("
+              + (amountError?.message || "lỗi không rõ")
+              + "). Thử lại, vì xác nhận lúc này sẽ báo khách/hãng sai số tiền.";
+
+          }
+
+          return;
 
         }
 
