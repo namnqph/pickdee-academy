@@ -7341,6 +7341,45 @@ const successEstimatedCustomerTotal =
       successCustomerTotal;
 
 
+/*
+  17/11/2026 — ĐƠN ĐẶT TRƯỚC TRẢ CỌC: màn hình "Đặt hàng thành công" phải nói đúng
+  số tiền khách vừa chuyển (cọc) và số còn lại, không được hiện "TỔNG THANH TOÁN"
+  bằng cả đơn (khách tưởng đã trả đủ — lỗi đơn PD-000170).
+*/
+const successPreorderPay =
+  (function () {
+    try {
+      return preorderPayAmount(currentCart);
+    }
+    catch (_) {
+      return null;
+    }
+  })();
+
+const successIsDeposit =
+  Boolean(
+    successPreorderPay
+    &&
+    successPreorderPay.percent < 100
+    &&
+    successPreorderPay.rest > 0
+  );
+
+const successDepositPaid =
+  successIsDeposit
+    ?
+      successPreorderPay.pay
+    :
+      0;
+
+const successDepositRest =
+  successIsDeposit
+    ?
+      successPreorderPay.rest
+    :
+      0;
+
+
         checkoutContent.innerHTML = `
 
           <div class="empty">
@@ -7502,18 +7541,24 @@ const successEstimatedCustomerTotal =
               >
                 <span style="font-weight:900;">
                   ${
-                    successShippingPending
+                    successIsDeposit
                       ?
-                        "TẠM TÍNH TỪ"
+                        "TỔNG ĐƠN HÀNG"
                       :
-                        "TỔNG THANH TOÁN"
+                        (
+                          successShippingPending
+                            ?
+                              "TẠM TÍNH TỪ"
+                            :
+                              "TỔNG THANH TOÁN"
+                        )
                   }
                 </span>
 
                 <strong
                   style="
-                    color:#ffc934;
-                    font-size:17px;
+                    color:${successIsDeposit ? "rgba(255,255,255,.72)" : "#ffc934"};
+                    font-size:${successIsDeposit ? "13px" : "17px"};
                   "
                 >
                   ${money(
@@ -7521,6 +7566,55 @@ const successEstimatedCustomerTotal =
                   )}
                 </strong>
               </div>
+
+              ${
+                successIsDeposit
+                  ?
+                    `
+                      <div
+                        style="
+                          display:flex;
+                          justify-content:space-between;
+                          gap:12px;
+                          margin-top:8px;
+                          font-size:12px;
+                        "
+                      >
+                        <span style="font-weight:900;">
+                          ĐÃ CHUYỂN CỌC (${successPreorderPay.percent}%)
+                        </span>
+
+                        <strong
+                          style="
+                            color:#ffc934;
+                            font-size:17px;
+                          "
+                        >
+                          ${money(successDepositPaid)}
+                        </strong>
+                      </div>
+
+                      <div
+                        style="
+                          display:flex;
+                          justify-content:space-between;
+                          gap:12px;
+                          margin-top:8px;
+                          font-size:11px;
+                        "
+                      >
+                        <span style="color:rgba(255,255,255,.50);">
+                          Còn lại thu trước khi giao
+                        </span>
+
+                        <strong>
+                          ${money(successDepositRest)}
+                        </strong>
+                      </div>
+                    `
+                  :
+                    ""
+              }
 
             </div>
 
@@ -8302,8 +8396,17 @@ const successEstimatedCustomerTotal =
                   ✓ ĐÃ NHẬN BILL CHUYỂN KHOẢN
                 </div>
                 <div class="bank-transfer-note">
-                  PickDee sẽ kiểm tra tiền về và xác nhận đơn vợt sớm.
-                  Anh/chị không cần chuyển khoản thêm.
+                  ${
+                    successIsDeposit
+                      ?
+                        "PickDee sẽ kiểm tra tiền cọc về và xác nhận đơn sớm. Anh/chị đã chuyển cọc "
+                        + money(successDepositPaid)
+                        + " — phần còn lại "
+                        + money(successDepositRest)
+                        + " thu trước khi giao hàng, chưa cần chuyển lúc này."
+                      :
+                        "PickDee sẽ kiểm tra tiền về và xác nhận đơn vợt sớm. Anh/chị không cần chuyển khoản thêm."
+                  }
                 </div>
               `;
             }
