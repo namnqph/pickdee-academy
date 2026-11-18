@@ -45,8 +45,8 @@
       a: "Elongate đầu dài: tầm với xa, lực đánh mạnh, hợp ai thích tấn công. Hybrid: nhanh, linh hoạt, đánh êm tay, dễ làm quen. Vợt 220–225g, cả 2 dáng đều hợp mọi trình độ nên chọn theo lối chơi mình thích."
     },
     {
-      q: "Mã giảm 50.000đ ai dùng được?",
-      a: "Mã giảm 50.000đ mỗi cây vợt, áp dụng cho khách mua vợt lần đầu tại PickDee. Nhập mã ở bước thanh toán, hoặc đặt qua link của em thì web tự điền. Người đã từng mua vợt ở PickDee thì mã không còn áp được nữa."
+      q: "Nhập mã của em để làm gì?",
+      a: "Mã để PickDee biết đơn này do em giới thiệu, giá vợt giữ nguyên như niêm yết, mã không làm thay đổi tiền anh/chị phải trả. Nhập mã ở bước thanh toán, hoặc đặt qua link của em thì web tự điền. Mã ghi nhận cho khách lần đầu mua vợt tại PickDee."
     }
   ];
 
@@ -204,13 +204,11 @@
     y += 56;
     ctx.fillStyle = "#ffc934";
     ctx.font = '900 42px "Be Vietnam Pro", sans-serif';
-    ctx.fillText("GIẢM 50.000Đ", 80, y);
+    ctx.fillText("MÃ " + code, 80, y);
     y += 42;
     ctx.fillStyle = "rgba(255,255,255,.72)";
     ctx.font = '600 26px "Be Vietnam Pro", sans-serif';
-    ctx.fillText("khách mua vợt lần đầu", 80, y);
-    y += 46;
-    ctx.fillText("Mã: " + code, 80, y);
+    ctx.fillText("hoặc nhập mã này khi thanh toán", 80, y);
 
     /* QR neo góc dưới phải, cột chữ trái rộng tối đa 600 nên không đè */
     var qr = window.qrcode(0, "M");
@@ -326,7 +324,7 @@
     /* 1. Ảnh QR mời khách */
     html +=
       '<div class="card"><details id="pdkQr"><summary>Ảnh QR mời khách (tải về, đăng luôn)</summary>' +
-      '<p class="pdk-sub">Ảnh đã có QR link riêng của anh/chị. Khách quét là vào đúng trang vợt và tự tính mã giảm 50.000đ. Đăng Zalo, Facebook, dán ở sân đều được.</p>' +
+      '<p class="pdk-sub">Ảnh đã có QR link riêng của anh/chị. Khách quét là vào đúng trang vợt và đơn tự gắn mã của anh/chị. Đăng Zalo, Facebook, dán ở sân đều được.</p>' +
       products.map(function (p, i) {
         return '<div class="pdk-item"><div class="pdk-name">' + esc(p.copy.short) + "</div>" +
           '<canvas class="pdk-poster" data-poster="' + i + '" width="1080" height="1350"></canvas>' +

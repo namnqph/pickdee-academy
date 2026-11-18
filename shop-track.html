@@ -817,7 +817,7 @@
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
 <script src="./shop-guest-push.js?v=20261021-1" defer></script>
-<script src="/pd-aff-invite.js?v=20261118-rate1"></script>
+<script src="/pd-aff-invite.js?v=20261118-nodisc1"></script>
 
 <main>
 
@@ -3123,11 +3123,11 @@ function renderOrder(data) {
 }
 
   /*
-    Đơn CÓ VỢT: mời khách thành cộng tác viên (250k/cây giới thiệu).
+    Đơn CÓ VỢT: mời khách thành cộng tác viên (250k/cây giới thiệu, mã không giảm giá cho khách).
     Đặt cuối trang theo dõi — khách mở lại trang này nhiều lần trong lúc chờ hàng.
     Đơn đã huỷ thì không mời.
   */
-  function mountAffInvite(data) {
+  async function mountAffInvite(data) {
 
     if (
       !data
@@ -3140,6 +3140,21 @@ function renderOrder(data) {
     ) {
       return;
     }
+
+
+    if (
+      document.getElementById("affInviteSlot")
+    ) {
+      return;
+    }
+
+
+    /* Khách đã là cộng tác viên rồi thì không mời nữa (18/11/2026).
+       RPC lỗi thì vẫn mời (thà mời lại hơn là mất lời mời). */
+    try {
+      const { data: pf } = await sb.rpc("aff_prefill_order", { p_token: token });
+      if (pf && pf.ok === true && pf.already_partner === true) return;
+    } catch (_) {}
 
 
     if (

@@ -1651,7 +1651,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link id="pdFont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"><style id="pdFontCss">html body{font-family:'Be Vietnam Pro',ui-sans-serif,system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}:where(button,input,select){font-family:inherit}h1,h2,h3{text-wrap:balance}</style>
 <script src="/pd-motion.js?v=20261020-gold2"></script>
 <script src="/pd-preorder.js?v=20261118-gift1"></script>
-<script src="/pd-aff-invite.js?v=20261118-rate1"></script>
+<script src="/pd-aff-invite.js?v=20261118-nodisc1"></script>
 <link rel="stylesheet" href="/pd-apple.css?v=20261029-a3">
 <link rel="stylesheet" href="/pd-apple-shoptab.css?v=20261029-t2">
 </head>
@@ -1903,7 +1903,7 @@
           <div class="field" id="affField" style="display:none;">
             <label for="affCode">MÃ GIỚI THIỆU (NẾU CÓ)</label>
             <input id="affCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="Ví dụ: PDTUAN">
-            <div id="affMsg" class="aff-msg">Khách mua vợt lần đầu nhập mã được giảm 50.000đ/vợt.</div>
+            <div id="affMsg" class="aff-msg">Có cộng tác viên PickDee giới thiệu thì nhập mã của họ. Mã không làm đổi giá vợt.</div>
           </div>
 
 
@@ -5270,7 +5270,9 @@
 
   }
   /* =====================================================
-     MÃ GIỚI THIỆU (CTV vợt): khách mua vợt lần đầu giảm 50k/vợt.
+     MÃ GIỚI THIỆU (CTV vợt): chỉ để ghi nhận hoa hồng cho CTV.
+     18/11/2026 anh Nam chốt: KHÔNG giảm giá cho khách (tiền đó còn gánh ship),
+     nên server trả discount_per_paddle = 0 và tiền đơn không đổi.
      Server kiểm lại khi tạo đơn (shop_create_guest_order_with_shipping_v2).
   ====================================================== */
   const AFF = { code: "", ok: false, per: 0, msg: "", seq: 0, bound: false };
@@ -5326,7 +5328,7 @@
     AFF.code = code; AFF.ok = false; AFF.per = 0; AFF.msg = "";
     if (!code) {
       msg.className = "aff-msg";
-      msg.textContent = "Khách mua vợt lần đầu nhập mã được giảm 50.000đ/vợt.";
+      msg.textContent = "Có cộng tác viên PickDee giới thiệu thì nhập mã của họ. Mã không làm đổi giá vợt.";
       affRefreshTotals();
       return;
     }
@@ -5342,13 +5344,26 @@
       AFF.ok = true;
       AFF.per = Number(res.discount_per_paddle || 0);
       msg.className = "aff-msg ok";
-      msg.textContent = "✓ Mã hợp lệ: giảm " + money(AFF.per) + "/vợt";
+      msg.textContent = "✓ Mã hợp lệ — đã ghi nhận giới thiệu" + (res.partner ? " của " + res.partner : "") + ".";
     } else {
       AFF.msg = (res && res.reason) || "Chưa kiểm tra được mã, anh/chị thử lại.";
       msg.className = "aff-msg bad";
       msg.textContent = AFF.msg;
     }
     affRefreshTotals();
+  }
+
+  /*
+    Ẩn khối mời CTV nếu SĐT của đơn đã là cộng tác viên.
+    Lỗi RPC thì giữ nguyên khối mời (thà mời lại hơn là mất lời mời).
+  */
+  async function hideAffInviteIfPartner(token) {
+    const wrap = document.getElementById("affInviteWrap");
+    if (!wrap || !token) return;
+    try {
+      const { data } = await sb.rpc("aff_prefill_order", { p_token: token });
+      if (data && data.ok === true && data.already_partner === true) wrap.remove();
+    } catch (_) {}
   }
 
   function affSetup(show) {
@@ -7938,14 +7953,19 @@ const successDepositRest =
 
 
             ${
-              /* Khách vừa mua vợt → mời thành CTV (đặt cuối: không che phần gửi bill) */
+              /* Khách vừa mua vợt → mời thành CTV (đặt cuối: không che phần gửi bill).
+                 Khách đã là CTV thì khối này tự ẩn ngay sau khi render (hideAffInviteIfPartner). */
               cartHasPaddle(currentCart)
               &&
               window.pdAffInvite
                 ?
+                  '<div id="affInviteWrap">'
+                  +
                   window.pdAffInvite.cardHtml(
                     trackingToken
                   )
+                  +
+                  "</div>"
                 :
                   ""
             }
@@ -7953,6 +7973,12 @@ const successDepositRest =
           </div>
 
         `;
+
+
+        /* Khách đã là cộng tác viên rồi thì không mời nữa (18/11/2026). */
+        hideAffInviteIfPartner(
+          trackingToken
+        );
 
 
         const copyOrderCodeBtn =
