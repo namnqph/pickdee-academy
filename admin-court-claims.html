@@ -1303,8 +1303,8 @@
 
                       `
                         <div class="item full" style="color:#ff8a8a;font-weight:700">
-                          ⚠️ Người gửi CHƯA ĐĂNG NHẬP — chưa có tài khoản gắn sẵn.
-                          Duyệt claim này sẽ xác nhận chủ sân nhưng KHÔNG ai đăng nhập được vào /my-court để tự sửa thông tin sân.
+                          ⚠️ Người gửi CHƯA ĐĂNG NHẬP — chưa có tài khoản gắn sẵn, nên
+                          yêu cầu này KHÔNG duyệt được (duyệt xong sẽ không ai vào được /my-court).
                           Nhắn Zalo bảo họ đăng nhập/đăng ký bằng đúng SĐT này rồi gửi lại yêu cầu, hoặc tự sửa giúp qua admin-court-detail.
                         </div>
                       `
@@ -1416,11 +1416,27 @@
         !target.claimant_user_id;
 
 
+      /* 18/11/2026 — từ 17/11 server (admin_approve_court_claim) CHẶN hẳn
+         claim chưa gắn tài khoản (CLAIM_NO_ACCOUNT), nên đừng hỏi "Vẫn DUYỆT?"
+         rồi để anh bấm OK và nhận lỗi kỹ thuật. Nói luôn việc cần làm. */
+      if (noAccount) {
+
+        alert(
+          "Chưa duyệt được: yêu cầu này CHƯA gắn tài khoản nào.\n\n"
+          + "Nhắn Zalo bảo chủ sân đăng ký/đăng nhập pickdee.vn bằng đúng SĐT đã gửi, "
+          + "rồi bấm xác minh sân lần nữa — lúc đó duyệt được.\n\n"
+          + "Yêu cầu hiện tại vẫn ở trạng thái CHỜ, không bị mất. "
+          + "Cần sửa thông tin sân ngay thì dùng admin-court-detail."
+        );
+
+        return;
+
+      }
+
+
       const ok =
         confirm(
-          noAccount
-            ? "Người gửi CHƯA ĐĂNG NHẬP khi gửi yêu cầu này — duyệt xong sẽ không ai đăng nhập được vào /my-court cho sân này. Vẫn DUYỆT?"
-            : "Bạn đã xác minh đúng chủ sân qua Zalo và muốn DUYỆT claim này?"
+          "Bạn đã xác minh đúng chủ sân qua Zalo và muốn DUYỆT claim này?"
         );
 
 
