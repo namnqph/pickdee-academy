@@ -46,7 +46,7 @@
     },
     {
       q: "Nhập mã của em để làm gì?",
-      a: "Mã để PickDee biết đơn này do em giới thiệu, giá vợt giữ nguyên như niêm yết, mã không làm thay đổi tiền anh/chị phải trả. Nhập mã ở bước thanh toán, hoặc đặt qua link của em thì web tự điền. Mã ghi nhận cho khách lần đầu mua vợt tại PickDee."
+      a: "Mã để PickDee biết đơn này do em giới thiệu, giá vợt giữ nguyên như niêm yết, mã không làm thay đổi tiền anh/chị phải trả. Nhập mã ở bước thanh toán, hoặc đặt qua link của em thì web tự điền. Anh/chị đã từng mua vợt ở PickDee rồi thì vẫn nhập mã được ạ."
     }
   ];
 
