@@ -3149,14 +3149,23 @@ function renderOrder(data) {
     }
 
 
-    /* Không mời khi: khách đã là cộng tác viên, hoặc chính khách này được một CTV
-       khác giới thiệu (18/11/2026 — để khách không biết người giới thiệu nhận tiền).
-       RPC lỗi thì vẫn mời (thà mời lại hơn là mất lời mời). */
+    /* Không mời khi khách đã là cộng tác viên. RPC lỗi thì vẫn mời (thà mời lại hơn là mất lời mời). */
+    let referredLead = "";
+
     try {
       const { data: pf } = await sb.rpc("aff_prefill_order", { p_token: token });
       if (pf && pf.ok === true && pf.already_partner === true) return;
-      /* Đơn này đến từ mã của một CTV khác → không mời chính khách đó (18/11/2026). */
-      if (pf && pf.ok === true && pf.referred === true) return;
+
+      /*
+        Khách này do một CTV khác giới thiệu. Trong lúc đơn còn đang chạy thì KHÔNG mời:
+        đặt lời mời cạnh đơn vừa mua là khách suy ra người giới thiệu mình được thưởng
+        (18/11/2026). Chỉ mời khi đơn đã GIAO XONG — tiền đã trả, vợt đã cầm trên tay,
+        không còn đơn nào để mất (anh Nam duyệt 18/11).
+      */
+      if (pf && pf.ok === true && pf.referred === true) {
+        if (pf.completed !== true) return;
+        referredLead = "Vợt tới tay rồi — hội mình hỏi mua thì giới thiệu giúp PickDee nhé.";
+      }
     } catch (_) {}
 
 
@@ -3177,7 +3186,8 @@ function renderOrder(data) {
 
     window.pdAffInvite.mount(
       slot,
-      token
+      token,
+      referredLead ? { lead: referredLead } : undefined
     );
 
   }
