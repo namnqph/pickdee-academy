@@ -7097,6 +7097,62 @@
 
     }
 
+    /* 18/11/2026 — ĐƠN ĐẶT TRƯỚC CÒN THIẾU TIỀN: luật "thu đủ mới chuyển hàng".
+       Chuyển sang Đóng gói / Đang giao / Hoàn tất khi phần còn lại chưa thu
+       là mất tiền thật, nên chặn và nói rõ số còn thu. Vẫn có đường thoát
+       tay (xác nhận lần 2) cho ca anh Nam đã thu ngoài web. */
+    if (
+      ["packing", "shipping", "completed"].includes(nextStatus)
+    ) {
+
+      const preDue =
+        preorderPay(currentOrder);
+
+      if (
+        preDue
+        &&
+        preDue.remaining > 0
+      ) {
+
+        const dueMsg =
+          document.getElementById(
+            "message"
+          );
+
+        if (dueMsg) {
+
+          dueMsg.className =
+            "message error";
+
+          dueMsg.textContent =
+            "Đơn ĐẶT TRƯỚC còn thu "
+            + money(preDue.remaining)
+            + " trước khi giao. Hãy gửi link THU NỐT cho khách (khối Thanh toán ở trên) rồi bấm \"Khách đã chuyển nốt\".";
+
+          dueMsg.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+
+        }
+
+        const goAnyway =
+          window.confirm(
+            "CÒN THU "
+            + money(preDue.remaining)
+            + " của đơn đặt trước này.\n\nChỉ bấm OK nếu anh ĐÃ nhận đủ tiền ngoài web (và sẽ ghi lại số tiền thật). Vẫn chuyển trạng thái?"
+          );
+
+        if (!goAnyway) {
+
+          return;
+
+        }
+
+      }
+
+    }
+
     actions
       .querySelectorAll(
         "button"
