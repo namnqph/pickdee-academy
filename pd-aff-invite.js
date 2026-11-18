@@ -12,6 +12,19 @@
 
   var STYLE_ID = "pdAffInviteCss";
 
+  /* Link CTV `?ref=MÃ` đổ về TRANG VỢT — trang này không nạp support-widget.js nên
+     trước 18/11/2026 mã bị rơi và khách phải tự gõ lại ở bước thanh toán. Nhớ 30 ngày,
+     cùng khoá `pickdee_aff_ref` mà shop-checkout.html đọc. */
+  try {
+    var qref = new URLSearchParams(location.search).get("ref");
+    if (qref && /^[A-Za-z0-9-]{3,20}$/.test(qref)) {
+      localStorage.setItem(
+        "pickdee_aff_ref",
+        JSON.stringify({ code: qref.replace(/[^A-Za-z0-9]/g, "").toUpperCase(), ts: Date.now() })
+      );
+    }
+  } catch (_) {}
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];

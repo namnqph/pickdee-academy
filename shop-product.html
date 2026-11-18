@@ -1481,7 +1481,7 @@
 ></header>
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
-<script src="/pd-aff-invite.js?v=20261118-freeship2"></script>
+<script src="/pd-aff-invite.js?v=20261118-refcatch1"></script>
 <script src="./shop-pending-payment.js?v=20261021-caps1" defer></script>
 
 
@@ -1947,13 +1947,24 @@
     );
 
 
-  const productId =
+  /*
+    Link CTV (`pd-aff-kit.js`, ảnh QR đã phát cho cộng tác viên) trỏ về `?slug=...`,
+    còn /shop thì trỏ `?id=...`. Nhận cả hai; slug được đổi sang id trong loadProduct().
+  */
+  let productId =
     params.get(
       "id"
     );
 
+  const productSlug =
+    String(
+      params.get(
+        "slug"
+      ) || ""
+    ).trim();
 
-  if (!productId) {
+
+  if (!productId && !productSlug) {
 
     showError(
       "Không tìm thấy sản phẩm."
@@ -6362,6 +6373,32 @@ function bindProductEvents() {
   ====================================================== */
 
   async function loadProduct() {
+
+    /* `?slug=` (link/QR của cộng tác viên) → tra ra id trước khi nạp sản phẩm. */
+    if (!productId && productSlug) {
+
+      const bySlug =
+        await sb
+          .from("shop_products")
+          .select("id")
+          .eq("slug", productSlug)
+          .eq("status", "active")
+          .maybeSingle();
+
+      if (bySlug.error || !bySlug.data) {
+
+        showError(
+          "Không tìm thấy sản phẩm."
+        );
+
+        return;
+
+      }
+
+      productId = bySlug.data.id;
+
+    }
+
 
     try {
 
