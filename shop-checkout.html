@@ -7317,6 +7317,25 @@ const successFreeShipping =
   );
 
 
+/*
+  Mã người tư vấn đã trừ tiền ngay trong merchandise_total do backend trả về,
+  nên phải nói rõ trên màn thành công — nếu không khách tưởng mã không ăn.
+*/
+const successAffDiscount =
+  Number(
+    data?.aff_discount
+    ??
+    0
+  );
+
+const successAffCode =
+  String(
+    data?.aff_code
+    ||
+    ""
+  );
+
+
 const successShippingPending =
   Boolean(
     data?.shipping_pending_confirmation
@@ -7488,9 +7507,38 @@ const successDepositRest =
                 <strong>
                   ${money(
                     successMerchandiseTotal
+                    +
+                    successAffDiscount
                   )}
                 </strong>
               </div>
+
+
+              ${
+                successAffDiscount > 0
+                  ?
+                    `
+                      <div
+                        style="
+                          display:flex;
+                          justify-content:space-between;
+                          gap:12px;
+                          margin-top:8px;
+                          font-size:11px;
+                        "
+                      >
+                        <span style="color:rgba(255,255,255,.50);">
+                          Giảm theo mã${successAffCode ? " " + successAffCode : ""}
+                        </span>
+
+                        <strong style="color:#ffc934;">
+                          −${money(successAffDiscount)}
+                        </strong>
+                      </div>
+                    `
+                  :
+                    ""
+              }
 
 
               <div
