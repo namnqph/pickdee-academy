@@ -38,7 +38,7 @@
     },
     {
       q: "Bao lâu nhận được vợt? Lấy trực tiếp ở Hà Nội được không?",
-      a: "Hàng gửi từ kho Bắc Giang: Hà Nội 1–2 ngày, các tỉnh khác 2–3 ngày. Hiện không có hình thức tới lấy trực tiếp ở Hà Nội ạ."
+      a: "Hàng giao Hà Nội 1–2 ngày, các tỉnh khác 2–3 ngày ạ. Hiện không có hình thức tới lấy trực tiếp ở Hà Nội."
     },
     {
       q: "Chọn dáng Elongate hay Hybrid? Vợt nặng bao nhiêu?",
