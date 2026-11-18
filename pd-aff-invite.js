@@ -1,7 +1,8 @@
 // pd-aff-invite.js — khối mời khách vừa mua vợt thành Cộng tác viên PickDee.
 // Dùng ở: shop-checkout.html (màn "Đặt hàng thành công"), shop-track.html (trang theo dõi đơn).
 // Chỉ hiện với đơn CÓ VỢT. Số tiền trong khối này phải khớp chính sách /cong-tac-vien:
-//   250.000đ/cây · từ 5 cây trong tháng → 300.000đ/cây · tính sau khi khách nhận hàng 7 ngày
+//   250.000đ/cây (MVP Pro 200.000đ) · từ 5 cây trong tháng cộng thêm 50.000đ/cây
+//   · tính sau khi khách nhận hàng 7 ngày
 //   · chuyển ngày 5 tháng sau · khách nhập mã được giảm 50.000đ cho cây vợt đầu tiên.
 
 (function (global) {
@@ -57,7 +58,7 @@
           "</span>" +
           '<h3 class="pd-aff-invite__title">Thành cộng tác viên PickDee</h3>' +
         "</div>" +
-        '<p class="pd-aff-invite__money">250.000đ mỗi cây vợt anh/chị giới thiệu · từ 5 cây trong tháng: 300.000đ/cây.</p>' +
+        '<p class="pd-aff-invite__money">250.000đ mỗi cây vợt anh/chị giới thiệu (MVP Pro 200.000đ) · từ 5 cây trong tháng cộng thêm 50.000đ/cây.</p>' +
         '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng; người anh/chị giới thiệu nhập mã được giảm 50.000đ cho cây vợt đầu tiên. " +
           "Hoa hồng tính sau khi khách nhận hàng 7 ngày và chuyển vào ngày 5 tháng sau.</p>" +
         '<a class="pd-aff-invite__btn" href="' + esc(href) + '">LẤY LINK GIỚI THIỆU CỦA TÔI</a>' +

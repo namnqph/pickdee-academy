@@ -870,7 +870,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261104-affctv4";
+      "/support-widget.js?v=20261118-rate1";
 
 
     script.async =
