@@ -37,55 +37,9 @@
   }
 
 
-  /* =====================================================
-     THEO DÕI LƯỢT TRUY CẬP
-     Fire-and-forget; dedupe 30 phút / trang / thiết bị.
-     Bỏ qua trang nội bộ (admin/coach/shop-admin).
-  ====================================================== */
-  try {
-    var _pvPath = location.pathname;
-    if (
-      !_pvPath.startsWith("/admin") &&
-      !_pvPath.startsWith("/coach") &&
-      !_pvPath.startsWith("/shop-admin") &&
-      !_pvPath.startsWith("/support-admin")
-    ) {
-      var _pvSidKey = "pd_sid";
-      var _pvSid = localStorage.getItem(_pvSidKey);
-      if (!_pvSid) {
-        try { _pvSid = crypto.randomUUID(); }
-        catch (_) { _pvSid = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2); }
-        localStorage.setItem(_pvSidKey, _pvSid);
-      }
-      var _pvPageKey = "pd_pv|" + _pvPath.slice(0, 50);
-      var _pvNow = Date.now();
-      if (_pvNow - Number(localStorage.getItem(_pvPageKey) || 0) >= 1800000) {
-        localStorage.setItem(_pvPageKey, _pvNow);
-        var _pvUa = navigator.userAgent || "";
-        var _pvDevice = /Mobi|Android/i.test(_pvUa) ? "mobile"
-          : /iPad|Tablet/i.test(_pvUa) ? "tablet" : "desktop";
-        var _pvRef = null;
-        try {
-          if (document.referrer && !document.referrer.includes(location.hostname))
-            _pvRef = new URL(document.referrer).hostname.slice(0, 100);
-        } catch (_) {}
-        fetch(cfg.SUPABASE_URL + "/rest/v1/pd_page_views", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": cfg.SUPABASE_PUBLISHABLE_KEY,
-            "Authorization": "Bearer " + cfg.SUPABASE_PUBLISHABLE_KEY
-          },
-          body: JSON.stringify({
-            page: _pvPath,
-            session_id: _pvSid,
-            referrer: _pvRef,
-            device: _pvDevice
-          })
-        }).catch(function () {});
-      }
-    }
-  } catch (_) {}
+  /* Lượt truy cập do pd-track.js (config.js tự nạp) đếm qua RPC pd_track_visit.
+     Khối chèn thẳng pd_page_views ở đây đã bỏ 18/11: bảng không có cột 'referrer'
+     nên mọi lần gửi đều lỗi 400, và pd-track.js đã đếm đủ rồi. */
 
 
   const sb =
