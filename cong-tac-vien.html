@@ -398,6 +398,43 @@
     return false;
   }
 
+  /*
+    Khách vừa mua vợt bấm "Lấy link giới thiệu của tôi" từ màn đặt hàng thành công
+    hay trang theo dõi đơn → /cong-tac-vien?order=<token theo dõi đơn>.
+    Điền sẵn họ tên + SĐT theo đơn, khách chỉ phải thêm tài khoản nhận tiền.
+    SĐT đã là CTV → mở sẵn ô "Đã đăng ký rồi?" để lấy lại link.
+  */
+  async function prefillFromOrder(orderToken) {
+    let d = null;
+    try { d = (await sb.rpc("aff_prefill_order", { p_token: orderToken })).data; } catch (_) {}
+    if (!d || !d.ok) return;
+
+    if (d.already_partner) {
+      $("rName").value = d.full_name || "";
+      $("rPhone").value = d.phone || "";
+      $("recoverBox").open = true;
+      $("recoverMsg").className = "msg";
+      $("recoverMsg").textContent = "Số điện thoại trên đơn " + d.order_code + " đã là cộng tác viên. Bấm \"Lấy lại link\" để mở trang hoa hồng.";
+      $("recoverBox").scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    if (!$("fName").value) $("fName").value = d.full_name || "";
+    if (!$("fPhone").value) $("fPhone").value = d.phone || "";
+    if (!$("fHolder").value && d.full_name) {
+      $("fHolder").value = String(d.full_name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toUpperCase();
+    }
+
+    const note = document.createElement("div");
+    note.className = "msg ok";
+    note.style.marginBottom = "12px";
+    note.textContent = "✓ Đơn " + d.order_code + " của anh/chị — đã điền sẵn họ tên và số điện thoại. Chỉ cần thêm email và tài khoản nhận hoa hồng.";
+    const form = $("joinForm");
+    form.insertBefore(note, form.firstElementChild ? form.firstElementChild.nextSibling : null);
+    /* block:center để dòng báo không bị đầu trang dính che */
+    note.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   (async function start() {
     if (!sb) { $("loading").textContent = "Không tải được, anh/chị tải lại trang."; return; }
     const q = new URLSearchParams(location.search).get("t");
@@ -408,6 +445,8 @@
     }
     if (await coachFlow()) return;
     show("join");
+    const orderToken = new URLSearchParams(location.search).get("order");
+    if (orderToken && orderToken.length >= 32) await prefillFromOrder(orderToken);
   })();
 })();
 </script>

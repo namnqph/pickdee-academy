@@ -1481,6 +1481,7 @@
 ></header>
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
+<script src="/pd-aff-invite.js?v=20261118-aff1"></script>
 <script src="./shop-pending-payment.js?v=20261021-caps1" defer></script>
 
 
@@ -3434,6 +3435,35 @@ function updateCartCount() {
 
     </div>
   `;
+
+
+  /*
+    Trang vợt: mời thành cộng tác viên, đặt CUỐI trang (sau mô tả/review)
+    để không chen vào lúc khách đang cân nhắc mua.
+  */
+  if (
+    window.pdAffInvite
+    &&
+    /^\s*(vợt|paddle)/i.test(String(product.name || ""))
+  ) {
+
+    const affSlot =
+      document.createElement("div");
+
+    affSlot.style.cssText =
+      "width:100%;max-width:420px;margin:0 auto;padding:4px 0 26px";
+
+    pageContent.appendChild(affSlot);
+
+    window.pdAffInvite.mount(
+      affSlot,
+      "",
+      {
+        lead: "Mua rồi giới thiệu lại cho hội bạn chơi cùng là có tiền về."
+      }
+    );
+
+  }
 
 
   document.title =

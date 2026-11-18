@@ -817,6 +817,7 @@
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
 <script src="./shop-guest-push.js?v=20261021-1" defer></script>
+<script src="/pd-aff-invite.js?v=20261118-aff1"></script>
 
 <main>
 
@@ -3121,6 +3122,49 @@ function renderOrder(data) {
   
 }
 
+  /*
+    Đơn CÓ VỢT: mời khách thành cộng tác viên (250k/cây giới thiệu).
+    Đặt cuối trang theo dõi — khách mở lại trang này nhiều lần trong lúc chờ hàng.
+    Đơn đã huỷ thì không mời.
+  */
+  function mountAffInvite(data) {
+
+    if (
+      !data
+      ||
+      data.has_paddle !== true
+      ||
+      data.order_status === "cancelled"
+      ||
+      !window.pdAffInvite
+    ) {
+      return;
+    }
+
+
+    if (
+      document.getElementById("affInviteSlot")
+    ) {
+      return;
+    }
+
+
+    const slot =
+      document.createElement("div");
+
+    slot.id = "affInviteSlot";
+    slot.style.padding = "0 0 18px";
+
+    page.appendChild(slot);
+
+    window.pdAffInvite.mount(
+      slot,
+      token
+    );
+
+  }
+
+
   async function loadOrder() {
 
     if (
@@ -3176,6 +3220,11 @@ function renderOrder(data) {
 
 
       renderOrder(
+        data
+      );
+
+
+      mountAffInvite(
         data
       );
 
