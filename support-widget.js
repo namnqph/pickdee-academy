@@ -1586,7 +1586,7 @@ if (
       ? ["Đưa sân lên có mất phí không?", "Cần điền những thông tin gì?", "Bao lâu thì sân được duyệt?"]
       : /^\/court-claim/.test(location.pathname)
       ? ["Xác minh chủ sân cần giấy tờ gì?", "Bao lâu thì được xác nhận?", "Sân chưa có trên PickDee thì sao?"]
-      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Mua vợt, bóng, phụ kiện Shop", "Làm CTV bán vợt, hoa hồng hấp dẫn", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
+      : ["Tư vấn khoá học Pickleball cho tôi", "Tìm Coach gần tôi", "Mua vợt, bóng, phụ kiện Shop", "Giới thiệu bạn mua vợt PickDee", "Muốn làm Coach PickDee thì sao?", "Tôi muốn đưa sân lên PickDee"]
   }[BOT_PAGE];
 
   /* =====================================================
@@ -1682,7 +1682,7 @@ if (
   const PDJ_HOME = [
     ["🏓 Chọn vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán, chống trơn", "grip"],
     ["🦵 Bảo hộ & phục hồi", "body"], ["🛡️ Phụ kiện cho vợt", "care"], ["🎁 Mua làm quà", "gift"],
-    ["📦 Tra cứu đơn hàng", "lookup"], ["🤝 Làm CTV (hoa hồng hấp dẫn)", "aff"]
+    ["📦 Tra cứu đơn hàng", "lookup"], ["🤝 Giới thiệu bạn mua vợt", "aff"]
   ];
   const PDJ_CLOSE = [["🛒 Đặt hàng ngay", "checkout"], ["🚚 Giao hàng & thanh toán", "policy"], ["💬 Hỏi thêm", "ask"]];
 
@@ -3494,7 +3494,7 @@ if (
       box.id = "pdTease";
       box.setAttribute("role", "status");
       const quick = PDJ && BOT_PAGE === "shop"
-        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"], ["🤝 Làm CTV (hoa hồng hấp dẫn)", "aff"]].map(function (c) {
+        ? '<div class="pd-tease-chips">' + [["🏓 Vợt", "paddle"], ["Bóng", "ball"], ["✋ Quấn cán", "grip"], ["🎁 Quà tặng", "gift"], ["🤝 Giới thiệu bạn mua vợt", "aff"]].map(function (c) {
           return '<span role="button" data-act="' + c[1] + '">' + pdjChipHtml(c[0], c[1]) + "</span>";
         }).join("") + "</div>"
         : BOT_SUGGEST && BOT_SUGGEST.length

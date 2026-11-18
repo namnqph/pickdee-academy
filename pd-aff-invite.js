@@ -58,7 +58,7 @@
               '<path d="M19 8v6M22 11h-6"/>' +
             "</svg>" +
           "</span>" +
-          '<h3 class="pd-aff-invite__title">Thành cộng tác viên PickDee</h3>' +
+          '<h3 class="pd-aff-invite__title">Giới thiệu người quen mua vợt</h3>' +
         "</div>" +
         '<p class="pd-aff-invite__money">Giới thiệu người quen mua vợt — PickDee gửi thưởng cho anh/chị sau khi họ nhận hàng.</p>' +
         '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng, người quen đặt vợt bằng link đó là anh/chị được ghi nhận. " +
