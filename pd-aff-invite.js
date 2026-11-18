@@ -52,7 +52,11 @@
       ".pd-aff-invite__note{margin:9px 0 0;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.5);line-height:1.5}" +
       "@media(min-width:900px){.pd-aff-invite{max-width:560px;padding:20px 22px}.pd-aff-invite__title{font-size:16.5px}" +
         ".pd-aff-invite__money{font-size:14.5px}.pd-aff-invite__text{font-size:13px}}" +
-      "@media(prefers-reduced-motion:reduce){.pd-aff-invite__btn{transition:none}.pd-aff-invite__btn:hover{transform:none}}";
+      "@media(prefers-reduced-motion:reduce){.pd-aff-invite__btn{transition:none}.pd-aff-invite__btn:hover{transform:none}}" +
+      ".pd-aff-ref{display:flex;align-items:flex-start;gap:10px;margin:10px 0 2px;padding:11px 13px;border-radius:14px;background:rgba(255,201,52,.09);border:1px solid rgba(255,201,52,.38)}" +
+      ".pd-aff-ref__tag{flex:0 0 auto;padding:4px 9px;border-radius:8px;background:#ffc934;color:#0b0b0b;font-size:11.5px;font-weight:900;letter-spacing:.04em;line-height:1.3}" +
+      ".pd-aff-ref__text{margin:0;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.82);line-height:1.5}" +
+      ".pd-aff-ref__text b{color:#ffc934;font-weight:800}";
     document.head.appendChild(st);
   }
 
@@ -92,5 +96,35 @@
     return el;
   }
 
-  global.pdAffInvite = { cardHtml: cardHtml, mount: mount, injectStyle: injectStyle };
+  /* Mã CTV đang nhớ trong máy (30 ngày) — cùng khoá mà shop-checkout.html đọc. */
+  function savedRef() {
+    try {
+      var r = JSON.parse(localStorage.getItem("pickdee_aff_ref") || "null");
+      if (r && r.code && Date.now() - Number(r.ts || 0) < 30 * 864e5) {
+        return String(r.code).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      }
+    } catch (_) {}
+    return "";
+  }
+
+  /* Thẻ báo khách ĐƯỢC GIỚI THIỆU rằng mã đang chờ sẵn ở bước thanh toán.
+     Không nêu tiền thưởng của CTV (luật 18/11: khách không được biết bạn mình ăn tiền). */
+  function refNoticeHtml(code) {
+    injectStyle();
+    return (
+      '<div class="pd-aff-ref">' +
+        '<span class="pd-aff-ref__tag">MÃ ' + esc(code) + "</span>" +
+        '<p class="pd-aff-ref__text"><b>Anh/chị vào từ link người quen giới thiệu.</b> ' +
+          "Mã tự điền ở bước thanh toán — giảm <b>50.000đ mỗi cây vợt</b> cho khách lần đầu mua vợt tại PickDee.</p>" +
+      "</div>"
+    );
+  }
+
+  global.pdAffInvite = {
+    cardHtml: cardHtml,
+    mount: mount,
+    injectStyle: injectStyle,
+    savedRef: savedRef,
+    refNoticeHtml: refNoticeHtml
+  };
 })(window);

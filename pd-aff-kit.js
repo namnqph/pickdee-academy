@@ -46,7 +46,7 @@
     },
     {
       q: "Nhập mã của em để làm gì?",
-      a: "Nhập mã của em là anh/chị được giảm 50.000đ cây vợt và được miễn phí vận chuyển. Nhập ở bước thanh toán, hoặc đặt qua link của em thì web tự điền."
+      a: "Nhập mã của em là anh/chị được giảm 50.000đ cây vợt và được miễn phí vận chuyển. Nhập ở bước thanh toán, hoặc đặt qua link của em thì web tự điền. Mức giảm này dành cho khách lần đầu mua vợt tại PickDee ạ."
     }
   ];
 
