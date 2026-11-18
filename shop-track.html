@@ -817,7 +817,7 @@
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
 <script src="./shop-guest-push.js?v=20261021-1" defer></script>
-<script src="/pd-aff-invite.js?v=20261118-nodisc1"></script>
+<script src="/pd-aff-invite.js?v=20261118-noamount1"></script>
 
 <main>
 
@@ -3149,11 +3149,14 @@ function renderOrder(data) {
     }
 
 
-    /* Khách đã là cộng tác viên rồi thì không mời nữa (18/11/2026).
+    /* Không mời khi: khách đã là cộng tác viên, hoặc chính khách này được một CTV
+       khác giới thiệu (18/11/2026 — để khách không biết người giới thiệu nhận tiền).
        RPC lỗi thì vẫn mời (thà mời lại hơn là mất lời mời). */
     try {
       const { data: pf } = await sb.rpc("aff_prefill_order", { p_token: token });
       if (pf && pf.ok === true && pf.already_partner === true) return;
+      /* Đơn này đến từ mã của một CTV khác → không mời chính khách đó (18/11/2026). */
+      if (pf && pf.ok === true && pf.referred === true) return;
     } catch (_) {}
 
 

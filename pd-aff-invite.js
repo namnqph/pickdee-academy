@@ -1,9 +1,11 @@
 // pd-aff-invite.js — khối mời khách vừa mua vợt thành Cộng tác viên PickDee.
-// Dùng ở: shop-checkout.html (màn "Đặt hàng thành công"), shop-track.html (trang theo dõi đơn).
-// Chỉ hiện với đơn CÓ VỢT. Số tiền trong khối này phải khớp chính sách /cong-tac-vien:
-//   250.000đ/cây (MVP Pro 200.000đ) · từ 5 cây trong tháng cộng thêm 50.000đ/cây
-//   · tính sau khi khách nhận hàng 7 ngày
-//   · chuyển ngày 5 tháng sau. 18/11/2026 anh Nam chốt: mã CTV KHÔNG giảm giá cho khách.
+// Dùng ở: shop-checkout.html (màn "Đặt hàng thành công"), shop-track.html (trang theo dõi đơn),
+// shop-product.html (cuối trang vợt — CÔNG KHAI, ai cũng đọc được).
+// Chỉ hiện với đơn CÓ VỢT.
+// 18/11/2026 anh Nam chốt: KHỐI NÀY KHÔNG ĐƯỢC NÊU SỐ TIỀN HOA HỒNG. Khách được bạn bè
+// giới thiệu mà đọc thấy "250.000đ" sẽ hiểu là bạn mình ăn tiền trên đầu mình → chạnh lòng,
+// không mua nữa. Số tiền chỉ nằm ở /cong-tac-vien, sau một cú bấm, và trang đó đã noindex.
+// Khách đến từ mã của CTV khác thì KHÔNG hiện khối này (cờ `referred` của aff_prefill_order).
 
 (function (global) {
   "use strict";
@@ -46,7 +48,7 @@
     var o = opts || {};
     injectStyle();
     var href = "/cong-tac-vien" + (token ? "?order=" + encodeURIComponent(token) : "");
-    var lead = o.lead || "Anh/chị vừa mua vợt — giới thiệu lại là có tiền về.";
+    var lead = o.lead || "Anh/chị vừa mua vợt — giới thiệu lại cho hội chơi cùng.";
     return (
       '<div class="pd-aff-invite">' +
         '<div class="pd-aff-invite__top">' +
@@ -58,10 +60,10 @@
           "</span>" +
           '<h3 class="pd-aff-invite__title">Thành cộng tác viên PickDee</h3>' +
         "</div>" +
-        '<p class="pd-aff-invite__money">250.000đ mỗi cây vợt anh/chị giới thiệu (MVP Pro 200.000đ) · từ 5 cây trong tháng cộng thêm 50.000đ/cây.</p>' +
-        '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng, khách đặt vợt bằng mã đó là hoa hồng về anh/chị. " +
-          "Hoa hồng tính sau khi khách nhận hàng 7 ngày và chuyển vào ngày 5 tháng sau.</p>" +
-        '<a class="pd-aff-invite__btn" href="' + esc(href) + '">LẤY LINK GIỚI THIỆU CỦA TÔI</a>' +
+        '<p class="pd-aff-invite__money">Giới thiệu người quen mua vợt — PickDee gửi thưởng cho anh/chị sau khi họ nhận hàng.</p>' +
+        '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng, người quen đặt vợt bằng link đó là anh/chị được ghi nhận. " +
+          "Không ôm hàng, không cần vốn, không phải giao hàng.</p>" +
+        '<a class="pd-aff-invite__btn" href="' + esc(href) + '">XEM MỨC THƯỞNG VÀ LẤY LINK</a>' +
         '<p class="pd-aff-invite__note">Đăng ký miễn phí' +
           (token ? ", tên và số điện thoại đã điền sẵn theo đơn này" : "") +
           " — chỉ cần thêm số tài khoản nhận tiền.</p>" +
