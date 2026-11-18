@@ -51,7 +51,7 @@
   ];
 
   var ESCALATE =
-    "Khách hỏi hoá đơn VAT, nguồn gốc / chính hãng, hay khuyến mãi khác thì đừng tự trả lời. " +
+    "Khách hỏi nguồn gốc / chính hãng, xuất xứ hay khuyến mãi khác thì đừng tự trả lời. " +
     "Nhờ khách nhắn PickDee 0926 629 966 hoặc chat ngay trên pickdee.vn.";
 
   function esc(t) {
