@@ -46,7 +46,7 @@
     },
     {
       q: "Nhập mã của em để làm gì?",
-      a: "Mã chỉ để PickDee biết đơn này do em tư vấn, giá vợt giữ nguyên như niêm yết. Nhập mã ở bước thanh toán, hoặc đặt qua link của em thì web tự điền."
+      a: "Nhập mã của em là anh/chị được giảm 50.000đ cây vợt. Nhập ở bước thanh toán, hoặc đặt qua link của em thì web tự điền."
     }
   ];
 
@@ -208,7 +208,7 @@
     y += 42;
     ctx.fillStyle = "rgba(255,255,255,.72)";
     ctx.font = '600 26px "Be Vietnam Pro", sans-serif';
-    ctx.fillText("hoặc nhập mã này khi thanh toán", 80, y);
+    ctx.fillText("nhập mã khi thanh toán, giảm 50.000đ", 80, y);
 
     /* QR neo góc dưới phải, cột chữ trái rộng tối đa 600 nên không đè */
     var qr = window.qrcode(0, "M");

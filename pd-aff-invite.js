@@ -60,7 +60,7 @@
           "</span>" +
           '<h3 class="pd-aff-invite__title">Giới thiệu người quen mua vợt</h3>' +
         "</div>" +
-        '<p class="pd-aff-invite__money">Giới thiệu người quen mua vợt — PickDee gửi thưởng cho anh/chị sau khi họ nhận hàng.</p>' +
+        '<p class="pd-aff-invite__money">Mã riêng của anh/chị giảm 50.000đ/cây vợt cho người quen — anh/chị còn được PickDee gửi thưởng sau khi họ nhận hàng.</p>' +
         '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng, người quen đặt vợt bằng link đó là anh/chị được ghi nhận. " +
           "Không ôm hàng, không cần vốn, không phải giao hàng.</p>" +
         '<a class="pd-aff-invite__btn" href="' + esc(href) + '">XEM MỨC THƯỞNG VÀ LẤY LINK</a>' +
