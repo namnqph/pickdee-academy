@@ -1,5 +1,5 @@
 /* =========================================================
-   PICKDEE ADMIN - MENU ĐÁY DÙNG CHUNG cho các trang con (điện thoại ≤759px)
+   PICKDEE ADMIN - MENU ĐÁY DÙNG CHUNG cho các trang con (điện thoại + iPad ≤1024px)
    Giống #admBottomBar trong admin.html: Trang chủ / Việc / Lịch học / Hỗ trợ / Thêm.
    "Thêm" mở tờ kính mờ kéo từ đáy chứa mọi mục quản trị (như app), ngay tại trang đang xem.
    Gắn trực tiếp (thẻ script) vào các trang quản trị Academy.
@@ -45,7 +45,7 @@
       var css = document.createElement("style");
       css.textContent =
         "#pdAdminNav,#pdAdminSheet{display:none}" +
-        "@media (max-width:759px){" +
+        "@media (max-width:1024px){" +
         "body{padding-bottom:calc(78px + env(safe-area-inset-bottom))!important}" +
         "#pdAdminNav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:900;" +
         "padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.10);" +
@@ -76,8 +76,9 @@
         "#pdAdminSheet .s-ic{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:20px;background:rgba(255,255,255,.07)}" +
         "#pdAdminSheet .s-lb{font-size:11.5px;font-weight:700;line-height:1.25;text-align:center;color:rgba(255,255,255,.9);overflow-wrap:anywhere}" +
         "}" +
-        "@media (max-width:759px) and (prefers-reduced-transparency:reduce){#pdAdminSheet .s-panel{-webkit-backdrop-filter:none;backdrop-filter:none;background:#181818}}" +
-        "@media (max-width:759px) and (prefers-contrast:more){#pdAdminSheet .s-panel{background:#000;border-color:rgba(255,255,255,.5)}}";
+        "@media (min-width:760px) and (max-width:1024px){#pdAdminSheet .s-panel{max-width:640px;margin:0 auto}}" +
+        "@media (max-width:1024px) and (prefers-reduced-transparency:reduce){#pdAdminSheet .s-panel{-webkit-backdrop-filter:none;backdrop-filter:none;background:#181818}}" +
+        "@media (max-width:1024px) and (prefers-contrast:more){#pdAdminSheet .s-panel{background:#000;border-color:rgba(255,255,255,.5)}}";
       document.head.appendChild(css);
 
       var nav = document.createElement("nav");
