@@ -16,12 +16,13 @@
       "shop-admin-products": "products",
       "shop-admin-suppliers": "products",
       "shop-admin-promotions": "promotions",
-      "shop-admin-affiliate": "promotions",
+      "shop-admin-affiliate": "ctv",
       "shop-admin-stock-history": "inventory",
       "shop-admin-stock-receipts": "receiving",
       "shop-admin-stock-receipt-detail": "receiving"
     };
     var active = ACTIVE[page];
+    setupCtv(page === "shop-admin-affiliate");
     if (!active) return;
 
     var ITEMS = [
@@ -66,4 +67,55 @@
     if (document.body) mount();
     else document.addEventListener("DOMContentLoaded", mount, { once: true });
   } catch (e) {}
+
+  /* Nút "CTV" (Cộng tác viên vợt) — CHỈ tài khoản owner thấy; shop_admin/shop_staff không thấy.
+     Trang /shop-admin-affiliate vẫn tự chặn bằng RPC owner-only, nút này chỉ là lối tắt. */
+  function setupCtv(isCtvPage) {
+    var ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 010 6M18 14c2 .7 3 2.8 3 6"/></svg>';
+    var st = document.createElement("style");
+    st.textContent =
+      ".tabs.pd-has-ctv{grid-template-columns:repeat(7,minmax(0,1fr))!important}" +
+      "@media (max-width:760px){#pdAppNav.pd-has-ctv{grid-template-columns:repeat(6,minmax(0,1fr))}" +
+      ".tabs.pd-has-ctv .tab{font-size:8.5px!important;padding:0!important;letter-spacing:-.2px!important;overflow:visible}" +
+      ".tabs.pd-has-ctv .tab .pd-ti{padding:3px 7px}}" +
+      ".pd-ctv-ic svg{width:22px;height:22px;vertical-align:middle}";
+    document.head.appendChild(st);
+
+    var tries = 0;
+    function isOwner() {
+      var sb = window.sb;
+      if (!sb || !sb.auth) return Promise.reject("nosb");
+      return sb.auth.getUser().then(function (r) {
+        var u = r && r.data && r.data.user;
+        if (!u) return false;
+        return sb.from("shop_user_roles").select("role").eq("user_id", u.id).eq("is_active", true)
+          .then(function (q) { return (q.data || []).some(function (x) { return x.role === "owner"; }); });
+      });
+    }
+    function add() {
+      if (document.getElementById("pdCtvNav")) return;
+      var nav = document.getElementById("pdAppNav");
+      var tabs = document.querySelector(".tabs");
+      var a = document.createElement("a");
+      a.id = "pdCtvNav";
+      a.href = "/shop-admin-affiliate";
+      if (isCtvPage) { a.className = "active"; a.setAttribute("aria-current", "page"); }
+      if (nav) {
+        a.innerHTML = '<span class="pd-ti pd-ic pd-ctv-ic">' + ICON + "</span><span>CTV</span>";
+        nav.appendChild(a); nav.classList.add("pd-has-ctv");
+      } else if (tabs) {
+        a.className = "tab";
+        a.innerHTML = '<span class="pd-ti pd-ic pd-ctv-ic">' + ICON + '</span><span class="pd-tl">CTV</span>';
+        tabs.appendChild(a); tabs.classList.add("pd-has-ctv");
+      }
+    }
+    function run() {
+      isOwner().then(function (ok) { if (ok) add(); }, function () {
+        if (++tries < 20) setTimeout(run, 300);
+      });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true });
+    else run();
+  }
 })();
