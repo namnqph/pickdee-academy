@@ -806,21 +806,55 @@
     const deposit = pre.deposit;
     const remaining = pre.remaining;
     const received = o?.payment_status === "paid";
-    const tone = received ? "83,215,105" : "255,201,52";
+
+    /* 19/11/2026 — LUẬT TIỀN (B2): đơn đã "paid" mà CHƯA ai ghi số tiền thật từ bill
+       thì con số dưới đây chỉ là MỨC KHÁCH TỰ CHỌN lúc đặt (đọc từ customer_note),
+       đúng cái mà luật cấm tin. Hay gặp nhất khi anh bấm "Đã nhận tiền" ngay trên
+       Telegram (hàm shop_confirm_bank_transfer_payment_by_telegram không ghi
+       amount_received). Nên phải nói thẳng là CHƯA ĐỐI SOÁT, không tô xanh "đã nhận". */
+    const unverified = received && pre.recorded === null;
+
+    const tone =
+      unverified
+        ? "255,149,0"
+        : (received ? "83,215,105" : "255,201,52");
+
     const head =
-      is70
+      unverified
         ?
-          (received
-            ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ NHẬN CỌC " + pre.percent + "%"
-            : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ CỌC " + pre.percent + "%")
+          "⚠️ ĐƠN ĐẶT TRƯỚC · ĐÃ XÁC NHẬN THANH TOÁN NHƯNG CHƯA ĐỐI SOÁT BILL"
         :
-          (received
-            ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ TRẢ ĐỦ 100%"
-            : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ TRẢ ĐỦ 100%");
+          (is70
+            ?
+              (received
+                ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ NHẬN CỌC " + pre.percent + "%"
+                : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ CỌC " + pre.percent + "%")
+            :
+              (received
+                ? "✅ ĐƠN ĐẶT TRƯỚC · ĐÃ TRẢ ĐỦ 100%"
+                : "⚠️ ĐƠN ĐẶT TRƯỚC · CHỜ TRẢ ĐỦ 100%"));
     return `<section style="margin:12px 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(${tone},.55);background:rgba(${tone},.10);color:#fff;line-height:1.5">
       <div style="font-weight:950;color:rgb(${tone});font-size:15px">${head}</div>
-      <div style="font-size:17px;font-weight:950;margin-top:4px">${received ? "Đã nhận" : "Cần nhận"}: ${money(deposit)}</div>
+      <div style="font-size:17px;font-weight:950;margin-top:4px">${unverified ? (is70 ? "Khách CHỌN cọc" : "Khách CHỌN trả đủ") : (received ? "Đã nhận" : "Cần nhận")}: ${money(deposit)}</div>
       ${is70 ? `<div style="font-size:13px;opacity:.8">Tổng đơn ${money(total)} · ${received ? "CÒN THU" : "còn lại"} ${money(remaining)} trước khi giao</div>` : ""}
+      ${
+        unverified
+          ?
+            `<div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:rgba(0,0,0,.28);font-size:13px;line-height:1.55">
+               Số tiền trên là <b>mức khách tự chọn lúc đặt</b> — chưa ai đọc bill, nên mọi con số
+               (còn thu, tin Zalo, email) đang chạy theo ghi chú đơn chứ không theo tiền thật.
+               <b>Mở bill rồi ghi số thật</b> để không lặp lại ca PD-000169.
+               <div style="margin-top:8px">
+                 <button
+                   type="button"
+                   onclick="pdEditReceivedAmount()"
+                   style="min-height:36px;padding:0 14px;border-radius:10px;border:0;background:#ffc934;color:#0b0b0b;font-weight:950;cursor:pointer"
+                 >🔎 ĐỌC BILL · GHI SỐ TIỀN THẬT</button>
+               </div>
+             </div>`
+          :
+            ""
+      }
       ${balanceCollectBlock(o, pre)}
     </section>`;
   }
