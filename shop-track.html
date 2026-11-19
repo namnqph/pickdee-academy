@@ -817,7 +817,7 @@
 
 <script src="./shop-public-nav.js?v=20261102-combo1"></script>
 <script src="./shop-guest-push.js?v=20261021-1" defer></script>
-<script src="/pd-aff-invite.js?v=20261118-refnote1"></script>
+<script src="/pd-aff-invite.js?v=20261119-partner1"></script>
 
 <main>
 
@@ -3151,10 +3151,12 @@ function renderOrder(data) {
 
     /* Không mời khi khách đã là cộng tác viên. RPC lỗi thì vẫn mời (thà mời lại hơn là mất lời mời). */
     let referredLead = "";
+    let partnerCode = null;
 
     try {
       const { data: pf } = await sb.rpc("aff_prefill_order", { p_token: token });
-      if (pf && pf.ok === true && pf.already_partner === true) return;
+      /* Đã là CTV (19/11/2026): không mời nữa, mà nhắc mã riêng + nút lấy link. */
+      if (pf && pf.ok === true && pf.already_partner === true) partnerCode = pf.partner_code || "";
 
       /*
         Khách này do một CTV khác giới thiệu. Trong lúc đơn còn đang chạy thì KHÔNG mời:
@@ -3162,7 +3164,7 @@ function renderOrder(data) {
         (18/11/2026). Chỉ mời khi đơn đã GIAO XONG — tiền đã trả, vợt đã cầm trên tay,
         không còn đơn nào để mất (anh Nam duyệt 18/11).
       */
-      if (pf && pf.ok === true && pf.referred === true) {
+      if (partnerCode === null && pf && pf.ok === true && pf.referred === true) {
         if (pf.completed !== true) return;
         referredLead = "Vợt tới tay rồi — hội mình hỏi mua thì giới thiệu giúp PickDee nhé.";
       }
@@ -3187,7 +3189,9 @@ function renderOrder(data) {
     window.pdAffInvite.mount(
       slot,
       token,
-      referredLead ? { lead: referredLead } : undefined
+      partnerCode !== null
+        ? { partnerCode: partnerCode }
+        : (referredLead ? { lead: referredLead } : undefined)
     );
 
   }

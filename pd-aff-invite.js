@@ -88,11 +88,37 @@
     );
   }
 
+  /* Người mua ĐÃ là CTV (19/11/2026): thay lời mời bằng thẻ nhắc mã riêng + nút lấy link.
+     Không nêu số tiền thưởng. Chỉ người cầm link theo dõi đơn của chính mình mới thấy. */
+  function partnerCardHtml(token, code) {
+    injectStyle();
+    var c = String(code || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    var href = "/cong-tac-vien" + (token ? "?order=" + encodeURIComponent(token) : "");
+    return (
+      '<div class="pd-aff-invite">' +
+        '<div class="pd-aff-invite__top">' +
+          '<span class="pd-aff-invite__ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="#0b0b0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' +
+              '<path d="M16 11l2 2 4-4"/>' +
+            "</svg>" +
+          "</span>" +
+          '<h3 class="pd-aff-invite__title">Anh/chị đang là Cộng tác viên PickDee</h3>' +
+        "</div>" +
+        (c ? '<p class="pd-aff-invite__money">Mã giới thiệu của anh/chị: ' + esc(c) + "</p>" : "") +
+        '<p class="pd-aff-invite__text">Gửi link riêng cho hội chơi cùng — người quen lần đầu mua vợt qua link được giảm 50.000đ/cây, vẫn miễn phí vận chuyển.</p>' +
+        '<a class="pd-aff-invite__btn" href="' + esc(href) + '">MỞ TRANG CTV, LẤY LINK</a>' +
+      "</div>"
+    );
+  }
+
   function mount(host, token, opts) {
     var el = typeof host === "string" ? document.getElementById(host) : host;
     if (!el) return null;
     injectStyle();
-    el.innerHTML = cardHtml(token, opts);
+    el.innerHTML = opts && opts.partnerCode !== undefined
+      ? partnerCardHtml(token, opts.partnerCode)
+      : cardHtml(token, opts);
     return el;
   }
 
@@ -122,6 +148,7 @@
 
   global.pdAffInvite = {
     cardHtml: cardHtml,
+    partnerCardHtml: partnerCardHtml,
     mount: mount,
     injectStyle: injectStyle,
     savedRef: savedRef,
