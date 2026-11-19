@@ -138,11 +138,46 @@ window.PICKDEE_CONFIG = {
     cho project Supabase PickDee.
   */
 
+  /*
+    LÁ CHẮN CLOUDFLARE (19/11, functions/sb/[[path]].js):
+    khách CHƯA đăng nhập đọc danh mục shop/sân qua /sb/... → Supabase lỗi/khoá vẫn hiện sản phẩm
+    (bản dự phòng gần nhất); giá vẫn luôn lấy trực tiếp DB khi Supabase sống.
+    Chỉ bật trên pickdee.vn / *.pages.dev (localhost không có Pages Functions).
+  */
+
+  const PD_SHIELD =
+    /(^|\.)pickdee\.vn$|\.pages\.dev$/.test(window.location.hostname);
+
+  const PD_SHIELD_REST =
+    /^\/rest\/v1\/(shop_products|shop_product_images|shop_categories|shop_product_variants|shop_promotions|court_directory)$/;
+
+  function pdShieldFetch(input, init) {
+    try {
+      if (PD_SHIELD) {
+        const raw = typeof input === "string" ? input : (input && input.url) || "";
+        const method = String((init && init.method) || (input && input.method) || "GET").toUpperCase();
+        if (method === "GET" && raw.indexOf(cfg.SUPABASE_URL + "/rest/v1/") === 0) {
+          const u = new URL(raw);
+          const h = new Headers((init && init.headers) || (input && input.headers) || {});
+          const auth = h.get("authorization") || "";
+          if (PD_SHIELD_REST.test(u.pathname) && !/^Bearer\s+eyJ/i.test(auth)) {
+            return fetch("/sb" + u.pathname + u.search, Object.assign({}, init, { headers: h }));
+          }
+        }
+      }
+    }
+    catch (_) {}
+    return fetch(input, init);
+  }
+
   const sharedClient =
     originalCreateClient(
       cfg.SUPABASE_URL,
       cfg.SUPABASE_PUBLISHABLE_KEY,
       {
+        global: {
+          fetch: pdShieldFetch
+        },
         auth: {
 
           persistSession:
@@ -366,6 +401,31 @@ window.PICKDEE_CONFIG = {
 
   window.supabaseClient =
     sharedClient;
+
+  /*
+    Lá chắn ảnh: getPublicUrl trả link /sb/storage/... (Cloudflare giữ 1 ngày).
+  */
+  if (PD_SHIELD) {
+    try {
+      const pdOrigFrom = sharedClient.storage.from.bind(sharedClient.storage);
+      const pdImgBase = cfg.SUPABASE_URL + "/storage/v1/object/public/";
+      sharedClient.storage.from = function (bucket) {
+        const api = pdOrigFrom(bucket);
+        const orig = api.getPublicUrl.bind(api);
+        api.getPublicUrl = function (path, opts) {
+          const r = orig(path, opts);
+          let signedIn = false;
+          try { signedIn = !!localStorage.getItem("pickdee-auth"); } catch (_) {}
+          if (!signedIn && !opts && r && r.data && typeof r.data.publicUrl === "string" && r.data.publicUrl.indexOf(pdImgBase) === 0) {
+            r.data.publicUrl = window.location.origin + "/sb/storage/v1/object/public/" + r.data.publicUrl.slice(pdImgBase.length);
+          }
+          return r;
+        };
+        return api;
+      };
+    }
+    catch (_) {}
+  }
 
   window.sb =
     sharedClient;
