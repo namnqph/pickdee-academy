@@ -374,7 +374,7 @@
 <meta name="apple-mobile-web-app-title" content="PD Admin">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="stylesheet" href="/pd-apple.css?v=20261029-a3">
-<link rel="stylesheet" href="/pd-apple-adminhome.css?v=20261030-a3">
+<link rel="stylesheet" href="/pd-apple-adminhome.css?v=20261119-more1">
 </head>
 
 
@@ -11678,7 +11678,7 @@ document.addEventListener(
   <a href="/admin-tasks.html" data-count-from="adminTaskCount"><span>⚠️</span><span>Việc</span><span class="adm-tile-badge"></span></a>
   <a href="/sessions" data-count-from="overdueCount"><span>📅</span><span>Lịch học</span><span class="adm-tile-badge"></span></a>
   <a href="/support-admin" data-count-from="adminSupportUnreadCount"><span>💬</span><span>Hỗ trợ</span><span class="adm-tile-badge"></span></a>
-  <a href="/shop-admin"><span>🛍️</span><span>Shop</span></a>
+  <a href="#more" data-more="1" id="admMoreBtn" aria-haspopup="dialog" aria-controls="admMoreSheet"><span>☰</span><span>Thêm</span><span class="adm-tile-badge"></span></a>
 </nav>
 <script>
 /* PICKDEE ADMIN - lưới ứng dụng theo nhóm: thu gọn thống kê chi tiết, đồng bộ số đếm */
@@ -11760,6 +11760,121 @@ document.addEventListener(
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
+  /* Điện thoại: mọi nhóm mở rộng gom vào 1 tờ "Thêm" kéo từ menu đáy (dựng từ chính lưới, không nhân đôi HTML) */
+  const sheetGroups = tabGroups;
+  const sheet = document.createElement("div");
+  sheet.id = "admMoreSheet";
+  sheet.hidden = true;
+  sheet.setAttribute("role", "dialog");
+  sheet.setAttribute("aria-modal", "true");
+  sheet.setAttribute("aria-label", "Tất cả mục quản trị");
+  sheet.innerHTML = '<div class="adm-sheet-scrim" data-close="1"></div><div class="adm-sheet-panel"><div class="adm-sheet-grab" aria-hidden="true"><i></i></div><div class="adm-sheet-body"></div></div>';
+  const sheetBody = sheet.querySelector(".adm-sheet-body");
+  sheetGroups.forEach(g => {
+    const sec = document.createElement("section");
+    sec.className = "adm-sheet-group " + [...g.classList].filter(c => /^g-/.test(c)).join(" ");
+    const title = g.querySelector(".adm-group-title")?.textContent || "";
+    const icon = g.querySelector(".adm-group-icon")?.textContent || "";
+    sec.innerHTML = '<h3><span>' + icon + '</span>' + title + '</h3><div class="adm-sheet-tiles"></div>';
+    g.querySelectorAll(".adm-tile").forEach(t => sec.lastChild.appendChild(t.cloneNode(true)));
+    sheetBody.appendChild(sec);
+  });
+  const detailRow = document.createElement("button");
+  detailRow.type = "button";
+  detailRow.className = "adm-sheet-detail";
+  detailRow.innerHTML = '<span>📊</span><span>Thống kê chi tiết</span><span aria-hidden="true">↓</span>';
+  sheetBody.appendChild(detailRow);
+  document.body.appendChild(sheet);
+
+  const panel = sheet.querySelector(".adm-sheet-panel");
+  const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const EASE = "cubic-bezier(.23,1,.32,1)";
+  let sheetOpen = false, curAnim = null, lastFocus = null;
+
+  function curY() { /* vị trí đang hiện, để bắt lại giữa chừng không bị nhảy */
+    const m = new DOMMatrixReadOnly(getComputedStyle(panel).transform);
+    return m.m42 || 0;
+  }
+  function slideTo(y, opts) {
+    const from = curY();
+    if (curAnim) { curAnim.cancel(); curAnim = null; }
+    panel.style.transform = "translateY(" + y + "px)";
+    if (reduceMotion()) return Promise.resolve();
+    curAnim = panel.animate(
+      [{ transform: "translateY(" + from + "px)" }, { transform: "translateY(" + y + "px)" }],
+      { duration: (opts && opts.ms) || 320, easing: EASE }
+    );
+    const a = curAnim;
+    return a.finished.catch(() => {}).then(() => { if (curAnim === a) curAnim = null; });
+  }
+  function openSheet() {
+    if (sheetOpen) return;
+    sheetOpen = true;
+    lastFocus = document.activeElement;
+    sheet.hidden = false;
+    document.documentElement.classList.add("adm-sheet-lock");
+    panel.style.transform = "translateY(" + panel.offsetHeight + "px)";
+    requestAnimationFrame(() => {
+      sheet.classList.add("is-open");
+      slideTo(0);
+      panel.querySelector("a,button")?.focus({ preventScroll: true });
+    });
+  }
+  function closeSheet(fast) {
+    if (!sheetOpen) return;
+    sheetOpen = false;
+    sheet.classList.remove("is-open");
+    document.documentElement.classList.remove("adm-sheet-lock");
+    slideTo(panel.offsetHeight, { ms: fast ? 200 : 280 }).then(() => { if (!sheetOpen) sheet.hidden = true; });
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  document.getElementById("admMoreBtn")?.addEventListener("click", e => {
+    e.preventDefault();
+    sheetOpen ? closeSheet() : openSheet();
+  });
+  sheet.addEventListener("click", e => {
+    if (e.target.closest("[data-close]")) closeSheet();
+    else if (e.target.closest("a.adm-tile")) closeSheet(true);
+  });
+  detailRow.addEventListener("click", () => {
+    closeSheet(true);
+    if (!expanded) btn?.click(); else btn?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+  if (location.hash === "#more" && window.matchMedia("(max-width:759px)").matches) setTimeout(openSheet, 60); /* từ menu đáy các trang con */
+
+  /* Kéo xuống để đóng: bám ngón 1:1, thả ra thì chiếu quán tính rồi chọn đóng/giữ */
+  (function () {
+    const grab = sheet.querySelector(".adm-sheet-grab");
+    let dragging = false, startY = 0, baseY = 0, hist = [];
+    grab.addEventListener("pointerdown", e => {
+      dragging = true;
+      grab.setPointerCapture(e.pointerId);
+      if (curAnim) { curAnim.cancel(); curAnim = null; }
+      baseY = curY();
+      startY = e.clientY;
+      hist = [{ y: e.clientY, t: e.timeStamp }];
+    });
+    grab.addEventListener("pointermove", e => {
+      if (!dragging) return;
+      let y = baseY + (e.clientY - startY);
+      if (y < 0) y = -(Math.sqrt(-y) * 2); /* kéo lên quá đỉnh thì cản dần */
+      panel.style.transform = "translateY(" + y + "px)";
+      hist.push({ y: e.clientY, t: e.timeStamp });
+      if (hist.length > 6) hist.shift();
+    });
+    function end(e) {
+      if (!dragging) return;
+      dragging = false;
+      const a = hist[0], b = hist[hist.length - 1];
+      const v = b.t > a.t ? ((b.y - a.y) / (b.t - a.t)) * 1000 : 0; /* px/giây */
+      const projected = curY() + (v / 1000) * 0.998 / (1 - 0.998);
+      if (projected > panel.offsetHeight * 0.4) closeSheet(true); else slideTo(0);
+    }
+    grab.addEventListener("pointerup", end);
+    grab.addEventListener("pointercancel", end);
+  })();
+
   function readCount(id) {
     const el = document.getElementById(id);
     if (!el) return 0;
@@ -11772,7 +11887,7 @@ document.addEventListener(
     let totalCount = 0;
     document.querySelectorAll("[data-count-from]").forEach(tile => {
       const n = readCount(tile.dataset.countFrom);
-      totalCount += n;
+      if (!tile.closest("#admMoreSheet") && !tile.closest("#admBottomBar")) totalCount += n; /* bản sao trong tờ "Thêm"/menu đáy không tính đôi */
       const badge = tile.querySelector(".adm-tile-badge");
       if (badge) badge.textContent = n > 99 ? "99+" : String(n);
       tile.classList.toggle("has-count", n > 0);
@@ -11793,6 +11908,14 @@ document.addEventListener(
         tb.classList.toggle("has-count", sum > 0);
       }
     });
+    const moreBtn = document.getElementById("admMoreBtn");
+    if (moreBtn) { /* huy hiệu "Thêm" = tổng việc của các nhóm trong tờ */
+      let ms = 0;
+      sheet.querySelectorAll(".adm-tile[data-count-from]").forEach(tl => { ms += readCount(tl.dataset.countFrom); });
+      const mb = moreBtn.querySelector(".adm-tile-badge");
+      if (mb) mb.textContent = ms > 99 ? "99+" : String(ms);
+      moreBtn.classList.toggle("has-count", ms > 0);
+    }
     applyCollapse(); // thẻ do script khác chèn muộn cũng được thu gọn
   }
 
