@@ -42,6 +42,10 @@
     th, td { padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.07); text-align: left; vertical-align: top; }
     th { color: rgba(255,255,255,.5); font-size: 11.5px; }
     .hidden { display: none !important; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+    .stat { padding: 8px 6px; border-radius: 10px; background: #0f0f0f; text-align: center; }
+    .stat b { display: block; font-size: 18px; font-weight: 950; color: #ffc934; line-height: 1.2; }
+    .stat span { font-size: 10.5px; color: rgba(255,255,255,.55); font-weight: 700; }
     #msg { margin: 0 0 12px; font-weight: 800; color: #ffb3b3; }
   </style>
   <link rel="manifest" href="/shop-admin.webmanifest">
@@ -57,7 +61,7 @@
 <header class="header">
   <div class="header-inner">
     <a href="/shop-admin" class="brand">PickDee<span>Shop</span></a>
-    <a href="./shop-admin-promotions" class="back">← Khuyến mãi</a>
+    <a href="/shop-admin" class="back">← Shop Admin</a>
   </div>
 </header>
 
@@ -164,8 +168,15 @@
     $("partners").innerHTML = ps.length ? ps.map(function (p) {
       return '<div class="row"><div class="top"><div><b>' + esc(p.full_name) + "</b> · " + esc(p.code) + (p.kind === "coach" ? ' <span class="tag">Coach</span>' : "") +
         ' <span class="tag ' + (p.status === "active" ? "ok" : "bad") + '">' + (p.status === "active" ? "đang hoạt động" : "đã khoá") + "</span>" +
-        '<div class="muted">' + esc(p.phone) + (p.orders != null && isFinite(Number(p.orders)) ? " · " + Number(p.orders) + " đơn" : "") + (p.channel ? " · " + esc(p.channel) : "") + "</div></div>" +
-        '<button class="btn ghost" type="button" data-status="' + p.id + '" data-to="' + (p.status === "active" ? "locked" : "active") + '">' + (p.status === "active" ? "Khoá mã" : "Mở mã") + "</button></div></div>";
+        '<div class="muted">' + esc(p.phone) + (p.channel ? " · " + esc(p.channel) : "") + (p.last_order_at ? " · đơn gần nhất " + new Date(p.last_order_at).toLocaleDateString("vi-VN") : "") + "</div></div>" +
+        '<button class="btn ghost" type="button" data-status="' + p.id + '" data-to="' + (p.status === "active" ? "locked" : "active") + '">' + (p.status === "active" ? "Khoá mã" : "Mở mã") + "</button></div>" +
+        '<div class="stats">' +
+          '<div class="stat"><b>' + Number(p.paddles || 0) + '</b><span>vợt đã bán</span></div>' +
+          '<div class="stat"><b>' + Number(p.buyers || 0) + '</b><span>người mua</span></div>' +
+          '<div class="stat"><b>' + Number(p.orders || 0) + '</b><span>đơn</span></div>' +
+          '<div class="stat"><b>' + Number(p.paddles_done || 0) + '</b><span>vợt đã giao</span></div>' +
+        "</div>" +
+        '<div class="muted" style="margin-top:4px">Hoa hồng đã chuyển: ' + money(p.paid_total) + " · không tính đơn huỷ</div></div>";
     }).join("") : '<div class="muted">Chưa có ai đăng ký.</div>';
   }
 
