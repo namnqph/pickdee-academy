@@ -1904,7 +1904,7 @@
       "YÊU CẦU:",
       "Nhãn hàng đóng hàng và gửi trực tiếp cho khách.",
       "Gửi bằng Giao Hàng Nhanh (GHN), không dùng Viettel Post.",
-      "Khi có mã vận đơn, vui lòng gửi lại để PickDee theo dõi và cập nhật đơn cho khách."
+      "Có mã vận đơn, hãng TRẢ LỜI tin này kèm mã (hoặc ghi rõ mã đơn PD) giúp PickDee nhé."
     ]
       .filter(
         function (line) {
@@ -5867,6 +5867,27 @@
       document.getElementById(
         "saveShippingBtn"
       );
+
+    /* 19/11/2026: link Telegram "hãng gửi mã vận đơn" (?trk=&carrier=) điền sẵn mã — anh kiểm rồi tự bấm Lưu, KHÔNG tự lưu. */
+    (function prefillTrackingFromLink() {
+      const qs = new URLSearchParams(location.search);
+      const trk = String(qs.get("trk") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+      const carrier = String(qs.get("carrier") || "").replace(/[^a-z_]/g, "");
+      if (!trk || !trackingCodeInput || trackingCodeInput.value.trim()) return;
+      trackingCodeInput.value = trk;
+      if (carrier && shippingProviderInput && [...shippingProviderInput.options].some(function (o) { return o.value === carrier; })) {
+        shippingProviderInput.value = carrier;
+      }
+      if (shippingStatusInput && [...shippingStatusInput.options].some(function (o) { return o.value === "shipped"; })) {
+        shippingStatusInput.value = "shipped";
+      }
+      trackingCodeInput.style.outline = "2px solid #ffc934";
+      const note = document.createElement("div");
+      note.textContent = "Mã vận đơn hãng gửi trong nhóm Zalo đã điền sẵn. Kiểm đúng đơn rồi bấm Lưu.";
+      note.style.cssText = "margin:6px 0;color:#ffc934;font-size:13px;font-weight:800";
+      trackingCodeInput.insertAdjacentElement("afterend", note);
+      setTimeout(function () { trackingCodeInput.scrollIntoView({ block: "center" }); }, 300);
+    })();
 
     const shippingMessage =
       document.getElementById(
