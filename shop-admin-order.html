@@ -7207,6 +7207,71 @@
 
       }
 
+      /* 20/11/2026 — ĐƠN THƯỜNG (không đặt trước) mà bill thật còn thiếu:
+         cùng luật "thu đủ mới chuyển hàng". Trước đây chỉ đơn ĐẶT TRƯỚC được
+         chặn, nên đơn thường cọc tay vẫn giao được mà không ai cảnh báo. */
+      if (!preDue) {
+
+        const recorded =
+          Number(currentOrder?.amount_received || 0);
+
+        const orderTotal =
+          Number(currentOrder?.total_amount || 0);
+
+        const shortfall =
+          orderTotal - recorded;
+
+        if (
+          String(currentOrder?.payment_method || "") === "bank_transfer"
+          &&
+          recorded > 0
+          &&
+          shortfall >= 1000
+        ) {
+
+          const shortMsg =
+            document.getElementById(
+              "message"
+            );
+
+          if (shortMsg) {
+
+            shortMsg.className =
+              "message error";
+
+            shortMsg.textContent =
+              "Bill thật của đơn này chỉ "
+              + money(recorded)
+              + " · CÒN THU "
+              + money(shortfall)
+              + " trước khi giao.";
+
+            shortMsg.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+
+          }
+
+          const shortGo =
+            window.confirm(
+              "CÒN THU "
+              + money(shortfall)
+              + " của đơn này (đã nhận "
+              + money(recorded)
+              + ").\n\nChỉ bấm OK nếu anh ĐÃ nhận đủ tiền ngoài web (và sẽ ghi lại số tiền thật). Vẫn chuyển trạng thái?"
+            );
+
+          if (!shortGo) {
+
+            return;
+
+          }
+
+        }
+
+      }
+
     }
 
     actions

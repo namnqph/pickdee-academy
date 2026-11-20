@@ -1407,13 +1407,53 @@
       box.className =
         "bank-transfer-box";
 
+      /*
+        20/11/2026 - Luật tiền B2: màn hình khách KHÔNG được nói đã trả đủ
+        khi bill thật còn thiếu. Đơn ĐẶT TRƯỚC đã có khung THU NỐT riêng,
+        nhưng đơn THƯỜNG mà khách chỉ cọc thì trước đây vẫn in
+        "đã nhận <tổng đơn>". Nay lấy đúng số tiền thật từ RPC.
+      */
+      const paidState =
+        data.money_state || null;
+
+      const paidPartial =
+        paidState
+        &&
+        paidState.is_partial === true;
+
+      const paidReceived =
+        Number(
+          (paidState && paidState.received)
+          || data.amount_received
+          || 0
+        );
+
+      if (paidPartial) {
+
+        box.innerHTML = `
+          <div class="bank-transfer-title">
+            ✓ ĐÃ NHẬN CỌC
+          </div>
+
+          <div class="bank-transfer-note">
+            PickDee đã nhận ${escapeHtml(money(paidReceived))} cho đơn này.
+            Còn lại <b>${escapeHtml(money(Number(paidState.due || 0)))}</b>
+            anh/chị thanh toán trước khi PickDee giao hàng.
+            Cần hỗ trợ: 0926 629 966.
+          </div>
+        `;
+
+        return box;
+
+      }
+
       box.innerHTML = `
         <div class="bank-transfer-title">
           ✓ ĐÃ THANH TOÁN
         </div>
 
         <div class="bank-transfer-note">
-          PickDee đã nhận ${escapeHtml(money(amount))} chuyển khoản cho đơn này.
+          PickDee đã nhận ${escapeHtml(money(paidReceived > 0 ? paidReceived : amount))} chuyển khoản cho đơn này.
         </div>
       `;
 
