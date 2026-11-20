@@ -796,6 +796,25 @@
 
     }
 
+    /* Sản phẩm trong đơn + khách tự đổi lựa chọn (20/11) */
+    .it-title{font-size:13px;font-weight:900;margin-bottom:10px}
+    .it-row{padding:11px 0;border-top:1px solid rgba(255,255,255,.07)}
+    .it-title + .it-row{border-top:0;padding-top:2px}
+    .it-name{font-size:13px;font-weight:800;line-height:1.4}
+    .it-meta{margin-top:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:rgba(255,255,255,.6)}
+    .it-chip{padding:3px 9px;border-radius:999px;background:rgba(255,201,52,.13);color:#ffc934;font-weight:800}
+    .it-change{margin-top:9px;min-height:36px;padding:0 13px;border-radius:11px;border:1px solid rgba(255,201,52,.45);background:transparent;color:#ffc934;font-weight:800;font-size:12px;cursor:pointer}
+    .it-opts{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px}
+    .it-opt{min-height:36px;padding:0 12px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#1e1e1e;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out}
+    .it-opt[aria-pressed="true"]{border-color:#ffc934;background:rgba(255,201,52,.16);color:#ffc934}
+    .it-opt[disabled]{opacity:.45;cursor:default}
+    .it-actions{margin-top:10px;display:flex;gap:8px}
+    .it-save{flex:1;min-height:40px;border:0;border-radius:12px;background:#ffc934;color:#111;font-weight:900;font-size:13px;cursor:pointer}
+    .it-save[disabled]{opacity:.5}
+    .it-cancel{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#fff;font-weight:700;font-size:12px;cursor:pointer}
+    .it-msg{margin-top:8px;font-size:12px;line-height:1.5}
+    .it-msg.ok{color:#7ee2a8}.it-msg.err{color:#ff8a8a}
+    .it-note{margin-top:10px;font-size:11px;line-height:1.55;color:rgba(255,255,255,.5)}
   </style>
   <link rel="manifest" href="/shop.webmanifest">
   <link rel="apple-touch-icon" href="/pickdee-shop-icon.png">
@@ -1962,6 +1981,123 @@
   }
 
 
+
+  /* ===== Sản phẩm trong đơn + khách tự đổi lựa chọn (cùng giá) ===== */
+  let itemsEl = null;
+  let itemsKey = "";
+  let itemsBusy = false;
+
+  function mountItemsBox(data) {
+    const slot = document.getElementById("itemsSlot");
+    if (!slot) return;
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (!items.length) { slot.remove(); return; }
+    const key = JSON.stringify([items, data.can_change_items, data.change_block_reason]);
+    if (!itemsEl || (key !== itemsKey && !itemsBusy)) {
+      itemsEl = buildItemsBox(data, items);
+      itemsKey = key;
+    }
+    slot.replaceWith(itemsEl);
+  }
+
+  function buildItemsBox(data, items) {
+    const box = document.createElement("div");
+    box.className = "card";
+    const canChange = data.can_change_items === true;
+    const active = ["new", "confirmed", "packing"].includes(data.order_status || "new");
+    let anyChangeable = false;
+    const rows = items.map(function (it) {
+      const opts = Array.isArray(it.options) ? it.options : [];
+      const changeable = canChange && opts.length > 1;
+      if (changeable) anyChangeable = true;
+      return `
+        <div class="it-row" data-item="${Number(it.id)}">
+          <div class="it-name">${escapeHtml(it.product_name || "")}</div>
+          <div class="it-meta">
+            ${it.variant_name ? `<span class="it-chip">${escapeHtml(it.variant_name)}</span>` : ""}
+            <span>SL ${Number(it.quantity || 0)} · ${escapeHtml(money(it.line_total))}</span>
+          </div>
+          ${changeable ? `<button type="button" class="it-change">Đổi lựa chọn (size, màu, quà tặng…)</button>` : ""}
+        </div>`;
+    }).join("");
+    let note = "";
+    if (anyChangeable) {
+      note = `<div class="it-note">Anh/chị được tự đổi lựa chọn cùng giá trước khi PickDee đóng gói. Cần đổi khác (khác giá, thêm/bớt sản phẩm) vui lòng nhắn PickDee 0926 629 966.</div>`;
+    } else if (active && data.change_block_reason) {
+      note = `<div class="it-note">${escapeHtml(data.change_block_reason)} Cần hỗ trợ đổi: 0926 629 966.</div>`;
+    }
+    box.innerHTML = `<div class="it-title">Sản phẩm trong đơn</div>${rows}${note}`;
+
+    box.querySelectorAll(".it-row").forEach(function (row) {
+      const btn = row.querySelector(".it-change");
+      if (!btn) return;
+      const it = items.find(function (x) { return Number(x.id) === Number(row.dataset.item); });
+      btn.addEventListener("click", function () { openPicker(row, btn, it); });
+    });
+    return box;
+  }
+
+  function openPicker(row, btn, it) {
+    if (row.querySelector(".it-opts")) return;
+    itemsBusy = true;
+    btn.hidden = true;
+    let chosen = null;
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `
+      <div class="it-opts">${(it.options || []).map(function (o) {
+        const cur = o.name === it.variant_name;
+        return `<button type="button" class="it-opt" data-v="${Number(o.id)}" aria-pressed="${cur}"${cur ? " disabled" : ""}>${escapeHtml(o.name)}${cur ? " (đang chọn)" : ""}</button>`;
+      }).join("")}</div>
+      <div class="it-actions">
+        <button type="button" class="it-save" disabled>Chọn lựa chọn mới</button>
+        <button type="button" class="it-cancel">Huỷ</button>
+      </div>
+      <div class="it-msg" hidden></div>`;
+    row.appendChild(wrap);
+    const save = wrap.querySelector(".it-save");
+    const msg = wrap.querySelector(".it-msg");
+    wrap.querySelectorAll(".it-opt:not([disabled])").forEach(function (b) {
+      b.addEventListener("click", function () {
+        wrap.querySelectorAll(".it-opt:not([disabled])").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        chosen = { id: Number(b.dataset.v), name: b.textContent };
+        save.disabled = false;
+        save.textContent = "Xác nhận đổi sang: " + chosen.name;
+      });
+    });
+    wrap.querySelector(".it-cancel").addEventListener("click", function () {
+      wrap.remove();
+      btn.hidden = false;
+      itemsBusy = false;
+    });
+    save.addEventListener("click", async function () {
+      if (!chosen) return;
+      save.disabled = true;
+      save.textContent = "Đang đổi…";
+      msg.hidden = true;
+      try {
+        const { data: res, error } = await sb.rpc("shop_public_change_order_item_variant", {
+          p_token: token, p_item_id: Number(it.id), p_new_variant_id: chosen.id
+        });
+        if (error) throw error;
+        if (!res || res.success !== true) throw new Error((res && res.message) || "Không đổi được.");
+        msg.className = "it-msg ok";
+        msg.textContent = "Đã đổi sang " + res.new_variant + ". PickDee đã nhận thông tin.";
+        msg.hidden = false;
+        wrap.querySelector(".it-actions").hidden = true;
+        wrap.querySelectorAll(".it-opt").forEach(function (x) { x.disabled = true; });
+        itemsBusy = false;
+        setTimeout(loadOrder, 1200);
+      } catch (e) {
+        msg.className = "it-msg err";
+        msg.textContent = (e && e.message) || "Không đổi được, anh/chị thử lại hoặc nhắn 0926 629 966.";
+        msg.hidden = false;
+        save.disabled = false;
+        save.textContent = "Xác nhận đổi sang: " + chosen.name;
+      }
+    });
+  }
+
   function formatTime(value) {
 
     if (!value) {
@@ -2765,6 +2901,8 @@ function renderOrder(data) {
 
     <div id="paymentSlot"></div>
 
+    <div id="itemsSlot"></div>
+
     ${
       data.order_status !== "cancelled"
       && data.shipping_status !== "delivered"
@@ -2986,6 +3124,10 @@ function renderOrder(data) {
 
 
   mountPaymentBox(
+    data
+  );
+
+  mountItemsBox(
     data
   );
 
