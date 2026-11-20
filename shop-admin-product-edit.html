@@ -508,6 +508,13 @@
        CHECKBOX
     ====================================================== */
 
+    .stock-quick { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .stock-quick-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,.12); border-radius:12px; }
+    .stock-quick-name { font-weight:700; min-width:0; overflow-wrap:anywhere; }
+    .stock-quick-btn { flex:none; min-width:104px; min-height:40px; padding:0 14px; border-radius:999px; border:1px solid #ffc934; background:#ffc934; color:#111; font:inherit; font-weight:800; font-size:13px; cursor:pointer; transition:transform .15s ease-out, opacity .15s ease-out; }
+    .stock-quick-btn.is-out { background:transparent; color:#ff6b6b; border-color:#ff6b6b; }
+    .stock-quick-btn:active { transform:scale(.96); }
+    .stock-quick-btn:disabled { opacity:.5; }
     .switch-row {
       min-height: 46px;
       padding:
@@ -3198,6 +3205,18 @@
         </div>
 
         <div class="field">
+          <label>Tình trạng hàng (bấm để đổi, lưu ngay)</label>
+          <div class="stock-quick">
+            ${variants.filter(function (v) { return v.is_active; }).map(function (v) {
+              return `<div class="stock-quick-row">
+                <span class="stock-quick-name">${escapeHtml(v.variant_name || v.sku || "")}</span>
+                <button type="button" class="stock-quick-btn${v.is_sold_out ? " is-out" : ""}" data-soldout-vid="${escapeHtml(String(v.id))}">${v.is_sold_out ? "Tạm hết" : "Còn hàng"}</button>
+              </div>`;
+            }).join("") || '<div class="card-subtitle">Chưa có biến thể đang bán.</div>'}
+          </div>
+        </div>
+
+        <div class="field">
 
           <label>
             Chọn biến thể / SKU
@@ -4978,7 +4997,7 @@
             "shop_product_variants"
           )
           .select(
-            "id,product_id,sku,variant_name,option1_name,option1_value,option2_name,option2_value,price,compare_at_price,is_active,sort_order"
+            "id,product_id,sku,variant_name,option1_name,option1_value,option2_name,option2_value,price,compare_at_price,is_active,sort_order,is_sold_out"
           )
           .eq(
             "product_id",
@@ -6015,6 +6034,31 @@
 
     }
 
+  }
+
+  document.addEventListener("click", async function (ev) {
+    const btn = ev.target.closest("[data-soldout-vid]");
+    if (!btn || btn.disabled) return;
+    const vid = btn.getAttribute("data-soldout-vid");
+    const v = variants.find(function (x) { return String(x.id) === vid; });
+    if (!v) return;
+    const next = !v.is_sold_out;
+    btn.disabled = true;
+    const { data, error } = await sb.from("shop_product_variants")
+      .update({ is_sold_out: next, updated_at: new Date().toISOString() })
+      .eq("id", v.id).select("id,is_sold_out");
+    btn.disabled = false;
+    if (error || !data || !data.length) {
+      alertMsg(btn, "Lỗi lưu, thử lại");
+      return;
+    }
+    v.is_sold_out = Boolean(data[0].is_sold_out);
+    btn.classList.toggle("is-out", v.is_sold_out);
+    btn.textContent = v.is_sold_out ? "Tạm hết" : "Còn hàng";
+  });
+  function alertMsg(btn, text) {
+    const old = btn.textContent; btn.textContent = text;
+    setTimeout(function () { btn.textContent = old; }, 1800);
   }
 
   start();
