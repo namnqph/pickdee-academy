@@ -3650,6 +3650,14 @@ startPolling();
   );
 
 
+  // Link từ tin nhắn Fanpage/TikTok (pickdee.vn/?chat=1) → mở sẵn khung tư vấn
+  try {
+    if (new URLSearchParams(location.search).get("chat") === "1") {
+      setTimeout(function () { if (!panel.classList.contains("open")) openPanel(); }, 600);
+    }
+  } catch (_) {}
+
+
   guestStartBtn.addEventListener(
     "click",
     startGuestChat
