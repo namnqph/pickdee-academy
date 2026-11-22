@@ -1580,7 +1580,7 @@ if (
     order: ["Tra cứu đơn hàng", "Bao lâu nhận hàng?", "Bảo hành vợt?"],
     shop: ["Tư vấn vợt cho người mới", "Vợt cho người chơi lâu năm", "Phí ship thế nào?", "Tra cứu đơn hàng"],
     academy: /^\/find-coach/.test(location.pathname)
-      ? ["Tìm Coach 1 kèm 1 gần tôi", "Học nhóm 2 người được không?", "Học phí 1 buổi học?", "Đặt lịch học thử thế nào?"]
+      ? ["Tìm Coach 1 kèm 1 gần tôi", "Học nhóm 2 người được không?", "Học phí 1 buổi học?", "Đăng ký học thế nào?"]
       : ["Người mới nên học gói nào?", "Học phí các gói học?", "Học nhóm 2 người như thế nào?", "Muốn làm Coach PickDee thì sao?"],
     all: /^\/add-my-court/.test(location.pathname)
       ? ["Đưa sân lên có mất phí không?", "Cần điền những thông tin gì?", "Bao lâu thì sân được duyệt?"]

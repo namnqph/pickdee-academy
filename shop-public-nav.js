@@ -870,7 +870,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261121-chat1";
+      "/support-widget.js?v=20261122-notrial";
 
 
     script.async =
