@@ -207,7 +207,7 @@
         )
         : "";
       var srcLink = it.parent_url
-        ? '<a class="item-src" href="' + escapeHtml(it.parent_url) + '" target="_blank" rel="noopener">🔗 Xem ' + (it.interaction_type === "dm" ? "hội thoại" : "bình luận") + " trên " + escapeHtml(PLAT_LABEL[it.platform] || it.platform) + "</a>"
+        ? '<a class="item-src" data-app="' + escapeHtml(it.platform) + '" href="' + escapeHtml(it.parent_url) + '" target="_blank" rel="noopener">🔗 Xem ' + (it.interaction_type === "dm" ? "hội thoại" : "bình luận") + " trên " + escapeHtml(PLAT_LABEL[it.platform] || it.platform) + "</a>"
         : "";
       var delay = Math.min(idx, 6) * 40;
       return (
@@ -225,9 +225,51 @@
       );
     }).join("");
 
+    Array.prototype.forEach.call(el.querySelectorAll("a[data-app]"), function (a) {
+      a.addEventListener("click", function (e) {
+        var scheme = appScheme(a.dataset.app, a.getAttribute("href"));
+        if (!scheme) return;
+        e.preventDefault();
+        openInApp(scheme, a.getAttribute("href"));
+      });
+    });
+
     Array.prototype.forEach.call(el.querySelectorAll("button[data-act]"), function (btn) {
       btn.addEventListener("click", function () { onAction(btn.dataset.act, Number(btn.dataset.id), btn); });
     });
+  }
+
+  // iOS PWA mở link ngoài trong khung web, không nhảy sang app → dùng scheme của app.
+  var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var IS_ANDROID = /Android/.test(navigator.userAgent);
+  function appScheme(platform, url) {
+    if (!url || !/^https:\/\//.test(url)) return null;
+    if (IS_ANDROID) {
+      // intent:// để Android chọn app đã cài, không có app thì về web
+      return "intent://" + url.replace(/^https:\/\//, "") +
+        "#Intent;scheme=https;S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+    }
+    if (!IS_IOS) return null;
+    if (platform === "tiktok") {
+      var m = url.match(/\/video\/(\d+)/);
+      return m ? "snssdk1233://aweme/detail/" + m[1] : null;
+    }
+    if (platform === "youtube") return "youtube://" + url.replace(/^https:\/\//, "");
+    if (platform === "facebook") return "fb://facewebmodal/f?href=" + encodeURIComponent(url);
+    return null;
+  }
+  function openInApp(scheme, webUrl) {
+    if (IS_ANDROID) { location.href = scheme; return; }
+    var left = false;
+    function onHide() { if (document.hidden) left = true; }
+    document.addEventListener("visibilitychange", onHide);
+    location.href = scheme;
+    // App chưa cài → sau 1,5s vẫn ở trang thì mở bản web như cũ
+    setTimeout(function () {
+      document.removeEventListener("visibilitychange", onHide);
+      if (!left && !document.hidden) window.open(webUrl, "_blank");
+    }, 1500);
   }
 
   var ORDER_SOURCE = { facebook: "facebook", tiktok: "tiktok", youtube: "youtube" };
