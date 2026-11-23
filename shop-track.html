@@ -2048,7 +2048,11 @@
     let anyChangeable = false;
     const rows = items.map(function (it) {
       const opts = Array.isArray(it.options) ? it.options : [];
-      const changeable = canChange && opts.length > 1;
+      // Lựa chọn khác đang bán cùng giá (bỏ lựa chọn hiện tại). Lựa chọn hiện tại
+      // có thể KHÔNG nằm trong opts nếu nó vừa bị tạm hết hàng — khi đó vẫn phải
+      // cho khách đổi, nên không dùng opts.length > 1 làm điều kiện.
+      const otherOpts = opts.filter(function (o) { return o.name !== it.variant_name; });
+      const changeable = canChange && otherOpts.length > 0;
       if (changeable) anyChangeable = true;
       return `
         <div class="it-row" data-item="${Number(it.id)}">
@@ -2083,7 +2087,9 @@
     btn.hidden = true;
     let chosen = null;
     const wrap = document.createElement("div");
+    const curGone = !(it.options || []).some(function (o) { return o.name === it.variant_name; });
     wrap.innerHTML = `
+      ${curGone && it.variant_name ? `<div class="it-note">Lựa chọn đang đặt (${escapeHtml(it.variant_name)}) hiện không còn trong danh sách đổi (tạm hết hàng hoặc khác giá) — anh/chị có thể chọn lựa chọn khác cùng giá bên dưới.</div>` : ""}
       <div class="it-opts">${(it.options || []).map(function (o) {
         const cur = o.name === it.variant_name;
         return `<button type="button" class="it-opt" data-v="${Number(o.id)}" aria-pressed="${cur}"${cur ? " disabled" : ""}>${escapeHtml(o.name)}${cur ? " (đang chọn)" : ""}</button>`;
