@@ -813,6 +813,7 @@
        Telegram (hàm shop_confirm_bank_transfer_payment_by_telegram không ghi
        amount_received). Nên phải nói thẳng là CHƯA ĐỐI SOÁT, không tô xanh "đã nhận". */
     const unverified = received && pre.recorded === null;
+    if (unverified) setTimeout(function () { pdAutoVerifyBill(o); }, 0);
 
     const tone =
       unverified
@@ -844,6 +845,7 @@
                Số tiền trên là <b>mức khách tự chọn lúc đặt</b> — chưa ai đọc bill, nên mọi con số
                (còn thu, tin Zalo, email) đang chạy theo ghi chú đơn chứ không theo tiền thật.
                <b>Mở bill rồi ghi số thật</b> để không lặp lại ca PD-000169.
+               <div id="pdAutoBillMsg" style="margin-top:8px;font-weight:800;color:#ffc934">🔄 Máy đang tự đọc bill để đối soát…</div>
                <div style="margin-top:8px">
                  <button
                    type="button"
@@ -857,6 +859,43 @@
       }
       ${balanceCollectBlock(o, pre)}
     </section>`;
+  }
+
+  /* 23/11/2026 (PD-000215) — Bấm "Đã nhận tiền" trên Telegram mà máy đọc bill lỗi (Gemini
+     lỗi/hết lượt) thì đơn vẫn 'paid' nhưng amount_received trống → khung cam "chưa đối soát".
+     Lưới an toàn: mở trang đơn là máy TỰ đọc bill (tesseract trên máy anh), chỉ TỰ GHI khi
+     bill có chữ "thành công" VÀ số tiền khớp đúng mức khách chọn (dư ≤10.000đ làm tròn) —
+     cùng luật với Edge. Lệch/không đọc được → giữ khung cam, nói rõ bill ghi bao nhiêu. */
+  const pdAutoBillTried = {};
+  function pdAutoVerifyBill(o) {
+    const pre = preorderPay(o);
+    if (!pre || o?.payment_status !== "paid" || pre.recorded !== null) return;
+    if (!o?.payment_proof_path || !window.PDBillAmount || pdAutoBillTried[o.id]) return;
+    pdAutoBillTried[o.id] = true;
+    const say = function (t) {
+      const el = document.getElementById("pdAutoBillMsg");
+      if (el) el.textContent = t;
+    };
+    (async function () {
+      try {
+        const r = await window.PDBillAmount.read(sb, o.payment_proof_path, pre.total, function () {});
+        const plain = String(r?.text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const success = /thanh cong|successful|success|da chuyen|hoan thanh/.test(plain);
+        const amount = Number(r?.amount || 0);
+        if (!amount) { say("⚠️ Máy không đọc được số tiền trên bill — anh bấm nút dưới để ghi tay."); return; }
+        if (!success) { say("⚠️ Bill ghi " + money(amount) + " nhưng không thấy chữ \"thành công\" — kiểm app ngân hàng rồi ghi tay."); return; }
+        if (amount < pre.expected || amount > pre.expected + 10000) {
+          say("⚠️ Bill ghi " + money(amount) + " ≠ mức khách chọn " + money(pre.expected) + " — mở bill ghi số thật.");
+          return;
+        }
+        if (currentOrder?.id !== o.id || Number(currentOrder?.amount_received) > 0) return;
+        await saveReceivedAmount(amount, "ocr_auto");
+        render();
+      } catch (e) {
+        console.error("AUTO BILL VERIFY ERROR:", e);
+        say("⚠️ Máy đọc bill lỗi (" + (e?.message || "không rõ") + ") — anh bấm nút dưới để ghi tay.");
+      }
+    })();
   }
 
   /* 15/11/2026 — Khối THU NỐT phần còn lại (luật: thu đủ mới chuyển hàng).
