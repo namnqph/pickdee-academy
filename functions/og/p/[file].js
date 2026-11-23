@@ -48,7 +48,10 @@ async function okImage(url, options) {
 }
 
 export async function onRequestGet(context) {
-  const match = /^(\d+)(?:-\d+)?\.jpg$/.exec(String(context.params.file || ""));
+  const match = /^(\d+)(?:-\d+)?(-s)?\.jpg$/.exec(String(context.params.file || ""));
+  // "-s" = bản NHỎ (≤600px ~40KB, shop-products/og-s/…): Messenger chat cá nhân do máy người gửi tự tải ảnh
+  // lúc soạn tin, ảnh to tải chậm là thẻ mất ảnh (23/11). Thiếu bản nhỏ thì rơi xuống thứ tự cũ bên dưới.
+  const small = !!match?.[2];
 
   if (!match) {
     return fallback(context, "bad name");
@@ -96,7 +99,15 @@ export async function onRequestGet(context) {
     let got = null;
     let how = "";
 
-    if (isJpg) {
+    if (small) {
+      got = await okImage(PUBLIC_BASE + "og-s/" + image.storage_path.replace(/\.[^./]+$/, "") + ".jpg");
+      how = "og small";
+    }
+
+    if (got) {
+      // đã có bản nhỏ
+    }
+    else if (isJpg) {
       got = await okImage(originalUrl);
       how = "original";
     }

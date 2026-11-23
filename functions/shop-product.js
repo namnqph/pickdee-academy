@@ -203,7 +203,7 @@ export async function onRequestGet(context) {
     // Ảnh JPG phục vụ ngay trên pickdee.vn (functions/og/p/[file].js): Zalo không hiện ảnh
     // khi og:image ở domain ngoài có ?query. imageId trong tên file để đổi ảnh là đổi URL.
     const imageUrl = image
-      ? "https://pickdee.vn/og/p/" + id + "-" + image.id + ".jpg"
+      ? "https://pickdee.vn/og/p/" + id + "-" + image.id + "-s.jpg"
       : "https://pickdee.vn/og-shop.jpg";
 
     if (!image) {
@@ -229,7 +229,8 @@ export async function onRequestGet(context) {
     // (hoặc &v=3…) để được quét lại. canonical/JSON-LD vẫn giữ pageUrl sạch.
     // Dấu phiên bản theo ảnh chính + giá: đổi ảnh hoặc đổi giá là og:url đổi theo, nên Facebook/Messenger
     // buộc phải dựng thẻ mới thay vì dùng lại thẻ đã nhớ từ lần quét trước (nguồn gốc lỗi "chỉ hiện logo").
-    const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000);
+    // "s": 23/11 đổi sang ảnh xem trước bản nhỏ → og:url đổi để Facebook dựng thẻ mới.
+    const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000) + "s";
     const shareUrl = pageUrl + "&v=" + (safeV || stamp);
 
     // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.

@@ -6,6 +6,7 @@
   window.pdUploadOgJpg(sb, storagePath, file) → Promise<void>
   - Ảnh không phải JPG (Zalo không hiện .webp khi xem trước link) → tự dựng bản JPG ≤1000px
     nền trắng, tải lên shop-products/og/<storagePath đổi đuôi .jpg> cho functions/og/p/[file].js.
+  - MỌI ảnh (cả JPG) thêm bản nhỏ ≤600px → shop-products/og-s/… (thẻ link Messenger tải kịp, 23/11).
   - Không bao giờ báo lỗi ra ngoài: hỏng thì link chỉ hiện ảnh thương hiệu.
   - Cạnh dài tối đa 1600px, WebP 0.82 (trình duyệt không hỗ trợ WebP thì JPEG 0.85).
   - Giữ nguyên file gốc nếu: không phải ảnh, là GIF, đã nhỏ (≤ 350KB và ≤ 1600px),
@@ -47,45 +48,61 @@
     return "og/" + String(storagePath).replace(/\.[^./]+$/, "") + ".jpg";
   };
 
+  // Bản NHỎ (≤600px) cho thẻ link Messenger/Zalo: máy người gửi tự tải ảnh lúc soạn tin, ảnh to là mất ảnh (23/11).
+  window.pdOgSmallPath = function (storagePath) {
+    return "og-s/" + String(storagePath).replace(/\.[^./]+$/, "") + ".jpg";
+  };
+
+  async function jpegOf(bitmap, maxSide, quality) {
+    const width = bitmap.width || bitmap.naturalWidth;
+    const height = bitmap.height || bitmap.naturalHeight;
+    const scale = Math.min(1, maxSide / Math.max(width, height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    return await canvasToBlob(canvas, "image/jpeg", quality);
+  }
+
+  async function putJpg(sb, path, blob) {
+    if (!blob) {
+      return;
+    }
+
+    const result = await sb.storage
+      .from("shop-products")
+      .upload(path, blob, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: "image/jpeg"
+      });
+
+    if (result.error) {
+      console.warn("pdUploadOgJpg", path, result.error);
+    }
+  }
+
   window.pdUploadOgJpg = async function (sb, storagePath, file) {
     try {
-      if (!sb || !file || /\.jpe?g$/i.test(storagePath)) {
+      if (!sb || !file) {
         return;
       }
 
       const bitmap = await loadBitmap(file);
-      const width = bitmap.width || bitmap.naturalWidth;
-      const height = bitmap.height || bitmap.naturalHeight;
-      const scale = Math.min(1, 1000 / Math.max(width, height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(width * scale);
-      canvas.height = Math.round(height * scale);
 
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      if (!/\.jpe?g$/i.test(storagePath)) {
+        await putJpg(sb, window.pdOgJpgPath(storagePath), await jpegOf(bitmap, 1000, 0.85));
+      }
+
+      await putJpg(sb, window.pdOgSmallPath(storagePath), await jpegOf(bitmap, 600, 0.8));
 
       if (bitmap.close) {
         bitmap.close();
-      }
-
-      const blob = await canvasToBlob(canvas, "image/jpeg", 0.85);
-
-      if (!blob) {
-        return;
-      }
-
-      const result = await sb.storage
-        .from("shop-products")
-        .upload(window.pdOgJpgPath(storagePath), blob, {
-          cacheControl: "3600",
-          upsert: true,
-          contentType: "image/jpeg"
-        });
-
-      if (result.error) {
-        console.warn("pdUploadOgJpg", result.error);
       }
     } catch (error) {
       console.warn("pdUploadOgJpg", error);
