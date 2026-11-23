@@ -23,7 +23,7 @@
     "vot-ess-on-mvp-pro": {
       short: "VỢT ESS/ON MVP PRO",
       photo: 5,
-      lines: ["Đặt trước · giao từ 28/11", "Tặng áo + khăn + quấn cán + dán viền", "Cọc 70% hoặc trả 100%"]
+      lines: ["Đặt trước · giao 28/11 – 5/12", "Tặng áo + khăn + quấn cán + dán viền", "Cọc 70% hoặc trả 100%"]
     }
   };
 

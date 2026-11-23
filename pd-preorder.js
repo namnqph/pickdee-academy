@@ -15,8 +15,8 @@
       tagline: "MẶT VỢT SIÊU NHÁM THẾ HỆ MỚI",
       price: 2499000,
       list_price: 3199000,
-      eta_text: "Dự kiến giao từ 28/11/2026",
-      eta_short: "Giao từ 28/11",
+      eta_text: "Dự kiến giao từ 28/11 đến khoảng 05/12/2026",
+      eta_short: "Giao 28/11 – 5/12",
       deposit_percents: [70, 100],
       gifts: [
         "01 áo chính hãng ESS/ON",
