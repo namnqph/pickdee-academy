@@ -7422,6 +7422,14 @@ const successDepositRest =
     :
       0;
 
+    /* 24/11 (anh Nam): QR / SỐ TIỀN / COPY ở màn thành công = ĐÚNG mức khách chọn
+       (cọc → tiền cọc, trả đủ → tổng đơn). Trước đây luôn là tổng đơn — nếu gửi bill lỗi,
+       khách cọc thấy QR 2.499.000đ. */
+    const successTransferAmount =
+      successIsDeposit
+        ? successDepositPaid
+        : successCustomerTotal;
+
 
         checkoutContent.innerHTML = `
 
@@ -7745,7 +7753,7 @@ const successDepositRest =
                                 class="bank-qr"
                                 src="${escapeHtml(
                                                                  vietQrUrl(
-                                    successCustomerTotal,
+                                    successTransferAmount,
                                     data.order_code,
                                     paymentBank
                                   )
@@ -7828,7 +7836,7 @@ const successDepositRest =
 
                                   <div class="bank-row-value highlight">
                                     ${money(
-                                      successCustomerTotal
+                                      successTransferAmount
                                     )}
                                   </div>
                                 </div>
@@ -8088,7 +8096,7 @@ const successDepositRest =
             copyText(
               String(
                 Math.round(
-                  successCustomerTotal
+                  successTransferAmount
                 )
               ),
               copyTransferAmountBtn,
