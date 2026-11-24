@@ -83,6 +83,53 @@ async function imageSize(imageUrl) {
   }
 }
 
+// 24/11: Zalo trên iPhone gửi thẻ KHÔNG ẢNH khi anh dán link rồi bấm Gửi ngay (bóng LT48, id 1): lần đầu
+// bot quét, ảnh /og/p/…-s.jpg phải tra lại Supabase (Sydney) rồi mới lấy ảnh → chậm ~1s, Zalo không chờ.
+// Nay lúc dựng thẻ, lấy luôn bản nhỏ og-s/ (đã biết storage_path, khỏi tra lại) và nạp vào bộ đệm biên
+// đúng khoá mà functions/og/p/[file].js đọc → bot hỏi ảnh là có ngay. Đã có trong bộ đệm thì đọc kích
+// thước từ đó (không tốn băng thông Supabase). Thiếu bản nhỏ → trả null, dùng cách cũ imageSize().
+async function warmSmallImage(imageUrl, storagePath) {
+  try {
+    const cache = caches.default;
+    const key = new Request(imageUrl, { method: "GET" });
+    const hit = await cache.match(key);
+
+    if (hit) {
+      return readImageSize(await hit.arrayBuffer());
+    }
+
+    const res = await fetch(
+      SUPABASE_URL + "/storage/v1/object/public/shop-products/og-s/"
+      + storagePath.replace(/\.[^./]+$/, "") + ".jpg"
+    );
+    const type = res.headers.get("content-type") || "";
+
+    if (!res.ok || !type.startsWith("image/")) {
+      return null;
+    }
+
+    const buf = await res.arrayBuffer();
+    const size = readImageSize(buf);
+
+    if (!size) {
+      return null;
+    }
+
+    await cache.put(key, new Response(buf, {
+      headers: {
+        "Content-Type": type,
+        "Cache-Control": "public, max-age=604800",
+        "X-OG": "og small"
+      }
+    }));
+
+    return size;
+  }
+  catch (_) {
+    return null;
+  }
+}
+
 // Bot đọc thẻ xem trước của Facebook/Messenger/Zalo/Telegram… (không phải người xem trang).
 function isCrawler(request) {
   const ua = (request.headers.get("user-agent") || "").toLowerCase();
@@ -213,7 +260,9 @@ export async function onRequestGet(context) {
       }
     }
 
-    const size = (image ? await imageSize(imageUrl) : null) || { width: 1200, height: 630 };
+    const size = (image
+      ? (await warmSmallImage(imageUrl, image.storage_path)) || await imageSize(imageUrl)
+      : null) || { width: 1200, height: 630 };
 
     const title =
       product.name
