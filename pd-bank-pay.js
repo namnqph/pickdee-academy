@@ -17,7 +17,8 @@
   ];
 
   const css = `
-.pdbp{margin:12px 0 4px;border:1.5px solid #111;border-radius:14px;padding:12px;background:#fff;text-align:left}
+.pdbp,.pdbp *{box-sizing:border-box}
+.pdbp{max-width:100%;overflow:hidden;margin:12px 0 4px;border:1.5px solid #111;border-radius:14px;padding:12px;background:#fff;text-align:left}
 .pdbp-t{font-weight:800;font-size:14px;margin:0 0 8px;color:#111}
 .pdbp-steps{margin:0 0 10px;padding-left:20px;font-size:13px;line-height:1.5;color:#222}
 .pdbp-steps b{color:#111}
@@ -25,8 +26,8 @@
 .pdbp-save:active{transform:scale(.97)}
 .pdbp-save svg{width:18px;height:18px}
 .pdbp-sub{font-size:12px;color:#555;margin:10px 0 6px}
-.pdbp-banks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.pdbp-banks a{display:flex;align-items:center;justify-content:center;min-height:38px;border:1px solid #d6d6d6;border-radius:10px;font-size:12.5px;font-weight:700;color:#111;text-decoration:none;background:#fafafa}
+.pdbp-banks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pdbp-banks a{display:flex;align-items:center;justify-content:center;min-height:38px;min-width:0;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid #d6d6d6;border-radius:10px;font-size:12px;font-weight:700;color:#111;text-decoration:none;background:#fafafa}
 .pdbp-banks a:active{background:#ffc934}
 .pdbp details{margin-top:6px}
 .pdbp summary{font-size:12.5px;color:#111;cursor:pointer;padding:4px 0}
