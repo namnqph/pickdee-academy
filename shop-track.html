@@ -1448,13 +1448,28 @@
 
       }
 
+      /*
+        24/11/2026 - Luật tiền B2: khi chưa đọc được số tiền thật trên bill
+        (amount_received trống -> money_state.known = false) thì KHÔNG được in
+        con số nào, vì câu "đã nhận <tổng đơn>" làm khách cọc tưởng đã trả đủ
+        (đúng lỗi PD-000169/PD-000215). Chỉ in số khi biết chắc tiền thật.
+      */
+      const paidAmountKnown =
+        paidReceived > 0;
+
       box.innerHTML = `
         <div class="bank-transfer-title">
           ✓ ĐÃ THANH TOÁN
         </div>
 
         <div class="bank-transfer-note">
-          PickDee đã nhận ${escapeHtml(money(paidReceived > 0 ? paidReceived : amount))} chuyển khoản cho đơn này.
+          ${
+            paidAmountKnown
+              ?
+                `PickDee đã nhận ${escapeHtml(money(paidReceived > 0 ? paidReceived : amount))} chuyển khoản cho đơn này.`
+              :
+                `PickDee đã nhận chuyển khoản cho đơn này. Cần đối chiếu số tiền, anh/chị gọi 0926 629 966.`
+          }
         </div>
       `;
 
