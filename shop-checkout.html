@@ -5130,6 +5130,7 @@
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
               >
+              <div id="paddleBillError" role="alert" style="display:none;margin-top:8px;color:#ff6b6b;font-weight:800;font-size:14px;line-height:1.4"></div>
 
               <img
                 id="paddleBillPreview"
@@ -5156,6 +5157,9 @@
 
             const file =
               billInput.files?.[0];
+
+            const billErr = document.getElementById("paddleBillError");
+            if (billErr && file) { billErr.style.display = "none"; billInput.style.outline = ""; }
 
             billPreview.classList.remove(
               "show"
@@ -6973,10 +6977,18 @@ function shippingQuote(
             "error"
           );
 
-          document
-            .getElementById(
-              "paddlePayBox"
-            )
+          // Báo lỗi NGAY dưới ô đính bill: trước đây trang cuộn về ô QR, câu lỗi nằm cuối form → khách tưởng nút hỏng (ca 25/11, khách đã CK 1.750.000đ)
+          const billErr =
+            document.getElementById("paddleBillError");
+          const billInputEl =
+            document.getElementById("paddleBillInput");
+          if (billErr) {
+            billErr.textContent =
+              "⚠️ Anh/chị chưa đính kèm ảnh bill. Bấm ô này, chọn ảnh chụp màn hình chuyển khoản thành công rồi bấm ĐẶT HÀNG lại.";
+            billErr.style.display = "block";
+          }
+          if (billInputEl) billInputEl.style.outline = "2px solid #ff6b6b";
+          (billInputEl || document.getElementById("paddlePayBox"))
             ?.scrollIntoView(
               {
                 behavior:
