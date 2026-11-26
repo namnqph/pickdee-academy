@@ -1695,7 +1695,8 @@
   });
 
   function popupHtml(row) {
-    const km = here ? `<div class="km">Cách bạn ${kmText(row._km)}</div>` : "";
+    const lb = here ? distLabel(row) : null;
+    const km = here ? `<div class="km">${lb ? "Cách bạn " + lb : "Đang tính đường đi…"}</div>` : "";
     const call = phoneHref(String(row.phone || "").trim());
     return `<div class="cmap-pop"><b>${esc(row.court_name)}</b>`
       + `<small>${esc(row.address || [row.ward, row.province].filter(Boolean).join(", "))}</small>${km}`
@@ -1715,6 +1716,7 @@
       pts.push(ll);
       L.marker(ll, { icon: pin, title: row.court_name })
         .bindPopup(function () { return popupHtml(row); }, { maxWidth: 260, autoPanPaddingTopLeft: [10, 64] })
+        .on("popupopen", function (e) { fetchOneRoad(row, e.target); })
         .addTo(cLayer);
     });
     // Đổi bộ lọc/tìm kiếm → khung bản đồ ôm đúng các sân đang hiện
@@ -1731,35 +1733,110 @@
     }
   }
 
+  /* GPS thật của điện thoại: không dùng vị trí cũ (maximumAge 0), dò liên tục
+     tới khi đủ chính xác; khoảng cách = ĐƯỜNG ĐI thật (OSRM), không phải chim bay */
+  let watchId = null, accCircle = null, acc = null, watchStop = null, fitted = false;
+  const roadCache = new Map();
+  let routedAt = null, routeBusy = false, routeRetryAt = 0;
+
+  function distLabel(row) {
+    const r = roadCache.get(row.id);
+    if (r == null) return null;
+    const line = kmBetween(here, [Number(row.latitude), Number(row.longitude)]);
+    // Chênh rõ (đường một chiều, phải vòng) → nêu cả đường thẳng cho khỏi thắc mắc
+    return kmText(r / 1000) + " đường xe" + (r / 1000 > line * 1.6 && r > 500 ? " · " + kmText(line) + " đường thẳng" : "");
+  }
+
+  async function fetchRoads(rows) {
+    if (!here || routeBusy || Date.now() < routeRetryAt) return;
+    if (routedAt && kmBetween(routedAt, here) >= 0.03) roadCache.clear();
+    const near = rows.slice(0, 40);
+    if (!near.length || near.every(r => roadCache.has(r.id))) return;
+    routeBusy = true;
+    const from = here.slice();
+    try {
+      const coords = [from[1] + "," + from[0]].concat(near.map(r => Number(r.longitude) + "," + Number(r.latitude))).join(";");
+      const res = await fetch("https://router.project-osrm.org/table/v1/driving/" + coords + "?sources=0&annotations=distance");
+      const j = await res.json();
+      if (j.code !== "Ok") throw new Error(j.code);
+      j.distances[0].slice(1).forEach(function (d, i) { if (d != null) roadCache.set(near[i].id, d); });
+      routedAt = from;
+      render();
+    } catch (e) {
+      console.warn("route", e);
+      routeRetryAt = Date.now() + 30000;
+    } finally {
+      routeBusy = false;
+    }
+  }
+
+  async function fetchOneRoad(row, marker) {
+    if (!here || roadCache.has(row.id)) return;
+    try {
+      const res = await fetch("https://router.project-osrm.org/route/v1/driving/" + here[1] + "," + here[0] + ";" + Number(row.longitude) + "," + Number(row.latitude) + "?overview=false");
+      const j = await res.json();
+      if (j.code === "Ok" && j.routes[0]) {
+        roadCache.set(row.id, j.routes[0].distance);
+        if (marker.isPopupOpen()) marker.setPopupContent(popupHtml(row));
+      }
+    } catch (e) {}
+  }
+
+  function onFix(p) {
+    const ll = [p.coords.latitude, p.coords.longitude];
+    const a = Math.round(p.coords.accuracy || 0);
+    // Bỏ bản đo kém hơn bản đang có (trừ khi đã di chuyển xa)
+    if (here && acc != null && a > acc && kmBetween(here, ll) * 1000 < a) return;
+    const moved = !here || kmBetween(here, ll) > 0.02;
+    here = ll; acc = a;
+    cmapMsg(a > 50
+      ? "Đang dò GPS chính xác hơn… (sai số ±" + a + " m). Bật Định vị chính xác / ra chỗ thoáng."
+      : "Vị trí GPS của bạn · chính xác ±" + a + " m");
+    if (a <= 50) setTimeout(function () { if (acc === a) cmapMsg(""); }, 4000);
+    mapReady.then(function () {
+      if (!cmap) return;
+      if (meMarker) meMarker.setLatLng(here);
+      else meMarker = L.marker(here, {
+        icon: L.divIcon({ className: "", html: '<div class="cmap-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+        interactive: false, zIndexOffset: 1000
+      }).addTo(cmap);
+      if (accCircle) accCircle.setLatLng(here).setRadius(a);
+      else accCircle = L.circle(here, { radius: a, color: "#3b9bff", weight: 1, fillColor: "#3b9bff", fillOpacity: 0.12, interactive: false }).addTo(cmap);
+      if (!fitted) { fitted = true; lastFitKey = null; }
+      if (moved) render();
+    });
+    if (a <= 15) stopWatch();
+  }
+
+  function stopWatch() {
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    clearTimeout(watchStop);
+  }
+
   function locate(manual) {
     if (!navigator.geolocation) {
       if (manual) cmapMsg("Trình duyệt không hỗ trợ định vị.");
       return;
     }
-    cmapMsg("Đang xác định vị trí của bạn…");
-    navigator.geolocation.getCurrentPosition(function (p) {
-      here = [p.coords.latitude, p.coords.longitude];
-      cmapMsg("");
-      mapReady.then(function () {
-        if (!cmap) return;
-        if (meMarker) meMarker.setLatLng(here);
-        else meMarker = L.marker(here, {
-          icon: L.divIcon({ className: "", html: '<div class="cmap-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }),
-          interactive: false, zIndexOffset: 1000
-        }).addTo(cmap);
-        lastFitKey = null;
-        if (manual) {
-          provinceFilter.value = "";
-          buildWardFilter();
-          searchInput.value = "";
-        }
-        renderFromStart();
-      });
-    }, function () {
-      cmapMsg(manual
-        ? "Chưa lấy được vị trí. Bạn bật Định vị cho trình duyệt (hoặc mở bằng Safari/Chrome thay vì Zalo) rồi bấm lại."
+    if (manual) {
+      provinceFilter.value = "";
+      buildWardFilter();
+      searchInput.value = "";
+      fitted = false; acc = null;
+    }
+    stopWatch();
+    cmapMsg("Đang lấy GPS điện thoại của bạn…");
+    watchId = navigator.geolocation.watchPosition(onFix, function (err) {
+      stopWatch();
+      if (here) return;
+      cmapMsg(manual || err.code === 1
+        ? "Chưa lấy được GPS. Bạn cho phép Vị trí cho trình duyệt (mở bằng Safari/Chrome nếu đang trong Zalo) rồi bấm “Sân gần tôi”."
         : "");
-    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 });
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    // Dò tối đa 60 giây cho đỡ hao pin, sau đó giữ bản chính xác nhất
+    watchStop = setTimeout(stopWatch, 60000);
+    if (manual && here) { lastFitKey = null; renderFromStart(); }
   }
 
   document.getElementById("cmapNear").addEventListener("click", function () { locate(true); });
@@ -1780,6 +1857,10 @@
     if (here) {
       rows.forEach(r => { r._km = kmBetween(here, [Number(r.latitude), Number(r.longitude)]); });
       rows = rows.slice().sort((a, b) => a._km - b._km);
+      fetchRoads(rows);
+      // Nhóm đã có đường đi thật xếp theo đường đi; phần còn lại giữ thứ tự
+      const routed = rows.filter(r => roadCache.has(r.id)).sort((a, b) => roadCache.get(a.id) - roadCache.get(b.id));
+      rows = routed.concat(rows.filter(r => !roadCache.has(r.id)));
     }
 
     updateMap(rows);
@@ -1915,7 +1996,7 @@
 
                     </div>
 
-                    ${here ? `<div class="court-km">📍 Cách bạn ${kmText(row._km)}</div>` : ""}
+                    ${here && distLabel(row) ? `<div class="court-km">📍 Cách bạn ${distLabel(row)}</div>` : ""}
 
                   </div>
 
