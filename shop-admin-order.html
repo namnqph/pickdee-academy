@@ -698,6 +698,7 @@
   let isShopManager = false;
 
   let currentItems = [];
+  let supplierCostPrefill = [];   // giá cốt trả hãng (chỉ chủ Shop nhận được từ RPC)
 
 
   /* =====================================================
@@ -7836,6 +7837,14 @@ async function loadOrder() {
     await attachItemImages(currentItems);
 
 
+    try {
+      const costRes = await sb.rpc("shop_admin_supplier_cost_prefill", { p_order_id: Number(orderId) });
+      supplierCostPrefill = Array.isArray(costRes.data) ? costRes.data : [];
+    } catch (_) {
+      supplierCostPrefill = [];
+    }
+
+
     /*
       Gắn dữ liệu vận hành mở rộng
       trực tiếp vào currentOrder
@@ -8232,6 +8241,21 @@ function mountSupplierSettlementUI() {
       .trim();
 
 
+  // 26/11 (anh Nam): giá cốt trả hãng lấy từ DB (bảng chỉ chủ Shop đọc được, RPC shop_admin_supplier_cost_prefill).
+  // Tạo đối soát MỚI → tự điền sẵn hãng còn thiếu đối soát; anh kiểm rồi bấm Lưu. Không ghi giá cốt trong code (repo public).
+  const costPrefill =
+    !selected
+      ? (supplierCostPrefill || []).find(entry =>
+          Number(entry.amount) > 0
+          && !settlements.some(item =>
+            !item.is_cancelled
+            && String(item.supplier_name_snapshot || "").trim().toLocaleLowerCase("vi-VN")
+               === String(entry.supplier_name || "").trim().toLocaleLowerCase("vi-VN")
+          )
+        ) || null
+      : null;
+
+
   const matchedSupplier =
     !selected
     &&
@@ -8267,6 +8291,8 @@ function mountSupplierSettlementUI() {
     selected
       ?.supplier_name_snapshot
     ||
+    (costPrefill ? costPrefill.supplier_name : "")
+    ||
     paddleSupplierName
     ||
     supplierSettlementName(
@@ -8279,6 +8305,8 @@ function mountSupplierSettlementUI() {
   const fulfillmentMode =
     selected
       ?.fulfillment_mode
+    ||
+    (costPrefill ? "supplier" : "")
     ||
     (
       currentOrder
@@ -8835,7 +8863,7 @@ function mountSupplierSettlementUI() {
           value="${escapeHtml(
             selected?.goods_amount
             ??
-            0
+            (costPrefill ? Number(costPrefill.amount) : 0)
           )}"
           placeholder="Ví dụ: 2200000"
           style="
@@ -8852,6 +8880,14 @@ function mountSupplierSettlementUI() {
             font-weight:800;
           "
         >
+
+        ${
+          costPrefill
+            ? `<div style="margin-top:6px;font-size:12.5px;font-weight:700;color:#ffc934;line-height:1.5;">
+                Đã tự điền: ${Number(costPrefill.unit_cost).toLocaleString("vi-VN")}đ × ${Number(costPrefill.qty)} cây = ${Number(costPrefill.amount).toLocaleString("vi-VN")}đ (${escapeHtml(costPrefill.supplier_name)}) — anh kiểm lại rồi bấm Lưu.
+              </div>`
+            : ""
+        }
 
       </div>
 
