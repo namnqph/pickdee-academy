@@ -69,6 +69,50 @@
     return await canvasToBlob(canvas, "image/jpeg", quality);
   }
 
+  // Bản NGANG 800x420 (26/11): Zalo iPhone bỏ ảnh dọc khỏi thẻ link. Ảnh SP đặt giữa, nền là chính ảnh
+  // phóng to + làm mờ (thu nhỏ rồi kéo to — chạy cả Safari cũ không có ctx.filter) + phủ tối 35%.
+  window.pdOgLandPath = function (storagePath) {
+    return "og-l/" + String(storagePath).replace(/\.[^./]+$/, "") + ".jpg";
+  };
+
+  async function landscapeJpegOf(bitmap) {
+    const W = 800;
+    const H = 420;
+    const width = bitmap.width || bitmap.naturalWidth;
+    const height = bitmap.height || bitmap.naturalHeight;
+
+    const tiny = document.createElement("canvas");
+    tiny.width = 40;
+    tiny.height = 21;
+    const cover = Math.max(tiny.width / width, tiny.height / height);
+    tiny.getContext("2d").drawImage(
+      bitmap,
+      (tiny.width - width * cover) / 2,
+      (tiny.height - height * cover) / 2,
+      width * cover,
+      height * cover
+    );
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(tiny, 0, 0, W, H);
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0, 0, W, H);
+
+    const fit = Math.min(1, W / width, H / height);
+    const fw = Math.round(width * fit);
+    const fh = Math.round(height * fit);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect((W - fw) / 2, (H - fh) / 2, fw, fh);
+    ctx.drawImage(bitmap, (W - fw) / 2, (H - fh) / 2, fw, fh);
+
+    return await canvasToBlob(canvas, "image/jpeg", 0.8);
+  }
+
   async function putJpg(sb, path, blob) {
     if (!blob) {
       return;
@@ -100,6 +144,7 @@
       }
 
       await putJpg(sb, window.pdOgSmallPath(storagePath), await jpegOf(bitmap, 600, 0.8));
+      await putJpg(sb, window.pdOgLandPath(storagePath), await landscapeJpegOf(bitmap));
 
       if (bitmap.close) {
         bitmap.close();

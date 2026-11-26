@@ -98,10 +98,17 @@ async function warmSmallImage(imageUrl, storagePath) {
       return readImageSize(await hit.arrayBuffer());
     }
 
-    const res = await fetch(
-      SUPABASE_URL + "/storage/v1/object/public/shop-products/og-s/"
-      + storagePath.replace(/\.[^./]+$/, "") + ".jpg"
-    );
+    // 26/11: ưu tiên bản NGANG og-l/ (Zalo iPhone bỏ ảnh dọc), thiếu thì bản nhỏ og-s/.
+    const base = SUPABASE_URL + "/storage/v1/object/public/shop-products/";
+    const name = storagePath.replace(/\.[^./]+$/, "") + ".jpg";
+    let how = "og land";
+    let res = await fetch(base + "og-l/" + name);
+
+    if (!res.ok || !(res.headers.get("content-type") || "").startsWith("image/")) {
+      how = "og small";
+      res = await fetch(base + "og-s/" + name);
+    }
+
     const type = res.headers.get("content-type") || "";
 
     if (!res.ok || !type.startsWith("image/")) {
@@ -119,7 +126,7 @@ async function warmSmallImage(imageUrl, storagePath) {
       headers: {
         "Content-Type": type,
         "Cache-Control": "public, max-age=604800",
-        "X-OG": "og small"
+        "X-OG": how
       }
     }));
 
@@ -157,7 +164,7 @@ const CARD_CACHE_TTL = 600;
 
 function cardCacheKey(id, vParam) {
   return new Request(
-    "https://pickdee.vn/__og-card/" + id + (vParam ? "?v=" + encodeURIComponent(vParam) : ""),
+    "https://pickdee.vn/__og-card/l/" + id + (vParam ? "?v=" + encodeURIComponent(vParam) : ""),
     { headers: { "accept": "text/html" } }
   );
 }
@@ -250,7 +257,7 @@ export async function onRequestGet(context) {
     // Ảnh JPG phục vụ ngay trên pickdee.vn (functions/og/p/[file].js): Zalo không hiện ảnh
     // khi og:image ở domain ngoài có ?query. imageId trong tên file để đổi ảnh là đổi URL.
     const imageUrl = image
-      ? "https://pickdee.vn/og/p/" + id + "-" + image.id + "-s.jpg"
+      ? "https://pickdee.vn/og/p/" + id + "-" + image.id + "-l.jpg"
       : "https://pickdee.vn/og-shop.jpg";
 
     if (!image) {
@@ -279,7 +286,7 @@ export async function onRequestGet(context) {
     // Dấu phiên bản theo ảnh chính + giá: đổi ảnh hoặc đổi giá là og:url đổi theo, nên Facebook/Messenger
     // buộc phải dựng thẻ mới thay vì dùng lại thẻ đã nhớ từ lần quét trước (nguồn gốc lỗi "chỉ hiện logo").
     // "s": 23/11 đổi sang ảnh xem trước bản nhỏ → og:url đổi để Facebook dựng thẻ mới.
-    const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000) + "s";
+    const stamp = "i" + (image ? image.id : 0) + "p" + Math.round(minPrice / 1000) + "l";
     const shareUrl = pageUrl + "&v=" + (safeV || stamp);
 
     // JSON-LD Product để Google hiện giá + còn hàng ngay trên kết quả tìm kiếm.

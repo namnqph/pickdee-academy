@@ -48,10 +48,13 @@ async function okImage(url, options) {
 }
 
 export async function onRequestGet(context) {
-  const match = /^(\d+)(?:-\d+)?(-s)?\.jpg$/.exec(String(context.params.file || ""));
+  const match = /^(\d+)(?:-\d+)?(-s|-l)?\.jpg$/.exec(String(context.params.file || ""));
   // "-s" = bản NHỎ (≤600px ~40KB, shop-products/og-s/…): Messenger chat cá nhân do máy người gửi tự tải ảnh
   // lúc soạn tin, ảnh to tải chậm là thẻ mất ảnh (23/11). Thiếu bản nhỏ thì rơi xuống thứ tự cũ bên dưới.
   const small = !!match?.[2];
+  // "-l" = bản NGANG 800x420 (shop-products/og-l/…, 26/11): Zalo iPhone bỏ ảnh dọc (LT48 482x600) khỏi thẻ.
+  // Thiếu bản ngang thì dùng bản nhỏ og-s/, rồi thứ tự cũ.
+  const landscape = match?.[2] === "-l";
 
   if (!match) {
     return fallback(context, "bad name");
@@ -99,7 +102,12 @@ export async function onRequestGet(context) {
     let got = null;
     let how = "";
 
-    if (small) {
+    if (landscape) {
+      got = await okImage(PUBLIC_BASE + "og-l/" + image.storage_path.replace(/\.[^./]+$/, "") + ".jpg");
+      how = "og land";
+    }
+
+    if (small && !got) {
       got = await okImage(PUBLIC_BASE + "og-s/" + image.storage_path.replace(/\.[^./]+$/, "") + ".jpg");
       how = "og small";
     }
