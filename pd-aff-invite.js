@@ -65,7 +65,6 @@
     var o = opts || {};
     injectStyle();
     var href = "/cong-tac-vien" + (token ? "?order=" + encodeURIComponent(token) : "");
-    var lead = o.lead || "Anh/chị vừa mua vợt — giới thiệu lại cho hội chơi cùng.";
     return (
       '<div class="pd-aff-invite">' +
         '<div class="pd-aff-invite__top">' +
@@ -77,8 +76,8 @@
           "</span>" +
           '<h3 class="pd-aff-invite__title">Trở thành Cộng tác viên vợt PickDee</h3>' +
         "</div>" +
-        '<p class="pd-aff-invite__money">Mã riêng của anh/chị giảm 50.000đ/cây vợt cho người quen (vẫn miễn phí vận chuyển) — anh/chị còn được PickDee gửi thưởng sau khi họ nhận hàng.</p>' +
-        '<p class="pd-aff-invite__text">' + esc(lead) + " PickDee cấp mã + link riêng, người quen đặt vợt bằng link đó là anh/chị được ghi nhận. " +
+        '<p class="pd-aff-invite__money">Chia sẻ link riêng của anh/chị — ai mua vợt lần đầu qua link được giảm 50.000đ/cây (vẫn miễn phí vận chuyển), anh/chị nhận thưởng sau khi họ nhận hàng.</p>' +
+        '<p class="pd-aff-invite__text">Gửi cho bạn chơi cùng, nhóm Zalo, hội sân hay đăng Facebook/TikTok đều được. ' +
           "Không ôm hàng, không cần vốn, không phải giao hàng.</p>" +
         '<a class="pd-aff-invite__btn" href="' + esc(href) + '">ĐĂNG KÝ CỘNG TÁC VIÊN</a>' +
         '<p class="pd-aff-invite__note">Đăng ký miễn phí' +
