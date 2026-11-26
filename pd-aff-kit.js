@@ -24,6 +24,11 @@
       short: "VỢT ESS/ON MVP PRO",
       photo: 5,
       lines: ["Đặt trước · giao 28/11 – 5/12", "Tặng áo + khăn + quấn cán + dán viền", "Cọc 70% hoặc trả 100%"]
+    },
+    "vot-highpicks-x-prime-signature-edition": {
+      short: "VỢT HIGHPICKS SIGNATURE",
+      photo: 0,
+      lines: ["Tặng balo Tour + bộ quần áo HighPicks", "Tặng quấn cán + dán viền", "Freeship · bảo hành lõi 3 tháng"]
     }
   };
 
@@ -276,9 +281,8 @@
     return rows.map(function (p) {
       var pics = imgs.filter(function (i) { return i.product_id === p.id; }).map(function (i) {
         var full = sb.storage.from("shop-products").getPublicUrl(i.storage_path);
-        var thumb = sb.storage.from("shop-products").getPublicUrl(i.storage_path, {
-          transform: { width: 180, height: 180, resize: "cover", quality: 70 }
-        });
+        // Supabase FREE không resize ảnh (render/image 403) → dùng ảnh gốc, không transform.
+        var thumb = full;
         return {
           url: (full.data && full.data.publicUrl) || "",
           thumb: (thumb.data && thumb.data.publicUrl) || "",
