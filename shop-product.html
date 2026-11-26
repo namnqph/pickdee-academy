@@ -1747,6 +1747,8 @@
   // → hiện thành nhiều hàng nút riêng; chọn đủ mới khớp biến thể thật.
   let option2Split = null;           // { names: [...], values: [[...], ...] } hoặc null
   let selectedOption2Parts = [];
+  // 26/11 tối: giá trị option 2 KHÔNG ghép (vd "Chỉ vợt …") = gói mua lẻ, cùng trang với combo.
+  let selectedOption2Package = "";   // "combo" | giá trị lẻ | ""
 
 
   function shirtSizeGuideHtml(option2Values) {
@@ -2802,24 +2804,34 @@ function updateCartCount() {
   option2Split = null;
   {
     const names = String(option2Name || "").split(" / ").map(function (x) { return x.trim(); });
-    const split = option2Values.map(function (v) { return String(v).split(" / "); });
+    const comboVals = option2Values.filter(function (v) { return String(v).split(" / ").length === names.length; });
+    const singleVals = option2Values.filter(function (v) { return String(v).split(" / ").length === 1; });
+    const split = comboVals.map(function (v) { return String(v).split(" / "); });
     if (
       names.length > 1
       && split.length
-      && split.every(function (parts) { return parts.length === names.length; })
+      && comboVals.length + singleVals.length === option2Values.length
     ) {
       option2Split = {
         names: names,
         values: names.map(function (_, k) {
           return [...new Set(split.map(function (parts) { return parts[k]; }))];
-        })
+        }),
+        singles: singleVals.map(String)
       };
       currentRequiresGiftShirtSize = false;
     }
   }
+  if (option2Split) {
+    if (!option2Split.singles.length) selectedOption2Package = "combo";
+    else if (selectedOption2Value && option2Split.singles.includes(String(selectedOption2Value))) selectedOption2Package = String(selectedOption2Value);
+    else if (selectedOption2Value) selectedOption2Package = "combo";
+  } else {
+    selectedOption2Package = "";
+  }
   selectedOption2Parts =
     option2Split
-      ? (selectedOption2Value
+      ? (selectedOption2Value && selectedOption2Package === "combo"
           ? String(selectedOption2Value).split(" / ")
           : (selectedOption2Parts.length === (option2Split ? option2Split.names.length : 0)
               ? selectedOption2Parts
@@ -3044,8 +3056,30 @@ function updateCartCount() {
       option2Split
     ) {
 
+      if (option2Split.singles.length) {
+        const pkgPrice = function (test) {
+          const ps = variants.filter(function (v) { return v.option2_value && test(String(v.option2_value)); })
+            .map(function (v) { return Number(v.price || 0); }).filter(Boolean);
+          return ps.length ? Math.min.apply(null, ps) : 0;
+        };
+        const comboPrice = pkgPrice(function (v) { return v.split(" / ").length === option2Split.names.length; });
+        variantSelectionHtml += `
+          <div class="section-label">CHỌN GÓI MUA</div>
+          <div class="variants">
+            <button class="variant-btn opt2-pkg-btn ${selectedOption2Package === "combo" ? "active" : ""}" type="button" data-pkg="combo">
+              <span>Combo vợt + balo + quần áo${comboPrice ? " · " + money(comboPrice) : ""}</span>
+            </button>
+            ${option2Split.singles.map(function (sv) {
+              const sp = pkgPrice(function (v) { return v === sv; });
+              return `<button class="variant-btn opt2-pkg-btn ${selectedOption2Package === sv ? "active" : ""}" type="button" data-pkg="${escapeHtml(sv)}"><span>${escapeHtml(sv)}${sp ? " · " + money(sp) : ""}</span></button>`;
+            }).join("")}
+          </div>
+        `;
+      }
+
       variantSelectionHtml +=
-        option2Split.names
+        `<div id="opt2ComboParts" style="${selectedOption2Package === "combo" ? "" : "display:none"}">`
+        + option2Split.names
           .map(
             function (partName, k) {
 
@@ -3089,6 +3123,7 @@ function updateCartCount() {
             }
           )
           .join("")
+        + `</div>`
         + `<div class="variants" style="display:none" aria-hidden="true">${option2Buttons}</div>`;
 
     }
@@ -4427,6 +4462,12 @@ function bindProductEvents() {
       );
 
 
+    document.querySelectorAll(".opt2-pkg-btn").forEach(function (button) {
+      button.classList.toggle("active", String(button.dataset.pkg || "") === String(selectedOption2Package || ""));
+    });
+    const comboParts = document.getElementById("opt2ComboParts");
+    if (comboParts) comboParts.style.display = selectedOption2Package === "combo" ? "" : "none";
+
     document
       .querySelectorAll(
         ".opt2-part-btn"
@@ -4805,6 +4846,37 @@ function bindProductEvents() {
     );
 
 
+  // 26/11 tối: chọn gói "Combo" hay gói lẻ (vd "Chỉ vợt") trên cùng trang.
+  document.querySelectorAll(".opt2-pkg-btn").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (!option2Split) return;
+      const pkg = button.dataset.pkg || "";
+      selectedOption2Package = pkg;
+      if (pkg !== "combo") {
+        const real = document.querySelector(`[data-option-index="2"][data-option-value="${CSS.escape(pkg)}"]`);
+        if (real) { real.click(); return; }
+        syncOptionButtons();
+        return;
+      }
+      if (selectedOption2Parts.length === option2Split.names.length && selectedOption2Parts.every(Boolean)) {
+        const real = document.querySelector(`[data-option-index="2"][data-option-value="${CSS.escape(selectedOption2Parts.join(" / "))}"]`);
+        if (real) { real.click(); return; }
+      }
+      // Chưa chọn đủ quà: hiện giá combo, bắt khách chọn tiếp balo/quần áo/size.
+      selectedOption2Value = "";
+      const comboVariant =
+        variants.find(function (v) {
+          return String(v.option2_value || "").split(" / ").length === option2Split.names.length
+            && (!selectedOption1Value || String(v.option1_value || "") === String(selectedOption1Value));
+        })
+        || variants.find(function (v) { return String(v.option2_value || "").split(" / ").length === option2Split.names.length; });
+      if (comboVariant) selectedVariant = comboVariant;
+      syncOptionButtons();
+      updateDisplayedPrice();
+    });
+  });
+
+
   /*
     =====================================================
     CHỌN TỪNG PHẦN CỦA OPTION 2 GHÉP (26/11/2026, vd quà HighPicks)
@@ -4828,6 +4900,7 @@ function bindProductEvents() {
 
             const k = Number(button.dataset.partIndex);
             const value = button.dataset.partValue || "";
+            selectedOption2Package = "combo";
 
             selectedOption2Parts[k] = value;
 
@@ -5880,7 +5953,10 @@ function bindProductEvents() {
         !selectedOption2Value
       ) {
 
-        if (option2Split) {
+        if (option2Split && option2Split.singles.length && selectedOption2Package !== "combo") {
+          missing.push("gói mua (combo hay chỉ vợt)");
+        }
+        else if (option2Split) {
           option2Split.names.forEach(function (name, k) {
             if (!selectedOption2Parts[k]) {
               missing.push(name.toLowerCase());
