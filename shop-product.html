@@ -6784,6 +6784,24 @@ function bindProductEvents() {
   }
 </style>
   
+<script>
+/* 26/11: anh hay chép link từ thanh địa chỉ (…?id=1). Zalo/Facebook nhớ thẻ cũ theo đúng link đó
+   (LT48 từng nhớ thẻ KHÔNG ảnh) → đổi thanh địa chỉ sang og:url có dấu phiên bản ảnh+giá (&v=…)
+   do functions/shop-product.js dựng: đổi ảnh/giá là link đổi, thẻ luôn mới. Giữ ?ref= và tham số khác. */
+(function () {
+  try {
+    var m = document.querySelector('meta[property="og:url"]');
+    if (!m) return;
+    var og = new URL(m.content, location.href);
+    var cur = new URL(location.href);
+    var v = og.searchParams.get("v");
+    if (!v || cur.searchParams.get("v") === v) return;
+    if (og.searchParams.get("id") !== cur.searchParams.get("id")) return;
+    cur.searchParams.set("v", v);
+    history.replaceState(history.state, "", cur.pathname + cur.search + cur.hash);
+  } catch (e) {}
+})();
+</script>
 </body>
 
 </html>
