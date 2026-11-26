@@ -2,7 +2,31 @@
 <html lang="vi">
 
 <head>
-  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}</style>
+  <style id="pdVT">@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:cubic-bezier(.23,1,.32,1)}    /* ===== Bản đồ GPS sân ===== */
+    .cmap-wrap{position:relative;margin:0 0 14px;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#121212}
+    #courtMap{height:340px;width:100%;background:#121212}
+    @media(min-width:900px){#courtMap{height:440px}}
+    #courtMap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.92) saturate(.55)}
+    #courtMap .leaflet-control-attribution{background:rgba(12,12,12,.7);color:#8c8c8c;font-size:9px}
+    #courtMap .leaflet-control-attribution a{color:#b2b2b2}
+    #courtMap .leaflet-popup-content-wrapper,#courtMap .leaflet-popup-tip{background:#161616;color:#fff;border:1px solid rgba(255,255,255,.12)}
+    #courtMap .leaflet-popup-content{margin:12px 14px;font:inherit;font-size:13px;line-height:1.45}
+    #courtMap .leaflet-popup-close-button{color:#aaa}
+    .cmap-pop b{display:block;font-size:14px;margin-bottom:2px}
+    .cmap-pop small{display:block;color:#a3a3a3}
+    .cmap-pop .km{color:#ffc934;font-weight:800;margin-top:4px}
+    .cmap-pop .acts{display:flex;gap:6px;margin-top:8px}
+    .cmap-pop .acts a{flex:1;text-align:center;padding:7px 8px;border-radius:10px;background:#ffc934;color:#0c0c0c!important;font-weight:800;text-decoration:none;font-size:12px}
+    .cmap-pop .acts a.g{background:rgba(255,255,255,.08);color:#fff!important}
+    .cmap-pin{width:16px;height:16px;border-radius:50%;background:#ffc934;border:2px solid #0c0c0c;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+    .cmap-me{width:18px;height:18px;border-radius:50%;background:#3b9bff;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,155,255,.25)}
+    .cmap-near{position:absolute;left:10px;top:10px;z-index:500;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:0;border-radius:12px;background:#ffc934;color:#0c0c0c;font:inherit;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4);transition:transform .15s ease-out}
+    .cmap-near:active{transform:scale(.96)}
+    .cmap-near svg{width:16px;height:16px}
+    .cmap-msg{position:absolute;left:10px;right:10px;bottom:10px;z-index:500;padding:8px 12px;border-radius:12px;background:rgba(12,12,12,.9);color:#d0d0d0;font-size:12px;display:none}
+    .cmap-msg.show{display:block}
+    .court-km{display:inline-block;margin-top:4px;color:#ffc934;font-weight:800;font-size:12.5px}
+  </style>
 
 
   <meta charset="UTF-8">
@@ -680,9 +704,8 @@
     </h1>
 
     <p>
-      Tìm sân theo Tỉnh/Thành và Phường/Xã,
-      xem thông tin liên hệ, giá tham khảo
-      và mở vị trí trên Google Maps.
+      Bản đồ sân Pickleball quanh bạn: bấm chấm vàng
+      để xem sân, gọi sân và chỉ đường.
     </p>
 
     <p class="owner-cta-inline">
@@ -691,6 +714,16 @@
     </p>
 
   </section>
+
+
+  <div class="cmap-wrap">
+    <div id="courtMap" aria-label="Bản đồ sân Pickleball"></div>
+    <button type="button" class="cmap-near" id="cmapNear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>
+      Sân gần tôi
+    </button>
+    <div class="cmap-msg" id="cmapMsg"></div>
+  </div>
 
 
   <!-- FILTER -->
@@ -1611,6 +1644,128 @@
 
 
   /* =========================================
+     BẢN ĐỒ GPS (Leaflet + OpenStreetMap, 0 đồng)
+  ========================================== */
+
+  const HN = [21.0285, 105.8542];
+  let cmap = null, cLayer = null, meMarker = null, here = null;
+  let lastFitKey = null;
+
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise(function (ok, fail) {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(css);
+      const sc = document.createElement("script");
+      sc.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+      sc.onload = ok; sc.onerror = fail;
+      document.head.appendChild(sc);
+    });
+  }
+
+  function kmBetween(a, b) {
+    const R = 6371, r = Math.PI / 180;
+    const dLat = (b[0] - a[0]) * r, dLng = (b[1] - a[1]) * r;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  function kmText(km) {
+    return km < 1 ? Math.round(km * 1000) + " m" : km.toFixed(km < 10 ? 1 : 0).replace(".", ",") + " km";
+  }
+
+  function cmapMsg(text) {
+    const el = document.getElementById("cmapMsg");
+    el.textContent = text || "";
+    el.classList.toggle("show", !!text);
+  }
+
+  const mapReady = loadLeaflet().then(function () {
+    cmap = L.map("courtMap", { zoomControl: false, attributionControl: true }).setView(HN, 11);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: "© OpenStreetMap"
+    }).addTo(cmap);
+    L.control.zoom({ position: "topright" }).addTo(cmap);
+    cLayer = L.layerGroup().addTo(cmap);
+  }).catch(function () {
+    document.querySelector(".cmap-wrap").style.display = "none";
+  });
+
+  function popupHtml(row) {
+    const km = here ? `<div class="km">Cách bạn ${kmText(row._km)}</div>` : "";
+    const call = phoneHref(String(row.phone || "").trim());
+    return `<div class="cmap-pop"><b>${esc(row.court_name)}</b>`
+      + `<small>${esc(row.address || [row.ward, row.province].filter(Boolean).join(", "))}</small>${km}`
+      + `<div class="acts"><a href="${esc(mapsUrl(row))}" target="_blank" rel="noopener noreferrer">Chỉ đường</a>`
+      + (call ? `<a class="g" href="${esc(call)}">Gọi sân</a>` : "")
+      + `</div></div>`;
+  }
+
+  function updateMap(rows) {
+    if (!cmap) return;
+    cLayer.clearLayers();
+    const pin = L.divIcon({ className: "", html: '<div class="cmap-pin"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+    const pts = [];
+    rows.forEach(function (row) {
+      const ll = [Number(row.latitude), Number(row.longitude)];
+      if (!isFinite(ll[0]) || !isFinite(ll[1])) return;
+      pts.push(ll);
+      L.marker(ll, { icon: pin, title: row.court_name })
+        .bindPopup(function () { return popupHtml(row); }, { maxWidth: 260, autoPanPaddingTopLeft: [10, 64] })
+        .addTo(cLayer);
+    });
+    // Đổi bộ lọc/tìm kiếm → khung bản đồ ôm đúng các sân đang hiện
+    const key = [provinceFilter.value, wardFilter.value, searchInput.value.trim()].join("|");
+    if (key === lastFitKey) return;
+    lastFitKey = key;
+    const filtered = key !== "||";
+    if (!filtered && here) {
+      // Chưa lọc + đã có GPS → quanh bạn (5 sân gần nhất)
+      const near = rows.slice(0, 5).map(r => [Number(r.latitude), Number(r.longitude)]);
+      cmap.fitBounds(L.latLngBounds(near.concat([here])).pad(0.25), { maxZoom: 15 });
+    } else if (filtered && pts.length) {
+      cmap.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 15 });
+    }
+  }
+
+  function locate(manual) {
+    if (!navigator.geolocation) {
+      if (manual) cmapMsg("Trình duyệt không hỗ trợ định vị.");
+      return;
+    }
+    cmapMsg("Đang xác định vị trí của bạn…");
+    navigator.geolocation.getCurrentPosition(function (p) {
+      here = [p.coords.latitude, p.coords.longitude];
+      cmapMsg("");
+      mapReady.then(function () {
+        if (!cmap) return;
+        if (meMarker) meMarker.setLatLng(here);
+        else meMarker = L.marker(here, {
+          icon: L.divIcon({ className: "", html: '<div class="cmap-me"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+          interactive: false, zIndexOffset: 1000
+        }).addTo(cmap);
+        lastFitKey = null;
+        if (manual) {
+          provinceFilter.value = "";
+          buildWardFilter();
+          searchInput.value = "";
+        }
+        renderFromStart();
+      });
+    }, function () {
+      cmapMsg(manual
+        ? "Chưa lấy được vị trí. Bạn bật Định vị cho trình duyệt (hoặc mở bằng Safari/Chrome thay vì Zalo) rồi bấm lại."
+        : "");
+    }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 });
+  }
+
+  document.getElementById("cmapNear").addEventListener("click", function () { locate(true); });
+
+
+  /* =========================================
      RENDER
   ========================================== */
 
@@ -1619,8 +1774,15 @@
 
   function render() {
 
-    const rows =
+    let rows =
       filteredRows();
+
+    if (here) {
+      rows.forEach(r => { r._km = kmBetween(here, [Number(r.latitude), Number(r.longitude)]); });
+      rows = rows.slice().sort((a, b) => a._km - b._km);
+    }
+
+    updateMap(rows);
 
 
     resultCount.textContent =
@@ -1752,6 +1914,8 @@
                       }
 
                     </div>
+
+                    ${here ? `<div class="court-km">📍 Cách bạn ${kmText(row._km)}</div>` : ""}
 
                   </div>
 
@@ -2057,6 +2221,11 @@
   try {
 
     await loadData();
+
+    mapReady.then(function () { lastFitKey = null; render(); });
+
+    // Đã từng cho phép vị trí → tự lấy, không hỏi lại; chưa thì vẫn hỏi 1 lần
+    locate(false);
 
   }
   catch (error) {
