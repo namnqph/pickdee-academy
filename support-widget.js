@@ -1863,8 +1863,8 @@ if (
     };
 
     if (act === "aff") return {
-      text: "Chương trình CTV vợt PickDee: đăng ký miễn phí tại pickdee.vn/cong-tac-vien, có ngay mã/link riêng gửi bạn bè, hội nhóm pickleball. Khách mua vợt qua mã của bạn là bạn nhận 250.000đ/vợt (cây MVP Pro 200.000đ), bán từ vợt thứ 5 trong tháng thì mỗi vợt được cộng thêm 50.000đ — không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút.",
-      html: "Dạ có ạ, hợp đó anh/chị! 🏓 Đăng ký làm CTV <b>miễn phí</b>, có ngay mã/link riêng để gửi bạn bè, hội nhóm pickleball — khách đặt vợt qua mã của anh/chị là anh/chị nhận <b>250.000đ/vợt</b> (cây MVP Pro 200.000đ), bán từ vợt thứ 5 trong tháng thì mỗi vợt được cộng thêm <b>50.000đ</b>. Không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút là có mã dùng ngay. Anh/chị bấm đăng ký bên dưới nhé, có gì chưa rõ em hỗ trợ thêm ạ:",
+      text: "Chương trình CTV vợt PickDee: đăng ký miễn phí tại pickdee.vn/cong-tac-vien, có ngay mã/link riêng gửi bạn bè, hội nhóm pickleball. Khách mua vợt qua mã của bạn là bạn nhận 250.000đ/vợt (cây MVP Pro 200.000đ, HighPicks 150.000đ), bán từ vợt thứ 5 trong tháng thì mỗi vợt được cộng thêm 50.000đ — không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút.",
+      html: "Dạ có ạ, hợp đó anh/chị! 🏓 Đăng ký làm CTV <b>miễn phí</b>, có ngay mã/link riêng để gửi bạn bè, hội nhóm pickleball — khách đặt vợt qua mã của anh/chị là anh/chị nhận <b>250.000đ/vợt</b> (cây MVP Pro 200.000đ, HighPicks 150.000đ), bán từ vợt thứ 5 trong tháng thì mỗi vợt được cộng thêm <b>50.000đ</b>. Không ôm hàng, không cần vốn, đăng ký chưa tới 1 phút là có mã dùng ngay. Anh/chị bấm đăng ký bên dưới nhé, có gì chưa rõ em hỗ trợ thêm ạ:",
       chips: [["🤝 Đăng ký làm CTV ngay", "href:/cong-tac-vien"], ["💬 Hỏi thêm", "ask"]]
     };
     return null;
