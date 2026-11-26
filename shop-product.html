@@ -1706,11 +1706,29 @@
     { size: "NC1", heightLabel: "> 175", height: 183, weightLabel: "82 - 90", weight: 86 }
   ];
 
+  // 26/11/2026: bảng size chính hãng bộ quần áo HighPicks tặng kèm (hãng chỉ cho cân nặng tham khảo).
+  const HIGHPICKS_SIZE_CHART = [
+    { size: "XS", heightLabel: "", height: null, weightLabel: "53 - 61", weight: 57, detail: "Áo dài 66 · ngực 48 · Quần eo 33 · dài 42" },
+    { size: "S",  heightLabel: "", height: null, weightLabel: "61 - 67", weight: 64, detail: "Áo dài 67 · ngực 50 · Quần eo 35 · dài 43" },
+    { size: "M",  heightLabel: "", height: null, weightLabel: "67 - 73", weight: 70, detail: "Áo dài 68 · ngực 52 · Quần eo 38 · dài 44,5" },
+    { size: "L",  heightLabel: "", height: null, weightLabel: "73 - 83", weight: 78, detail: "Áo dài 72 · ngực 54 · Quần eo 39 · dài 45,8" }
+  ];
+
+  let activeSizeChart = SHIRT_SIZE_CHART;
+
+  // 26/11/2026: phân loại 2 GHÉP nhiều lựa chọn ("Màu balo / Mẫu quần áo / Size quần áo")
+  // → hiện thành nhiều hàng nút riêng; chọn đủ mới khớp biến thể thật.
+  let option2Split = null;           // { names: [...], values: [[...], ...] } hoặc null
+  let selectedOption2Parts = [];
+
 
   function shirtSizeGuideHtml(option2Values) {
 
+    const hasHeight =
+      activeSizeChart.some(function (row) { return row.height != null; });
+
     const rows =
-      SHIRT_SIZE_CHART.filter(
+      activeSizeChart.filter(
         function (row) {
 
           return option2Values.includes(
@@ -1732,7 +1750,7 @@
         id="sizeGuideToggle"
         class="size-guide-toggle"
       >
-        <span>📏 Chưa biết chọn size nào? Xem bảng size + gợi ý theo chiều cao</span>
+        <span>📏 Chưa biết chọn size nào? Xem bảng size + gợi ý theo ${hasHeight ? "chiều cao" : "cân nặng"}</span>
         <span class="size-guide-toggle-arrow">⌄</span>
       </button>
 
@@ -1746,7 +1764,7 @@
 
           <div class="size-suggest-row">
 
-            <label>
+            <label ${hasHeight ? "" : 'style="display:none"'}>
               Chiều cao (cm)
               <input
                 type="number"
@@ -1788,8 +1806,9 @@
           <thead>
             <tr>
               <th>Size</th>
-              <th>Chiều cao</th>
+              ${hasHeight ? "<th>Chiều cao</th>" : ""}
               <th>Cân nặng</th>
+              ${hasHeight ? "" : "<th>Số đo (cm)</th>"}
             </tr>
           </thead>
 
@@ -1810,8 +1829,9 @@
                       data-size-row="${escapeHtml(row.size)}"
                     >
                       <td class="size-guide-size">${escapeHtml(row.size)}</td>
-                      <td>${escapeHtml(row.heightLabel)} cm</td>
+                      ${hasHeight ? `<td>${escapeHtml(row.heightLabel)} cm</td>` : ""}
                       <td>${escapeHtml(row.weightLabel)} kg</td>
+                      ${hasHeight ? "" : `<td style="font-size:12px">${escapeHtml(row.detail || "")}</td>`}
                     </tr>
                   `;
 
@@ -1823,7 +1843,9 @@
         </table>
 
         <div class="size-guide-note">
-          Đo chiều cao/cân nặng thực tế gần nhất với mốc trong bảng. Chưa chắc chắn → nhắn PickDee để được tư vấn.
+          ${hasHeight
+            ? "Đo chiều cao/cân nặng thực tế gần nhất với mốc trong bảng. Chưa chắc chắn → nhắn PickDee để được tư vấn."
+            : "Bảng size chính hãng, 1 size chung cho cả áo và quần. Nằm giữa 2 size hoặc bụng/đùi to → chọn size lớn hơn. Chưa chắc chắn → nhắn PickDee trước khi đặt để khỏi phải đổi."}
         </div>
 
       </div>
@@ -2317,6 +2339,27 @@
       .join("");
   }
 
+  // Ảnh nhỏ cho nút quà ghép (balo / mẫu quần áo): tìm ảnh SP có alt chứa giá trị + từ khoá nhóm.
+  function option2PartThumbUrl(partName, value) {
+    const key = String(partName || "").trim().split(/\s+/).pop().toLowerCase();
+    const val = String(value || "").toLowerCase();
+    if (!key || !val) return "";
+    const img = (window.__pdCurrentImages || []).find(function (im) {
+      const alt = String(im.alt_text || "").toLowerCase();
+      return !im.variant_id && alt.includes(key) && alt.includes(val);
+    });
+    return img ? thumbUrl(img.storage_path) : "";
+  }
+
+  function option2PartImageIndex(partName, value) {
+    const key = String(partName || "").trim().split(/\s+/).pop().toLowerCase();
+    const val = String(value || "").toLowerCase();
+    return (window.__pdCurrentImages || []).findIndex(function (im) {
+      const alt = String(im.alt_text || "").toLowerCase();
+      return !im.variant_id && alt.includes(key) && alt.includes(val);
+    });
+  }
+
   function optionButtonInner(index, value, withThumb) {
 
     const url =
@@ -2601,6 +2644,8 @@ function updateCartCount() {
 
 
 
+  window.__pdCurrentImages = sortedImages;
+
   /*
     =====================================================
     PHÂN TÁCH OPTION
@@ -2721,6 +2766,38 @@ function updateCartCount() {
     productRequiresGiftShirtSize(
       product
     );
+
+  // Phân loại 2 ghép ("A / B / C"): tách thành nhiều hàng nút.
+  option2Split = null;
+  {
+    const names = String(option2Name || "").split(" / ").map(function (x) { return x.trim(); });
+    const split = option2Values.map(function (v) { return String(v).split(" / "); });
+    if (
+      names.length > 1
+      && split.length
+      && split.every(function (parts) { return parts.length === names.length; })
+    ) {
+      option2Split = {
+        names: names,
+        values: names.map(function (_, k) {
+          return [...new Set(split.map(function (parts) { return parts[k]; }))];
+        })
+      };
+      currentRequiresGiftShirtSize = false;
+    }
+  }
+  selectedOption2Parts =
+    option2Split
+      ? (selectedOption2Value
+          ? String(selectedOption2Value).split(" / ")
+          : (selectedOption2Parts.length === (option2Split ? option2Split.names.length : 0)
+              ? selectedOption2Parts
+              : option2Split.names.map(function () { return ""; })))
+      : [];
+  activeSizeChart =
+    option2Split && /high\s*picks?/i.test(String(product.brand || product.name || ""))
+      ? HIGHPICKS_SIZE_CHART
+      : SHIRT_SIZE_CHART;
 
   /*
     =====================================================
@@ -2933,6 +3010,58 @@ function updateCartCount() {
 
 
     if (
+      option2Split
+    ) {
+
+      variantSelectionHtml +=
+        option2Split.names
+          .map(
+            function (partName, k) {
+
+              const values = option2Split.values[k];
+              const isSize = /size/i.test(partName);
+              const withThumb =
+                !isSize
+                && values.every(function (v) { return !!option2PartThumbUrl(partName, v); });
+
+              return `
+                <div class="section-label">
+                  ${escapeHtml(String(partName).toUpperCase())}${k === 0 ? ' <span style="font-weight:500;text-transform:none;letter-spacing:0">(quà tặng kèm)</span>' : ""}
+                </div>
+
+                <div class="variants">
+                  ${values
+                    .map(
+                      function (value) {
+                        const url = withThumb ? option2PartThumbUrl(partName, value) : "";
+                        return `
+                          <button
+                            class="variant-btn opt2-part-btn ${withThumb ? "has-thumb" : ""} ${
+                              selectedOption2Parts[k] === value ? "active" : ""
+                            }"
+                            type="button"
+                            data-part-index="${k}"
+                            data-part-value="${escapeHtml(value)}"
+                          >
+                            ${url ? `<img class="opt-thumb" src="${escapeHtml(url)}" alt="" loading="lazy">` : ""}
+                            <span>${escapeHtml(value)}</span>
+                          </button>
+                        `;
+                      }
+                    )
+                    .join("")}
+                </div>
+
+                ${isSize ? shirtSizeGuideHtml(values) : ""}
+              `;
+
+            }
+          )
+          .join("")
+        + `<div class="variants" style="display:none" aria-hidden="true">${option2Buttons}</div>`;
+
+    }
+    else if (
       option2Name
       &&
       option2Values.length
@@ -4265,6 +4394,22 @@ function bindProductEvents() {
 
     document
       .querySelectorAll(
+        ".opt2-part-btn"
+      )
+      .forEach(
+        function (button) {
+          button.classList.toggle(
+            "active",
+            String(selectedOption2Parts[Number(button.dataset.partIndex)] || "")
+            ===
+            String(button.dataset.partValue || "")
+          );
+        }
+      );
+
+
+    document
+      .querySelectorAll(
         ".legacy-variant-btn"
       )
       .forEach(
@@ -4331,7 +4476,9 @@ function bindProductEvents() {
             )
             ===
             String(
-              selectedOption2Value
+              (option2Split
+                ? selectedOption2Parts[option2Split.names.length - 1]
+                : selectedOption2Value)
               ||
               ""
             )
@@ -4625,6 +4772,67 @@ function bindProductEvents() {
 
   /*
     =====================================================
+    CHỌN TỪNG PHẦN CỦA OPTION 2 GHÉP (26/11/2026, vd quà HighPicks)
+    =====================================================
+  */
+
+  document
+    .querySelectorAll(
+      ".opt2-part-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            if (!option2Split) {
+              return;
+            }
+
+            const k = Number(button.dataset.partIndex);
+            const value = button.dataset.partValue || "";
+
+            selectedOption2Parts[k] = value;
+
+            // Bấm balo / mẫu quần áo → nhảy tới ảnh món quà đó cho khách xem.
+            const imgIndex = option2PartImageIndex(option2Split.names[k], value);
+            const thumbBtn = imgIndex >= 0 ? document.querySelectorAll(".thumb")[imgIndex] : null;
+            if (thumbBtn) {
+              thumbBtn.click();
+            }
+
+            if (
+              selectedOption2Parts.length === option2Split.names.length
+              && selectedOption2Parts.every(Boolean)
+            ) {
+
+              const full = selectedOption2Parts.join(" / ");
+              const real = document.querySelector(
+                `[data-option-index="2"][data-option-value="${CSS.escape(full)}"]`
+              );
+
+              if (real) {
+                window.__pdKeepGalleryOnce = true;   // giữ ảnh quà vừa bấm, không nhảy về ảnh vợt
+                real.click();   // dùng lại đúng logic chọn biến thể sẵn có
+                return;
+              }
+
+            }
+
+            selectedOption2Value = "";
+            syncOptionButtons();
+
+          }
+        );
+
+      }
+    );
+
+
+  /*
+    =====================================================
     VARIANT CŨ
     =====================================================
   */
@@ -4771,6 +4979,18 @@ function bindProductEvents() {
 
     function selectShirtSize(size) {
 
+      const partBtn =
+        option2Split
+          ? document.querySelector(
+              `.opt2-part-btn[data-part-index="${option2Split.names.length - 1}"][data-part-value="${CSS.escape(size)}"]`
+            )
+          : null;
+
+      if (partBtn) {
+        partBtn.click();
+        return;
+      }
+
       const optionBtn =
         document.querySelector(
           `[data-option-index="2"][data-option-value="${CSS.escape(size)}"]`
@@ -4898,7 +5118,7 @@ function bindProductEvents() {
           let best = null;
           let bestScore = Infinity;
 
-          SHIRT_SIZE_CHART
+          activeSizeChart
             .filter(
               function (row) {
 
@@ -4913,7 +5133,7 @@ function bindProductEvents() {
 
               let score = 0;
 
-              if (hasHeight) {
+              if (hasHeight && row.height != null) {
                 score +=
                   Math.pow(
                     (heightCm - row.height) / 20,
@@ -4938,7 +5158,14 @@ function bindProductEvents() {
           );
 
 
-          if (!best) {
+          if (
+            !best
+            ||
+            (!hasWeight && best.height == null)
+          ) {
+            if (!hasWeight) {
+              resultBox.textContent = "Nhập cân nặng để em gợi ý size nhé.";
+            }
             return;
           }
 
@@ -4949,6 +5176,9 @@ function bindProductEvents() {
 
 
           resultBox.textContent =
+            best.height == null
+              ? "👉 Gợi ý: Size " + best.size + " (nặng " + best.weightLabel + "kg). Bụng/đùi to → lấy size lớn hơn."
+              :
             "👉 Gợi ý: Size "
             +
             best.size
@@ -4997,14 +5227,27 @@ function bindProductEvents() {
   */
   function showSelectedVariantImage() {
 
+    if (window.__pdKeepGalleryOnce) {
+      window.__pdKeepGalleryOnce = false;
+      return;
+    }
+
     if (!selectedVariant) {
       return;
     }
 
-    const thumb =
+    let thumb =
       document.querySelector(
         `.thumb[data-variant-id="${CSS.escape(String(selectedVariant.id))}"]`
       );
+
+    // Quà ghép: biến thể đủ lựa chọn không có ảnh riêng → hiện ảnh cùng màu vợt (option1).
+    if (!thumb && option2Split && selectedVariant.option1_value) {
+      thumb = Array.from(document.querySelectorAll(".thumb[data-variant-id]")).find(function (t) {
+        const v = variants.find(function (x) { return String(x.id) === String(t.dataset.variantId); });
+        return v && String(v.option1_value || "") === String(selectedVariant.option1_value);
+      }) || null;
+    }
 
     if (!thumb) {
       return;
@@ -5219,7 +5462,7 @@ function bindProductEvents() {
 
       }
 
-      if (variant.option2_value) {
+      if (variant.option2_value && !option2Split) {   // quà ghép: khách tự chọn, không chọn hộ theo ảnh
 
         const opt2Btn =
           document.querySelector(
@@ -5602,11 +5845,20 @@ function bindProductEvents() {
         !selectedOption2Value
       ) {
 
-        missing.push(
-          currentOption2Name
-          ||
-          "phân loại 2"
-        );
+        if (option2Split) {
+          option2Split.names.forEach(function (name, k) {
+            if (!selectedOption2Parts[k]) {
+              missing.push(name.toLowerCase());
+            }
+          });
+        }
+        else {
+          missing.push(
+            currentOption2Name
+            ||
+            "phân loại 2"
+          );
+        }
 
       }
 
