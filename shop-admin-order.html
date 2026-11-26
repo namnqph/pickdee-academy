@@ -1861,6 +1861,25 @@
         .filter(Boolean)
         .join(", ");
 
+    // Address once: skip ward/province already typed in the address line; hide legacy when identical.
+    const supplierAddress =
+      [ward, province].reduce(
+        function (acc, part) {
+          const p = String(part || "").trim();
+          if (!p || acc.toLocaleLowerCase("vi-VN").includes(p.toLocaleLowerCase("vi-VN"))) return acc;
+          return acc ? acc + ", " + p : p;
+        },
+        String(addressLine || "").trim()
+      ) || fullAddress;
+
+    const legacyNorm = String(legacyAddress || "").trim().toLocaleLowerCase("vi-VN");
+    const supplierLegacy =
+      legacyNorm
+      && legacyNorm !== String(addressLine || "").trim().toLocaleLowerCase("vi-VN")
+      && legacyNorm !== supplierAddress.toLocaleLowerCase("vi-VN")
+        ? legacyAddress
+        : "";
+
     const itemsText =
       (
         currentItems
@@ -1922,10 +1941,10 @@
       "THÔNG TIN KHÁCH NHẬN:",
       `Họ tên: ${o.customer_name || "-"}`,
       `SĐT: ${o.phone || "-"}`,
-      `Địa chỉ: ${fullAddress || "-"}`,
-      legacyAddress
+      `Địa chỉ: ${supplierAddress || "-"}`,
+      supplierLegacy
         ?
-          `Địa chỉ cũ trước sáp nhập: ${legacyAddress}`
+          `Địa chỉ cũ trước sáp nhập: ${supplierLegacy}`
         :
           "",
       "",
