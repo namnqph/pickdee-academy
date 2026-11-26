@@ -19,6 +19,9 @@
     .cmap-pop .acts a{flex:1;text-align:center;padding:7px 8px;border-radius:10px;background:#ffc934;color:#0c0c0c!important;font-weight:800;text-decoration:none;font-size:12px}
     .cmap-pop .acts a.g{background:rgba(255,255,255,.08);color:#fff!important}
     .cmap-pin{width:16px;height:16px;border-radius:50%;background:#ffc934;border:2px solid #0c0c0c;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+    .cmap-ph{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid #ffc934;background:#202020 center/cover no-repeat;box-shadow:0 6px 14px rgba(0,0,0,.55);transition:transform .15s ease-out}
+    .cmap-ph::after{content:"";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border:6px solid transparent;border-top:6px solid #ffc934;border-bottom:0}
+    .leaflet-marker-icon:hover .cmap-ph{transform:scale(1.12)}
     .cmap-me{width:18px;height:18px;border-radius:50%;background:#3b9bff;border:3px solid #fff;box-shadow:0 0 0 8px rgba(59,155,255,.25)}
     .cmap-near{position:absolute;left:10px;top:10px;z-index:500;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:0;border-radius:12px;background:#ffc934;color:#0c0c0c;font:inherit;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4);transition:transform .15s ease-out}
     .cmap-near:active{transform:scale(.96)}
@@ -704,8 +707,8 @@
     </h1>
 
     <p>
-      Bản đồ sân Pickleball quanh bạn: bấm chấm vàng
-      để xem sân, gọi sân và chỉ đường.
+      Bản đồ sân Pickleball quanh bạn: bấm vào ảnh sân
+      để xem khoảng cách, gọi sân và chỉ đường.
     </p>
 
     <p class="owner-cta-inline">
@@ -1705,20 +1708,48 @@
       + `</div></div>`;
   }
 
+  // Phóng gần (≥13) → ảnh sân trong khung nhìn; xa → chấm (nhẹ + đỡ rối)
+  const PHOTO_ZOOM = 13;
+  const dotIcon = () => L.divIcon({ className: "", html: '<div class="cmap-pin"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+  function photoIcon(row) {
+    return L.divIcon({
+      className: "",
+      html: `<div class="cmap-ph" style="background-image:url('${esc(photoUrl(row.photo_path))}')"></div>`,
+      iconSize: [46, 52], iconAnchor: [23, 55], popupAnchor: [0, -52]
+    });
+  }
+  let markers = [];
+  function refreshIcons() {
+    if (!cmap) return;
+    const z = cmap.getZoom();
+    const view = cmap.getBounds().pad(0.3);
+    markers.forEach(function (m) {
+      const want = z >= PHOTO_ZOOM && m._row.photo_path && view.contains(m.getLatLng()) ? "ph" : "dot";
+      if (m._kind === want) return;
+      m._kind = want;
+      m.setIcon(want === "ph" ? photoIcon(m._row) : dotIcon());
+      m.setZIndexOffset(want === "ph" ? 200 : 0);
+    });
+  }
+
   function updateMap(rows) {
     if (!cmap) return;
     cLayer.clearLayers();
-    const pin = L.divIcon({ className: "", html: '<div class="cmap-pin"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+    markers = [];
+    if (!cmap._pdIconHook) { cmap._pdIconHook = true; cmap.on("moveend zoomend", refreshIcons); }
     const pts = [];
     rows.forEach(function (row) {
       const ll = [Number(row.latitude), Number(row.longitude)];
       if (!isFinite(ll[0]) || !isFinite(ll[1])) return;
       pts.push(ll);
-      L.marker(ll, { icon: pin, title: row.court_name })
+      const m = L.marker(ll, { icon: dotIcon(), title: row.court_name, riseOnHover: true })
         .bindPopup(function () { return popupHtml(row); }, { maxWidth: 260, autoPanPaddingTopLeft: [10, 64] })
         .on("popupopen", function (e) { fetchOneRoad(row, e.target); })
         .addTo(cLayer);
+      m._row = row; m._kind = "dot";
+      markers.push(m);
     });
+    refreshIcons();
     // Đổi bộ lọc/tìm kiếm → khung bản đồ ôm đúng các sân đang hiện
     const key = [provinceFilter.value, wardFilter.value, searchInput.value.trim()].join("|");
     if (key === lastFitKey) return;
