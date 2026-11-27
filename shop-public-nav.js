@@ -870,7 +870,7 @@
 
 
     script.src =
-      "/support-widget.js?v=20261126-hp150";
+      "/support-widget.js?v=20261127-hp200";
 
 
     script.async =
