@@ -24,6 +24,8 @@
         "01 quấn cán",
         "01 dán viền"
       ],
+      short_title: "Vợt ESS/ON MVP Pro",
+      thumb_image: "/img/shop/mvp-pro-thumb.webp?v=1",
       banner_image: "/img/shop/mvp-pro-banner.webp?v=3",
       banner_image_wide: "/img/shop/mvp-pro-banner-wide.webp?v=3"
     }
@@ -76,25 +78,8 @@
     if (styleInjected) return;
     styleInjected = true;
     var css =
-      ".pd-pre-banner{width:min(1100px,calc(100% - 28px));margin:14px auto 0;border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#131313 0%,#0b0b0b 55%,#1b1608 100%);border:1px solid rgba(255,201,52,.45);box-shadow:0 14px 34px rgba(0,0,0,.35)}" +
-      ".pd-pre-link{display:flex;align-items:stretch;text-decoration:none;color:#fff}" +
-      ".pd-pre-photo{flex:0 0 124px;background:#000;position:relative;min-height:177px}" +
-      ".pd-pre-photo{background-size:cover;background-position:center;overflow:hidden}.pd-pre-photo::before{content:\"\";position:absolute;inset:-14px;background:inherit;background-size:cover;background-position:center;filter:blur(16px) brightness(.45) saturate(.8)}.pd-pre-photo::after{content:\"\";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(11,11,11,0) 86%,rgba(11,11,11,.85) 100%)}.pd-pre-photo picture{display:block}.pd-pre-photo img{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;display:block}" +
-      ".pd-pre-body{flex:1;min-width:0;padding:14px 16px;display:flex;flex-direction:column;gap:7px;justify-content:center}" +
       ".pd-pre-tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:900;letter-spacing:.06em;color:#0b0b0b;background:#ffc934;padding:4px 10px;border-radius:999px;animation:pdPrePulse 1.8s ease-in-out infinite}" +
-      ".pd-pre-title{margin:0;font-size:19px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:.01em}" +
-      ".pd-pre-sub{margin:0;font-size:12.5px;font-weight:800;color:#ffc934;letter-spacing:.02em}" +
-      ".pd-pre-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}" +
-      ".pd-pre-now{font-size:22px;font-weight:900;color:#ffc934;line-height:1}" +
-      ".pd-pre-old{font-size:13px;color:rgba(255,255,255,.45);text-decoration:line-through}" +
-      ".pd-pre-save{font-size:11px;font-weight:900;color:#0b0b0b;background:#fff;padding:2px 7px;border-radius:999px}" +
-      ".pd-pre-meta{font-size:12px;color:rgba(255,255,255,.8);font-weight:600;line-height:1.5}" +
-      ".pd-pre-meta b{color:#fff;font-weight:800}" +
-      ".pd-pre-cta{align-self:flex-start;margin-top:2px;font-size:13px;font-weight:900;color:#0b0b0b;background:#ffc934;padding:9px 16px;border-radius:999px;transition:transform .2s ease-out,box-shadow .2s ease-out;box-shadow:0 6px 16px rgba(255,201,52,.25)}" +
-      ".pd-pre-link:hover .pd-pre-cta{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,201,52,.35)}" +
       "@keyframes pdPrePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,201,52,.5)}50%{box-shadow:0 0 0 6px rgba(255,201,52,0)}}" +
-      "@media (min-width:701px){.pd-pre-photo{flex-basis:234px;min-height:334px}.pd-pre-body{padding:20px 24px;gap:9px}.pd-pre-title{font-size:26px}.pd-pre-sub{font-size:14px}.pd-pre-now{font-size:30px}.pd-pre-meta{font-size:13px}}" +
-      "@media (max-width:420px){.pd-pre-photo{flex-basis:96px}.pd-pre-body{padding:12px 13px;gap:6px}.pd-pre-title{font-size:17px}.pd-pre-now{font-size:20px}}" +
       /* Thẻ trên trang sản phẩm */
       ".pd-pre-card{margin:14px 0 4px;border-radius:16px;background:linear-gradient(135deg,#141414,#0b0b0b);border:1px solid rgba(255,201,52,.4);padding:14px 15px;color:#fff}" +
       ".pd-pre-card h3{margin:8px 0 4px;font-size:16px;font-weight:900;color:#ffc934}" +
@@ -128,34 +113,24 @@
 
     var save = Number(p.list_price || 0) - Number(p.price || 0);
 
+    /* Thẻ gọn: CSS .pd-promo nằm ở shop.html (khối KHUYẾN MÃI ĐẦU TRANG) */
     slot.innerHTML =
-      '<div class="pd-pre-banner">' +
-        '<a class="pd-pre-link" href="./shop-product?id=' + encodeURIComponent(p.product_id) + '">' +
-          '<div class="pd-pre-photo" style="background-image:url(' + escapeHtml(p.banner_image) + ')">' +
-            "<picture>" +
-              '<source media="(min-width:701px)" srcset="' + escapeHtml(p.banner_image_wide || p.banner_image) + '">' +
-              '<img src="' + escapeHtml(p.banner_image) + '" alt="' + escapeHtml(p.title) + '" loading="eager" decoding="async">' +
-            "</picture>" +
-          "</div>" +
-          '<div class="pd-pre-body">' +
-            '<span class="pd-pre-tag">⚡ MỞ ĐẶT TRƯỚC</span>' +
-            '<h2 class="pd-pre-title">' + escapeHtml(p.title) + "</h2>" +
-            '<p class="pd-pre-sub">' + escapeHtml(p.tagline) + "</p>" +
-            '<div class="pd-pre-price">' +
-              '<span class="pd-pre-now">' + money(p.price) + "</span>" +
-              (save > 0
-                ? '<span class="pd-pre-old">' + money(p.list_price) + "</span>" +
-                  '<span class="pd-pre-save">-' + money(save) + "</span>"
-                : "") +
-            "</div>" +
-            '<div class="pd-pre-meta">' +
-              "🎁 <b>Tặng " + p.gifts.length + " món</b>: áo + khăn + quấn cán + dán viền<br>" +
-              "📦 <b>" + escapeHtml(p.eta_text) + "</b> • cọc 70% hoặc 100%" +
-            "</div>" +
-            '<span class="pd-pre-cta">ĐẶT TRƯỚC NGAY →</span>' +
-          "</div>" +
-        "</a>" +
-      "</div>";
+      '<a class="pd-promo pd-promo--gold" href="./shop-product?id=' + encodeURIComponent(p.product_id) + '" aria-label="' + escapeHtml(p.title + " " + money(p.price)) + '">' +
+        '<span class="pd-promo-img"><img src="' + escapeHtml(p.thumb_image || p.banner_image) + '" width="72" height="90" alt="' + escapeHtml(p.title) + '" loading="eager" decoding="async"></span>' +
+        '<span class="pd-promo-body">' +
+          '<span class="pd-promo-tag"><i></i>Mở đặt trước</span>' +
+          '<span class="pd-promo-title">' + escapeHtml(p.short_title || p.title) + "</span>" +
+          '<span class="pd-promo-price">' +
+            '<span class="pd-promo-now">' + money(p.price) + "</span>" +
+            (save > 0
+              ? '<span class="pd-promo-old">' + money(p.list_price) + "</span>" +
+                '<span class="pd-promo-save">-' + money(save) + "</span>"
+              : "") +
+          "</span>" +
+          '<span class="pd-promo-meta">Tặng ' + p.gifts.length + " món · " + escapeHtml(p.eta_short) + "</span>" +
+        "</span>" +
+        '<svg class="pd-promo-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
+      "</a>";
   }
 
   /* ---------- Thẻ trên trang sản phẩm ---------- */
